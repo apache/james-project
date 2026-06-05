@@ -139,7 +139,7 @@ class SaslMechanismContractTest {
                 return new SaslStep.Failure("response received before challenge");
             }
             if (new String(clientResponse, StandardCharsets.UTF_8).equals("accepted")) {
-                return new SaslStep.Success(SAME_USER_IDENTITY, Optional.empty(), "accepted");
+                return new SaslStep.Success(SAME_USER_IDENTITY, Optional.empty());
             }
             return new SaslStep.Failure("rejected");
         }
@@ -181,7 +181,7 @@ class SaslMechanismContractTest {
 
         private SaslStep authenticate(byte[] payload, SaslSessionContext context) {
             return context.service(PasswordSaslAuthenticationService.class)
-                .map(service -> service.authenticate(authenticationId(payload), password(payload), authorizationId(payload)))
+                .map(service -> service.authenticate(authenticationId(payload), authorizationId(payload), password(payload)))
                 .map(this::toSaslStep)
                 .orElseGet(() -> new SaslStep.Failure("missing password authentication service"));
         }
@@ -205,10 +205,10 @@ class SaslMechanismContractTest {
         }
 
         private SaslStep toSaslStep(SaslAuthenticationResult authenticationResult) {
-            if (authenticationResult instanceof SaslAuthenticationResult.Success(SaslIdentity identity, String log)) {
-                return new SaslStep.Success(identity, Optional.empty(), log);
+            if (authenticationResult instanceof SaslAuthenticationResult.Success(SaslIdentity identity)) {
+                return new SaslStep.Success(identity, Optional.empty());
             }
-            return new SaslStep.Failure(((SaslAuthenticationResult.Failure) authenticationResult).log());
+            return new SaslStep.Failure(((SaslAuthenticationResult.Failure) authenticationResult).reason());
         }
     }
 
@@ -226,31 +226,21 @@ class SaslMechanismContractTest {
         }
 
         @Override
-        public SaslProtocol protocol() {
-            return SaslProtocol.IMAP;
-        }
-
-        @Override
-        public boolean isTlsStarted() {
-            return true;
-        }
-
-        @Override
-        public <T> Optional<T> configuration(Class<T> configurationType) {
-            return Optional.empty();
-        }
-
-        @Override
         public <T> Optional<T> service(Class<T> serviceType) {
             return Optional.ofNullable(services.get(serviceType))
                 .map(serviceType::cast);
+        }
+
+        @Override
+        public <T> void register(Class<T> serviceType, T service) {
+            services.put(serviceType, service);
         }
     }
 
     @Test
     void oneStepMechanismShouldReturnSuccess() {
         // Given a one-step mechanism configured to immediately succeed
-        SaslStep.Success success = new SaslStep.Success(SAME_USER_IDENTITY, Optional.empty(), "success");
+        SaslStep.Success success = new SaslStep.Success(SAME_USER_IDENTITY, Optional.empty());
         SaslExchange exchange = new FixedStepMechanism(success).start(initialRequest(Optional.empty()), new FakeSaslSessionContext(Map.of()));
 
         // When the exchange starts
@@ -290,11 +280,11 @@ class SaslMechanismContractTest {
     @Test
     void passwordLikeMechanismShouldAuthenticateThroughSessionContextService() {
         // Given a protocol-provided password service and a PLAIN-like initial response
-        PasswordSaslAuthenticationService service = (authenticationId, password, authorizationId) -> {
+        PasswordSaslAuthenticationService service = (authenticationId, authorizationId, password) -> {
             assertThat(authenticationId).isEqualTo(AUTHENTICATION_ID);
             assertThat(password).isEqualTo("secret");
             assertThat(authorizationId).isEmpty();
-            return new SaslAuthenticationResult.Success(SAME_USER_IDENTITY, "password accepted");
+            return new SaslAuthenticationResult.Success(SAME_USER_IDENTITY);
         };
         SaslExchange exchange = new PasswordLikeMechanism()
             .start(initialRequest(Optional.of(bytes("\u0000" + AUTHENTICATION_ID.asString() + "\u0000secret"))),
@@ -310,11 +300,11 @@ class SaslMechanismContractTest {
     @Test
     void passwordLikeMechanismShouldPreserveDelegatedIdentity() {
         // Given a PLAIN-like initial response with distinct authorization and authentication identities
-        PasswordSaslAuthenticationService service = (authenticationId, password, authorizationId) -> {
+        PasswordSaslAuthenticationService service = (authenticationId, authorizationId, password) -> {
             assertThat(authenticationId).isEqualTo(AUTHENTICATION_ID);
             assertThat(password).isEqualTo("secret");
             assertThat(authorizationId).contains(AUTHORIZATION_ID);
-            return new SaslAuthenticationResult.Success(DELEGATED_IDENTITY, "delegation accepted");
+            return new SaslAuthenticationResult.Success(DELEGATED_IDENTITY);
         };
         SaslExchange exchange = new PasswordLikeMechanism()
             .start(initialRequest(Optional.of(bytes(AUTHORIZATION_ID.asString() + "\u0000" + AUTHENTICATION_ID.asString() + "\u0000secret"))),
@@ -346,7 +336,7 @@ class SaslMechanismContractTest {
         byte[] challengePayload = bytes("challenge");
         byte[] serverData = bytes("server");
         SaslStep.Challenge challenge = new SaslStep.Challenge(Optional.of(challengePayload));
-        SaslStep.Success success = new SaslStep.Success(SAME_USER_IDENTITY, Optional.of(serverData), "success");
+        SaslStep.Success success = new SaslStep.Success(SAME_USER_IDENTITY, Optional.of(serverData));
 
         // When the caller mutates the original arrays
         challengePayload[0] = 'C';

@@ -19,41 +19,11 @@
 
 package org.apache.james.protocols.api.sasl;
 
-import java.util.Set;
+public class XOauth2SaslMechanism extends AbstractOidcSaslMechanism {
+    public static final String NAME = "XOAUTH2";
 
-/**
- * Protocol-neutral SASL mechanism.
- */
-public interface SaslMechanism {
-    /**
-     * Returns the SASL mechanism name advertised to clients.
-     */
-    String name();
-
-    /**
-     * Whether this mechanism can be used by the supplied protocol.
-     *
-     * <p>A mechanism may intentionally support only a subset of protocols when its
-     * wire payload, authorization semantics, or surrounding protocol state is only
-     * valid for those protocols. For example, a custom PLAIN variant may support
-     * only IMAP when it relies on IMAP-specific delegation semantics.
-     */
-    boolean supports(SaslProtocol protocol);
-
-    /**
-     * Lists protocol-provided service types required by this mechanism.
-     */
-    default Set<Class<?>> requiredServices(SaslProtocol protocol) {
-        return Set.of();
+    @Override
+    public String name() {
+        return NAME;
     }
-
-    /**
-     * Whether this mechanism is currently usable for the supplied session context.
-     */
-    boolean isAvailable(SaslSessionContext context);
-
-    /**
-     * Starts a new SASL exchange for one client authentication attempt.
-     */
-    SaslExchange start(SaslInitialRequest request, SaslSessionContext context);
 }

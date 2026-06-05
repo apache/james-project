@@ -30,5 +30,5 @@ public interface PasswordSaslAuthenticationService {
     /**
      * Authenticates the supplied credentials and returns the authenticated SASL identity.
      */
-    SaslAuthenticationResult authenticate(Username authenticationId, String password, Optional<Username> authorizationId);
+    SaslAuthenticationResult authenticate(Username authenticationId, Optional<Username> authorizationId, String password);
 }

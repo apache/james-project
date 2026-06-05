@@ -19,41 +19,28 @@
 
 package org.apache.james.protocols.api.sasl;
 
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
-/**
- * Protocol-neutral SASL mechanism.
- */
-public interface SaslMechanism {
-    /**
-     * Returns the SASL mechanism name advertised to clients.
-     */
-    String name();
+class TestSaslSessionContext implements SaslSessionContext {
+    private final Map<Class<?>, Object> services;
 
-    /**
-     * Whether this mechanism can be used by the supplied protocol.
-     *
-     * <p>A mechanism may intentionally support only a subset of protocols when its
-     * wire payload, authorization semantics, or surrounding protocol state is only
-     * valid for those protocols. For example, a custom PLAIN variant may support
-     * only IMAP when it relies on IMAP-specific delegation semantics.
-     */
-    boolean supports(SaslProtocol protocol);
-
-    /**
-     * Lists protocol-provided service types required by this mechanism.
-     */
-    default Set<Class<?>> requiredServices(SaslProtocol protocol) {
-        return Set.of();
+    TestSaslSessionContext(Optional<PasswordSaslAuthenticationService> passwordService,
+                           Optional<BearerTokenSaslAuthenticationService> bearerTokenService) {
+        this.services = new HashMap<>();
+        passwordService.ifPresent(service -> register(PasswordSaslAuthenticationService.class, service));
+        bearerTokenService.ifPresent(service -> register(BearerTokenSaslAuthenticationService.class, service));
     }
 
-    /**
-     * Whether this mechanism is currently usable for the supplied session context.
-     */
-    boolean isAvailable(SaslSessionContext context);
+    @Override
+    public <T> Optional<T> service(Class<T> serviceType) {
+        return Optional.ofNullable(services.get(serviceType))
+            .map(serviceType::cast);
+    }
 
-    /**
-     * Starts a new SASL exchange for one client authentication attempt.
-     */
-    SaslExchange start(SaslInitialRequest request, SaslSessionContext context);
+    @Override
+    public <T> void register(Class<T> serviceType, T service) {
+        services.put(serviceType, service);
+    }
 }

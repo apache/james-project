@@ -25,7 +25,7 @@ import java.util.Optional;
 /**
  * Server step produced by a SASL exchange.
  */
-public interface SaslStep {
+public sealed interface SaslStep permits SaslStep.Challenge, SaslStep.Success, SaslStep.Failure {
     /**
      * Server challenge to send back to the client.
      */
@@ -46,12 +46,11 @@ public interface SaslStep {
     /**
      * Successful SASL exchange result.
      */
-    record Success(SaslIdentity identity, Optional<byte[]> serverData, String log) implements SaslStep {
+    record Success(SaslIdentity identity, Optional<byte[]> serverData) implements SaslStep {
         public Success {
             identity = Objects.requireNonNull(identity);
             serverData = Objects.requireNonNull(serverData)
                 .map(byte[]::clone);
-            log = Objects.requireNonNull(log);
         }
 
         /**
@@ -65,9 +64,9 @@ public interface SaslStep {
     /**
      * Failed SASL exchange result.
      */
-    record Failure(String log) implements SaslStep {
+    record Failure(String reason) implements SaslStep {
         public Failure {
-            log = Objects.requireNonNull(log);
+            reason = Objects.requireNonNull(reason);
         }
     }
 }

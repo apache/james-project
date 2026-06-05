@@ -26,12 +26,12 @@ public interface SaslAuthenticationResult {
     /**
      * Successful authentication result.
      */
-    record Success(SaslIdentity identity, String log) implements SaslAuthenticationResult {
+    record Success(SaslIdentity identity) implements SaslAuthenticationResult {
     }
 
     /**
      * Failed authentication result.
      */
-    record Failure(String log) implements SaslAuthenticationResult {
+    record Failure(String reason) implements SaslAuthenticationResult {
     }
 }

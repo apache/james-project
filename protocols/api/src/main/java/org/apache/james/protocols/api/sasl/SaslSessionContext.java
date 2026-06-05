@@ -26,22 +26,12 @@ import java.util.Optional;
  */
 public interface SaslSessionContext {
     /**
-     * Protocol currently running the SASL exchange.
-     */
-    SaslProtocol protocol();
-
-    /**
-     * Whether TLS is active for the current session.
-     */
-    boolean isTlsStarted();
-
-    /**
-     * Looks up optional protocol or server configuration required by a mechanism.
-     */
-    <T> Optional<T> configuration(Class<T> configurationType);
-
-    /**
      * Looks up protocol-provided services, such as password or bearer-token authentication.
      */
     <T> Optional<T> service(Class<T> serviceType);
+
+    /**
+     * Registers a protocol-provided service for the current SASL session.
+     */
+    <T> void register(Class<T> serviceType, T service);
 }

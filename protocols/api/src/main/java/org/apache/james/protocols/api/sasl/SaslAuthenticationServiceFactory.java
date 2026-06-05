@@ -19,41 +19,24 @@
 
 package org.apache.james.protocols.api.sasl;
 
-import java.util.Set;
+import java.util.Optional;
 
 /**
- * Protocol-neutral SASL mechanism.
+ * Protocol-specific factory for services required by SASL mechanisms.
  */
-public interface SaslMechanism {
+public interface SaslAuthenticationServiceFactory<T> {
     /**
-     * Returns the SASL mechanism name advertised to clients.
+     * Protocol supported by the produced service.
      */
-    String name();
+    SaslProtocol protocol();
 
     /**
-     * Whether this mechanism can be used by the supplied protocol.
-     *
-     * <p>A mechanism may intentionally support only a subset of protocols when its
-     * wire payload, authorization semantics, or surrounding protocol state is only
-     * valid for those protocols. For example, a custom PLAIN variant may support
-     * only IMAP when it relies on IMAP-specific delegation semantics.
+     * Service type produced by this factory.
      */
-    boolean supports(SaslProtocol protocol);
+    Class<T> serviceType();
 
     /**
-     * Lists protocol-provided service types required by this mechanism.
+     * Creates the service for the supplied SASL session context when available.
      */
-    default Set<Class<?>> requiredServices(SaslProtocol protocol) {
-        return Set.of();
-    }
-
-    /**
-     * Whether this mechanism is currently usable for the supplied session context.
-     */
-    boolean isAvailable(SaslSessionContext context);
-
-    /**
-     * Starts a new SASL exchange for one client authentication attempt.
-     */
-    SaslExchange start(SaslInitialRequest request, SaslSessionContext context);
+    Optional<T> create(SaslSessionContext context);
 }

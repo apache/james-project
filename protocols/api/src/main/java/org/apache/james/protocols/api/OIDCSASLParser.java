@@ -58,41 +58,43 @@ public class OIDCSASLParser {
     }
 
     public static Optional<OIDCInitialResponse> parse(String initialResponse) {
-        Optional<String> decodeResult = decodeBase64(initialResponse);
+        return decodeBase64(initialResponse)
+            .flatMap(OIDCSASLParser::parseDecoded);
+    }
 
-        if (decodeResult.isPresent()) {
-            // See the format of the gs2-header in https://www.rfc-editor.org/rfc/rfc5801#section-4.
-            String decodeValueWithoutDanglingPart = decodeResult.filter(value -> value.startsWith("n,"))
-                .map(value -> value.substring(2))
-                .orElse(decodeResult.get());
+    public static Optional<OIDCInitialResponse> parseDecoded(String decodedInitialResponse) {
+        // See the format of the gs2-header in https://www.rfc-editor.org/rfc/rfc5801#section-4.
+        String decodeValueWithoutDanglingPart = Optional.of(decodedInitialResponse)
+            .filter(value -> value.startsWith("n,"))
+            .map(value -> value.substring(2))
+            .orElse(decodedInitialResponse);
 
-            StringTokenizer stringTokenizer = new StringTokenizer(decodeValueWithoutDanglingPart, String.valueOf(SASL_SEPARATOR));
-            String tokenPart = null;
-            String userPart = null;
-            int tokenPartCounter = 0;
-            int userPartCounter = 0;
+        StringTokenizer stringTokenizer = new StringTokenizer(decodeValueWithoutDanglingPart, String.valueOf(SASL_SEPARATOR));
+        String tokenPart = null;
+        String userPart = null;
+        int tokenPartCounter = 0;
+        int userPartCounter = 0;
 
-            while (stringTokenizer.hasMoreTokens()) {
-                String stringToken = stringTokenizer.nextToken();
-                if (stringToken.startsWith(TOKEN_PART_PREFIX)) {
-                    tokenPart = StringUtils.replace(stringToken.substring(TOKEN_PART_INDEX), PREFIX_TOKEN, "");
-                    tokenPartCounter++;
-                } else if (stringToken.startsWith(XOAUTH2_USER_PART_PREFIX)) {
-                    userPart = stringToken.substring(XOAUTH2_USER_PART_INDEX);
-                    userPartCounter++;
-                } else if (stringToken.startsWith(OAUTHBEARER_USER_PART_PREFIX)) {
-                    userPart = stringToken.substring(OAUTHBEARER_USER_PART_INDEX);
-                    // See the format of the gs2-header in https://www.rfc-editor.org/rfc/rfc5801#section-4.
-                    if (userPart.endsWith(",")) {
-                        userPart = userPart.substring(0, userPart.length() - 1);
-                    }
-                    userPartCounter++;
+        while (stringTokenizer.hasMoreTokens()) {
+            String stringToken = stringTokenizer.nextToken();
+            if (stringToken.startsWith(TOKEN_PART_PREFIX)) {
+                tokenPart = StringUtils.replace(stringToken.substring(TOKEN_PART_INDEX), PREFIX_TOKEN, "");
+                tokenPartCounter++;
+            } else if (stringToken.startsWith(XOAUTH2_USER_PART_PREFIX)) {
+                userPart = stringToken.substring(XOAUTH2_USER_PART_INDEX);
+                userPartCounter++;
+            } else if (stringToken.startsWith(OAUTHBEARER_USER_PART_PREFIX)) {
+                userPart = stringToken.substring(OAUTHBEARER_USER_PART_INDEX);
+                // See the format of the gs2-header in https://www.rfc-editor.org/rfc/rfc5801#section-4.
+                if (userPart.endsWith(",")) {
+                    userPart = userPart.substring(0, userPart.length() - 1);
                 }
+                userPartCounter++;
             }
+        }
 
-            if (tokenPart != null && userPart != null && tokenPartCounter == 1 && userPartCounter == 1) {
-                return Optional.of(new OIDCInitialResponse(userPart, tokenPart));
-            }
+        if (tokenPart != null && userPart != null && tokenPartCounter == 1 && userPartCounter == 1) {
+            return Optional.of(new OIDCInitialResponse(userPart, tokenPart));
         }
         return Optional.empty();
     }

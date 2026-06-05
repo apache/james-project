@@ -21,6 +21,7 @@ package org.apache.james.protocols.api.sasl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -29,8 +30,8 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 
 class SaslMechanismRegistryTest {
-    private static final SaslSessionContext IMAP_CONTEXT = new FakeSaslSessionContext(SaslProtocol.IMAP);
-    private static final SaslSessionContext SMTP_CONTEXT = new FakeSaslSessionContext(SaslProtocol.SMTP);
+    private static final SaslSessionContext IMAP_CONTEXT = new FakeSaslSessionContext();
+    private static final SaslSessionContext SMTP_CONTEXT = new FakeSaslSessionContext();
 
     @Test
     void findShouldBeCaseInsensitive() {
@@ -77,14 +78,46 @@ class SaslMechanismRegistryTest {
         assertThat(testee.availableFor(SaslProtocol.SMTP, SMTP_CONTEXT)).containsExactly(smtpPlain);
     }
 
+    @Test
+    void initializeShouldRegisterRequiredServicesForConfiguredMechanisms() {
+        PasswordSaslAuthenticationService service = (authenticationId, authorizationId, password) -> new SaslAuthenticationResult.Failure("failed");
+        FakeSaslMechanism plain = new FakeSaslMechanism("PLAIN", Set.of(SaslProtocol.IMAP), true, Set.of(PasswordSaslAuthenticationService.class));
+        SaslMechanismRegistry testee = new SaslMechanismRegistry(ImmutableList.of(plain),
+            ImmutableList.of(new FakeSaslAuthenticationServiceFactory<>(SaslProtocol.IMAP, PasswordSaslAuthenticationService.class, service)));
+        FakeSaslSessionContext context = new FakeSaslSessionContext();
+
+        testee.initialize(SaslProtocol.IMAP, context);
+
+        assertThat(context.service(PasswordSaslAuthenticationService.class)).contains(service);
+    }
+
+    @Test
+    void initializeShouldNotRegisterServicesForOtherProtocols() {
+        PasswordSaslAuthenticationService service = (authenticationId, authorizationId, password) -> new SaslAuthenticationResult.Failure("failed");
+        FakeSaslMechanism plain = new FakeSaslMechanism("PLAIN", Set.of(SaslProtocol.IMAP), true, Set.of(PasswordSaslAuthenticationService.class));
+        SaslMechanismRegistry testee = new SaslMechanismRegistry(ImmutableList.of(plain),
+            ImmutableList.of(new FakeSaslAuthenticationServiceFactory<>(SaslProtocol.SMTP, PasswordSaslAuthenticationService.class, service)));
+        FakeSaslSessionContext context = new FakeSaslSessionContext();
+
+        testee.initialize(SaslProtocol.IMAP, context);
+
+        assertThat(context.service(PasswordSaslAuthenticationService.class)).isEmpty();
+    }
+
     private static class FakeSaslMechanism implements SaslMechanism {
         private final String name;
         private final Set<SaslProtocol> supportedProtocols;
+        private final Set<Class<?>> requiredServices;
         private final boolean available;
 
         private FakeSaslMechanism(String name, Set<SaslProtocol> supportedProtocols, boolean available) {
+            this(name, supportedProtocols, available, Set.of());
+        }
+
+        private FakeSaslMechanism(String name, Set<SaslProtocol> supportedProtocols, boolean available, Set<Class<?>> requiredServices) {
             this.name = name;
             this.supportedProtocols = supportedProtocols;
+            this.requiredServices = requiredServices;
             this.available = available;
         }
 
@@ -99,6 +132,11 @@ class SaslMechanismRegistryTest {
         }
 
         @Override
+        public Set<Class<?>> requiredServices(SaslProtocol protocol) {
+            return requiredServices;
+        }
+
+        @Override
         public boolean isAvailable(SaslSessionContext context) {
             return available;
         }
@@ -109,20 +147,29 @@ class SaslMechanismRegistryTest {
         }
     }
 
-    private record FakeSaslSessionContext(SaslProtocol protocol) implements SaslSessionContext {
+    private record FakeSaslAuthenticationServiceFactory<T>(SaslProtocol protocol, Class<T> serviceType, T service) implements SaslAuthenticationServiceFactory<T> {
         @Override
-        public boolean isTlsStarted() {
-            return true;
+        public Optional<T> create(SaslSessionContext context) {
+            return Optional.of(service);
         }
+    }
 
-        @Override
-        public <T> Optional<T> configuration(Class<T> configurationType) {
-            return Optional.empty();
+    private static class FakeSaslSessionContext implements SaslSessionContext {
+        private final Map<Class<?>, Object> services;
+
+        private FakeSaslSessionContext() {
+            this.services = new java.util.HashMap<>();
         }
 
         @Override
         public <T> Optional<T> service(Class<T> serviceType) {
-            return Optional.empty();
+            return Optional.ofNullable(services.get(serviceType))
+                .map(serviceType::cast);
+        }
+
+        @Override
+        public <T> void register(Class<T> serviceType, T service) {
+            services.put(serviceType, service);
         }
     }
 }
