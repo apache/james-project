@@ -68,6 +68,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>${james.protocols.groupId}</groupId>
+      <artifactId>protocols-api</artifactId>
+      <version>${james.baseVersion}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
       <version>7.0.0</version>
