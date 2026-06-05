@@ -39,6 +39,8 @@ import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import jakarta.inject.Inject;
 
@@ -234,11 +236,21 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     public Publisher<BlobId> listBlobs(BucketName bucketName) {
         return Mono.fromCallable(() -> {
                 File bucketRoot = getBucketRoot(bucketName);
-                return Files.list(bucketRoot.toPath());
+                Path rootPath = bucketRoot.toPath();
+                // Blob ids may contain '/' (eg. recovery sidecar keys) and are then stored in nested
+                // directories, so we walk the tree and rebuild the id from the bucket-root-relative path.
+                return Files.walk(rootPath)
+                    .filter(Files::isRegularFile)
+                    .map(path -> blobIdFactory.parse(toBlobId(rootPath.relativize(path))));
             })
             .flatMapMany(Flux::fromStream)
-            .map(path -> blobIdFactory.parse(path.getFileName().toString()))
             .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    private String toBlobId(Path relativePath) {
+        return StreamSupport.stream(relativePath.spliterator(), false)
+            .map(Path::toString)
+            .collect(Collectors.joining("/"));
     }
 
     private BlobMetadata readMetadata(Path path) {
@@ -254,6 +266,8 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
                     this::asBlobMetadataName,
                     Throwing.function((String attributeName) -> new BlobMetadataValue(readFileAttributeValue(attributeView, attributeName)))
                         .sneakyThrow())));
+        } catch (NoSuchFileException e) {
+            throw new ObjectNotFoundException(String.format("Cannot locate %s", path), e);
         } catch (IOException e) {
             throw new ObjectStoreIOException("IOException occurred", e);
         }
@@ -299,6 +313,9 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
 
     private File createTempFile(File blob) {
         try {
+            // Blob ids may contain '/' (eg. recovery sidecar keys), introducing nested directories
+            // that must exist before the temp file is created alongside the target blob.
+            Files.createDirectories(blob.getParentFile().toPath());
             return Files.createTempFile(blob.getParentFile().toPath(), blob.getName(), ".tmp").toFile();
         } catch (IOException e) {
             throw new ObjectStoreIOException("IOException occurred", e);

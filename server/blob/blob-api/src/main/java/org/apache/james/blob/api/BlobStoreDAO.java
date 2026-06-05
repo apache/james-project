@@ -52,6 +52,8 @@ import com.google.common.io.FileBackedOutputStream;
  * <p>See {@code docs/modules/servers/partials/architecture/blobstore.adoc} for more details.</p>
  */
 public interface BlobStoreDAO {
+    String RECOVERY_BLOB_PREFIX = "recovery/";
+
     record BlobMetadataName(String name) {
         private static final CharMatcher CHAR_MATCHER = CharMatcher.inRange('a', 'z')
             .or(CharMatcher.inRange('A', 'Z'))

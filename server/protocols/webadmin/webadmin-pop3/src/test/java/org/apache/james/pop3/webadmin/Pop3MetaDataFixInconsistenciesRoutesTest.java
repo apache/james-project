@@ -35,6 +35,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
@@ -74,6 +75,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 
@@ -184,6 +186,7 @@ class Pop3MetaDataFixInconsistenciesRoutesTest {
             cassandra.getTypesProvider(),
             CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .passthrough(),
+            Mockito.mock(BlobStoreDAO.class),
             new PlainBlobId.Factory(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
         MetaDataFixInconsistenciesService fixInconsistenciesService = new MetaDataFixInconsistenciesService(imapUidDAO, pop3MetadataStore, cassandraMessageDAOV3);

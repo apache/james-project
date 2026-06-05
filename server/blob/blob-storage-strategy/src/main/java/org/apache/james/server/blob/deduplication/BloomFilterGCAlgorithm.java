@@ -25,10 +25,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
@@ -39,6 +41,7 @@ import org.apache.james.task.Task.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnel;
@@ -51,6 +54,8 @@ public class BloomFilterGCAlgorithm {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BloomFilterGCAlgorithm.class);
     private static final Funnel<CharSequence> BLOOM_FILTER_FUNNEL = Funnels.stringFunnel(StandardCharsets.US_ASCII);
+    @VisibleForTesting
+    static boolean RECOVERY_AWARE = Boolean.parseBoolean(System.getProperty("james.gc.recover.aware", "true"));
 
     public static class Context {
 
@@ -273,6 +278,7 @@ public class BloomFilterGCAlgorithm {
 
     private Mono<Result> gc(BloomFilter<CharSequence> bloomFilter, BucketName bucketName, Context context, int deletionWindowSize) {
         return Flux.from(blobStoreDAO.listBlobs(bucketName))
+            .filter(blobId -> !RECOVERY_AWARE || !blobId.asString().startsWith(BlobStoreDAO.RECOVERY_BLOB_PREFIX))
             .doOnNext(blobId -> context.incrementBlobCount())
             .flatMap(blobId -> Mono.fromCallable(() -> blobIdFactory.parse(blobId.asString())))
             .filter(blobId -> {
@@ -290,15 +296,28 @@ public class BloomFilterGCAlgorithm {
 
     private Mono<Result> handlePagedDeletion(BucketName bucketName, Context context, Flux<BlobId> blobIdFlux) {
         return blobIdFlux.collectList()
-            .flatMap(orphanBlobIds -> Mono.from(blobStoreDAO.delete(bucketName, (Collection) orphanBlobIds))
-                .then(Mono.fromCallable(() -> {
-                    context.incrementGCedBlobCount(orphanBlobIds.size());
-                    return Result.COMPLETED;
-                })).onErrorResume(error -> {
-                    LOGGER.error("Error when gc orphan blob", error);
-                    context.incrementErrorCount();
-                    return Mono.just(Result.PARTIAL);
-                }));
+            .flatMap(orphanBlobIds -> {
+                Mono<Void> deleteRecoverySidecars = RECOVERY_AWARE
+                    ? Mono.from(blobStoreDAO.delete(bucketName, toRecoveryBlobIds(orphanBlobIds)))
+                    : Mono.empty();
+
+                return Mono.from(blobStoreDAO.delete(bucketName, (Collection) orphanBlobIds))
+                    .then(deleteRecoverySidecars)
+                    .then(Mono.fromCallable(() -> {
+                        context.incrementGCedBlobCount(orphanBlobIds.size());
+                        return Result.COMPLETED;
+                    })).onErrorResume(error -> {
+                        LOGGER.error("Error when gc orphan blob", error);
+                        context.incrementErrorCount();
+                        return Mono.just(Result.PARTIAL);
+                    });
+            });
+    }
+
+    private List<BlobId> toRecoveryBlobIds(List<BlobId> blobIds) {
+        return blobIds.stream()
+            .map(blobId -> blobIdFactory.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + blobId.asString()))
+            .collect(Collectors.toList());
     }
 
     private Mono<BloomFilter<CharSequence>> populatedBloomFilter(int expectedBlobCount, double associatedProbability, Context context) {

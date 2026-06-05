@@ -39,6 +39,19 @@ import com.google.common.collect.ImmutableList;
 public class CassandraConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraConfiguration.class);
 
+    public enum BlobRecoveryMode {
+        NONE, SYNCHRONOUS, ASYNCHRONOUS;
+
+        public static BlobRecoveryMode parse(String value) {
+            return switch (value.toLowerCase()) {
+                case "none" -> NONE;
+                case "synchronous" -> SYNCHRONOUS;
+                case "asynchronous" -> ASYNCHRONOUS;
+                default -> throw new IllegalArgumentException("Unknown blob recovery mode: '" + value + "'. Expected none, synchronous or asynchronous");
+            };
+        }
+    }
+
     public static final float DEFAULT_MAILBOX_READ_REPAIR = 0.1f;
     public static final float DEFAULT_MAX_MAILBOX_COUNTERS_READ_REPAIR_CHANCE = 0.1f;
     public static final float DEFAULT_ONE_HUNDRED_MAILBOX_COUNTERS_READ_REPAIR_CHANCE = 0.01f;
@@ -59,6 +72,7 @@ public class CassandraConfiguration {
     public static final boolean DEFAULT_STRONG_CONSISTENCY = true;
     public static final boolean DEFAULT_OPTIMISTIC_CONSISTENCY_LEVEL = false;
     public static final boolean DEFAULT_MAIL_REPOSITORY_STRONG_CONSISTENCY = true;
+    public static final BlobRecoveryMode DEFAULT_BLOB_RECOVERY_MODE = BlobRecoveryMode.NONE;
 
     private static final String MAILBOX_READ_REPAIR = "mailbox.read.repair.chance";
     private static final String MAILBOX_MAX_COUNTERS_READ_REPAIR = "mailbox.counters.read.repair.chance.max";
@@ -84,6 +98,7 @@ public class CassandraConfiguration {
     private static final String MAIL_REPOSITORY_STRONG_CONSISTENCY = "mailrepository.strong.consistency";
     private static final String ACL_ENABLED = "acl.enabled";
     private static final String UID_MODSEQ_INCREMENT = "uid.modseq.increment";
+    private static final String MAILBOX_BLOB_RECOVERY_MODE = "mailbox.blob.recovery.mode";
 
     public static final CassandraConfiguration DEFAULT_CONFIGURATION = builder().build();
 
@@ -112,6 +127,7 @@ public class CassandraConfiguration {
         private Optional<Boolean> mailRepositoryStrongConsistency = Optional.empty();
         private Optional<Boolean> aclEnabled = Optional.empty();
         private Optional<Integer> uidModseqIncrement = Optional.empty();
+        private Optional<BlobRecoveryMode> blobRecoveryMode = Optional.empty();
 
         public Builder mailboxReadStrongConsistency(boolean value) {
             this.mailboxReadStrongConsistency = Optional.of(value);
@@ -172,6 +188,16 @@ public class CassandraConfiguration {
 
         public Builder uidModseqIncrement(Optional<Integer> value) {
             value.ifPresent(this::uidModseqIncrement);
+            return this;
+        }
+
+        public Builder blobRecoveryMode(BlobRecoveryMode value) {
+            this.blobRecoveryMode = Optional.of(value);
+            return this;
+        }
+
+        public Builder blobRecoveryMode(Optional<BlobRecoveryMode> value) {
+            this.blobRecoveryMode = value;
             return this;
         }
 
@@ -386,7 +412,8 @@ public class CassandraConfiguration {
                 uidReadStrongConsistency.orElse(DEFAULT_STRONG_CONSISTENCY),
                 modseqReadStrongConsistency.orElse(DEFAULT_STRONG_CONSISTENCY),
                 aclEnabled.orElse(true),
-                uidModseqIncrement.orElse(0));
+                uidModseqIncrement.orElse(0),
+                blobRecoveryMode.orElse(DEFAULT_BLOB_RECOVERY_MODE));
         }
     }
 
@@ -442,6 +469,8 @@ public class CassandraConfiguration {
                 propertiesConfiguration.getBoolean(MAIL_REPOSITORY_STRONG_CONSISTENCY, null)))
             .aclEnabled(Optional.ofNullable(propertiesConfiguration.getBoolean(ACL_ENABLED, null)))
             .uidModseqIncrement(Optional.ofNullable(propertiesConfiguration.getInteger(UID_MODSEQ_INCREMENT, null)))
+            .blobRecoveryMode(Optional.ofNullable(propertiesConfiguration.getString(MAILBOX_BLOB_RECOVERY_MODE, null))
+                .map(BlobRecoveryMode::parse))
             .build();
     }
 
@@ -469,6 +498,7 @@ public class CassandraConfiguration {
     private final boolean modseqReadStrongConsistency;
     private final boolean aclEnabled;
     private final int uidModseqIncrement;
+    private final BlobRecoveryMode blobRecoveryMode;
 
     @VisibleForTesting
     CassandraConfiguration(int aclMaxRetry, int expungeChunkSize,
@@ -481,7 +511,7 @@ public class CassandraConfiguration {
                            boolean messageReadStrongConsistency, boolean messageWriteStrongConsistency,
                            boolean optimisticConsistencyLevel, boolean mailRepositoryStrongConsistency,
                            boolean uidReadStrongConsistency, boolean modseqReadStrongConsistency, boolean aclEnabled,
-                           int uidModseqIncrement) {
+                           int uidModseqIncrement, BlobRecoveryMode blobRecoveryMode) {
         this.aclMaxRetry = aclMaxRetry;
         this.expungeChunkSize = expungeChunkSize;
         this.flagsUpdateMessageIdMaxRetry = flagsUpdateMessageIdMaxRetry;
@@ -506,6 +536,7 @@ public class CassandraConfiguration {
         this.modseqReadStrongConsistency = modseqReadStrongConsistency;
         this.aclEnabled = aclEnabled;
         this.uidModseqIncrement = uidModseqIncrement;
+        this.blobRecoveryMode = blobRecoveryMode;
     }
 
     public boolean isUidReadStrongConsistency() {
@@ -604,6 +635,10 @@ public class CassandraConfiguration {
         return uidModseqIncrement;
     }
 
+    public BlobRecoveryMode getBlobRecoveryMode() {
+        return blobRecoveryMode;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof CassandraConfiguration) {
@@ -632,7 +667,8 @@ public class CassandraConfiguration {
                 && Objects.equals(this.modseqReadStrongConsistency, that.modseqReadStrongConsistency)
                 && Objects.equals(this.mailRepositoryStrongConsistency, that.mailRepositoryStrongConsistency)
                 && Objects.equals(this.aclEnabled, that.aclEnabled)
-                && Objects.equals(this.uidModseqIncrement, that.uidModseqIncrement);
+                && Objects.equals(this.uidModseqIncrement, that.uidModseqIncrement)
+                && Objects.equals(this.blobRecoveryMode, that.blobRecoveryMode);
         }
         return false;
     }
@@ -646,7 +682,7 @@ public class CassandraConfiguration {
             consistencyLevelRegular, consistencyLevelLightweightTransaction, mailboxReadRepair,
             messageReadStrongConsistency, mailboxReadStrongConsistency, messageWriteStrongConsistency,
             optimisticConsistencyLevel, mailRepositoryStrongConsistency, uidReadStrongConsistency,
-            modseqReadStrongConsistency, aclEnabled, uidModseqIncrement);
+            modseqReadStrongConsistency, aclEnabled, uidModseqIncrement, blobRecoveryMode);
     }
 
     @Override
@@ -676,6 +712,7 @@ public class CassandraConfiguration {
             .add("uidReadStrongConsistency", uidReadStrongConsistency)
             .add("aclEnabled", aclEnabled)
             .add("uidModseqIncrement", uidModseqIncrement)
+            .add("blobRecoveryMode", blobRecoveryMode)
             .toString();
     }
 }
