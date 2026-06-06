@@ -273,7 +273,7 @@ public class MailboxManageTest {
                 "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "delete", "hqtr@an@linagora.com", "INBOX");
 
         assertThat(exitCode).isEqualTo(1);
-        assertThat(errorStreamCaptor.toString()).contains("Attempt to delete an invalid mailbox");
+        assertThat(errorStreamCaptor.toString()).contains("Invalid arguments supplied in the user request");
     }
 
     @Test
