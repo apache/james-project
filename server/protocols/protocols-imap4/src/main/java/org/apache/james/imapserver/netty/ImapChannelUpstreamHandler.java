@@ -313,11 +313,11 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         String username = retrieveUsername(imapSession);
         try (Closeable closeable = mdc(imapSession).build()) {
             if (cause instanceof SocketException) {
-                LOGGER.info("Socket exception encountered for user {}: {}", username, cause.getMessage());
+                logExpectedException("Socket exception encountered for user " + username, cause);
             } else if (isSslHandshkeException(cause)) {
-                LOGGER.info("SSH handshake rejected {}", cause.getMessage());
+                logExpectedException("SSL handshake rejected", cause);
             } else if (isNotSslRecordException(cause)) {
-                LOGGER.info("Not an SSL record {}", cause.getMessage());
+                logExpectedException("Not an SSL record", cause);
             } else if (!(cause instanceof ClosedChannelException)) {
                 LOGGER.error("Error while processing imap request", cause);
             }
@@ -348,6 +348,14 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             } else {
                 manageUnknownError(ctx);
             }
+        }
+    }
+
+    private void logExpectedException(String message, Throwable cause) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(message, cause);
+        } else {
+            LOGGER.info("{}: {}", message, cause.getMessage());
         }
     }
 
