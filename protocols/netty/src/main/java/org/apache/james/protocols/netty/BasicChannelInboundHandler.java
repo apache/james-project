@@ -282,18 +282,26 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                     transport.writeResponse(Response.DISCONNECT, session);
                 }
                 if (cause instanceof SocketException) {
-                    LOGGER.info("Socket exception encountered: {}", cause.getMessage());
+                    logExpectedException("Socket exception encountered", cause);
                 } else if (isSslHandshkeException(cause)) {
-                    LOGGER.info("SSH handshake rejected {}", cause.getMessage());
+                    logExpectedException("SSL handshake rejected", cause);
                 } else if (isNotSslRecordException(cause)) {
-                    LOGGER.info("Not an SSL record {}", cause.getMessage());
+                    logExpectedException("Not an SSL record", cause);
                 } else if (isSslException(cause)) {
-                    LOGGER.info("Encountered SSL exception: {}", cause.getMessage());
+                    logExpectedException("Encountered SSL exception", cause);
                 } else if (!(cause instanceof ClosedChannelException)) {
                     LOGGER.error("Unable to process request", cause);
                 }
                 ctx.close();
             }
+        }
+    }
+
+    private void logExpectedException(String message, Throwable cause) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(message, cause);
+        } else {
+            LOGGER.info("{}: {}", message, cause.getMessage());
         }
     }
 
