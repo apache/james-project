@@ -30,7 +30,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
-import org.eclipse.jetty.http.HttpStatus;
+import org.apache.james.webadmin.utils.Parsers;
 
 import spark.Request;
 
@@ -44,15 +44,11 @@ public class SubscribeAllRequestToTask extends TaskFromRequestRegistry.TaskRegis
     }
 
     private static Task toTask(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, UsersRepository usersRepository, Request request) throws UsersRepositoryException {
-        Username username = Username.of(request.params("username"));
+        Username username = Parsers.parseUsername(request.params("username"));
         if (usersRepository.contains(username)) {
             return new SubscribeAllTask(mailboxManager, subscriptionManager, username);
         }
 
-        throw ErrorResponder.builder()
-            .type(ErrorResponder.ErrorType.NOT_FOUND)
-            .statusCode(HttpStatus.NOT_FOUND_404)
-            .message(String.format("User '%s' does not exist", username.asString()))
-            .haltError();
+        throw ErrorResponder.notFound("User '%s' does not exist", username.asString());
     }
 }

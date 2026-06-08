@@ -40,6 +40,7 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
+import org.apache.james.webadmin.utils.Parsers;
 import org.apache.james.webadmin.utils.Responses;
 import org.apache.james.webadmin.validation.QuotaDTOValidator;
 import org.apache.james.webadmin.validation.Quotas;
@@ -189,27 +190,17 @@ public class DomainQuotaRoutes implements Routes {
                 .message("Domain Quota configuration not supported when virtual hosting is desactivated. Please use global quota configuration instead")
                 .haltError();
         }
+        Domain domain = Parsers.parseDomain(request.params(DOMAIN));
         try {
-            Domain domain = Domain.of(request.params(DOMAIN));
             if (!domainList.containsDomain(domain)) {
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorType.NOT_FOUND)
-                    .message("Domain not found")
-                    .haltError();
+                throw ErrorResponder.notFound("Domain not found");
             }
             return domain;
         } catch (DomainListException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorType.NOT_FOUND)
-                .cause(e)
-                .haltError();
-        } catch (IllegalArgumentException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid domain")
+                .message("Domain not found")
                 .cause(e)
                 .haltError();
         }

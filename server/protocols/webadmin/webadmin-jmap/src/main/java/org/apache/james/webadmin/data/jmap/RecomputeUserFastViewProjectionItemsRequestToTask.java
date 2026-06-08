@@ -27,7 +27,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.utils.ErrorResponder;
-import org.eclipse.jetty.http.HttpStatus;
+import org.apache.james.webadmin.utils.Parsers;
 
 import spark.Request;
 
@@ -41,15 +41,11 @@ public class RecomputeUserFastViewProjectionItemsRequestToTask extends TaskFromR
     }
 
     private static Task toTask(MessageFastViewProjectionCorrector corrector, UsersRepository usersRepository, Request request) throws UsersRepositoryException {
-        Username username = Username.of(request.params("username"));
+        Username username = Parsers.parseUsername(request.params("username"));
         if (usersRepository.contains(username)) {
             return new RecomputeUserFastViewProjectionItemsTask(corrector, RunningOptionsParser.parse(request), username);
         }
 
-        throw ErrorResponder.builder()
-            .type(ErrorResponder.ErrorType.NOT_FOUND)
-            .statusCode(HttpStatus.NOT_FOUND_404)
-            .message("User '" + username.asString() + "' does not exists")
-            .haltError();
+        throw ErrorResponder.notFound("User '%s' does not exists", username.asString());
     }
 }

@@ -42,6 +42,7 @@ import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Parsers;
 import org.apache.james.webadmin.validation.MailboxName;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
@@ -158,7 +159,7 @@ public class RunRulesOnMailboxRoutes implements Routes {
     }
 
     private Username getUsernameParam(Request request) {
-        return Username.of(request.params(USER_NAME));
+        return Parsers.parseUsername(request.params(USER_NAME));
     }
 
     private void usernamePreconditions(Username username) throws UsersRepositoryException {

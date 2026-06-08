@@ -39,8 +39,8 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Parsers;
 import org.apache.james.webadmin.utils.Responses;
-import org.eclipse.jetty.http.HttpStatus;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -120,13 +120,9 @@ public class VacationRoutes implements Routes {
     }
 
     private void testUserExists(Request request) {
-        Username username = Username.of(request.params(USER_NAME));
+        Username username = Parsers.parseUsername(request.params(USER_NAME));
         if (!isExistingUser(username)) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorResponder.ErrorType.NOT_FOUND)
-                .message("The user '" + username.asString() + "' does not exist")
-                .haltError();
+            throw ErrorResponder.notFound("The user '%s' does not exist", username.asString());
         }
     }
 

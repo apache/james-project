@@ -42,6 +42,7 @@ import org.apache.james.webadmin.data.jmap.dto.UserIdentity;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.ParametersExtractor;
+import org.apache.james.webadmin.utils.Parsers;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -221,15 +222,11 @@ public class UserIdentityRoutes implements Routes {
     }
 
     private HaltException throw404(String message) {
-        throw ErrorResponder.builder()
-            .statusCode(HttpStatus.NOT_FOUND_404)
-            .type(ErrorResponder.ErrorType.NOT_FOUND)
-            .message(message)
-            .haltError();
+        throw ErrorResponder.notFound(message);
     }
 
     private Username extractUsername(Request request) {
-        return Username.of(request.params(USER_NAME));
+        return Parsers.parseUsername(request.params(USER_NAME));
     }
 
 }

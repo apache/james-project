@@ -141,10 +141,6 @@ public class SieveScriptRoutes implements Routes {
     }
 
     private HaltException throw404(String message) {
-        throw ErrorResponder.builder()
-            .statusCode(HttpStatus.NOT_FOUND_404)
-            .type(ErrorResponder.ErrorType.NOT_FOUND)
-            .message(message)
-            .haltError();
+        throw ErrorResponder.notFound(message);
     }
 }
