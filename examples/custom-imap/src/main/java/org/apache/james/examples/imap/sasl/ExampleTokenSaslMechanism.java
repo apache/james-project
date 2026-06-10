@@ -33,6 +33,7 @@ import org.apache.james.protocols.api.sasl.SaslStep;
 
 public class ExampleTokenSaslMechanism implements SaslMechanism {
     public static final String NAME = "EXAMPLE-TOKEN";
+    public static final String CONTINUATION_PROMPT = "Go ahead";
 
     @Override
     public String name() {
@@ -75,7 +76,8 @@ public class ExampleTokenSaslMechanism implements SaslMechanism {
         public SaslStep firstStep() {
             return initialResponse
                 .map(this::authenticate)
-                .orElseGet(() -> new SaslStep.Challenge(Optional.empty()));
+                .orElseGet(() -> new SaslStep.Challenge(Optional.of(CONTINUATION_PROMPT
+                    .getBytes(StandardCharsets.UTF_8))));
         }
 
         @Override

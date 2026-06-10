@@ -29,11 +29,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanism;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.TestIMAPClient;
@@ -43,6 +45,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CustomSaslMechanismTest {
     private static final String EXPECTED_TOKEN = "secret-token";
+    private static final String LOCALHOST_IP = "127.0.0.1";
 
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
@@ -76,6 +79,26 @@ class CustomSaslMechanismTest {
             .contains("OK AUTHENTICATE completed.");
         assertThat(client.sendCommand("PING"))
             .contains("PONG");
+    }
+
+    @Test
+    void imapServerShouldAuthenticateCustomSaslMechanismUsingContinuation(GuiceJamesServer server) throws IOException {
+        IMAPClient client = new IMAPClient();
+        client.connect(LOCALHOST_IP, imapPort(server));
+        try {
+            client.sendCommand("AUTHENTICATE EXAMPLE-TOKEN");
+            assertThat(client.getReplyString()).contains("+ " + encode(ExampleTokenSaslMechanism.CONTINUATION_PROMPT));
+
+            client.sendData(encode(EXPECTED_TOKEN));
+            assertThat(client.getReplyString())
+                .contains("OK AUTHENTICATE completed.");
+
+            client.sendCommand("PING");
+            assertThat(client.getReplyString())
+                .contains("PONG");
+        } finally {
+            client.disconnect();
+        }
     }
 
     @Test

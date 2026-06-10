@@ -99,3 +99,22 @@ A03 PING
 * PONG
 A03 OK PING completed.
 ```
+
+The custom SASL mechanism also supports a continuation when the client does not send
+the initial response in the `AUTHENTICATE` command. The continuation payload is
+base64-encoded by IMAP, so `R28gYWhlYWQ` decodes to `Go ahead`:
+
+```bash
+telnet localhost 143
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+* OK JAMES IMAP4rev1 Server james.local is ready.
+A01 AUTHENTICATE EXAMPLE-TOKEN
++ R28gYWhlYWQ
+c2VjcmV0LXRva2Vu
+A01 OK AUTHENTICATE completed.
+A02 PING
+* PONG
+A02 OK PING completed.
+```
