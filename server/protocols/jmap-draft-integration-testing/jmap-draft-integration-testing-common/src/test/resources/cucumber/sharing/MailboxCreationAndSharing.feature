@@ -26,7 +26,8 @@ Feature: Mailbox creation and sharing
     And "alice@domain.tld" has a mailbox "shared"
     And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "aeilrwt" rights
 
-  Scenario: A sharee should not be able to update shared mailbox rights
+  Scenario: A sharee without administer right should not be able to update shared mailbox rights
+    Given "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "eilrwt" rights
     When "bob@domain.tld" shares "alice@domain.tld" delegated mailbox "shared" with rights "aeilrwt" with "bob@domain.tld"
     Then mailbox "shared" owned by "alice@domain.tld" is not updated
 
