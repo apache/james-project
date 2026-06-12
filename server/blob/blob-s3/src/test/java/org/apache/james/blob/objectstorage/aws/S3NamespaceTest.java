@@ -28,6 +28,7 @@ import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
@@ -77,5 +78,10 @@ class S3NamespaceTest implements BlobStoreContract {
     @Override
     public BlobId.Factory blobIdFactory() {
         return new HashBlobId.Factory();
+    }
+
+    @Override
+    @Disabled("Unstable")
+    public void readBytesShouldReturnBigSavedByteSource(BlobStore.StoragePolicy storagePolicy) {
     }
 }

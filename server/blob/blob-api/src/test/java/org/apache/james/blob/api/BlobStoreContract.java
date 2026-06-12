@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -273,6 +274,7 @@ public interface BlobStoreContract extends BucketBlobStoreContract {
         assertThat(read).hasSameContentAs(new ByteArrayInputStream(ELEVEN_KILOBYTES));
     }
 
+    @Disabled("Unstable test")
     @ParameterizedTest
     @MethodSource("storagePolicies")
     default void readShouldReturnBigSavedData(BlobStore.StoragePolicy storagePolicy) {

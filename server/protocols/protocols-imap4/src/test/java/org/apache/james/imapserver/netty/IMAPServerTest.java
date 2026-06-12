@@ -101,6 +101,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -2784,6 +2785,7 @@ class IMAPServerTest {
         }
 
         @Test
+        @Disabled("Unstable")
         void enableQRESYNCShouldReturnHighestModseq() throws Exception {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 

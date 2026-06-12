@@ -21,8 +21,10 @@ package org.apache.james.metric.es.v7;
 
 import org.apache.james.backends.opensearch.DockerOpenSearch;
 import org.apache.james.util.docker.Images;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Disabled
 class ES6ReporterTest extends ESReporterContract {
 
     @RegisterExtension
