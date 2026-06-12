@@ -25,11 +25,18 @@ import static org.apache.james.jmap.JMAPTestingConstants.BOB_PASSWORD;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.function.Predicate;
 
-import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
@@ -44,6 +51,45 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CustomSaslMechanismTest {
+    private static class ClientConnection implements AutoCloseable {
+        private final Socket socket;
+        private final BufferedReader reader;
+        private final BufferedWriter writer;
+
+        private ClientConnection(String host, int port) throws IOException {
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(host, port));
+            socket.setSoTimeout(5_000);
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
+            writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII));
+        }
+
+        private void writeLine(String line) throws IOException {
+            writer.write(line);
+            writer.write("\r\n");
+            writer.flush();
+        }
+
+        private String readUntil(Predicate<String> condition) throws IOException {
+            StringBuilder response = new StringBuilder();
+            while (true) {
+                String line = reader.readLine();
+                if (line == null) {
+                    throw new EOFException("Connection closed while waiting for IMAP response");
+                }
+                response.append(line).append("\n");
+                if (condition.test(line)) {
+                    return response.toString();
+                }
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            socket.close();
+        }
+    }
+
     private static final String EXPECTED_TOKEN = "secret-token";
     private static final String LOCALHOST_IP = "127.0.0.1";
 
@@ -83,21 +129,22 @@ class CustomSaslMechanismTest {
 
     @Test
     void imapServerShouldAuthenticateCustomSaslMechanismUsingContinuation(GuiceJamesServer server) throws IOException {
-        IMAPClient client = new IMAPClient();
-        client.connect(LOCALHOST_IP, imapPort(server));
-        try {
-            client.sendCommand("AUTHENTICATE EXAMPLE-TOKEN");
-            assertThat(client.getReplyString()).contains("+ " + encode(ExampleTokenSaslMechanism.CONTINUATION_PROMPT));
+        try (ClientConnection client = clientConnection(server)) {
+            client.readUntil(line -> line.startsWith("* OK"));
 
-            client.sendData(encode(EXPECTED_TOKEN));
-            assertThat(client.getReplyString())
-                .contains("OK AUTHENTICATE completed.");
+            client.writeLine("A01 AUTHENTICATE EXAMPLE-TOKEN");
+            assertThat(client.readUntil(line -> line.startsWith("+")))
+                .contains("+ " + encode(ExampleTokenSaslMechanism.CONTINUATION_PROMPT));
 
-            client.sendCommand("PING");
-            assertThat(client.getReplyString())
+            client.writeLine(encode(EXPECTED_TOKEN));
+            String authenticationResponse = client.readUntil(line -> line.startsWith("A01"));
+            assertThat(authenticationResponse)
+                .contains("OK AUTHENTICATE completed.")
+                .doesNotContain("+ " + encode(ExampleTokenSaslMechanism.CONTINUATION_PROMPT));
+
+            client.writeLine("A02 PING");
+            assertThat(client.readUntil(line -> line.startsWith("A02")))
                 .contains("PONG");
-        } finally {
-            client.disconnect();
         }
     }
 
@@ -120,6 +167,10 @@ class CustomSaslMechanismTest {
 
     private int imapPort(GuiceJamesServer server) {
         return server.getProbe(ImapGuiceProbe.class).getImapPort();
+    }
+
+    private ClientConnection clientConnection(GuiceJamesServer server) throws IOException {
+        return new ClientConnection(LOCALHOST_IP, imapPort(server));
     }
 
     private String encode(String token) {
