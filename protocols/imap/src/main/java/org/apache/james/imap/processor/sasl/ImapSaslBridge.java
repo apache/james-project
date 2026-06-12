@@ -26,7 +26,6 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.protocols.api.sasl.SaslExchange;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
-import org.apache.james.protocols.api.sasl.SaslProtocol;
 import org.apache.james.protocols.api.sasl.SaslStep;
 
 public class ImapSaslBridge {
@@ -34,8 +33,7 @@ public class ImapSaslBridge {
      * Converts an IMAP AUTHENTICATE request into a protocol-neutral SASL initial request.
      */
     public SaslInitialRequest initialRequest(String mechanismName, Optional<String> initialClientResponse) {
-        return new SaslInitialRequest(SaslProtocol.IMAP, mechanismName,
-            initialClientResponse.map(this::decodeInitialClientResponse));
+        return new SaslInitialRequest(mechanismName, initialClientResponse.map(this::decodeInitialClientResponse));
     }
 
     /**
@@ -43,6 +41,15 @@ public class ImapSaslBridge {
      */
     public String continuation(SaslStep.Challenge challenge) {
         return challenge.payload()
+            .map(Base64.getEncoder()::encodeToString)
+            .orElse("");
+    }
+
+    /**
+     * Encodes final SASL server data as an IMAP continuation payload.
+     */
+    public String successData(SaslStep.Success success) {
+        return success.serverData()
             .map(Base64.getEncoder()::encodeToString)
             .orElse("");
     }
@@ -59,11 +66,21 @@ public class ImapSaslBridge {
     }
 
     /**
+     * Detects the empty IMAP client response used to acknowledge final SASL server data.
+     */
+    public boolean isEmptyClientResponse(byte[] line) {
+        return stripTrailingCrlf(line).isEmpty();
+    }
+
+    /**
      * Aborts and closes an active SASL exchange.
      */
     public void abort(SaslExchange exchange) {
-        exchange.abort();
-        exchange.close();
+        try {
+            exchange.abort();
+        } finally {
+            exchange.close();
+        }
     }
 
     /**

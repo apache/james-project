@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor.sasl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -31,7 +32,6 @@ import org.apache.james.core.Username;
 import org.apache.james.protocols.api.sasl.SaslExchange;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
-import org.apache.james.protocols.api.sasl.SaslProtocol;
 import org.apache.james.protocols.api.sasl.SaslStep;
 import org.junit.jupiter.api.Test;
 
@@ -71,13 +71,41 @@ class ImapSaslBridgeTest {
         }
     }
 
+    private static class ThrowingAbortExchange implements SaslExchange {
+        private final List<String> lifecycleEvents;
+
+        private ThrowingAbortExchange() {
+            this.lifecycleEvents = new ArrayList<>();
+        }
+
+        @Override
+        public SaslStep firstStep() {
+            return new SaslStep.Challenge(Optional.of(bytes("challenge")));
+        }
+
+        @Override
+        public SaslStep onResponse(byte[] clientResponse) {
+            return new SaslStep.Success(IDENTITY, Optional.empty());
+        }
+
+        @Override
+        public void abort() {
+            lifecycleEvents.add("abort");
+            throw new IllegalStateException("boom");
+        }
+
+        @Override
+        public void close() {
+            lifecycleEvents.add("close");
+        }
+    }
+
     @Test
     void initialRequestShouldDecodeInitialClientResponse() {
         String encodedInitialResponse = Base64.getEncoder().encodeToString(bytes("initial"));
 
         SaslInitialRequest request = testee.initialRequest("PLAIN", Optional.of(encodedInitialResponse));
 
-        assertThat(request.protocol()).isEqualTo(SaslProtocol.IMAP);
         assertThat(request.mechanismName()).isEqualTo("PLAIN");
         assertThat(request.initialResponse()).hasValueSatisfying(value -> assertThat(value).containsExactly(bytes("initial")));
     }
@@ -105,6 +133,25 @@ class ImapSaslBridgeTest {
         String continuation = testee.continuation(challenge);
 
         assertThat(continuation).isEmpty();
+    }
+
+    @Test
+    void successDataShouldBase64EncodePayload() {
+        SaslStep.Success success = new SaslStep.Success(IDENTITY, Optional.of(bytes("server-data")));
+
+        String successData = testee.successData(success);
+
+        assertThat(successData).isEqualTo(Base64.getEncoder().encodeToString(bytes("server-data")));
+    }
+
+    @Test
+    void isEmptyClientResponseShouldDetectEmptyLine() {
+        assertThat(testee.isEmptyClientResponse("\r\n".getBytes(StandardCharsets.US_ASCII))).isTrue();
+    }
+
+    @Test
+    void isEmptyClientResponseShouldRejectNonEmptyLine() {
+        assertThat(testee.isEmptyClientResponse("data\r\n".getBytes(StandardCharsets.US_ASCII))).isFalse();
     }
 
     @Test
@@ -151,6 +198,16 @@ class ImapSaslBridgeTest {
         RecordingExchange exchange = new RecordingExchange();
 
         testee.abort(exchange);
+
+        assertThat(exchange.lifecycleEvents).containsExactly("abort", "close");
+    }
+
+    @Test
+    void abortShouldCloseExchangeWhenAbortThrows() {
+        ThrowingAbortExchange exchange = new ThrowingAbortExchange();
+
+        assertThatThrownBy(() -> testee.abort(exchange))
+            .isInstanceOf(IllegalStateException.class);
 
         assertThat(exchange.lifecycleEvents).containsExactly("abort", "close");
     }

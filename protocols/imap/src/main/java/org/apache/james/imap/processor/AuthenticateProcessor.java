@@ -28,27 +28,23 @@ import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
-import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.AuthenticateRequest;
 import org.apache.james.imap.message.request.IRAuthenticateRequest;
 import org.apache.james.imap.message.response.AuthenticateResponse;
-import org.apache.james.imap.processor.sasl.ImapBearerTokenSaslAuthenticationServiceFactory;
-import org.apache.james.imap.processor.sasl.ImapPasswordSaslAuthenticationServiceFactory;
 import org.apache.james.imap.processor.sasl.ImapSaslBridge;
-import org.apache.james.imap.processor.sasl.ImapSaslSessionContext;
+import org.apache.james.jwt.OidcJwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.sasl.OauthBearerSaslMechanism;
 import org.apache.james.protocols.api.sasl.PlainSaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslCredentials;
 import org.apache.james.protocols.api.sasl.SaslExchange;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
-import org.apache.james.protocols.api.sasl.SaslMechanismRegistry;
-import org.apache.james.protocols.api.sasl.SaslProtocol;
 import org.apache.james.protocols.api.sasl.SaslStep;
 import org.apache.james.protocols.api.sasl.XOauth2SaslMechanism;
 import org.apache.james.util.MDCBuilder;
@@ -74,14 +70,14 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         new XOauth2SaslMechanism());
 
     private final ImapSaslBridge saslBridge;
-    private SaslMechanismRegistry saslMechanisms;
+    private ImmutableList<SaslMechanism> saslMechanisms;
 
     @Inject
     public AuthenticateProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                                  MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(AuthenticateRequest.class, mailboxManager, factory, metricFactory, pathConverterFactory);
         this.saslBridge = new ImapSaslBridge();
-        this.saslMechanisms = defaultSaslMechanisms();
+        this.saslMechanisms = DEFAULT_SASL_MECHANISMS;
     }
 
     @Override
@@ -91,8 +87,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
 
     @Override
     protected void processRequest(AuthenticateRequest request, ImapSession session, final Responder responder) {
-        ImapSaslSessionContext context = buildContext(session);
-        Optional<SaslMechanism> mechanism = saslMechanisms.find(request.getAuthType(), SaslProtocol.IMAP);
+        Optional<SaslMechanism> mechanism = findMechanism(request.getAuthType());
 
         if (mechanism.isEmpty()) {
             LOGGER.debug("Unsupported authentication mechanism '{}'", request.getAuthType());
@@ -100,15 +95,15 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
             return;
         }
 
-        if (!mechanism.get().isAvailable(context)) {
+        if (!isAvailable(mechanism.get(), session)) {
             rejectUnavailable(request, responder, mechanism.get());
             return;
         }
 
         try {
             SaslInitialRequest initialRequest = saslBridge.initialRequest(request.getAuthType(), initialClientResponse(request));
-            SaslExchange exchange = mechanism.get().start(initialRequest, context);
-            handleFirstStep(exchange, exchange.firstStep(), context, session, request, responder);
+            SaslExchange exchange = mechanism.get().start(initialRequest);
+            handleFirstStep(exchange, firstStep(exchange), session, request, responder);
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid syntax in AUTHENTICATE initial client response", e);
             authFailure(session, request, responder, HumanReadableText.AUTHENTICATION_FAILED, Optional.empty(),
@@ -118,8 +113,8 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
 
     @Override
     public List<Capability> getImplementedCapabilities(ImapSession session) {
-        ImapSaslSessionContext context = buildContext(session);
-        List<Capability> caps = saslMechanisms.availableFor(SaslProtocol.IMAP, context)
+        List<Capability> caps = saslMechanisms.stream()
+            .filter(mechanism -> isAvailable(mechanism, session))
             .map(mechanism -> Capability.of("AUTH=" + mechanism.name()))
             .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
@@ -135,7 +130,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
             .addToContext("authType", request.getAuthType());
     }
 
-    public void configureSaslMechanisms(SaslMechanismRegistry saslMechanisms) {
+    public void configureSaslMechanisms(ImmutableList<SaslMechanism> saslMechanisms) {
         this.saslMechanisms = saslMechanisms;
     }
 
@@ -146,21 +141,34 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         return Optional.empty();
     }
 
-    private ImapSaslSessionContext buildContext(ImapSession session) {
-        ImapSaslSessionContext context = new ImapSaslSessionContext(session, withAdminUsers());
-        saslMechanisms.initialize(SaslProtocol.IMAP, context);
-        return context;
+    private SaslStep firstStep(SaslExchange exchange) {
+        try {
+            return exchange.firstStep();
+        } catch (RuntimeException e) {
+            saslBridge.close(exchange);
+            throw e;
+        }
     }
 
-    private SaslMechanismRegistry defaultSaslMechanisms() {
-        return new SaslMechanismRegistry(DEFAULT_SASL_MECHANISMS,
-            ImmutableList.of(
-                new ImapPasswordSaslAuthenticationServiceFactory(getMailboxManager()),
-                new ImapBearerTokenSaslAuthenticationServiceFactory(getMailboxManager())));
+    private Optional<SaslMechanism> findMechanism(String mechanismName) {
+        String normalizedName = mechanismName.toUpperCase(Locale.US);
+        return saslMechanisms.stream()
+            .filter(mechanism -> mechanism.name().toUpperCase(Locale.US).equals(normalizedName))
+            .findFirst();
+    }
+
+    private boolean isAvailable(SaslMechanism mechanism, ImapSession session) {
+        if (PlainSaslMechanism.NAME.equalsIgnoreCase(mechanism.name())) {
+            return !session.isPlainAuthDisallowed();
+        }
+        if (OauthBearerSaslMechanism.NAME.equalsIgnoreCase(mechanism.name()) || XOauth2SaslMechanism.NAME.equalsIgnoreCase(mechanism.name())) {
+            return session.supportsOAuth();
+        }
+        return true;
     }
 
     private void rejectUnavailable(AuthenticateRequest request, Responder responder, SaslMechanism mechanism) {
-        if (PlainSaslMechanism.NAME.equals(mechanism.name())) {
+        if (PlainSaslMechanism.NAME.equalsIgnoreCase(mechanism.name())) {
             LOGGER.warn("Plain authentication rejected because it is disabled or not allowed over insecure channel");
             no(request, responder, HumanReadableText.DISABLED_LOGIN);
         } else {
@@ -169,89 +177,252 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         }
     }
 
-    private void handleFirstStep(SaslExchange exchange, SaslStep step, ImapSaslSessionContext context,
-                                 ImapSession session, AuthenticateRequest request, Responder responder) {
+    private void handleFirstStep(SaslExchange exchange, SaslStep step, ImapSession session, AuthenticateRequest request, Responder responder) {
         if (step instanceof SaslStep.Challenge challenge) {
-            session.executeSafely(() -> {
-                responder.respond(new AuthenticateResponse(saslBridge.continuation(challenge)));
-                responder.flush();
-                session.pushLineHandler((requestSession, data) -> Mono.fromRunnable(() -> handleContinuationLine(exchange, context, requestSession, request, responder, data))
-                    .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-                    .then());
-            });
+            handleInitialChallenge(exchange, challenge, session, request, responder);
             return;
         }
-        handleTerminalStep(exchange, step, context, session, request, responder);
+        if (step instanceof SaslStep.Success success && success.serverData().isPresent()) {
+            handleSuccessWithServerData(exchange, success, session, request, responder);
+            return;
+        }
+        handleTerminalStep(exchange, step, session, request, responder);
     }
 
-    private void handleContinuationLine(SaslExchange exchange, ImapSaslSessionContext context,
-                                        ImapSession session, AuthenticateRequest request, Responder responder, byte[] data) {
-        if (saslBridge.isAbort(data)) {
-            saslBridge.abort(exchange);
-            session.popLineHandler();
+    private void handleInitialChallenge(SaslExchange exchange, SaslStep.Challenge challenge,
+                                        ImapSession session, AuthenticateRequest request, Responder responder) {
+        pushContinuationHandlerAndRespond(exchange, challenge, session, request, responder);
+    }
+
+    private void pushContinuationHandlerAndRespond(SaslExchange exchange, SaslStep.Challenge challenge,
+                                                   ImapSession session, AuthenticateRequest request, Responder responder) {
+        pushContinuationHandler(exchange, session, request, responder);
+        respondActiveContinuation(exchange, session, () ->
+            responder.respond(new AuthenticateResponse(saslBridge.continuation(challenge))));
+    }
+
+    private void pushContinuationHandler(SaslExchange exchange, ImapSession session, AuthenticateRequest request, Responder responder) {
+        try {
+            session.pushLineHandler((requestSession, data) -> Mono.fromRunnable(() -> handleContinuationLine(exchange, requestSession, request, responder, data))
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+                .then());
+        } catch (RuntimeException e) {
+            saslBridge.close(exchange);
+            throw e;
+        }
+    }
+
+    private void handleContinuationLine(SaslExchange exchange, ImapSession session, AuthenticateRequest request, Responder responder, byte[] data) {
+        if (isAbort(exchange, session, data)) {
+            abortActiveContinuation(exchange, session);
             no(request, responder, HumanReadableText.AUTHENTICATION_FAILED);
             responder.flush();
             return;
         }
 
+        nextStep(exchange, session, request, responder, data)
+            .ifPresent(step -> handleContinuationStep(exchange, step, session, request, responder));
+    }
+
+    private Optional<SaslStep> nextStep(SaslExchange exchange, ImapSession session, AuthenticateRequest request, Responder responder, byte[] data) {
         try {
-            SaslStep step = saslBridge.onClientResponse(exchange, data);
-            if (step instanceof SaslStep.Challenge challenge) {
-                responder.respond(new AuthenticateResponse(saslBridge.continuation(challenge)));
-                responder.flush();
-            } else {
-                session.popLineHandler();
-                handleTerminalStep(exchange, step, context, session, request, responder);
-                responder.flush();
-            }
+            return Optional.of(saslBridge.onClientResponse(exchange, data));
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid syntax in AUTHENTICATE client response", e);
-            session.popLineHandler();
-            saslBridge.close(exchange);
+            closeActiveContinuation(exchange, session);
             authFailure(session, request, responder, HumanReadableText.AUTHENTICATION_FAILED, Optional.empty(),
                 Optional.empty(), "Malformed authentication command.");
             responder.flush();
+            return Optional.empty();
+        } catch (RuntimeException e) {
+            closeActiveContinuation(exchange, session);
+            throw e;
         }
     }
 
-    private void handleTerminalStep(SaslExchange exchange, SaslStep step, ImapSaslSessionContext context,
-                                    ImapSession session, AuthenticateRequest request, Responder responder) {
-        if (step instanceof SaslStep.Success success) {
-            handleSuccess(context, session, request, responder, success.identity());
-        } else if (step instanceof SaslStep.Failure failure) {
-            handleFailure(context, session, request, responder, failure.reason());
-        }
-        saslBridge.close(exchange);
-    }
-
-    private void handleSuccess(ImapSaslSessionContext context, ImapSession session, AuthenticateRequest request, Responder responder, SaslIdentity identity) {
-        context.mailboxSession()
-            .ifPresentOrElse(mailboxSession -> authSuccess(session, mailboxSession, request, responder, successLog(request, identity)),
-                () -> handleMissingMailboxSession(session, request, responder, identity));
-    }
-
-    private void handleMissingMailboxSession(ImapSession session, AuthenticateRequest request, Responder responder, SaslIdentity identity) {
-        LOGGER.error("SASL mechanism {} returned Success without creating a mailbox session for authenticationId={} authorizationId={}",
-            request.getAuthType(), identity.authenticationId(), identity.authorizationId());
-        authFailure(session, request, responder, HumanReadableText.AUTHENTICATION_FAILED, Optional.of(identity.authenticationId()),
-            Optional.of(identity.authorizationId()), "Authentication failed.");
-    }
-
-    private String successLog(AuthenticateRequest request, SaslIdentity identity) {
-        String authType = request.getAuthType().toUpperCase(Locale.US);
-        if (!identity.authenticationId().equals(identity.authorizationId())) {
-            return "Authentication with delegation succeeded using " + authType + ".";
-        }
-        return authType + " authentication succeeded.";
-    }
-
-    private void handleFailure(ImapSaslSessionContext context, ImapSession session, ImapRequest request, Responder responder, String reason) {
-        if (context.hasProcessingFailure()) {
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+    private void handleContinuationStep(SaslExchange exchange, SaslStep step, ImapSession session, AuthenticateRequest request, Responder responder) {
+        if (step instanceof SaslStep.Challenge challenge) {
+            try {
+                responder.respond(new AuthenticateResponse(saslBridge.continuation(challenge)));
+                responder.flush();
+            } catch (RuntimeException e) {
+                closeActiveContinuation(exchange, session);
+                throw e;
+            }
             return;
         }
-        context.failureDetails()
-            .ifPresentOrElse(failure -> authFailure(session, request, responder, failure.text(), failure.username(), failure.assumedUser(), failure.reason()),
-                () -> authFailure(session, request, responder, HumanReadableText.AUTHENTICATION_FAILED, Optional.empty(), Optional.empty(), reason));
+
+        popActiveContinuation(exchange, session);
+        if (step instanceof SaslStep.Success success && success.serverData().isPresent()) {
+            handleSuccessWithServerData(exchange, success, session, request, responder);
+            return;
+        }
+
+        handleTerminalStep(exchange, step, session, request, responder);
+        responder.flush();
+    }
+
+    private void respondActiveContinuation(SaslExchange exchange, ImapSession session, Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (RuntimeException e) {
+            closeActiveContinuation(exchange, session);
+            throw e;
+        }
+    }
+
+    private boolean isAbort(SaslExchange exchange, ImapSession session, byte[] data) {
+        try {
+            return saslBridge.isAbort(data);
+        } catch (RuntimeException e) {
+            closeActiveContinuation(exchange, session);
+            throw e;
+        }
+    }
+
+    private boolean isEmptyClientResponse(SaslExchange exchange, ImapSession session, byte[] data) {
+        try {
+            return saslBridge.isEmptyClientResponse(data);
+        } catch (RuntimeException e) {
+            closeActiveContinuation(exchange, session);
+            throw e;
+        }
+    }
+
+    private void closeActiveContinuation(SaslExchange exchange, ImapSession session) {
+        try {
+            session.popLineHandler();
+        } finally {
+            saslBridge.close(exchange);
+        }
+    }
+
+    private void abortActiveContinuation(SaslExchange exchange, ImapSession session) {
+        try {
+            session.popLineHandler();
+        } finally {
+            saslBridge.abort(exchange);
+        }
+    }
+
+    private void popActiveContinuation(SaslExchange exchange, ImapSession session) {
+        try {
+            session.popLineHandler();
+        } catch (RuntimeException e) {
+            saslBridge.close(exchange);
+            throw e;
+        }
+    }
+
+    private void handleSuccessWithServerData(SaslExchange exchange, SaslStep.Success success, ImapSession session,
+                                             AuthenticateRequest request, Responder responder) {
+        pushSuccessDataAcknowledgementHandler(exchange, success, session, request, responder);
+        respondActiveContinuation(exchange, session, () -> {
+            responder.respond(new AuthenticateResponse(saslBridge.successData(success)));
+            responder.flush();
+        });
+    }
+
+    private void pushSuccessDataAcknowledgementHandler(SaslExchange exchange, SaslStep.Success success, ImapSession session,
+                                                       AuthenticateRequest request, Responder responder) {
+        try {
+            session.pushLineHandler((requestSession, data) -> Mono.fromRunnable(() -> handleSuccessDataAcknowledgement(exchange, success, requestSession, request, responder, data))
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+                .then());
+        } catch (RuntimeException e) {
+            saslBridge.close(exchange);
+            throw e;
+        }
+    }
+
+    private void handleSuccessDataAcknowledgement(SaslExchange exchange, SaslStep.Success success, ImapSession session,
+                                                  AuthenticateRequest request, Responder responder, byte[] data) {
+        if (isAbort(exchange, session, data)) {
+            abortActiveContinuation(exchange, session);
+            no(request, responder, HumanReadableText.AUTHENTICATION_FAILED);
+            responder.flush();
+            return;
+        }
+        if (!isEmptyClientResponse(exchange, session, data)) {
+            closeActiveContinuation(exchange, session);
+            authFailure(session, request, responder, HumanReadableText.AUTHENTICATION_FAILED, Optional.empty(),
+                Optional.empty(), "Malformed authentication command.");
+            responder.flush();
+            return;
+        }
+
+        popActiveContinuation(exchange, session);
+        handleTerminalStep(exchange, success, session, request, responder);
+        responder.flush();
+    }
+
+    private void handleTerminalStep(SaslExchange exchange, SaslStep step, ImapSession session, AuthenticateRequest request, Responder responder) {
+        try {
+            if (step instanceof SaslStep.Credentials credentials) {
+                handleCredentials(credentials.credentials(), session, request, responder);
+            } else if (step instanceof SaslStep.Success success) {
+                handleSuccess(session, request, responder, success.identity());
+            } else if (step instanceof SaslStep.Failure failure) {
+                authFailure(session, request, responder, HumanReadableText.AUTHENTICATION_FAILED, Optional.empty(), Optional.empty(), failure.reason());
+            }
+        } finally {
+            saslBridge.close(exchange);
+        }
+    }
+
+    private void handleCredentials(SaslCredentials credentials, ImapSession session, AuthenticateRequest request, Responder responder) {
+        if (credentials instanceof SaslCredentials.Password password) {
+            handlePasswordCredentials(password, session, request, responder);
+            return;
+        }
+        if (credentials instanceof SaslCredentials.BearerToken bearerToken) {
+            handleBearerTokenCredentials(bearerToken, session, request, responder);
+        }
+    }
+
+    private void handlePasswordCredentials(SaslCredentials.Password password, ImapSession session, AuthenticateRequest request, Responder responder) {
+        AuthenticationAttempt authenticationAttempt = new AuthenticationAttempt(password.authorizationId(), password.authenticationId(), password.password());
+        if (authenticationAttempt.isDelegation()) {
+            doPasswordAuthWithDelegation(authenticationAttempt, session, request, responder);
+        } else {
+            doPasswordAuth(authenticationAttempt, session, request, responder);
+        }
+    }
+
+    private void handleBearerTokenCredentials(SaslCredentials.BearerToken bearerToken, ImapSession session, AuthenticateRequest request, Responder responder) {
+        session.oidcSaslConfiguration()
+            .ifPresentOrElse(configuration -> new OidcJwtTokenVerifier(configuration).validateToken(bearerToken.token())
+                    .ifPresentOrElse(authenticatedUser -> {
+                        if (!bearerToken.authorizationId().equals(authenticatedUser)) {
+                            doAuthWithDelegation(() -> getMailboxManager()
+                                    .withExtraAuthorizator(withAdminUsers())
+                                    .authenticate(authenticatedUser)
+                                    .as(bearerToken.authorizationId()),
+                                session, request, responder, authenticatedUser, bearerToken.authorizationId());
+                        } else {
+                            authSuccess(session, getMailboxManager().createSystemSession(authenticatedUser), request, responder,
+                                "OAuth authentication succeeded.");
+                        }
+                    }, () -> authFailure(session, request, responder, HumanReadableText.AUTHENTICATION_FAILED, Optional.empty(),
+                        Optional.of(bearerToken.authorizationId()), "OAuth authentication failed.")),
+                () -> authFailure(session, request, responder, HumanReadableText.AUTHENTICATION_FAILED, Optional.empty(),
+                    Optional.of(bearerToken.authorizationId()), "OAuth authentication failed."));
+    }
+
+    private void handleSuccess(ImapSession session, AuthenticateRequest request, Responder responder, SaslIdentity identity) {
+        if (!identity.authenticationId().equals(identity.authorizationId())) {
+            doAuthWithDelegation(() -> getMailboxManager()
+                    .withExtraAuthorizator(withAdminUsers())
+                    .authenticate(identity.authenticationId())
+                    .as(identity.authorizationId()),
+                session, request, responder, identity.authenticationId(), identity.authorizationId());
+            return;
+        }
+        authSuccess(session, getMailboxManager().createSystemSession(identity.authenticationId()), request, responder, successLog(request));
+    }
+
+    private String successLog(AuthenticateRequest request) {
+        String authType = request.getAuthType().toUpperCase(Locale.US);
+        return authType + " authentication succeeded.";
     }
 }
