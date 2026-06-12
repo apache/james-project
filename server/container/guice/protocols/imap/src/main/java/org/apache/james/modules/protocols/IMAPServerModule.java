@@ -19,8 +19,8 @@
 package org.apache.james.modules.protocols;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -69,24 +69,21 @@ import org.apache.james.imap.processor.StatusProcessor;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.base.UnknownRequestProcessor;
 import org.apache.james.imap.processor.fetch.FetchProcessor;
-import org.apache.james.imap.processor.sasl.ImapBearerTokenSaslAuthenticationServiceFactory;
-import org.apache.james.imap.processor.sasl.ImapPasswordSaslAuthenticationServiceFactory;
 import org.apache.james.imapserver.netty.IMAPHealthCheck;
 import org.apache.james.imapserver.netty.IMAPServerFactory;
 import org.apache.james.lifecycle.api.ConfigurationSanitizer;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.protocols.api.sasl.SaslAuthenticationServiceFactory;
+import org.apache.james.modules.SaslMechanismFactories;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
-import org.apache.james.protocols.api.sasl.SaslMechanismLoader;
-import org.apache.james.protocols.api.sasl.SaslMechanismRegistry;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
 import org.apache.james.protocols.lib.netty.CertificateReloadable;
 import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ClassName;
 import org.apache.james.utils.GuiceLoader;
 import org.apache.james.utils.GuiceProbe;
+import org.apache.james.utils.GuiceSaslMechanismResolver;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.KeystoreCreator;
@@ -96,14 +93,19 @@ import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class IMAPServerModule extends AbstractModule {
-    private static final String SASL_AUTHENTICATION_SERVICE_FACTORY_PROVIDER_EXTENSIONS = "auth.saslAuthenticationServiceFactoryProviderExtensions";
+    private static final Key<Map<Class<? extends SaslMechanism>, Provider<SaslMechanismFactory>>> SASL_MECHANISM_FACTORY_PROVIDERS =
+        Key.get(new TypeLiteral<>() {
+        }, SaslMechanismFactories.class);
 
     private static Stream<Pair<Class, AbstractProcessor>> asPairStream(AbstractProcessor p) {
         return p.acceptableClasses()
@@ -116,11 +118,13 @@ public class IMAPServerModule extends AbstractModule {
         bind(UnpooledStatusResponseFactory.class).in(Scopes.SINGLETON);
         bind(StatusResponseFactory.class).to(UnpooledStatusResponseFactory.class);
 
-        bind(CapabilityProcessor.class).in(Scopes.SINGLETON);
-        bind(AuthenticateProcessor.class).in(Scopes.SINGLETON);
+        // Keep CapabilityProcessor, AuthenticateProcessor and EnableProcessor unscoped: IMAP suite loading configures
+        // their SASL mechanisms and capability links from each server configuration.
+        bind(CapabilityProcessor.class);
+        bind(AuthenticateProcessor.class);
+        bind(EnableProcessor.class);
         bind(SelectProcessor.class).in(Scopes.SINGLETON);
         bind(StatusProcessor.class).in(Scopes.SINGLETON);
-        bind(EnableProcessor.class).in(Scopes.SINGLETON);
         bind(DefaultImapSaslMechanismClassNamesProvider.class).to(JamesDefaultImapSaslMechanismClassNamesProvider.class);
         bind(NamespaceSupplier.class).to(NamespaceSupplier.Default.class).in(Scopes.SINGLETON);
         bind(PathConverter.Factory.class).to(PathConverter.Factory.Default.class).in(Scopes.SINGLETON);
@@ -141,22 +145,39 @@ public class IMAPServerModule extends AbstractModule {
     @Singleton
     IMAPServerFactory provideServerFactory(FileSystem fileSystem,
                                            GuiceLoader guiceLoader,
-                                           SaslMechanismLoader saslMechanismLoader,
-                                           Set<ImapSaslAuthenticationServiceFactoryProvider> saslAuthenticationServiceFactoryProviders,
+                                           GuiceSaslMechanismResolver saslMechanismResolver,
                                            DefaultImapSaslMechanismClassNamesProvider defaultImapSaslMechanismClassNamesProvider,
                                            StatusResponseFactory statusResponseFactory,
                                            MetricFactory metricFactory,
                                            GaugeRegistry gaugeRegistry,
                                            ConnectionCheckFactory connectionCheckFactory,
                                            Encryption.Factory encryptionFactory) {
-        IMAPServerFactory factory = new IMAPServerFactory(fileSystem, imapSuiteLoader(guiceLoader, saslMechanismLoader,
-            saslAuthenticationServiceFactoryProviders, defaultImapSaslMechanismClassNamesProvider, statusResponseFactory), metricFactory, gaugeRegistry, connectionCheckFactory);
+        Map<Class<? extends SaslMechanism>, SaslMechanismFactory> saslMechanismFactories = retrieveSaslMechanismFactories(guiceLoader);
+        IMAPServerFactory factory = new IMAPServerFactory(fileSystem, imapSuiteLoader(guiceLoader, saslMechanismResolver,
+            saslMechanismFactories, defaultImapSaslMechanismClassNamesProvider, statusResponseFactory), metricFactory, gaugeRegistry, connectionCheckFactory);
         factory.setEncryptionFactory(encryptionFactory);
         return factory;
     }
 
+    private Map<Class<? extends SaslMechanism>, SaslMechanismFactory> retrieveSaslMechanismFactories(GuiceLoader guiceLoader) {
+        return retrieveSaslMechanismFactoryProviders(guiceLoader)
+            .entrySet()
+            .stream()
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> entry.getValue().get()));
+    }
+
+    private Map<Class<? extends SaslMechanism>, Provider<SaslMechanismFactory>> retrieveSaslMechanismFactoryProviders(GuiceLoader guiceLoader) {
+        try {
+            // Optional extension point: custom modules can contribute SASL mechanism factories through this annotated map.
+            return guiceLoader.getInstance(SASL_MECHANISM_FACTORY_PROVIDERS);
+        } catch (com.google.inject.ConfigurationException e) {
+            // No custom factory map was bound; resolver will fall back to direct SASL mechanism instantiation.
+            return ImmutableMap.of();
+        }
+    }
+
     DefaultProcessor provideClassImapProcessors(ImapPackage imapPackage, GuiceLoader guiceLoader,
-                                                SaslMechanismRegistry saslMechanisms, StatusResponseFactory statusResponseFactory) {
+                                                ImmutableList<SaslMechanism> saslMechanisms, StatusResponseFactory statusResponseFactory) {
         ImmutableMap<Class, ImapProcessor> processors = imapPackage.processors()
             .stream()
             .map(Throwing.function(guiceLoader::instantiate))
@@ -185,7 +206,7 @@ public class IMAPServerModule extends AbstractModule {
         return new DefaultProcessor(processors, new UnknownRequestProcessor(statusResponseFactory));
     }
 
-    private AbstractProcessor configureSaslMechanisms(AbstractProcessor processor, SaslMechanismRegistry saslMechanisms) {
+    private AbstractProcessor configureSaslMechanisms(AbstractProcessor processor, ImmutableList<SaslMechanism> saslMechanisms) {
         if (processor instanceof AuthenticateProcessor authenticateProcessor) {
             authenticateProcessor.configureSaslMechanisms(saslMechanisms);
         }
@@ -209,58 +230,12 @@ public class IMAPServerModule extends AbstractModule {
         return ImapPackage.and(packages);
     }
 
-    private SaslMechanismRegistry retrieveSaslMechanisms(SaslMechanismLoader saslMechanismLoader,
-                                                         GuiceLoader guiceLoader,
-                                                         Set<ImapSaslAuthenticationServiceFactoryProvider> saslAuthenticationServiceFactoryProviders,
-                                                         DefaultImapSaslMechanismClassNamesProvider defaultImapSaslMechanismClassNamesProvider,
-                                                         HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
+    private ImmutableList<SaslMechanism> retrieveSaslMechanisms(GuiceSaslMechanismResolver saslMechanismResolver,
+                                                                Map<Class<? extends SaslMechanism>, SaslMechanismFactory> saslMechanismFactories,
+                                                                DefaultImapSaslMechanismClassNamesProvider defaultImapSaslMechanismClassNamesProvider,
+                                                                HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         ImmutableList<String> mechanismClassNames = retrieveSaslMechanismClassNames(configuration, defaultImapSaslMechanismClassNamesProvider);
-        ImmutableList<SaslMechanism> mechanisms = saslMechanismLoader.load(mechanismClassNames);
-        ImmutableList<SaslAuthenticationServiceFactory<?>> saslAuthenticationServiceFactories =
-            retrieveSaslAuthenticationServiceFactories(configuration, guiceLoader, saslAuthenticationServiceFactoryProviders);
-        return new SaslMechanismRegistry(mechanisms, saslAuthenticationServiceFactories);
-    }
-
-    ImmutableList<SaslAuthenticationServiceFactory<?>> retrieveSaslAuthenticationServiceFactories(HierarchicalConfiguration<ImmutableNode> configuration,
-                                                                                                  GuiceLoader guiceLoader,
-                                                                                                  Set<ImapSaslAuthenticationServiceFactoryProvider> providers) throws ConfigurationException {
-        ImmutableList.Builder<SaslAuthenticationServiceFactory<?>> factories = ImmutableList.builder();
-        ImmutableList<ImapSaslAuthenticationServiceFactoryProvider> allProviders = ImmutableList.<ImapSaslAuthenticationServiceFactoryProvider>builder()
-            .addAll(providers)
-            .addAll(retrieveConfiguredSaslAuthenticationServiceFactoryProviders(configuration, guiceLoader))
-            .build();
-
-        for (ImapSaslAuthenticationServiceFactoryProvider provider : allProviders) {
-            factories.addAll(provider.provide(configuration));
-        }
-        return factories.build();
-    }
-
-    ImmutableList<ImapSaslAuthenticationServiceFactoryProvider> retrieveConfiguredSaslAuthenticationServiceFactoryProviders(HierarchicalConfiguration<ImmutableNode> configuration,
-                                                                                                                             GuiceLoader guiceLoader) throws ConfigurationException {
-        if (!configuration.containsKey(SASL_AUTHENTICATION_SERVICE_FACTORY_PROVIDER_EXTENSIONS)) {
-            return ImmutableList.of();
-        }
-
-        ImmutableList<String> providerClassNames = Arrays.stream(configuration.getStringArray(SASL_AUTHENTICATION_SERVICE_FACTORY_PROVIDER_EXTENSIONS))
-            .flatMap(value -> Arrays.stream(value.split(",")))
-            .map(String::trim)
-            .collect(ImmutableList.toImmutableList());
-
-        if (providerClassNames.isEmpty() || providerClassNames.stream().anyMatch(StringUtils::isBlank)) {
-            throw new ConfigurationException(SASL_AUTHENTICATION_SERVICE_FACTORY_PROVIDER_EXTENSIONS + " must not be blank when configured");
-        }
-
-        ImmutableList.Builder<ImapSaslAuthenticationServiceFactoryProvider> providers = ImmutableList.builder();
-        for (String providerClassName : providerClassNames) {
-            try {
-                ImapSaslAuthenticationServiceFactoryProvider provider = guiceLoader.instantiate(new ClassName(providerClassName));
-                providers.add(provider);
-            } catch (ClassNotFoundException e) {
-                throw new ConfigurationException("Failed to load " + SASL_AUTHENTICATION_SERVICE_FACTORY_PROVIDER_EXTENSIONS + " class " + providerClassName, e);
-            }
-        }
-        return providers.build();
+        return saslMechanismResolver.resolve(mechanismClassNames, configuration, saslMechanismFactories);
     }
 
     ImmutableList<String> retrieveSaslMechanismClassNames(HierarchicalConfiguration<ImmutableNode> configuration,
@@ -281,13 +256,13 @@ public class IMAPServerModule extends AbstractModule {
     }
 
     private ThrowingFunction<HierarchicalConfiguration<ImmutableNode>, ImapSuite> imapSuiteLoader(GuiceLoader guiceLoader,
-                                                                                                  SaslMechanismLoader saslMechanismLoader,
-                                                                                                  Set<ImapSaslAuthenticationServiceFactoryProvider> saslAuthenticationServiceFactoryProviders,
+                                                                                                  GuiceSaslMechanismResolver saslMechanismResolver,
+                                                                                                  Map<Class<? extends SaslMechanism>, SaslMechanismFactory> saslMechanismFactories,
                                                                                                   DefaultImapSaslMechanismClassNamesProvider defaultImapSaslMechanismClassNamesProvider,
                                                                                                   StatusResponseFactory statusResponseFactory) {
         return configuration -> {
             ImapPackage imapPackage = retrievePackages(guiceLoader, configuration);
-            SaslMechanismRegistry saslMechanisms = retrieveSaslMechanisms(saslMechanismLoader, guiceLoader, saslAuthenticationServiceFactoryProviders,
+            ImmutableList<SaslMechanism> saslMechanisms = retrieveSaslMechanisms(saslMechanismResolver, saslMechanismFactories,
                 defaultImapSaslMechanismClassNamesProvider, configuration);
             DefaultProcessor processor = provideClassImapProcessors(imapPackage, guiceLoader, saslMechanisms, statusResponseFactory);
             ImapEncoder encoder = provideImapEncoder(imapPackage, guiceLoader);
@@ -316,13 +291,6 @@ public class IMAPServerModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    ImapSaslAuthenticationServiceFactoryProvider provideDefaultImapSaslAuthenticationServiceFactoryProvider(MailboxManager mailboxManager) {
-        return configuration -> ImmutableList.of(
-            new ImapPasswordSaslAuthenticationServiceFactory(mailboxManager),
-            new ImapBearerTokenSaslAuthenticationServiceFactory(mailboxManager));
-    }
-
-    @ProvidesIntoSet
     InitializationOperation configureImap(ConfigurationProvider configurationProvider, IMAPServerFactory imapServerFactory) {
         return InitilizationOperationBuilder
             .forClass(IMAPServerFactory.class)
@@ -338,6 +306,12 @@ public class IMAPServerModule extends AbstractModule {
     }
 
     private void configureEnable(EnableProcessor enableProcessor, ImmutableMap<Class, ImapProcessor> processorMap) {
+        processorMap.values().stream()
+            .filter(CapabilityProcessor.class::isInstance)
+            .map(CapabilityProcessor.class::cast)
+            .findFirst()
+            .ifPresent(enableProcessor::configureCapabilityProcessor);
+
         processorMap.values().stream()
             .filter(PermitEnableCapabilityProcessor.class::isInstance)
             .map(PermitEnableCapabilityProcessor.class::cast)

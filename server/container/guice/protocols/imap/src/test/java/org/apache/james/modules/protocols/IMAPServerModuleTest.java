@@ -22,165 +22,82 @@ package org.apache.james.modules.protocols;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Optional;
-
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
-import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.protocols.api.sasl.SaslAuthenticationServiceFactory;
-import org.apache.james.protocols.api.sasl.SaslProtocol;
-import org.apache.james.protocols.api.sasl.SaslSessionContext;
-import org.apache.james.utils.ClassName;
-import org.apache.james.utils.GuiceLoader;
-import org.apache.james.utils.NamingScheme;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
 
 class IMAPServerModuleTest {
     private static final JamesDefaultImapSaslMechanismClassNamesProvider JAMES_DEFAULT_PROVIDER = new JamesDefaultImapSaslMechanismClassNamesProvider();
-    private static final GuiceLoader GUICE_LOADER = new GuiceLoader() {
-        @Override
-        public <T> T instantiate(ClassName className) throws ClassNotFoundException {
-            if (className.getName().equals(CustomAuthenticationServiceFactoryProvider.class.getName())) {
-                return (T) new CustomAuthenticationServiceFactoryProvider();
-            }
-            throw new ClassNotFoundException(className.getName());
-        }
-
-        @Override
-        public <T> InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public <T> InvocationPerformer<T> withChildModule(Module childModule) {
-            throw new UnsupportedOperationException();
-        }
-    };
-
-    private record CustomAuthenticationServiceFactoryProvider() implements ImapSaslAuthenticationServiceFactoryProvider {
-        @Override
-        public ImmutableList<SaslAuthenticationServiceFactory<?>> provide(HierarchicalConfiguration<ImmutableNode> configuration) {
-            return ImmutableList.of(new CustomAuthenticationServiceFactory(configuration.getString("auth.custom.realm")));
-        }
-    }
-
-    private record CustomAuthenticationServiceFactory(String realm) implements SaslAuthenticationServiceFactory<CustomAuthenticationService> {
-        @Override
-        public SaslProtocol protocol() {
-            return SaslProtocol.IMAP;
-        }
-
-        @Override
-        public Class<CustomAuthenticationService> serviceType() {
-            return CustomAuthenticationService.class;
-        }
-
-        @Override
-        public Optional<CustomAuthenticationService> create(SaslSessionContext context) {
-            return Optional.of(new CustomAuthenticationService(realm));
-        }
-    }
-
-    private record CustomAuthenticationService(String realm) {
-    }
 
     private final IMAPServerModule testee = new IMAPServerModule();
 
     @Test
     void retrieveSaslMechanismClassNamesShouldReturnDefaultsWhenAbsent() throws Exception {
+        // GIVEN no auth.saslMechanisms configuration
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
 
-        assertThat(testee.retrieveSaslMechanismClassNames(configuration, JAMES_DEFAULT_PROVIDER))
+        // WHEN IMAP resolves its SASL mechanism class names
+        ImmutableList<String> mechanismClassNames = testee.retrieveSaslMechanismClassNames(configuration, JAMES_DEFAULT_PROVIDER);
+
+        // THEN existing James IMAP defaults are preserved
+        assertThat(mechanismClassNames)
             .containsExactly("PlainSaslMechanism", "OauthBearerSaslMechanism", "XOauth2SaslMechanism");
     }
 
     @Test
-    void retrieveSaslMechanismClassNamesShouldUseDefaultProviderWhenAbsent() throws Exception {
+    void retrieveSaslMechanismClassNamesShouldUseConfiguredDefaultProviderOverJamesDefaultProviderWhenAbsent() throws Exception {
+        // GIVEN a non-James default provider configured by Guice.
+        // This allows community custom IMAP packages with custom authentication to provide
+        // their own default SASL list and avoid breaking changes when auth.saslMechanisms is absent.
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
-        DefaultImapSaslMechanismClassNamesProvider defaultProvider = ignored -> ImmutableList.of("com.example.CustomSaslMechanism");
+        DefaultImapSaslMechanismClassNamesProvider communityDefaultProvider = ignored -> ImmutableList.of("com.example.CustomSaslMechanism");
 
-        assertThat(testee.retrieveSaslMechanismClassNames(configuration, defaultProvider))
+        // WHEN auth.saslMechanisms is absent
+        ImmutableList<String> mechanismClassNames = testee.retrieveSaslMechanismClassNames(configuration, communityDefaultProvider);
+
+        // THEN IMAP uses the configured community default provider instead of James default mechanisms
+        assertThat(mechanismClassNames)
             .containsExactly("com.example.CustomSaslMechanism");
     }
 
     @Test
-    void retrieveSaslMechanismClassNamesShouldReturnConfiguredList() throws Exception {
+    void retrieveSaslMechanismClassNamesShouldReturnConfiguredSaslMechanismList() throws Exception {
+        // GIVEN an explicit server-specific SASL mechanism list
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("auth.saslMechanisms",
             "PlainSaslMechanism,com.example.CustomSaslMechanism,PlainSaslMechanism");
 
-        assertThat(testee.retrieveSaslMechanismClassNames(configuration, JAMES_DEFAULT_PROVIDER))
+        // WHEN IMAP resolves configured class names
+        ImmutableList<String> mechanismClassNames = testee.retrieveSaslMechanismClassNames(configuration, JAMES_DEFAULT_PROVIDER);
+
+        // THEN the exact configured order is passed to the resolver
+        assertThat(mechanismClassNames)
             .containsExactly("PlainSaslMechanism", "com.example.CustomSaslMechanism", "PlainSaslMechanism");
     }
 
     @Test
-    void retrieveSaslMechanismClassNamesShouldIgnoreDefaultProviderWhenConfigured() throws Exception {
-        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
-        configuration.addProperty("auth.saslMechanisms", "PlainSaslMechanism");
-        DefaultImapSaslMechanismClassNamesProvider defaultProvider = ignored -> ImmutableList.of("com.example.CustomSaslMechanism");
-
-        assertThat(testee.retrieveSaslMechanismClassNames(configuration, defaultProvider))
-            .containsExactly("PlainSaslMechanism");
-    }
-
-    @Test
     void retrieveSaslMechanismClassNamesShouldRejectBlankConfiguredList() {
+        // GIVEN auth.saslMechanisms is present but blank
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("auth.saslMechanisms", " ");
 
+        // WHEN resolving class names
+        // THEN startup fails instead of silently disabling all mechanisms
         assertThatThrownBy(() -> testee.retrieveSaslMechanismClassNames(configuration, JAMES_DEFAULT_PROVIDER))
             .isInstanceOf(ConfigurationException.class);
     }
 
     @Test
     void retrieveSaslMechanismClassNamesShouldRejectBlankEntry() {
+        // GIVEN auth.saslMechanisms contains a blank entry
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("auth.saslMechanisms", "PlainSaslMechanism,,XOauth2SaslMechanism");
 
+        // WHEN resolving class names
+        // THEN startup fails with an invalid configured list
         assertThatThrownBy(() -> testee.retrieveSaslMechanismClassNames(configuration, JAMES_DEFAULT_PROVIDER))
-            .isInstanceOf(ConfigurationException.class);
-    }
-
-    @Test
-    void extensionSaslMechanismShouldLoadItsOwnAuthConfigurationFromBoundProvider() throws Exception {
-        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
-        configuration.addProperty("auth.custom.realm", "james.example");
-        ImapSaslAuthenticationServiceFactoryProvider provider = new CustomAuthenticationServiceFactoryProvider();
-
-        assertThat(testee.retrieveSaslAuthenticationServiceFactories(configuration, GUICE_LOADER, ImmutableSet.of(provider)))
-            .containsExactly(new CustomAuthenticationServiceFactory("james.example"));
-    }
-
-    @Test
-    void extensionSaslMechanismShouldLoadItsOwnAuthConfigurationFromConfiguredProvider() throws Exception {
-        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
-        configuration.addProperty("auth.custom.realm", "james.example");
-        configuration.addProperty("auth.saslAuthenticationServiceFactoryProviderExtensions", CustomAuthenticationServiceFactoryProvider.class.getName());
-
-        assertThat(testee.retrieveSaslAuthenticationServiceFactories(configuration, GUICE_LOADER, ImmutableSet.of()))
-            .containsExactly(new CustomAuthenticationServiceFactory("james.example"));
-    }
-
-    @Test
-    void retrieveConfiguredSaslAuthenticationServiceFactoryProvidersShouldRejectBlankConfiguredList() {
-        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
-        configuration.addProperty("auth.saslAuthenticationServiceFactoryProviderExtensions", " ");
-
-        assertThatThrownBy(() -> testee.retrieveConfiguredSaslAuthenticationServiceFactoryProviders(configuration, GUICE_LOADER))
-            .isInstanceOf(ConfigurationException.class);
-    }
-
-    @Test
-    void retrieveConfiguredSaslAuthenticationServiceFactoryProvidersShouldFailWhenClassIsUnknown() {
-        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
-        configuration.addProperty("auth.saslAuthenticationServiceFactoryProviderExtensions", "com.example.MissingProvider");
-
-        assertThatThrownBy(() -> testee.retrieveConfiguredSaslAuthenticationServiceFactoryProviders(configuration, GUICE_LOADER))
             .isInstanceOf(ConfigurationException.class);
     }
 }
