@@ -22,23 +22,12 @@ package org.apache.james.examples.imap.sasl;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.modules.protocols.ImapSaslAuthenticationServiceFactoryProvider;
-import org.apache.james.protocols.api.sasl.SaslAuthenticationServiceFactory;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-
-public class ExampleTokenSaslAuthenticationServiceFactoryProvider implements ImapSaslAuthenticationServiceFactoryProvider {
-    private final MailboxManager mailboxManager;
-
-    @Inject
-    public ExampleTokenSaslAuthenticationServiceFactoryProvider(MailboxManager mailboxManager) {
-        this.mailboxManager = mailboxManager;
-    }
-
+public class ExampleTokenSaslMechanismFactory implements SaslMechanismFactory {
     @Override
-    public ImmutableList<SaslAuthenticationServiceFactory<?>> provide(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
-        return ImmutableList.of(new ExampleTokenSaslAuthenticationServiceFactory(mailboxManager, ExampleTokenSaslConfiguration.from(configuration)));
+    public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
+        return new ExampleTokenSaslMechanism(ExampleTokenSaslConfiguration.from(serverConfiguration));
     }
 }

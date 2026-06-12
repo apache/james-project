@@ -21,19 +21,24 @@ package org.apache.james.examples.imap.sasl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.Set;
 
-import org.apache.james.protocols.api.sasl.SaslAuthenticationResult;
 import org.apache.james.protocols.api.sasl.SaslExchange;
+import org.apache.james.protocols.api.sasl.SaslIdentity;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
-import org.apache.james.protocols.api.sasl.SaslProtocol;
-import org.apache.james.protocols.api.sasl.SaslSessionContext;
 import org.apache.james.protocols.api.sasl.SaslStep;
 
 public class ExampleTokenSaslMechanism implements SaslMechanism {
     public static final String NAME = "EXAMPLE-TOKEN";
     public static final String CONTINUATION_PROMPT = "Go ahead";
+    public static final String SUCCESS_DATA_TOKEN_SUFFIX = ":server-data";
+    public static final String SUCCESS_DATA = "Token accepted";
+
+    private final ExampleTokenSaslConfiguration configuration;
+
+    public ExampleTokenSaslMechanism(ExampleTokenSaslConfiguration configuration) {
+        this.configuration = configuration;
+    }
 
     @Override
     public String name() {
@@ -41,35 +46,18 @@ public class ExampleTokenSaslMechanism implements SaslMechanism {
     }
 
     @Override
-    public boolean supports(SaslProtocol protocol) {
-        return protocol == SaslProtocol.IMAP;
-    }
-
-    @Override
-    public Set<Class<?>> requiredServices(SaslProtocol protocol) {
-        if (supports(protocol)) {
-            return Set.of(ExampleTokenSaslAuthenticationService.class);
-        }
-        return Set.of();
-    }
-
-    @Override
-    public boolean isAvailable(SaslSessionContext context) {
-        return context.service(ExampleTokenSaslAuthenticationService.class).isPresent();
-    }
-
-    @Override
-    public SaslExchange start(SaslInitialRequest request, SaslSessionContext context) {
-        return new ExampleTokenSaslExchange(request.initialResponse(), context);
+    public SaslExchange start(SaslInitialRequest request) {
+        Optional<byte[]> initialResponse = request.initialResponse();
+        return new ExampleTokenSaslExchange(initialResponse, configuration);
     }
 
     private static class ExampleTokenSaslExchange implements SaslExchange {
         private final Optional<byte[]> initialResponse;
-        private final SaslSessionContext context;
+        private final ExampleTokenSaslConfiguration configuration;
 
-        private ExampleTokenSaslExchange(Optional<byte[]> initialResponse, SaslSessionContext context) {
+        private ExampleTokenSaslExchange(Optional<byte[]> initialResponse, ExampleTokenSaslConfiguration configuration) {
             this.initialResponse = initialResponse;
-            this.context = context;
+            this.configuration = configuration;
         }
 
         @Override
@@ -94,17 +82,19 @@ public class ExampleTokenSaslMechanism implements SaslMechanism {
         }
 
         private SaslStep authenticate(byte[] clientResponse) {
-            return context.service(ExampleTokenSaslAuthenticationService.class)
-                .map(service -> service.authenticate(new String(clientResponse, StandardCharsets.UTF_8)))
-                .map(this::toStep)
-                .orElseGet(() -> new SaslStep.Failure("EXAMPLE-TOKEN authentication is not available."));
+            String token = new String(clientResponse, StandardCharsets.UTF_8);
+            if (configuration.expectedToken().equals(token)) {
+                return success(Optional.empty());
+            }
+            // allow client to request server to return data on success message, which may be used by Kerberos auth
+            if ((configuration.expectedToken() + SUCCESS_DATA_TOKEN_SUFFIX).equals(token)) {
+                return success(Optional.of(SUCCESS_DATA.getBytes(StandardCharsets.UTF_8)));
+            }
+            return new SaslStep.Failure("EXAMPLE-TOKEN authentication failed.");
         }
 
-        private SaslStep toStep(SaslAuthenticationResult result) {
-            if (result instanceof SaslAuthenticationResult.Success success) {
-                return new SaslStep.Success(success.identity(), Optional.empty());
-            }
-            return new SaslStep.Failure(((SaslAuthenticationResult.Failure) result).reason());
+        private SaslStep success(Optional<byte[]> serverData) {
+            return new SaslStep.Success(new SaslIdentity(configuration.authorizedUser(), configuration.authorizedUser()), serverData);
         }
     }
 }

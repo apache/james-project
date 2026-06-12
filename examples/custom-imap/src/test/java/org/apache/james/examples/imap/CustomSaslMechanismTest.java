@@ -149,6 +149,32 @@ class CustomSaslMechanismTest {
     }
 
     @Test
+    void imapServerShouldAuthenticateCustomSaslMechanismReturningServerDataOnSuccess(GuiceJamesServer server) throws IOException {
+        try (ClientConnection client = clientConnection(server)) {
+            // GIVEN a custom SASL exchange started without SASL-IR
+            client.readUntil(line -> line.startsWith("* OK"));
+            client.writeLine("A01 AUTHENTICATE EXAMPLE-TOKEN");
+            assertThat(client.readUntil(line -> line.startsWith("+")))
+                .contains("+ " + encode(ExampleTokenSaslMechanism.CONTINUATION_PROMPT));
+
+            // WHEN the mechanism succeeds with final server data, as GSSAPI/Kerberos-like SASL mechanisms may require
+            client.writeLine(encode(EXPECTED_TOKEN + ExampleTokenSaslMechanism.SUCCESS_DATA_TOKEN_SUFFIX));
+            assertThat(client.readUntil(line -> line.startsWith("+") || line.startsWith("A01")))
+                .contains("+ " + encode(ExampleTokenSaslMechanism.SUCCESS_DATA));
+
+            // THEN the client acknowledges the final server data before IMAP completes authentication
+            client.writeLine("");
+            assertThat(client.readUntil(line -> line.startsWith("A01")))
+                .contains("OK AUTHENTICATE completed.");
+
+            // THEN the authenticated IMAP session remains usable
+            client.writeLine("A02 PING");
+            assertThat(client.readUntil(line -> line.startsWith("A02")))
+                .contains("PONG");
+        }
+    }
+
+    @Test
     void plainSaslAuthenticationShouldStillWork(GuiceJamesServer server) throws IOException {
         TestIMAPClient client = new TestIMAPClient().connect("127.0.0.1", imapPort(server));
 

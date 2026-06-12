@@ -38,7 +38,6 @@ under the License.
         <gracefulShutdown>false</gracefulShutdown>
         <auth>
             <saslMechanisms>PlainSaslMechanism,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanism</saslMechanisms>
-            <saslAuthenticationServiceFactoryProviderExtensions>org.apache.james.examples.imap.sasl.ExampleTokenSaslAuthenticationServiceFactoryProvider</saslAuthenticationServiceFactoryProviderExtensions>
             <exampleToken>
                 <expectedToken>secret-token</expectedToken>
                 <authorizedUser>bob@domain.tld</authorizedUser>
@@ -65,7 +64,6 @@ under the License.
         <gracefulShutdown>false</gracefulShutdown>
         <auth>
             <saslMechanisms>PlainSaslMechanism,OauthBearerSaslMechanism,XOauth2SaslMechanism,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanism</saslMechanisms>
-            <saslAuthenticationServiceFactoryProviderExtensions>org.apache.james.examples.imap.sasl.ExampleTokenSaslAuthenticationServiceFactoryProvider</saslAuthenticationServiceFactoryProviderExtensions>
             <exampleToken>
                 <expectedToken>secret-token</expectedToken>
                 <authorizedUser>bob@domain.tld</authorizedUser>

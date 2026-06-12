@@ -18,14 +18,11 @@ Note that when `imapPackages` is not provided, James will implicit use
 
 This example also demonstrates how to add a custom IMAP SASL mechanism.
 The `EXAMPLE-TOKEN` mechanism is declared through `auth.saslMechanisms`,
-its authentication service factory provider is declared through
-`auth.saslAuthenticationServiceFactoryProviderExtensions`, while `auth.exampleToken`
-is a custom configuration block owned by the extension:
+while `auth.exampleToken` is a custom configuration block owned by the extension:
 
 ```xml
 <auth>
     <saslMechanisms>PlainSaslMechanism,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanism</saslMechanisms>
-    <saslAuthenticationServiceFactoryProviderExtensions>org.apache.james.examples.imap.sasl.ExampleTokenSaslAuthenticationServiceFactoryProvider</saslAuthenticationServiceFactoryProviderExtensions>
     <exampleToken>
         <expectedToken>secret-token</expectedToken>
         <authorizedUser>bob@domain.tld</authorizedUser>
@@ -33,9 +30,15 @@ is a custom configuration block owned by the extension:
 </auth>
 ```
 
-James loads the provider through the extension classloader and instantiates it
-with Guice, so the provider can use James services and parse its own
-configuration block.
+The extension module is declared in `extensions.properties`:
+
+```properties
+guice.extension.module=org.apache.james.examples.imap.sasl.ExampleTokenSaslModule
+```
+
+The module binds a `SaslMechanismFactory` for `ExampleTokenSaslMechanism`.
+James still uses `auth.saslMechanisms` to select the mechanism for one IMAP
+server, and the factory reads that server's `auth.exampleToken` block.
 
 ## Running the example
 
@@ -117,4 +120,21 @@ A01 OK AUTHENTICATE completed.
 A02 PING
 * PONG
 A02 OK PING completed.
+```
+
+The mechanism can also return final server data on success. The client acknowledges
+that final data with an empty line before James sends the tagged `OK`:
+
+```bash
+telnet localhost 143
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+* OK JAMES IMAP4rev1 Server james.local is ready.
+A01 AUTHENTICATE EXAMPLE-TOKEN
++ R28gYWhlYWQ
+c2VjcmV0LXRva2VuOnNlcnZlci1kYXRh
++ VG9rZW4gYWNjZXB0ZWQ=
+
+A01 OK AUTHENTICATE completed.
 ```
