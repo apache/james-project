@@ -19,35 +19,25 @@
 
 package org.apache.james.utils;
 
-import java.util.Collection;
+import jakarta.inject.Inject;
 
 import org.apache.james.protocols.api.sasl.SaslMechanism;
-import org.apache.james.protocols.api.sasl.SaslMechanismLoader;
-import org.apache.james.protocols.api.sasl.SaslMechanismLoadingException;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-
-public class GuiceSaslMechanismLoader implements SaslMechanismLoader {
+public class GuiceSaslMechanismInstantiator implements SaslMechanismInstantiator {
     private final GuiceLoader.InvocationPerformer<SaslMechanism> mechanismLoader;
 
     @Inject
-    public GuiceSaslMechanismLoader(GuiceLoader guiceLoader) {
+    public GuiceSaslMechanismInstantiator(GuiceLoader guiceLoader) {
         this.mechanismLoader = guiceLoader.withNamingSheme(DefaultSaslMechanismNamingScheme.asNamingScheme());
     }
 
     @Override
-    public ImmutableList<SaslMechanism> load(Collection<String> classNames) {
-        return classNames.stream()
-            .map(this::load)
-            .collect(ImmutableList.toImmutableList());
+    public Class<? extends SaslMechanism> locate(ClassName className) throws ClassNotFoundException {
+        return mechanismLoader.locateClass(className);
     }
 
-    private SaslMechanism load(String className) {
-        try {
-            return mechanismLoader.instantiate(new ClassName(className));
-        } catch (Exception e) {
-            throw new SaslMechanismLoadingException("Can not load SASL mechanism " + className, e);
-        }
+    @Override
+    public SaslMechanism instantiate(ClassName className) throws ClassNotFoundException {
+        return mechanismLoader.instantiate(className);
     }
 }

@@ -26,17 +26,27 @@ public class TestingDefaultPackageSaslMechanism implements SaslMechanism {
     }
 
     @Override
-    public boolean supports(SaslProtocol protocol) {
-        return true;
+    public SaslExchange start(SaslInitialRequest request) {
+        return new FixedStepExchange(new SaslStep.Failure("not implemented"));
     }
 
-    @Override
-    public boolean isAvailable(SaslSessionContext context) {
-        return true;
-    }
+    private record FixedStepExchange(SaslStep step) implements SaslExchange {
+        @Override
+        public SaslStep firstStep() {
+            return step;
+        }
 
-    @Override
-    public SaslExchange start(SaslInitialRequest request, SaslSessionContext context) {
-        throw new UnsupportedOperationException();
+        @Override
+        public SaslStep onResponse(byte[] clientResponse) {
+            return step;
+        }
+
+        @Override
+        public void abort() {
+        }
+
+        @Override
+        public void close() {
+        }
     }
 }

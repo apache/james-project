@@ -19,27 +19,10 @@
 
 package org.apache.james.utils;
 
-import com.google.inject.Key;
-import com.google.inject.Module;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
 
-public interface GuiceLoader {
+public interface SaslMechanismInstantiator {
+    Class<? extends SaslMechanism> locate(ClassName className) throws ClassNotFoundException;
 
-    public interface InvocationPerformer<T> {
-
-        T instantiate(ClassName className) throws ClassNotFoundException;
-
-        Class<T> locateClass(ClassName className)throws ClassNotFoundException;
-
-        InvocationPerformer<T> withChildModule(Module childModule);
-
-        InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme);
-    }
-
-    <T> T instantiate(ClassName className) throws ClassNotFoundException;
-
-    <T> T getInstance(Key<T> key);
-
-    <T> InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme);
-
-    <T> InvocationPerformer<T> withChildModule(Module childModule);
+    SaslMechanism instantiate(ClassName className) throws ClassNotFoundException;
 }

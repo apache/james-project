@@ -26,7 +26,6 @@ import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.modules.server.DropWizardMetricsModule;
 import org.apache.james.onami.lifecycle.PreDestroyModule;
-import org.apache.james.protocols.api.sasl.SaslMechanismLoader;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
@@ -34,8 +33,9 @@ import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.ExtensionModule;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.GuiceSaslMechanismLoader;
+import org.apache.james.utils.GuiceSaslMechanismInstantiator;
 import org.apache.james.utils.PropertiesProvider;
+import org.apache.james.utils.SaslMechanismInstantiator;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -51,7 +51,7 @@ public class CommonServicesModule extends AbstractModule {
         this.fileSystem = new FileSystemImpl(configuration.directories());
 
     }
-    
+
     @Override
     protected void configure() {
         install(new ExtensionModule());
@@ -69,7 +69,7 @@ public class CommonServicesModule extends AbstractModule {
 
         bind(FileSystem.class).toInstance(fileSystem);
         bind(Configuration.class).toInstance(configuration);
-        bind(SaslMechanismLoader.class).to(GuiceSaslMechanismLoader.class);
+        bind(SaslMechanismInstantiator.class).to(GuiceSaslMechanismInstantiator.class);
 
         bind(ConfigurationProvider.class).toInstance(new FileConfigurationProvider(fileSystem, configuration));
 
