@@ -19,20 +19,18 @@
 
 package org.apache.james.protocols.api.sasl;
 
-import java.util.Objects;
 import java.util.Optional;
 
 /**
  * Server step produced by a SASL exchange.
  */
-public sealed interface SaslStep permits SaslStep.Challenge, SaslStep.Success, SaslStep.Failure {
+public sealed interface SaslStep permits SaslStep.Challenge, SaslStep.Credentials, SaslStep.Success, SaslStep.Failure {
     /**
      * Server challenge to send back to the client.
      */
     record Challenge(Optional<byte[]> payload) implements SaslStep {
-        public Challenge {
-            payload = Objects.requireNonNull(payload)
-                .map(byte[]::clone);
+        public Challenge(Optional<byte[]> payload) {
+            this.payload = payload.map(byte[]::clone);
         }
 
         /**
@@ -44,13 +42,18 @@ public sealed interface SaslStep permits SaslStep.Challenge, SaslStep.Success, S
     }
 
     /**
+     * Parsed credentials to be applied by the protocol handler.
+     */
+    record Credentials(SaslCredentials credentials) implements SaslStep {
+    }
+
+    /**
      * Successful SASL exchange result.
      */
     record Success(SaslIdentity identity, Optional<byte[]> serverData) implements SaslStep {
-        public Success {
-            identity = Objects.requireNonNull(identity);
-            serverData = Objects.requireNonNull(serverData)
-                .map(byte[]::clone);
+        public Success(SaslIdentity identity, Optional<byte[]> serverData) {
+            this.identity = identity;
+            this.serverData = serverData.map(byte[]::clone);
         }
 
         /**
@@ -65,8 +68,5 @@ public sealed interface SaslStep permits SaslStep.Challenge, SaslStep.Success, S
      * Failed SASL exchange result.
      */
     record Failure(String reason) implements SaslStep {
-        public Failure {
-            reason = Objects.requireNonNull(reason);
-        }
     }
 }

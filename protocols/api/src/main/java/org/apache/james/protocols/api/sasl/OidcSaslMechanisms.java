@@ -21,42 +21,23 @@ package org.apache.james.protocols.api.sasl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.Set;
 
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.OIDCSASLParser;
 
-abstract class AbstractOidcSaslMechanism implements SaslMechanism {
-    @Override
-    public boolean supports(SaslProtocol protocol) {
-        return protocol == SaslProtocol.IMAP || protocol == SaslProtocol.SMTP;
+public final class OidcSaslMechanisms {
+    static SaslExchange start(Optional<byte[]> initialResponse) {
+        return new OidcSaslExchange(initialResponse);
     }
 
-    @Override
-    public Set<Class<?>> requiredServices(SaslProtocol protocol) {
-        if (supports(protocol)) {
-            return Set.of(BearerTokenSaslAuthenticationService.class);
-        }
-        return Set.of();
-    }
-
-    @Override
-    public boolean isAvailable(SaslSessionContext context) {
-        return context.service(BearerTokenSaslAuthenticationService.class).isPresent();
-    }
-
-    @Override
-    public SaslExchange start(SaslInitialRequest request, SaslSessionContext context) {
-        return new OidcSaslExchange(request.initialResponse(), context);
+    private OidcSaslMechanisms() {
     }
 
     private static class OidcSaslExchange implements SaslExchange {
         private final Optional<byte[]> initialResponse;
-        private final SaslSessionContext context;
 
-        private OidcSaslExchange(Optional<byte[]> initialResponse, SaslSessionContext context) {
+        private OidcSaslExchange(Optional<byte[]> initialResponse) {
             this.initialResponse = initialResponse;
-            this.context = context;
         }
 
         @Override
@@ -81,22 +62,9 @@ abstract class AbstractOidcSaslMechanism implements SaslMechanism {
 
         private SaslStep authenticate(byte[] clientResponse) {
             return OIDCSASLParser.parseDecoded(new String(clientResponse, StandardCharsets.US_ASCII))
-                .map(this::authenticate)
+                .map(response -> (SaslStep) new SaslStep.Credentials(new SaslCredentials.BearerToken(
+                    response.getToken(), Username.of(response.getAssociatedUser()))))
                 .orElseGet(() -> new SaslStep.Failure("Malformed authentication command."));
-        }
-
-        private SaslStep authenticate(OIDCSASLParser.OIDCInitialResponse initialResponse) {
-            return context.service(BearerTokenSaslAuthenticationService.class)
-                .map(service -> service.authenticate(initialResponse.getToken(), Username.of(initialResponse.getAssociatedUser())))
-                .map(this::toStep)
-                .orElseGet(() -> new SaslStep.Failure("OIDC authentication is not available."));
-        }
-
-        private SaslStep toStep(SaslAuthenticationResult result) {
-            if (result instanceof SaslAuthenticationResult.Success success) {
-                return new SaslStep.Success(success.identity(), Optional.empty());
-            }
-            return new SaslStep.Failure(((SaslAuthenticationResult.Failure) result).reason());
         }
     }
 }

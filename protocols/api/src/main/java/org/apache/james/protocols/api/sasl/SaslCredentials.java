@@ -19,11 +19,23 @@
 
 package org.apache.james.protocols.api.sasl;
 
+import java.util.Optional;
+
+import org.apache.james.core.Username;
+
 /**
- * Thrown when a configured SASL mechanism cannot be loaded.
+ * Credentials parsed by SASL mechanisms and applied by protocol handlers.
  */
-public class SaslMechanismLoadingException extends RuntimeException {
-    public SaslMechanismLoadingException(String message, Throwable cause) {
-        super(message, cause);
+public sealed interface SaslCredentials permits SaslCredentials.Password, SaslCredentials.BearerToken {
+    record Password(Username authenticationId, Optional<Username> authorizationId, String password) implements SaslCredentials {
+        public String toString() {
+            return "Password[authenticationId=" + authenticationId.asString() + ", authorizationId=" + authorizationId.map(Username::asString) + ", password=******]";
+        }
+    }
+
+    record BearerToken(String token, Username authorizationId) implements SaslCredentials {
+        public String toString() {
+            return "BearerToken[token=******, authorizationId=" + authorizationId.asString() + "]";
+        }
     }
 }

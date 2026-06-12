@@ -19,11 +19,16 @@
 
 package org.apache.james.protocols.api.sasl;
 
-public class OauthBearerSaslMechanism extends AbstractOidcSaslMechanism {
+public class OauthBearerSaslMechanism implements SaslMechanism {
     public static final String NAME = "OAUTHBEARER";
 
     @Override
     public String name() {
         return NAME;
+    }
+
+    @Override
+    public SaslExchange start(SaslInitialRequest request) {
+        return OidcSaslMechanisms.start(request.initialResponse());
     }
 }

@@ -22,8 +22,6 @@ package org.apache.james.protocols.api.sasl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
@@ -35,6 +33,8 @@ import org.junit.jupiter.api.Test;
 class SaslMechanismContractTest {
     private static final Username AUTHENTICATION_ID = Username.of("authentication@example.com");
     private static final Username AUTHORIZATION_ID = Username.of("authorization@example.com");
+    private static final String PASSWORD = "secret";
+    private static final String TOKEN = "access-token";
     private static final SaslIdentity SAME_USER_IDENTITY = new SaslIdentity(AUTHENTICATION_ID, AUTHENTICATION_ID);
     private static final SaslIdentity DELEGATED_IDENTITY = new SaslIdentity(AUTHENTICATION_ID, AUTHORIZATION_ID);
 
@@ -54,17 +54,7 @@ class SaslMechanismContractTest {
         }
 
         @Override
-        public boolean supports(SaslProtocol protocol) {
-            return protocol == SaslProtocol.IMAP;
-        }
-
-        @Override
-        public boolean isAvailable(SaslSessionContext context) {
-            return true;
-        }
-
-        @Override
-        public SaslExchange start(SaslInitialRequest request, SaslSessionContext context) {
+        public SaslExchange start(SaslInitialRequest request) {
             return new FixedStepExchange(firstStep);
         }
     }
@@ -109,17 +99,7 @@ class SaslMechanismContractTest {
         }
 
         @Override
-        public boolean supports(SaslProtocol protocol) {
-            return protocol == SaslProtocol.IMAP;
-        }
-
-        @Override
-        public boolean isAvailable(SaslSessionContext context) {
-            return true;
-        }
-
-        @Override
-        public SaslExchange start(SaslInitialRequest request, SaslSessionContext context) {
+        public SaslExchange start(SaslInitialRequest request) {
             return new TwoStepExchange();
         }
     }
@@ -154,7 +134,7 @@ class SaslMechanismContractTest {
     }
 
     /**
-     * Models generic password mechanisms that parse SASL payloads but delegate credential verification to the protocol.
+     * Models generic password mechanisms that parse SASL payloads but leave verification to the protocol.
      */
     private static class PasswordLikeMechanism implements SaslMechanism {
         @Override
@@ -163,206 +143,167 @@ class SaslMechanismContractTest {
         }
 
         @Override
-        public boolean supports(SaslProtocol protocol) {
-            return protocol == SaslProtocol.IMAP;
-        }
-
-        @Override
-        public boolean isAvailable(SaslSessionContext context) {
-            return context.service(PasswordSaslAuthenticationService.class).isPresent();
-        }
-
-        @Override
-        public SaslExchange start(SaslInitialRequest request, SaslSessionContext context) {
+        public SaslExchange start(SaslInitialRequest request) {
             return new FixedStepExchange(request.initialResponse()
-                .map(payload -> authenticate(payload, context))
-                .orElseGet(() -> new SaslStep.Failure("missing initial response")));
+                .map(this::credentials)
+                .orElseGet(() -> new SaslStep.Challenge(Optional.empty())));
         }
 
-        private SaslStep authenticate(byte[] payload, SaslSessionContext context) {
-            return context.service(PasswordSaslAuthenticationService.class)
-                .map(service -> service.authenticate(authenticationId(payload), authorizationId(payload), password(payload)))
-                .map(this::toSaslStep)
-                .orElseGet(() -> new SaslStep.Failure("missing password authentication service"));
-        }
-
-        private Username authenticationId(byte[] payload) {
-            return Username.of(parts(payload)[1]);
-        }
-
-        private Optional<Username> authorizationId(byte[] payload) {
-            return Optional.of(parts(payload)[0])
-                .filter(value -> !value.isEmpty())
-                .map(Username::of);
-        }
-
-        private String password(byte[] payload) {
-            return parts(payload)[2];
-        }
-
-        private String[] parts(byte[] payload) {
-            return new String(payload, StandardCharsets.UTF_8).split("\u0000", -1);
-        }
-
-        private SaslStep toSaslStep(SaslAuthenticationResult authenticationResult) {
-            if (authenticationResult instanceof SaslAuthenticationResult.Success(SaslIdentity identity)) {
-                return new SaslStep.Success(identity, Optional.empty());
-            }
-            return new SaslStep.Failure(((SaslAuthenticationResult.Failure) authenticationResult).reason());
-        }
-    }
-
-    private static class FakeSaslSessionContext implements SaslSessionContext {
-        private final Map<Class<?>, Object> services;
-
-        private FakeSaslSessionContext(Map<Class<?>, Object> services) {
-            this.services = services;
-        }
-
-        private static FakeSaslSessionContext withPasswordAuthenticationService(PasswordSaslAuthenticationService service) {
-            Map<Class<?>, Object> services = new HashMap<>();
-            services.put(PasswordSaslAuthenticationService.class, service);
-            return new FakeSaslSessionContext(services);
-        }
-
-        @Override
-        public <T> Optional<T> service(Class<T> serviceType) {
-            return Optional.ofNullable(services.get(serviceType))
-                .map(serviceType::cast);
-        }
-
-        @Override
-        public <T> void register(Class<T> serviceType, T service) {
-            services.put(serviceType, service);
+        private SaslStep credentials(byte[] payload) {
+            String[] parts = new String(payload, StandardCharsets.UTF_8).split("\u0000", -1);
+            return new SaslStep.Credentials(new SaslCredentials.Password(
+                Username.of(parts[1]),
+                Optional.of(parts[0]).filter(value -> !value.isEmpty()).map(Username::of),
+                parts[2]));
         }
     }
 
     @Test
     void oneStepMechanismShouldReturnSuccess() {
-        // Given a one-step mechanism configured to immediately succeed
+        // GIVEN a one-step mechanism configured to immediately succeed
         SaslStep.Success success = new SaslStep.Success(SAME_USER_IDENTITY, Optional.empty());
-        SaslExchange exchange = new FixedStepMechanism(success).start(initialRequest(Optional.empty()), new FakeSaslSessionContext(Map.of()));
+        SaslExchange exchange = new FixedStepMechanism(success).start(initialRequest(Optional.empty()));
 
-        // When the exchange starts
+        // WHEN the exchange starts
         SaslStep firstStep = exchange.firstStep();
 
-        // Then the mechanism can complete without a client continuation
+        // THEN the mechanism can complete without a client continuation
         assertThat(firstStep).isEqualTo(success);
     }
 
     @Test
     void oneStepMechanismShouldReturnFailure() {
-        // Given a one-step mechanism configured to immediately fail
+        // GIVEN a one-step mechanism configured to immediately fail
         SaslStep.Failure failure = new SaslStep.Failure("failure");
-        SaslExchange exchange = new FixedStepMechanism(failure).start(initialRequest(Optional.empty()), new FakeSaslSessionContext(Map.of()));
+        SaslExchange exchange = new FixedStepMechanism(failure).start(initialRequest(Optional.empty()));
 
-        // When the exchange starts
+        // WHEN the exchange starts
         SaslStep firstStep = exchange.firstStep();
 
-        // Then the mechanism can fail without a client continuation
+        // THEN the mechanism can fail without a client continuation
         assertThat(firstStep).isEqualTo(failure);
     }
 
     @Test
     void multiStepMechanismShouldKeepStateAcrossResponses() {
-        // Given a mechanism that requires one challenge before accepting a response
-        SaslExchange exchange = new TwoStepMechanism().start(initialRequest(Optional.empty()), new FakeSaslSessionContext(Map.of()));
+        // GIVEN a mechanism that requires one challenge before accepting a response
+        SaslExchange exchange = new TwoStepMechanism().start(initialRequest(Optional.empty()));
 
-        // When the server sends a challenge and later receives the expected client response
+        // WHEN the server sends a challenge and later receives the expected client response
         SaslStep firstStep = exchange.firstStep();
         SaslStep success = exchange.onResponse(bytes("accepted"));
 
-        // Then the exchange keeps enough state to complete after the continuation
+        // THEN the exchange keeps enough state to complete after the continuation
         assertThat(firstStep).isInstanceOf(SaslStep.Challenge.class);
         assertThat(((SaslStep.Success) success).identity()).isEqualTo(SAME_USER_IDENTITY);
     }
 
     @Test
-    void passwordLikeMechanismShouldAuthenticateThroughSessionContextService() {
-        // Given a protocol-provided password service and a PLAIN-like initial response
-        PasswordSaslAuthenticationService service = (authenticationId, authorizationId, password) -> {
-            assertThat(authenticationId).isEqualTo(AUTHENTICATION_ID);
-            assertThat(password).isEqualTo("secret");
-            assertThat(authorizationId).isEmpty();
-            return new SaslAuthenticationResult.Success(SAME_USER_IDENTITY);
-        };
+    void passwordLikeMechanismShouldReturnProtocolNeutralCredentials() {
+        // GIVEN a password-like mechanism and a PLAIN-like initial response
         SaslExchange exchange = new PasswordLikeMechanism()
-            .start(initialRequest(Optional.of(bytes("\u0000" + AUTHENTICATION_ID.asString() + "\u0000secret"))),
-                FakeSaslSessionContext.withPasswordAuthenticationService(service));
+            .start(initialRequest(Optional.of(bytes("\u0000" + AUTHENTICATION_ID.asString() + "\u0000" + PASSWORD))));
 
-        // When the generic mechanism consumes the initial response
+        // WHEN the generic mechanism consumes the initial response
         SaslStep firstStep = exchange.firstStep();
 
-        // Then authentication succeeds without depending on an IMAP or SMTP class
-        assertThat(((SaslStep.Success) firstStep).identity()).isEqualTo(SAME_USER_IDENTITY);
+        // THEN it returns credentials without depending on IMAP or SMTP authentication services
+        assertThat(firstStep).isEqualTo(new SaslStep.Credentials(new SaslCredentials.Password(
+            AUTHENTICATION_ID, Optional.empty(), PASSWORD)));
     }
 
     @Test
-    void passwordLikeMechanismShouldPreserveDelegatedIdentity() {
-        // Given a PLAIN-like initial response with distinct authorization and authentication identities
-        PasswordSaslAuthenticationService service = (authenticationId, authorizationId, password) -> {
-            assertThat(authenticationId).isEqualTo(AUTHENTICATION_ID);
-            assertThat(password).isEqualTo("secret");
-            assertThat(authorizationId).contains(AUTHORIZATION_ID);
-            return new SaslAuthenticationResult.Success(DELEGATED_IDENTITY);
-        };
+    void passwordLikeMechanismShouldPreserveDelegatedIdentityInCredentials() {
+        // GIVEN a PLAIN-like initial response with distinct authorization and authentication identities
         SaslExchange exchange = new PasswordLikeMechanism()
-            .start(initialRequest(Optional.of(bytes(AUTHORIZATION_ID.asString() + "\u0000" + AUTHENTICATION_ID.asString() + "\u0000secret"))),
-                FakeSaslSessionContext.withPasswordAuthenticationService(service));
+            .start(initialRequest(Optional.of(bytes(AUTHORIZATION_ID.asString() + "\u0000" + AUTHENTICATION_ID.asString() + "\u0000" + PASSWORD))));
 
-        // When the generic mechanism authenticates through the context service
+        // WHEN the generic mechanism consumes the initial response
         SaslStep firstStep = exchange.firstStep();
 
-        // Then the success step carries both identities for protocol-level delegation handling
+        // THEN the credentials carry both identities for protocol-level delegation handling
+        assertThat(firstStep).isEqualTo(new SaslStep.Credentials(new SaslCredentials.Password(
+            AUTHENTICATION_ID, Optional.of(AUTHORIZATION_ID), PASSWORD)));
+    }
+
+    @Test
+    void credentialsToStringShouldRedactSecrets() {
+        // GIVEN credentials carrying sensitive password and bearer token values
+        SaslCredentials.Password password = new SaslCredentials.Password(AUTHENTICATION_ID, Optional.of(AUTHORIZATION_ID), PASSWORD);
+        SaslCredentials.BearerToken bearerToken = new SaslCredentials.BearerToken(TOKEN, AUTHORIZATION_ID);
+
+        // WHEN credentials are converted to strings, for example by accidental logging
+        String passwordString = password.toString();
+        String bearerTokenString = bearerToken.toString();
+
+        // THEN the sensitive fields are redacted while identity fields remain useful for diagnostics
+        assertThat(passwordString)
+            .contains("password=******", AUTHENTICATION_ID.asString(), AUTHORIZATION_ID.asString())
+            .doesNotContain(PASSWORD);
+        assertThat(bearerTokenString)
+            .contains("token=******", AUTHORIZATION_ID.asString())
+            .doesNotContain(TOKEN);
+    }
+
+    @Test
+    void successStepShouldPreserveDelegatedIdentity() {
+        // GIVEN a self-authenticating mechanism returning a delegated identity
+        SaslExchange exchange = new FixedStepMechanism(new SaslStep.Success(DELEGATED_IDENTITY, Optional.empty()))
+            .start(initialRequest(Optional.empty()));
+
+        // WHEN the exchange starts
+        SaslStep firstStep = exchange.firstStep();
+
+        // THEN the identity keeps both authentication and authorization users
         assertThat(((SaslStep.Success) firstStep).identity()).isEqualTo(DELEGATED_IDENTITY);
     }
 
     @Test
     void initialRequestShouldDefensivelyCopyInitialResponse() {
-        // Given an initial response backed by a mutable byte array
+        // GIVEN an initial response backed by a mutable byte array
         byte[] initialResponse = bytes("initial");
         SaslInitialRequest request = initialRequest(Optional.of(initialResponse));
 
-        // When the caller mutates the original array
+        // WHEN the caller mutates the original array
         initialResponse[0] = 'I';
 
-        // Then the request keeps the original payload
+        // THEN the request keeps the original payload
         assertThat(request.initialResponse()).hasValueSatisfying(value -> assertThat(value).containsExactly(bytes("initial")));
     }
 
     @Test
     void saslStepsShouldDefensivelyCopyPayloads() {
-        // Given challenge and success steps backed by mutable byte arrays
+        // GIVEN challenge and success steps backed by mutable byte arrays
         byte[] challengePayload = bytes("challenge");
         byte[] serverData = bytes("server");
         SaslStep.Challenge challenge = new SaslStep.Challenge(Optional.of(challengePayload));
         SaslStep.Success success = new SaslStep.Success(SAME_USER_IDENTITY, Optional.of(serverData));
 
-        // When the caller mutates the original arrays
+        // WHEN the caller mutates the original arrays
         challengePayload[0] = 'C';
         serverData[0] = 'S';
 
-        // Then the SASL steps keep their original payloads
+        // THEN the SASL steps keep their original payloads
         assertThat(challenge.payload()).hasValueSatisfying(value -> assertThat(value).containsExactly(bytes("challenge")));
         assertThat(success.serverData()).hasValueSatisfying(value -> assertThat(value).containsExactly(bytes("server")));
     }
 
     @Test
     void exchangeShouldExposeAbortAndCloseLifecycle() {
-        // Given an active exchange
+        // GIVEN an active exchange
         FixedStepExchange exchange = new FixedStepExchange(new SaslStep.Failure("failure"));
 
-        // When the protocol aborts and then closes it
+        // WHEN the protocol aborts and then closes it
         exchange.abort();
         exchange.close();
 
-        // Then mechanisms can observe both lifecycle events
+        // THEN mechanisms can observe both lifecycle events
         assertThat(exchange.aborted).isTrue();
         assertThat(exchange.closed).isTrue();
     }
 
     private static SaslInitialRequest initialRequest(Optional<byte[]> initialResponse) {
-        return new SaslInitialRequest(SaslProtocol.IMAP, "TEST", initialResponse);
+        return new SaslInitialRequest("TEST", initialResponse);
     }
 
     private static byte[] bytes(String value) {

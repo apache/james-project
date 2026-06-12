@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.james.core.Username;
 import org.junit.jupiter.api.Test;
@@ -33,61 +32,54 @@ class OidcSaslMechanismTest {
     private static final String TOKEN = "token";
 
     @Test
-    void oauthBearerShouldAuthenticateDecodedInitialResponse() {
-        AtomicReference<String> token = new AtomicReference<>();
-        AtomicReference<Username> authorizationId = new AtomicReference<>();
-        BearerTokenSaslAuthenticationService service = (bearerToken, user) -> {
-            token.set(bearerToken);
-            authorizationId.set(user);
-            return new SaslAuthenticationResult.Success(new SaslIdentity(user, user));
-        };
-        SaslInitialRequest request = new SaslInitialRequest(SaslProtocol.IMAP, OauthBearerSaslMechanism.NAME,
+    void oauthBearerShouldReturnBearerTokenCredentialsFromDecodedInitialResponse() {
+        // GIVEN a decoded OAUTHBEARER initial response
+        SaslInitialRequest request = new SaslInitialRequest(OauthBearerSaslMechanism.NAME,
             Optional.of(bytes("n,a=" + USER.asString() + ",\u0001auth=Bearer " + TOKEN + "\u0001\u0001")));
 
-        SaslStep step = new OauthBearerSaslMechanism()
-            .start(request, new TestSaslSessionContext(Optional.empty(), Optional.of(service)))
-            .firstStep();
+        // WHEN the mechanism consumes the response
+        SaslStep step = new OauthBearerSaslMechanism().start(request).firstStep();
 
-        assertThat(step).isInstanceOf(SaslStep.Success.class);
-        assertThat(token.get()).isEqualTo(TOKEN);
-        assertThat(authorizationId.get()).isEqualTo(USER);
+        // THEN it returns protocol-neutral bearer token credentials
+        assertThat(step).isEqualTo(new SaslStep.Credentials(new SaslCredentials.BearerToken(TOKEN, USER)));
     }
 
     @Test
-    void xOauth2ShouldAuthenticateDecodedInitialResponse() {
-        AtomicReference<String> token = new AtomicReference<>();
-        BearerTokenSaslAuthenticationService service = (bearerToken, user) -> {
-            token.set(bearerToken);
-            return new SaslAuthenticationResult.Success(new SaslIdentity(user, user));
-        };
-        SaslInitialRequest request = new SaslInitialRequest(SaslProtocol.IMAP, XOauth2SaslMechanism.NAME,
+    void xOauth2ShouldReturnBearerTokenCredentialsFromDecodedInitialResponse() {
+        // GIVEN a decoded XOAUTH2 initial response
+        SaslInitialRequest request = new SaslInitialRequest(XOauth2SaslMechanism.NAME,
             Optional.of(bytes("user=" + USER.asString() + "\u0001auth=Bearer " + TOKEN + "\u0001\u0001")));
 
-        SaslStep step = new XOauth2SaslMechanism()
-            .start(request, new TestSaslSessionContext(Optional.empty(), Optional.of(service)))
-            .firstStep();
+        // WHEN the mechanism consumes the response
+        SaslStep step = new XOauth2SaslMechanism().start(request).firstStep();
 
-        assertThat(step).isInstanceOf(SaslStep.Success.class);
-        assertThat(token.get()).isEqualTo(TOKEN);
+        // THEN it exposes the same generic bearer-token credential shape
+        assertThat(step).isEqualTo(new SaslStep.Credentials(new SaslCredentials.BearerToken(TOKEN, USER)));
+    }
+
+    @Test
+    void shouldChallengeWhenNoInitialResponse() {
+        // GIVEN an OIDC SASL exchange without SASL-IR
+        SaslInitialRequest request = new SaslInitialRequest(OauthBearerSaslMechanism.NAME, Optional.empty());
+
+        // WHEN the mechanism starts
+        SaslStep firstStep = new OauthBearerSaslMechanism().start(request).firstStep();
+
+        // THEN the server asks for one client response
+        assertThat(firstStep).isEqualTo(new SaslStep.Challenge(Optional.empty()));
     }
 
     @Test
     void shouldFailMalformedResponse() {
-        SaslInitialRequest request = new SaslInitialRequest(SaslProtocol.IMAP, OauthBearerSaslMechanism.NAME,
+        // GIVEN a malformed OIDC SASL response
+        SaslInitialRequest request = new SaslInitialRequest(OauthBearerSaslMechanism.NAME,
             Optional.of(bytes("invalid")));
 
-        SaslStep step = new OauthBearerSaslMechanism()
-            .start(request, new TestSaslSessionContext(Optional.empty(), Optional.empty()))
-            .firstStep();
+        // WHEN the mechanism consumes the response
+        SaslStep step = new OauthBearerSaslMechanism().start(request).firstStep();
 
+        // THEN it fails before any protocol-specific token validation
         assertThat(step).isEqualTo(new SaslStep.Failure("Malformed authentication command."));
-    }
-
-    @Test
-    void shouldBeAvailableOnlyWhenBearerTokenServiceExists() {
-        assertThat(new OauthBearerSaslMechanism().isAvailable(new TestSaslSessionContext(Optional.empty(), Optional.empty()))).isFalse();
-        assertThat(new OauthBearerSaslMechanism().isAvailable(new TestSaslSessionContext(Optional.empty(), Optional.of((token, user) ->
-            new SaslAuthenticationResult.Failure("failure"))))).isTrue();
     }
 
     private static byte[] bytes(String value) {

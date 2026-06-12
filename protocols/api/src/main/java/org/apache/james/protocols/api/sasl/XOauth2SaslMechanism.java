@@ -19,11 +19,16 @@
 
 package org.apache.james.protocols.api.sasl;
 
-public class XOauth2SaslMechanism extends AbstractOidcSaslMechanism {
+public class XOauth2SaslMechanism implements SaslMechanism {
     public static final String NAME = "XOAUTH2";
 
     @Override
     public String name() {
         return NAME;
+    }
+
+    @Override
+    public SaslExchange start(SaslInitialRequest request) {
+        return OidcSaslMechanisms.start(request.initialResponse());
     }
 }

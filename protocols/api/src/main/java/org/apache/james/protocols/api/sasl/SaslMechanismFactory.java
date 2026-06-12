@@ -19,13 +19,13 @@
 
 package org.apache.james.protocols.api.sasl;
 
-import java.util.Collection;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 
-import com.google.common.collect.ImmutableList;
-
-public interface SaslMechanismLoader {
-    /**
-     * Instantiates the configured SASL mechanism classes in declaration order.
-     */
-    ImmutableList<SaslMechanism> load(Collection<String> classNames);
+/**
+ * Creates a SASL mechanism for one server configuration block.
+ */
+public interface SaslMechanismFactory {
+    SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException;
 }

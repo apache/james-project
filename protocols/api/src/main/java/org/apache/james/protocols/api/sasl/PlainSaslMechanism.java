@@ -22,7 +22,6 @@ package org.apache.james.protocols.api.sasl;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 
 import org.apache.james.core.Username;
@@ -45,36 +44,16 @@ public class PlainSaslMechanism implements SaslMechanism {
     }
 
     @Override
-    public boolean supports(SaslProtocol protocol) {
-        return protocol == SaslProtocol.IMAP || protocol == SaslProtocol.SMTP;
-    }
-
-    @Override
-    public Set<Class<?>> requiredServices(SaslProtocol protocol) {
-        if (supports(protocol)) {
-            return Set.of(PasswordSaslAuthenticationService.class);
-        }
-        return Set.of();
-    }
-
-    @Override
-    public boolean isAvailable(SaslSessionContext context) {
-        return context.service(PasswordSaslAuthenticationService.class).isPresent();
-    }
-
-    @Override
-    public SaslExchange start(SaslInitialRequest request, SaslSessionContext context) {
-        return new PlainSaslExchange(request.initialResponse(), context, this::parse);
+    public SaslExchange start(SaslInitialRequest request) {
+        return new PlainSaslExchange(request.initialResponse(), this::parse);
     }
 
     private static class PlainSaslExchange implements SaslExchange {
         private final Optional<byte[]> initialResponse;
-        private final SaslSessionContext context;
         private final Function<byte[], Optional<PlainCredentials>> credentialsParser;
 
-        private PlainSaslExchange(Optional<byte[]> initialResponse, SaslSessionContext context, Function<byte[], Optional<PlainCredentials>> credentialsParser) {
+        private PlainSaslExchange(Optional<byte[]> initialResponse, Function<byte[], Optional<PlainCredentials>> credentialsParser) {
             this.initialResponse = initialResponse;
-            this.context = context;
             this.credentialsParser = credentialsParser;
         }
 
@@ -100,36 +79,24 @@ public class PlainSaslMechanism implements SaslMechanism {
 
         private SaslStep authenticate(byte[] clientResponse) {
             return credentialsParser.apply(clientResponse)
-                .map(this::authenticate)
+                .map(credentials -> (SaslStep) new SaslStep.Credentials(new SaslCredentials.Password(
+                    credentials.authenticationId(), credentials.authorizationId(), credentials.password())))
                 .orElseGet(() -> new SaslStep.Failure("Malformed authentication command."));
         }
-
-        private SaslStep authenticate(PlainCredentials credentials) {
-            return context.service(PasswordSaslAuthenticationService.class)
-                .map(service -> service.authenticate(credentials.authenticationId(), credentials.authorizationId(), credentials.password()))
-                .map(this::toStep)
-                .orElseGet(() -> new SaslStep.Failure("PLAIN authentication is not available."));
-        }
-
-        private SaslStep toStep(SaslAuthenticationResult result) {
-            if (result instanceof SaslAuthenticationResult.Success success) {
-                return new SaslStep.Success(success.identity(), Optional.empty());
-            }
-            return new SaslStep.Failure(((SaslAuthenticationResult.Failure) result).reason());
-        }
-
     }
 
     protected Optional<PlainCredentials> parse(byte[] clientResponse) {
-        ImmutableList<String> tokens = Arrays.stream(new String(clientResponse, StandardCharsets.UTF_8).split("\0"))
-            .filter(token -> !token.isBlank())
+        ImmutableList<String> tokens = Arrays.stream(new String(clientResponse, StandardCharsets.UTF_8).split("\0", -1))
             .collect(ImmutableList.toImmutableList());
 
         if (tokens.size() == 2) {
             return Optional.of(credentials(Optional.empty(), Username.of(tokens.get(0)), tokens.get(1)));
         }
         if (tokens.size() == 3) {
-            return Optional.of(credentials(Optional.of(Username.of(tokens.get(0))), Username.of(tokens.get(1)), tokens.get(2)));
+            Optional<Username> authorizationId = Optional.of(tokens.get(0))
+                .filter(value -> !value.isEmpty())
+                .map(Username::of);
+            return Optional.of(credentials(authorizationId, Username.of(tokens.get(1)), tokens.get(2)));
         }
         return Optional.empty();
     }

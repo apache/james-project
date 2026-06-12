@@ -19,23 +19,16 @@
 
 package org.apache.james.protocols.api.sasl;
 
-import java.util.Objects;
 import java.util.Optional;
 
 /**
  * Protocol-neutral initial SASL request.
  *
- * @param protocol protocol receiving the SASL exchange
  * @param mechanismName requested SASL mechanism name
  * @param initialResponse decoded initial client response, when supplied by the client
  */
-public record SaslInitialRequest(SaslProtocol protocol, String mechanismName, Optional<byte[]> initialResponse) {
-    public SaslInitialRequest(SaslProtocol protocol, String mechanismName, Optional<byte[]> initialResponse) {
-        Objects.requireNonNull(protocol);
-        Objects.requireNonNull(mechanismName);
-        Objects.requireNonNull(initialResponse);
-
-        this.protocol = protocol;
+public record SaslInitialRequest(String mechanismName, Optional<byte[]> initialResponse) {
+    public SaslInitialRequest(String mechanismName, Optional<byte[]> initialResponse) {
         this.mechanismName = mechanismName;
         this.initialResponse = initialResponse.map(byte[]::clone);
     }

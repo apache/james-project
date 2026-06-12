@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.james.core.Username;
 import org.junit.jupiter.api.Test;
@@ -38,68 +37,68 @@ class PlainSaslMechanismTest {
     @Test
     void shouldChallengeWhenNoInitialResponse() {
         // GIVEN a PLAIN exchange without SASL-IR
-        SaslInitialRequest request = new SaslInitialRequest(SaslProtocol.IMAP, PlainSaslMechanism.NAME, Optional.empty());
+        SaslInitialRequest request = new SaslInitialRequest(PlainSaslMechanism.NAME, Optional.empty());
 
         // WHEN the mechanism starts
-        SaslStep firstStep = testee.start(request, new TestSaslSessionContext(Optional.empty(), Optional.empty())).firstStep();
+        SaslStep firstStep = testee.start(request).firstStep();
 
         // THEN the server asks for one client response
         assertThat(firstStep).isEqualTo(new SaslStep.Challenge(Optional.empty()));
     }
 
     @Test
-    void shouldAuthenticateInitialResponseWithoutDelegation() {
-        AtomicReference<Username> authenticationId = new AtomicReference<>();
-        AtomicReference<String> password = new AtomicReference<>();
-        AtomicReference<Optional<Username>> authorizationId = new AtomicReference<>();
-        PasswordSaslAuthenticationService service = (user, delegatedUser, secret) -> {
-            authenticationId.set(user);
-            password.set(secret);
-            authorizationId.set(delegatedUser);
-            return new SaslAuthenticationResult.Success(new SaslIdentity(user, user));
-        };
-        SaslInitialRequest request = new SaslInitialRequest(SaslProtocol.IMAP, PlainSaslMechanism.NAME,
+    void shouldReturnPasswordCredentialsForInitialResponseWithoutDelegation() {
+        // GIVEN a valid PLAIN initial response without an authorization identity
+        SaslInitialRequest request = new SaslInitialRequest(PlainSaslMechanism.NAME,
             Optional.of(bytes("\0" + AUTHENTICATION_ID.asString() + "\0" + PASSWORD)));
 
-        SaslStep step = testee.start(request, new TestSaslSessionContext(Optional.of(service), Optional.empty())).firstStep();
+        // WHEN the mechanism consumes the initial response
+        SaslStep step = testee.start(request).firstStep();
 
-        assertThat(step).isInstanceOf(SaslStep.Success.class);
-        assertThat(authenticationId.get()).isEqualTo(AUTHENTICATION_ID);
-        assertThat(password.get()).isEqualTo(PASSWORD);
-        assertThat(authorizationId.get()).isEmpty();
+        // THEN it returns protocol-neutral password credentials
+        assertThat(step).isEqualTo(new SaslStep.Credentials(new SaslCredentials.Password(
+            AUTHENTICATION_ID, Optional.empty(), PASSWORD)));
     }
 
     @Test
-    void shouldAuthenticateContinuationResponseWithDelegation() {
-        AtomicReference<Optional<Username>> authorizationId = new AtomicReference<>();
-        PasswordSaslAuthenticationService service = (user, delegatedUser, secret) -> {
-            authorizationId.set(delegatedUser);
-            return new SaslAuthenticationResult.Success(new SaslIdentity(user, delegatedUser.orElse(user)));
-        };
-        SaslInitialRequest request = new SaslInitialRequest(SaslProtocol.IMAP, PlainSaslMechanism.NAME, Optional.empty());
-        SaslExchange exchange = testee.start(request, new TestSaslSessionContext(Optional.of(service), Optional.empty()));
+    void shouldReturnPasswordCredentialsForContinuationResponseWithDelegation() {
+        // GIVEN a PLAIN exchange waiting for the client response
+        SaslInitialRequest request = new SaslInitialRequest(PlainSaslMechanism.NAME, Optional.empty());
+        SaslExchange exchange = testee.start(request);
 
+        // WHEN the client sends a response with an authorization identity
         SaslStep step = exchange.onResponse(bytes(AUTHORIZATION_ID.asString() + "\0" + AUTHENTICATION_ID.asString() + "\0" + PASSWORD));
 
-        assertThat(step).isInstanceOf(SaslStep.Success.class);
-        assertThat(authorizationId.get()).contains(AUTHORIZATION_ID);
+        // THEN both identities are preserved for protocol-level authentication and delegation
+        assertThat(step).isEqualTo(new SaslStep.Credentials(new SaslCredentials.Password(
+            AUTHENTICATION_ID, Optional.of(AUTHORIZATION_ID), PASSWORD)));
+    }
+
+    @Test
+    void shouldAcceptTwoPartResponseWithoutAuthorizationIdentity() {
+        // GIVEN a PLAIN response encoded as authcid/password
+        SaslInitialRequest request = new SaslInitialRequest(PlainSaslMechanism.NAME,
+            Optional.of(bytes(AUTHENTICATION_ID.asString() + "\0" + PASSWORD)));
+
+        // WHEN the mechanism consumes the response
+        SaslStep step = testee.start(request).firstStep();
+
+        // THEN it treats the response as non-delegated password credentials
+        assertThat(step).isEqualTo(new SaslStep.Credentials(new SaslCredentials.Password(
+            AUTHENTICATION_ID, Optional.empty(), PASSWORD)));
     }
 
     @Test
     void shouldFailMalformedResponse() {
-        SaslInitialRequest request = new SaslInitialRequest(SaslProtocol.IMAP, PlainSaslMechanism.NAME,
+        // GIVEN a PLAIN response without the expected separators
+        SaslInitialRequest request = new SaslInitialRequest(PlainSaslMechanism.NAME,
             Optional.of(bytes("missing-separators")));
 
-        SaslStep step = testee.start(request, new TestSaslSessionContext(Optional.empty(), Optional.empty())).firstStep();
+        // WHEN the mechanism consumes the response
+        SaslStep step = testee.start(request).firstStep();
 
+        // THEN it fails before any protocol-specific authentication side effect
         assertThat(step).isEqualTo(new SaslStep.Failure("Malformed authentication command."));
-    }
-
-    @Test
-    void shouldBeAvailableOnlyWhenPasswordServiceExists() {
-        assertThat(testee.isAvailable(new TestSaslSessionContext(Optional.empty(), Optional.empty()))).isFalse();
-        assertThat(testee.isAvailable(new TestSaslSessionContext(Optional.of((user, authorizationId, password) ->
-            new SaslAuthenticationResult.Failure("failure")), Optional.empty()))).isTrue();
     }
 
     private static byte[] bytes(String value) {
