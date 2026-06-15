@@ -19,8 +19,8 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -34,7 +34,6 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
@@ -204,17 +203,18 @@ public class MailRepositoriesRoutes implements Routes {
                 response.raw()));
     }
 
-    private Object writeMimeMessage(MimeMessage mimeMessage, HttpServletResponse rawResponse) throws MessagingException, IOException {
-        rawResponse.setContentType(Constants.RFC822_CONTENT_TYPE);
-        rawResponse.setHeader("Content-Length", String.valueOf(computeExactSize(mimeMessage)));
-        mimeMessage.writeTo(rawResponse.getOutputStream());
-        return rawResponse;
-    }
+    private Object writeMimeMessage(MimeMessage mimeMessage, HttpServletResponse rawResponse) {
+        try {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            mimeMessage.writeTo(buffer);
 
-    private long computeExactSize(MimeMessage mimeMessage) throws IOException, MessagingException {
-        CountingOutputStream countingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream());
-        mimeMessage.writeTo(countingOutputStream);
-        return countingOutputStream.getByteCount();
+            rawResponse.setContentType(Constants.RFC822_CONTENT_TYPE);
+            rawResponse.setHeader("Content-Length", String.valueOf(buffer.size()));
+            buffer.writeTo(rawResponse.getOutputStream());
+            return rawResponse;
+        } catch (MessagingException | IOException e) {
+            throw internalServerError(e);
+        }
     }
 
     private MimeMessage getMailAsMimeMessage(MailRepositoryPath path, MailKey mailKey) {
