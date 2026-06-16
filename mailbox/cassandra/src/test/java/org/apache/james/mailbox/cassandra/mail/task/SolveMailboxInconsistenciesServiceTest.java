@@ -154,12 +154,13 @@ class SolveMailboxInconsistenciesServiceTest {
     }
 
     @Test
-    void fixMailboxInconsistenciesShouldReturnPartialWhenDAOMisMatchOnPath() {
+    void fixMailboxInconsistenciesShouldReturnCompletedWhenDAOMisMatchOnPath() {
+        // Same mailbox id referenced by two paths: auto-resolvable without data loss.
         mailboxDAO.save(MAILBOX).block();
         mailboxPathV3DAO.save(MAILBOX_NEW_PATH).block();
 
         assertThat(testee.fixMailboxInconsistencies(new Context()).block())
-            .isEqualTo(Result.PARTIAL);
+            .isEqualTo(Result.COMPLETED);
     }
 
     @Test
@@ -248,14 +249,14 @@ class SolveMailboxInconsistenciesServiceTest {
 
         testee.fixMailboxInconsistencies(context).block();
 
+        // The orphan mailbox pass re-registers the projection path, then the same-id conflict pass
+        // keeps the most recent path and drops the stale one: two fixes, no conflicting entry.
         assertThat(context.snapshot())
             .isEqualTo(Context.builder()
                 .processedMailboxEntries(1)
                 .processedMailboxPathEntries(2)
                 .addFixedInconsistencies(CASSANDRA_ID_1)
-                .addConflictingEntry(ConflictingEntry.builder()
-                    .mailboxDaoEntry(MAILBOX)
-                    .mailboxPathDaoEntry(MAILBOX_NEW_PATH))
+                .addFixedInconsistencies(CASSANDRA_ID_1)
                 .build()
                 .snapshot());
     }
@@ -335,8 +336,8 @@ class SolveMailboxInconsistenciesServiceTest {
 
     @Test
     void fixMailboxInconsistenciesShouldAlterStateWhenDaoMisMatchOnPath() {
-        // Note that CASSANDRA_ID_1 becomes usable
-        // However in order to avoid data loss, merging CASSANDRA_ID_1 and CASSANDRA_ID_2 is still required
+        // Same mailbox id referenced by two paths (a partial rename leftover): the solver keeps the
+        // most recently written path and drops the stale one, leaving a single consistent registration.
         mailboxDAO.save(MAILBOX).block();
         mailboxPathV3DAO.save(MAILBOX_NEW_PATH).block();
 
@@ -346,9 +347,27 @@ class SolveMailboxInconsistenciesServiceTest {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
                 .containsExactlyInAnyOrder(MAILBOX);
             softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
-                .containsExactlyInAnyOrder(
-                    MAILBOX_NEW_PATH,
-                    MAILBOX);
+                .containsExactlyInAnyOrder(MAILBOX);
+        });
+    }
+
+    @Test
+    void fixMailboxInconsistenciesShouldKeepMostRecentPathWhenSameMailboxRegisteredUnderTwoPaths() {
+        // Real partial rename leftover: the projection points to the new path, and both the old and
+        // the new path are still registered to the same id. The most recently written path (the
+        // rename target) wins and the stale old path reference is dropped.
+        mailboxDAO.save(MAILBOX_NEW_PATH).block();
+        mailboxPathV3DAO.save(MAILBOX).block();
+        mailboxPathV3DAO.save(MAILBOX_NEW_PATH).block();
+
+        Result result = testee.fixMailboxInconsistencies(new Context()).block();
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(result).isEqualTo(Result.COMPLETED);
+            softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
+                .containsExactlyInAnyOrder(MAILBOX_NEW_PATH);
+            softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
+                .containsExactlyInAnyOrder(MAILBOX_NEW_PATH);
         });
     }
 

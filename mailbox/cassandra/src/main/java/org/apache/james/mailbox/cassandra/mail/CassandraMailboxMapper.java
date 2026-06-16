@@ -233,8 +233,12 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
         return mailboxPathV3DAO.save(cassandraMailbox)
             .handle(ReactorUtils.raiseErrorIfFalse(() -> new MailboxExistsException(cassandraMailbox.generateAssociatedPath().asString())))
-            .flatMap(applied -> deletePreviousMailboxPathReference(previousPath)
-                .then(persistMailboxEntity(cassandraMailbox)))
+            // Additive writes first (the new path reference and the projection), subtractive write
+            // last (drop the old path reference). At any crash point the mailbox thus stays
+            // reachable under its new path with a consistent projection; only a stale old path
+            // reference may linger (the delete is retried to absorb transient failures).
+            .flatMap(applied -> persistMailboxEntity(cassandraMailbox)
+                .then(deletePreviousMailboxPathReference(previousPath)))
             .thenReturn(cassandraId);
     }
 
