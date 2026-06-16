@@ -63,6 +63,7 @@ public class CassandraMailboxPathV3DAO {
     private final PreparedStatement delete;
     private final PreparedStatement insert;
     private final PreparedStatement select;
+    private final PreparedStatement selectWriteTime;
     private final PreparedStatement selectUser;
     private final PreparedStatement selectAll;
     private final CqlSession session;
@@ -75,6 +76,7 @@ public class CassandraMailboxPathV3DAO {
         this.insert = prepareInsert();
         this.delete = prepareDelete();
         this.select = prepareSelect();
+        this.selectWriteTime = prepareSelectWriteTime();
         this.selectUser = prepareSelectUser();
         this.selectAll = prepareSelectAll();
         this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
@@ -109,6 +111,15 @@ public class CassandraMailboxPathV3DAO {
             .build());
     }
 
+    private PreparedStatement prepareSelectWriteTime() {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .writeTime(MAILBOX_ID)
+            .where(column(NAMESPACE).isEqualTo(bindMarker(NAMESPACE)),
+                column(USER).isEqualTo(bindMarker(USER)),
+                column(MAILBOX_NAME).isEqualTo(bindMarker(MAILBOX_NAME)))
+            .build());
+    }
+
     private PreparedStatement prepareSelectUser() {
         return session.prepare(selectFrom(TABLE_NAME)
             .columns(MAILBOX_ID, UIDVALIDITY, MAILBOX_NAME)
@@ -137,6 +148,16 @@ public class CassandraMailboxPathV3DAO {
             .map(row -> fromRow(row, mailboxPath.getUser(), mailboxPath.getNamespace(), mailboxPath.getName()))
             .map(FunctionalUtils.toFunction(this::logGhostMailboxSuccess))
             .switchIfEmpty(ReactorUtils.executeAndEmpty(() -> logGhostMailboxFailure(mailboxPath)));
+    }
+
+    public Mono<Long> writeTime(MailboxPath mailboxPath) {
+        BoundStatement statement = selectWriteTime.bind()
+            .set(NAMESPACE, mailboxPath.getNamespace(), TypeCodecs.TEXT)
+            .set(USER, sanitizeUser(mailboxPath.getUser()), TypeCodecs.TEXT)
+            .set(MAILBOX_NAME, mailboxPath.getName(), TypeCodecs.TEXT);
+
+        return cassandraAsyncExecutor.executeSingleRow(setExecutionProfileIfNeeded(statement, STRONG))
+            .map(row -> row.getLong(0));
     }
 
     public Flux<Mailbox> listUserMailboxes(String namespace, Username user, JamesExecutionProfiles.ConsistencyChoice consistencyChoice) {
