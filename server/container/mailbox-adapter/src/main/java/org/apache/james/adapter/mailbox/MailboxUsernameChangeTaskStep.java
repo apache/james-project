@@ -19,6 +19,7 @@
 
 package org.apache.james.adapter.mailbox;
 
+import java.util.Comparator;
 import java.util.concurrent.ThreadLocalRandom;
 
 import jakarta.inject.Inject;
@@ -77,14 +78,20 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
         int renameOperationId = ThreadLocalRandom.current().nextInt(1000);
 
         return mailboxManager.search(queryUser, MailboxManager.MailboxSearchFetchType.Minimal, fromSession)
-            // Only keep top level, rename takes care of sub mailboxes
-            .filter(mailbox -> mailbox.getPath().getHierarchyLevels(fromSession.getPathDelimiter()).size() == 1)
+            // Process the deepest mailboxes first. As renameMailbox is recursive (it also renames
+            // sub mailboxes), handling a mailbox only once all of its descendants have already been
+            // migrated guarantees it is effectively a leaf at that point: the rename then carries no
+            // sub mailbox along, which lets us migrate every node individually - including when the
+            // destination mailbox already exists and a plain rename is therefore not possible.
+            .sort(Comparator.comparingInt(
+                (MailboxMetaData mailbox) -> mailbox.getPath().getHierarchyLevels(fromSession.getPathDelimiter()).size())
+                .reversed())
             .concatMap(mailbox -> migrateMailbox(fromSession, toSession, mailbox, renameOperationId))
             .doFinally(any -> mailboxManager.endProcessingRequest(fromSession))
             .doFinally(any -> mailboxManager.endProcessingRequest(toSession));
     }
 
-    private Mono<Void> migrateMailbox(MailboxSession fromSession, MailboxSession toSession, org.apache.james.mailbox.model.MailboxMetaData mailbox, int renameOperationId) {
+    private Mono<Void> migrateMailbox(MailboxSession fromSession, MailboxSession toSession, MailboxMetaData mailbox, int renameOperationId) {
         MailboxPath renamedPath = mailbox.getPath().withUser(toSession.getUser());
         return mailboxManager.mailboxExists(renamedPath, toSession)
             .flatMap(exist -> {
@@ -104,9 +111,11 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
             .then();
     }
 
-    // The destination mailbox already exists: bring the source mailbox into the destination
-    // account under a temporary name, MOVE its messages into the destination, then drop the
-    // emptied temporary mailbox.
+    // The destination mailbox already exists: a plain rename is impossible, so we bring the source
+    // mailbox into the destination account under a temporary name, MOVE its messages into the
+    // destination, then drop the emptied temporary mailbox. Sub mailboxes are not handled here: as
+    // mailboxes are migrated deepest first, the source mailbox no longer has any descendant when we
+    // reach this point.
     private Mono<Void> moveWhenMailboxExist(MailboxSession fromSession, MailboxSession toSession, MailboxMetaData mailbox, MailboxPath renamedPath, int renameOperationId) {
         MailboxPath temporaryPath = new MailboxPath(renamedPath.getNamespace(), renamedPath.getUser(), renamedPath.getName() + "-tmp-" + renameOperationId);
         return mailboxManager.renameMailboxReactive(mailbox.getPath(), temporaryPath,
