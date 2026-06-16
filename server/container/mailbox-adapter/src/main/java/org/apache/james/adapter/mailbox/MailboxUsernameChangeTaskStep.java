@@ -19,6 +19,8 @@
 
 package org.apache.james.adapter.mailbox;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -69,22 +71,27 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
             .user(fromSession.getUser())
             .build();
 
+        // A single random suffix is generated for the whole rename operation so that temporary
+        // mailboxes never collide with a leftover from a previous run (we thus do not loose the
+        // previous content) while staying recognizable.
+        int renameOperationId = ThreadLocalRandom.current().nextInt(1000);
+
         return mailboxManager.search(queryUser, MailboxManager.MailboxSearchFetchType.Minimal, fromSession)
             // Only keep top level, rename takes care of sub mailboxes
             .filter(mailbox -> mailbox.getPath().getHierarchyLevels(fromSession.getPathDelimiter()).size() == 1)
-            .concatMap(mailbox -> migrateMailbox(fromSession, toSession, mailbox))
+            .concatMap(mailbox -> migrateMailbox(fromSession, toSession, mailbox, renameOperationId))
             .doFinally(any -> mailboxManager.endProcessingRequest(fromSession))
             .doFinally(any -> mailboxManager.endProcessingRequest(toSession));
     }
 
-    private Mono<Void> migrateMailbox(MailboxSession fromSession, MailboxSession toSession, org.apache.james.mailbox.model.MailboxMetaData mailbox) {
+    private Mono<Void> migrateMailbox(MailboxSession fromSession, MailboxSession toSession, org.apache.james.mailbox.model.MailboxMetaData mailbox, int renameOperationId) {
         MailboxPath renamedPath = mailbox.getPath().withUser(toSession.getUser());
         return mailboxManager.mailboxExists(renamedPath, toSession)
             .flatMap(exist -> {
                 if (!exist) {
                     return renameMailboxAndRenameSubscriptionForDelegatee(fromSession, toSession, mailbox, renamedPath);
                 } else {
-                    return moveWhenMailboxExist(fromSession, toSession, mailbox, renamedPath);
+                    return moveWhenMailboxExist(fromSession, toSession, mailbox, renamedPath, renameOperationId);
                 }
             });
     }
@@ -100,8 +107,8 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
     // The destination mailbox already exists: bring the source mailbox into the destination
     // account under a temporary name, MOVE its messages into the destination, then drop the
     // emptied temporary mailbox.
-    private Mono<Void> moveWhenMailboxExist(MailboxSession fromSession, MailboxSession toSession, MailboxMetaData mailbox, MailboxPath renamedPath) {
-        MailboxPath temporaryPath = new MailboxPath(renamedPath.getNamespace(), renamedPath.getUser(), renamedPath.getName() + "tmp");
+    private Mono<Void> moveWhenMailboxExist(MailboxSession fromSession, MailboxSession toSession, MailboxMetaData mailbox, MailboxPath renamedPath, int renameOperationId) {
+        MailboxPath temporaryPath = new MailboxPath(renamedPath.getNamespace(), renamedPath.getUser(), renamedPath.getName() + "-tmp-" + renameOperationId);
         return mailboxManager.renameMailboxReactive(mailbox.getPath(), temporaryPath,
                 MailboxManager.RenameOption.NONE, fromSession, toSession)
             .thenMany(mailboxManager.moveMessagesReactive(MessageRange.all(), temporaryPath, renamedPath, toSession))
