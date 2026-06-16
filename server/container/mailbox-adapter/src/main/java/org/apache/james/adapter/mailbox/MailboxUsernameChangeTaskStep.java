@@ -84,8 +84,7 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
                 if (!exist) {
                     return renameMailboxAndRenameSubscriptionForDelegatee(fromSession, toSession, mailbox, renamedPath);
                 } else {
-                    return renameWhenMailboxExist(toSession, renamedPath,
-                        renameMailboxAndRenameSubscriptionForDelegatee(fromSession, toSession, mailbox, renamedPath));
+                    return moveWhenMailboxExist(fromSession, toSession, mailbox, renamedPath);
                 }
             });
     }
@@ -98,18 +97,15 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
             .then();
     }
 
-    // rename: renamedPath -> temporaryPath
-    // rename: mailbox.getPath -> renamedPath
-    // copy messages: temporaryPath -> renamedPath
-    // delete: temporaryPath
-    private Mono<Void> renameWhenMailboxExist(MailboxSession toSession, MailboxPath renamedPath, Mono<Void> renamePublisher) {
+    // The destination mailbox already exists: bring the source mailbox into the destination
+    // account under a temporary name, MOVE its messages into the destination, then drop the
+    // emptied temporary mailbox.
+    private Mono<Void> moveWhenMailboxExist(MailboxSession fromSession, MailboxSession toSession, MailboxMetaData mailbox, MailboxPath renamedPath) {
         MailboxPath temporaryPath = new MailboxPath(renamedPath.getNamespace(), renamedPath.getUser(), renamedPath.getName() + "tmp");
-        return mailboxManager.renameMailboxReactive(renamedPath, temporaryPath,
-                MailboxManager.RenameOption.NONE, toSession)
-            .then(renamePublisher)
-            .then(mailboxManager.copyMessagesReactive(MessageRange.all(),
-                    temporaryPath, renamedPath, toSession)
-                .then())
+        return mailboxManager.renameMailboxReactive(mailbox.getPath(), temporaryPath,
+                MailboxManager.RenameOption.NONE, fromSession, toSession)
+            .thenMany(mailboxManager.moveMessagesReactive(MessageRange.all(), temporaryPath, renamedPath, toSession))
+            .then(renameSubscriptionsForDelegatee(mailbox, renamedPath))
             .then(mailboxManager.deleteMailboxReactive(temporaryPath, toSession));
     }
 
