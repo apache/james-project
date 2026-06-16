@@ -19,26 +19,11 @@
 
 package org.apache.james.protocols.api.sasl;
 
-/**
- * Protocol-neutral SASL mechanism.
- */
-public interface SaslMechanism {
-    /**
-     * Returns the SASL mechanism name advertised to clients.
-     */
-    String name();
+public final class SaslMechanismNames {
+    public static final String PLAIN = "PLAIN";
+    public static final String OAUTHBEARER = "OAUTHBEARER";
+    public static final String XOAUTH2 = "XOAUTH2";
 
-    /**
-     * Starts a new SASL exchange for one client authentication attempt.
-     */
-    SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator);
-
-    /**
-     * Whether this mechanism may be used over the current transport.
-     *
-     * @param channelEncrypted whether the underlying transport is encrypted, for example with TLS.
-     */
-    default boolean isAvailableOnTransport(boolean channelEncrypted) {
-        return true;
+    private SaslMechanismNames() {
     }
 }

@@ -21,46 +21,23 @@ package org.apache.james.protocols.api.sasl;
 
 import java.util.Optional;
 
+import org.apache.james.core.Username;
+
 /**
- * Server step produced by a SASL exchange.
+ * Protocol-neutral authentication service available to SASL mechanisms.
  */
-public sealed interface SaslStep permits SaslStep.Challenge, SaslStep.Success, SaslStep.Failure {
+public interface SaslAuthenticator {
     /**
-     * Server challenge to send back to the client.
+     * Verifies password credentials and, when present, validates that the authenticated user may act as the
+     * requested authorization identity.
      */
-    record Challenge(Optional<byte[]> payload) implements SaslStep {
-        public Challenge(Optional<byte[]> payload) {
-            this.payload = payload.map(byte[]::clone);
-        }
-
-        /**
-         * Returns a defensive copy of the decoded challenge payload.
-         */
-        public Optional<byte[]> payload() {
-            return payload.map(byte[]::clone);
-        }
-    }
+    SaslAuthenticationResult authenticatePassword(Username authenticationId,
+                                                  Optional<Username> authorizationId,
+                                                  String password);
 
     /**
-     * Successful SASL exchange result.
+     * Validates an already-authenticated identity, typically for token or Kerberos mechanisms that verified
+     * credentials inside the SASL exchange.
      */
-    record Success(SaslIdentity identity, Optional<byte[]> serverData) implements SaslStep {
-        public Success(SaslIdentity identity, Optional<byte[]> serverData) {
-            this.identity = identity;
-            this.serverData = serverData.map(byte[]::clone);
-        }
-
-        /**
-         * Returns a defensive copy of the decoded final server data.
-         */
-        public Optional<byte[]> serverData() {
-            return serverData.map(byte[]::clone);
-        }
-    }
-
-    /**
-     * Failed SASL exchange result.
-     */
-    record Failure(SaslFailure failure) implements SaslStep {
-    }
+    SaslAuthenticationResult authorize(SaslIdentity identity);
 }

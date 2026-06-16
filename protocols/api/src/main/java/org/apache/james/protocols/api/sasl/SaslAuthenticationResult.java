@@ -20,25 +20,13 @@
 package org.apache.james.protocols.api.sasl;
 
 /**
- * Protocol-neutral SASL mechanism.
+ * Result of protocol-neutral James authentication or authorization performed for a SASL mechanism.
  */
-public interface SaslMechanism {
-    /**
-     * Returns the SASL mechanism name advertised to clients.
-     */
-    String name();
+public sealed interface SaslAuthenticationResult permits SaslAuthenticationResult.Success, SaslAuthenticationResult.Failure {
 
-    /**
-     * Starts a new SASL exchange for one client authentication attempt.
-     */
-    SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator);
+    record Success(SaslIdentity identity) implements SaslAuthenticationResult {
+    }
 
-    /**
-     * Whether this mechanism may be used over the current transport.
-     *
-     * @param channelEncrypted whether the underlying transport is encrypted, for example with TLS.
-     */
-    default boolean isAvailableOnTransport(boolean channelEncrypted) {
-        return true;
+    record Failure(SaslFailure failure) implements SaslAuthenticationResult {
     }
 }

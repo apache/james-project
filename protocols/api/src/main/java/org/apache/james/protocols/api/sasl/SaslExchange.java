@@ -34,9 +34,11 @@ public interface SaslExchange extends AutoCloseable {
     SaslStep onResponse(byte[] clientResponse);
 
     /**
-     * Aborts the exchange after a client cancellation or protocol-level failure.
+     * Aborts the exchange after a client cancellation or protocol-level failure, and releases associated resources.
      */
-    void abort();
+    default void abort() {
+        close();
+    }
 
     @Override
     void close();
