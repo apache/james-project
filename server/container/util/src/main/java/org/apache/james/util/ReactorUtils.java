@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.reactivestreams.Publisher;
@@ -105,6 +106,16 @@ public class ReactorUtils {
 
     public static <T> BiConsumer<Optional<T>, SynchronousSink<T>> publishIfPresent() {
         return (element, sink) -> element.ifPresent(sink::next);
+    }
+
+    public static BiConsumer<Boolean, SynchronousSink<Boolean>> raiseErrorIfFalse(Supplier<Exception> exceptionSupplier) {
+        return (element, sink) -> {
+            if (!element) {
+                sink.error(exceptionSupplier.get());
+            } else {
+                sink.next(element);
+            }
+        };
     }
 
     public static InputStream toInputStream(Flux<ByteBuffer> byteArrays) {
