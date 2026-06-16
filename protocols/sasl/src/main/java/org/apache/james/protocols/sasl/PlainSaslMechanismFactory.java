@@ -17,27 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.protocols.sasl;
 
-import jakarta.inject.Inject;
-
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
+import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
 
-public class GuiceSaslMechanismInstantiator implements SaslMechanismInstantiator {
-    private final GuiceLoader.InvocationPerformer<SaslMechanism> mechanismLoader;
-
-    @Inject
-    public GuiceSaslMechanismInstantiator(GuiceLoader guiceLoader) {
-        this.mechanismLoader = guiceLoader.withNamingSheme(DefaultSaslMechanismNamingScheme.asNamingScheme());
-    }
+public class PlainSaslMechanismFactory implements SaslMechanismFactory {
+    private static final boolean PLAIN_AUTH_DISALLOWED_DEFAULT = true;
+    private static final boolean PLAIN_AUTH_ENABLED_DEFAULT = true;
 
     @Override
-    public Class<? extends SaslMechanism> locate(ClassName className) throws ClassNotFoundException {
-        return mechanismLoader.locateClass(className);
+    public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
+        return new PlainSaslMechanism(plainAuthEnabled(serverConfiguration), requiresSsl(serverConfiguration));
     }
 
-    @Override
-    public SaslMechanism instantiate(ClassName className) throws ClassNotFoundException {
-        return mechanismLoader.instantiate(className);
+    protected boolean plainAuthEnabled(HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
+        return serverConfiguration.getBoolean("auth.plainAuthEnabled", PLAIN_AUTH_ENABLED_DEFAULT);
+    }
+
+    protected boolean requiresSsl(HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
+        return serverConfiguration.getBoolean("auth.requireSSL",
+            serverConfiguration.getBoolean("plainAuthDisallowed", PLAIN_AUTH_DISALLOWED_DEFAULT));
     }
 }

@@ -17,22 +17,27 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.protocols;
+package org.apache.james.protocols.sasl;
+
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.protocols.api.sasl.OauthBearerSaslMechanism;
-import org.apache.james.protocols.api.sasl.PlainSaslMechanism;
-import org.apache.james.protocols.api.sasl.XOauth2SaslMechanism;
+import org.apache.james.jwt.OidcJwtTokenVerifier;
+import org.apache.james.jwt.OidcSASLConfiguration;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
 
-import com.google.common.collect.ImmutableList;
-
-public class JamesDefaultImapSaslMechanismClassNamesProvider implements DefaultImapSaslMechanismClassNamesProvider {
-    @Override
-    public ImmutableList<String> resolve(HierarchicalConfiguration<ImmutableNode> configuration) {
-        return ImmutableList.of(
-            PlainSaslMechanism.class.getSimpleName(),
-            OauthBearerSaslMechanism.class.getSimpleName(),
-            XOauth2SaslMechanism.class.getSimpleName());
+abstract class OidcSaslMechanismFactory implements SaslMechanismFactory {
+    protected OidcJwtTokenVerifier parseVerifier(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
+        if (serverConfiguration.immutableConfigurationsAt("auth.oidc").isEmpty()) {
+            throw new ConfigurationException("OAuth SASL mechanisms require an auth.oidc configuration");
+        }
+        try {
+            return new OidcJwtTokenVerifier(OidcSASLConfiguration.parse(serverConfiguration.configurationAt("auth.oidc")));
+        } catch (MalformedURLException | URISyntaxException | NullPointerException e) {
+            throw new ConfigurationException("Failed to retrieve oauth component", e);
+        }
     }
 }

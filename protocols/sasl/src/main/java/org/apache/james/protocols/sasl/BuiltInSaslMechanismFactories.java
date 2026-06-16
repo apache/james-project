@@ -17,18 +17,30 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.api.sasl;
+package org.apache.james.protocols.sasl;
 
-public class OauthBearerSaslMechanism implements SaslMechanism {
-    public static final String NAME = "OAUTHBEARER";
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
 
-    @Override
-    public String name() {
-        return NAME;
+import com.google.common.collect.ImmutableList;
+
+public final class BuiltInSaslMechanismFactories {
+    public static ImmutableList<SaslMechanismFactory> enabledForServer(ImmutableList<SaslMechanismFactory> defaultFactories,
+                                                                       HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
+        return defaultFactories.stream()
+            .filter(factory -> isEnabledByDefault(factory, serverConfiguration))
+            .collect(ImmutableList.toImmutableList());
     }
 
-    @Override
-    public SaslExchange start(SaslInitialRequest request) {
-        return OidcSaslMechanisms.start(request.initialResponse());
+    private static boolean isEnabledByDefault(SaslMechanismFactory factory,
+                                              HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
+        if (factory instanceof OidcSaslMechanismFactory) {
+            return !serverConfiguration.immutableConfigurationsAt("auth.oidc").isEmpty();
+        }
+        return true;
+    }
+
+    private BuiltInSaslMechanismFactories() {
     }
 }

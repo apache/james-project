@@ -17,10 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.api.sasl;
+package org.apache.james.protocols.sasl.oidc;
 
-public class XOauth2SaslMechanism implements SaslMechanism {
-    public static final String NAME = "XOAUTH2";
+import org.apache.james.jwt.OidcJwtTokenVerifier;
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslExchange;
+import org.apache.james.protocols.api.sasl.SaslInitialRequest;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismNames;
+
+public class OauthBearerSaslMechanism implements SaslMechanism {
+    public static final String NAME = SaslMechanismNames.OAUTHBEARER;
+
+    private final OidcJwtTokenVerifier verifier;
+
+    public OauthBearerSaslMechanism(OidcJwtTokenVerifier verifier) {
+        this.verifier = verifier;
+    }
 
     @Override
     public String name() {
@@ -28,7 +41,7 @@ public class XOauth2SaslMechanism implements SaslMechanism {
     }
 
     @Override
-    public SaslExchange start(SaslInitialRequest request) {
-        return OidcSaslMechanisms.start(request.initialResponse());
+    public SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator) {
+        return OidcSaslMechanisms.start(request.initialResponse(), verifier, authenticator);
     }
 }

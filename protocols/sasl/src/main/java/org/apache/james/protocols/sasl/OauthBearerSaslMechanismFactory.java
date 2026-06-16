@@ -17,25 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.api.sasl;
+package org.apache.james.protocols.sasl;
 
-import java.util.Optional;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.sasl.oidc.OauthBearerSaslMechanism;
 
-import org.apache.james.core.Username;
-
-/**
- * Credentials parsed by SASL mechanisms and applied by protocol handlers.
- */
-public sealed interface SaslCredentials permits SaslCredentials.Password, SaslCredentials.BearerToken {
-    record Password(Username authenticationId, Optional<Username> authorizationId, String password) implements SaslCredentials {
-        public String toString() {
-            return "Password[authenticationId=" + authenticationId.asString() + ", authorizationId=" + authorizationId.map(Username::asString) + ", password=******]";
-        }
-    }
-
-    record BearerToken(String token, Username authorizationId) implements SaslCredentials {
-        public String toString() {
-            return "BearerToken[token=******, authorizationId=" + authorizationId.asString() + "]";
-        }
+public class OauthBearerSaslMechanismFactory extends OidcSaslMechanismFactory {
+    @Override
+    public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
+        return new OauthBearerSaslMechanism(parseVerifier(serverConfiguration));
     }
 }

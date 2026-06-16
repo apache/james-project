@@ -17,36 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.api.sasl;
+package org.apache.james.protocols.sasl.oidc;
 
-public class TestingDefaultPackageSaslMechanism implements SaslMechanism {
+import org.apache.james.jwt.OidcJwtTokenVerifier;
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslExchange;
+import org.apache.james.protocols.api.sasl.SaslInitialRequest;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismNames;
+
+public class XOauth2SaslMechanism implements SaslMechanism {
+    public static final String NAME = SaslMechanismNames.XOAUTH2;
+
+    private final OidcJwtTokenVerifier verifier;
+
+    public XOauth2SaslMechanism(OidcJwtTokenVerifier verifier) {
+        this.verifier = verifier;
+    }
+
     @Override
     public String name() {
-        return "DEFAULT";
+        return NAME;
     }
 
     @Override
-    public SaslExchange start(SaslInitialRequest request) {
-        return new FixedStepExchange(new SaslStep.Failure("not implemented"));
-    }
-
-    private record FixedStepExchange(SaslStep step) implements SaslExchange {
-        @Override
-        public SaslStep firstStep() {
-            return step;
-        }
-
-        @Override
-        public SaslStep onResponse(byte[] clientResponse) {
-            return step;
-        }
-
-        @Override
-        public void abort() {
-        }
-
-        @Override
-        public void close() {
-        }
+    public SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator) {
+        return OidcSaslMechanisms.start(request.initialResponse(), verifier, authenticator);
     }
 }

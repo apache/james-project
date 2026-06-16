@@ -17,27 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.examples.imap.sasl;
+package org.apache.james.protocols.sasl;
 
-import org.apache.james.modules.SaslMechanismFactories;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
-import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
+import org.apache.james.protocols.sasl.oidc.XOauth2SaslMechanism;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
-
-public class ExampleTokenSaslModule extends AbstractModule {
+public class XOauth2SaslMechanismFactory extends OidcSaslMechanismFactory {
     @Override
-    protected void configure() {
-        MapBinder<Class<? extends SaslMechanism>, SaslMechanismFactory> factories = MapBinder.newMapBinder(binder(),
-            new TypeLiteral<>() {
-            },
-            new TypeLiteral<>() {
-            },
-            SaslMechanismFactories.class);
-
-        factories.addBinding(ExampleTokenSaslMechanism.class)
-            .to(ExampleTokenSaslMechanismFactory.class);
+    public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
+        return new XOauth2SaslMechanism(parseVerifier(serverConfiguration));
     }
 }

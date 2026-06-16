@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.api.sasl;
+package org.apache.james.protocols.sasl.plain;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -25,11 +25,19 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.james.core.Username;
+import org.apache.james.protocols.api.sasl.SaslAuthenticationResult;
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslExchange;
+import org.apache.james.protocols.api.sasl.SaslFailure;
+import org.apache.james.protocols.api.sasl.SaslInitialRequest;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismNames;
+import org.apache.james.protocols.api.sasl.SaslStep;
 
 import com.google.common.collect.ImmutableList;
 
 public class PlainSaslMechanism implements SaslMechanism {
-    public static final String NAME = "PLAIN";
+    public static final String NAME = SaslMechanismNames.PLAIN;
 
     protected record PlainCredentials(Optional<Username> authorizationId, Username authenticationId, String password) {
     }
@@ -38,23 +46,52 @@ public class PlainSaslMechanism implements SaslMechanism {
         return new PlainCredentials(authorizationId, authenticationId, password);
     }
 
+    private final boolean enabled;
+    private final boolean requiresSsl;
+
+    public PlainSaslMechanism() {
+        this(true, false);
+    }
+
+    public PlainSaslMechanism(boolean enabled, boolean requiresSsl) {
+        this.enabled = enabled;
+        this.requiresSsl = requiresSsl;
+    }
+
     @Override
     public String name() {
         return NAME;
     }
 
     @Override
-    public SaslExchange start(SaslInitialRequest request) {
-        return new PlainSaslExchange(request.initialResponse(), this::parse);
+    public boolean isAvailableOnTransport(boolean channelEncrypted) {
+        return enabled && (!requiresSsl || channelEncrypted);
+    }
+
+    @Override
+    public SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator) {
+        return new PlainSaslExchange(request.initialResponse(), this::parse, authenticator);
+    }
+
+    /**
+     * Verifies cleartext credentials directly for protocols whose command already exposes username/password,
+     * for example IMAP LOGIN.
+     */
+    public SaslStep authenticate(Username authenticationId, String password, SaslAuthenticator authenticator) {
+        return verify(credentials(Optional.empty(), authenticationId, password), authenticator);
     }
 
     private static class PlainSaslExchange implements SaslExchange {
         private final Optional<byte[]> initialResponse;
         private final Function<byte[], Optional<PlainCredentials>> credentialsParser;
+        private final SaslAuthenticator authenticator;
 
-        private PlainSaslExchange(Optional<byte[]> initialResponse, Function<byte[], Optional<PlainCredentials>> credentialsParser) {
+        private PlainSaslExchange(Optional<byte[]> initialResponse,
+                                  Function<byte[], Optional<PlainCredentials>> credentialsParser,
+                                  SaslAuthenticator authenticator) {
             this.initialResponse = initialResponse;
             this.credentialsParser = credentialsParser;
+            this.authenticator = authenticator;
         }
 
         @Override
@@ -70,19 +107,23 @@ public class PlainSaslMechanism implements SaslMechanism {
         }
 
         @Override
-        public void abort() {
-        }
-
-        @Override
         public void close() {
         }
 
         private SaslStep authenticate(byte[] clientResponse) {
             return credentialsParser.apply(clientResponse)
-                .map(credentials -> (SaslStep) new SaslStep.Credentials(new SaslCredentials.Password(
-                    credentials.authenticationId(), credentials.authorizationId(), credentials.password())))
-                .orElseGet(() -> new SaslStep.Failure("Malformed authentication command."));
+                .map(credentials -> verify(credentials, authenticator))
+                .orElseGet(() -> new SaslStep.Failure(SaslFailure.malformed("Malformed authentication command.")));
         }
+    }
+
+    protected static SaslStep verify(PlainCredentials credentials, SaslAuthenticator authenticator) {
+        SaslAuthenticationResult result = authenticator.authenticatePassword(
+            credentials.authenticationId(), credentials.authorizationId(), credentials.password());
+        return switch (result) {
+            case SaslAuthenticationResult.Success success -> new SaslStep.Success(success.identity(), Optional.empty());
+            case SaslAuthenticationResult.Failure failure -> new SaslStep.Failure(failure.failure());
+        };
     }
 
     protected Optional<PlainCredentials> parse(byte[] clientResponse) {
