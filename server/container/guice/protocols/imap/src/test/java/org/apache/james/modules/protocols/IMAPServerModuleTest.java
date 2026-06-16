@@ -24,80 +24,83 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.protocols.sasl.OauthBearerSaslMechanismFactory;
+import org.apache.james.protocols.sasl.PlainSaslMechanismFactory;
+import org.apache.james.protocols.sasl.XOauth2SaslMechanismFactory;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 class IMAPServerModuleTest {
-    private static final JamesDefaultImapSaslMechanismClassNamesProvider JAMES_DEFAULT_PROVIDER = new JamesDefaultImapSaslMechanismClassNamesProvider();
-
     private final IMAPServerModule testee = new IMAPServerModule();
 
     @Test
-    void retrieveSaslMechanismClassNamesShouldReturnDefaultsWhenAbsent() throws Exception {
+    void provideDefaultImapSaslMechanismFactoriesShouldReturnJamesDefaults() {
         // GIVEN no auth.saslMechanisms configuration
-        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
+        // WHEN IMAP provides its default SASL factories
 
-        // WHEN IMAP resolves its SASL mechanism class names
-        ImmutableList<String> mechanismClassNames = testee.retrieveSaslMechanismClassNames(configuration, JAMES_DEFAULT_PROVIDER);
-
-        // THEN existing James IMAP defaults are preserved
-        assertThat(mechanismClassNames)
-            .containsExactly("PlainSaslMechanism", "OauthBearerSaslMechanism", "XOauth2SaslMechanism");
+        // THEN existing James IMAP defaults are preserved in order
+        assertThat(testee.provideDefaultImapSaslMechanismFactories(
+                new PlainSaslMechanismFactory(),
+                new OauthBearerSaslMechanismFactory(),
+                new XOauth2SaslMechanismFactory()))
+            .map(factory -> factory.getClass().getSimpleName())
+            .containsExactly(
+                PlainSaslMechanismFactory.class.getSimpleName(),
+                OauthBearerSaslMechanismFactory.class.getSimpleName(),
+                XOauth2SaslMechanismFactory.class.getSimpleName());
     }
 
     @Test
-    void retrieveSaslMechanismClassNamesShouldUseConfiguredDefaultProviderOverJamesDefaultProviderWhenAbsent() throws Exception {
-        // GIVEN a non-James default provider configured by Guice.
-        // This allows community custom IMAP packages with custom authentication to provide
-        // their own default SASL list and avoid breaking changes when auth.saslMechanisms is absent.
+    void retrieveSaslMechanismFactoryClassNamesShouldReturnEmptyWhenAbsent() throws Exception {
+        // GIVEN no auth.saslMechanisms configuration.
+        // The empty configured list lets the resolver use the Guice-provided default factory list.
+        // Community custom IMAP packages can override that default factory list to avoid breaking changes.
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
-        DefaultImapSaslMechanismClassNamesProvider communityDefaultProvider = ignored -> ImmutableList.of("com.example.CustomSaslMechanism");
 
         // WHEN auth.saslMechanisms is absent
-        ImmutableList<String> mechanismClassNames = testee.retrieveSaslMechanismClassNames(configuration, communityDefaultProvider);
+        ImmutableList<String> mechanismFactoryClassNames = testee.retrieveSaslMechanismFactoryClassNames(configuration);
 
-        // THEN IMAP uses the configured community default provider instead of James default mechanisms
-        assertThat(mechanismClassNames)
-            .containsExactly("com.example.CustomSaslMechanism");
+        // THEN there is no configured override
+        assertThat(mechanismFactoryClassNames).isEmpty();
     }
 
     @Test
-    void retrieveSaslMechanismClassNamesShouldReturnConfiguredSaslMechanismList() throws Exception {
-        // GIVEN an explicit server-specific SASL mechanism list
+    void retrieveSaslMechanismFactoryClassNamesShouldReturnConfiguredSaslFactoryList() throws Exception {
+        // GIVEN an explicit server-specific SASL factory list
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("auth.saslMechanisms",
-            "PlainSaslMechanism,com.example.CustomSaslMechanism,PlainSaslMechanism");
+            "PlainSaslMechanismFactory,com.example.CustomSaslMechanismFactory,PlainSaslMechanismFactory");
 
-        // WHEN IMAP resolves configured class names
-        ImmutableList<String> mechanismClassNames = testee.retrieveSaslMechanismClassNames(configuration, JAMES_DEFAULT_PROVIDER);
+        // WHEN IMAP resolves configured factory class names
+        ImmutableList<String> mechanismFactoryClassNames = testee.retrieveSaslMechanismFactoryClassNames(configuration);
 
         // THEN the exact configured order is passed to the resolver
-        assertThat(mechanismClassNames)
-            .containsExactly("PlainSaslMechanism", "com.example.CustomSaslMechanism", "PlainSaslMechanism");
+        assertThat(mechanismFactoryClassNames)
+            .containsExactly("PlainSaslMechanismFactory", "com.example.CustomSaslMechanismFactory", "PlainSaslMechanismFactory");
     }
 
     @Test
-    void retrieveSaslMechanismClassNamesShouldRejectBlankConfiguredList() {
+    void retrieveSaslMechanismFactoryClassNamesShouldRejectBlankConfiguredList() {
         // GIVEN auth.saslMechanisms is present but blank
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("auth.saslMechanisms", " ");
 
-        // WHEN resolving class names
+        // WHEN resolving factory class names
         // THEN startup fails instead of silently disabling all mechanisms
-        assertThatThrownBy(() -> testee.retrieveSaslMechanismClassNames(configuration, JAMES_DEFAULT_PROVIDER))
+        assertThatThrownBy(() -> testee.retrieveSaslMechanismFactoryClassNames(configuration))
             .isInstanceOf(ConfigurationException.class);
     }
 
     @Test
-    void retrieveSaslMechanismClassNamesShouldRejectBlankEntry() {
+    void retrieveSaslMechanismFactoryClassNamesShouldRejectBlankEntry() {
         // GIVEN auth.saslMechanisms contains a blank entry
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
-        configuration.addProperty("auth.saslMechanisms", "PlainSaslMechanism,,XOauth2SaslMechanism");
+        configuration.addProperty("auth.saslMechanisms", "PlainSaslMechanismFactory,,XOauth2SaslMechanismFactory");
 
-        // WHEN resolving class names
+        // WHEN resolving factory class names
         // THEN startup fails with an invalid configured list
-        assertThatThrownBy(() -> testee.retrieveSaslMechanismClassNames(configuration, JAMES_DEFAULT_PROVIDER))
+        assertThatThrownBy(() -> testee.retrieveSaslMechanismFactoryClassNames(configuration))
             .isInstanceOf(ConfigurationException.class);
     }
 }
