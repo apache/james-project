@@ -464,10 +464,14 @@ class CassandraMailboxMapperTest {
 
             doQuietly(() -> testee.rename(inboxRenamed).block());
 
+            // rename writes additively first (new path reference + projection) and removes the old
+            // path reference last. When that removal fails, the projection already reflects the
+            // rename, so the mailbox is consistent under its new identity; the old INBOX path
+            // reference merely lingers (the delete is retried to absorb transient failures).
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
                     .assertThat(testee.findMailboxById(inboxId).block())
-                    .isEqualTo(inbox);
+                    .isEqualTo(inboxRenamed);
                 softly(softly)
                     .assertThat(testee.findMailboxByPath(inboxPath).block())
                     .isEqualTo(inbox);
@@ -476,6 +480,38 @@ class CassandraMailboxMapperTest {
                     .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
                         .assertThat(searchMailbox)
                         .isEqualTo(inbox));
+            }));
+        }
+
+        @Test
+        void renameThenFailToDeleteMailboxPathShouldExposeRenamedMailbox(CassandraCluster cassandra) {
+            Mailbox inbox = testee.create(inboxPath, UID_VALIDITY).block();
+            CassandraId inboxId = (CassandraId) inbox.getMailboxId();
+            Mailbox inboxRenamed = createInboxRenamedMailbox(inboxId);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .times(TRY_COUNT_BEFORE_FAILURE)
+                    .whenQueryStartsWith("DELETE FROM mailboxpathv3 WHERE namespace=:namespace AND user=:user AND mailboxname=:mailboxname IF EXISTS"));
+
+            doQuietly(() -> testee.rename(inboxRenamed).block());
+
+            // Counterpart of the previous test: even though the old path cleanup failed, the rename
+            // is fully observable under its new identity (by id and by renamed path). With the legacy
+            // ordering - projection written last, after the delete - the projection would still read
+            // INBOX here, contradicting the already committed renamed path reference.
+            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                softly(softly)
+                    .assertThat(testee.findMailboxById(inboxId).block())
+                    .isEqualTo(inboxRenamed);
+                softly(softly)
+                    .assertThat(testee.findMailboxByPath(inboxPathRenamed).block())
+                    .isEqualTo(inboxRenamed);
+                softly.assertThat(testee.findMailboxWithPathLike(inboxRenamedSearchQuery)
+                        .collectList().block())
+                    .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inboxRenamed));
             }));
         }
 
