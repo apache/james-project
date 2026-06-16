@@ -73,14 +73,10 @@ public class ImapSaslBridge {
     }
 
     /**
-     * Aborts and closes an active SASL exchange.
+     * Aborts an active SASL exchange.
      */
     public void abort(SaslExchange exchange) {
-        try {
-            exchange.abort();
-        } finally {
-            exchange.close();
-        }
+        exchange.abort();
     }
 
     /**

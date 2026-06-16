@@ -42,7 +42,7 @@ class ImapSaslBridgeTest {
     private final ImapSaslBridge testee = new ImapSaslBridge();
 
     private static class RecordingExchange implements SaslExchange {
-        private final List<String> lifecycleEvents;
+        protected final List<String> lifecycleEvents;
         private byte[] lastClientResponse;
 
         private RecordingExchange() {
@@ -61,13 +61,16 @@ class ImapSaslBridgeTest {
         }
 
         @Override
-        public void abort() {
-            lifecycleEvents.add("abort");
-        }
-
-        @Override
         public void close() {
             lifecycleEvents.add("close");
+        }
+    }
+
+    private static class RecordingAbortExchange extends RecordingExchange {
+        @Override
+        public void abort() {
+            lifecycleEvents.add("abort");
+            close();
         }
     }
 
@@ -91,6 +94,7 @@ class ImapSaslBridgeTest {
         @Override
         public void abort() {
             lifecycleEvents.add("abort");
+            close();
             throw new IllegalStateException("boom");
         }
 
@@ -194,8 +198,17 @@ class ImapSaslBridgeTest {
     }
 
     @Test
-    void abortShouldAbortThenCloseExchange() {
+    void abortShouldCloseExchangeByDefault() {
         RecordingExchange exchange = new RecordingExchange();
+
+        testee.abort(exchange);
+
+        assertThat(exchange.lifecycleEvents).containsExactly("close");
+    }
+
+    @Test
+    void abortShouldUseExchangeSpecificAbortWhenOverridden() {
+        RecordingAbortExchange exchange = new RecordingAbortExchange();
 
         testee.abort(exchange);
 
@@ -203,7 +216,7 @@ class ImapSaslBridgeTest {
     }
 
     @Test
-    void abortShouldCloseExchangeWhenAbortThrows() {
+    void abortShouldPropagateExchangeSpecificAbortFailure() {
         ThrowingAbortExchange exchange = new ThrowingAbortExchange();
 
         assertThatThrownBy(() -> testee.abort(exchange))

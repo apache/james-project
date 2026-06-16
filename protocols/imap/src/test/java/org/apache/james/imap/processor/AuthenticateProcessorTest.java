@@ -36,13 +36,17 @@ import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.AuthenticateRequest;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
+import org.apache.james.mailbox.Authenticator;
+import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
 import org.apache.james.protocols.api.sasl.SaslExchange;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
 import org.apache.james.protocols.api.sasl.SaslStep;
+import org.apache.james.protocols.sasl.JamesSaslAuthenticator;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -67,7 +71,7 @@ class AuthenticateProcessorTest {
         }
 
         @Override
-        public SaslExchange start(SaslInitialRequest request) {
+        public SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator) {
             return exchange;
         }
     }
@@ -176,7 +180,8 @@ class AuthenticateProcessorTest {
         mock(MailboxManager.class),
         new UnpooledStatusResponseFactory(),
         new RecordingMetricFactory(),
-        PathConverter.Factory.DEFAULT);
+        PathConverter.Factory.DEFAULT,
+        new JamesSaslAuthenticator(mock(Authenticator.class), mock(Authorizator.class)));
 
     @Test
     void processRequestShouldCloseExchangeWhenFirstStepThrows() {
