@@ -22,7 +22,7 @@ while `auth.exampleToken` is a custom configuration block owned by the extension
 
 ```xml
 <auth>
-    <saslMechanisms>PlainSaslMechanism,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanism</saslMechanisms>
+    <saslMechanisms>PlainSaslMechanismFactory,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanismFactory</saslMechanisms>
     <exampleToken>
         <expectedToken>secret-token</expectedToken>
         <authorizedUser>bob@domain.tld</authorizedUser>
@@ -30,15 +30,9 @@ while `auth.exampleToken` is a custom configuration block owned by the extension
 </auth>
 ```
 
-The extension module is declared in `extensions.properties`:
-
-```properties
-guice.extension.module=org.apache.james.examples.imap.sasl.ExampleTokenSaslModule
-```
-
-The module binds a `SaslMechanismFactory` for `ExampleTokenSaslMechanism`.
-James still uses `auth.saslMechanisms` to select the mechanism for one IMAP
-server, and the factory reads that server's `auth.exampleToken` block.
+`auth.saslMechanisms` lists SASL mechanism factory classes. Built-in factories
+can use simple names, while custom factories use their fully qualified class name.
+The factory reads that server's `auth.exampleToken` block.
 
 ## Running the example
 

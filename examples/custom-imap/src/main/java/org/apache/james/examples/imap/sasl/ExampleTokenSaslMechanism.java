@@ -22,7 +22,9 @@ package org.apache.james.examples.imap.sasl;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
 import org.apache.james.protocols.api.sasl.SaslExchange;
+import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
@@ -46,7 +48,7 @@ public class ExampleTokenSaslMechanism implements SaslMechanism {
     }
 
     @Override
-    public SaslExchange start(SaslInitialRequest request) {
+    public SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator) {
         Optional<byte[]> initialResponse = request.initialResponse();
         return new ExampleTokenSaslExchange(initialResponse, configuration);
     }
@@ -74,10 +76,6 @@ public class ExampleTokenSaslMechanism implements SaslMechanism {
         }
 
         @Override
-        public void abort() {
-        }
-
-        @Override
         public void close() {
         }
 
@@ -90,7 +88,8 @@ public class ExampleTokenSaslMechanism implements SaslMechanism {
             if ((configuration.expectedToken() + SUCCESS_DATA_TOKEN_SUFFIX).equals(token)) {
                 return success(Optional.of(SUCCESS_DATA.getBytes(StandardCharsets.UTF_8)));
             }
-            return new SaslStep.Failure("EXAMPLE-TOKEN authentication failed.");
+            return new SaslStep.Failure(SaslFailure.authenticationFailed(Optional.empty(), Optional.of(configuration.authorizedUser()),
+                "EXAMPLE-TOKEN authentication failed."));
         }
 
         private SaslStep success(Optional<byte[]> serverData) {

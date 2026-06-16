@@ -37,7 +37,7 @@ under the License.
         <customProperties>prop.b=anotherValue</customProperties>
         <gracefulShutdown>false</gracefulShutdown>
         <auth>
-            <saslMechanisms>PlainSaslMechanism,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanism</saslMechanisms>
+            <saslMechanisms>PlainSaslMechanismFactory,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanismFactory</saslMechanisms>
             <exampleToken>
                 <expectedToken>secret-token</expectedToken>
                 <authorizedUser>bob@domain.tld</authorizedUser>
@@ -63,7 +63,7 @@ under the License.
         <customProperties>prop.b=baad</customProperties>
         <gracefulShutdown>false</gracefulShutdown>
         <auth>
-            <saslMechanisms>PlainSaslMechanism,OauthBearerSaslMechanism,XOauth2SaslMechanism,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanism</saslMechanisms>
+            <saslMechanisms>PlainSaslMechanismFactory,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanismFactory</saslMechanisms>
             <exampleToken>
                 <expectedToken>secret-token</expectedToken>
                 <authorizedUser>bob@domain.tld</authorizedUser>
