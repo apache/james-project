@@ -69,7 +69,6 @@ public class CassandraMailboxPathV3DAO {
     private final CqlSession session;
     private final DriverExecutionProfile lwtProfile;
     private final DriverExecutionProfile readProfile;
-    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraMailboxPathV3DAO(CqlSession session) {
@@ -82,7 +81,6 @@ public class CassandraMailboxPathV3DAO {
         this.selectAll = prepareSelectAll();
         this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
         this.readProfile = ProfileLocator.READ.locateProfile(session, "MAILBOXPATHV3");
-        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "MAILBOXPATHV3");
     }
 
     private PreparedStatement prepareDelete() {
