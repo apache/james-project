@@ -29,17 +29,21 @@
         <constructor-arg index="6" ref="connectionCheckFactory" />
     </bean>
 
-    <!-- The imapProcessor configuration will be reviewed when IMAP will be integrated into Protocols project -->
-    <!-- Temporary configuration - see IMAP-357 -->
     <bean id="imapProcessor" class="org.apache.james.imap.processor.main.DefaultImapProcessorFactory"
           factory-method="createXListSupportingProcessor">
         <constructor-arg index="0" ref="mailboxmanager"/>
-        <constructor-arg index="1" ref="event-bus"/>
-        <constructor-arg index="2" ref="subscriptionManager"/>
-        <constructor-arg index="3" ref="mailboxTyper"/>
-        <constructor-arg index="4" ref="quotaManager"/>
-        <constructor-arg index="5" ref="quotaRootResolver"/>
-        <constructor-arg index="6" ref="timeMetricFactory"/>
+        <constructor-arg index="1" ref="jamesSaslAuthenticator"/>
+        <constructor-arg index="2" ref="event-bus"/>
+        <constructor-arg index="3" ref="subscriptionManager"/>
+        <constructor-arg index="4" ref="mailboxTyper"/>
+        <constructor-arg index="5" ref="quotaManager"/>
+        <constructor-arg index="6" ref="quotaRootResolver"/>
+        <constructor-arg index="7" ref="timeMetricFactory"/>
+    </bean>
+
+    <bean id="jamesSaslAuthenticator" class="org.apache.james.protocols.sasl.JamesSaslAuthenticator">
+        <constructor-arg index="0" ref="authenticator"/>
+        <constructor-arg index="1" ref="authorizator"/>
     </bean>
 
     <bean id="mailboxTyper" class="org.apache.james.imap.api.process.DefaultMailboxTyper"/>
