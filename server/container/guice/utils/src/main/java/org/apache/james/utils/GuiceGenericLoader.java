@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
@@ -118,11 +117,6 @@ public class GuiceGenericLoader implements GuiceLoader {
     public <T> T instantiate(ClassName className) throws ClassNotFoundException {
         return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY)
                 .instantiate(className);
-    }
-
-    @Override
-    public <T> T getInstance(Key<T> key) {
-        return injector.getInstance(key);
     }
 
     @Override

@@ -19,39 +19,14 @@
 
 package org.apache.james.utils;
 
-import org.apache.james.protocols.api.sasl.SaslExchange;
-import org.apache.james.protocols.api.sasl.SaslInitialRequest;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
-import org.apache.james.protocols.api.sasl.SaslStep;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
 
-public class ExternalFakeSaslMechanism implements SaslMechanism {
+public class ConfigurableFakeSaslMechanismFactory implements SaslMechanismFactory {
     @Override
-    public String name() {
-        return "EXTERNAL-FAKE";
-    }
-
-    @Override
-    public SaslExchange start(SaslInitialRequest request) {
-        return new FixedStepExchange(new SaslStep.Failure("not implemented"));
-    }
-
-    private record FixedStepExchange(SaslStep step) implements SaslExchange {
-        @Override
-        public SaslStep firstStep() {
-            return step;
-        }
-
-        @Override
-        public SaslStep onResponse(byte[] clientResponse) {
-            return step;
-        }
-
-        @Override
-        public void abort() {
-        }
-
-        @Override
-        public void close() {
-        }
+    public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
+        return new FixedNameSaslMechanism(serverConfiguration.getString("auth.example.realm"));
     }
 }

@@ -17,19 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.protocols.sasl;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
+import org.apache.james.utils.FixedNameSaslMechanism;
 
-import org.junit.jupiter.api.Test;
-
-class DefaultSaslMechanismNamingSchemeTest {
-    @Test
-    void asNamingSchemeShouldResolveSimpleNameAgainstDefaultSaslPackage() {
-        // avoid breaking changes for default SASL package
-        assertThat(DefaultSaslMechanismNamingScheme.asNamingScheme()
-            .toFullyQualifiedClassNames(new ClassName("TestingDefaultPackageSaslMechanism"))
-            .map(FullyQualifiedClassName::getName))
-            .contains("org.apache.james.protocols.api.sasl.TestingDefaultPackageSaslMechanism");
+public class TestingDefaultPackageSaslMechanismFactory implements SaslMechanismFactory {
+    @Override
+    public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
+        return new FixedNameSaslMechanism("DEFAULT");
     }
 }

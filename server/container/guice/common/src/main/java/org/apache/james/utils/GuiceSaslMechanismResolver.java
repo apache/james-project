@@ -22,7 +22,6 @@ package org.apache.james.utils;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,20 +37,28 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class GuiceSaslMechanismResolver {
-    private final SaslMechanismInstantiator instantiator;
+    private static final NamingScheme SASL_FACTORY_NAMING_SCHEME =
+        new NamingScheme.OptionalPackagePrefix(PackageName.of("org.apache.james.protocols.sasl"));
+
+    private final GuiceLoader.InvocationPerformer<SaslMechanismFactory> factoryLoader;
 
     @Inject
-    public GuiceSaslMechanismResolver(SaslMechanismInstantiator instantiator) {
-        this.instantiator = instantiator;
+    public GuiceSaslMechanismResolver(GuiceLoader guiceLoader) {
+        this.factoryLoader = guiceLoader.withNamingSheme(SASL_FACTORY_NAMING_SCHEME);
     }
 
-    public ImmutableList<SaslMechanism> resolve(Collection<String> mechanismClassNames,
-                                                HierarchicalConfiguration<ImmutableNode> serverConfiguration,
-                                                Map<Class<? extends SaslMechanism>, SaslMechanismFactory> factories) throws ConfigurationException {
+    public ImmutableList<SaslMechanism> resolve(Collection<String> configuredFactoryClassNames,
+                                                ImmutableList<SaslMechanismFactory> enabledDefaultFactories,
+                                                HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
         try {
-            return mechanismClassNames.stream()
-                .map(ClassName::new)
-                .map(Throwing.function(className -> resolve(className, serverConfiguration, factories)))
+            ImmutableList<SaslMechanismFactory> factories = configuredFactoryClassNames.isEmpty()
+                ? enabledDefaultFactories
+                : configuredFactoryClassNames.stream()
+                    .map(Throwing.function(this::instantiateFactory))
+                    .collect(ImmutableList.toImmutableList());
+
+            return factories.stream()
+                .map(Throwing.function(factory -> factory.create(serverConfiguration)))
                 .collect(Collectors.toMap(
                     mechanism -> normalize(mechanism.name()),
                     Function.identity(),
@@ -68,31 +75,11 @@ public class GuiceSaslMechanismResolver {
         }
     }
 
-    private SaslMechanism resolve(ClassName mechanismClassName,
-                                  HierarchicalConfiguration<ImmutableNode> serverConfiguration,
-                                  Map<Class<? extends SaslMechanism>, SaslMechanismFactory> factories) throws ConfigurationException {
-        Class<? extends SaslMechanism> mechanismClass = locate(mechanismClassName);
-        SaslMechanismFactory factory = factories.get(mechanismClass);
-        if (factory != null) {
-            return factory.create(serverConfiguration);
-        }
-        // Fall back to direct instantiation for mechanisms that do not need server-specific configuration.
-        return instantiate(mechanismClassName);
-    }
-
-    private Class<? extends SaslMechanism> locate(ClassName mechanismClassName) throws ConfigurationException {
+    private SaslMechanismFactory instantiateFactory(String className) throws ConfigurationException {
         try {
-            return instantiator.locate(mechanismClassName);
-        } catch (Exception e) {
-            throw new ConfigurationException("Can not load SASL mechanism " + mechanismClassName.getName(), e);
-        }
-    }
-
-    private SaslMechanism instantiate(ClassName mechanismClassName) throws ConfigurationException {
-        try {
-            return instantiator.instantiate(mechanismClassName);
-        } catch (Exception e) {
-            throw new ConfigurationException("Can not load SASL mechanism " + mechanismClassName.getName(), e);
+            return factoryLoader.instantiate(new ClassName(className));
+        } catch (ClassNotFoundException | RuntimeException e) {
+            throw new ConfigurationException("Can not load SASL mechanism factory " + className, e);
         }
     }
 

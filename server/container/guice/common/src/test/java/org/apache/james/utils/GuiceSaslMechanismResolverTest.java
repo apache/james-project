@@ -22,237 +22,221 @@ package org.apache.james.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.protocols.api.sasl.SaslExchange;
-import org.apache.james.protocols.api.sasl.SaslInitialRequest;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
 import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
-import org.apache.james.protocols.api.sasl.SaslStep;
-import org.apache.james.protocols.api.sasl.TestingDefaultPackageSaslMechanism;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.inject.Module;
 
 class GuiceSaslMechanismResolverTest {
     private static final HierarchicalConfiguration<ImmutableNode> EMPTY_CONFIGURATION = new BaseHierarchicalConfiguration();
 
     @Test
-    void resolveShouldResolveSimpleNameFromDefaultSaslPackage() throws Exception {
-        // GIVEN a resolver using a test instantiator that models James default SASL package resolution
-        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new MapBackedSaslMechanismInstantiator());
+    void resolveShouldUseEnabledDefaultFactoriesWhenNoFactoryClassIsConfigured() throws Exception {
+        // GIVEN an absent auth.saslMechanisms configuration and an ordered default factory list
+        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new ReflectionGuiceLoader());
 
-        // WHEN resolving a simple class name
-        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of("TestingDefaultPackageSaslMechanism"),
-            EMPTY_CONFIGURATION, ImmutableMap.of());
+        // WHEN resolving mechanisms for this server
+        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of(),
+            ImmutableList.of(factory("PLAIN"), factory("OAUTHBEARER")),
+            EMPTY_CONFIGURATION);
 
-        // THEN the mechanism is instantiated from org.apache.james.protocols.api.sasl
-        assertThat(mechanisms).hasOnlyElementsOfType(TestingDefaultPackageSaslMechanism.class);
-    }
-
-    @Test
-    void resolveShouldResolveFullyQualifiedClassName() throws Exception {
-        // GIVEN a resolver that also accepts extension class names
-        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new MapBackedSaslMechanismInstantiator());
-
-        // WHEN resolving a fully qualified class name
-        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of(ExternalFakeSaslMechanism.class.getCanonicalName()),
-            EMPTY_CONFIGURATION, ImmutableMap.of());
-
-        // THEN the mechanism is instantiated without relying on the default package
-        assertThat(mechanisms).hasOnlyElementsOfType(ExternalFakeSaslMechanism.class);
-    }
-
-    @Test
-    void resolveShouldUseFactoryBindingBeforeDirectInstantiation() throws Exception {
-        // GIVEN a factory binding for a configured mechanism class
-        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
-        configuration.addProperty("auth.example.realm", "example.org");
-        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new MapBackedSaslMechanismInstantiator());
-        SaslMechanismFactory factory = serverConfiguration ->
-            new FactoryBackedSaslMechanism(serverConfiguration.getString("auth.example.realm"));
-
-        // WHEN resolving that class name
-        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of(ExternalFakeSaslMechanism.class.getCanonicalName()),
-            configuration, ImmutableMap.of(ExternalFakeSaslMechanism.class, factory));
-
-        // THEN the factory creates the server-specific mechanism instance
+        // THEN defaults are used in their declared order
         assertThat(mechanisms)
-            .singleElement()
-            .isInstanceOfSatisfying(FactoryBackedSaslMechanism.class,
-                mechanism -> assertThat(mechanism.realm()).isEqualTo("example.org"));
+            .extracting(SaslMechanism::name)
+            .containsExactly("PLAIN", "OAUTHBEARER");
     }
 
     @Test
-    void resolveShouldCreateFactoryBackedMechanismsFromCurrentServerConfiguration() throws Exception {
-        // GIVEN two server configurations using the same configured SASL mechanism class
-        BaseHierarchicalConfiguration firstConfiguration = new BaseHierarchicalConfiguration();
-        firstConfiguration.addProperty("auth.example.realm", "first.example.org");
-        BaseHierarchicalConfiguration secondConfiguration = new BaseHierarchicalConfiguration();
-        secondConfiguration.addProperty("auth.example.realm", "second.example.org");
-        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new MapBackedSaslMechanismInstantiator());
-        SaslMechanismFactory factory = serverConfiguration ->
-            new FactoryBackedSaslMechanism(serverConfiguration.getString("auth.example.realm"));
+    void resolveShouldResolveSimpleFactoryNameFromDefaultSaslPackage() throws Exception {
+        // GIVEN a configured built-in SASL factory simple name
+        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new ReflectionGuiceLoader());
 
-        // WHEN resolving the same configured mechanism for each server
-        SaslMechanism firstMechanism = testee.resolve(ImmutableList.of(ExternalFakeSaslMechanism.class.getCanonicalName()),
-            firstConfiguration, ImmutableMap.of(ExternalFakeSaslMechanism.class, factory))
+        // WHEN resolving it
+        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of("TestingDefaultPackageSaslMechanismFactory"),
+            ImmutableList.of(),
+            EMPTY_CONFIGURATION);
+
+        // THEN the factory is loaded from org.apache.james.protocols.sasl
+        assertThat(mechanisms)
+            .extracting(SaslMechanism::name)
+            .containsExactly("DEFAULT");
+    }
+
+    @Test
+    void resolveShouldResolveFullyQualifiedFactoryName() throws Exception {
+        // GIVEN a configured extension factory FQCN
+        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new ReflectionGuiceLoader());
+
+        // WHEN resolving it
+        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of(ExternalFakeSaslMechanismFactory.class.getCanonicalName()),
+            ImmutableList.of(),
+            EMPTY_CONFIGURATION);
+
+        // THEN the extension factory is loaded directly
+        assertThat(mechanisms)
+            .extracting(SaslMechanism::name)
+            .containsExactly("EXTERNAL-FAKE");
+    }
+
+    @Test
+    void resolveShouldUseConfiguredFactoriesInsteadOfDefaults() throws Exception {
+        // GIVEN both defaults and an explicit auth.saslMechanisms configuration
+        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new ReflectionGuiceLoader());
+
+        // WHEN resolving mechanisms
+        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of(ExternalFakeSaslMechanismFactory.class.getCanonicalName()),
+            ImmutableList.of(factory("DEFAULT")),
+            EMPTY_CONFIGURATION);
+
+        // THEN the configured list replaces defaults
+        assertThat(mechanisms)
+            .extracting(SaslMechanism::name)
+            .containsExactly("EXTERNAL-FAKE");
+    }
+
+    @Test
+    void resolveShouldCreateConfiguredFactoriesFromCurrentServerConfiguration() throws Exception {
+        // GIVEN two server configurations using the same configured SASL factory
+        BaseHierarchicalConfiguration firstConfiguration = new BaseHierarchicalConfiguration();
+        firstConfiguration.addProperty("auth.example.realm", "FIRST");
+        BaseHierarchicalConfiguration secondConfiguration = new BaseHierarchicalConfiguration();
+        secondConfiguration.addProperty("auth.example.realm", "SECOND");
+        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new ReflectionGuiceLoader());
+
+        // WHEN resolving the same configured factory for each server
+        SaslMechanism firstMechanism = testee.resolve(ImmutableList.of(ConfigurableFakeSaslMechanismFactory.class.getCanonicalName()),
+                ImmutableList.of(),
+                firstConfiguration)
             .getFirst();
-        SaslMechanism secondMechanism = testee.resolve(ImmutableList.of(ExternalFakeSaslMechanism.class.getCanonicalName()),
-            secondConfiguration, ImmutableMap.of(ExternalFakeSaslMechanism.class, factory))
+        SaslMechanism secondMechanism = testee.resolve(ImmutableList.of(ConfigurableFakeSaslMechanismFactory.class.getCanonicalName()),
+                ImmutableList.of(),
+                secondConfiguration)
             .getFirst();
 
         // THEN each mechanism is created from that server's configuration, not from a global singleton
-        assertThat(firstMechanism)
-            .isInstanceOfSatisfying(FactoryBackedSaslMechanism.class,
-                mechanism -> assertThat(mechanism.realm()).isEqualTo("first.example.org"));
-        assertThat(secondMechanism)
-            .isInstanceOfSatisfying(FactoryBackedSaslMechanism.class,
-                mechanism -> assertThat(mechanism.realm()).isEqualTo("second.example.org"));
+        assertThat(firstMechanism.name()).isEqualTo("FIRST");
+        assertThat(secondMechanism.name()).isEqualTo("SECOND");
     }
 
     @Test
     void resolveShouldPreserveConfiguredOrderForDistinctMechanisms() throws Exception {
-        // GIVEN a configured mechanism list with distinct SASL mechanism names
-        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new MapBackedSaslMechanismInstantiator());
+        // GIVEN several distinct SASL mechanism factories in a configured order
+        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new ReflectionGuiceLoader());
 
-        // WHEN resolving the list
-        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of(
-                ExternalFakeSaslMechanism.class.getCanonicalName(),
-                "TestingDefaultPackageSaslMechanism"),
-            EMPTY_CONFIGURATION, ImmutableMap.of());
+        // WHEN resolving them
+        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of(),
+            ImmutableList.of(factory("FIRST"), factory("SECOND"), factory("THIRD")),
+            EMPTY_CONFIGURATION);
 
-        // THEN configured order is preserved
+        // THEN the resolved mechanisms keep the configured order
         assertThat(mechanisms)
             .extracting(SaslMechanism::name)
-            .containsExactly("EXTERNAL-FAKE", "DEFAULT");
+            .containsExactly("FIRST", "SECOND", "THIRD");
     }
 
     @Test
     void resolveShouldDeduplicateMechanismNamesCaseInsensitively() throws Exception {
-        // GIVEN two configured classes returning the same SASL mechanism name with different case
-        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new MapBackedSaslMechanismInstantiator());
+        // GIVEN two factories returning the same SASL mechanism name with different case
+        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new ReflectionGuiceLoader());
 
-        // WHEN resolving both classes
-        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of(
-                DuplicateUpperCaseSaslMechanism.class.getCanonicalName(),
-                DuplicateLowerCaseSaslMechanism.class.getCanonicalName()),
-            EMPTY_CONFIGURATION, ImmutableMap.of());
+        // WHEN resolving both factories
+        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of(),
+            ImmutableList.of(factory("DUPLICATE"), factory("duplicate")),
+            EMPTY_CONFIGURATION);
 
-        // THEN first occurrence wins and configured order remains stable
+        // THEN first occurrence wins and order remains stable
         assertThat(mechanisms)
-            .hasSize(1)
-            .hasOnlyElementsOfType(DuplicateUpperCaseSaslMechanism.class);
+            .extracting(SaslMechanism::name)
+            .containsExactly("DUPLICATE");
     }
 
     @Test
-    void resolveShouldFailWhenClassDoesNotExist() {
-        // GIVEN a resolver used for configured SASL mechanism entries
-        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new MapBackedSaslMechanismInstantiator());
+    void resolveShouldFailWhenConfiguredFactoryClassDoesNotExist() {
+        // GIVEN a resolver used for configured SASL mechanism factory entries
+        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new ReflectionGuiceLoader());
 
-        // WHEN resolving an unknown class name
+        // WHEN resolving an unknown factory class name
         // THEN startup wiring can fail fast with the configured entry in the error
-        assertThatThrownBy(() -> testee.resolve(ImmutableList.of("MissingSaslMechanism"), EMPTY_CONFIGURATION, ImmutableMap.of()))
+        assertThatThrownBy(() -> testee.resolve(ImmutableList.of("MissingSaslMechanismFactory"),
+            ImmutableList.of(),
+            EMPTY_CONFIGURATION))
             .isInstanceOf(ConfigurationException.class)
-            .hasMessageContaining("MissingSaslMechanism");
+            .hasMessageContaining("MissingSaslMechanismFactory");
     }
 
-    private static class MapBackedSaslMechanismInstantiator implements SaslMechanismInstantiator {
-        private final Map<String, Class<? extends SaslMechanism>> classes = ImmutableMap.<String, Class<? extends SaslMechanism>>builder()
-            .put("TestingDefaultPackageSaslMechanism", TestingDefaultPackageSaslMechanism.class)
-            .put(TestingDefaultPackageSaslMechanism.class.getCanonicalName(), TestingDefaultPackageSaslMechanism.class)
-            .put(ExternalFakeSaslMechanism.class.getCanonicalName(), ExternalFakeSaslMechanism.class)
-            .put(FactoryBackedSaslMechanism.class.getCanonicalName(), FactoryBackedSaslMechanism.class)
-            .put(DuplicateUpperCaseSaslMechanism.class.getCanonicalName(), DuplicateUpperCaseSaslMechanism.class)
-            .put(DuplicateLowerCaseSaslMechanism.class.getCanonicalName(), DuplicateLowerCaseSaslMechanism.class)
-            .build();
+    private static SaslMechanismFactory factory(String mechanismName) {
+        return serverConfiguration -> new FixedNameSaslMechanism(mechanismName);
+    }
 
+    private static class ReflectionGuiceLoader implements GuiceLoader {
         @Override
-        public Class<? extends SaslMechanism> locate(ClassName className) throws ClassNotFoundException {
-            return Optional.ofNullable(classes.get(className.getName()))
-                .orElseThrow(() -> new ClassNotFoundException(className.getName()));
+        public <T> T instantiate(ClassName className) throws ClassNotFoundException {
+            return this.<T>withNamingSheme(NamingScheme.IDENTITY).instantiate(className);
         }
 
         @Override
-        public SaslMechanism instantiate(ClassName className) throws ClassNotFoundException {
+        public <T> InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {
+            return new ReflectionInvocationPerformer<>(namingSheme);
+        }
+
+        @Override
+        public <T> InvocationPerformer<T> withChildModule(Module childModule) {
+            return new ReflectionInvocationPerformer<>(NamingScheme.IDENTITY);
+        }
+    }
+
+    private static class ReflectionInvocationPerformer<T> implements GuiceLoader.InvocationPerformer<T> {
+        private final NamingScheme namingScheme;
+
+        private ReflectionInvocationPerformer(NamingScheme namingScheme) {
+            this.namingScheme = namingScheme;
+        }
+
+        @Override
+        public T instantiate(ClassName className) throws ClassNotFoundException {
             try {
-                return locate(className).getDeclaredConstructor().newInstance();
-            } catch (ReflectiveOperationException e) {
+                return locateClass(className).getDeclaredConstructor().newInstance();
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                 throw new ClassNotFoundException(className.getName(), e);
             }
         }
-    }
 
-    public static class FactoryBackedSaslMechanism extends FixedNameSaslMechanism {
-        private final String realm;
-
-        public FactoryBackedSaslMechanism() {
-            this("unused");
-        }
-
-        private FactoryBackedSaslMechanism(String realm) {
-            super("FACTORY");
-            this.realm = realm;
-        }
-
-        private String realm() {
-            return realm;
-        }
-    }
-
-    public static class DuplicateUpperCaseSaslMechanism extends FixedNameSaslMechanism {
-        public DuplicateUpperCaseSaslMechanism() {
-            super("DUPLICATE");
-        }
-    }
-
-    public static class DuplicateLowerCaseSaslMechanism extends FixedNameSaslMechanism {
-        public DuplicateLowerCaseSaslMechanism() {
-            super("duplicate");
-        }
-    }
-
-    private abstract static class FixedNameSaslMechanism implements SaslMechanism {
-        private final String name;
-
-        private FixedNameSaslMechanism(String name) {
-            this.name = name;
+        @Override
+        public Class<T> locateClass(ClassName className) throws ClassNotFoundException {
+            Optional<Class<T>> locatedClass = namingScheme.toFullyQualifiedClassNames(className)
+                .map(FullyQualifiedClassName::getName)
+                .map(this::tryLocateClass)
+                .flatMap(Optional::stream)
+                .findFirst();
+            return locatedClass.orElseThrow(() -> new ClassNotFoundException(className.getName()));
         }
 
         @Override
-        public String name() {
-            return name;
+        public GuiceLoader.InvocationPerformer<T> withChildModule(Module childModule) {
+            return new ReflectionInvocationPerformer<>(namingScheme);
         }
 
         @Override
-        public SaslExchange start(SaslInitialRequest request) {
-            return new FixedStepExchange();
-        }
-    }
-
-    private record FixedStepExchange() implements SaslExchange {
-        @Override
-        public SaslStep firstStep() {
-            return new SaslStep.Failure("not implemented");
+        public GuiceLoader.InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {
+            return new ReflectionInvocationPerformer<>(namingSheme);
         }
 
-        @Override
-        public SaslStep onResponse(byte[] clientResponse) {
-            return new SaslStep.Failure("not implemented");
-        }
-
-        @Override
-        public void abort() {
-        }
-
-        @Override
-        public void close() {
+        @SuppressWarnings("unchecked")
+        private Optional<Class<T>> tryLocateClass(String className) {
+            try {
+                return Optional.of((Class<T>) Class.forName(className));
+            } catch (ClassNotFoundException e) {
+                return Optional.empty();
+            }
         }
     }
 }

@@ -17,13 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.protocols;
+package org.apache.james.utils;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
 
-import com.google.common.collect.ImmutableList;
-
-public interface DefaultImapSaslMechanismClassNamesProvider {
-    ImmutableList<String> resolve(HierarchicalConfiguration<ImmutableNode> configuration);
+public class ExternalFakeSaslMechanismFactory implements SaslMechanismFactory {
+    @Override
+    public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
+        return new FixedNameSaslMechanism("EXTERNAL-FAKE");
+    }
 }

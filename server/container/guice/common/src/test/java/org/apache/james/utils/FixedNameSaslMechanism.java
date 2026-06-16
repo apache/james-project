@@ -19,18 +19,51 @@
 
 package org.apache.james.utils;
 
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslExchange;
+import org.apache.james.protocols.api.sasl.SaslFailure;
+import org.apache.james.protocols.api.sasl.SaslInitialRequest;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslStep;
 
-/**
- * Resolves simple SASL mechanism class names against James' default SASL SPI package.
- */
-public final class DefaultSaslMechanismNamingScheme {
-    private static final PackageName DEFAULT_SASL_PACKAGE = PackageName.of(SaslMechanism.class.getPackageName());
+public class FixedNameSaslMechanism implements SaslMechanism {
+    private final String name;
 
-    public static NamingScheme asNamingScheme() {
-        return new NamingScheme.OptionalPackagePrefix(DEFAULT_SASL_PACKAGE);
+    public FixedNameSaslMechanism(String name) {
+        this.name = name;
     }
 
-    private DefaultSaslMechanismNamingScheme() {
+    @Override
+    public String name() {
+        return name;
+    }
+
+    @Override
+    public SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator) {
+        return new FixedStepExchange();
+    }
+
+    private record FixedStepExchange() implements SaslExchange {
+        @Override
+        public SaslStep firstStep() {
+            return failure();
+        }
+
+        @Override
+        public SaslStep onResponse(byte[] clientResponse) {
+            return failure();
+        }
+
+        @Override
+        public void abort() {
+        }
+
+        @Override
+        public void close() {
+        }
+
+        private SaslStep failure() {
+            return new SaslStep.Failure(SaslFailure.malformed("not implemented"));
+        }
     }
 }
