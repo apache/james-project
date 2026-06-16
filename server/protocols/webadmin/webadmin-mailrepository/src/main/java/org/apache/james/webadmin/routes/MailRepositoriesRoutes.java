@@ -211,6 +211,7 @@ public class MailRepositoriesRoutes implements Routes {
             rawResponse.setContentType(Constants.RFC822_CONTENT_TYPE);
             rawResponse.setHeader("Content-Length", String.valueOf(buffer.size()));
             buffer.writeTo(rawResponse.getOutputStream());
+            rawResponse.flushBuffer();
             return rawResponse;
         } catch (MessagingException | IOException e) {
             throw internalServerError(e);
