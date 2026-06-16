@@ -44,7 +44,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.util.FunctionalUtils;
+import org.apache.james.util.ReactorUtils;
 
 import com.google.common.base.Preconditions;
 
@@ -221,21 +221,21 @@ public class CassandraMailboxMapper implements MailboxMapper {
         Preconditions.checkNotNull(mailbox.getMailboxId(), "A mailbox we want to rename should have a defined mailboxId");
 
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return tryRename(mailbox, cassandraId)
-            .filter(FunctionalUtils.identityPredicate())
-            .switchIfEmpty(Mono.error(() -> new MailboxExistsException(mailbox.generateAssociatedPath().asString())))
-            .thenReturn(cassandraId);
+        return mailboxDAO.retrieveMailbox(cassandraId)
+            .flatMap(storedMailbox -> rename(mailbox, storedMailbox.generateAssociatedPath()))
+            .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(cassandraId)));
     }
 
-    private Mono<Boolean> tryRename(Mailbox cassandraMailbox, CassandraId cassandraId) {
-        return mailboxDAO.retrieveMailbox(cassandraId)
-            .flatMap(mailbox -> mailboxPathV3DAO.save(cassandraMailbox)
-                .filter(isCreated -> isCreated)
-                .flatMap(mailboxHasCreated -> deletePreviousMailboxPathReference(mailbox.generateAssociatedPath())
-                    .then(persistMailboxEntity(cassandraMailbox))
-                    .thenReturn(true))
-                .defaultIfEmpty(false))
-            .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(cassandraId)));
+    @Override
+    public Mono<MailboxId> rename(Mailbox cassandraMailbox, MailboxPath previousPath) {
+        Preconditions.checkNotNull(cassandraMailbox.getMailboxId(), "A mailbox we want to rename should have a defined mailboxId");
+        CassandraId cassandraId = (CassandraId) cassandraMailbox.getMailboxId();
+
+        return mailboxPathV3DAO.save(cassandraMailbox)
+            .handle(ReactorUtils.raiseErrorIfFalse(() -> new MailboxExistsException(cassandraMailbox.generateAssociatedPath().asString())))
+            .flatMap(applied -> deletePreviousMailboxPathReference(previousPath)
+                .then(persistMailboxEntity(cassandraMailbox)))
+            .thenReturn(cassandraId);
     }
 
     private Mono<Void> persistMailboxEntity(Mailbox cassandraMailbox) {

@@ -50,8 +50,12 @@ public interface MailboxMapper extends Mapper {
     /**
      * Rename the given {@link Mailbox} to the underlying storage
      */
+    default Mono<MailboxId> rename(Mailbox mailbox, MailboxPath previousPath) {
+        return rename(mailbox);
+    }
+
     Mono<MailboxId> rename(Mailbox mailbox);
-    
+
     /**
      * Delete the given {@link Mailbox} from the underlying storage
      */

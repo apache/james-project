@@ -686,7 +686,7 @@ public class StoreMailboxManager implements MailboxManager {
             .build()
             .asUserBound();
 
-        return mapper.rename(mailbox)
+        return mapper.rename(mailbox, from)
             .map(mailboxId -> {
                 resultBuilder.add(new MailboxRenamedResult(mailboxId, from, newMailboxPath));
                 return mailboxId;
@@ -717,7 +717,7 @@ public class StoreMailboxManager implements MailboxManager {
                 MailboxPath fromPath = new MailboxPath(from, subOriginalName);
                 sub.setName(subNewName);
                 sub.setUser(newMailboxPath.getUser());
-                return mapper.rename(sub)
+                return mapper.rename(sub, fromPath)
                     .map(mailboxId -> {
                         resultBuilder.add(new MailboxRenamedResult(sub.getMailboxId(), fromPath, sub.generateAssociatedPath()));
                         return mailboxId;
