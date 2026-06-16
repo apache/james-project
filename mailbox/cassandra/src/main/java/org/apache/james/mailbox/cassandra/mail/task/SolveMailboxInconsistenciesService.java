@@ -37,6 +37,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
 import org.slf4j.Logger;
@@ -61,9 +62,7 @@ public class SolveMailboxInconsistenciesService {
                         return NO_INCONSISTENCY;
                     }
                     // Path entry references another mailbox.
-                    return new ConflictingEntryInconsistency(ConflictingEntry.builder()
-                        .mailboxDaoEntry(mailboxEntry)
-                        .mailboxPathDaoEntry(mailboxByPath));
+                    return new ConflictingEntryInconsistency(mailboxEntry, mailboxByPath);
                 })
                 .defaultIfEmpty(new OrphanMailboxDAOEntry(mailboxEntry));
         }
@@ -76,9 +75,7 @@ public class SolveMailboxInconsistenciesService {
                         return NO_INCONSISTENCY;
                     }
                     // Mailbox references another path
-                    return new ConflictingEntryInconsistency(ConflictingEntry.builder()
-                        .mailboxDaoEntry(mailboxById)
-                        .mailboxPathDaoEntry(mailboxByPathEntry));
+                    return new ConflictingEntryInconsistency(mailboxById, mailboxByPathEntry);
                 })
                 .defaultIfEmpty(new OrphanMailboxPathDAOEntry(mailboxByPathEntry));
         }
@@ -181,19 +178,87 @@ public class SolveMailboxInconsistenciesService {
      * See https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#correcting-ghost-mailbox
      */
     private static class ConflictingEntryInconsistency implements Inconsistency {
-        private final ConflictingEntry conflictingEntry;
+        private final Mailbox mailboxDaoEntry;
+        private final Mailbox mailboxPathEntry;
 
-        private ConflictingEntryInconsistency(ConflictingEntry conflictingEntry) {
-            this.conflictingEntry = conflictingEntry;
+        private ConflictingEntryInconsistency(Mailbox mailboxDaoEntry, Mailbox mailboxPathEntry) {
+            this.mailboxDaoEntry = mailboxDaoEntry;
+            this.mailboxPathEntry = mailboxPathEntry;
         }
 
         @Override
         public Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO) {
+            if (mailboxDaoEntry.getMailboxId().equals(mailboxPathEntry.getMailboxId())) {
+                // Same mailbox referenced by two different paths. This happens when a rename (or any
+                // partial path update) failed to drop the old path reference. As both registrations
+                // point to the same mailbox id, the messages (keyed by id) are safe regardless of the
+                // path we keep: we keep the most recently written path reference, realign the
+                // projection on it and drop the stale one.
+                return fixSameMailboxConflict(context, mailboxDAO, pathV3DAO);
+            }
+
+            return reportConflict(context);
+        }
+
+        // Auto-resolution is restricted to the case where BOTH the conflicting path entry and the
+        // projection's path are registered to the same mailbox id: only then are they two genuine
+        // aliases of a single mailbox, hence safe to deduplicate without data loss. If the
+        // projection's path is unregistered or held by another mailbox (e.g. a reference loop), we
+        // fall back to the conservative reporting so an admin can merge.
+        //
+        // As fixes are applied sequentially, we re-read the current state first: a previous fix may
+        // already have reconciled this mailbox, in which case there is nothing left to do.
+        private Mono<Result> fixSameMailboxConflict(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO) {
+            CassandraId mailboxId = (CassandraId) mailboxPathEntry.getMailboxId();
+            MailboxPath conflictingPath = mailboxPathEntry.generateAssociatedPath();
+
+            return pathV3DAO.retrieve(conflictingPath, STRONG)
+                .filter(stillRegistered -> stillRegistered.getMailboxId().equals(mailboxId))
+                .flatMap(conflictingEntry -> mailboxDAO.retrieveMailbox(mailboxId)
+                    .flatMap(currentProjection -> resolveSameMailboxConflict(context, mailboxDAO, pathV3DAO, currentProjection, conflictingEntry)))
+                // The conflicting path entry is gone (already reconciled): nothing left to do.
+                .switchIfEmpty(Mono.just(Result.COMPLETED));
+        }
+
+        private Mono<Result> resolveSameMailboxConflict(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO,
+                                                        Mailbox currentProjection, Mailbox conflictingEntry) {
+            MailboxPath projectionPath = currentProjection.generateAssociatedPath();
+            MailboxPath conflictingPath = conflictingEntry.generateAssociatedPath();
+            if (projectionPath.equals(conflictingPath)) {
+                // The projection now matches this path: no longer inconsistent.
+                return Mono.just(Result.COMPLETED);
+            }
+            return pathV3DAO.retrieve(projectionPath, STRONG)
+                .filter(projectionRegistration -> projectionRegistration.getMailboxId().equals(currentProjection.getMailboxId()))
+                .flatMap(projectionRegistration -> Mono.zip(
+                        pathV3DAO.writeTime(conflictingPath),
+                        pathV3DAO.writeTime(projectionPath))
+                    .flatMap(writeTimes -> {
+                        boolean projectionWins = writeTimes.getT2() >= writeTimes.getT1();
+                        Mailbox winner = projectionWins ? currentProjection : conflictingEntry;
+                        Mailbox loser = projectionWins ? conflictingEntry : currentProjection;
+                        return mailboxDAO.save(winner)
+                            .then(pathV3DAO.delete(loser.generateAssociatedPath()))
+                            .then(Mono.fromRunnable(() -> {
+                                LOGGER.info("Inconsistency fixed for mailbox {}: kept path {}, dropped stale path {}",
+                                    winner.getMailboxId().serialize(),
+                                    winner.generateAssociatedPath().asString(),
+                                    loser.generateAssociatedPath().asString());
+                                context.addFixedInconsistency(winner.getMailboxId());
+                            }))
+                            .thenReturn(Result.COMPLETED);
+                    }))
+                .switchIfEmpty(Mono.defer(() -> reportConflict(context)));
+        }
+
+        private Mono<Result> reportConflict(Context context) {
             LOGGER.error("MailboxDAO contains mailbox {} {} which conflict with corresponding registration {} {}. " +
                 "We recommend merging these mailboxes together to prevent mail data loss.",
-                conflictingEntry.getMailboxDaoEntry().getMailboxId(), conflictingEntry.getMailboxDaoEntry().getMailboxPath(),
-                conflictingEntry.getMailboxPathDaoEntry().getMailboxId(), conflictingEntry.getMailboxPathDaoEntry().getMailboxPath());
-            context.addConflictingEntries(conflictingEntry);
+                mailboxDaoEntry.getMailboxId(), mailboxDaoEntry.generateAssociatedPath(),
+                mailboxPathEntry.getMailboxId(), mailboxPathEntry.generateAssociatedPath());
+            context.addConflictingEntries(ConflictingEntry.builder()
+                .mailboxDaoEntry(mailboxDaoEntry)
+                .mailboxPathDaoEntry(mailboxPathEntry));
             return Mono.just(Result.PARTIAL);
         }
     }
@@ -413,8 +478,16 @@ public class SolveMailboxInconsistenciesService {
     private Flux<Result> processMailboxPathDaoInconsistencies(Context context) {
         return mailboxPathV3DAO.listAll()
             .flatMap(this::detectMailboxPathDaoInconsistency, DEFAULT_CONCURRENCY)
-            .flatMap(inconsistency -> inconsistency.fix(context, mailboxDAO, mailboxPathV3DAO), DEFAULT_CONCURRENCY)
-            .doOnNext(any -> context.incrementProcessedMailboxPathEntries());
+            .doOnNext(any -> context.incrementProcessedMailboxPathEntries())
+            // Detect every inconsistency first, then fix them one at a time. Resolving a same-mailbox
+            // conflict may realign the projection, so a fully materialized detection set fixed
+            // sequentially prevents a fix from racing with the detection or resolution of a sibling
+            // path entry. Consistent entries are filtered out to keep the materialized set small;
+            // each fix re-confirms the inconsistency against the current state before acting.
+            .filter(inconsistency -> inconsistency != NO_INCONSISTENCY)
+            .collectList()
+            .flatMapMany(inconsistencies -> Flux.fromIterable(inconsistencies)
+                .concatMap(inconsistency -> inconsistency.fix(context, mailboxDAO, mailboxPathV3DAO)));
     }
 
     private Flux<Result> processMailboxDaoInconsistencies(Context context) {
