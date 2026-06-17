@@ -20,8 +20,10 @@
 package org.apache.james.mailbox.cassandra.mail.task;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService.RunningOptions;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
@@ -37,7 +39,8 @@ public class SolveMailboxInconsistenciesTaskAdditionalInformationDTO implements 
             details.getFixedInconsistencies(),
             details.getConflictingEntries(),
             details.getErrors(),
-            details.timestamp());
+            details.timestamp(),
+            Optional.of(SolveMailboxInconsistenciesRunningOptionsDTO.asDTO(details.getRunningOptions())));
     }
 
     public static AdditionalInformationDTOModule<SolveMailboxInconsistenciesTask.Details, SolveMailboxInconsistenciesTaskAdditionalInformationDTO> module() {
@@ -57,6 +60,7 @@ public class SolveMailboxInconsistenciesTaskAdditionalInformationDTO implements 
     private final ImmutableList<ConflictingEntry> conflictingEntries;
     private final long errors;
     private final Instant timestamp;
+    private final Optional<SolveMailboxInconsistenciesRunningOptionsDTO> runningOptions;
 
     public SolveMailboxInconsistenciesTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                                    @JsonProperty("processedMailboxEntries") long processedMailboxEntries,
@@ -64,7 +68,8 @@ public class SolveMailboxInconsistenciesTaskAdditionalInformationDTO implements 
                                                                    @JsonProperty("fixedInconsistencies") ImmutableList<String> fixedInconsistencies,
                                                                    @JsonProperty("conflictingEntries") ImmutableList<ConflictingEntry> conflictingEntries,
                                                                    @JsonProperty("errors") long errors,
-                                                                   @JsonProperty("timestamp") Instant timestamp) {
+                                                                   @JsonProperty("timestamp") Instant timestamp,
+                                                                   @JsonProperty("runningOptions") Optional<SolveMailboxInconsistenciesRunningOptionsDTO> runningOptions) {
         this.type = type;
         this.processedMailboxEntries = processedMailboxEntries;
         this.timestamp = timestamp;
@@ -72,6 +77,7 @@ public class SolveMailboxInconsistenciesTaskAdditionalInformationDTO implements 
         this.fixedInconsistencies = fixedInconsistencies;
         this.conflictingEntries = conflictingEntries;
         this.errors = errors;
+        this.runningOptions = runningOptions;
     }
 
     public long getProcessedMailboxEntries() {
@@ -94,6 +100,10 @@ public class SolveMailboxInconsistenciesTaskAdditionalInformationDTO implements 
         return errors;
     }
 
+    public Optional<SolveMailboxInconsistenciesRunningOptionsDTO> getRunningOptions() {
+        return runningOptions;
+    }
+
     @Override
     public Instant getTimestamp() {
         return timestamp;
@@ -110,6 +120,9 @@ public class SolveMailboxInconsistenciesTaskAdditionalInformationDTO implements 
             processedMailboxPathEntries,
             fixedInconsistencies,
             conflictingEntries,
-            errors);
+            errors,
+            runningOptions
+                .map(SolveMailboxInconsistenciesRunningOptionsDTO::asDomainObject)
+                .orElse(RunningOptions.DEFAULT));
     }
 }

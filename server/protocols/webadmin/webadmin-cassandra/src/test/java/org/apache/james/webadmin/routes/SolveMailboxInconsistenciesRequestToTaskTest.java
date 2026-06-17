@@ -86,7 +86,7 @@ class SolveMailboxInconsistenciesRequestToTaskTest {
         taskManager = new MemoryTaskManager(new Hostname("foo"));
 
         service = mock(SolveMailboxInconsistenciesService.class);
-        Mockito.when(service.fixMailboxInconsistencies(any())).thenReturn(Mono.just(Task.Result.COMPLETED));
+        Mockito.when(service.fixMailboxInconsistencies(any(), any())).thenReturn(Mono.just(Task.Result.COMPLETED));
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(SolveMessageInconsistenciesTaskAdditionalInformationDTO.module())),
