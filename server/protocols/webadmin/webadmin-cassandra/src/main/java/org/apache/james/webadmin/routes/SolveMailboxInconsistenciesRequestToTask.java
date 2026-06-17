@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService.RunningOptions;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
@@ -42,7 +43,11 @@ public class SolveMailboxInconsistenciesRequestToTask extends TaskFromRequestReg
                         "`ALL-SERVICES-ARE-OFFLINE` in order to prevent accidental calls. " +
                         "Check the documentation for details.");
 
-                return new SolveMailboxInconsistenciesTask(service);
+                RunningOptions runningOptions = RunningOptionsParser.intQueryParameter(request, "maxIterations")
+                    .map(RunningOptions::new)
+                    .orElse(RunningOptions.DEFAULT);
+
+                return new SolveMailboxInconsistenciesTask(service, runningOptions);
             });
     }
 }

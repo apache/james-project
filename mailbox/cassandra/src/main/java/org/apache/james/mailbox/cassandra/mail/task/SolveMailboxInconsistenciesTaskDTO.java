@@ -18,7 +18,10 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import java.util.Optional;
+
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService.RunningOptions;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 
@@ -26,7 +29,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SolveMailboxInconsistenciesTaskDTO implements TaskDTO {
     private static SolveMailboxInconsistenciesTaskDTO toDTO(SolveMailboxInconsistenciesTask domainObject, String typeName) {
-        return new SolveMailboxInconsistenciesTaskDTO(typeName);
+        return new SolveMailboxInconsistenciesTaskDTO(typeName,
+            Optional.of(SolveMailboxInconsistenciesRunningOptionsDTO.asDTO(domainObject.getRunningOptions())));
     }
 
     public static TaskDTOModule<SolveMailboxInconsistenciesTask, SolveMailboxInconsistenciesTaskDTO> module(SolveMailboxInconsistenciesService service) {
@@ -40,17 +44,27 @@ public class SolveMailboxInconsistenciesTaskDTO implements TaskDTO {
     }
 
     private final String type;
+    private final Optional<SolveMailboxInconsistenciesRunningOptionsDTO> runningOptions;
 
-    public SolveMailboxInconsistenciesTaskDTO(@JsonProperty("type") String type) {
+    public SolveMailboxInconsistenciesTaskDTO(@JsonProperty("type") String type,
+                                              @JsonProperty("runningOptions") Optional<SolveMailboxInconsistenciesRunningOptionsDTO> runningOptions) {
         this.type = type;
+        this.runningOptions = runningOptions;
     }
 
     private SolveMailboxInconsistenciesTask toDomainObject(SolveMailboxInconsistenciesService service) {
-        return new SolveMailboxInconsistenciesTask(service);
+        return new SolveMailboxInconsistenciesTask(service,
+            runningOptions
+                .map(SolveMailboxInconsistenciesRunningOptionsDTO::asDomainObject)
+                .orElse(RunningOptions.DEFAULT));
     }
 
     @Override
     public String getType() {
         return type;
+    }
+
+    public Optional<SolveMailboxInconsistenciesRunningOptionsDTO> getRunningOptions() {
+        return runningOptions;
     }
 }
