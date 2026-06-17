@@ -30,26 +30,39 @@ import org.apache.james.protocols.api.sasl.SaslAuthenticator;
 import org.apache.james.protocols.api.sasl.SaslExchange;
 import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
+import org.apache.james.protocols.api.sasl.SaslInitialRequest;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
 import org.apache.james.protocols.api.sasl.SaslStep;
 
-final class OidcSaslMechanisms {
-    static SaslExchange start(Optional<byte[]> initialResponse, OidcJwtTokenVerifier verifier, SaslAuthenticator authenticator) {
-        return new OidcSaslExchange(initialResponse, verifier, authenticator);
+/**
+ * OIDC bearer-token SASL mechanism. OAUTHBEARER and XOAUTH2 share the same exchange and only differ by
+ * their advertised name, so a single implementation is parameterized with the mechanism name.
+ */
+public class OAuthSaslMechanism implements SaslMechanism {
+    private final String name;
+    private final OidcJwtTokenVerifier verifier;
+
+    public OAuthSaslMechanism(String name, OidcJwtTokenVerifier verifier) {
+        this.name = name;
+        this.verifier = verifier;
     }
 
-    private OidcSaslMechanisms() {
+    @Override
+    public String name() {
+        return name;
     }
 
-    private static class OidcSaslExchange implements SaslExchange {
+    @Override
+    public SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator) {
+        return new OAuthSaslExchange(request.initialResponse(), authenticator);
+    }
+
+    private class OAuthSaslExchange implements SaslExchange {
         private final Optional<byte[]> initialResponse;
-        private final OidcJwtTokenVerifier verifier;
         private final SaslAuthenticator authenticator;
 
-        private OidcSaslExchange(Optional<byte[]> initialResponse,
-                                 OidcJwtTokenVerifier verifier,
-                                 SaslAuthenticator authenticator) {
+        private OAuthSaslExchange(Optional<byte[]> initialResponse, SaslAuthenticator authenticator) {
             this.initialResponse = initialResponse;
-            this.verifier = verifier;
             this.authenticator = authenticator;
         }
 

@@ -23,11 +23,12 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
-import org.apache.james.protocols.sasl.oidc.XOauth2SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismNames;
+import org.apache.james.protocols.sasl.oidc.OAuthSaslMechanism;
 
 public class XOauth2SaslMechanismFactory extends OidcSaslMechanismFactory {
     @Override
     public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
-        return new XOauth2SaslMechanism(parseVerifier(serverConfiguration));
+        return new OAuthSaslMechanism(SaslMechanismNames.XOAUTH2, parseVerifier(serverConfiguration));
     }
 }

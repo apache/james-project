@@ -31,6 +31,7 @@ import org.apache.james.protocols.api.sasl.SaslAuthenticator;
 import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
+import org.apache.james.protocols.api.sasl.SaslMechanismNames;
 import org.apache.james.protocols.api.sasl.SaslStep;
 import org.junit.jupiter.api.Test;
 
@@ -42,11 +43,11 @@ class OidcSaslMechanismTest {
     @Test
     void oauthBearerShouldValidateTokenAndAuthorizeDecodedInitialResponse() {
         // GIVEN a decoded OAUTHBEARER initial response
-        SaslInitialRequest request = new SaslInitialRequest(OauthBearerSaslMechanism.NAME,
+        SaslInitialRequest request = new SaslInitialRequest(SaslMechanismNames.OAUTHBEARER,
             Optional.of(bytes("n,a=" + USER.asString() + ",\u0001auth=Bearer " + TOKEN + "\u0001\u0001")));
 
         // WHEN the mechanism consumes and validates the response
-        SaslStep step = new OauthBearerSaslMechanism(verifyingToken()).start(request, authorizing()).firstStep();
+        SaslStep step = new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, authorizing()).firstStep();
 
         // THEN it returns the authorized identity directly to the protocol driver
         assertThat(step).isEqualTo(new SaslStep.Success(new SaslIdentity(TOKEN_SUBJECT, USER), Optional.empty()));
@@ -55,11 +56,11 @@ class OidcSaslMechanismTest {
     @Test
     void xOauth2ShouldValidateTokenAndAuthorizeDecodedInitialResponse() {
         // GIVEN a decoded XOAUTH2 initial response
-        SaslInitialRequest request = new SaslInitialRequest(XOauth2SaslMechanism.NAME,
+        SaslInitialRequest request = new SaslInitialRequest(SaslMechanismNames.XOAUTH2,
             Optional.of(bytes("user=" + USER.asString() + "\u0001auth=Bearer " + TOKEN + "\u0001\u0001")));
 
         // WHEN the mechanism consumes and validates the response
-        SaslStep step = new XOauth2SaslMechanism(verifyingToken()).start(request, authorizing()).firstStep();
+        SaslStep step = new OAuthSaslMechanism(SaslMechanismNames.XOAUTH2, verifyingToken()).start(request, authorizing()).firstStep();
 
         // THEN it exposes the same authorized identity shape
         assertThat(step).isEqualTo(new SaslStep.Success(new SaslIdentity(TOKEN_SUBJECT, USER), Optional.empty()));
@@ -68,10 +69,10 @@ class OidcSaslMechanismTest {
     @Test
     void shouldChallengeWhenNoInitialResponse() {
         // GIVEN an OIDC SASL exchange without SASL-IR
-        SaslInitialRequest request = new SaslInitialRequest(OauthBearerSaslMechanism.NAME, Optional.empty());
+        SaslInitialRequest request = new SaslInitialRequest(SaslMechanismNames.OAUTHBEARER, Optional.empty());
 
         // WHEN the mechanism starts
-        SaslStep firstStep = new OauthBearerSaslMechanism(verifyingToken()).start(request, authorizing()).firstStep();
+        SaslStep firstStep = new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, authorizing()).firstStep();
 
         // THEN the server asks for one client response
         assertThat(firstStep).isEqualTo(new SaslStep.Challenge(Optional.empty()));
@@ -80,11 +81,11 @@ class OidcSaslMechanismTest {
     @Test
     void shouldFailMalformedResponse() {
         // GIVEN a malformed OIDC SASL response
-        SaslInitialRequest request = new SaslInitialRequest(OauthBearerSaslMechanism.NAME,
+        SaslInitialRequest request = new SaslInitialRequest(SaslMechanismNames.OAUTHBEARER,
             Optional.of(bytes("invalid")));
 
         // WHEN the mechanism consumes the response
-        SaslStep step = new OauthBearerSaslMechanism(verifyingToken()).start(request, authorizing()).firstStep();
+        SaslStep step = new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, authorizing()).firstStep();
 
         // THEN it fails before any token validation side effect
         assertThat(step).isEqualTo(new SaslStep.Failure(SaslFailure.malformed("Malformed authentication command.")));
@@ -93,11 +94,11 @@ class OidcSaslMechanismTest {
     @Test
     void shouldFailWhenTokenIsRejected() {
         // GIVEN an OIDC SASL response with an invalid bearer token
-        SaslInitialRequest request = new SaslInitialRequest(OauthBearerSaslMechanism.NAME,
+        SaslInitialRequest request = new SaslInitialRequest(SaslMechanismNames.OAUTHBEARER,
             Optional.of(bytes("n,a=" + USER.asString() + ",\u0001auth=Bearer " + TOKEN + "\u0001\u0001")));
 
         // WHEN token validation rejects the token
-        SaslStep step = new OauthBearerSaslMechanism(rejectingToken()).start(request, authorizing()).firstStep();
+        SaslStep step = new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, rejectingToken()).start(request, authorizing()).firstStep();
 
         // THEN the mechanism returns a typed authentication failure
         assertThat(step).isEqualTo(new SaslStep.Failure(SaslFailure.authenticationFailed(
@@ -107,12 +108,12 @@ class OidcSaslMechanismTest {
     @Test
     void shouldReturnAuthorizationFailure() {
         // GIVEN a valid token but a James authorization rule rejecting the requested identity
-        SaslInitialRequest request = new SaslInitialRequest(OauthBearerSaslMechanism.NAME,
+        SaslInitialRequest request = new SaslInitialRequest(SaslMechanismNames.OAUTHBEARER,
             Optional.of(bytes("n,a=" + USER.asString() + ",\u0001auth=Bearer " + TOKEN + "\u0001\u0001")));
         SaslFailure failure = SaslFailure.delegationForbidden(TOKEN_SUBJECT, USER, "forbidden");
 
         // WHEN authorization rejects the identity
-        SaslStep step = new OauthBearerSaslMechanism(verifyingToken()).start(request, rejectingAuthorization(failure)).firstStep();
+        SaslStep step = new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, rejectingAuthorization(failure)).firstStep();
 
         // THEN the failure is returned to the protocol driver
         assertThat(step).isEqualTo(new SaslStep.Failure(failure));
