@@ -68,9 +68,13 @@ public class MailboxMergingTaskRunner {
     }
 
     public Task.Result run(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxMergingTask.Context context) {
-        return moveMessages(oldMailboxId, newMailboxId, mailboxSession, context)
-            .flatMap(onMoveCompleteOperations(oldMailboxId, newMailboxId))
+        return runReactive(oldMailboxId, newMailboxId, context)
             .block();
+    }
+
+    public Mono<Task.Result> runReactive(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxMergingTask.Context context) {
+        return moveMessages(oldMailboxId, newMailboxId, mailboxSession, context)
+            .flatMap(onMoveCompleteOperations(oldMailboxId, newMailboxId));
     }
 
     private Function<Task.Result, Mono<Task.Result>> onMoveCompleteOperations(CassandraId oldMailboxId, CassandraId newMailboxId) {
