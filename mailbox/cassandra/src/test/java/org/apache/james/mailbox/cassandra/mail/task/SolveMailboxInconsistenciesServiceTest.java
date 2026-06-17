@@ -458,9 +458,11 @@ class SolveMailboxInconsistenciesServiceTest {
     }
 
     @Test
-    void fixMailboxInconsistenciesShouldNotAutoMergeWhenLoserIsRegisteredElsewhere() {
+    void fixMailboxInconsistenciesShouldRealignLoserInsteadOfMergingWhenLoserIsRegisteredElsewhere() {
         // CASSANDRA_ID_1 squats path "abc" (owned by CASSANDRA_ID_2) but also legitimately owns path
-        // "xyz": it is not a clean ghost, so the path table vouches for it and it must not be merged away.
+        // "xyz": it is not a clean ghost. Rather than being merged away, its stale projection is
+        // realigned onto its registered path "xyz", which makes the ghost on "abc" disappear without
+        // any merge. The whole picture becomes consistent within a single run.
         Mailbox pathOwnerProjection = new Mailbox(MAILBOX_PATH, UID_VALIDITY_2, CASSANDRA_ID_2);
         Mailbox loserOtherPath = new Mailbox(NEW_MAILBOX_PATH, UID_VALIDITY_1, CASSANDRA_ID_1);
         mailboxDAO.save(MAILBOX).block();
@@ -468,11 +470,16 @@ class SolveMailboxInconsistenciesServiceTest {
         mailboxPathV3DAO.save(MAILBOX_2).block();
         mailboxPathV3DAO.save(loserOtherPath).block();
 
-        testee.fixMailboxInconsistencies(new Context(), new SolveMailboxInconsistenciesService.RunningOptions(1, true)).block();
+        Context context = new Context();
+        testee.fixMailboxInconsistencies(context, new SolveMailboxInconsistenciesService.RunningOptions(1, true)).block();
 
-        verify(mergingRunner, never()).runReactive(any(), any(), any());
-        // The ghost projection is preserved (not destroyed by an auto-merge).
-        assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
-            .contains(MAILBOX);
+        SoftAssertions.assertSoftly(softly -> {
+            verify(mergingRunner, never()).runReactive(any(), any(), any());
+            softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
+                .containsExactlyInAnyOrder(pathOwnerProjection, loserOtherPath);
+            softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
+                .containsExactlyInAnyOrder(MAILBOX_2, loserOtherPath);
+            softly.assertThat(context.snapshot().getConflictingEntries()).isEmpty();
+        });
     }
 }
