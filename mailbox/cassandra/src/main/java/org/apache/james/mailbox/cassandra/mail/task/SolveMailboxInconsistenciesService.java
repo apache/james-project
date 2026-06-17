@@ -263,6 +263,36 @@ public class SolveMailboxInconsistenciesService {
         }
     }
 
+    public static class RunningOptions {
+        public static final int DEFAULT_MAX_ITERATIONS = 1;
+        public static final RunningOptions DEFAULT = new RunningOptions(DEFAULT_MAX_ITERATIONS);
+
+        private final int maxIterations;
+
+        public RunningOptions(int maxIterations) {
+            Preconditions.checkArgument(maxIterations >= 1, "'maxIterations' must be strictly positive");
+            this.maxIterations = maxIterations;
+        }
+
+        public int getMaxIterations() {
+            return maxIterations;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof RunningOptions) {
+                RunningOptions that = (RunningOptions) o;
+                return this.maxIterations == that.maxIterations;
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(maxIterations);
+        }
+    }
+
     public static class Context {
         static class Builder {
             private Optional<Long> processedMailboxEntries;
@@ -457,7 +487,33 @@ public class SolveMailboxInconsistenciesService {
     }
 
     public Mono<Result> fixMailboxInconsistencies(Context context) {
+        return fixMailboxInconsistencies(context, RunningOptions.DEFAULT);
+    }
+
+    public Mono<Result> fixMailboxInconsistencies(Context context, RunningOptions runningOptions) {
         assertValidVersion();
+        return fixUntilStable(context, runningOptions.getMaxIterations());
+    }
+
+    // Reconciliation is run to a fixpoint: fixing an inconsistency in one pass (dropping a stale
+    // path, merging a ghost mailbox...) can surface a new inconsistency that only a subsequent pass
+    // detects. We re-run as long as a pass keeps applying fixes, bounded by maxIterations to guard
+    // against oscillation. As fixes only ever grow the fixedInconsistencies list, a pass that adds
+    // none means we reached a stable state.
+    private Mono<Result> fixUntilStable(Context context, int remainingIterations) {
+        int fixedBefore = context.snapshot().getFixedInconsistencies().size();
+        return runOnePass(context)
+            .flatMap(result -> {
+                boolean appliedFixes = context.snapshot().getFixedInconsistencies().size() > fixedBefore;
+                if (appliedFixes && remainingIterations > 1) {
+                    return fixUntilStable(context, remainingIterations - 1)
+                        .map(nextResult -> Task.combine(result, nextResult));
+                }
+                return Mono.just(result);
+            });
+    }
+
+    private Mono<Result> runOnePass(Context context) {
         return Flux.concat(
                 processMailboxDaoInconsistencies(context),
                 processMailboxPathDaoInconsistencies(context))
