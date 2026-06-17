@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import java.util.function.Function;
+
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -66,19 +68,36 @@ public class MailboxMergingTaskRunner {
     }
 
     public Task.Result run(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxMergingTask.Context context) {
-        return moveMessages(oldMailboxId, newMailboxId, mailboxSession, context)
-            .onComplete(
-                () -> mergeRights(oldMailboxId, newMailboxId).block(),
-                () -> mailboxDAO.delete(oldMailboxId).block());
+        return runReactive(oldMailboxId, newMailboxId, context)
+            .block();
     }
 
-    private Task.Result moveMessages(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxSession session, MailboxMergingTask.Context context) {
+    public Mono<Task.Result> runReactive(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxMergingTask.Context context) {
+        return moveMessages(oldMailboxId, newMailboxId, mailboxSession, context)
+            .flatMap(onMoveCompleteOperations(oldMailboxId, newMailboxId));
+    }
+
+    private Function<Task.Result, Mono<Task.Result>> onMoveCompleteOperations(CassandraId oldMailboxId, CassandraId newMailboxId) {
+        return result -> {
+            if (result == Task.Result.COMPLETED) {
+                return mergeRights(oldMailboxId, newMailboxId)
+                    .then(mailboxDAO.delete(oldMailboxId))
+                    .thenReturn(result)
+                    .onErrorResume(e -> {
+                        LOGGER.error("Error while executing move completion operation", e);
+                        return Mono.just(Task.Result.PARTIAL);
+                    });
+            }
+            return Mono.just(result);
+        };
+    }
+
+    private Mono<Task.Result> moveMessages(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxSession session, MailboxMergingTask.Context context) {
         return cassandraMessageIdDAO.retrieveMessages(oldMailboxId, MessageRange.all(), Limit.unlimited())
             .map(CassandraMessageMetadata::getComposedMessageId)
             .map(ComposedMessageIdWithMetaData::getComposedMessageId)
             .concatMap(messageId -> Mono.fromCallable(() -> moveMessage(newMailboxId, messageId, session, context)).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
-            .reduce(Task.Result.COMPLETED, Task::combine)
-            .block();
+            .reduce(Task.Result.COMPLETED, Task::combine);
     }
 
     private Task.Result moveMessage(CassandraId newMailboxId, ComposedMessageId composedMessageId, MailboxSession session, MailboxMergingTask.Context context) {

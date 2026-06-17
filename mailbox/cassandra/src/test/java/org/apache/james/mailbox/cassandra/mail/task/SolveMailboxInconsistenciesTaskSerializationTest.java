@@ -41,11 +41,11 @@ class SolveMailboxInconsistenciesTaskSerializationTest {
     public static final String MAILBOX_ID_AS_STRING = "464765a0-e4e7-11e4-aba4-710c1de3782b";
     private static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString(MAILBOX_ID_AS_STRING));
 
-    private static final SolveMailboxInconsistenciesService.RunningOptions RUNNING_OPTIONS = new SolveMailboxInconsistenciesService.RunningOptions(3);
+    private static final SolveMailboxInconsistenciesService.RunningOptions RUNNING_OPTIONS = new SolveMailboxInconsistenciesService.RunningOptions(3, true);
 
     private static final SolveMailboxInconsistenciesService SERVICE = mock(SolveMailboxInconsistenciesService.class);
     private static final SolveMailboxInconsistenciesTask TASK = new SolveMailboxInconsistenciesTask(SERVICE, RUNNING_OPTIONS);
-    private static final String SERIALIZED_TASK = "{\"type\": \"solve-mailbox-inconsistencies\", \"runningOptions\":{\"maxIterations\":3}}";
+    private static final String SERIALIZED_TASK = "{\"type\": \"solve-mailbox-inconsistencies\", \"runningOptions\":{\"maxIterations\":3,\"autoMerge\":true}}";
     private static final ConflictingEntry CONFLICTING_ENTRY = ConflictingEntry.builder()
         .mailboxDaoEntry(MAILBOX_PATH, MAILBOX_ID)
         .mailboxPathDaoEntry(MAILBOX_PATH_2, MAILBOX_ID);
@@ -68,7 +68,7 @@ class SolveMailboxInconsistenciesTaskSerializationTest {
         "  }]," +
         "  \"errors\":3," +
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"," +
-        "  \"runningOptions\":{\"maxIterations\":3}" +
+        "  \"runningOptions\":{\"maxIterations\":3,\"autoMerge\":true}" +
         "}";
 
     @Test
