@@ -24,24 +24,29 @@ import java.util.EnumSet;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxMapper;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -117,5 +122,13 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     @Override
     public <T> Mono<T> manageProcessing(Mono<T> toBeWrapped, MailboxSession mailboxSession) {
         return toBeWrapped;
+    }
+
+    @Override
+    protected Flux<Mailbox> getMailboxWithPathLikeUponRename(MailboxMapper mapper, MailboxQuery.UserBound query) {
+        if (mapper instanceof CassandraMailboxMapper cassandraMailboxMapper) {
+            return cassandraMailboxMapper.findMailboxWithPathLike(query, JamesExecutionProfiles.ConsistencyChoice.STRONG);
+        }
+        return super.getMailboxWithPathLikeUponRename(mapper, query);
     }
 }
