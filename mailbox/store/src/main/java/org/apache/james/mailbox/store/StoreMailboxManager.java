@@ -633,7 +633,7 @@ public class StoreMailboxManager implements MailboxManager {
             .asUserBound();
 
         return assertCanDeleteWhenRename(fromSession, from)
-            .then(mapper.findMailboxWithPathLike(query)
+            .then(getMailboxWithPathLikeUponRename(mapper, query)
                 .filter(mailbox -> mailbox.generateAssociatedPath().getHierarchyLevels(fromSession.getPathDelimiter()).contains(from))
                 .sort(Comparator.comparing(mailbox -> mailbox.generateAssociatedPath().getHierarchyLevels(fromSession.getPathDelimiter()).size()))
                 .collectList()
@@ -644,6 +644,10 @@ public class StoreMailboxManager implements MailboxManager {
                         sink.error(new MailboxNotFoundException(from));
                     }
                 }));
+    }
+
+    protected Flux<Mailbox> getMailboxWithPathLikeUponRename(MailboxMapper mapper, MailboxQuery.UserBound query) {
+        return mapper.findMailboxWithPathLike(query);
     }
 
     private Mono<List<MailboxRenamedResult>> renameSubscriptionsIfNeeded(List<MailboxRenamedResult> renamedResults,

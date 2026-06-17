@@ -192,16 +192,13 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
-        String fixedNamespace = query.getFixedNamespace();
-        Username fixedUser = query.getFixedUser();
-
-        return performReadRepair(listMailboxes(fixedNamespace, fixedUser))
-            .filter(mailbox -> query.isPathMatch(mailbox.generateAssociatedPath()))
-            .flatMap(this::addAcl, CONCURRENCY);
+        return findMailboxWithPathLike(query, consistencyChoice());
     }
 
-    private Flux<Mailbox> listMailboxes(String fixedNamespace, Username fixedUser) {
-        return mailboxPathV3DAO.listUserMailboxes(fixedNamespace, fixedUser, consistencyChoice());
+    public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query, JamesExecutionProfiles.ConsistencyChoice consistencyChoice) {
+        return performReadRepair(mailboxPathV3DAO.listUserMailboxes(query.getFixedNamespace(), query.getFixedUser(), consistencyChoice))
+            .filter(mailbox -> query.isPathMatch(mailbox.generateAssociatedPath()))
+            .flatMap(this::addAcl, CONCURRENCY);
     }
 
     @Override
@@ -254,7 +251,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public Mono<Boolean> hasChildren(Mailbox mailbox, char delimiter) {
-        return performReadRepair(listMailboxes(mailbox.getNamespace(), mailbox.getUser()))
+        return performReadRepair(mailboxPathV3DAO.listUserMailboxes(mailbox.getNamespace(), mailbox.getUser(), consistencyChoice()))
             .filter(idAndPath -> isPathChildOfMailbox(idAndPath, mailbox, delimiter))
             .hasElements();
     }
