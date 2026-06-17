@@ -832,6 +832,26 @@ Will schedule a task for fixing inconsistencies for the mailbox deduplicated obj
 
 The `I-KNOW-WHAT-I-M-DOING` header is mandatory (you can read more information about it in the warning section below).
 
+Optional query parameters:
+
+ - `maxIterations` strictly positive integer, defaults to `1`. Reconciliation is run up to a fixpoint:
+ fixing an inconsistency in one pass (dropping a stale path, merging a ghost mailbox...) can surface a
+ new inconsistency that only a subsequent pass detects. The task re-runs as long as a pass keeps applying
+ fixes, bounded by `maxIterations` to guard against oscillation. A value of `1` keeps the historical
+ single-pass behaviour.
+ - `autoMerge` boolean, defaults to `false`. When `true`, conflicting entries where two **different**
+ mailboxes resolve to the same path (the historical "ghost mailbox") are resolved automatically: the
+ mailbox registered in the path table (the source of truth) is kept, and the squatting one is merged into
+ it (its messages and rights are moved over, then its projection is dropped), reusing the
+ [ghost mailbox](#correcting-ghost-mailbox) merging machinery. This is **destructive** (mail data is
+ moved), only attempted once a strong read confirms the loser is a genuine ghost not registered anywhere
+ else, and left `false` by default so that an admin explicitly opts in. Combine it with `maxIterations > 1`
+ so that any residual left by a merge converges within the same task run.
+
+```
+curl -XPOST '/mailboxes?task=SolveInconsistencies&maxIterations=5&autoMerge=true'
+```
+
 The scheduled task will have the following type `solve-mailbox-inconsistencies` and the following `additionalInformation`:
 
 ```
@@ -850,13 +870,17 @@ The scheduled task will have the following type `solve-mailbox-inconsistencies` 
       "mailboxPath":"#private:user:mailboxName2",
       "mailboxId":"464765a0-e4e7-11e4-aba4-710c1de3782b"
     }
-  }]
+  }],
+  "runningOptions":{
+    "maxIterations": 5,
+    "autoMerge": true
+  }
 }
 ```
 
-Note that conflicting entry inconsistencies will not be fixed and will require to explicitly use 
-[ghost mailbox](#correcting-ghost-mailbox) endpoint in order to merge the conflicting mailboxes and prevent any message
-loss.
+Note that, unless `autoMerge` is enabled, conflicting entry inconsistencies will not be fixed and will
+require to explicitly use [ghost mailbox](#correcting-ghost-mailbox) endpoint in order to merge the
+conflicting mailboxes and prevent any message loss.
 
 **WARNING**: this task can cancel concurrently running legitimate user operations upon dirty read. As such this task 
 should be run offline. 
