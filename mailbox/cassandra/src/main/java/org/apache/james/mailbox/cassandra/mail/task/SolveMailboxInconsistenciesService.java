@@ -251,12 +251,11 @@ public class SolveMailboxInconsistenciesService {
                 .flatMap(state -> {
                     boolean cleanGhost = state.getT1() && state.getT2() && state.getT3();
                     if (!cleanGhost) {
-                        // State no longer matches the clean-ghost picture (already reconciled, or the
-                        // loser owns another path): do not merge.
-                        if (state.getT1() && state.getT2()) {
-                            // Still conflicting but the loser is registered elsewhere: leave it to an admin.
-                            return reportConflict(context);
-                        }
+                        // State no longer matches the clean-ghost picture: either already reconciled,
+                        // or the loser owns another path. In the latter case the loser is a genuine
+                        // mailbox whose stale projection gets realigned onto its registered path by the
+                        // same-mailbox conflict resolution, making this ghost disappear without a merge.
+                        // We therefore leave it to that resolution rather than destroying or reporting it.
                         return Mono.just(Result.COMPLETED);
                     }
                     return mergingRunner.runReactive(loserId, winnerId, new MailboxMergingTask.Context(0))
@@ -316,7 +315,26 @@ public class SolveMailboxInconsistenciesService {
                             }))
                             .thenReturn(Result.COMPLETED);
                     }))
-                .switchIfEmpty(Mono.defer(() -> reportConflict(context)));
+                // The projection points to a path it does not own (unregistered, or held by another
+                // mailbox), while the conflicting path *is* registered to this mailbox: the projection
+                // is simply stale. Realign it onto the path the source of truth vouches for.
+                .switchIfEmpty(Mono.defer(() -> realignStaleProjection(context, mailboxDAO, currentProjection, conflictingEntry)));
+        }
+
+        private Mono<Result> realignStaleProjection(Context context, CassandraMailboxDAO mailboxDAO,
+                                                    Mailbox currentProjection, Mailbox conflictingEntry) {
+            MailboxPath stalePath = currentProjection.generateAssociatedPath();
+            Mailbox realigned = new Mailbox(conflictingEntry.generateAssociatedPath(),
+                currentProjection.getUidValidity(), currentProjection.getMailboxId());
+            return mailboxDAO.save(realigned)
+                .then(Mono.fromRunnable(() -> {
+                    LOGGER.info("Inconsistency fixed for mailbox {}: realigned stale projection from path {} to registered path {}",
+                        realigned.getMailboxId().serialize(),
+                        stalePath.asString(),
+                        realigned.generateAssociatedPath().asString());
+                    context.addFixedInconsistency(realigned.getMailboxId());
+                }))
+                .thenReturn(Result.COMPLETED);
         }
 
         private Mono<Result> reportConflict(Context context) {
