@@ -23,6 +23,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService.RunningOptions;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
@@ -44,15 +45,17 @@ public class SolveMailboxInconsistenciesTask implements Task {
         private final ImmutableList<String> fixedInconsistencies;
         private final ImmutableList<ConflictingEntry> conflictingEntries;
         private final long errors;
+        private final RunningOptions runningOptions;
 
         Details(Instant instant, long processedMailboxEntries, long processedMailboxPathEntries, ImmutableList<String> fixedInconsistencies,
-                ImmutableList<ConflictingEntry> conflictingEntries, long errors) {
+                ImmutableList<ConflictingEntry> conflictingEntries, long errors, RunningOptions runningOptions) {
             this.instant = instant;
             this.processedMailboxEntries = processedMailboxEntries;
             this.processedMailboxPathEntries = processedMailboxPathEntries;
             this.fixedInconsistencies = fixedInconsistencies;
             this.conflictingEntries = conflictingEntries;
             this.errors = errors;
+            this.runningOptions = runningOptions;
         }
 
         @Override
@@ -79,24 +82,34 @@ public class SolveMailboxInconsistenciesTask implements Task {
         long getErrors() {
             return errors;
         }
+
+        public RunningOptions getRunningOptions() {
+            return runningOptions;
+        }
     }
 
     private final SolveMailboxInconsistenciesService service;
+    private final RunningOptions runningOptions;
 
-    public SolveMailboxInconsistenciesTask(SolveMailboxInconsistenciesService service) {
+    public SolveMailboxInconsistenciesTask(SolveMailboxInconsistenciesService service, RunningOptions runningOptions) {
         this.service = service;
+        this.runningOptions = runningOptions;
         this.context = new SolveMailboxInconsistenciesService.Context();
     }
 
     @Override
     public Result run() {
-        return service.fixMailboxInconsistencies(context)
+        return service.fixMailboxInconsistencies(context, runningOptions)
             .block();
     }
 
     @Override
     public TaskType type() {
         return SOLVE_MAILBOX_INCONSISTENCIES;
+    }
+
+    public RunningOptions getRunningOptions() {
+        return runningOptions;
     }
 
     @Override
@@ -109,6 +122,7 @@ public class SolveMailboxInconsistenciesTask implements Task {
                 .map(MailboxId::serialize)
                 .collect(ImmutableList.toImmutableList()),
             snapshot.getConflictingEntries(),
-            snapshot.getErrors()));
+            snapshot.getErrors(),
+            runningOptions));
     }
 }
