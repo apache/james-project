@@ -26,13 +26,38 @@ import jakarta.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.exception.BadCredentialsException;
+import org.apache.james.mailbox.exception.ForbiddenDelegationException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.protocols.api.sasl.SaslAuthenticationResult;
 import org.apache.james.protocols.api.sasl.SaslAuthenticator;
 import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
 
 public class JamesSaslAuthenticator implements SaslAuthenticator {
+    public static JamesSaslAuthenticator jamesSaslAuthenticator(MailboxManager mailboxManager) {
+        Authenticator authenticator = (username, password) -> {
+            try {
+                return Optional.of(mailboxManager.authenticate(username, password.toString()).withoutDelegation().getUser());
+            } catch (BadCredentialsException e) {
+                return Optional.empty();
+            }
+        };
+        Authorizator authorizator = (username, otherUsername) -> {
+            try {
+                mailboxManager.authenticate(username).as(otherUsername);
+                return Authorizator.AuthorizationState.ALLOWED;
+            } catch (UserDoesNotExistException e) {
+                return Authorizator.AuthorizationState.UNKNOWN_USER;
+            } catch (ForbiddenDelegationException | BadCredentialsException e) {
+                return Authorizator.AuthorizationState.FORBIDDEN;
+            }
+        };
+        return new JamesSaslAuthenticator(authenticator, authorizator);
+    }
+
     private final Authenticator authenticator;
     private final Authorizator authorizator;
 

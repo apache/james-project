@@ -19,8 +19,9 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.protocols.sasl.JamesSaslAuthenticator.jamesSaslAuthenticator;
+
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,14 +36,9 @@ import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.base.ImapResponseMessageProcessor;
 import org.apache.james.imap.processor.fetch.FetchProcessor;
-import org.apache.james.mailbox.Authenticator;
-import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.exception.BadCredentialsException;
-import org.apache.james.mailbox.exception.ForbiddenDelegationException;
-import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
@@ -183,27 +179,6 @@ public class DefaultProcessor implements ImapProcessor {
                 Pair::getRight));
 
         return new DefaultProcessor(processorMap, chainEndProcessor);
-    }
-
-    private static JamesSaslAuthenticator jamesSaslAuthenticator(MailboxManager mailboxManager) {
-        Authenticator authenticator = (username, password) -> {
-            try {
-                return Optional.of(mailboxManager.authenticate(username, password.toString()).withoutDelegation().getUser());
-            } catch (BadCredentialsException e) {
-                return Optional.empty();
-            }
-        };
-        Authorizator authorizator = (username, otherUsername) -> {
-            try {
-                mailboxManager.authenticate(username).as(otherUsername);
-                return Authorizator.AuthorizationState.ALLOWED;
-            } catch (UserDoesNotExistException e) {
-                return Authorizator.AuthorizationState.UNKNOWN_USER;
-            } catch (ForbiddenDelegationException | BadCredentialsException e) {
-                return Authorizator.AuthorizationState.FORBIDDEN;
-            }
-        };
-        return new JamesSaslAuthenticator(authenticator, authorizator);
     }
 
     private static Stream<Pair<Class, AbstractProcessor>> asPairStream(AbstractProcessor p) {
