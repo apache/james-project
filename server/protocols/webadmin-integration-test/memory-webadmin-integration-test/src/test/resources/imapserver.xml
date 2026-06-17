@@ -36,6 +36,11 @@ under the License.
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <plainAuthDisallowed>false</plainAuthDisallowed>
+        <auth>
+            <adminUsers>
+                <adminUser>admin@domain</adminUser>
+            </adminUsers>
+        </auth>
         <gracefulShutdown>false</gracefulShutdown>
         <trafficShaping>
             <writeTrafficPerSecond>0</writeTrafficPerSecond>

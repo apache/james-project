@@ -22,7 +22,11 @@ package org.apache.james.webadmin.integration.memory;
 import static io.restassured.RestAssured.when;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
@@ -40,6 +44,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class MemoryWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest {
     private static final String DOMAIN = "domain";
     private static final String USERNAME = "bob@" + DOMAIN;
+    private static final String ADMIN_USERNAME = "admin@" + DOMAIN;
     private static final String PASSWORD = "password";
 
     @RegisterExtension
@@ -78,5 +83,30 @@ class MemoryWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest 
             .body("[0].protocolSpecificInformation.loggedInUser", is("bob@domain"))
             .body("[0].protocolSpecificInformation.userAgent", is("{name=Thunderbird, version=102.7.1}"))
             .body("[0].protocolSpecificInformation.requestCount", is("3"));
+    }
+
+    @Test
+    void shouldDescribeDelegatedImapChannels(GuiceJamesServer server) throws Exception {
+        int imapPort = server.getProbe(ImapGuiceProbe.class).getImapPort();
+
+        server.getProbe(DataProbeImpl.class).addUser(USERNAME, PASSWORD);
+        server.getProbe(DataProbeImpl.class).addUser(ADMIN_USERNAME, PASSWORD);
+
+        String initialClientResponse = Base64.getEncoder()
+            .encodeToString((USERNAME + "\0" + ADMIN_USERNAME + "\0" + PASSWORD).getBytes(StandardCharsets.US_ASCII));
+
+        testIMAPClient.connect(LOCALHOST_IP, imapPort);
+        String authenticateResponse = testIMAPClient.sendCommand("AUTHENTICATE PLAIN " + initialClientResponse);
+        testIMAPClient.select("INBOX");
+
+        assertThat(authenticateResponse).contains("OK AUTHENTICATE completed.");
+
+        // loggedInUser should be well recorded for delegation
+        when()
+            .get("/servers/channels/" + USERNAME)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("[0].username", is(USERNAME))
+            .body("[0].protocolSpecificInformation.loggedInUser", is(ADMIN_USERNAME));
     }
 }

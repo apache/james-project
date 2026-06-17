@@ -91,8 +91,14 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
     protected void doAuthWithDelegation(MailboxSessionAuthWithDelegationSupplier mailboxSessionSupplier,
                                         ImapSession session, ImapRequest request, Responder responder,
                                         Username authenticateUser, Username delegatorUser) {
+        doAuth(mailboxSessionSupplier, session, request, responder, authenticateUser, delegatorUser, "Authentication with delegation succeeded.");
+    }
+
+    protected void doAuth(MailboxSessionAuthWithDelegationSupplier mailboxSessionSupplier,
+                          ImapSession session, ImapRequest request, Responder responder,
+                          Username authenticateUser, Username delegatorUser, String successLog) {
         try {
-            authSuccess(session, mailboxSessionSupplier.get(), request, responder, "Authentication with delegation succeeded.");
+            authSuccess(session, mailboxSessionSupplier.get(), request, responder, successLog);
         } catch (BadCredentialsException e) {
             authFailure(session, request, responder, HumanReadableText.INVALID_CREDENTIALS, Optional.of(authenticateUser),
                 Optional.of(delegatorUser), "Password authentication with delegation failed because of bad credentials.");
@@ -127,7 +133,10 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
             return;
         }
 
-        authSuccess(session, getMailboxManager().createSystemSession(identity.authenticationId()), request, responder, successLog);
+        doAuth(() -> getMailboxManager()
+                .authenticate(identity.authenticationId())
+                .withoutDelegation(),
+            session, request, responder, identity.authenticationId(), identity.authorizationId(), successLog);
     }
 
     protected void handleSaslFailure(SaslFailure failure, ImapSession session, ImapRequest request, Responder responder) {
@@ -202,14 +211,6 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         }
     }
 
-    protected static AuthenticationAttempt delegation(Username authorizeId, Username authenticationId, String password) {
-        return new AuthenticationAttempt(Optional.of(authorizeId), authenticationId, password);
-    }
-
-    protected static AuthenticationAttempt noDelegation(Username authenticationId, String password) {
-        return new AuthenticationAttempt(Optional.empty(), authenticationId, password);
-    }
-
     protected void authSuccess(ImapSession session, MailboxSession mailboxSession, ImapRequest request, Responder responder, String successLog) {
         session.authenticated();
         session.setMailboxSession(mailboxSession);
@@ -247,33 +248,5 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         }
         entry.log(failureReason);
         manageFailureCount(session, request, responder, failed);
-    }
-
-    protected static class AuthenticationAttempt {
-        private final Optional<Username> delegateUserName;
-        private final Username authenticationId;
-        private final String password;
-
-        public AuthenticationAttempt(Optional<Username> delegateUserName, Username authenticationId, String password) {
-            this.delegateUserName = delegateUserName;
-            this.authenticationId = authenticationId;
-            this.password = password;
-        }
-
-        public boolean isDelegation() {
-            return delegateUserName.isPresent() && !delegateUserName.get().equals(authenticationId);
-        }
-
-        public Optional<Username> getDelegateUserName() {
-            return delegateUserName;
-        }
-
-        public Username getAuthenticationId() {
-            return authenticationId;
-        }
-
-        public String getPassword() {
-            return password;
-        }
     }
 }
