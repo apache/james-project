@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail.task;
 
 import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.STRONG;
+import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.WEAK;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;
@@ -33,6 +34,8 @@ import java.util.function.Predicate;
 import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -421,11 +424,21 @@ public class SolveMessageInconsistenciesService {
 
     private final CassandraMessageIdToImapUidDAO messageIdToImapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
+    private final CassandraConfiguration cassandraConfiguration;
 
     @Inject
-    SolveMessageInconsistenciesService(CassandraMessageIdToImapUidDAO messageIdToImapUidDAO, CassandraMessageIdDAO messageIdDAO) {
+    SolveMessageInconsistenciesService(CassandraMessageIdToImapUidDAO messageIdToImapUidDAO, CassandraMessageIdDAO messageIdDAO,
+                                       CassandraConfiguration cassandraConfiguration) {
         this.messageIdToImapUidDAO = messageIdToImapUidDAO;
         this.messageIdDAO = messageIdDAO;
+        this.cassandraConfiguration = cassandraConfiguration;
+    }
+
+    private ConsistencyChoice chooseReadConsistency() {
+        if (cassandraConfiguration.isMessageWriteStrongConsistency()) {
+            return STRONG;
+        }
+        return WEAK;
     }
 
     public Mono<Task.Result> fixMessageInconsistencies(Context context, RunningOptions runningOptions) {
@@ -469,7 +482,7 @@ public class SolveMessageInconsistenciesService {
     }
 
     private Mono<Inconsistency> detectOutdatedMessageIdEntry(CassandraId mailboxId, CassandraMessageId messageId, CassandraMessageMetadata messageIdRecord) {
-        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), STRONG)
+        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), chooseReadConsistency())
             .filter(Predicate.not(Predicate.isEqual(messageIdRecord)))
             .<Inconsistency>map(upToDateMessageFromImapUid -> new OutdatedMessageIdEntry(messageIdRecord, upToDateMessageFromImapUid))
             .next()
@@ -477,7 +490,7 @@ public class SolveMessageInconsistenciesService {
     }
 
     private Mono<Inconsistency> detectOrphanImapUidEntry(CassandraId mailboxId, CassandraMessageId messageId) {
-        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), STRONG)
+        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), chooseReadConsistency())
             .next()
             .<Inconsistency>map(OrphanImapUidEntry::new)
             .switchIfEmpty(Mono.just(NO_INCONSISTENCY));
@@ -495,7 +508,7 @@ public class SolveMessageInconsistenciesService {
 
     private Mono<Inconsistency> detectInconsistencyInMessageId(CassandraMessageMetadata message) {
         return messageIdToImapUidDAO.retrieve((CassandraMessageId) message.getComposedMessageId().getComposedMessageId().getMessageId(),
-                Optional.of((CassandraId) message.getComposedMessageId().getComposedMessageId().getMailboxId()), STRONG)
+                Optional.of((CassandraId) message.getComposedMessageId().getComposedMessageId().getMailboxId()), chooseReadConsistency())
             .map(uidRecord -> NO_INCONSISTENCY)
             .next()
             .switchIfEmpty(detectOrphanMessageIdEntry(message))
