@@ -58,7 +58,8 @@ class RecomputeMailboxCountersServiceTest {
             blobIdFactory, cassandraCluster.getCassandraConsistenciesConfiguration(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
         counterDAO = new CassandraMailboxCounterDAO(cassandra.getConf());
-        testee = new RecomputeMailboxCountersService(mailboxDAO, imapUidToMessageIdDAO, messageIdToImapUidDAO, counterDAO);
+        testee = new RecomputeMailboxCountersService(mailboxDAO, imapUidToMessageIdDAO, messageIdToImapUidDAO, counterDAO,
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Test
