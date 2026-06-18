@@ -76,7 +76,7 @@ public class SolveMessageInconsistenciesServiceTest {
             new CassandraMessageId.Factory(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
         messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), blobIdFactory, new CassandraMessageId.Factory());
-        testee = new SolveMessageInconsistenciesService(imapUidDAO, messageIdDAO);
+        testee = new SolveMessageInconsistenciesService(imapUidDAO, messageIdDAO, CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Test
