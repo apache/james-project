@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail.task;
 
 import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.STRONG;
+import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.WEAK;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -29,6 +30,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -194,16 +197,26 @@ public class RecomputeMailboxCountersService {
     private final CassandraMessageIdDAO imapUidToMessageIdDAO;
     private final CassandraMessageIdToImapUidDAO messageIdToImapUidDAO;
     private final CassandraMailboxCounterDAO counterDAO;
+    private final CassandraConfiguration cassandraConfiguration;
 
     @Inject
     RecomputeMailboxCountersService(CassandraMailboxDAO mailboxDAO,
                                     CassandraMessageIdDAO imapUidToMessageIdDAO,
                                     CassandraMessageIdToImapUidDAO messageIdToImapUidDAO,
-                                    CassandraMailboxCounterDAO counterDAO) {
+                                    CassandraMailboxCounterDAO counterDAO,
+                                    CassandraConfiguration cassandraConfiguration) {
         this.mailboxDAO = mailboxDAO;
         this.imapUidToMessageIdDAO = imapUidToMessageIdDAO;
         this.messageIdToImapUidDAO = messageIdToImapUidDAO;
         this.counterDAO = counterDAO;
+        this.cassandraConfiguration = cassandraConfiguration;
+    }
+
+    private ConsistencyChoice chooseReadConsistency() {
+        if (cassandraConfiguration.isMessageWriteStrongConsistency()) {
+            return STRONG;
+        }
+        return WEAK;
     }
 
     Mono<Result> recomputeMailboxCounters(Context context, Options options) {
@@ -245,7 +258,7 @@ public class RecomputeMailboxCountersService {
         }
         CassandraMessageId messageId = (CassandraMessageId) message.getComposedMessageId().getMessageId();
 
-        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), STRONG)
+        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), chooseReadConsistency())
             .map(CassandraMessageMetadata::getComposedMessageId)
             .doOnNext(trustedMessage -> {
                 if (!trustedMessage.equals(message)) {
