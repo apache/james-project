@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.WebSocketContract;
 
-public class MemoryWebSocketTest extends MemoryBase implements WebSocketContract {
+public class MemoryWebSocketTest extends PerClassMemoryBase implements WebSocketContract {
 }

@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.WebSocketContract;
 
-public class DistributedWebSocketTest extends DistributedBase implements WebSocketContract {
+public class DistributedWebSocketTest extends PerClassDistributedBase implements WebSocketContract {
 
 }
