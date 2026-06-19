@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.WebSocketContract;
 
-public class PostgresWebSocketTest extends PostgresBase implements WebSocketContract {
+public class PostgresWebSocketTest extends PerClassPostgresBase implements WebSocketContract {
 }
