@@ -25,7 +25,7 @@ import org.apache.james.mailbox.model.MessageId;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 
-public class DistributedDownloadTest extends DistributedBase implements DownloadContract {
+public class DistributedDownloadTest extends PerClassDistributedBase implements DownloadContract {
     public static final CassandraMessageId.Factory MESSAGE_ID_FACTORY = new CassandraMessageId.Factory();
 
     @Override

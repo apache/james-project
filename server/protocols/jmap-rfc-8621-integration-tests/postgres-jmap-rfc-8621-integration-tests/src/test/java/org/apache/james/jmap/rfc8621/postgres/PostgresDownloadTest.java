@@ -23,7 +23,7 @@ import org.apache.james.jmap.rfc8621.contract.DownloadContract;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 
-public class PostgresDownloadTest extends PostgresBase implements DownloadContract {
+public class PostgresDownloadTest extends PerClassPostgresBase implements DownloadContract {
     public static final PostgresMessageId.Factory MESSAGE_ID_FACTORY = new PostgresMessageId.Factory();
 
     @Override
