@@ -25,7 +25,7 @@ import org.apache.james.mailbox.model.MessageId;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 
-class DistributedMDNSendMethodTest extends DistributedBase implements MDNSendMethodContract {
+class DistributedMDNSendMethodTest extends PerClassDistributedBase implements MDNSendMethodContract {
     public static final CassandraMessageId.Factory MESSAGE_ID_FACTORY = new CassandraMessageId.Factory();
 
     @Override

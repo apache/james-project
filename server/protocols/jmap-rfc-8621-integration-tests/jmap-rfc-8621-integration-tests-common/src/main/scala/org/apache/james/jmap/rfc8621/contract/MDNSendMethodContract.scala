@@ -21,8 +21,10 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
 import java.time.Duration
-import java.util.concurrent.TimeUnit
+import java.util.UUID
+import java.util.concurrent.{TimeUnit, atomic}
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
@@ -34,8 +36,8 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.MessageIdProbe
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_IDENTITY_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DAVID, DOMAIN, IDENTITY_ID, authScheme, baseRequestSpecBuilder}
-import org.apache.james.jmap.rfc8621.contract.MDNSendMethodContract.TAG_MDN_MESSAGE_FORMAT
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.MDNSendMethodContract.{TAG_MDN_MESSAGE_FORMAT, TestContext}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.{MailboxId, MailboxPath, MessageId, MultimailboxesSearchQuery, SearchQuery}
 import org.apache.james.mime4j.codec.DecodeMonitor
@@ -52,10 +54,29 @@ import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 import scala.jdk.CollectionConverters._
 
 object MDNSendMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String, bobIdentityId: String, andreUsername: Username, andreAccountId: String, andreIdentityId: String, cedricUsername: Username, davidUsername: Username)
+
   val TAG_MDN_MESSAGE_FORMAT: "MDN_MESSAGE_FORMAT" = "MDN_MESSAGE_FORMAT"
+
+  val currentContext: atomic.AtomicReference[TestContext] = new atomic.AtomicReference[TestContext]()
 }
 
 trait MDNSendMethodContract {
+  def bobUsername: Username = MDNSendMethodContract.currentContext.get().bobUsername
+  def bobAccountId: String = MDNSendMethodContract.currentContext.get().bobAccountId
+  def bobIdentityId: String = MDNSendMethodContract.currentContext.get().bobIdentityId
+  def andreUsername: Username = MDNSendMethodContract.currentContext.get().andreUsername
+  def andreAccountId: String = MDNSendMethodContract.currentContext.get().andreAccountId
+  def andreIdentityId: String = MDNSendMethodContract.currentContext.get().andreIdentityId
+  def cedricUsername: Username = MDNSendMethodContract.currentContext.get().cedricUsername
+  def davidUsername: Username = MDNSendMethodContract.currentContext.get().davidUsername
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
+
+  private def identityId(username: Username): String =
+    UUID.nameUUIDFromBytes(username.asString().getBytes(StandardCharsets.UTF_8)).toString
+
   private lazy val slowPacedPollInterval: Duration = ONE_HUNDRED_MILLISECONDS
 
   private lazy val calmlyAwait: ConditionFactory = Awaitility.`with`
@@ -81,16 +102,16 @@ trait MDNSendMethodContract {
     Message.Builder
       .of
       .setSubject(s"Subject of original message$tag")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
-      .addField(new RawField("Disposition-Notification-To", s"Bob <${BOB.asString()}>"))
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
+      .addField(new RawField("Disposition-Notification-To", s"Bob <${bobUsername.asString()}>"))
       .setBody(s"Body of mail$tag, that mdn related", StandardCharsets.UTF_8)
       .build
 
   private def buildBOBRequestSpecification(server: GuiceJamesServer): RequestSpecification =
     baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build
 
@@ -98,15 +119,30 @@ trait MDNSendMethodContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    val cedric = Username.fromLocalPartWithDomain(s"cedric$uniqueSuffix", DOMAIN)
+    val david = Username.fromLocalPartWithDomain(s"david$uniqueSuffix", DOMAIN)
+    MDNSendMethodContract.currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = accountId(bob),
+      bobIdentityId = identityId(bob),
+      andreUsername = andre,
+      andreAccountId = accountId(andre),
+      andreIdentityId = identityId(andre),
+      cedricUsername = cedric,
+      davidUsername = david))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent()
       .addDomain(DOMAIN.asString())
-      .addUser(BOB.asString(), BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
-      .addUser(DAVID.asString, DAVID.asString())
+      .addUser(bob.asString(), BOB_PASSWORD)
+      .addUser(andre.asString, ANDRE_PASSWORD)
+      .addUser(david.asString, david.asString())
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+      .setAuth(authScheme(UserCredential(andre, ANDRE_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build()
   }
@@ -115,14 +151,14 @@ trait MDNSendMethodContract {
   def mdnSendShouldBeSuccessAndSendMailSuccessfully(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     val bobInboxId: MailboxId = mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -137,8 +173,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -188,12 +224,12 @@ trait MDNSendMethodContract {
            |        [
            |            "MDN/send",
            |            {
-           |                "accountId": "$ANDRE_ACCOUNT_ID",
+           |                "accountId": "$andreAccountId",
            |                "sent": {
            |                    "k1546": {
-           |                        "finalRecipient": "rfc822; ${ANDRE.asString}",
+           |                        "finalRecipient": "rfc822; ${andreUsername.asString}",
            |                        "includeOriginalMessage": false,
-           |                        "originalRecipient": "rfc822; ${ANDRE.asString()}"
+           |                        "originalRecipient": "rfc822; ${andreUsername.asString()}"
            |                    }
            |                }
            |            },
@@ -202,7 +238,7 @@ trait MDNSendMethodContract {
            |        [
            |            "Email/set",
            |            {
-           |                "accountId": "$ANDRE_ACCOUNT_ID",
+           |                "accountId": "$andreAccountId",
            |                "oldState": "23",
            |                "newState": "42",
            |                "updated": {
@@ -220,7 +256,7 @@ trait MDNSendMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"inMailbox": "${bobInboxId.serialize}"}
          |    },
          |    "c1"]]
@@ -249,16 +285,16 @@ trait MDNSendMethodContract {
   @Test
   def mdnSendShouldBeSuccessWhenRequestAssignFinalRecipient(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("david", "domain.tld", "andre@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(davidUsername.getLocalPart, DOMAIN.asString, andreUsername.asString)
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -273,14 +309,14 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
-         |            "finalRecipient": "rfc822; ${ANDRE.asString()}",
+         |            "finalRecipient": "rfc822; ${andreUsername.asString()}",
          |            "disposition": {
          |              "actionMode": "manual-action",
          |              "sendingMode": "mdn-sent-manually",
@@ -321,11 +357,11 @@ trait MDNSendMethodContract {
            |        [
            |            "MDN/send",
            |            {
-           |                "accountId": "$ANDRE_ACCOUNT_ID",
+           |                "accountId": "$andreAccountId",
            |                "sent": {
            |                    "k1546": {
            |                        "includeOriginalMessage": false,
-           |                        "originalRecipient": "rfc822; ${ANDRE.asString()}"
+           |                        "originalRecipient": "rfc822; ${andreUsername.asString()}"
            |                    }
            |                }
            |            },
@@ -334,7 +370,7 @@ trait MDNSendMethodContract {
            |        [
            |            "Email/set",
            |            {
-           |                "accountId": "$ANDRE_ACCOUNT_ID",
+           |                "accountId": "$andreAccountId",
            |                "oldState": "23",
            |                "newState": "42",
            |                "updated": {
@@ -351,14 +387,14 @@ trait MDNSendMethodContract {
   def mdnSendShouldBeFailWhenDispositionPropertyIsInvalid(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -373,8 +409,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -420,11 +456,11 @@ trait MDNSendMethodContract {
   def mdnSendShouldBeFailWhenFinalRecipientIsInvalid(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -439,8 +475,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -489,11 +525,11 @@ trait MDNSendMethodContract {
   def mdnSendShouldBeFailWhenIdentityIsNotAllowedToUseFinalRecipient(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -508,14 +544,14 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
-         |            "finalRecipient" : "rfc822; ${CEDRIC.asString}",
+         |            "finalRecipient" : "rfc822; ${cedricUsername.asString}",
          |            "disposition": {
          |              "actionMode": "manual-action",
          |              "sendingMode": "mdn-sent-manually",
@@ -555,11 +591,11 @@ trait MDNSendMethodContract {
   def implicitEmailSetShouldNotBeAttemptedWhenMDNIsNotSent(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -574,8 +610,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -616,14 +652,14 @@ trait MDNSendMethodContract {
   def implicitEmailSetShouldNotBeAttemptedWhenOnSuccessUpdateEmailIsNull(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -638,8 +674,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -680,12 +716,12 @@ trait MDNSendMethodContract {
            |        [
            |            "MDN/send",
            |            {
-           |                "accountId": "$ANDRE_ACCOUNT_ID",
+           |                "accountId": "$andreAccountId",
            |                "sent": {
            |                    "k1546": {
-           |                        "finalRecipient": "rfc822; ${ANDRE.asString}",
+           |                        "finalRecipient": "rfc822; ${andreUsername.asString}",
            |                        "includeOriginalMessage": false,
-           |                        "originalRecipient": "rfc822; ${ANDRE.asString}"
+           |                        "originalRecipient": "rfc822; ${andreUsername.asString}"
            |                    }
            |                }
            |            },
@@ -699,22 +735,22 @@ trait MDNSendMethodContract {
   def mdnSendShouldAcceptSeveralMDNObjects(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId1: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
     val relatedEmailId2: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("2")))
       .getMessageId
     val relatedEmailId3: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("3")))
       .getMessageId
 
@@ -729,8 +765,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId1.serialize()}",
@@ -796,27 +832,27 @@ trait MDNSendMethodContract {
            |		[
            |			"MDN/send",
            |			{
-           |				"accountId": "$ANDRE_ACCOUNT_ID",
+           |				"accountId": "$andreAccountId",
            |				"sent": {
            |					"k1546": {
            |						"subject": "[Received] Subject of original message1",
            |						"textBody": "The email has been displayed on your recipient's computer",
-           |						"originalRecipient": "rfc822; ${ANDRE.asString()}",
-           |						"finalRecipient": "rfc822; ${ANDRE.asString()}",
+           |						"originalRecipient": "rfc822; ${andreUsername.asString()}",
+           |						"finalRecipient": "rfc822; ${andreUsername.asString()}",
            |						"includeOriginalMessage": false
            |					},
            |					"k1547": {
            |						"subject": "[Received] Subject of original message2",
            |						"textBody": "The email has been displayed on your recipient's computer",
-           |						"originalRecipient": "rfc822; ${ANDRE.asString()}",
-           |						"finalRecipient": "rfc822; ${ANDRE.asString()}",
+           |						"originalRecipient": "rfc822; ${andreUsername.asString()}",
+           |						"finalRecipient": "rfc822; ${andreUsername.asString()}",
            |						"includeOriginalMessage": false
            |					},
            |					"k1548": {
            |						"subject": "[Received] Subject of original message3",
            |						"textBody": "The email has been displayed on your recipient's computer",
-           |						"originalRecipient": "rfc822; ${ANDRE.asString()}",
-           |						"finalRecipient": "rfc822; ${ANDRE.asString()}",
+           |						"originalRecipient": "rfc822; ${andreUsername.asString()}",
+           |						"finalRecipient": "rfc822; ${andreUsername.asString()}",
            |						"includeOriginalMessage": false
            |					}
            |				}
@@ -826,7 +862,7 @@ trait MDNSendMethodContract {
            |		[
            |			"Email/set",
            |			{
-           |				"accountId": "$ANDRE_ACCOUNT_ID",
+           |				"accountId": "$andreAccountId",
            |				"oldState": "3be4a1bc-0b41-4e33-aaf0-585e567a5af5",
            |				"newState": "3e1d5c70-9ca4-4c02-a35c-f54a51d253e3",
            |				"updated": {
@@ -845,18 +881,18 @@ trait MDNSendMethodContract {
   def mdnSendMixValidAndNotFoundAndInvalid(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val validEmailId1: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
     val validEmailId2: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("2")))
       .getMessageId
 
@@ -872,8 +908,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${validEmailId1.serialize()}",
@@ -938,13 +974,13 @@ trait MDNSendMethodContract {
                    |        [
                    |            "MDN/send",
                    |            {
-                   |                "accountId": "$ANDRE_ACCOUNT_ID",
+                   |                "accountId": "$andreAccountId",
                    |                "sent": {
                    |                    "k1546": {
                    |                        "subject": "[Received] Subject of original message1",
                    |                        "textBody": "The email has been displayed on your recipient's computer",
-                   |                        "originalRecipient": "rfc822; ${ANDRE.asString()}",
-                   |                        "finalRecipient": "rfc822; ${ANDRE.asString()}",
+                   |                        "originalRecipient": "rfc822; ${andreUsername.asString()}",
+                   |                        "finalRecipient": "rfc822; ${andreUsername.asString()}",
                    |                        "includeOriginalMessage": false
                    |                    }
                    |                },
@@ -958,7 +994,7 @@ trait MDNSendMethodContract {
                    |                    },
                    |                    "k1548": {
                    |                        "type": "notFound",
-                   |                        "description": "The reference \\"forEmailId\\" $serializedRandomId cannot be found for user andre@domain.tld."
+                   |                        "description": "The reference \\"forEmailId\\" $serializedRandomId cannot be found for user ${andreUsername.asString()}."
                    |                    }
                    |                }
                    |            },
@@ -967,7 +1003,7 @@ trait MDNSendMethodContract {
                    |        [
                    |            "Email/set",
                    |            {
-                   |                "accountId": "1e8584548eca20f26faf6becc1704a0f352839f12c208a47fbd486d60f491f7c",
+                   |                "accountId": "$andreAccountId",
                    |                "oldState": "eda83b09-6aca-4215-b493-2b4af19c50f0",
                    |                "newState": "8bd671b2-e9fd-4ce3-b9b2-c3e1f35cc8ee",
                    |                "updated": {
@@ -982,12 +1018,12 @@ trait MDNSendMethodContract {
 
   @Test
   def mdnSendShouldBeFailWhenMDNHasAlreadyBeenSet(server: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.builder()
+      .appendMessage(bobUsername.asString(), path, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -1002,8 +1038,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
-         |        "identityId": "$IDENTITY_ID",
+         |        "accountId": "$bobAccountId",
+         |        "identityId": "$bobIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -1068,7 +1104,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "ue150411c",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "Md45b47b4877521042cec0938",
@@ -1125,7 +1161,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "ue150411c",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "Md45b47b4877521042cec0938",
@@ -1174,7 +1210,7 @@ trait MDNSendMethodContract {
 
   @Test
   def mdnSendShouldReturnNotFoundWhenForEmailIdIsNotExist(server: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
@@ -1190,8 +1226,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
-         |        "identityId": "$IDENTITY_ID",
+         |        "accountId": "$bobAccountId",
+         |        "identityId": "$bobIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${randomMessageId1.serialize()}",
@@ -1230,7 +1266,7 @@ trait MDNSendMethodContract {
       .isEqualTo(s"""{
                    |    "k1546": {
                    |        "type": "notFound",
-                   |        "description": "The reference \\\"forEmailId\\\" ${randomMessageId1.serialize()} cannot be found for user bob@domain.tld."
+                   |        "description": "The reference \\\"forEmailId\\\" ${randomMessageId1.serialize()} cannot be found for user ${bobUsername.asString()}."
                    |    }
                    |}""".stripMargin)
   }
@@ -1239,23 +1275,23 @@ trait MDNSendMethodContract {
   def mdnSendShouldReturnNotFoundWhenMessageRelateHasNotDispositionNotificationTo(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("Body of mail, that mdn related", StandardCharsets.UTF_8)
       .build
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(message))
       .getMessageId
 
@@ -1270,8 +1306,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -1319,23 +1355,23 @@ trait MDNSendMethodContract {
   def mdnSendShouldReturnInvalidWhenIdentityDoesNotExist(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("Body of mail, that mdn related", StandardCharsets.UTF_8)
       .build
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(message))
       .getMessageId
 
@@ -1350,7 +1386,7 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
+         |        "accountId": "$andreAccountId",
          |        "identityId": "notFound",
          |        "send": {
          |          "k1546": {
@@ -1403,7 +1439,7 @@ trait MDNSendMethodContract {
 
   @Test
   def mdnSendShouldBeFailWhenWrongAccountId(server: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
@@ -1419,7 +1455,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "unknownAccountId",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "1",
@@ -1468,12 +1504,12 @@ trait MDNSendMethodContract {
 
   @Test
   def mdnSendShouldBeFailWhenOnSuccessUpdateEmailMissesTheCreationIdSharp(server: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.builder()
+      .appendMessage(bobUsername.asString(), path, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -1489,7 +1525,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -1541,12 +1577,12 @@ trait MDNSendMethodContract {
 
   @Test
   def mdnSendShouldBeFailWhenOnSuccessUpdateEmailDoesNotReferenceACreationWithinThisCall(server: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.builder()
+      .appendMessage(bobUsername.asString(), path, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -1562,7 +1598,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -1621,14 +1657,14 @@ trait MDNSendMethodContract {
   def mdnSendShouldReturnSubjectWhenRequestDoNotSet(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -1643,8 +1679,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -1690,14 +1726,14 @@ trait MDNSendMethodContract {
   def mdnSendShouldReturnTextBodyWhenRequestDoNotSet(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -1712,8 +1748,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -1758,21 +1794,21 @@ trait MDNSendMethodContract {
   def mdnSendShouldReturnOriginalMessageIdWhenRelatedMessageHasMessageIDHeader(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(Message.Builder
           .of
           .setSubject(s"Subject of original message")
-          .setSender(BOB.asString)
-          .setFrom(BOB.asString)
-          .setTo(ANDRE.asString)
-          .addField(new RawField("Disposition-Notification-To", s"Bob <${BOB.asString()}>"))
+          .setSender(bobUsername.asString)
+          .setFrom(bobUsername.asString)
+          .setTo(andreUsername.asString)
+          .addField(new RawField("Disposition-Notification-To", s"Bob <${bobUsername.asString()}>"))
           .addField(new RawField("Message-Id", "<199509192301.23456@example.org>"))
           .setBody(s"Body of mail, that mdn related", StandardCharsets.UTF_8)
           .build
@@ -1790,8 +1826,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -1836,14 +1872,14 @@ trait MDNSendMethodContract {
   def mdnMessageShouldHasThirdBodyPartWhenIncludeOriginalMessageIsTrue(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
-    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(andreUsername)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
     val relatedEmailId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+      .appendMessage(andreUsername.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
 
@@ -1858,8 +1894,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_IDENTITY_ID",
+         |        "accountId": "$andreAccountId",
+         |        "identityId": "$andreIdentityId",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId.serialize()}",
@@ -1900,7 +1936,7 @@ trait MDNSendMethodContract {
       .asString
 
     awaitAtMostTenSeconds.untilAsserted { () =>
-      val mdnBodyPartCounter = getFirstMessageInMailBox(server, BOB)
+      val mdnBodyPartCounter = getFirstMessageInMailBox(server, bobUsername)
         .filter(msg => msg.isMultipart)
         .map(msg => msg.getBody.asInstanceOf[Multipart].getBodyParts)
       assert(mdnBodyPartCounter.isDefined && mdnBodyPartCounter.get.size == 3)
