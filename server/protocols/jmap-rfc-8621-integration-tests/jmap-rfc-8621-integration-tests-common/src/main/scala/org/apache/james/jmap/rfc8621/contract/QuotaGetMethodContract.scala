@@ -21,30 +21,99 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
 import java.time.Duration
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{TimeUnit, atomic}
+import java.util.{Optional, UUID}
 
+import com.google.common.hash.Hashing
+import com.google.inject.multibindings.Multibinder
+import com.google.inject.{AbstractModule, Scopes}
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
+import jakarta.inject.Inject
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaSizeLimit}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.mail.{CountResourceType, QuotaIdFactory}
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.mail.{CountResourceType, OctetsResourceType, QuotaIdFactory}
+import org.apache.james.jmap.method.QuotaGetMethod
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.QuotaGetMethodContract.TestContext
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right.{Lookup, Read}
-import org.apache.james.mailbox.model.{MailboxACL, MailboxPath}
+import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, QuotaRoot}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl, QuotaProbesImpl}
-import org.apache.james.utils.DataProbeImpl
+import org.apache.james.utils.{DataProbeImpl, GuiceProbe}
 import org.awaitility.Awaitility
-import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.api.{AfterEach, BeforeEach, Test}
+
+object QuotaGetMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username)
+
+  val currentContext: atomic.AtomicReference[TestContext] = new atomic.AtomicReference[TestContext]()
+}
+
+class QuotaGetMethodProbeModule extends AbstractModule {
+  override def configure(): Unit = {
+    bind(classOf[QuotaGetMethod]).in(Scopes.SINGLETON)
+    Multibinder.newSetBinder(binder(), classOf[GuiceProbe])
+      .addBinding()
+      .to(classOf[QuotaGetMethodProbe])
+  }
+}
+
+class QuotaGetMethodProbe @Inject()(quotaGetMethod: QuotaGetMethod) extends GuiceProbe {
+  def forceDraftCompatibility(value: Boolean): Unit = {
+    val draftCompatibilityField = classOf[QuotaGetMethod].getDeclaredField("JMAP_QUOTA_DRAFT_COMPATIBILITY")
+    draftCompatibilityField.setAccessible(true)
+    draftCompatibilityField.setBoolean(quotaGetMethod, value)
+
+    val lazyValInitializedField = classOf[QuotaGetMethod].getDeclaredField("bitmap$0")
+    lazyValInitializedField.setAccessible(true)
+    lazyValInitializedField.setBoolean(quotaGetMethod, true)
+  }
+}
 
 trait QuotaGetMethodContract {
+  def bobUsername: Username = QuotaGetMethodContract.currentContext.get().bobUsername
+  def bobAccountId: String = QuotaGetMethodContract.currentContext.get().bobAccountId
+  def andreUsername: Username = QuotaGetMethodContract.currentContext.get().andreUsername
+
+  private def quotaRoot(username: Username): QuotaRoot =
+    QuotaRoot.quotaRoot(s"#private&${username.asString()}", Optional.of(DOMAIN))
+
+  private def quotaName(quotaRoot: QuotaRoot, resourceType: String): String =
+    s"${quotaRoot.asString()}:account:$resourceType:Mail"
+
+  private def quotaState(entries: (String, Long, Long)*): String = {
+    val namePart = entries.map(_._1).sorted.mkString("_")
+    val sum = entries.map { case (_, used, hardLimit) => used + hardLimit }.sum
+    UUID.nameUUIDFromBytes(s"$namePart:$sum".getBytes(StandardCharsets.UTF_8)).toString
+  }
+
+  def bobQuotaRoot: QuotaRoot = quotaRoot(bobUsername)
+  def andreQuotaRoot: QuotaRoot = quotaRoot(andreUsername)
+
+  def bobCountQuotaName: String = quotaName(bobQuotaRoot, CountResourceType.asString())
+  def bobOctetsQuotaName: String = quotaName(bobQuotaRoot, OctetsResourceType.asString())
+  def andreCountQuotaName: String = quotaName(andreQuotaRoot, CountResourceType.asString())
+
+  def bobCountQuotaId: String = QuotaIdFactory.from(bobQuotaRoot, CountResourceType).value
+  def bobOctetsQuotaId: String = QuotaIdFactory.from(bobQuotaRoot, OctetsResourceType).value
+  def andreCountQuotaId: String = QuotaIdFactory.from(andreQuotaRoot, CountResourceType).value
+
+  def emptyQuotaState: String = quotaState()
+  def bobCount100State: String = quotaState((bobCountQuotaName, 0, 100))
+  def bobCount100Octets99State: String = quotaState((bobCountQuotaName, 0, 100), (bobOctetsQuotaName, 0, 99))
+  def bobCount100Octets900State: String = quotaState((bobCountQuotaName, 0, 100), (bobOctetsQuotaName, 0, 900))
+  def bobCount100Octets900WithUsageState: String = quotaState((bobCountQuotaName, 1, 100), (bobOctetsQuotaName, 85, 900))
+  def bobCount100Octets101WithUsageState: String = quotaState((bobCountQuotaName, 1, 100), (bobOctetsQuotaName, 85, 101))
+  def bobCount100AndreCount88State: String = quotaState((bobCountQuotaName, 0, 100), (andreCountQuotaName, 0, 88))
 
   private lazy val awaitAtMostTenSeconds = Awaitility.`with`
     .await
@@ -53,18 +122,36 @@ trait QuotaGetMethodContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    QuotaGetMethodContract.currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString,
+      andreUsername = andre))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString(), ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString(), ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build
 
-    System.clearProperty("james.jmap.quota.draft.compatibility")
+    server.getProbe(classOf[QuotaGetMethodProbe]).forceDraftCompatibility(false)
+  }
+
+  @AfterEach
+  def tearDown(server: GuiceJamesServer): Unit = {
+    val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
+    quotaProbe.removeGlobalMaxMessageCount()
+    quotaProbe.removeGlobalMaxStorage()
+    quotaProbe.removeDomainMaxMessage(DOMAIN)
+    quotaProbe.removeDomainMaxStorage(DOMAIN)
+    server.getProbe(classOf[QuotaGetMethodProbe]).forceDraftCompatibility(false)
   }
 
   @Test
@@ -78,7 +165,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -98,8 +185,8 @@ trait QuotaGetMethodContract {
          |  "methodResponses": [[
          |    "Quota/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "1a9d5db2-2c73-3993-bf0b-42f64b396873",
+         |      "accountId": "$bobAccountId",
+         |      "state": "$emptyQuotaState",
          |      "list": [],
          |      "notFound": []
          |    },
@@ -110,7 +197,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnListWhenQuotasIsProvided(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -123,7 +210,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -146,14 +233,14 @@ trait QuotaGetMethodContract {
          |        [
          |            "Quota/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
-         |                "state": "6d7199ed-f1ce-31f3-8f02-c2e824004e55",
+         |                "state": "$bobCount100Octets99State",
          |                "list": [
          |                    {
          |                        "used": 0,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "name": "$bobCountQuotaName",
+         |                        "id": "$bobCountQuotaId",
          |                        "types": [
          |                            "Mail"
          |                        ],
@@ -164,8 +251,8 @@ trait QuotaGetMethodContract {
          |                    },
          |                    {
          |                        "used": 0,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
-         |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
+         |                        "name": "$bobOctetsQuotaName",
+         |                        "id": "$bobOctetsQuotaId",
          |                        "types": [
          |                            "Mail"
          |                        ],
@@ -186,7 +273,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldFilterOutUnlimitedQuota(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.unlimited())
 
@@ -199,7 +286,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -222,14 +309,14 @@ trait QuotaGetMethodContract {
          |        [
          |            "Quota/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
-         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
+         |                "state": "$bobCount100State",
          |                "list": [
          |                    {
          |                        "used": 0,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "name": "$bobCountQuotaName",
+         |                        "id": "$bobCountQuotaId",
          |                        "types": [
          |                            "Mail"
          |                        ],
@@ -250,7 +337,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnEmptyListWhenIdsAreEmpty(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
 
     val response = `given`
@@ -262,7 +349,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": []
            |    },
            |    "c1"]]
@@ -283,9 +370,9 @@ trait QuotaGetMethodContract {
          |        [
          |            "Quota/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
-         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
+         |                "state": "$bobCount100State",
          |                "list": []
          |            },
          |            "c1"
@@ -311,7 +398,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -334,14 +421,14 @@ trait QuotaGetMethodContract {
            |        [
            |            "Quota/get",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "notFound": [],
-           |                "state": "6d7199ed-f1ce-31f3-8f02-c2e824004e55",
+           |                "state": "$bobCount100Octets99State",
            |                "list": [
            |                    {
            |                        "used": 0,
-           |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-           |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+           |                        "name": "$bobCountQuotaName",
+           |                        "id": "$bobCountQuotaId",
            |                        "types": [
            |                            "Mail"
            |                        ],
@@ -352,8 +439,8 @@ trait QuotaGetMethodContract {
            |                    },
            |                    {
            |                        "used": 0,
-           |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
-           |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
+           |                        "name": "$bobOctetsQuotaName",
+           |                        "id": "$bobOctetsQuotaId",
            |                        "types": [
            |                            "Mail"
            |                        ],
@@ -376,7 +463,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnNotFoundWhenIdDoesNotExist(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
 
     val response = `given`
@@ -388,7 +475,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": ["notfound123"]
            |    },
            |    "c1"]]
@@ -409,9 +496,9 @@ trait QuotaGetMethodContract {
          |        [
          |            "Quota/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [ "notfound123" ],
-         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
+         |                "state": "$bobCount100State",
          |                "list": []
          |            },
          |            "c1"
@@ -424,7 +511,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnNotFoundAndListWhenMixCases(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(900))
 
@@ -439,7 +526,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": ["notfound123", "${quotaId.value}"]
            |    },
            |    "c1"]]
@@ -460,14 +547,14 @@ trait QuotaGetMethodContract {
          |        [
          |            "Quota/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [ "notfound123" ],
-         |                "state": "461cef39-0c47-352b-a9e9-052093c20d5d",
+         |                "state": "$bobCount100Octets900State",
          |                "list": [
          |                    {
          |                        "used": 0,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "name": "$bobCountQuotaName",
+         |                        "id": "$bobCountQuotaId",
          |                        "types": [
          |                            "Mail"
          |                        ],
@@ -488,13 +575,13 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnRightUsageQuota(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(900L))
 
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString(), MailboxPath.inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("test")
         .setBody("testmail", StandardCharsets.UTF_8)
@@ -511,7 +598,7 @@ trait QuotaGetMethodContract {
              |  "methodCalls": [[
              |    "Quota/get",
              |    {
-             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |      "accountId": "$bobAccountId",
              |      "ids": null
              |    },
              |    "c1"]]
@@ -534,14 +621,14 @@ trait QuotaGetMethodContract {
              |        [
              |            "Quota/get",
              |            {
-             |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |                "accountId": "$bobAccountId",
              |                "notFound": [ ],
-             |                "state": "3c51d50a-d766-38b7-9fa4-c9ff12de87a4",
+             |                "state": "$bobCount100Octets900WithUsageState",
              |                "list": [
              |                    {
              |                        "used": 1,
-             |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-             |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+             |                        "name": "$bobCountQuotaName",
+             |                        "id": "$bobCountQuotaId",
              |                        "types": [
              |                            "Mail"
              |                        ],
@@ -552,8 +639,8 @@ trait QuotaGetMethodContract {
              |                    },
              |                    {
              |                        "used": 85,
-             |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
-             |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
+             |                        "name": "$bobOctetsQuotaName",
+             |                        "id": "$bobOctetsQuotaId",
              |                        "types": [
              |                            "Mail"
              |                        ],
@@ -621,7 +708,7 @@ trait QuotaGetMethodContract {
          |  "methodCalls": [[
          |    "Quota/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": null
          |    },
          |    "c1"]]
@@ -660,7 +747,7 @@ trait QuotaGetMethodContract {
          |  "methodCalls": [[
          |    "Quota/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": null
          |    },
          |    "c1"]]
@@ -694,7 +781,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldNotReturnQuotaDataOfOtherAccount(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val andreQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(ANDRE))
+    val andreQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(andreUsername))
     quotaProbe.setMaxMessageCount(andreQuotaRoot, QuotaCountLimit.count(100L))
 
     val response = `given`
@@ -706,7 +793,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -726,8 +813,8 @@ trait QuotaGetMethodContract {
          |  "methodResponses": [[
          |    "Quota/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "1a9d5db2-2c73-3993-bf0b-42f64b396873",
+         |      "accountId": "$bobAccountId",
+         |      "state": "$emptyQuotaState",
          |      "list": [],
          |      "notFound": []
          |    },
@@ -738,7 +825,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnNotFoundWhenDoesNotPermission(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val andreQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(ANDRE))
+    val andreQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(andreUsername))
     quotaProbe.setMaxMessageCount(andreQuotaRoot, QuotaCountLimit.count(100L))
 
     val quotaId = QuotaIdFactory.from(andreQuotaRoot, CountResourceType)
@@ -752,7 +839,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": ["${quotaId.value}"]
            |    },
            |    "c1"]]
@@ -772,8 +859,8 @@ trait QuotaGetMethodContract {
          |  "methodResponses": [[
          |    "Quota/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "1a9d5db2-2c73-3993-bf0b-42f64b396873",
+         |      "accountId": "$bobAccountId",
+         |      "state": "$emptyQuotaState",
          |      "list": [],
          |      "notFound": [ "${quotaId}" ]
          |    },
@@ -784,7 +871,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnIdWhenNoPropertiesRequested(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val quotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val quotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(quotaRoot, QuotaCountLimit.count(100L))
 
     val response = `given`
@@ -796,7 +883,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null,
            |      "properties": []
            |    },
@@ -817,11 +904,11 @@ trait QuotaGetMethodContract {
          |  "methodResponses": [[
          |    "Quota/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
+         |      "accountId": "$bobAccountId",
+         |      "state": "$bobCount100State",
          |      "list": [
          |        {
-         |          "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528"
+         |          "id": "$bobCountQuotaId"
          |        }
          |      ],
          |      "notFound": []
@@ -833,7 +920,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnOnlyRequestedProperties(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val quotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val quotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(quotaRoot, QuotaCountLimit.count(100L))
 
     val response = `given`
@@ -845,7 +932,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null,
            |      "properties": ["name","used","hardLimit"]
            |    },
@@ -866,13 +953,13 @@ trait QuotaGetMethodContract {
          |  "methodResponses": [[
          |    "Quota/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
+         |      "accountId": "$bobAccountId",
+         |      "state": "$bobCount100State",
          |      "list": [
          |        {
-         |          "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |          "id": "$bobCountQuotaId",
          |          "used": 0,
-         |          "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
+         |          "name": "$bobCountQuotaName",
          |          "hardLimit": 100
          |        }
          |      ],
@@ -885,7 +972,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldFailWhenInvalidProperties(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val quotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val quotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(quotaRoot, QuotaCountLimit.count(100L))
 
     val response = `given`
@@ -897,7 +984,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null,
            |      "properties": ["invalid"]
            |    },
@@ -931,7 +1018,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldFailWhenInvalidIds(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val quotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val quotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(quotaRoot, QuotaCountLimit.count(100L))
 
     val response = `given`
@@ -943,7 +1030,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": ["#==id"]
            |    },
            |    "c1"]]
@@ -976,7 +1063,7 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnOnlyUserQuota(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(101L))
 
@@ -986,9 +1073,9 @@ trait QuotaGetMethodContract {
     quotaProbe.setDomainMaxMessage(DOMAIN, QuotaCountLimit.count(80L))
     quotaProbe.setDomainMaxStorage(DOMAIN, QuotaSizeLimit.size(88L))
 
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString(), MailboxPath.inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("test")
         .setBody("testmail", StandardCharsets.UTF_8)
@@ -1005,7 +1092,7 @@ trait QuotaGetMethodContract {
              |  "methodCalls": [[
              |    "Quota/get",
              |    {
-             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |      "accountId": "$bobAccountId",
              |      "ids": null
              |    },
              |    "c1"]]
@@ -1028,14 +1115,14 @@ trait QuotaGetMethodContract {
              |        [
              |            "Quota/get",
              |            {
-             |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |                "accountId": "$bobAccountId",
              |                "notFound": [],
-             |                "state": "7d53031b-2819-3584-9e9d-e10ac1067906",
+             |                "state": "$bobCount100Octets101WithUsageState",
              |                "list": [
              |                    {
              |                        "used": 1,
-             |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-             |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+             |                        "name": "$bobCountQuotaName",
+             |                        "id": "$bobCountQuotaId",
              |                        "types": [
              |                            "Mail"
              |                        ],
@@ -1046,8 +1133,8 @@ trait QuotaGetMethodContract {
              |                    },
              |                    {
              |                        "used": 85,
-             |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
-             |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
+             |                        "name": "$bobOctetsQuotaName",
+             |                        "id": "$bobOctetsQuotaId",
              |                        "types": [
              |                            "Mail"
              |                        ],
@@ -1069,14 +1156,14 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldNotReturnQuotaRootOfDelegatedMailboxWhenNotExtension(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
 
     // setup delegated Mailbox
-    val andreMailbox = MailboxPath.forUser(ANDRE, "mailbox")
+    val andreMailbox = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailbox, BOB.asString, new MailboxACL.Rfc4314Rights(Read))
+      .replaceRights(andreMailbox, bobUsername.asString, new MailboxACL.Rfc4314Rights(Read))
 
     quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(andreMailbox), QuotaCountLimit.count(88L))
 
@@ -1090,7 +1177,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -1111,14 +1198,14 @@ trait QuotaGetMethodContract {
          |        [
          |            "Quota/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
-         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
+         |                "state": "$bobCount100State",
          |                "list": [
          |                    {
          |                        "used": 0,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "name": "$bobCountQuotaName",
+         |                        "id": "$bobCountQuotaId",
          |                        "types": [
          |                            "Mail"
          |                        ],
@@ -1139,14 +1226,14 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnQuotaRootOfDelegatedMailboxWhenExtension(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
 
     // setup delegated Mailbox
-    val andreMailbox = MailboxPath.forUser(ANDRE, "mailbox")
+    val andreMailbox = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailbox, BOB.asString, new MailboxACL.Rfc4314Rights(Read))
+      .replaceRights(andreMailbox, bobUsername.asString, new MailboxACL.Rfc4314Rights(Read))
 
     quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(andreMailbox), QuotaCountLimit.count(88L))
 
@@ -1160,7 +1247,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -1183,14 +1270,14 @@ trait QuotaGetMethodContract {
          |        [
          |            "Quota/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
-         |                "state": "5dc809dd-d059-3fab-bc7e-c0f1fcacf2f2",
+         |                "state": "$bobCount100AndreCount88State",
          |                "list": [
          |                    {
          |                        "used": 0,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "name": "$bobCountQuotaName",
+         |                        "id": "$bobCountQuotaId",
          |                        "types": [
          |                            "Mail"
          |                        ],
@@ -1201,9 +1288,9 @@ trait QuotaGetMethodContract {
          |                    },
          |                    {
          |                        "used": 0,
-         |                        "name": "#private&andre@domain.tld@domain.tld:account:count:Mail",
+         |                        "name": "$andreCountQuotaName",
          |                        "warnLimit": 79,
-         |                        "id": "04cbe4578878e02a74e47ae6be66c88cc8aafd3a5fc698457d712ee5f9a5b4ca",
+         |                        "id": "$andreCountQuotaId",
          |                        "types": [
          |                            "Mail"
          |                        ],
@@ -1223,14 +1310,14 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnQuotaRootOfDelegatedMailboxWhenNotHasReadRight(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
 
     // setup delegated Mailbox
-    val andreMailbox = MailboxPath.forUser(ANDRE, "mailbox")
+    val andreMailbox = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailbox, BOB.asString, new MailboxACL.Rfc4314Rights(Lookup))
+      .replaceRights(andreMailbox, bobUsername.asString, new MailboxACL.Rfc4314Rights(Lookup))
 
     quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(andreMailbox), QuotaCountLimit.count(88L))
 
@@ -1244,7 +1331,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -1265,14 +1352,14 @@ trait QuotaGetMethodContract {
          |        [
          |            "Quota/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
-         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
+         |                "state": "$bobCount100State",
          |                "list": [
          |                    {
          |                        "used": 0,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "name": "$bobCountQuotaName",
+         |                        "id": "$bobCountQuotaId",
          |                        "types": [
          |                            "Mail"
          |                        ],
@@ -1293,14 +1380,14 @@ trait QuotaGetMethodContract {
   @Test
   def quotaGetShouldReturnQuotaRootOfDelegatedMailboxWhenProvideCorrectId(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
 
     // setup delegated Mailbox
-    val andreMailbox = MailboxPath.forUser(ANDRE, "mailbox")
+    val andreMailbox = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailbox, BOB.asString, new MailboxACL.Rfc4314Rights(Read))
+      .replaceRights(andreMailbox, bobUsername.asString, new MailboxACL.Rfc4314Rights(Read))
 
     quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(andreMailbox), QuotaCountLimit.count(88L))
 
@@ -1314,8 +1401,8 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "ids": ["04cbe4578878e02a74e47ae6be66c88cc8aafd3a5fc698457d712ee5f9a5b4ca"]
+           |      "accountId": "$bobAccountId",
+           |      "ids": ["$andreCountQuotaId"]
            |    },
            |    "c1"]]
            |}""".stripMargin)
@@ -1337,15 +1424,15 @@ trait QuotaGetMethodContract {
          |        [
          |            "Quota/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
-         |                "state": "5dc809dd-d059-3fab-bc7e-c0f1fcacf2f2",
+         |                "state": "$bobCount100AndreCount88State",
          |                "list": [
          |                    {
          |                        "used": 0,
-         |                        "name": "#private&andre@domain.tld@domain.tld:account:count:Mail",
+         |                        "name": "$andreCountQuotaName",
          |                        "warnLimit": 79,
-         |                        "id": "04cbe4578878e02a74e47ae6be66c88cc8aafd3a5fc698457d712ee5f9a5b4ca",
+         |                        "id": "$andreCountQuotaId",
          |                        "types": [
          |                            "Mail"
          |                        ],
@@ -1364,10 +1451,10 @@ trait QuotaGetMethodContract {
 
   @Test
   def shouldSupportQuotaGetDraftCompatibilityWhenEnabled(server: GuiceJamesServer): Unit = {
-    System.setProperty("james.jmap.quota.draft.compatibility", "true")
+    server.getProbe(classOf[QuotaGetMethodProbe]).forceDraftCompatibility(true)
 
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.unlimited())
 
@@ -1380,7 +1467,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -1403,14 +1490,14 @@ trait QuotaGetMethodContract {
          |        [
          |            "Quota/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
-         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
+         |                "state": "$bobCount100State",
          |                "list": [
          |                    {
          |                        "used": 0,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "name": "$bobCountQuotaName",
+         |                        "id": "$bobCountQuotaId",
          |                        "types": ["Mail"],
          |                        "dataTypes": ["Mail"],
          |                        "hardLimit": 100,
@@ -1430,10 +1517,10 @@ trait QuotaGetMethodContract {
 
   @Test
   def quotaGetDraftCompatibilityShouldStillSupportPropertiesFiltering(server: GuiceJamesServer): Unit = {
-    System.setProperty("james.jmap.quota.draft.compatibility", "true")
+    server.getProbe(classOf[QuotaGetMethodProbe]).forceDraftCompatibility(true)
 
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.unlimited())
 
@@ -1446,7 +1533,7 @@ trait QuotaGetMethodContract {
            |  "methodCalls": [[
            |    "Quota/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": null,
            |      "properties": ["limit", "dataTypes"]
            |    },
@@ -1470,12 +1557,12 @@ trait QuotaGetMethodContract {
          |        [
          |            "Quota/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
-         |                "state": "84c40a2e-76a1-3f84-a1e8-862104c7a697",
+         |                "state": "$bobCount100State",
          |                "list": [
          |                    {
-         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+         |                        "id": "$bobCountQuotaId",
          |                        "dataTypes": ["Mail"],
          |                        "limit": 100
          |                    }
