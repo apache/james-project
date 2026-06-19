@@ -21,7 +21,9 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -29,19 +31,22 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
-import org.apache.james.core.MailAddress
+import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.identity.IdentityCreationRequest
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, IdentityName, TextSignature}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
-import org.apache.james.jmap.rfc8621.contract.IdentitySetContract.IDENTITY_CREATION_REQUEST
+import org.apache.james.jmap.rfc8621.contract.IdentitySetContract.TestContext
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 import reactor.core.scala.publisher.SMono
 
 object IdentitySetContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String, bobAliasLocalPart: String)
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+
   val IDENTITY_CREATION_REQUEST: IdentityCreationRequest = IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
     email = BOB.asMailAddress(),
     replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
@@ -50,16 +55,34 @@ object IdentitySetContract {
     htmlSignature = Some(HtmlSignature("html signature")))
 }
 trait IdentitySetContract {
+  def bobUsername: Username = IdentitySetContract.currentContext.get().bobUsername
+  def bobAccountId: String = IdentitySetContract.currentContext.get().bobAccountId
+  def bobAliasLocalPart: String = IdentitySetContract.currentContext.get().bobAliasLocalPart
+  def bobAliasAddress: String = s"$bobAliasLocalPart@${DOMAIN.asString}"
+  def identityCreationRequest: IdentityCreationRequest = IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
+    email = bobUsername.asMailAddress(),
+    replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
+    bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
+    textSignature = Some(TextSignature("text signature")),
+    htmlSignature = Some(HtmlSignature("html signature")))
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    IdentitySetContract.currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString,
+      bobAliasLocalPart = s"bob-alias-$uniqueSuffix"))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
       .addDomain("domain-alias.tld")
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build
   }
@@ -73,11 +96,11 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
          |						"name": "Bob",
-         |						"email": "bob@domain.tld",
+         |						"email": "${bobUsername.asString}",
          |						"replyTo": [{
          |							"name": "Alice",
          |							"email": "alice@domain.tld"
@@ -95,7 +118,7 @@ trait IdentitySetContract {
          |		],
          |		["Identity/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"ids": null
          |			}, "c2"
          |		]
@@ -123,7 +146,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"created": {
            |					"4f29": {
@@ -137,12 +160,12 @@ trait IdentitySetContract {
            |		[
            |			"Identity/get",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"list": [{
            |						"id": "$${json-unit.ignore}",
            |						"name": "Bob",
-           |						"email": "bob@domain.tld",
+           |						"email": "${bobUsername.asString}",
            |						"replyTo": [{
            |							"name": "Alice",
            |							"email": "alice@domain.tld"
@@ -156,9 +179,9 @@ trait IdentitySetContract {
            |						"mayDelete": true
            |					},
            |					{
-           |						"id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
-           |						"name": "bob@domain.tld",
-           |						"email": "bob@domain.tld",
+           |						"id": "${UUID.nameUUIDFromBytes(bobUsername.asString.getBytes(StandardCharsets.UTF_8))}",
+           |						"name": "${bobUsername.asString}",
+           |						"email": "${bobUsername.asString}",
            |						"textSignature": "",
            |						"htmlSignature": "",
            |						"mayDelete": false
@@ -180,11 +203,11 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
          |						"name": "Bob",
-         |						"email": "bob@domain.tld",
+         |						"email": "${bobUsername.asString}",
          |						"replyTo": [{
          |							"name": "Alice",
          |							"email": "alice@domain.tld"
@@ -203,7 +226,7 @@ trait IdentitySetContract {
          |		],
          |		["Identity/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"ids": ["#4f29"]
          |			}, "c2"
          |		]
@@ -231,7 +254,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"created": {
            |					"4f29": {
@@ -245,12 +268,12 @@ trait IdentitySetContract {
            |		[
            |			"Identity/get",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"list": [{
            |						"id": "$${json-unit.ignore}",
            |						"name": "Bob",
-           |						"email": "bob@domain.tld",
+           |						"email": "${bobUsername.asString}",
            |						"replyTo": [{
            |							"name": "Alice",
            |							"email": "alice@domain.tld"
@@ -281,11 +304,11 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
          |						"name": "Bob",
-         |						"email": "bob@domain.tld",
+         |						"email": "${bobUsername.asString}",
          |						"replyTo": [{
          |							"name": "Alice",
          |							"email": "alice@domain.tld"
@@ -303,7 +326,7 @@ trait IdentitySetContract {
          |		],
          |		["Identity/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"ids": ["#4f29"]
          |			}, "c2"
          |		]
@@ -330,7 +353,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"created": {
            |					"4f29": {
@@ -344,12 +367,12 @@ trait IdentitySetContract {
            |		[
            |			"Identity/get",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"list": [{
            |					"id": "$${json-unit.ignore}",
            |					"name": "Bob",
-           |					"email": "bob@domain.tld",
+           |					"email": "${bobUsername.asString}",
            |					"replyTo": [{
            |						"name": "Alice",
            |						"email": "alice@domain.tld"
@@ -378,10 +401,10 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
-         |						"email": "bob@domain.tld"
+         |						"email": "${bobUsername.asString}"
          |					}
          |				}
          |			},
@@ -405,7 +428,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"newState": "${INSTANCE.serialize}",
            |	"created": {
            |		"4f29": {
@@ -422,17 +445,17 @@ trait IdentitySetContract {
   @Test
   def setIdentityShouldCreatedSeveralValidCreationRequest(): Unit = {
     val request: String =
-      """{
+      s"""{
         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
         |	"methodCalls": [
         |		[
         |			"Identity/set",
         |			{
-        |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |				"accountId": "$bobAccountId",
         |				"create": {
         |					"4f28": {
         |						"name": "Identity1",
-        |						"email": "bob@domain.tld",
+        |						"email": "${bobUsername.asString}",
         |						"replyTo": [{
         |							"name": "Alice",
         |							"email": "alice@domain.tld"
@@ -446,7 +469,7 @@ trait IdentitySetContract {
         |					},
         |					"4f29": {
         |						"name": "Identity2",
-        |						"email": "bob@domain.tld",
+        |						"email": "${bobUsername.asString}",
         |						"replyTo": null,
         |						"bcc": null,
         |						"textSignature": "Some text signature",
@@ -474,7 +497,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"created": {
            |		"4f28": {
@@ -492,21 +515,21 @@ trait IdentitySetContract {
   @Test
   def setIdentityShouldReturnForbiddenFromErrorWhenForbiddenEmailProperty(): Unit = {
     val request: String =
-      """{
+      s"""{
         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
         |	"methodCalls": [
         |		[
         |			"Identity/set",
         |			{
-        |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |				"accountId": "$bobAccountId",
         |				"create": {
         |					"4f28": {
         |						"name": "valid send from identity",
-        |						"email": "bob@domain.tld"
+        |						"email": "${bobUsername.asString}"
         |					},
         |					"4f29": {
         |						"name": "forbidden send from identity",
-        |						"email": "bob-alias@domain.tld"
+        |						"email": "${bobAliasAddress}"
         |					}
         |				}
         |			},
@@ -530,7 +553,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"created": {
            |		"4f28": {
@@ -543,7 +566,7 @@ trait IdentitySetContract {
            |	"notCreated": {
            |		"4f29": {
            |			"type": "forbiddenFrom",
-           |			"description": "Can not send from bob-alias@domain.tld"
+           |			"description": "Can not send from ${bobAliasAddress}"
            |		}
            |	}
            |}""".stripMargin)
@@ -551,24 +574,24 @@ trait IdentitySetContract {
 
   @Test
   def setIdentityShouldSucceedWhenValidEmailProperty(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
 
     val request: String =
-      """{
+      s"""{
         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
         |	"methodCalls": [
         |		[
         |			"Identity/set",
         |			{
-        |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |				"accountId": "$bobAccountId",
         |				"create": {
         |					"4f28": {
         |						"name": "valid send from identity",
-        |						"email": "bob@domain.tld"
+        |						"email": "${bobUsername.asString}"
         |					},
         |					"4f29": {
         |						"name": "valid send from identity",
-        |						"email": "bob-alias@domain.tld"
+        |						"email": "${bobAliasAddress}"
         |					}
         |				}
         |			},
@@ -592,7 +615,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"created": {
            |		"4f28": {
@@ -620,7 +643,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
          |						"name": "Bob",
@@ -657,7 +680,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"notCreated": {
            |		"4f29": {
@@ -677,7 +700,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
          |						"name": "Bob",
@@ -715,7 +738,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"notCreated": {
            |		"4f29": {
@@ -735,12 +758,12 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
          |						"id": "someId",
          |            "mayDelete": false,
-         |						"email": "bob@domain.tld"
+         |						"email": "${bobUsername.asString}"
          |					}
          |				}
          |			},
@@ -764,7 +787,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"notCreated": {
            |		"4f29": {
@@ -820,16 +843,16 @@ trait IdentitySetContract {
   @Test
   def setIdentityShouldFailWhenMissingCapability(): Unit = {
     val request: String =
-      """{
+      s"""{
         |	"using": [],
         |	"methodCalls": [
         |		[
         |			"Identity/set",
         |			{
-        |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |				"accountId": "$bobAccountId",
         |				"create": {
         |					"4f29": {
-        |						"email": "bob@domain.tld"
+        |						"email": "${bobUsername.asString}"
         |					}
         |				}
         |			},
@@ -877,7 +900,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "update": {
            |                    "$identityId": {
            |                        "name": "NewName1"
@@ -905,7 +928,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "updated": {
            |                    "$identityId": {}
@@ -932,7 +955,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "update": {
            |                    "$identityId": {
            |                        "name": "NewName1",
@@ -958,7 +981,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/get",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "ids": [
            |                    "$identityId"
            |                ]
@@ -984,7 +1007,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "updated": {
            |                    "$identityId": { }
@@ -995,13 +1018,13 @@ trait IdentitySetContract {
            |        [
            |            "Identity/get",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "list": [
            |                    {
            |                        "id": "$identityId",
            |                        "name": "NewName1",
-           |                        "email": "bob@domain.tld",
+           |                        "email": "${bobUsername.asString}",
            |                        "replyTo": [
            |                            {
            |                                "name": "Difference Alice",
@@ -1041,7 +1064,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "update": {
            |                    "$identityId": {
            |                        "name": "NewName1",
@@ -1068,7 +1091,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/get",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "ids": ["$identityId"]
            |            },
            |            "c2"
@@ -1092,7 +1115,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "updated": {
            |                    "$identityId": { }
@@ -1103,13 +1126,13 @@ trait IdentitySetContract {
            |        [
            |            "Identity/get",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "list": [
            |                    {
            |                        "id": "$identityId",
            |                        "name": "NewName1",
-           |                        "email": "bob@domain.tld",
+           |                        "email": "${bobUsername.asString}",
            |                        "replyTo": [
            |                            {
            |                                "name": "Difference Alice",
@@ -1149,7 +1172,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "update": {
            |                    "$identityId": {
            |                        "bcc": [
@@ -1166,7 +1189,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/get",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "ids": [
            |                    "$identityId"
            |                ]
@@ -1191,7 +1214,7 @@ trait IdentitySetContract {
                     |        [
                     |            "Identity/set",
                     |            {
-                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                    |                "accountId": "$bobAccountId",
                     |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
                     |                "updated": {
                     |                    "$identityId": { }
@@ -1202,7 +1225,7 @@ trait IdentitySetContract {
                     |        [
                     |            "Identity/get",
                     |            {
-                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                    |                "accountId": "$bobAccountId",
                     |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
                     |                "list": [
                     |                    {
@@ -1216,7 +1239,7 @@ trait IdentitySetContract {
                     |                        ],
                     |                        "textSignature": "Some text signature",
                     |                        "mayDelete": true,
-                    |                        "email": "bob@domain.tld",
+                    |                        "email": "${bobUsername.asString}",
                     |                        "replyTo": [
                     |                            {
                     |                                "name": "Alice",
@@ -1243,7 +1266,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |            		"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |            		"accountId": "$bobAccountId",
            |                "update": {
            |                    "$notfoundIdentityId": {
            |                        "name": "NewName1"
@@ -1271,7 +1294,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "notUpdated": {
            |                    "$notfoundIdentityId": {
@@ -1297,7 +1320,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |            		"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |            		"accountId": "$bobAccountId",
            |                "update": {
            |                    "$notParsedId": {
            |                        "name": "NewName1"
@@ -1325,7 +1348,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "notUpdated": {
            |                    "$notParsedId": {
@@ -1351,7 +1374,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |            		"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |            		"accountId": "$bobAccountId",
            |                "update": {
            |                    "$identityId": {
            |                        "email": "bob2@domain.tld"
@@ -1379,7 +1402,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "notUpdated": {
            |                    "$identityId": {
@@ -1412,7 +1435,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "update": {
            |                    "$updateIdentityId1": { "name": "new Name 1" },
            |                    "$updateIdentityId2": { "name": "new Name 2" },
@@ -1442,7 +1465,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "updated": {
            |                    "$updateIdentityId1": {},
@@ -1467,7 +1490,7 @@ trait IdentitySetContract {
 
   private def createNewIdentity(): String = createNewIdentity(UUID.randomUUID().toString)
 
-  private def createNewIdentity(clientId: String, email: String = "bob@domain.tld"): String =
+  private def createNewIdentity(clientId: String, email: String = bobUsername.asString): String =
     `given`
       .body(
         s"""{
@@ -1476,7 +1499,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"create": {
            |					"$clientId": {
            |						"name": "Bob",
@@ -1509,7 +1532,7 @@ trait IdentitySetContract {
   @Test
   def destroyShouldSucceedWhenDeleteCustomIdentity(server: GuiceJamesServer): Unit = {
     val id = SMono(server.getProbe(classOf[IdentityProbe])
-      .save(BOB, IDENTITY_CREATION_REQUEST))
+      .save(bobUsername, identityCreationRequest))
       .block()
       .id.id.toString
 
@@ -1520,7 +1543,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["$id"]
          |			},
          |			"c1"
@@ -1547,7 +1570,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"destroyed": ["$id"]
            |			},
@@ -1559,9 +1582,9 @@ trait IdentitySetContract {
 
   @Test
   def destroyShouldFailWhenDeleteServerSetIdentities(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
-    val defaultServerSetIdentity = UUID.nameUUIDFromBytes("bob@domain.tld".getBytes(StandardCharsets.UTF_8))
-    val serverIdentitiesId1 = UUID.nameUUIDFromBytes("bob-alias@domain.tld".getBytes(StandardCharsets.UTF_8))
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
+    val defaultServerSetIdentity = UUID.nameUUIDFromBytes(bobUsername.asString.getBytes(StandardCharsets.UTF_8))
+    val serverIdentitiesId1 = UUID.nameUUIDFromBytes(bobAliasAddress.getBytes(StandardCharsets.UTF_8))
 
     val request: String =
       s"""{
@@ -1570,7 +1593,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["$serverIdentitiesId1", "$defaultServerSetIdentity"]
          |			},
          |			"c1"
@@ -1597,7 +1620,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"notDestroyed": {
            |					"$serverIdentitiesId1": {
@@ -1625,7 +1648,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["invalid"]
          |			},
          |			"c1"
@@ -1652,7 +1675,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"notDestroyed": {
            |					"invalid": {
@@ -1678,7 +1701,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["$id"]
          |			},
          |			"c1"
@@ -1705,7 +1728,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"destroyed": ["$id"]
            |			},
@@ -1718,14 +1741,14 @@ trait IdentitySetContract {
   @Test
   def destroyShouldHandleMixedCases(server: GuiceJamesServer): Unit = {
     val customId1 = SMono(server.getProbe(classOf[IdentityProbe])
-      .save(BOB, IDENTITY_CREATION_REQUEST))
+      .save(bobUsername, identityCreationRequest))
       .block()
       .id.id.toString
     val customId2 = SMono(server.getProbe(classOf[IdentityProbe])
-      .save(BOB, IDENTITY_CREATION_REQUEST))
+      .save(bobUsername, identityCreationRequest))
       .block()
       .id.id.toString
-    val defaultServerSetIdentity = UUID.nameUUIDFromBytes("bob@domain.tld".getBytes(StandardCharsets.UTF_8))
+    val defaultServerSetIdentity = UUID.nameUUIDFromBytes(bobUsername.asString.getBytes(StandardCharsets.UTF_8))
 
     val request: String =
       s"""{
@@ -1734,7 +1757,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["$customId1", "$customId2", "$defaultServerSetIdentity"]
          |			},
          |			"c1"
@@ -1762,7 +1785,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"destroyed": ["$customId1", "$customId2"],
            |				"notDestroyed": {
@@ -1781,7 +1804,7 @@ trait IdentitySetContract {
   @Test
   def deletedIdentityShouldNotBeFetchedAnyMore(server: GuiceJamesServer): Unit = {
     val id = SMono(server.getProbe(classOf[IdentityProbe])
-      .save(BOB, IDENTITY_CREATION_REQUEST))
+      .save(bobUsername, identityCreationRequest))
       .block()
       .id.id.toString
 
@@ -1792,7 +1815,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["$id"]
          |			},
          |			"c1"
@@ -1813,7 +1836,7 @@ trait IdentitySetContract {
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["$id"]
          |    },
          |    "c1"]]
@@ -1834,7 +1857,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"notFound": [
            |		"$id"
            |	],
@@ -1852,7 +1875,7 @@ trait IdentitySetContract {
            |	"methodCalls": [
            |		["Identity/get",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"ids": null
            |			}, "c2"
            |		]
@@ -1878,7 +1901,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "update": {
            |                    "$identityId": {
            |                        "name": "NewName1",
@@ -1904,7 +1927,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/get",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "ids": [
            |                    "$identityId"
            |                ]
@@ -1930,7 +1953,7 @@ trait IdentitySetContract {
            |        [
            |            "Identity/set",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "updated": {
            |                    "$identityId": { }
@@ -1941,13 +1964,13 @@ trait IdentitySetContract {
            |        [
            |            "Identity/get",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "list": [
            |                    {
            |                        "id": "$identityId",
            |                        "name": "NewName1",
-           |                        "email": "bob@domain.tld",
+           |                        "email": "${bobUsername.asString}",
            |                        "replyTo": [
            |                            {
            |                                "name": "Difference Alice",
@@ -1975,8 +1998,8 @@ trait IdentitySetContract {
   @Test
   def givenUpdatedServerSetIdentityWhenAdminRemoveThatIdentityThenDestroyThatIdentityShouldSucceed(server: GuiceJamesServer): Unit = {
     // server create a alias for Bob
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
-    val serverIdentityId = UUID.nameUUIDFromBytes("bob-alias@domain.tld".getBytes(StandardCharsets.UTF_8))
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
+    val serverIdentityId = UUID.nameUUIDFromBytes(bobAliasAddress.getBytes(StandardCharsets.UTF_8))
 
     // Bob update serverIdentity
     `given`
@@ -1987,7 +2010,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"update": {
            |					"$serverIdentityId": {
            |						"name": "NewName1",
@@ -2014,7 +2037,7 @@ trait IdentitySetContract {
       .statusCode(SC_OK)
 
     // server delete provided alias
-    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
 
     // Bob delete that serverIdentity
     val request: String =
@@ -2024,7 +2047,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["$serverIdentityId"]
          |			},
          |			"c1"
@@ -2048,7 +2071,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"destroyed": ["$serverIdentityId"]
            |}""".stripMargin)
@@ -2057,13 +2080,13 @@ trait IdentitySetContract {
   @Test
   def givenServerSetAliasAndCreateACustomIdentityWithItWhenAdminRemoveThatAliasThenFetchThatIdentityShouldNoLongerReturn(server: GuiceJamesServer): Unit = {
     // GIVEN bob-alias@domain.tld
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
 
     // Bob create a new custom identity with bob-alias@domain.tld
-    val customIdentityId = createNewIdentity(UUID.randomUUID().toString, "bob-alias@domain.tld")
+    val customIdentityId = createNewIdentity(UUID.randomUUID().toString, bobAliasAddress)
 
     // WHEN an admin delete bob-alias@domain.tld
-    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
 
     // THEN Identity/get no longer returns the identity
     val request: String =
@@ -2073,7 +2096,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"ids": ["$customIdentityId"]
          |			}, "c1"
          |		]
@@ -2096,7 +2119,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"notFound": [
            |		"$customIdentityId"
            |	],
@@ -2108,13 +2131,13 @@ trait IdentitySetContract {
   @Test
   def givenServerSetAliasAndCreateACustomIdentityWhenAdminRemoveThatAliasThenUpdateThatIdentityShouldFail(server: GuiceJamesServer): Unit = {
     // GIVEN bob-alias@domain.tld
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
 
     // Bob create a new custom identity with bob-alias@domain.tld
-    val customIdentityId = createNewIdentity(UUID.randomUUID().toString, "bob-alias@domain.tld")
+    val customIdentityId = createNewIdentity(UUID.randomUUID().toString, bobAliasAddress)
 
     // WHEN an admin delete bob-alias@domain.tld
-    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
 
     // THEN Identity/set update of that identity fails
     val request: String =
@@ -2127,7 +2150,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"update": {
          |					"$customIdentityId": {
          |						"name": "NewName1",
@@ -2164,7 +2187,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"notUpdated": {
            |		"$customIdentityId": {
@@ -2178,8 +2201,8 @@ trait IdentitySetContract {
   @Test
   def givenServerSetAliasAndUserUpdateItWhenAdminRemoveThatAliasThenFetchThatIdentityShouldNoLongerReturn(server: GuiceJamesServer): Unit = {
     // GIVEN bob-alias@domain.tld
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
-    val serverIdentityId = UUID.nameUUIDFromBytes("bob-alias@domain.tld".getBytes(StandardCharsets.UTF_8))
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
+    val serverIdentityId = UUID.nameUUIDFromBytes(bobAliasAddress.getBytes(StandardCharsets.UTF_8))
 
     // Bob update the default identity of bob-alias@domain.tld
     `given`
@@ -2193,7 +2216,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"update": {
            |					"$serverIdentityId": {
            |						"name": "NewName1",
@@ -2220,7 +2243,7 @@ trait IdentitySetContract {
       .statusCode(SC_OK)
 
     // WHEN an admin delete bob-alias@domain.tld
-    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
 
     // THEN Identity/get that identity should no longer return
     val request: String =
@@ -2230,7 +2253,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"ids": ["$serverIdentityId"]
          |			}, "c1"
          |		]
@@ -2252,7 +2275,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"notFound": [
            |		"$serverIdentityId"
            |	],
@@ -2264,8 +2287,8 @@ trait IdentitySetContract {
   @Test
   def givenServerSetAliasAndUserUpdateItWhenAdminRemoveThatAliasThenUpdateThatIdentityShouldFail(server: GuiceJamesServer): Unit = {
     // GIVEN bob-alias@domain.tld
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
-    val serverIdentityId = UUID.nameUUIDFromBytes("bob-alias@domain.tld".getBytes(StandardCharsets.UTF_8))
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
+    val serverIdentityId = UUID.nameUUIDFromBytes(bobAliasAddress.getBytes(StandardCharsets.UTF_8))
 
     // Bob update the default identity of bob-alias@domain.tld
     `given`
@@ -2279,7 +2302,7 @@ trait IdentitySetContract {
            |		[
            |			"Identity/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"update": {
            |					"$serverIdentityId": {
            |						"name": "NewName1",
@@ -2306,7 +2329,7 @@ trait IdentitySetContract {
       .statusCode(SC_OK)
 
     // WHEN an admin delete bob-alias@domain.tld
-    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
 
     // THEN Identity/set update of that identity fails
     val request: String =
@@ -2319,7 +2342,7 @@ trait IdentitySetContract {
          |		[
          |			"Identity/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"update": {
          |					"$serverIdentityId": {
          |						"name": "NewName1",
@@ -2356,7 +2379,7 @@ trait IdentitySetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |	"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |	"accountId": "$bobAccountId",
            |	"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"notUpdated": {
            |		"$serverIdentityId": {
