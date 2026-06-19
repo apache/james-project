@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.IdentitySetContract;
 
-public class DistributedIdentitySetTest extends DistributedBase implements IdentitySetContract {
+public class DistributedIdentitySetTest extends PerClassDistributedBase implements IdentitySetContract {
 
 }
