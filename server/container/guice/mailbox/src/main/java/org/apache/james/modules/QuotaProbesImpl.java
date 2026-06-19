@@ -115,4 +115,20 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
     public void setDomainMaxStorage(Domain domain, QuotaSizeLimit size) throws MailboxException {
         maxQuotaManager.setDomainMaxStorage(domain, size);
     }
+
+    public void removeGlobalMaxMessageCount() throws MailboxException {
+        maxQuotaManager.removeGlobalMaxMessage();
+    }
+
+    public void removeGlobalMaxStorage() throws MailboxException {
+        maxQuotaManager.removeGlobalMaxStorage();
+    }
+
+    public void removeDomainMaxMessage(Domain domain) throws MailboxException {
+        maxQuotaManager.removeDomainMaxMessage(domain);
+    }
+
+    public void removeDomainMaxStorage(Domain domain) throws MailboxException {
+        maxQuotaManager.removeDomainMaxStorage(domain);
+    }
 }
