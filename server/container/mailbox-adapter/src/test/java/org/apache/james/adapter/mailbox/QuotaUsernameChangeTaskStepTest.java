@@ -103,9 +103,7 @@ class QuotaUsernameChangeTaskStepTest {
             resources.getCurrentQuotaCalculator(),
             quotaRootResolver,
             mailboxManager.getSessionProvider(),
-            mailboxManager,
-            quotaManager,
-            eventBus);
+            mailboxManager);
 
         testee = new QuotaUsernameChangeTaskStep(
             quotaManager,
