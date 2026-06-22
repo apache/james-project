@@ -2122,6 +2122,27 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        protected void renameMailboxByIdShouldChangeTheMailboxNamespace() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath oldMailboxPath = new MailboxPath("#source", USER_1, "mbx1");
+            MailboxPath oldMailboxPathChild = new MailboxPath("#source", USER_1, "mbx1.child");
+            MailboxPath newMailboxPath = new MailboxPath("#destination", USER_1, "mbx2");
+            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(oldMailboxPath, session);
+            Optional<MailboxId> childMailboxId = mailboxManager.createMailbox(oldMailboxPathChild, session);
+
+            mailboxManager.renameMailbox(mailboxId.get(), newMailboxPath, session);
+
+            MailboxPath renamedMailboxPath = mailboxManager.getMailbox(mailboxId.get(), session).getMailboxPath();
+            MailboxPath renamedChildMailboxPath = mailboxManager.getMailbox(childMailboxId.get(), session).getMailboxPath();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(renamedMailboxPath).isEqualTo(newMailboxPath);
+                softly.assertThat(renamedChildMailboxPath).isEqualTo(new MailboxPath("#destination", USER_1, "mbx2.child"));
+            });
+        }
+
+        @Test
         void renameMailboxShouldThrowWhenMailboxPathsDoNotBelongToUser() throws Exception {
             MailboxSession sessionUser1 = mailboxManager.createSystemSession(USER_1);
             MailboxSession sessionUser2 = mailboxManager.createSystemSession(USER_2);

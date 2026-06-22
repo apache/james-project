@@ -754,6 +754,7 @@ public class StoreMailboxManager implements MailboxManager {
                 String subOriginalName = sub.getName();
                 String subNewName = newMailboxPath.getName() + subOriginalName.substring(from.getName().length());
                 MailboxPath fromPath = new MailboxPath(from, subOriginalName);
+                sub.setNamespace(newMailboxPath.getNamespace());
                 sub.setName(subNewName);
                 sub.setUser(newMailboxPath.getUser());
                 return mapper.rename(sub, fromPath)
