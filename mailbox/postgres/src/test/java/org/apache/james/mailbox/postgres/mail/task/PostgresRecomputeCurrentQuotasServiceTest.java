@@ -19,18 +19,27 @@
 
 package org.apache.james.mailbox.postgres.mail.task;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Set;
+
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
 import org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.postgres.PostgresMailboxAggregateDataDefinition;
 import org.apache.james.mailbox.postgres.PostgresMailboxManagerProvider;
 import org.apache.james.mailbox.postgres.quota.PostgresCurrentQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
+import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract;
@@ -47,6 +56,7 @@ import org.apache.james.user.postgres.PostgresUsersRepository;
 import org.apache.james.user.postgres.PostgresUsersRepositoryConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.mockito.ArgumentMatchers;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -87,12 +97,19 @@ class PostgresRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuota
 
         CurrentQuotaCalculator currentQuotaCalculator = new CurrentQuotaCalculator(mapperFactory, userQuotaRootResolver);
 
+        QuotaManager quotaManager = mock(QuotaManager.class);
+        when(quotaManager.getQuotasReactive(any())).thenReturn(reactor.core.publisher.Mono.empty());
+        EventBus eventBus = mock(EventBus.class);
+        when(eventBus.dispatch(any(), ArgumentMatchers.<Set<RegistrationKey>>any())).thenReturn(reactor.core.publisher.Mono.empty());
+
         testee = new RecomputeCurrentQuotasService(usersRepository,
             ImmutableSet.of(new RecomputeMailboxCurrentQuotasService(currentQuotaManager,
                     currentQuotaCalculator,
                     userQuotaRootResolver,
                     sessionProvider,
-                    mailboxManager),
+                    mailboxManager,
+                    quotaManager,
+                    eventBus),
                 RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE));
     }
 

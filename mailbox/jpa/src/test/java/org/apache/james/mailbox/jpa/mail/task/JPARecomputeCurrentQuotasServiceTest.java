@@ -19,6 +19,12 @@
 
 package org.apache.james.mailbox.jpa.mail.task;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Set;
+
 import jakarta.persistence.EntityManagerFactory;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
@@ -26,6 +32,8 @@ import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.model.JPADomain;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.jpa.JPAMailboxFixture;
@@ -35,6 +43,7 @@ import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
+import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract;
@@ -97,12 +106,19 @@ class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServ
 
         CurrentQuotaCalculator currentQuotaCalculator = new CurrentQuotaCalculator(mapperFactory, userQuotaRootResolver);
 
+        QuotaManager quotaManager = mock(QuotaManager.class);
+        when(quotaManager.getQuotasReactive(any())).thenReturn(reactor.core.publisher.Mono.empty());
+        EventBus eventBus = mock(EventBus.class);
+        when(eventBus.dispatch(any(Event.class), any(Set.class))).thenReturn(reactor.core.publisher.Mono.empty());
+
         testee = new RecomputeCurrentQuotasService(usersRepository,
             ImmutableSet.of(new RecomputeMailboxCurrentQuotasService(currentQuotaManager,
                     currentQuotaCalculator,
                     userQuotaRootResolver,
                     sessionProvider,
-                    mailboxManager),
+                    mailboxManager,
+                    quotaManager,
+                    eventBus),
                 RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE));
     }
 
