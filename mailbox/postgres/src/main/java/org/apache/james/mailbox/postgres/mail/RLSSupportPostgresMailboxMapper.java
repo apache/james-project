@@ -47,11 +47,12 @@ public class RLSSupportPostgresMailboxMapper extends PostgresMailboxMapper {
 
     @Override
     public Flux<Mailbox> findNonPersonalMailboxes(Username userName, MailboxACL.Right right) {
+        MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.createUserEntryKey(userName);
         return postgresMailboxMemberDAO.findMailboxIdByUsername(userName)
             .collectList()
             .filter(postgresMailboxIds -> !postgresMailboxIds.isEmpty())
             .flatMapMany(postgresMailboxDAO::findMailboxByIds)
-            .filter(postgresMailbox -> postgresMailbox.getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(userName)).contains(right))
+            .filter(postgresMailbox -> postgresMailbox.getACL().getEntries().getOrDefault(entryKey, MailboxACL.NO_RIGHTS).contains(right))
             .map(Function.identity());
     }
 
