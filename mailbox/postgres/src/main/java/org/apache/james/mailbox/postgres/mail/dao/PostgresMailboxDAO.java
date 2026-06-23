@@ -60,6 +60,7 @@ import org.apache.james.mailbox.postgres.mail.PostgresACLUpsertException;
 import org.apache.james.mailbox.postgres.mail.PostgresMailbox;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.jooq.Condition;
+import org.jooq.Param;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultDataType;
@@ -181,6 +182,7 @@ public class PostgresMailboxDAO {
     }
 
     public Flux<PostgresMailbox> findMailboxesByUsername(Username userName) {
+        Param<String> userNameParam = DSL.val(userName.asString());
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MAILBOX_ID,
                     MAILBOX_NAME,
                     MAILBOX_UID_VALIDITY,
@@ -191,9 +193,9 @@ public class PostgresMailboxDAO {
                     DSL.function("slice",
                         DefaultDataType.getDefaultDataType("hstore"),
                         MAILBOX_ACL,
-                        DSL.array(DSL.val(userName.asString()))).as(MAILBOX_ACL)
+                        DSL.array(userNameParam)).as(MAILBOX_ACL)
                 ).from(TABLE_NAME)
-                .where(DSL.sql(MAILBOX_ACL.getName() + " ? '" + userName.asString() + "'"))), PostgresExecutor.EAGER_FETCH)       //TODO fix security vulnerability
+                .where(DSL.condition("defined({0}, {1})", MAILBOX_ACL, userNameParam))), PostgresExecutor.EAGER_FETCH)
             .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION);
     }
 
