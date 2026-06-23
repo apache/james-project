@@ -193,7 +193,7 @@ public class PostgresMailboxDAO {
                         MAILBOX_ACL,
                         DSL.array(DSL.val(userName.asString()))).as(MAILBOX_ACL)
                 ).from(TABLE_NAME)
-                .where(DSL.sql(MAILBOX_ACL.getName() + " ? '" + userName.asString() + "'"))))       //TODO fix security vulnerability
+                .where(DSL.sql(MAILBOX_ACL.getName() + " ? '" + userName.asString() + "'"))), PostgresExecutor.EAGER_FETCH)       //TODO fix security vulnerability
             .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION);
     }
 
