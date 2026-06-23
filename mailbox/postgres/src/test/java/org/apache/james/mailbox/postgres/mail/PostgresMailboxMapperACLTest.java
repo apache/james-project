@@ -19,10 +19,15 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.core.Username;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperACLTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresMailboxMapperACLTest extends MailboxMapperACLTest {
@@ -35,5 +40,19 @@ class PostgresMailboxMapperACLTest extends MailboxMapperACLTest {
     protected MailboxMapper createMailboxMapper() {
         mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()));
         return mailboxMapper;
+    }
+
+    @Test
+    void findNonPersonalMailboxesShouldSupportUsernamesContainingSingleQuote() {
+        // findMailboxesByUsername used to inline the username into the SQL text. A username
+        // containing a single quote then broke the query (SQL injection / syntax error). The
+        // username is now a bind parameter, so such usernames must be handled correctly.
+        Username trickyUser = Username.of("o'brien@domain.tld");
+        MailboxACL.EntryKey key = MailboxACL.EntryKey.createUserEntryKey(trickyUser);
+        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup);
+        mailboxMapper.updateACL(benwaInboxMailbox, MailboxACL.command().key(key).rights(rights).asReplacement()).block();
+
+        assertThat(mailboxMapper.findNonPersonalMailboxes(trickyUser, MailboxACL.Right.Lookup).collectList().block())
+            .containsOnly(benwaInboxMailbox);
     }
 }
