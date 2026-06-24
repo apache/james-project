@@ -25,6 +25,7 @@ import java.net.InetSocketAddress;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Optional;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -39,6 +40,7 @@ import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.Authorizator;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
@@ -49,9 +51,15 @@ import org.apache.james.mailrepository.memory.SimpleMailRepositoryLoader;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.protocols.api.sasl.SaslAuthenticationResult;
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslFailure;
+import org.apache.james.protocols.api.sasl.SaslIdentity;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
+import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
@@ -67,6 +75,7 @@ import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.smtpserver.netty.SMTPServer;
 import org.apache.james.smtpserver.netty.SmtpMetricsImpl;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 
 import com.google.common.collect.ImmutableList;
@@ -100,6 +109,23 @@ class SMTPServerTestSystem {
     void setUp(HierarchicalConfiguration<ImmutableNode> configuration, Authorizator authorizator) throws Exception {
         preSetUp(authorizator);
 
+        configureSaslMechanisms(configuration);
+        smtpServer.configure(configuration);
+        smtpServer.init();
+    }
+
+    void configureSaslMechanisms(HierarchicalConfiguration<ImmutableNode> configuration) {
+        smtpServer.setSaslMechanisms(ImmutableList.of(new PlainSaslMechanism(
+            configuration.getBoolean("auth.plainAuthEnabled", true),
+            configuration.getBoolean("auth.requireSSL", false))));
+    }
+
+    void setUpWithSaslMechanisms(HierarchicalConfiguration<ImmutableNode> configuration, Authorizator authorizator,
+                                  ImmutableList<SaslMechanism> saslMechanisms) throws Exception {
+        preSetUp(authorizator);
+
+        smtpServer.setSaslMechanisms(saslMechanisms);
+        smtpServer.setSaslAuthenticator(Optional.of(testSaslAuthenticator(authorizator)));
         smtpServer.configure(configuration);
         smtpServer.init();
     }
@@ -116,7 +142,7 @@ class SMTPServerTestSystem {
         createMailRepositoryStore();
 
         setUpFakeLoader(authorizator);
-        setUpSMTPServer();
+        setUpSMTPServer(authorizator);
     }
 
     void preSetUp() throws Exception {
@@ -141,7 +167,7 @@ class SMTPServerTestSystem {
         return new SMTPServer(smtpMetrics);
     }
 
-    protected void setUpSMTPServer() {
+    protected void setUpSMTPServer(Authorizator authorizator) {
         SmtpMetricsImpl smtpMetrics = mock(SmtpMetricsImpl.class);
         when(smtpMetrics.getCommandsMetric()).thenReturn(mock(Metric.class));
         when(smtpMetrics.getConnectionMetric()).thenReturn(mock(Metric.class));
@@ -150,6 +176,8 @@ class SMTPServerTestSystem {
         smtpServer.setFileSystem(fileSystem);
         smtpServer.setEncryptionFactory(new LegacyJavaEncryptionFactory(fileSystem));
         smtpServer.setProtocolHandlerLoader(chain);
+        smtpServer.setSaslMechanisms(ImmutableList.of(new PlainSaslMechanism(true, false)));
+        smtpServer.setSaslAuthenticator(Optional.of(testSaslAuthenticator(authorizator)));
     }
 
     protected void setUpFakeLoader(Authorizator authorizator) {
@@ -176,6 +204,34 @@ class SMTPServerTestSystem {
             .put(binder -> binder.bind(UserEntityValidator.class).toInstance(UserEntityValidator.NOOP))
             .put(binder -> binder.bind(Authorizator.class).toInstance(authorizator))
             .build();
+    }
+
+    private SaslAuthenticator testSaslAuthenticator(Authorizator authorizator) {
+        return new SaslAuthenticator() {
+            @Override
+            public SaslAuthenticationResult authenticatePassword(Username authenticationId, Optional<Username> authorizationId, String password) {
+                try {
+                    return usersRepository.test(authenticationId, password)
+                        .<SaslAuthenticationResult>map(authenticatedUser -> authorize(new SaslIdentity(authenticatedUser, authorizationId.orElse(authenticatedUser))))
+                        .orElseGet(() -> new SaslAuthenticationResult.Failure(SaslFailure.invalidCredentials(authenticationId, authorizationId, "Invalid credentials")));
+                } catch (UsersRepositoryException e) {
+                    return new SaslAuthenticationResult.Failure(SaslFailure.serverError(Optional.of(authenticationId), authorizationId, "Authentication failed", e));
+                }
+            }
+
+            @Override
+            public SaslAuthenticationResult authorize(SaslIdentity identity) {
+                try {
+                    if (identity.authenticationId().equals(identity.authorizationId())
+                        || authorizator.user(identity.authenticationId()).canLoginAs(identity.authorizationId()) == Authorizator.AuthorizationState.ALLOWED) {
+                        return new SaslAuthenticationResult.Success(identity);
+                    }
+                    return new SaslAuthenticationResult.Failure(SaslFailure.delegationForbidden(identity.authenticationId(), identity.authorizationId(), "Delegation forbidden"));
+                } catch (MailboxException e) {
+                    return new SaslAuthenticationResult.Failure(SaslFailure.serverError(Optional.of(identity.authenticationId()), Optional.of(identity.authorizationId()), "Authentication failed", e));
+                }
+            }
+        };
     }
 
     InetSocketAddress getBindedAddress() {
