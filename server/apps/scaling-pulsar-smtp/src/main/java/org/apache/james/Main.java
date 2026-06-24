@@ -25,6 +25,7 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
 import org.apache.james.blob.objectstorage.aws.S3RequestOption;
+import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailrepository.api.MailRepositoryFactory;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.postgres.PostgresMailRepositoryFactory;
@@ -109,6 +110,7 @@ public class Main implements JamesServerMain {
                 Multibinder.newSetBinder(binder, PostgresDataDefinition.class)
                         .addBinding().toInstance(org.apache.james.mailrepository.postgres.PostgresMailRepositoryDataDefinition.MODULE);
                 binder.bind(MailRepositoryUrlStore.class).to(PostgresMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
+                binder.bind(Authenticator.class).to(UsersRepositoryBackedAuthenticator.class).in(Scopes.SINGLETON);
             },
             new CoreDataModule(),
             new MemoryDelegationStoreModule(),
