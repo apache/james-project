@@ -63,4 +63,8 @@ public record SaslFailure(Type type,
     public static SaslFailure serverError(Optional<Username> authenticationId, Optional<Username> authorizationId, String reason, Throwable cause) {
         return new SaslFailure(Type.SERVER_ERROR, authenticationId, authorizationId, reason, Optional.ofNullable(cause));
     }
+
+    public static SaslFailure serverError(Optional<Username> authenticationId, Optional<Username> authorizationId, String reason) {
+        return new SaslFailure(Type.SERVER_ERROR, authenticationId, authorizationId, reason, Optional.empty());
+    }
 }

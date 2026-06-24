@@ -21,6 +21,7 @@ package org.apache.james.protocols.sasl.plain;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -130,6 +131,14 @@ public class PlainSaslMechanism implements SaslMechanism {
         ImmutableList<String> tokens = Arrays.stream(new String(clientResponse, StandardCharsets.UTF_8).split("\0", -1))
             .collect(ImmutableList.toImmutableList());
 
+        // Preserve legacy SMTP compatibility: some clients send a trailing NUL after the password.
+        if (tokens.size() == 4 && tokens.get(3).isEmpty()) {
+            return credentials(tokens.subList(0, 3));
+        }
+        return credentials(tokens);
+    }
+
+    private Optional<PlainCredentials> credentials(List<String> tokens) {
         if (tokens.size() == 2) {
             return Optional.of(credentials(Optional.empty(), Username.of(tokens.get(0)), tokens.get(1)));
         }
