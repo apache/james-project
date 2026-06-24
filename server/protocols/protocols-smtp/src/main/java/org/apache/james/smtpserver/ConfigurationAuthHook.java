@@ -44,9 +44,10 @@ import com.google.common.collect.Multimap;
 /**
  * Declarative authentication.
  *
- * This is helpful for things like service accounts, used by other applications (and it is not desirable to create
- * user accounts for those applications)
+ * @deprecated Prefer implementing a SASL mechanism factory. Existing handler-chain registrations
+ * are adapted by the SMTP AUTH handler during migration.
  */
+@Deprecated
 public class ConfigurationAuthHook implements AuthHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationAuthHook.class);
 

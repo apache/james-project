@@ -16,36 +16,22 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.protocols.smtp.hook;
 
-import org.apache.james.core.Username;
-import org.apache.james.jwt.OidcSASLConfiguration;
+import org.apache.james.protocols.api.sasl.SaslFailure;
+import org.apache.james.protocols.api.sasl.SaslIdentity;
 import org.apache.james.protocols.smtp.SMTPSession;
 
 /**
- * Legacy SMTP authentication hook.
- *
- * @deprecated Implement {@code SaslMechanismFactory} for authentication, or {@link SaslAuthResultHook}
- * for post-authentication side effects.
+ * Decorates terminal SMTP SASL authentication results without participating in credential validation.
+ * <p>
+ * Use this hook for legacy {@link AuthHook} use cases that only need authentication result side effects,
+ * such as audit events, notifications or metrics. Credential validation should be implemented by a SASL
+ * mechanism instead.
  */
-@Deprecated
-public interface AuthHook extends Hook {
+public interface SaslAuthResultHook extends Hook {
+    void onSuccess(SMTPSession session, String mechanismName, SaslIdentity identity);
 
-    /**
-     * Return the HookResult after run the hook
-     * 
-     * @param session the SMTPSession
-     * @param username the username
-     * @param password the password
-     * @return HockResult
-     */
-    HookResult doAuth(SMTPSession session, Username username, String password);
-
-    default HookResult doSasl(SMTPSession session, OidcSASLConfiguration saslConfiguration, String initialResponse) {
-        return HookResult.DECLINED;
-    }
-
-    default HookResult doDelegation(SMTPSession session, Username target) {
-        return HookResult.DECLINED;
-    }
+    void onFailure(SMTPSession session, String mechanismName, SaslFailure failure);
 }
