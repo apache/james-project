@@ -91,8 +91,6 @@ public interface SMTPSession extends ProtocolSession {
     int getRcptCount();
 
 
-    boolean supportsOAuth();
-
     long currentMessageSize();
 
     void setCurrentMessageSize(long increment);

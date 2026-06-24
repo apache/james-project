@@ -87,11 +87,6 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
     }
 
     @Override
-    public boolean supportsOAuth() {
-        return getConfiguration().saslConfiguration().isPresent() && isAuthAnnounced();
-    }
-
-    @Override
     public boolean isAuthAnnounced() {
         return getConfiguration().isAuthAnnounced(getRemoteAddress().getAddress().getHostAddress(), isTLSStarted());
     }
