@@ -48,7 +48,6 @@ import org.apache.james.smtpserver.JamesRcptCmdHandler;
 import org.apache.james.smtpserver.JamesWelcomeMessageHandler;
 import org.apache.james.smtpserver.SendMailHandler;
 import org.apache.james.smtpserver.SenderAuthIdentifyVerificationHook;
-import org.apache.james.smtpserver.UsersRepositoryAuthHook;
 
 /**
  * This class copies CoreCmdHandlerLoader adding support for MYNOOP command
@@ -71,7 +70,6 @@ public class MyCmdHandlerLoader implements HandlersPackage {
             RsetCmdHandler.class.getName(),
             VrfyCmdHandler.class.getName(),
             MailSizeEsmtpExtension.class.getName(),
-            UsersRepositoryAuthHook.class.getName(),
             AuthRequiredToRelayRcptHook.class.getName(),
             SenderAuthIdentifyVerificationHook.class.getName(),
             PostmasterAbuseRcptHook.class.getName(),
