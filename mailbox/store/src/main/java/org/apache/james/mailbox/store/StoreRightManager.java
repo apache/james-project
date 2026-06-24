@@ -265,10 +265,13 @@ public class StoreRightManager implements RightManager {
 
     private void assertHaveAccessTo(Mailbox mailbox, MailboxSession session) throws InsufficientRightsException, MailboxNotFoundException {
         if (!mailbox.generateAssociatedPath().belongsTo(session)) {
-            if (mailbox.getACL().getEntries().containsKey(EntryKey.createUserEntryKey(session.getUser()))) {
-                throw new InsufficientRightsException("Setting ACL is only permitted to the owner of the mailbox");
-            } else {
+            // Use the effective rights (positive entries minus applicable negative entries) rather
+            // than the raw positive ACL entry, so that a negative ACL removing Administer is honoured.
+            Rfc4314Rights rights = myRights(mailbox, session);
+            if (rights.isEmpty()) {
                 throw new MailboxNotFoundException(mailbox.getMailboxId());
+            } else if (!rights.contains(Right.Administer)) {
+                throw new InsufficientRightsException("Setting ACL is only permitted to the owner and admins of the mailbox");
             }
         }
     }
@@ -313,16 +316,19 @@ public class StoreRightManager implements RightManager {
      * the connected user.
      */
     @VisibleForTesting
-    static MailboxACL filteredForSession(Mailbox mailbox, MailboxACL acl, MailboxSession mailboxSession) {
+    MailboxACL filteredForSession(Mailbox mailbox, MailboxACL acl, MailboxSession mailboxSession) throws UnsupportedRightException {
         if (mailbox.generateAssociatedPath().belongsTo(mailboxSession)) {
             return acl;
         }
 
         MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser());
-        Rfc4314Rights rights = acl.getEntries().getOrDefault(userAsKey, new Rfc4314Rights());
-        if (rights.contains(MailboxACL.Right.Administer)) {
+        // Expose the full ACL only when the user effectively holds Administer (i.e. after applicable
+        // negative ACL entries have been subtracted), not merely from their raw positive entry.
+        Rfc4314Rights effectiveRights = aclResolver.resolveRights(mailboxSession.getUser(), acl, mailbox.getUser().asString());
+        if (effectiveRights.contains(MailboxACL.Right.Administer)) {
             return acl;
         }
-        return new MailboxACL(ImmutableMap.of(userAsKey, rights));
+        Rfc4314Rights ownRights = acl.getEntries().getOrDefault(userAsKey, new Rfc4314Rights());
+        return new MailboxACL(ImmutableMap.of(userAsKey, ownRights));
     }
 }

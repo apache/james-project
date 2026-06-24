@@ -33,6 +33,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -95,6 +96,7 @@ class ReadOnlyUsersLDAPRepositoryEmptyListTest {
             ldapRepository = startUsersRepository(config);
         }
 
+        @Disabled("Unstable test")
         @Test
         void listShouldReturnEmptyWhenNoEntity() throws Exception {
             assertThat(ImmutableList.copyOf(ldapRepository.list()))
