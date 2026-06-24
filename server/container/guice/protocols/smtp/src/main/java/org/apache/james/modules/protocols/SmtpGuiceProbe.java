@@ -24,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
@@ -54,6 +55,12 @@ public class SmtpGuiceProbe implements GuiceProbe {
     @Inject
     private SmtpGuiceProbe(SMTPServerFactory smtpServerFactory) {
         this.smtpServerFactory = smtpServerFactory;
+    }
+
+    @PreDestroy
+    void destroy() {
+        // SMTPServerFactory is provided through a factory method; dispose it explicitly on Guice shutdown.
+        smtpServerFactory.destroy();
     }
 
     public Port getSmtpPort() {
