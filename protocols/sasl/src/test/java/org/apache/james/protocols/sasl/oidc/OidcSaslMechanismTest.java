@@ -28,6 +28,7 @@ import org.apache.james.core.Username;
 import org.apache.james.jwt.OidcJwtTokenVerifier;
 import org.apache.james.protocols.api.sasl.SaslAuthenticationResult;
 import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslExchange;
 import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
@@ -39,6 +40,7 @@ class OidcSaslMechanismTest {
     private static final Username USER = Username.of("user@example.com");
     private static final Username TOKEN_SUBJECT = Username.of("token-subject@example.com");
     private static final String TOKEN = "token";
+    private static final byte[] INVALID_TOKEN_RESPONSE = bytes("{\"status\":\"invalid_token\"}");
 
     @Test
     void oauthBearerShouldValidateTokenAndAuthorizeDecodedInitialResponse() {
@@ -47,7 +49,7 @@ class OidcSaslMechanismTest {
             Optional.of(bytes("n,a=" + USER.asString() + ",\u0001auth=Bearer " + TOKEN + "\u0001\u0001")));
 
         // WHEN the mechanism consumes and validates the response
-        SaslStep step = new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, authorizing()).firstStep();
+        SaslStep step = mechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, authorizing()).firstStep();
 
         // THEN it returns the authorized identity directly to the protocol driver
         assertThat(step).isEqualTo(new SaslStep.Success(new SaslIdentity(TOKEN_SUBJECT, USER), Optional.empty()));
@@ -60,7 +62,7 @@ class OidcSaslMechanismTest {
             Optional.of(bytes("user=" + USER.asString() + "\u0001auth=Bearer " + TOKEN + "\u0001\u0001")));
 
         // WHEN the mechanism consumes and validates the response
-        SaslStep step = new OAuthSaslMechanism(SaslMechanismNames.XOAUTH2, verifyingToken()).start(request, authorizing()).firstStep();
+        SaslStep step = mechanism(SaslMechanismNames.XOAUTH2, verifyingToken()).start(request, authorizing()).firstStep();
 
         // THEN it exposes the same authorized identity shape
         assertThat(step).isEqualTo(new SaslStep.Success(new SaslIdentity(TOKEN_SUBJECT, USER), Optional.empty()));
@@ -72,7 +74,7 @@ class OidcSaslMechanismTest {
         SaslInitialRequest request = new SaslInitialRequest(SaslMechanismNames.OAUTHBEARER, Optional.empty());
 
         // WHEN the mechanism starts
-        SaslStep firstStep = new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, authorizing()).firstStep();
+        SaslStep firstStep = mechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, authorizing()).firstStep();
 
         // THEN the server asks for one client response
         assertThat(firstStep).isEqualTo(new SaslStep.Challenge(Optional.empty()));
@@ -85,23 +87,27 @@ class OidcSaslMechanismTest {
             Optional.of(bytes("invalid")));
 
         // WHEN the mechanism consumes the response
-        SaslStep step = new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, authorizing()).firstStep();
+        SaslStep step = mechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, authorizing()).firstStep();
 
         // THEN it fails before any token validation side effect
         assertThat(step).isEqualTo(new SaslStep.Failure(SaslFailure.malformed("Malformed authentication command.")));
     }
 
     @Test
-    void shouldFailWhenTokenIsRejected() {
+    void shouldReturnInvalidTokenChallengeThenFailWhenTokenIsRejected() {
         // GIVEN an OIDC SASL response with an invalid bearer token
         SaslInitialRequest request = new SaslInitialRequest(SaslMechanismNames.OAUTHBEARER,
             Optional.of(bytes("n,a=" + USER.asString() + ",\u0001auth=Bearer " + TOKEN + "\u0001\u0001")));
+        SaslExchange exchange = mechanism(SaslMechanismNames.OAUTHBEARER, rejectingToken()).start(request, authorizing());
 
         // WHEN token validation rejects the token
-        SaslStep step = new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, rejectingToken()).start(request, authorizing()).firstStep();
+        SaslStep firstStep = exchange.firstStep();
+        SaslStep secondStep = exchange.onResponse(new byte[0]);
 
-        // THEN the mechanism returns a typed authentication failure
-        assertThat(step).isEqualTo(new SaslStep.Failure(SaslFailure.authenticationFailed(
+        // THEN the mechanism owns the OIDC error challenge before returning the typed authentication failure
+        assertThat(firstStep).isInstanceOfSatisfying(SaslStep.Challenge.class,
+            challenge -> assertThat(challenge.payload()).hasValueSatisfying(payload -> assertThat(payload).containsExactly(INVALID_TOKEN_RESPONSE)));
+        assertThat(secondStep).isEqualTo(new SaslStep.Failure(SaslFailure.authenticationFailed(
             Optional.empty(), Optional.of(USER), "OAuth authentication failed.")));
     }
 
@@ -113,10 +119,22 @@ class OidcSaslMechanismTest {
         SaslFailure failure = SaslFailure.delegationForbidden(TOKEN_SUBJECT, USER, "forbidden");
 
         // WHEN authorization rejects the identity
-        SaslStep step = new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, rejectingAuthorization(failure)).firstStep();
+        SaslStep step = mechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken()).start(request, rejectingAuthorization(failure)).firstStep();
 
         // THEN the failure is returned to the protocol driver
         assertThat(step).isEqualTo(new SaslStep.Failure(failure));
+    }
+
+    @Test
+    void shouldBeUnavailableOnClearTransportWhenSslIsRequired() {
+        OAuthSaslMechanism mechanism = new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, verifyingToken(), true);
+
+        assertThat(mechanism.isAvailableOnTransport(false)).isFalse();
+        assertThat(mechanism.isAvailableOnTransport(true)).isTrue();
+    }
+
+    private static OAuthSaslMechanism mechanism(String mechanismName, OidcJwtTokenVerifier verifier) {
+        return new OAuthSaslMechanism(mechanismName, verifier, false, INVALID_TOKEN_RESPONSE);
     }
 
     private static OidcJwtTokenVerifier verifyingToken() {

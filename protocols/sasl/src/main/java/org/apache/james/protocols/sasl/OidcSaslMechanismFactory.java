@@ -19,23 +19,35 @@
 
 package org.apache.james.protocols.sasl;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.jwt.OidcJwtTokenVerifier;
 import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
 
 abstract class OidcSaslMechanismFactory implements SaslMechanismFactory {
-    protected OidcJwtTokenVerifier parseVerifier(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
+    protected boolean requiresSsl(HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
+        return serverConfiguration.getBoolean("auth.requireSSL", false);
+    }
+
+    protected byte[] invalidTokenResponse(OidcSASLConfiguration configuration) {
+        return String.format("{\"status\":\"invalid_token\",\"scope\":\"%s\",\"schemes\":\"%s\"}",
+            configuration.getScope(),
+            configuration.getOidcConfigurationURL().toString())
+            .getBytes(UTF_8);
+    }
+
+    protected OidcSASLConfiguration parseConfiguration(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
         if (serverConfiguration.immutableConfigurationsAt("auth.oidc").isEmpty()) {
             throw new ConfigurationException("OAuth SASL mechanisms require an auth.oidc configuration");
         }
         try {
-            return new OidcJwtTokenVerifier(OidcSASLConfiguration.parse(serverConfiguration.configurationAt("auth.oidc")));
+            return OidcSASLConfiguration.parse(serverConfiguration.configurationAt("auth.oidc"));
         } catch (MalformedURLException | URISyntaxException | NullPointerException e) {
             throw new ConfigurationException("Failed to retrieve oauth component", e);
         }

@@ -29,6 +29,16 @@ public class PlainSaslMechanismFactory implements SaslMechanismFactory {
     private static final boolean PLAIN_AUTH_DISALLOWED_DEFAULT = true;
     private static final boolean PLAIN_AUTH_ENABLED_DEFAULT = true;
 
+    private final boolean requireSslDefault;
+
+    public PlainSaslMechanismFactory() {
+        this(PLAIN_AUTH_DISALLOWED_DEFAULT);
+    }
+
+    public PlainSaslMechanismFactory(boolean requireSslDefault) {
+        this.requireSslDefault = requireSslDefault;
+    }
+
     @Override
     public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
         return new PlainSaslMechanism(plainAuthEnabled(serverConfiguration), requiresSsl(serverConfiguration));
@@ -40,6 +50,6 @@ public class PlainSaslMechanismFactory implements SaslMechanismFactory {
 
     protected boolean requiresSsl(HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
         return serverConfiguration.getBoolean("auth.requireSSL",
-            serverConfiguration.getBoolean("plainAuthDisallowed", PLAIN_AUTH_DISALLOWED_DEFAULT));
+            serverConfiguration.getBoolean("plainAuthDisallowed", requireSslDefault));
     }
 }
