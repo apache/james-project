@@ -24,7 +24,6 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
@@ -64,18 +63,21 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
 
     @Override
     protected boolean isValidRecipient(SMTPSession session, MailAddress recipient) throws UsersRepositoryException, RecipientRewriteTableException {
-        Username username = users.getUsername(recipient);
-
-        if (users.contains(username)) {
+        // Check existence of mailbox first to use RRT less often.
+        if (mailboxExists(recipient)) {
             return true;
         } else {
-            return supportsRecipientRewriteTable && isRedirected(recipient, username.asString());
+            // Check whether there is a valid RRT entry for the recipient.
+            return supportsRecipientRewriteTable && hasValidRRTEntry(recipient);
         }
     }
 
-    private boolean isRedirected(MailAddress recipient, String username) throws RecipientRewriteTableException {
-        LOGGER.debug("Unknown user {} check if it's an alias", username);
+    protected boolean mailboxExists(MailAddress recipient) throws UsersRepositoryException {
+        return users.contains(users.getUsername(recipient));
+    }
 
+    protected boolean hasValidRRTEntry(MailAddress recipient) throws RecipientRewriteTableException {
+        LOGGER.debug("Unknown recipient {}, resolving it via RRT", recipient);
         try {
             Mappings targetString = recipientRewriteTable.getResolvedMappings(recipient.getLocalPart(), recipient.getDomain());
 
