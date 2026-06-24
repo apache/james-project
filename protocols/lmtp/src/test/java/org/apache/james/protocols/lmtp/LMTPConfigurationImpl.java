@@ -18,10 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.lmtp;
 
-import java.util.Optional;
-
-import org.apache.james.jwt.OidcSASLConfiguration;
-
 public class LMTPConfigurationImpl extends LMTPConfiguration {
 
     private long maxMessageSize = 0;    
@@ -43,15 +39,5 @@ public class LMTPConfigurationImpl extends LMTPConfiguration {
     
     public void setMaxMessageSize(long maxMessageSize) {
         this.maxMessageSize = maxMessageSize;
-    }
-
-    @Override
-    public boolean isPlainAuthEnabled() {
-        return false;
-    }
-
-    @Override
-    public Optional<OidcSASLConfiguration> saslConfiguration() {
-        return Optional.empty();
     }
 }
