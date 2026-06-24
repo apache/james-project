@@ -23,6 +23,16 @@
         <constructor-arg index="1" ref="protocolhandlerloader"/>
         <constructor-arg index="2" ref="filesystem"/>
         <constructor-arg index="3" ref="metricFactory"/>
+        <constructor-arg index="4" ref="smtpSaslMechanismLoader"/>
+        <constructor-arg index="5" ref="smtpSaslAuthenticator"/>
+    </bean>
+
+    <bean id="smtpSaslMechanismLoader" class="org.apache.james.smtpserver.netty.SMTPServerFactory$SmtpSaslMechanismLoader"
+          factory-method="defaultLoader"/>
+
+    <bean id="smtpSaslAuthenticator" class="org.apache.james.protocols.sasl.JamesSaslAuthenticator">
+        <constructor-arg index="0" ref="authenticator"/>
+        <constructor-arg index="1" ref="authorizator"/>
     </bean>
     
 </beans>
