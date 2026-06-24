@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetSocketAddress;
 
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.assertj.core.api.SoftAssertions;
@@ -45,9 +47,7 @@ class AuthAnnounceTest {
 
     @Test
     void authAnnounceAlwaysShouldAnnounceAuth() throws Exception {
-        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-authAnnounceAlways.xml")));
-        testSystem.smtpServer.init();
+        configureAndInit("smtpserver-authAnnounceAlways.xml");
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
@@ -63,9 +63,7 @@ class AuthAnnounceTest {
 
     @Test
     void authAnnounceSometimeShouldNotAnnounceAuthWhenMatching() throws Exception {
-        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-authAnnounceSometimeMatching.xml")));
-        testSystem.smtpServer.init();
+        configureAndInit("smtpserver-authAnnounceSometimeMatching.xml");
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
@@ -81,9 +79,7 @@ class AuthAnnounceTest {
 
     @Test
     void plainAuthShouldNotBeAnnouncedWhenDisabled() throws Exception {
-        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-no-plain.xml")));
-        testSystem.smtpServer.init();
+        configureAndInit("smtpserver-no-plain.xml");
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
@@ -99,9 +95,7 @@ class AuthAnnounceTest {
 
     @Test
     void plainAuthShouldFailWhenDisabled() throws Exception {
-        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-no-plain.xml")));
-        testSystem.smtpServer.init();
+        configureAndInit("smtpserver-no-plain.xml");
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
@@ -114,9 +108,7 @@ class AuthAnnounceTest {
 
     @Test
     void authAnnounceSometimeShouldAnnounceAuthWhenNotMatching() throws Exception {
-        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-authAnnounceSometimeNotMatching.xml")));
-        testSystem.smtpServer.init();
+        configureAndInit("smtpserver-authAnnounceSometimeNotMatching.xml");
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
@@ -132,9 +124,7 @@ class AuthAnnounceTest {
 
     @Test
     void authAnnounceNeverShouldNotAnnounceAuth() throws Exception {
-        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-authAnnounceNever.xml")));
-        testSystem.smtpServer.init();
+        configureAndInit("smtpserver-authAnnounceNever.xml");
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
@@ -150,9 +140,7 @@ class AuthAnnounceTest {
 
     @Test
     void authShouldNotBeAnnouncedOnPlainChannelsWhenRequireSSL() throws Exception {
-        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-requireSSL.xml")));
-        testSystem.smtpServer.init();
+        configureAndInit("smtpserver-requireSSL.xml");
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
@@ -168,9 +156,7 @@ class AuthAnnounceTest {
 
     @Test
     void shouldStartWithPreviousConfiguration() throws Exception {
-        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-noauth.xml")));
-        testSystem.smtpServer.init();
+        configureAndInit("smtpserver-noauth.xml");
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
@@ -183,5 +169,13 @@ class AuthAnnounceTest {
                 // SSL is required
                 .doesNotContain("250-AUTH LOGIN PLAIN");
         });
+    }
+
+    private void configureAndInit(String configurationName) throws Exception {
+        HierarchicalConfiguration<ImmutableNode> configuration = FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream(configurationName));
+        testSystem.configureSaslMechanisms(configuration);
+        testSystem.smtpServer.configure(configuration);
+        testSystem.smtpServer.init();
     }
 }

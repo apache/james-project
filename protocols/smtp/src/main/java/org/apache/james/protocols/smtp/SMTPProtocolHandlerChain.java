@@ -19,13 +19,11 @@
 package org.apache.james.protocols.smtp;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
-import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChainImpl;
@@ -49,7 +47,6 @@ import org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler;
 import org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler;
 import org.apache.james.protocols.smtp.core.esmtp.MailSizeEsmtpExtension;
 import org.apache.james.protocols.smtp.core.esmtp.StartTlsCmdHandler;
-import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.Hook;
 
 /**
@@ -87,6 +84,7 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
     protected List<ProtocolHandler> initDefaultHandlers() {
         List<ProtocolHandler> defaultHandlers = new ArrayList<>();
         defaultHandlers.add(new CommandDispatcher<SMTPSession>());
+        defaultHandlers.add(new AuthCmdHandler());
         defaultHandlers.add(new ExpnCmdHandler());
         defaultHandlers.add(new EhloCmdHandler(metricFactory));
         defaultHandlers.add(new HeloCmdHandler(metricFactory));
@@ -109,45 +107,4 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
         return defaultHandlers;
     }
 
-    private synchronized boolean checkForAuth(ProtocolHandler handler) {
-        if (isReadyOnly()) {
-            throw new UnsupportedOperationException("Read-Only");
-        }
-        if (handler instanceof AuthHook) {
-            // check if we need to add the AuthCmdHandler
-            List<ExtensibleHandler> handlers = getHandlers(ExtensibleHandler.class);
-            for (ExtensibleHandler h: handlers) {
-                if (h.getMarkerInterfaces().contains(AuthHook.class)) {
-                    return true;
-                }
-            }
-            if (!add(new AuthCmdHandler())) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    @Override
-    public boolean add(ProtocolHandler handler) {
-        checkForAuth(handler);
-        return super.add(handler);
-    }
-
-    @Override
-    public boolean addAll(Collection<? extends ProtocolHandler> c) {
-        return c.stream().allMatch(this::checkForAuth) && super.addAll(c);
-    }
-
-    @Override
-    public boolean addAll(int index, Collection<? extends ProtocolHandler> c) {
-        return c.stream().allMatch(this::checkForAuth) && super.addAll(index, c);
-    }
-
-    @Override
-    public void add(int index, ProtocolHandler element) {
-        checkForAuth(element);
-        super.add(index, element);
-    }
-  
 }
