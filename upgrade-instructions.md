@@ -19,6 +19,24 @@ Change list:
  - [Adding thread_id column to Cassandra email_query_view_sent_at and email_query_view_received_at tables](#adding-thread_id-column-to-cassandra-email_query_view_sent_at-and-email_query_view_received_at-tables)
  - [Adding thread_id column to Postgresql email_query_view table](#adding-thread_id-column-to-postgresql-email_query_view-table)
  - [Lucene mailbox index schema update for collapseThreads support](#lucene-mailbox-index-schema-update-for-collapsethreads-support)
+ - [JAMES-4210 SMTP AuthHook deprecation](#james-4210-smtp-authhook-deprecation)
+
+### JAMES-4210 SMTP AuthHook deprecation
+
+Date: 24/06/2026
+
+Concerned products: SMTP servers declaring custom `AuthHook` implementations
+
+`AuthHook` is deprecated. Existing handler-chain registrations remain usable through the automatically applied
+`AuthHookSaslMechanism` compatibility adapter, but new and existing extensions should avoid relying on `AuthHook`
+going forward and migrate to dedicated SASL mechanisms.
+
+Extensions that only decorate authentication results for audit, notification or metrics should migrate to
+`SaslAuthResultHook`.
+
+Normal SMTP user authentication now relies on `PlainSaslMechanism`, not a default `UsersRepositoryAuthHook`.
+Deployments that relied on a custom `AuthHook` declining before `UsersRepositoryAuthHook` authenticated normal users
+must explicitly declare `UsersRepositoryAuthHook` after their custom hook in the SMTP handler chain.
 
 ### Adding metadata column to blob tables
 

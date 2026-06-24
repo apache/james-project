@@ -498,6 +498,9 @@ include::partial$configure/smtp-limitation-hook.adoc[]
 
 Declarative authentication.
 
+`ConfigurationAuthHook` is deprecated. Existing handler-chain registrations remain supported through the SMTP SASL
+adapter, while new authentication logic should use a dedicated SASL mechanism factory.
+
 It is possible to open and configure on a dedicated port (eg port 26) to accept application traffic in parallel of user
 traffic. Authentication is then done on the supplied configuration.
 
