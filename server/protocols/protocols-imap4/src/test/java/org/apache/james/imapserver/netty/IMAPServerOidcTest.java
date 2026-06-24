@@ -23,6 +23,7 @@ import static org.apache.james.jwt.OidcTokenFixture.INTROSPECTION_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -46,6 +47,12 @@ import org.mockserver.model.HttpResponse;
 
 @SuppressWarnings("checkstyle:membername")
 class IMAPServerOidcTest extends AbstractIMAPServerTest {
+    private static final String OIDC_CONFIGURATION_URL = "https://example.com/jwks";
+    private static final String OIDC_SCOPE = "email";
+    private static final String FAIL_RESPONSE_TOKEN = Base64.getEncoder().encodeToString(
+        String.format("{\"status\":\"invalid_token\",\"scope\":\"%s\",\"schemes\":\"%s\"}", OIDC_SCOPE, OIDC_CONFIGURATION_URL)
+            .getBytes(StandardCharsets.UTF_8));
+
     String JWKS_URI_PATH = "/jwks";
     String INTROSPECT_TOKEN_URI_PATH = "/introspect";
     String USERINFO_URI_PATH = "/userinfo";
@@ -80,8 +87,8 @@ class IMAPServerOidcTest extends AbstractIMAPServerTest {
         HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
         config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
         config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
-        config.addProperty("auth.oidc.oidcConfigurationURL", "https://example.com/jwks");
-        config.addProperty("auth.oidc.scope", "email");
+        config.addProperty("auth.oidc.oidcConfigurationURL", OIDC_CONFIGURATION_URL);
+        config.addProperty("auth.oidc.scope", OIDC_SCOPE);
 
         imapServer = createImapServer(config, integrationResources, FetchProcessor.LocalCacheConfiguration.DEFAULT);
         port = imapServer.getListenAddresses().get(0).getPort();
@@ -208,6 +215,11 @@ class IMAPServerOidcTest extends AbstractIMAPServerTest {
         String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN);
         IMAPSClient client = imapsClient(port);
         client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
+        assertThat(client.getReplyString()).contains("+ " + FAIL_RESPONSE_TOKEN);
+
+        // RFC 7628 section 3.2.3: after an OAuth failure error challenge, the client must send a dummy response
+        // so the server can fail the SASL negotiation.
+        client.sendCommand("AQ==");
         assertThat(client.getReplyString()).contains("NO AUTHENTICATE failed.");
     }
 
