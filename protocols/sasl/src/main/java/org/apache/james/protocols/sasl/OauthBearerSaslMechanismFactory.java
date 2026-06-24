@@ -22,6 +22,8 @@ package org.apache.james.protocols.sasl;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.jwt.OidcJwtTokenVerifier;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
 import org.apache.james.protocols.api.sasl.SaslMechanismNames;
 import org.apache.james.protocols.sasl.oidc.OAuthSaslMechanism;
@@ -29,6 +31,8 @@ import org.apache.james.protocols.sasl.oidc.OAuthSaslMechanism;
 public class OauthBearerSaslMechanismFactory extends OidcSaslMechanismFactory {
     @Override
     public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
-        return new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, parseVerifier(serverConfiguration));
+        OidcSASLConfiguration oidcConfiguration = parseConfiguration(serverConfiguration);
+        return new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER, new OidcJwtTokenVerifier(oidcConfiguration),
+            requiresSsl(serverConfiguration), invalidTokenResponse(oidcConfiguration));
     }
 }

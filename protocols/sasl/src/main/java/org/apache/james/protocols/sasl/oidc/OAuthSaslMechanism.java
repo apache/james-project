@@ -41,15 +41,28 @@ import org.apache.james.protocols.api.sasl.SaslStep;
 public class OAuthSaslMechanism implements SaslMechanism {
     private final String name;
     private final OidcJwtTokenVerifier verifier;
+    private final boolean requiresSsl;
+    private final byte[] invalidTokenResponse;
 
-    public OAuthSaslMechanism(String name, OidcJwtTokenVerifier verifier) {
+    public OAuthSaslMechanism(String name, OidcJwtTokenVerifier verifier, boolean requiresSsl) {
+        this(name, verifier, requiresSsl, new byte[0]);
+    }
+
+    public OAuthSaslMechanism(String name, OidcJwtTokenVerifier verifier, boolean requiresSsl, byte[] invalidTokenResponse) {
         this.name = name;
         this.verifier = verifier;
+        this.requiresSsl = requiresSsl;
+        this.invalidTokenResponse = invalidTokenResponse.clone();
     }
 
     @Override
     public String name() {
         return name;
+    }
+
+    @Override
+    public boolean isAvailableOnTransport(boolean channelEncrypted) {
+        return !requiresSsl || channelEncrypted;
     }
 
     @Override
@@ -60,10 +73,12 @@ public class OAuthSaslMechanism implements SaslMechanism {
     private class OAuthSaslExchange implements SaslExchange {
         private final Optional<byte[]> initialResponse;
         private final SaslAuthenticator authenticator;
+        private Optional<SaslFailure> pendingFailure;
 
         private OAuthSaslExchange(Optional<byte[]> initialResponse, SaslAuthenticator authenticator) {
             this.initialResponse = initialResponse;
             this.authenticator = authenticator;
+            this.pendingFailure = Optional.empty();
         }
 
         @Override
@@ -75,6 +90,11 @@ public class OAuthSaslMechanism implements SaslMechanism {
 
         @Override
         public SaslStep onResponse(byte[] clientResponse) {
+            if (pendingFailure.isPresent()) {
+                SaslFailure failure = pendingFailure.orElseThrow();
+                pendingFailure = Optional.empty();
+                return new SaslStep.Failure(failure);
+            }
             return authenticate(clientResponse);
         }
 
@@ -88,10 +108,15 @@ public class OAuthSaslMechanism implements SaslMechanism {
                     Username authorizationId = Username.of(response.getAssociatedUser());
                     return verifier.validateToken(response.getToken())
                         .map(authenticationId -> authorize(authenticationId, authorizationId))
-                        .orElseGet(() -> new SaslStep.Failure(SaslFailure.authenticationFailed(
-                            Optional.empty(), Optional.of(authorizationId), "OAuth authentication failed.")));
+                        .orElseGet(() -> invalidToken(authorizationId));
                 })
                 .orElseGet(() -> new SaslStep.Failure(SaslFailure.malformed("Malformed authentication command.")));
+        }
+
+        private SaslStep invalidToken(Username authorizationId) {
+            pendingFailure = Optional.of(SaslFailure.authenticationFailed(
+                Optional.empty(), Optional.of(authorizationId), "OAuth authentication failed."));
+            return new SaslStep.Challenge(Optional.of(invalidTokenResponse.clone()));
         }
 
         private SaslStep authorize(Username authenticationId, Username authorizationId) {
