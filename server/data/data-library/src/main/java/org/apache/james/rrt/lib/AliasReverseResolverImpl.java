@@ -52,7 +52,7 @@ public class AliasReverseResolverImpl implements AliasReverseResolver {
         CanSendFromImpl.DomainFetcher domains = domainFetcher();
 
         return relatedAliases(user)
-            .flatMap(allowedUser -> user.getDomainPart()
+            .flatMap(allowedUser -> allowedUser.getDomainPart()
                 .map(domain -> Flux.concat(
                     Flux.just(allowedUser),
                     domains.fetch(domain).map(allowedUser::withOtherDomain)))

@@ -221,10 +221,18 @@ public interface CanSendFromContract {
         redirectDomain(OTHER_DOMAIN).to(DOMAIN).asAlias();
         redirectUser(userAliasOtherDomain).to(USER);
 
-        Username userAliasMainDomain = USER_ALIAS.withOtherDomain(DOMAIN);
         Username userOtherDomain = USER.withOtherDomain(OTHER_DOMAIN);
         assertThat(Flux.from(canSendFrom().allValidFromAddressesForUser(USER)).toStream())
-            .containsExactlyInAnyOrder(USER.asMailAddress(), userAliasOtherDomain.asMailAddress(), userAliasMainDomain.asMailAddress(), userOtherDomain.asMailAddress());
+            .containsExactlyInAnyOrder(USER.asMailAddress(), userAliasOtherDomain.asMailAddress(), userOtherDomain.asMailAddress());
+    }
+
+    @Test
+    default void allValidFromAddressesShouldNotStampAliasLocalPartOntoUserDomainWhenNoDomainAlias() throws Exception {
+        Username userAliasOtherDomain = USER_ALIAS.withOtherDomain(OTHER_DOMAIN);
+        redirectUser(userAliasOtherDomain).to(USER);
+
+        assertThat(Flux.from(canSendFrom().allValidFromAddressesForUser(USER)).toStream())
+            .containsExactlyInAnyOrder(USER.asMailAddress(), userAliasOtherDomain.asMailAddress());
     }
 
     @Test

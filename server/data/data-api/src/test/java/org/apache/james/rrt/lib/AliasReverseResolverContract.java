@@ -114,10 +114,18 @@ public interface AliasReverseResolverContract {
         redirectDomain(OTHER_DOMAIN).to(DOMAIN);
         redirectUser(userAliasOtherDomain).to(USER);
 
-        Username userAliasMainDomain = USER_ALIAS.withOtherDomain(DOMAIN);
         Username userOtherDomain = USER.withOtherDomain(OTHER_DOMAIN);
         assertThat(Flux.from(aliasReverseResolver().listAddresses(USER)).toStream())
-            .containsExactlyInAnyOrder(USER.asMailAddress(), userAliasOtherDomain.asMailAddress(), userAliasMainDomain.asMailAddress(), userOtherDomain.asMailAddress());
+            .containsExactlyInAnyOrder(USER.asMailAddress(), userAliasOtherDomain.asMailAddress(), userOtherDomain.asMailAddress());
+    }
+
+    @Test
+    default void listAddressesShouldNotStampAliasLocalPartOntoUserDomainWhenNoDomainAlias() throws Exception {
+        Username userAliasOtherDomain = USER_ALIAS.withOtherDomain(OTHER_DOMAIN);
+        redirectUser(userAliasOtherDomain).to(USER);
+
+        assertThat(Flux.from(aliasReverseResolver().listAddresses(USER)).toStream())
+            .containsExactlyInAnyOrder(USER.asMailAddress(), userAliasOtherDomain.asMailAddress());
     }
 
     @Test
