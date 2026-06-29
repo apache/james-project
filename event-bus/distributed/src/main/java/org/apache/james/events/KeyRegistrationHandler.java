@@ -19,7 +19,6 @@
 
 package org.apache.james.events;
 
-import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
@@ -127,7 +126,7 @@ class KeyRegistrationHandler {
             QueueSpecification.queue(registrationQueue.asString())
                 .durable(evaluateDurable(configurations.rabbitMQConfiguration().isEventBusNotificationDurabilityEnabled(), configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
                 .exclusive(evaluateExclusive(!EXCLUSIVE, configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
-                .autoDelete(evaluateAutoDelete(AUTO_DELETE, configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
+                .autoDelete(evaluateAutoDelete(configurations.rabbitMQConfiguration().isEventBusNotificationQueueAutoDeleteEnabled(), configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
                 .arguments(builder.build()))
             .timeout(TOPOLOGY_CHANGES_TIMEOUT)
             .map(AMQP.Queue.DeclareOk::getQueue)

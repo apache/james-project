@@ -105,6 +105,14 @@ A coma separated list of hosts, example: hosts=ip1:5672,ip2:5672
 | event.bus.notification.durability.enabled
 | Whether or not the queue backing notifications should be durable. Optional boolean, defaults to true.
 
+| notification.queue.autoDelete
+| Whether the per-node notification (key registration) queue is declared as auto-delete. Optional boolean, defaults to true
+(historical behaviour). Forced to false when `quorum.queues.enable` is true, as quorum queues do not support auto-delete.
+Auto-delete queues are removed by RabbitMQ as soon as their last consumer disconnects, including on transient connection
+blips, causing key bindings to fail with 404 NOT_FOUND until the queue is redeclared. Setting this to false, combined with
+`notification.queue.ttl` (x-expires), is more robust: the queue survives short consumer outages and is only garbage
+collected once it has stayed unused for the TTL, which also cleans up the queues of nodes that died abruptly.
+
 | event.bus.propagate.dispatch.error
 | Whether to propagate errors back to the callers when eventbus fails to dispatch group events to RabbitMQ (then store the failed events in the event dead letters).
 Optional boolean, defaults to true.
