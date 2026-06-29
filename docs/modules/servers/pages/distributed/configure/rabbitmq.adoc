@@ -51,4 +51,12 @@ Tips for choosing metricsEnabled are explained in
 This is used only on queues used to share notification patterns, are exclusive to a node. If omitted, it will not add the TTL configure when declaring queues.
 Optional integer, defaults is 3600000.
 
+| notification.queue.autoDelete
+| Whether the per-node notification (key registration) queue is declared as auto-delete. Optional boolean, defaults to true
+(historical behaviour). Forced to false when `quorum.queues.enable` is true, as quorum queues do not support auto-delete.
+Auto-delete queues are removed by RabbitMQ as soon as their last consumer disconnects, including on transient connection
+blips, causing key bindings to fail with 404 NOT_FOUND until the queue is redeclared. Setting this to false, combined with
+`notification.queue.ttl` (x-expires), is more robust: the queue survives short consumer outages and is only garbage
+collected once it has stayed unused for the TTL, which also cleans up the queues of nodes that died abruptly.
+
 |===
