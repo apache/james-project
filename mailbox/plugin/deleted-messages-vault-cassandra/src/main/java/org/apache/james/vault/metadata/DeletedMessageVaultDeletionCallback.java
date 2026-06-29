@@ -72,12 +72,13 @@ public class DeletedMessageVaultDeletionCallback implements DeleteMessageListene
         return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), copyCommand.getHeaderId(), BlobStore.StoragePolicy.LOW_COST))
             .flatMap(bytes -> {
                 Optional<Message> mimeMessage = parseMessage(new ByteArrayInputStream(bytes), copyCommand.getMessageId());
+                ZonedDateTime deletionDate = ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
                 DeletedMessage deletedMessage = DeletedMessage.builder()
                     .messageId(copyCommand.getMessageId())
                     .originMailboxes(copyCommand.getMailboxId())
                     .user(copyCommand.getOwner())
-                    .deliveryDate(ZonedDateTime.ofInstant(copyCommand.getInternalDate().toInstant(), ZoneOffset.UTC))
-                    .deletionDate(ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC))
+                    .deliveryDate(deliveryDate(copyCommand, deletionDate))
+                    .deletionDate(deletionDate)
                     .sender(retrieveSender(mimeMessage))
                     .recipients(retrieveRecipients(mimeMessage))
                     .hasAttachment(copyCommand.hasAttachments())
@@ -91,6 +92,15 @@ public class DeletedMessageVaultDeletionCallback implements DeleteMessageListene
             });
     }
 
+
+    private ZonedDateTime deliveryDate(DeleteMessageListener.DeletedMessageCopyCommand copyCommand, ZonedDateTime fallback) {
+        if (copyCommand.getInternalDate() == null) {
+            LOGGER.warn("Message {} has no internal date (likely a partially deleted Cassandra row), " +
+                "falling back to the deletion date for the deleted message vault delivery date", copyCommand.getMessageId());
+            return fallback;
+        }
+        return ZonedDateTime.ofInstant(copyCommand.getInternalDate().toInstant(), ZoneOffset.UTC);
+    }
 
     private Optional<Message> parseMessage(InputStream inputStream, MessageId messageId) {
         DefaultMessageBuilder messageBuilder = new DefaultMessageBuilder();
