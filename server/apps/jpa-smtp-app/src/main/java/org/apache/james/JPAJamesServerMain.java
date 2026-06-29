@@ -19,7 +19,9 @@
 
 package org.apache.james;
 
+import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.data.UsersRepositoryModuleChooser;
+import org.apache.james.mailbox.Authenticator;
 import org.apache.james.modules.LegacyEncryptionModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
@@ -66,6 +68,7 @@ public class JPAJamesServerMain implements JamesServerMain {
         new JPADataModule(),
         new ActiveMQQueueModule(),
         new RawPostDequeueDecoratorModule(),
+        binder -> binder.bind(Authenticator.class).to(UserRepositoryAuthenticator.class),
         new JPAAuthorizatorModule());
 
     public static void main(String[] args) throws Exception {
