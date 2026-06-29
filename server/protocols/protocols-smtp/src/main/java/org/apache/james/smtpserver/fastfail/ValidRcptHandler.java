@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.smtpserver.fastfail;
 
+import java.util.EnumSet;
+
 import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.Configuration;
@@ -32,6 +34,7 @@ import org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -49,6 +52,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
     private final DomainList domains;
 
     private boolean supportsRecipientRewriteTable = true;
+    private boolean ignoreMappingsWithoutLocalMailbox = false;
 
     @Inject
     public ValidRcptHandler(UsersRepository users, RecipientRewriteTable recipientRewriteTable, DomainList domains) {
@@ -59,6 +63,10 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
 
     public void setSupportsRecipientRewriteTable(boolean supportsRecipientRewriteTable) {
         this.supportsRecipientRewriteTable = supportsRecipientRewriteTable;
+    }
+
+    public void setIgnoreMappingsWithoutLocalMailbox(boolean ignoreMappingsWithoutLocalMailbox) {
+        this.ignoreMappingsWithoutLocalMailbox = ignoreMappingsWithoutLocalMailbox;
     }
 
     @Override
@@ -79,15 +87,35 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
     protected boolean hasValidRRTEntry(MailAddress recipient) throws RecipientRewriteTableException {
         LOGGER.debug("Unknown recipient {}, resolving it via RRT", recipient);
         try {
-            Mappings targetString = recipientRewriteTable.getResolvedMappings(recipient.getLocalPart(), recipient.getDomain());
-
-            if (!targetString.isEmpty()) {
-                return true;
+            // Error mappings are only used to forbid sending from the source address and can be ignored here.
+            Mappings mappings = recipientRewriteTable.getResolvedMappings(
+                recipient.getLocalPart(),
+                recipient.getDomain(),
+                EnumSet.complementOf(EnumSet.of(Mapping.Type.Error))
+            );
+            if (ignoreMappingsWithoutLocalMailbox) {
+                return !mappings.isEmpty();
+            } else {
+                return allResolvedMailboxesExist(mappings);
             }
         } catch (ErrorMappingException e) {
-            return true;
+            // As we filter the mappings above, this case should never happen.
+            LOGGER.error("Unexpexted mapping of type Error: ", e);
+            return false;
         }
-        return false;
+    }
+
+    private boolean allResolvedMailboxesExist(Mappings mappings) {
+        return mappings
+            .asStream()
+            .flatMap(mapping -> mapping.asMailAddress().stream())
+            .allMatch(address -> {
+                try {
+                    return mailboxExists(address);
+                } catch (UsersRepositoryException e) {
+                    return false;
+                }
+            });
     }
 
     @Override
@@ -98,5 +126,6 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
     @Override
     public void init(Configuration config) throws ConfigurationException {
         setSupportsRecipientRewriteTable(config.getBoolean("enableRecipientRewriteTable", true));
+        setIgnoreMappingsWithoutLocalMailbox(config.getBoolean("ignoreMappingsWithoutLocalMailbox", true));
     }
 }
