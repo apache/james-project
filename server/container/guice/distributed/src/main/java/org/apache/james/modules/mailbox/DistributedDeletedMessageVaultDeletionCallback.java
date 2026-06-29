@@ -197,6 +197,9 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
                 sender.declareExchange(ExchangeSpecification.exchange(EXCHANGE)
                     .durable(DURABLE)
                     .type(DIRECT_EXCHANGE)),
+                sender.declareExchange(ExchangeSpecification.exchange(DEAD_LETTER)
+                    .durable(DURABLE)
+                    .type(DIRECT_EXCHANGE)),
                 sender.declareQueue(QueueSpecification.queue(DEAD_LETTER)
                     .durable(DURABLE)
                     .exclusive(!EXCLUSIVE)
@@ -214,6 +217,10 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
                 sender.bind(BindingSpecification.binding()
                     .exchange(EXCHANGE)
                     .queue(QUEUE)
+                    .routingKey(EMPTY_ROUTING_KEY)),
+                sender.bind(BindingSpecification.binding()
+                    .exchange(DEAD_LETTER)
+                    .queue(DEAD_LETTER)
                     .routingKey(EMPTY_ROUTING_KEY)))
             .then()
             .block();
@@ -249,8 +256,10 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
             return callback.forMessage(copyCommandDTO.asPojo(mailboxIdFactory, messageIdFactory, blobIdFactory))
                 .timeout(Duration.ofMinutes(5))
                 .onErrorResume(e -> {
-                    LOGGER.error("Failed executing deletion callback for {}", copyCommandDTO.messageId, e);
-                    delivery.nack(REQUEUE);
+                    LOGGER.error("Failed executing deletion callback for {}, routing to the dead-letter queue", copyCommandDTO.messageId, e);
+                    // Do not requeue: a failing message (e.g. poisonous payload) would otherwise loop forever and block
+                    // the work queue. Dead-letter it instead so it can be inspected/replayed manually.
+                    delivery.nack(!REQUEUE);
                     return Mono.empty();
                 })
                 .doOnSuccess(any -> delivery.ack())
