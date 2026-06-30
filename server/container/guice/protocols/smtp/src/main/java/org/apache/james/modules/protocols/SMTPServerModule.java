@@ -44,6 +44,7 @@ import org.apache.james.protocols.sasl.JamesSaslAuthenticator;
 import org.apache.james.protocols.sasl.OauthBearerSaslMechanismFactory;
 import org.apache.james.protocols.sasl.PlainSaslMechanismFactory;
 import org.apache.james.protocols.sasl.XOauth2SaslMechanismFactory;
+import org.apache.james.protocols.smtp.core.esmtp.LoginSaslMechanismFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.smtpserver.SendMailHandler;
 import org.apache.james.smtpserver.netty.SMTPServer.AuthAnnouncementConfiguration;
@@ -97,8 +98,9 @@ public class SMTPServerModule extends AbstractModule {
                                                                                  XOauth2SaslMechanismFactory xoauth2) {
         // SMTP historically used auth.requireSSL for capability announcement only: PLAIN/LOGIN remain accepted
         // when sent explicitly by clients, even over clear-text test/configuration ports.
-        return ImmutableList.of(new PlainSaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT,
-            PlainSaslMechanismFactory.IGNORE_REQUIRE_SSL_CONFIGURATION), oauthBearer, xoauth2);
+        PlainSaslMechanismFactory plain = new PlainSaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT,
+            PlainSaslMechanismFactory.IGNORE_REQUIRE_SSL_CONFIGURATION);
+        return ImmutableList.of(new LoginSaslMechanismFactory(plain), plain, oauthBearer, xoauth2);
     }
 
     @Provides
