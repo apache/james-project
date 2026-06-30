@@ -29,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Optional;
 
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.net.smtp.SMTPClient;
@@ -51,6 +52,7 @@ import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.protocols.sasl.OauthBearerSaslMechanismFactory;
 import org.apache.james.protocols.sasl.XOauth2SaslMechanismFactory;
 import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
+import org.apache.james.protocols.smtp.core.esmtp.LoginSaslMechanismFactory;
 import org.apache.james.util.ClassLoaderUtils;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
@@ -490,8 +492,9 @@ class SMTPSaslTest {
     }
 
     @Test
-    void ehloShouldAdvertisePlainAndLoginWhenPlainMechanismIsConfigured() throws Exception {
-        resetWithMechanisms(ImmutableList.of(new PlainSaslMechanism(true, false)));
+    void ehloShouldAdvertisePlainAndLoginWhenPlainAndLoginMechanismsAreConfigured() throws Exception {
+        PlainSaslMechanism plain = new PlainSaslMechanism(true, false);
+        resetWithMechanisms(smtpPlainAndLoginMechanisms(plain));
         SMTPClient client = connectedClient();
 
         client.sendCommand("EHLO localhost");
@@ -501,11 +504,15 @@ class SMTPSaslTest {
 
     @Test
     void ehloShouldPreserveConfiguredMechanismOrderAndDeduplicateAdvertisement() throws Exception {
+        PlainSaslMechanism plain = new PlainSaslMechanism(true, false);
+        PlainSaslMechanism duplicatePlain = new PlainSaslMechanism(true, false);
         resetWithMechanisms(ImmutableList.of(
             ADVERTISED_OAUTHBEARER,
-            new PlainSaslMechanism(true, false),
+            loginMechanism(plain),
+            plain,
             ADVERTISED_XOAUTH2,
-            new PlainSaslMechanism(true, false)));
+            loginMechanism(duplicatePlain),
+            duplicatePlain));
         SMTPClient client = connectedClient();
 
         client.sendCommand("EHLO localhost");
@@ -563,7 +570,8 @@ class SMTPSaslTest {
 
     @Test
     void authLoginShouldSucceedWhenCredentialsAreValid() throws Exception {
-        resetWithMechanisms(ImmutableList.of(new PlainSaslMechanism(true, false)));
+        PlainSaslMechanism plain = new PlainSaslMechanism(true, false);
+        resetWithMechanisms(smtpPlainAndLoginMechanisms(plain));
         SMTPClient client = connectedClient();
 
         client.sendCommand("AUTH LOGIN");
@@ -573,6 +581,21 @@ class SMTPSaslTest {
         client.sendCommand(base64(SMTPServerTestSystem.PASSWORD));
 
         assertThat(client.getReplyString()).contains("235 Authentication Successful");
+    }
+
+    @Test
+    void authLoginShouldFailWhenCredentialsAreInvalid() throws Exception {
+        PlainSaslMechanism plain = new PlainSaslMechanism(true, false);
+        resetWithMechanisms(smtpPlainAndLoginMechanisms(plain));
+        SMTPClient client = connectedClient();
+
+        client.sendCommand("AUTH LOGIN");
+        assertThat(client.getReplyString()).contains("334 VXNlcm5hbWU6");
+        client.sendCommand(base64(SMTPServerTestSystem.BOB.asString()));
+        assertThat(client.getReplyString()).contains("334 UGFzc3dvcmQ6");
+        client.sendCommand(base64("bad-password"));
+
+        assertThat(client.getReplyString()).contains("535 Authentication Failed");
     }
 
     @Test
@@ -599,7 +622,8 @@ class SMTPSaslTest {
 
     @Test
     void mechanismUnavailableOnClearTransportShouldNotBeAdvertisedAndShouldBeRejected() throws Exception {
-        resetWithMechanisms(ImmutableList.of(new PlainSaslMechanism(true, true)));
+        PlainSaslMechanism plain = new PlainSaslMechanism(true, true);
+        resetWithMechanisms(smtpPlainAndLoginMechanisms(plain));
         SMTPClient client = connectedClient();
 
         client.sendCommand("EHLO localhost");
@@ -614,6 +638,14 @@ class SMTPSaslTest {
         HierarchicalConfiguration<ImmutableNode> configuration = ConfigLoader.getConfig(
             ClassLoaderUtils.getSystemResourceAsSharedStream("smtpserver-authAnnounceAlways.xml"));
         testSystem.setUpWithSaslMechanisms(configuration, authorizator(), saslMechanisms);
+    }
+
+    private ImmutableList<SaslMechanism> smtpPlainAndLoginMechanisms(PlainSaslMechanism plain) throws Exception {
+        return ImmutableList.of(loginMechanism(plain), plain);
+    }
+
+    private SaslMechanism loginMechanism(PlainSaslMechanism plain) throws Exception {
+        return new LoginSaslMechanismFactory(ignored -> plain).create(new BaseHierarchicalConfiguration());
     }
 
     private SMTPClient connectedClient() throws IOException {

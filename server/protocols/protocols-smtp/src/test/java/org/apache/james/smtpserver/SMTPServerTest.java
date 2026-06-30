@@ -160,6 +160,7 @@ public class SMTPServerTest {
     }
 
     protected void initSMTPServer(SMTPTestConfiguration testConfiguration) throws Exception {
+        testSystem.configureSaslMechanisms(testConfiguration);
         testSystem.smtpServer.configure(testConfiguration);
         testSystem.smtpServer.init();
     }
