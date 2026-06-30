@@ -482,13 +482,15 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfHomerFromVault(jmapServer)).hasSize(1));
 
+        // The deletion was attributed to Homer, not to Bart: Bart's own vault stays empty
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfUserFromVault(jmapServer, Username.of(BART))).isEmpty());
+
         // THEN Bart should not restore anything from his own DMV
         restoreMessagesFor(BART);
         awaitSearchUpToDate();
 
-        // No additional had been restored for Bart as the vault is empty
-        assertThat(listMessageIdsForAccount(bartCredential).size())
-            .isEqualTo(1);
+        // No message had been restored for Bart as his vault is empty
+        assertThat(restoredMessagesCount(bartCredential)).isEqualTo(0);
     }
 
     @Test
