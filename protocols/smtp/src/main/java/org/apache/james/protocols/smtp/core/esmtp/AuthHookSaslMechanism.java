@@ -53,17 +53,39 @@ class AuthHookSaslMechanism implements SaslMechanism {
         if (exchange instanceof AuthHookSaslMechanism.Exchange authHookExchange) {
             return authHookExchange.terminalResponse();
         }
-        return Optional.empty();
+        return LoginSaslMechanism.delegatedExchange(exchange)
+            .flatMap(AuthHookSaslMechanism::terminalResponse);
+    }
+
+    static ImmutableList<SaslMechanism> withLegacyAuthHooks(ImmutableList<SaslMechanism> mechanisms, List<AuthHook> authHooks,
+                                                            List<HookResultHook> hookResultHooks, SMTPSession session) {
+        return mechanisms.stream()
+            .map(mechanism -> adaptMechanism(mechanism, authHooks, hookResultHooks, session))
+            .collect(ImmutableList.toImmutableList());
+    }
+
+    private static SaslMechanism adaptMechanism(SaslMechanism mechanism, List<AuthHook> authHooks,
+                                                List<HookResultHook> hookResultHooks, SMTPSession session) {
+        if (mechanism instanceof LoginSaslMechanism loginSaslMechanism) {
+            return new LoginSaslMechanism(new AuthHookSaslMechanism(
+                loginSaslMechanism.plainMechanism(), authHooks, hookResultHooks, session));
+        }
+        if (mechanism.name().equalsIgnoreCase(SaslMechanismNames.PLAIN)) {
+            return new AuthHookSaslMechanism(mechanism, authHooks, hookResultHooks, session);
+        }
+        return mechanism;
     }
 
     private final SaslMechanism plainMechanism;
     private final ImmutableList<AuthHook> authHooks;
     private final ImmutableList<HookResultHook> hookResultHooks;
+    private final SMTPSession session;
 
-    AuthHookSaslMechanism(SaslMechanism plainMechanism, List<AuthHook> authHooks, List<HookResultHook> hookResultHooks) {
+    AuthHookSaslMechanism(SaslMechanism plainMechanism, List<AuthHook> authHooks, List<HookResultHook> hookResultHooks, SMTPSession session) {
         this.plainMechanism = plainMechanism;
         this.authHooks = ImmutableList.copyOf(authHooks);
         this.hookResultHooks = ImmutableList.copyOf(hookResultHooks);
+        this.session = session;
     }
 
     @Override
@@ -78,10 +100,6 @@ class AuthHookSaslMechanism implements SaslMechanism {
 
     @Override
     public SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator) {
-        throw new IllegalStateException("Legacy SMTP AuthHook adapter requires an SMTP session");
-    }
-
-    Exchange start(SaslInitialRequest request, SMTPSession session) {
         return new Exchange(request.initialResponse(), session);
     }
 
