@@ -29,6 +29,7 @@ import java.util.Optional;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
@@ -60,6 +61,7 @@ import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
+import org.apache.james.protocols.smtp.core.esmtp.LoginSaslMechanismFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
@@ -114,10 +116,12 @@ class SMTPServerTestSystem {
         smtpServer.init();
     }
 
-    void configureSaslMechanisms(HierarchicalConfiguration<ImmutableNode> configuration) {
-        smtpServer.setSaslMechanisms(ImmutableList.of(new PlainSaslMechanism(
+    void configureSaslMechanisms(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
+        PlainSaslMechanism plain = new PlainSaslMechanism(
             configuration.getBoolean("auth.plainAuthEnabled", true),
-            configuration.getBoolean("auth.requireSSL", false))));
+            configuration.getBoolean("auth.requireSSL", false));
+        SaslMechanism login = new LoginSaslMechanismFactory(ignored -> plain).create(configuration);
+        smtpServer.setSaslMechanisms(ImmutableList.of(login, plain));
     }
 
     void setUpWithSaslMechanisms(HierarchicalConfiguration<ImmutableNode> configuration, Authorizator authorizator,

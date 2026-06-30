@@ -20,14 +20,13 @@
 
 package org.apache.james.protocols.smtp.core.esmtp;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import static org.apache.james.protocols.smtp.core.esmtp.AuthHookSaslMechanism.withLegacyAuthHooks;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.Request;
@@ -41,7 +40,6 @@ import org.apache.james.protocols.api.sasl.SaslExchange;
 import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
-import org.apache.james.protocols.api.sasl.SaslMechanismNames;
 import org.apache.james.protocols.api.sasl.SaslStep;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
@@ -79,8 +77,6 @@ public class AuthCmdHandler
     private static final Response ALREADY_AUTH = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER) + " User has previously authenticated. "
             + " Further authentication is not required!").immutable();
     private static final Response SYNTAX_ERROR = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_INVALID_ARG) + " Usage: AUTH (authentication type) <challenge>").immutable();
-    private static final Response AUTH_READY_USERNAME_LOGIN = new SMTPResponse(SMTPRetCode.AUTH_READY, "VXNlcm5hbWU6").immutable(); // base64 encoded "Username:"
-    private static final Response AUTH_READY_PASSWORD_LOGIN = new SMTPResponse(SMTPRetCode.AUTH_READY, "UGFzc3dvcmQ6").immutable(); // base64 encoded "Password:
     private static final Response AUTH_SUCCEEDED = new SMTPResponse(SMTPRetCode.AUTH_OK, "Authentication Successful").immutable();
     private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, "Authentication Failed").immutable();
     private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, "Unrecognized Authentication Type").immutable();
@@ -88,44 +84,7 @@ public class AuthCmdHandler
 
     private static final SmtpSaslBridge SASL_BRIDGE = new SmtpSaslBridge();
 
-    private abstract static class AbstractSMTPLineHandler implements LineHandler<SMTPSession> {
-
-        @Override
-        public Response onLine(SMTPSession session, byte[] line) {
-            return handleCommand(session, new String(line, session.getCharset()));
-        }
-
-        private Response handleCommand(SMTPSession session, String line) {
-            // See JAMES-939
-
-            // According to RFC2554:
-            // "If the client wishes to cancel an authentication exchange, it issues a line with a single "*".
-            // If the server receives such an answer, it MUST reject the AUTH
-            // command by sending a 501 reply."
-            if (line.equals("*\r\n")) {
-                session.popLineHandler();
-                return AUTH_ABORTED;
-            }
-            return onCommand(session, line);
-        }
-
-        protected abstract Response onCommand(SMTPSession session, String l);
-    }
-
-
-
-    /**
-     * The text string for the SMTP AUTH type PLAIN.
-     */
-    protected static final String AUTH_TYPE_PLAIN = "PLAIN";
-
-    /**
-     * The text string for the SMTP AUTH type LOGIN.
-     */
-    protected static final String AUTH_TYPE_LOGIN = "LOGIN";
-
     private ImmutableList<SaslMechanism> saslMechanisms = ImmutableList.of();
-    private ImmutableList<SaslMechanism> effectiveSaslMechanisms = ImmutableList.of();
     private Optional<SaslAuthenticator> saslAuthenticator = Optional.empty();
     private ImmutableList<AuthHook> authHooks = ImmutableList.of();
     private ImmutableList<HookResultHook> hookResultHooks = ImmutableList.of();
@@ -134,7 +93,6 @@ public class AuthCmdHandler
     public void configureSaslMechanisms(ImmutableList<SaslMechanism> saslMechanisms, SaslAuthenticator saslAuthenticator) {
         this.saslMechanisms = saslMechanisms;
         this.saslAuthenticator = Optional.of(saslAuthenticator);
-        updateEffectiveSaslMechanisms();
     }
 
     /**
@@ -172,10 +130,6 @@ public class AuthCmdHandler
     }
 
     private Response handleSaslAuthentication(SMTPSession session, String authType, Optional<String> initialResponse) {
-        if (authType.equals(AUTH_TYPE_LOGIN)) {
-            return handleLoginFraming(session, initialResponse);
-        }
-
         Optional<SaslMechanism> maybeMechanism = findAvailableMechanism(session, authType);
         if (maybeMechanism.isEmpty()) {
             return doUnknownAuth(authType);
@@ -185,7 +139,7 @@ public class AuthCmdHandler
         SaslExchange exchange;
         try {
             SaslInitialRequest request = SASL_BRIDGE.initialRequest(authType, initialResponse);
-            exchange = startExchange(session, mechanism, request);
+            exchange = startExchange(mechanism, request);
             return handleFirstSaslStep(session, authType, exchange);
         } catch (IllegalArgumentException e) {
             LOGGER.info("Could not decode parameters for AUTH {}", authType, e);
@@ -333,86 +287,15 @@ public class AuthCmdHandler
         }
     }
 
-    private Response handleLoginFraming(SMTPSession session, Optional<String> initialResponse) {
-        Optional<SaslMechanism> plain = findAvailableMechanism(session, SaslMechanismNames.PLAIN);
-        if (plain.isEmpty()) {
-            return doUnknownAuth(AUTH_TYPE_LOGIN);
-        }
-
-        return initialResponse
-            .map(user -> promptLoginPasswordThenDelegateToPlain(session, plain.get(), user))
-            .orElseGet(() -> {
-                session.pushLineHandler(new AbstractSMTPLineHandler() {
-                    @Override
-                    protected Response onCommand(SMTPSession session, String line) {
-                        session.popLineHandler();
-                        return promptLoginPasswordThenDelegateToPlain(session, plain.get(), line);
-                    }
-                });
-                return AUTH_READY_USERNAME_LOGIN;
-            });
-    }
-
-    private Response promptLoginPasswordThenDelegateToPlain(SMTPSession session, SaslMechanism plain, String encodedUsername) {
-        session.pushLineHandler(new AbstractSMTPLineHandler() {
-            @Override
-            protected Response onCommand(SMTPSession session, String encodedPassword) {
-                session.popLineHandler();
-                return delegateLoginCredentialsToPlain(session, plain, decodeLoginUsername(encodedUsername), encodedPassword);
-            }
-        });
-        return AUTH_READY_PASSWORD_LOGIN;
-    }
-
-    private Response delegateLoginCredentialsToPlain(SMTPSession session, SaslMechanism plain, Optional<Username> username, String encodedPassword) {
-        Optional<String> password = decodeLoginPassword(username, encodedPassword);
-        if (username.isEmpty() || password.isEmpty()) {
-            return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, "Could not decode parameters for AUTH " + AUTH_TYPE_LOGIN);
-        }
-        SaslInitialRequest request = new SaslInitialRequest(SaslMechanismNames.PLAIN,
-            Optional.of(toPlainInitialResponse(username.get(), password.get())));
-        SaslExchange exchange = startExchange(session, plain, request);
-        return handleFirstSaslStep(session, AUTH_TYPE_LOGIN, exchange);
-    }
-
-    private byte[] toPlainInitialResponse(Username username, String password) {
-        return ("\0" + username.asString() + "\0" + password).getBytes(StandardCharsets.UTF_8);
-    }
-
-    private Optional<Username> decodeLoginUsername(String response) {
-        try {
-            return Optional.of(Username.of(decodeSaslLoginResponse(response)));
-        } catch (IllegalArgumentException e) {
-            LOGGER.info("Could not decode LOGIN username", e);
-            return Optional.empty();
-        }
-    }
-
-    private Optional<String> decodeLoginPassword(Optional<Username> username, String response) {
-        try {
-            return Optional.of(decodeSaslLoginResponse(response));
-        } catch (IllegalArgumentException e) {
-            LOGGER.info("Could not decode LOGIN password for user {}", username, e);
-            return Optional.empty();
-        }
-    }
-
-    private String decodeSaslLoginResponse(String response) {
-        return new String(Base64.getDecoder().decode(response.replace("\r\n", "")), StandardCharsets.UTF_8);
-    }
-
     private Optional<SaslMechanism> findAvailableMechanism(SMTPSession session, String authType) {
-        return effectiveSaslMechanisms
+        return effectiveSaslMechanisms(session)
             .stream()
             .filter(mechanism -> mechanism.name().equalsIgnoreCase(authType))
             .filter(mechanism -> mechanism.isAvailableOnTransport(session.isTLSStarted()))
             .findFirst();
     }
 
-    private SaslExchange startExchange(SMTPSession session, SaslMechanism mechanism, SaslInitialRequest request) {
-        if (mechanism instanceof AuthHookSaslMechanism authHookSaslMechanism) {
-            return authHookSaslMechanism.start(request, session);
-        }
+    private SaslExchange startExchange(SaslMechanism mechanism, SaslInitialRequest request) {
         return mechanism.start(request, saslAuthenticator());
     }
 
@@ -421,19 +304,12 @@ public class AuthCmdHandler
             .orElseThrow(() -> new IllegalStateException("SASL authenticator is not configured"));
     }
 
-    private void updateEffectiveSaslMechanisms() {
-        this.effectiveSaslMechanisms = saslMechanisms.stream()
-            .map(this::adaptPlainMechanismForLegacyAuthHooks)
-            .collect(ImmutableList.toImmutableList());
-    }
-
-    private SaslMechanism adaptPlainMechanismForLegacyAuthHooks(SaslMechanism mechanism) {
-        if (!authHooks.isEmpty() && mechanism.name().equalsIgnoreCase(SaslMechanismNames.PLAIN)) {
-            // Legacy AuthHooks own PLAIN authentication: replace, rather than append to, the configured mechanism
-            // so a declined hook remains a terminal authentication failure as it was before SASL modularization.
-            return new AuthHookSaslMechanism(mechanism, authHooks, hookResultHooks);
+    private ImmutableList<SaslMechanism> effectiveSaslMechanisms(SMTPSession session) {
+        if (authHooks.isEmpty()) {
+            return saslMechanisms;
         }
-        return mechanism;
+
+        return withLegacyAuthHooks(saslMechanisms, authHooks, hookResultHooks, session);
     }
 
     /**
@@ -465,15 +341,10 @@ public class AuthCmdHandler
     }
 
     private ImmutableList<String> saslAuthTypes(SMTPSession session) {
-        return effectiveSaslMechanisms
+        return effectiveSaslMechanisms(session)
             .stream()
             .filter(mechanism -> mechanism.isAvailableOnTransport(session.isTLSStarted()))
-            .flatMap(mechanism -> {
-                if (mechanism.name().equalsIgnoreCase(SaslMechanismNames.PLAIN)) {
-                    return Stream.of(AUTH_TYPE_LOGIN, AUTH_TYPE_PLAIN);
-                }
-                return Stream.of(mechanism.name());
-            })
+            .map(SaslMechanism::name)
             .distinct()
             .collect(ImmutableList.toImmutableList());
     }
@@ -493,7 +364,6 @@ public class AuthCmdHandler
         } else if (SaslAuthResultHook.class.equals(interfaceName)) {
             this.saslAuthResultHooks = ImmutableList.copyOf((List<SaslAuthResultHook>) extension);
         }
-        updateEffectiveSaslMechanisms();
     }
 
     @Override
