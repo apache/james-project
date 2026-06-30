@@ -48,6 +48,7 @@ import org.apache.james.protocols.sasl.BuiltInSaslMechanismFactories;
 import org.apache.james.protocols.sasl.OauthBearerSaslMechanismFactory;
 import org.apache.james.protocols.sasl.PlainSaslMechanismFactory;
 import org.apache.james.protocols.sasl.XOauth2SaslMechanismFactory;
+import org.apache.james.protocols.smtp.core.esmtp.LoginSaslMechanismFactory;
 import org.apache.james.smtpserver.netty.SMTPServer.AuthAnnouncementConfiguration;
 
 import com.github.fge.lambdas.Throwing;
@@ -57,11 +58,13 @@ public class SMTPServerFactory extends AbstractServerFactory implements Disconne
     @FunctionalInterface
     public interface SmtpSaslMechanismLoader {
         static SmtpSaslMechanismLoader defaultLoader() {
+            PlainSaslMechanismFactory plain = new PlainSaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT,
+                PlainSaslMechanismFactory.IGNORE_REQUIRE_SSL_CONFIGURATION);
             ImmutableList<SaslMechanismFactory> defaultFactories = ImmutableList.of(
                 // SMTP historically used auth.requireSSL for capability announcement only: PLAIN/LOGIN remain accepted
                 // when sent explicitly by clients, even over clear-text test/configuration ports.
-                new PlainSaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT,
-                    PlainSaslMechanismFactory.IGNORE_REQUIRE_SSL_CONFIGURATION),
+                new LoginSaslMechanismFactory(plain),
+                plain,
                 new OauthBearerSaslMechanismFactory(),
                 new XOauth2SaslMechanismFactory());
             return configuration -> loadBuiltInMechanisms(defaultFactories, configuration);
