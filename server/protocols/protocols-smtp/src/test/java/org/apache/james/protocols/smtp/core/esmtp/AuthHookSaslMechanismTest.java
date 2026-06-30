@@ -31,6 +31,7 @@ import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.Response;
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
 import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
@@ -50,6 +51,7 @@ class AuthHookSaslMechanismTest {
     private static final Username USERNAME = Username.of("user@domain.tld");
 
     private final SMTPSession session = mock(SMTPSession.class);
+    private final SaslAuthenticator authenticator = mock(SaslAuthenticator.class);
 
     @Test
     void shouldDelegatePlainAvailabilityToWrappedMechanism() {
@@ -57,7 +59,8 @@ class AuthHookSaslMechanismTest {
         AuthHookSaslMechanism mechanism = new AuthHookSaslMechanism(
             new PlainSaslMechanism(false, true),
             ImmutableList.of(mock(AuthHook.class)),
-            ImmutableList.of());
+            ImmutableList.of(),
+            session);
 
         // WHEN checking whether it is available on either transport
         // THEN the legacy adapter preserves the configured policy
@@ -70,14 +73,16 @@ class AuthHookSaslMechanismTest {
         // GIVEN a legacy hook declining the provided credentials
         AuthHook authHook = mock(AuthHook.class);
         when(authHook.doAuth(any(SMTPSession.class), eq(USERNAME), eq("password"))).thenReturn(HookResult.DECLINED);
-        SMTPSession session = mock(SMTPSession.class);
         AuthHookSaslMechanism mechanism = new AuthHookSaslMechanism(
             new PlainSaslMechanism(),
             ImmutableList.of(authHook),
-            ImmutableList.of());
+            ImmutableList.of(),
+            session);
 
         // WHEN authenticating through the adapter
-        SaslStep step = mechanism.start(initialRequest("\0user@domain.tld\0password"), session).firstStep();
+        SaslStep step = mechanism
+            .start(initialRequest("\0user@domain.tld\0password"), authenticator)
+            .firstStep();
 
         // THEN the legacy terminal failure is preserved without a fallback login
         assertThat(step).isEqualTo(new SaslStep.Failure(SaslFailure.invalidCredentials(
@@ -96,10 +101,13 @@ class AuthHookSaslMechanismTest {
         AuthHookSaslMechanism mechanism = new AuthHookSaslMechanism(
             new PlainSaslMechanism(),
             ImmutableList.of(authHook),
-            ImmutableList.of());
+            ImmutableList.of(),
+            session);
 
         // WHEN authenticating through the adapter
-        SaslStep step = mechanism.start(initialRequest("\0user@domain.tld\0"), session).firstStep();
+        SaslStep step = mechanism
+            .start(initialRequest("\0user@domain.tld\0"), authenticator)
+            .firstStep();
 
         // THEN the legacy hook receives the delegation call
         assertThat(step).isEqualTo(new SaslStep.Success(
@@ -120,15 +128,17 @@ class AuthHookSaslMechanismTest {
         AuthHookSaslMechanism mechanism = new AuthHookSaslMechanism(
             new PlainSaslMechanism(),
             ImmutableList.of(authHook),
-            ImmutableList.of());
+            ImmutableList.of(),
+            session);
 
         // WHEN the adapter processes the PLAIN credentials
-        AuthHookSaslMechanism.Exchange exchange = mechanism.start(initialRequest("\0user@domain.tld\0password"), session);
+        AuthHookSaslMechanism.Exchange exchange = (AuthHookSaslMechanism.Exchange) mechanism
+            .start(initialRequest("\0user@domain.tld\0password"), authenticator);
         SaslStep step = exchange.firstStep();
 
         // THEN the SASL failure keeps the legacy SMTP response for the protocol driver
         assertThat(step).isInstanceOf(SaslStep.Failure.class);
-        Response response = AuthHookSaslMechanism.terminalResponse(exchange).orElseThrow();
+        Response response = exchange.terminalResponse().orElseThrow();
         assertThat(response.getRetCode()).isEqualTo("421");
         assertThat(response.getLines()).containsExactly("421 Too many authentication attempts");
         assertThat(response.isEndSession()).isTrue();
@@ -146,15 +156,17 @@ class AuthHookSaslMechanismTest {
         AuthHookSaslMechanism mechanism = new AuthHookSaslMechanism(
             new PlainSaslMechanism(),
             ImmutableList.of(authHook),
-            ImmutableList.of());
+            ImmutableList.of(),
+            session);
 
         // WHEN the adapter processes the PLAIN credentials
-        AuthHookSaslMechanism.Exchange exchange = mechanism.start(initialRequest("\0user@domain.tld\0password"), session);
+        AuthHookSaslMechanism.Exchange exchange = (AuthHookSaslMechanism.Exchange) mechanism
+            .start(initialRequest("\0user@domain.tld\0password"), authenticator);
         SaslStep step = exchange.firstStep();
 
         // THEN SMTP success keeps the connection open
         assertThat(step).isInstanceOf(SaslStep.Success.class);
-        assertThat(AuthHookSaslMechanism.terminalResponse(exchange).orElseThrow().isEndSession()).isFalse();
+        assertThat(exchange.terminalResponse().orElseThrow().isEndSession()).isFalse();
     }
 
     private SaslInitialRequest initialRequest(String value) {
