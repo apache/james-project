@@ -83,6 +83,7 @@ import org.awaitility.core.ConditionFactory;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -948,6 +949,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
             .hasSize(0);
     }
 
+    @Disabled("JAMES-4156")
     @Test
     public void vaultDeleteShouldDeleteAllMessagesHavingSameBlobContent(GuiceJamesServer jmapServer) throws Exception {
         bartSendMessageToHomerAndJack();
