@@ -17,14 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.api.sasl;
+package org.apache.james.protocols.smtp.core.esmtp;
 
-public final class SaslMechanismNames {
-    public static final String LOGIN = "LOGIN";
-    public static final String PLAIN = "PLAIN";
-    public static final String OAUTHBEARER = "OAUTHBEARER";
-    public static final String XOAUTH2 = "XOAUTH2";
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
 
-    private SaslMechanismNames() {
+/**
+ * SMTP AUTH LOGIN framing backed by a configured PLAIN mechanism factory.
+ */
+public class LoginSaslMechanismFactory implements SaslMechanismFactory {
+    private final SaslMechanismFactory plainSaslMechanismFactory;
+
+    public LoginSaslMechanismFactory(SaslMechanismFactory plainSaslMechanismFactory) {
+        this.plainSaslMechanismFactory = plainSaslMechanismFactory;
+    }
+
+    @Override
+    public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
+        return new LoginSaslMechanism(plainSaslMechanismFactory.create(serverConfiguration));
     }
 }
