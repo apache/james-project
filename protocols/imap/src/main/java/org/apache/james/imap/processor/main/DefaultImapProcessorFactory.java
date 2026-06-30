@@ -19,6 +19,9 @@
 
 package org.apache.james.imap.processor.main;
 
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.events.EventBus;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.DefaultMailboxTyper;
@@ -34,6 +37,17 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
+import org.apache.james.protocols.sasl.BuiltInSaslMechanismFactories;
+import org.apache.james.protocols.sasl.JamesSaslAuthenticator;
+import org.apache.james.protocols.sasl.OauthBearerSaslMechanismFactory;
+import org.apache.james.protocols.sasl.PlainSaslMechanismFactory;
+import org.apache.james.protocols.sasl.XOauth2SaslMechanismFactory;
+import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
+
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 public class DefaultImapProcessorFactory {
 
@@ -59,6 +73,7 @@ public class DefaultImapProcessorFactory {
     }
 
     public static ImapProcessor createXListSupportingProcessor(MailboxManager mailboxManager,
+                                                               JamesSaslAuthenticator saslAuthenticator,
                                                                EventBus eventBus, SubscriptionManager subscriptionManager,
                                                                MailboxTyper mailboxTyper, QuotaManager quotaManager,
                                                                QuotaRootResolver quotaRootResolver, MetricFactory metricFactory) {
@@ -69,7 +84,60 @@ public class DefaultImapProcessorFactory {
         return DefaultProcessor.createDefaultProcessor(unknownRequestImapProcessor, mailboxManager,
             eventBus, subscriptionManager, statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver,
             MailboxCounterCorrector.DEFAULT, metricFactory,
-            FetchProcessor.LocalCacheConfiguration.DEFAULT);
+            FetchProcessor.LocalCacheConfiguration.DEFAULT, ImmutableList.of(new PlainSaslMechanism()), saslAuthenticator);
+    }
+
+    public static ImapProcessor createXListSupportingProcessor(MailboxManager mailboxManager,
+                                                               EventBus eventBus, SubscriptionManager subscriptionManager,
+                                                               MailboxTyper mailboxTyper, QuotaManager quotaManager,
+                                                               QuotaRootResolver quotaRootResolver, MetricFactory metricFactory,
+                                                               FetchProcessor.LocalCacheConfiguration localCacheConfiguration,
+                                                               HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
+
+        StatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
+        UnknownRequestProcessor unknownRequestImapProcessor = new UnknownRequestProcessor(statusResponseFactory);
+
+        return DefaultProcessor.createDefaultProcessor(unknownRequestImapProcessor, mailboxManager,
+            eventBus, subscriptionManager, statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver,
+            MailboxCounterCorrector.DEFAULT, metricFactory,
+            localCacheConfiguration, defaultSaslMechanisms(serverConfiguration));
+    }
+
+    public static ImapProcessor createXListSupportingProcessor(MailboxManager mailboxManager,
+                                                               EventBus eventBus, SubscriptionManager subscriptionManager,
+                                                               MailboxTyper mailboxTyper, QuotaManager quotaManager,
+                                                               QuotaRootResolver quotaRootResolver, MetricFactory metricFactory,
+                                                               FetchProcessor.LocalCacheConfiguration localCacheConfiguration,
+                                                               HierarchicalConfiguration<ImmutableNode> serverConfiguration,
+                                                               JamesSaslAuthenticator saslAuthenticator) throws ConfigurationException {
+
+        StatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
+        UnknownRequestProcessor unknownRequestImapProcessor = new UnknownRequestProcessor(statusResponseFactory);
+
+        return DefaultProcessor.createDefaultProcessor(unknownRequestImapProcessor, mailboxManager,
+            eventBus, subscriptionManager, statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver,
+            MailboxCounterCorrector.DEFAULT, metricFactory,
+            localCacheConfiguration, defaultSaslMechanisms(serverConfiguration), saslAuthenticator);
+    }
+
+    private static ImmutableList<SaslMechanism> defaultSaslMechanisms(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
+        ImmutableList<SaslMechanismFactory> factories = BuiltInSaslMechanismFactories.enabledForServer(
+            ImmutableList.of(
+                new PlainSaslMechanismFactory(),
+                new OauthBearerSaslMechanismFactory(),
+                new XOauth2SaslMechanismFactory()),
+            serverConfiguration);
+
+        try {
+            return factories.stream()
+                .map(Throwing.function(factory -> factory.create(serverConfiguration)))
+                .collect(ImmutableList.toImmutableList());
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof ConfigurationException configurationException) {
+                throw configurationException;
+            }
+            throw e;
+        }
     }
 
 }

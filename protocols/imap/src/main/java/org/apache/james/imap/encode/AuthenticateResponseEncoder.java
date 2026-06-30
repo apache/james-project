@@ -30,6 +30,10 @@ public class AuthenticateResponseEncoder implements ImapResponseEncoder<Authenti
 
     @Override
     public void encode(AuthenticateResponse message, ImapResponseComposer composer) throws IOException {
-        composer.continuationResponse();
+        if (message.getResponse().filter(response -> !response.isEmpty()).isPresent()) {
+            composer.continuationResponse(message.getResponse().get());
+        } else {
+            composer.continuationResponse();
+        }
     }
 }

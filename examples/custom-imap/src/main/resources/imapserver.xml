@@ -36,6 +36,13 @@ under the License.
         <customProperties>pong.response=customImapParameter</customProperties>
         <customProperties>prop.b=anotherValue</customProperties>
         <gracefulShutdown>false</gracefulShutdown>
+        <auth>
+            <saslMechanisms>PlainSaslMechanismFactory,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanismFactory</saslMechanisms>
+            <exampleToken>
+                <expectedToken>secret-token</expectedToken>
+                <authorizedUser>bob@domain.tld</authorizedUser>
+            </exampleToken>
+        </auth>
         <imapPackages>org.apache.james.modules.protocols.DefaultImapPackage</imapPackages>
         <imapPackages>org.apache.james.examples.imap.PingImapPackages</imapPackages>
     </imapserver>
@@ -55,6 +62,13 @@ under the License.
         <customProperties>pong.response=bad</customProperties>
         <customProperties>prop.b=baad</customProperties>
         <gracefulShutdown>false</gracefulShutdown>
+        <auth>
+            <saslMechanisms>PlainSaslMechanismFactory,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanismFactory</saslMechanisms>
+            <exampleToken>
+                <expectedToken>secret-token</expectedToken>
+                <authorizedUser>bob@domain.tld</authorizedUser>
+            </exampleToken>
+        </auth>
         <imapPackages>org.apache.james.modules.protocols.DefaultImapPackage</imapPackages>
         <imapPackages>org.apache.james.examples.imap.PingImapPackages</imapPackages>
     </imapserver>

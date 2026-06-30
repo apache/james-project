@@ -92,6 +92,10 @@
             <artifactId>protocols-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-sasl</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.beetstra.jutf7</groupId>
             <artifactId>jutf7</artifactId>
         </dependency>

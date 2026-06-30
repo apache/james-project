@@ -19,7 +19,6 @@
 package org.apache.james.imapserver.netty;
 
 import static org.apache.james.imap.api.process.ImapSession.MDC_KEY;
-import static org.apache.james.imapserver.netty.IMAPServer.AuthenticationConfiguration;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -88,7 +87,6 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         private boolean compress;
         private ImapProcessor processor;
         private ImapEncoder encoder;
-        private IMAPServer.AuthenticationConfiguration authenticationConfiguration;
         private ImapMetrics imapMetrics;
         private boolean ignoreIDLEUponProcessing;
         private Duration heartbeatInterval;
@@ -127,11 +125,6 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             return this;
         }
 
-        public ImapChannelUpstreamHandlerBuilder authenticationConfiguration(IMAPServer.AuthenticationConfiguration authenticationConfiguration) {
-            this.authenticationConfiguration = authenticationConfiguration;
-            return this;
-        }
-
         public ImapChannelUpstreamHandlerBuilder connectionChecks(Set<ConnectionCheck> connectionChecks) {
             this.connectionChecks = connectionChecks;
             return this;
@@ -163,7 +156,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         }
 
         public ImapChannelUpstreamHandler build() {
-            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration, ignoreIDLEUponProcessing, (int) heartbeatInterval.toSeconds(), reactiveThrottler, connectionChecks, proxyRequired, imapChannelGroup);
+            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, ignoreIDLEUponProcessing, (int) heartbeatInterval.toSeconds(), reactiveThrottler, connectionChecks, proxyRequired, imapChannelGroup);
         }
     }
 
@@ -182,7 +175,6 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     private final ImapProcessor processor;
     private final ImapEncoder encoder;
     private final ImapHeartbeatHandler heartbeatHandler;
-    private final AuthenticationConfiguration authenticationConfiguration;
     private final Metric imapConnectionsMetric;
     private final Metric imapCommandsMetric;
     private final boolean ignoreIDLEUponProcessing;
@@ -192,15 +184,13 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     private final ChannelGroup imapChannelGroup;
 
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
-                                      Encryption secure, ImapMetrics imapMetrics, AuthenticationConfiguration authenticationConfiguration,
-                                      boolean ignoreIDLEUponProcessing, int heartbeatIntervalSeconds, ReactiveThrottler reactiveThrottler,
+                                      Encryption secure, ImapMetrics imapMetrics, boolean ignoreIDLEUponProcessing, int heartbeatIntervalSeconds, ReactiveThrottler reactiveThrottler,
                                       Set<ConnectionCheck> connectionChecks, boolean proxyRequired, ChannelGroup imapChannelGroup) {
         this.hello = hello;
         this.processor = processor;
         this.encoder = encoder;
         this.secure = secure;
         this.compress = compress;
-        this.authenticationConfiguration = authenticationConfiguration;
         this.imapConnectionsMetric = imapMetrics.getConnectionsMetric();
         this.imapCommandsMetric = imapMetrics.getCommandsMetric();
         this.ignoreIDLEUponProcessing = ignoreIDLEUponProcessing;
@@ -215,9 +205,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     public void channelActive(ChannelHandlerContext ctx) {
         imapChannelGroup.add(ctx.channel());
         SessionId sessionId = SessionId.generate();
-        ImapSession imapsession = new NettyImapSession(ctx.channel(), secure, compress, authenticationConfiguration.isSSLRequired(),
-            authenticationConfiguration.isPlainAuthEnabled(), sessionId,
-            authenticationConfiguration.getOidcSASLConfiguration());
+        ImapSession imapsession = new NettyImapSession(ctx.channel(), secure, compress, sessionId);
         ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).set(imapsession);
         ctx.channel().attr(REQUEST_COUNTER).set(new AtomicLong());
         ctx.channel().attr(LINEARIZER_ATTRIBUTE_KEY).set(new ImapLinerarizer());
