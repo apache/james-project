@@ -135,11 +135,8 @@ public class AuthCmdHandler
             return doUnknownAuth(authType);
         }
 
-        SaslMechanism mechanism = maybeMechanism.get();
-        SaslExchange exchange;
         try {
-            SaslInitialRequest request = SASL_BRIDGE.initialRequest(authType, initialResponse);
-            exchange = startExchange(mechanism, request);
+            SaslExchange exchange = startExchange(maybeMechanism.get(), SASL_BRIDGE.initialRequest(authType, initialResponse));
             return handleFirstSaslStep(session, authType, exchange);
         } catch (IllegalArgumentException e) {
             LOGGER.info("Could not decode parameters for AUTH {}", authType, e);
@@ -150,38 +147,39 @@ public class AuthCmdHandler
     private Response handleFirstSaslStep(SMTPSession session, String authType, SaslExchange exchange) {
         try {
             SaslStep step = exchange.firstStep();
-            return handleSaslStep(session, authType, exchange, step);
+            if (step instanceof SaslStep.Challenge challenge) {
+                session.pushLineHandler(saslLineHandler(authType, exchange));
+                return SASL_BRIDGE.challenge(challenge);
+            }
+            return handleTerminalSaslStep(session, authType, exchange, step, () -> {
+            });
         } catch (RuntimeException e) {
             SASL_BRIDGE.close(exchange);
             throw e;
         }
     }
 
-    private Response handleSaslStep(SMTPSession session, String authType, SaslExchange exchange, SaslStep step) {
+    private Response handleTerminalSaslStep(SMTPSession session, String authType, SaslExchange exchange, SaslStep step, Runnable terminalStepAction) {
         return switch (step) {
-            case SaslStep.Challenge challenge -> {
-                session.pushLineHandler(saslLineHandler(authType, exchange));
-                yield SASL_BRIDGE.challenge(challenge);
+            case SaslStep.Challenge ignored -> throw new IllegalStateException("Challenge SASL step is not terminal");
+            case SaslStep.Success success -> {
+                terminalStepAction.run();
+                yield handleSaslSuccess(session, authType, exchange, success);
             }
-            case SaslStep.Success success -> handleSaslSuccess(session, authType, exchange, success);
-            case SaslStep.Failure failure -> handleSaslFailure(session, authType, exchange, failure.failure());
+            case SaslStep.Failure failure -> {
+                terminalStepAction.run();
+                yield handleSaslFailure(session, authType, exchange, failure.failure());
+            }
         };
     }
 
     private Response handleSaslContinuation(SMTPSession session, String authType, SaslExchange exchange, String line) {
         try {
             SaslStep step = SASL_BRIDGE.onClientResponse(exchange, line.getBytes(session.getCharset()));
-            return switch (step) {
-                case SaslStep.Challenge challenge -> SASL_BRIDGE.challenge(challenge);
-                case SaslStep.Success success -> {
-                    session.popLineHandler();
-                    yield handleSaslSuccess(session, authType, exchange, success);
-                }
-                case SaslStep.Failure failure -> {
-                    session.popLineHandler();
-                    yield handleSaslFailure(session, authType, exchange, failure.failure());
-                }
-            };
+            if (step instanceof SaslStep.Challenge challenge) {
+                return SASL_BRIDGE.challenge(challenge);
+            }
+            return handleTerminalSaslStep(session, authType, exchange, step, session::popLineHandler);
         } catch (IllegalArgumentException e) {
             LOGGER.info("Could not decode parameters for AUTH {}", authType, e);
             session.popLineHandler();
