@@ -23,11 +23,6 @@ import java.util.Optional;
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.jwt.OidcJwtTokenVerifier;
-import org.apache.james.jwt.OidcSASLConfiguration;
-import org.apache.james.mailbox.Authorizator;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.protocols.api.OIDCSASLParser;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -38,19 +33,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This Auth hook can be used to authenticate against the james user repository
+ * Legacy SMTP AuthHook backed by the James users repository.
+ *
+ * @deprecated Default SMTP authentication is now handled by PLAIN SASL and {@code SaslAuthenticator}.
  */
+@Deprecated
 public class UsersRepositoryAuthHook implements AuthHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(UsersRepositoryAuthHook.class);
 
     private final UsersRepository users;
-    private final Authorizator authorizator;
 
     @Inject
-    public UsersRepositoryAuthHook(UsersRepository users,
-                                   Authorizator authorizator) {
+    public UsersRepositoryAuthHook(UsersRepository users) {
         this.users = users;
-        this.authorizator = authorizator;
     }
 
     @Override
@@ -69,47 +64,5 @@ public class UsersRepositoryAuthHook implements AuthHook {
             LOGGER.info("Unable to access UsersRepository", e);
         }
         return HookResult.DECLINED;
-    }
-
-    @Override
-    public HookResult doSasl(SMTPSession session, OidcSASLConfiguration configuration, String initialResponse) {
-        return OIDCSASLParser.parse(initialResponse)
-            .flatMap(oidcInitialResponseValue -> new OidcJwtTokenVerifier(configuration).validateToken(oidcInitialResponseValue.getToken())
-                .map(authenticatedUser -> {
-                    Username associatedUser = Username.of(oidcInitialResponseValue.getAssociatedUser());
-                    if (!associatedUser.equals(authenticatedUser)) {
-                        return doAuthWithDelegation(session, authenticatedUser, associatedUser);
-                    } else {
-                        return saslSuccess(session, authenticatedUser);
-                    }
-                })
-            )
-            .orElse(HookResult.DECLINED);
-    }
-
-    private HookResult doAuthWithDelegation(SMTPSession session, Username authenticatedUser, Username associatedUser) {
-        try {
-            if (Authorizator.AuthorizationState.ALLOWED.equals(authorizator.user(authenticatedUser).canLoginAs(associatedUser))) {
-                return saslSuccess(session, associatedUser);
-            }
-        } catch (MailboxException e) {
-            LOGGER.info("Unable to authorization", e);
-        }
-        return HookResult.DECLINED;
-    }
-
-    private HookResult saslSuccess(SMTPSession session, Username username) {
-        try {
-            users.assertValid(username);
-            session.setUsername(username);
-            session.setRelayingAllowed(true);
-            return HookResult.builder()
-                .hookReturnCode(HookReturnCode.ok())
-                .smtpDescription("Authentication successful.")
-                .build();
-        } catch (UsersRepositoryException e) {
-            LOGGER.warn("Invalid username", e);
-            return HookResult.DECLINED;
-        }
     }
 }

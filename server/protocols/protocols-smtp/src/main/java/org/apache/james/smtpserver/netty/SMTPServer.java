@@ -24,9 +24,7 @@ import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounc
 import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounceMode.NEVER;
 
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.net.SocketAddress;
-import java.net.URISyntaxException;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -44,9 +42,10 @@ import org.apache.james.core.Disconnector;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
-import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolTransport;
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
@@ -55,6 +54,7 @@ import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler;
 import org.apache.james.smtpserver.CoreCmdHandlerLoader;
 import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.jmx.JMXHandlersLoader;
@@ -62,6 +62,7 @@ import org.apache.james.util.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -110,30 +111,15 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         }
     }
 
-    public static class AuthenticationConfiguration {
-        private static final String OIDC_PATH = "auth.oidc";
+    public static class AuthAnnouncementConfiguration {
+        public static final boolean REQUIRE_SSL_DEFAULT = false;
 
-        public static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
-            return new AuthenticationConfiguration(
+        public static AuthAnnouncementConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
+            return new AuthAnnouncementConfiguration(
                 Optional.ofNullable(configuration.getString("auth.announce", null))
                     .map(AuthenticationAnnounceMode::parse)
                     .orElseGet(() -> fallbackAuthenticationAnnounceMode(configuration)),
-                configuration.getBoolean("auth.requireSSL", false),
-                configuration.getBoolean("auth.plainAuthEnabled", true),
-                parseSASLConfiguration(configuration));
-        }
-
-        private static Optional<OidcSASLConfiguration> parseSASLConfiguration(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
-            boolean haveOidcProperties = configuration.getKeys(OIDC_PATH).hasNext();
-            if (haveOidcProperties) {
-                try {
-                    return Optional.of(OidcSASLConfiguration.parse(configuration.configurationAt(OIDC_PATH)));
-                } catch (MalformedURLException | URISyntaxException exception) {
-                   throw new ConfigurationException("Failed to retrieve oauth component", exception);
-                }
-            } else {
-                return Optional.empty();
-            }
+                configuration.getBoolean("auth.requireSSL", REQUIRE_SSL_DEFAULT));
         }
 
         private static AuthenticationAnnounceMode fallbackAuthenticationAnnounceMode(HierarchicalConfiguration<ImmutableNode> configuration) {
@@ -142,37 +128,22 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
         private final AuthenticationAnnounceMode authenticationAnnounceMode;
         private final boolean requireSSL;
-        private final boolean plainAuthEnabled;
-        private final Optional<OidcSASLConfiguration> saslConfiguration;
 
-        public AuthenticationConfiguration(AuthenticationAnnounceMode authenticationAnnounceMode, boolean requireSSL, boolean plainAuthEnabled, Optional<OidcSASLConfiguration> saslConfiguration) {
+        public AuthAnnouncementConfiguration(AuthenticationAnnounceMode authenticationAnnounceMode, boolean requireSSL) {
             this.authenticationAnnounceMode = authenticationAnnounceMode;
             this.requireSSL = requireSSL;
-            this.plainAuthEnabled = plainAuthEnabled;
-            this.saslConfiguration = saslConfiguration;
         }
 
         public AuthenticationAnnounceMode getAuthenticationAnnounceMode() {
             return authenticationAnnounceMode;
         }
 
-        public boolean isRequireSSL() {
-            return requireSSL;
-        }
-
-        public boolean isPlainAuthEnabled() {
-            return plainAuthEnabled;
-        }
-
-        public Optional<OidcSASLConfiguration> getSaslConfiguration() {
-            return saslConfiguration;
-        }
     }
 
     /**
      * Whether authentication is required to use this SMTP server.
      */
-    private AuthenticationConfiguration authenticationConfiguration;
+    private AuthAnnouncementConfiguration authAnnouncementConfiguration;
     
     /**
      * Whether the server needs helo to be send first
@@ -203,6 +174,8 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     private final SmtpMetrics smtpMetrics;
     private final DefaultChannelGroup smtpChannelGroup;
     private Set<String> disabledFeatures = ImmutableSet.of();
+    private ImmutableList<SaslMechanism> saslMechanisms = ImmutableList.of();
+    private Optional<SaslAuthenticator> saslAuthenticator = Optional.empty();
 
     private boolean addressBracketsEnforcement = true;
 
@@ -216,6 +189,14 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         this.smtpChannelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     }
 
+    public void setSaslMechanisms(ImmutableList<SaslMechanism> saslMechanisms) {
+        this.saslMechanisms = saslMechanisms;
+    }
+
+    public void setSaslAuthenticator(Optional<SaslAuthenticator> saslAuthenticator) {
+        this.saslAuthenticator = saslAuthenticator;
+    }
+
     @Inject
     public void setDnsService(DNSService dns) {
         this.dns = dns;
@@ -224,6 +205,9 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     @Override
     protected void preInit() throws Exception {
         super.preInit();
+        saslAuthenticator.ifPresent(authenticator -> getProtocolHandlerChain()
+            .getHandlers(AuthCmdHandler.class)
+            .forEach(handler -> handler.configureSaslMechanisms(saslMechanisms, authenticator)));
         if (authorizedAddresses != null) {
             java.util.StringTokenizer st = new java.util.StringTokenizer(authorizedAddresses, ", ", false);
             java.util.Collection<String> networks = new java.util.ArrayList<>();
@@ -246,7 +230,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     public void doConfigure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         if (isEnabled()) {
-            authenticationConfiguration = AuthenticationConfiguration.parse(configuration);
+            authAnnouncementConfiguration = AuthAnnouncementConfiguration.parse(configuration);
 
             authorizedAddresses = configuration.getString("authorizedAddresses", null);
 
@@ -322,19 +306,15 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             return SMTPServer.this.addressBracketsEnforcement;
         }
 
-        public boolean isPlainAuthEnabled() {
-            return authenticationConfiguration.isPlainAuthEnabled();
-        }
-
         @Override
         public boolean isAuthAnnounced(String remoteIP, boolean tlsStarted) {
-            if (authenticationConfiguration.requireSSL && !tlsStarted) {
+            if (authAnnouncementConfiguration.requireSSL && !tlsStarted) {
                 return false;
             }
-            if (authenticationConfiguration.getAuthenticationAnnounceMode() == ALWAYS) {
+            if (authAnnouncementConfiguration.getAuthenticationAnnounceMode() == ALWAYS) {
                 return true;
             }
-            if (authenticationConfiguration.getAuthenticationAnnounceMode() == NEVER) {
+            if (authAnnouncementConfiguration.getAuthenticationAnnounceMode() == NEVER) {
                 return false;
             }
             return Optional.ofNullable(authorizedNetworks)
@@ -354,11 +334,6 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         @Override
         public String getSoftwareName() {
             return "JAMES SMTP Server ";
-        }
-
-        @Override
-        public Optional<OidcSASLConfiguration> saslConfiguration() {
-            return authenticationConfiguration.getSaslConfiguration();
         }
 
         @Override
@@ -428,7 +403,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     }
 
     public AuthenticationAnnounceMode getAuthRequired() {
-        return authenticationConfiguration.getAuthenticationAnnounceMode();
+        return authAnnouncementConfiguration.getAuthenticationAnnounceMode();
     }
 
     @Override

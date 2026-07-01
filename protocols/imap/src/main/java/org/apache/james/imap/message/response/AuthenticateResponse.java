@@ -19,8 +19,22 @@
 
 package org.apache.james.imap.message.response;
 
+import java.util.Optional;
+
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
-public class AuthenticateResponse implements ImapResponseMessage{
+public class AuthenticateResponse implements ImapResponseMessage {
+    private final Optional<String> response;
 
+    public AuthenticateResponse() {
+        this.response = Optional.empty();
+    }
+
+    public AuthenticateResponse(String response) {
+        this.response = Optional.of(response);
+    }
+
+    public Optional<String> getResponse() {
+        return response;
+    }
 }

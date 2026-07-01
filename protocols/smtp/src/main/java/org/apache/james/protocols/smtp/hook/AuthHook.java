@@ -23,8 +23,12 @@ import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 
 /**
- * Implement this interfaces to hook in the AUTH Command
+ * Legacy SMTP authentication hook.
+ *
+ * @deprecated Implement {@code SaslMechanismFactory} for authentication, or {@link SaslAuthResultHook}
+ * for post-authentication side effects.
  */
+@Deprecated
 public interface AuthHook extends Hook {
 
     /**
@@ -37,7 +41,9 @@ public interface AuthHook extends Hook {
      */
     HookResult doAuth(SMTPSession session, Username username, String password);
 
-    HookResult doSasl(SMTPSession session, OidcSASLConfiguration saslConfiguration, String initialResponse);
+    default HookResult doSasl(SMTPSession session, OidcSASLConfiguration saslConfiguration, String initialResponse) {
+        return HookResult.DECLINED;
+    }
 
     default HookResult doDelegation(SMTPSession session, Username target) {
         return HookResult.DECLINED;

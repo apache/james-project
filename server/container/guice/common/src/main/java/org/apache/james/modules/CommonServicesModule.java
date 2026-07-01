@@ -49,7 +49,7 @@ public class CommonServicesModule extends AbstractModule {
         this.fileSystem = new FileSystemImpl(configuration.directories());
 
     }
-    
+
     @Override
     protected void configure() {
         install(new ExtensionModule());

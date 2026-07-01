@@ -142,6 +142,10 @@
             <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-netty</artifactId>
         </dependency>
+        <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-sasl</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>${james.protocols.groupId}</groupId>

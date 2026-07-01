@@ -5,7 +5,8 @@ enqueued in the MailQueue, and before any mail processing takes place.
 
 The following interfaces allows interacting with the following commands:
 
- * *AuthHook*: Implement this interfaces to hook in the AUTH Command.
+ * *AuthHook*: Legacy hook for the AUTH Command. Prefer implementing a SASL mechanism factory for new authentication
+   logic, or a `SaslAuthResultHook` when only post-authentication side effects are needed.
 
 ....
     HookResult doAuth(SMTPSession session, Username username, String password);
@@ -51,6 +52,9 @@ The following interfaces allows interacting with the following commands:
 == Custom hook registration
 
 Register you hooks using xref:{pages-path}/configure/smtp.adoc[*smtpserver.xml*] handlerchain property.
+
+For AUTH, `AuthHook` is deprecated. Existing handler-chain password hooks remain supported through the SMTP SASL
+adapter while keeping `AuthCmdHandler` on the SASL exchange path.
 
 == Writing additional SMTP commands
 

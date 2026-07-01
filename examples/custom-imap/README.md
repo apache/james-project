@@ -14,6 +14,26 @@ Sample configure file: [imapserver.xml](./sample-configuration/imapserver.xml)
 Note that when `imapPackages` is not provided, James will implicit use
 `org.apache.James.modules.protocols.DefaultImapPackage`
 
+# Creating your own IMAP SASL mechanisms
+
+This example also demonstrates how to add a custom IMAP SASL mechanism.
+The `EXAMPLE-TOKEN` mechanism is declared through `auth.saslMechanisms`,
+while `auth.exampleToken` is a custom configuration block owned by the extension:
+
+```xml
+<auth>
+    <saslMechanisms>PlainSaslMechanismFactory,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanismFactory</saslMechanisms>
+    <exampleToken>
+        <expectedToken>secret-token</expectedToken>
+        <authorizedUser>bob@domain.tld</authorizedUser>
+    </exampleToken>
+</auth>
+```
+
+`auth.saslMechanisms` lists SASL mechanism factory classes. Built-in factories
+can use simple names, while custom factories use their fully qualified class name.
+The factory reads that server's `auth.exampleToken` block.
+
 ## Running the example
 
 Build the project:
@@ -56,4 +76,59 @@ a02 OK LOGIN completed.
 A03 PING
 * PONG
 A03 OK PING completed.
+A04 LOGOUT
+```
+
+Test the custom SASL mechanism:
+
+```bash
+telnet localhost 143
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+* OK JAMES IMAP4rev1 Server james.local is ready.
+A01 CAPABILITY
+* CAPABILITY IMAP4rev1 AUTH=PLAIN SASL-IR AUTH=EXAMPLE-TOKEN PING
+A01 OK CAPABILITY completed.
+A02 AUTHENTICATE EXAMPLE-TOKEN c2VjcmV0LXRva2Vu
+A02 OK AUTHENTICATE completed.
+A03 PING
+* PONG
+A03 OK PING completed.
+```
+
+The custom SASL mechanism also supports a continuation when the client does not send
+the initial response in the `AUTHENTICATE` command. The continuation payload is
+base64-encoded by IMAP, so `R28gYWhlYWQ` decodes to `Go ahead`:
+
+```bash
+telnet localhost 143
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+* OK JAMES IMAP4rev1 Server james.local is ready.
+A01 AUTHENTICATE EXAMPLE-TOKEN
++ R28gYWhlYWQ
+c2VjcmV0LXRva2Vu
+A01 OK AUTHENTICATE completed.
+A02 PING
+* PONG
+A02 OK PING completed.
+```
+
+The mechanism can also return final server data on success. The client acknowledges
+that final data with an empty line before James sends the tagged `OK`:
+
+```bash
+telnet localhost 143
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+* OK JAMES IMAP4rev1 Server james.local is ready.
+A01 AUTHENTICATE EXAMPLE-TOKEN
++ R28gYWhlYWQ
+c2VjcmV0LXRva2VuOnNlcnZlci1kYXRh
++ VG9rZW4gYWNjZXB0ZWQ=
+
+A01 OK AUTHENTICATE completed.
 ```

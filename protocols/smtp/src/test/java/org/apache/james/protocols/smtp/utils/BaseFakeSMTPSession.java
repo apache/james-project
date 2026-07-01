@@ -70,11 +70,6 @@ public class BaseFakeSMTPSession implements SMTPSession {
     }
 
     @Override
-    public boolean supportsOAuth() {
-        return false;
-    }
-
-    @Override
     public String getSessionID() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }

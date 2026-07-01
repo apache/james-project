@@ -160,6 +160,7 @@ public class SMTPServerTest {
     }
 
     protected void initSMTPServer(SMTPTestConfiguration testConfiguration) throws Exception {
+        testSystem.configureSaslMechanisms(testConfiguration);
         testSystem.smtpServer.configure(testConfiguration);
         testSystem.smtpServer.init();
     }
@@ -1363,8 +1364,10 @@ public class SMTPServerTest {
 
         smtpProtocol.sendCommand("AUTH PLAIN");
         smtpProtocol.sendCommand("canNotDecode");
+        // RFC 4954 distinguishes malformed AUTH exchange data from invalid credentials:
+        // this payload has no valid PLAIN separators, so 501 is more accurate than 535.
         assertThat(smtpProtocol.getReplyString())
-            .contains("535 Authentication Failed");
+            .contains("501 Could not decode parameters for AUTH PLAIN");
     }
 
     @Test

@@ -18,12 +18,9 @@
  ****************************************************************/
 package org.apache.james.lmtpserver.netty;
 
-import java.util.Optional;
-
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.lmtpserver.CoreCmdHandlerLoader;
 import org.apache.james.lmtpserver.jmx.JMXHandlersLoader;
 import org.apache.james.protocols.api.ProtocolSession;
@@ -120,16 +117,6 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
 
         public String getSMTPGreeting() {
             return LMTPServer.this.lmtpGreeting;
-        }
-
-        @Override
-        public boolean isPlainAuthEnabled() {
-            return false;
-        }
-
-        @Override
-        public Optional<OidcSASLConfiguration> saslConfiguration() {
-            return Optional.empty();
         }
     }
 
