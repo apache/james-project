@@ -28,6 +28,8 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.jmap.JMAPModule;
+import org.apache.james.jmap.oidc.JMAPOidcConfiguration;
+import org.apache.james.jmap.oidc.redis.OidcTokenCacheModuleChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.queue.rabbitmq.MailQueueViewChoice;
 import org.apache.james.server.core.JamesServerResourceLoader;
@@ -51,6 +53,8 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<VaultConfiguration> vaultConfiguration;
         private Optional<Boolean> jmapEnabled;
+        private Optional<Boolean> jmapOidcEnabled;
+        private Optional<OidcTokenCacheModuleChooser.Implementation> oidcTokenCacheImplementation;
         private Optional<Boolean> quotaCompatibilityMode;
         private Optional<Boolean> dropListsEnabled;
 
@@ -64,6 +68,8 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             mailQueueChoice = Optional.empty();
             vaultConfiguration = Optional.empty();
             jmapEnabled = Optional.empty();
+            jmapOidcEnabled = Optional.empty();
+            oidcTokenCacheImplementation = Optional.empty();
             quotaCompatibilityMode = Optional.empty();
             dropListsEnabled = Optional.empty();
         }
@@ -131,6 +137,16 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder enableJMAPOidc() {
+            this.jmapOidcEnabled = Optional.of(true);
+            return this;
+        }
+
+        public Builder oidcTokenCacheImplementation(OidcTokenCacheModuleChooser.Implementation oidcTokenCacheImplementation) {
+            this.oidcTokenCacheImplementation = Optional.of(oidcTokenCacheImplementation);
+            return this;
+        }
+
         public Builder quotaCompatibilityModeEnabled(boolean value) {
             this.quotaCompatibilityMode = Optional.of(value);
             return this;
@@ -187,6 +203,23 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                 }
             });
 
+            boolean jmapOidcEnabled = this.jmapOidcEnabled.orElseGet(() -> {
+                try {
+                    return JMAPOidcConfiguration.parseConfiguration(propertiesProvider).getOidcEnabled();
+                } catch (FileNotFoundException e) {
+                    return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            OidcTokenCacheModuleChooser.Implementation oidcTokenCacheImplementation = this.oidcTokenCacheImplementation.orElseGet(() -> {
+                if (jmapOidcEnabled) {
+                    return OidcTokenCacheModuleChooser.Implementation.from(propertiesProvider);
+                }
+                return OidcTokenCacheModuleChooser.Implementation.CAFFEINE;
+            });
+
             boolean quotaCompatibilityMode = this.quotaCompatibilityMode.orElseGet(() -> {
                 try {
                     return propertiesProvider.getConfiguration("cassandra").getBoolean("quota.compatibility.mode", false);
@@ -216,6 +249,8 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                 mailQueueChoice,
                 mailQueueViewChoice, vaultConfiguration,
                 jmapEnabled,
+                jmapOidcEnabled,
+                oidcTokenCacheImplementation,
                 quotaCompatibilityMode,
                 dropListsEnabled);
         }
@@ -234,6 +269,8 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
     private final MailQueueViewChoice mailQueueViewChoice;
     private final VaultConfiguration vaultConfiguration;
     private final boolean jmapEnabled;
+    private final boolean jmapOidcEnabled;
+    private final OidcTokenCacheModuleChooser.Implementation oidcTokenCacheImplementation;
     private final boolean quotaCompatibilityMode;
     private final boolean dropListsEnabled;
 
@@ -241,7 +278,9 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                                                BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration,
                                                UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, MailQueueChoice mailQueueChoice,
                                                MailQueueViewChoice mailQueueViewChoice, VaultConfiguration vaultConfiguration,
-                                               boolean jmapEnabled, boolean quotaCompatibilityMode, boolean dropListsEnabled) {
+                                               boolean jmapEnabled, boolean jmapOidcEnabled,
+                                               OidcTokenCacheModuleChooser.Implementation oidcTokenCacheImplementation,
+                                               boolean quotaCompatibilityMode, boolean dropListsEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.blobStoreConfiguration = blobStoreConfiguration;
@@ -251,6 +290,8 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         this.mailQueueViewChoice = mailQueueViewChoice;
         this.vaultConfiguration = vaultConfiguration;
         this.jmapEnabled = jmapEnabled;
+        this.jmapOidcEnabled = jmapOidcEnabled;
+        this.oidcTokenCacheImplementation = oidcTokenCacheImplementation;
         this.quotaCompatibilityMode = quotaCompatibilityMode;
         this.dropListsEnabled = dropListsEnabled;
     }
@@ -291,6 +332,14 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
 
     public boolean isJmapEnabled() {
         return jmapEnabled;
+    }
+
+    public boolean isJmapOidcEnabled() {
+        return jmapOidcEnabled;
+    }
+
+    public OidcTokenCacheModuleChooser.Implementation oidcTokenCacheImplementation() {
+        return oidcTokenCacheImplementation;
     }
 
     public boolean isQuotaCompatibilityMode() {

@@ -26,6 +26,8 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
 import org.apache.james.jmap.JMAPListenerModule;
 import org.apache.james.jmap.JMAPModule;
+import org.apache.james.jmap.oidc.JMAPOidcModule;
+import org.apache.james.jmap.oidc.redis.OidcTokenCacheModuleChooser;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -95,6 +97,7 @@ import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.modules.server.oidc.OidcBackchannelLogoutRoutesModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.CassandraRoutesModule;
 import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
@@ -216,6 +219,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .combineWith(chooseDeletedMessageVault(configuration.getVaultConfiguration()))
             .combineWith(chooseQuotaModule(configuration))
+            .combineWith(chooseJmapOidcModules(configuration))
             .overrideWith(chooseJmapModules(configuration))
             .overrideWith(chooseDropListsModule(configuration));
     }
@@ -252,6 +256,16 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         return binder -> {
 
         };
+    }
+
+    private static Module chooseJmapOidcModules(CassandraRabbitMQJamesConfiguration configuration) {
+        if (configuration.isJmapEnabled() && configuration.isJmapOidcEnabled()) {
+            return Modules.combine(
+                new JMAPOidcModule(),
+                OidcTokenCacheModuleChooser.chooseModules(configuration.oidcTokenCacheImplementation()),
+                new OidcBackchannelLogoutRoutesModule());
+        }
+        return Modules.EMPTY_MODULE;
     }
 
     private static Module chooseQuotaModule(CassandraRabbitMQJamesConfiguration configuration) {

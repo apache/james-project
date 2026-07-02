@@ -24,6 +24,8 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.jmap.JMAPListenerModule;
 import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionModule;
+import org.apache.james.jmap.oidc.CaffeineOidcTokenCacheModule;
+import org.apache.james.jmap.oidc.JMAPOidcModule;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
@@ -67,6 +69,7 @@ import org.apache.james.modules.server.UserIdentityModule;
 import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.modules.server.oidc.OidcBackchannelLogoutRoutesModule;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
@@ -175,6 +178,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
             .combineWith(new UsersRepositoryModuleChooser(new MemoryUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .combineWith(chooseJmapModule(configuration))
+            .combineWith(chooseJmapOidcModules(configuration))
             .combineWith(chooseDropListsModule(configuration));
     }
 
@@ -185,6 +189,16 @@ public class MemoryJamesServerMain implements JamesServerMain {
         return binder -> {
 
         };
+    }
+
+    private static Module chooseJmapOidcModules(MemoryJamesConfiguration configuration) {
+        if (configuration.isJmapEnabled() && configuration.isJmapOidcEnabled()) {
+            return Modules.combine(
+                new JMAPOidcModule(),
+                new CaffeineOidcTokenCacheModule(),
+                new OidcBackchannelLogoutRoutesModule());
+        }
+        return Modules.EMPTY_MODULE;
     }
 
     private static Module chooseDropListsModule(MemoryJamesConfiguration configuration) {
