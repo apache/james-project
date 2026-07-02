@@ -69,6 +69,30 @@ The implicit package name is `org.apache.james.jmap.http`. If you have a custom 
 If no authentication strategy is specified, JMAP RFC-8621 server will fallback to default strategies:
 `JWTAuthenticationStrategy`, `BasicAuthenticationStrategy`.
 
+| oidc.userInfo.url
+| Optional String. Configures the user info endpoint url for OIDC authentication. Example: `http://keycloak:8080/auth/realms/oidc/protocol/openid-connect/token/userinfo`. Mandatory if `OidcAuthenticationStrategy` is declared in `authentication.strategy.rfc8621`.
+
+| oidc.introspect.url
+| Optional String. Configures the introspection url for OIDC authentication. Example: `http://keycloak:8080/auth/realms/oidc/protocol/openid-connect/introspect`. Mandatory if `OidcAuthenticationStrategy` is declared in `authentication.strategy.rfc8621`.
+
+| oidc.introspect.credentials
+| Optional String. Configures the credentials for accessing the introspection endpoint for OIDC authentication. Example: `Bearer ewjiwelhwew`.
+
+| oidc.claim
+| Optional String. Configures the claim to get the username from for OIDC authentication. Example: `email`. Mandatory if `OidcAuthenticationStrategy` is declared in `authentication.strategy.rfc8621`.
+
+| oidc.audience
+| Optional List[String] with delimiter `,`. Configures a list of audiences for OIDC authentication. Example: `tmail,james`. Omitting this bypasses the audience check (not advised).
+
+| oidc.token.cache.expiration
+| Optional duration. Configures the OIDC token cache expiration time. Example: `300s`. Defaults to 5 minutes.
+
+| oidc.token.cache.maxSize
+| Optional positive integer. Configures the maximum number of OIDC tokens to cache in memory. Example: `10000`. Defaults to 10000 tokens.
+
+| oidc.token.cache.redis.command.timeout
+| Optional duration. Defaults to `3s`. Timeout for Redis commands when the Redis OIDC token cache is selected.
+
 | jmap.version.default
 | Optional string. Defaults to `rfc-8621`. Allowed values: rfc-8621
 Which version of the JMAP protocol should be served when none supplied in the Accept header.
@@ -124,6 +148,30 @@ all incoming and outgoing requests, outgoing requests. This will log also potent
 like authentication credentials.
 
 == OIDC set up
+
+James can authenticate JMAP RFC-8621 requests directly against an OIDC provider by enabling
+`OidcAuthenticationStrategy`:
+
+....
+authentication.strategy.rfc8621=OidcAuthenticationStrategy
+oidc.userInfo.url=https://oidc.example.com/protocol/openid-connect/userinfo
+oidc.introspect.url=https://oidc.example.com/protocol/openid-connect/token/introspect
+oidc.introspect.credentials=Basic base64(client_id:client_secret)
+oidc.claim=email
+oidc.audience=james
+....
+
+Clients pass the access token as a bearer token:
+
+....
+curl -H "Authorization: Bearer $token" -XPOST http://127.0.0.1:80/jmap -d '...'
+....
+
+OIDC token information is cached. The memory app uses an in-memory Caffeine cache.
+Postgres and distributed apps use the Redis cache when `redis.properties` is present, otherwise they use the in-memory cache.
+
+Backchannel logout is exposed as a WebAdmin route at `POST /add-revoked-token` and expects an `application/x-www-form-urlencoded`
+body containing the `logout_token` parameter. The token payload must contain the `sid` claim to invalidate related cached access tokens.
 
 The use of `XUserAuthenticationStrategy` allow delegating the authentication responsibility to a third party system,
 which could be used to set up authentication against an OIDC provider.
