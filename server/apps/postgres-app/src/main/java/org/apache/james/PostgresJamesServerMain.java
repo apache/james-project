@@ -29,6 +29,8 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
 import org.apache.james.jmap.JMAPListenerModule;
 import org.apache.james.jmap.JMAPModule;
+import org.apache.james.jmap.oidc.JMAPOidcModule;
+import org.apache.james.jmap.oidc.redis.OidcTokenCacheModuleChooser;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -91,6 +93,7 @@ import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.UserIdentityModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.modules.server.oidc.OidcBackchannelLogoutRoutesModule;
 import org.apache.james.modules.task.DistributedTaskManagerModule;
 import org.apache.james.modules.task.PostgresTaskExecutionDetailsProjectionGuiceModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
@@ -197,6 +200,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
             .combineWith(chooseBlobStoreModules(configuration))
             .combineWith(chooseDeletedMessageVaultModules(configuration.getDeletedMessageVaultConfiguration()))
             .combineWith(chooseRLSSupportPostgresMailboxModule(configuration))
+            .combineWith(chooseJmapOidcModules(configuration))
             .overrideWith(chooseJmapModules(configuration))
             .overrideWith(chooseTaskManagerModules(configuration))
             .overrideWith(chooseDropListsModule(configuration));
@@ -265,6 +269,16 @@ public class PostgresJamesServerMain implements JamesServerMain {
         }
         return binder -> {
         };
+    }
+
+    private static Module chooseJmapOidcModules(PostgresJamesConfiguration configuration) {
+        if (configuration.isJmapEnabled() && configuration.isJmapOidcEnabled()) {
+            return Modules.combine(
+                new JMAPOidcModule(),
+                OidcTokenCacheModuleChooser.chooseModules(configuration.oidcTokenCacheImplementation()),
+                new OidcBackchannelLogoutRoutesModule());
+        }
+        return Modules.EMPTY_MODULE;
     }
 
     private static Module chooseDropListsModule(PostgresJamesConfiguration configuration) {

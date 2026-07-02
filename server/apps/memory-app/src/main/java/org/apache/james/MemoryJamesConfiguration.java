@@ -28,6 +28,7 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.jmap.JMAPModule;
+import org.apache.james.jmap.oidc.JMAPOidcConfiguration;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.MissingArgumentException;
 import org.apache.james.server.core.configuration.Configuration;
@@ -41,6 +42,7 @@ public class MemoryJamesConfiguration implements Configuration {
         private Optional<ConfigurationPath> configurationPath;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<Boolean> jmapEnabled;
+        private Optional<Boolean> jmapOidcEnabled;
         private Optional<Boolean> dropListsEnabled;
 
         private Builder() {
@@ -48,6 +50,7 @@ public class MemoryJamesConfiguration implements Configuration {
             configurationPath = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
             jmapEnabled = Optional.empty();
+            jmapOidcEnabled = Optional.empty();
             dropListsEnabled = Optional.empty();
         }
 
@@ -89,6 +92,11 @@ public class MemoryJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder enableJMAPOidc() {
+            this.jmapOidcEnabled = Optional.of(true);
+            return this;
+        }
+
         public Builder enableDropLists() {
             this.dropListsEnabled = Optional.of(true);
             return this;
@@ -119,6 +127,17 @@ public class MemoryJamesConfiguration implements Configuration {
                 }
             });
 
+            boolean jmapOidcEnabled = this.jmapOidcEnabled.orElseGet(() -> {
+                PropertiesProvider propertiesProvider = new PropertiesProvider(fileSystem, configurationPath);
+                try {
+                    return JMAPOidcConfiguration.parseConfiguration(propertiesProvider).getOidcEnabled();
+                } catch (FileNotFoundException e) {
+                    return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
             boolean dropListsEnabled = this.dropListsEnabled.orElseGet(() -> {
                 PropertiesProvider propertiesProvider = new PropertiesProvider(fileSystem, configurationPath);
                 try {
@@ -134,7 +153,7 @@ public class MemoryJamesConfiguration implements Configuration {
             return new MemoryJamesConfiguration(
                 configurationPath,
                 directories,
-                usersRepositoryChoice, jmapEnabled, dropListsEnabled);
+                usersRepositoryChoice, jmapEnabled, jmapOidcEnabled, dropListsEnabled);
         }
     }
 
@@ -146,15 +165,17 @@ public class MemoryJamesConfiguration implements Configuration {
     private final JamesDirectoriesProvider directories;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
     private final boolean jmapEnabled;
+    private final boolean jmapOidcEnabled;
     private final boolean dropListsEnabled;
 
     public MemoryJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories,
                                     UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation,
-                                    boolean jmapEnabled, boolean dropListsEnabled) {
+                                    boolean jmapEnabled, boolean jmapOidcEnabled, boolean dropListsEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
         this.jmapEnabled = jmapEnabled;
+        this.jmapOidcEnabled = jmapOidcEnabled;
         this.dropListsEnabled = dropListsEnabled;
     }
 
@@ -174,6 +195,10 @@ public class MemoryJamesConfiguration implements Configuration {
 
     public boolean isJmapEnabled() {
         return jmapEnabled;
+    }
+
+    public boolean isJmapOidcEnabled() {
+        return jmapOidcEnabled;
     }
 
     public boolean isDropListsEnabled() {
