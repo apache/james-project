@@ -62,6 +62,7 @@
         <module>postgres-common</module>
         <module>protocols/imap</module>
         <module>protocols/jmap</module>
+        <module>protocols/jmap-redis</module>
         <module>protocols/lmtp</module>
         <module>protocols/managedsieve</module>
         <module>protocols/netty</module>
@@ -134,6 +135,11 @@
                 <artifactId>james-server-guice-jmap</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-jmap-redis</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
@@ -254,6 +260,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-webadmin-rabbitmq-mailqueue</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-jmap-redis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
