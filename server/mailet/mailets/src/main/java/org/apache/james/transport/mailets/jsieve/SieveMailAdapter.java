@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.jsieve;
 
+import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,6 +42,7 @@ import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.dom.field.ParseException;
 import org.apache.james.mime4j.field.address.DefaultAddressParser;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
+import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.InternetAddressException;
 import org.apache.jsieve.exception.SieveException;
@@ -381,13 +383,13 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
 
     @Override
     public boolean isInBodyText(List<String> phrasesCaseInsensitive) throws SieveMailException {
-        try {
+        try (InputStream messageStream = new MimeMessageInputStream(getMail().getMessage())) {
             return MessageMatcher.builder()
                 .contentTypes(Lists.newArrayList("text/plain"))
                 .includeHeaders(false)
                 .caseInsensitive(false)
                 .searchContents(ImmutableList.copyOf(phrasesCaseInsensitive)).build()
-                .messageMatches(getMail().getMessage().getInputStream());
+                .messageMatches(messageStream);
         } catch (Exception e) {
             throw new SieveMailException("Error searching in the mail content", e);
         }
@@ -409,13 +411,13 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
 
     @Override
     public boolean isInBodyContent(List<String> contentTypes, List<String> phrasesCaseInsensitive) throws SieveMailException {
-        try {
+        try (InputStream messageStream = new MimeMessageInputStream(getMail().getMessage())) {
             return MessageMatcher.builder()
                 .contentTypes(contentTypes)
                 .includeHeaders(false)
                 .caseInsensitive(false)
                 .searchContents(ImmutableList.copyOf(phrasesCaseInsensitive)).build()
-                .messageMatches(getMail().getMessage().getInputStream());
+                .messageMatches(messageStream);
         } catch (Exception e) {
             throw new SieveMailException("Error searching in the mail content", e);
         }
