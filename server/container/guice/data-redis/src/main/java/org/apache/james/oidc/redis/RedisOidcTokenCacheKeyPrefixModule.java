@@ -17,9 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.oidc.redis;
-
-import org.apache.james.oidc.redis.RedisOidcTokenCacheKeyPrefix;
+package org.apache.james.oidc.redis;
 
 import com.google.inject.AbstractModule;
 
