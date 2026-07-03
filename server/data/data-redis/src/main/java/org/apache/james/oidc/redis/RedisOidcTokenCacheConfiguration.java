@@ -17,18 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.oidc;
+package org.apache.james.oidc.redis;
 
-import org.apache.james.oidc.OidcTokenCache;
-import org.apache.james.oidc.memory.CaffeineOidcTokenCache;
+import java.time.Duration;
+import java.util.Optional;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.james.util.DurationParser;
 
-public class CaffeineOidcTokenCacheModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(OidcTokenCache.class).to(CaffeineOidcTokenCache.class)
-            .in(Scopes.SINGLETON);
+import com.google.common.base.Preconditions;
+
+public record RedisOidcTokenCacheConfiguration(Duration commandTimeout) {
+    public static final String COMMAND_TIMEOUT_PROPERTY = "oidc.token.cache.redis.command.timeout";
+    public static final Duration DEFAULT_COMMAND_TIMEOUT = Duration.ofSeconds(3);
+    public static final RedisOidcTokenCacheConfiguration DEFAULT = new RedisOidcTokenCacheConfiguration(DEFAULT_COMMAND_TIMEOUT);
+
+    public static RedisOidcTokenCacheConfiguration from(Configuration configuration) {
+        return new RedisOidcTokenCacheConfiguration(
+            Optional.ofNullable(configuration.getString(COMMAND_TIMEOUT_PROPERTY, null))
+                .map(DurationParser::parse)
+                .orElse(DEFAULT_COMMAND_TIMEOUT));
+    }
+
+    public RedisOidcTokenCacheConfiguration {
+        Preconditions.checkArgument(!commandTimeout.isZero() && !commandTimeout.isNegative(), "commandTimeout must be positive");
     }
 }

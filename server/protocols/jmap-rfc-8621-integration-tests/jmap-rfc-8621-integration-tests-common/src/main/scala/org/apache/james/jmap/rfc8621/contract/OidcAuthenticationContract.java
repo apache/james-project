@@ -43,10 +43,10 @@ import java.util.UUID;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.http.OidcAuthenticationStrategy;
-import org.apache.james.jmap.oidc.Aud;
 import org.apache.james.jmap.oidc.JMAPOidcConfiguration;
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags;
 import org.apache.james.jwt.introspection.IntrospectionEndpoint;
+import org.apache.james.oidc.Aud;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.jupiter.api.AfterEach;

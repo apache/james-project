@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.oidc.redis;
 
+import org.apache.james.oidc.redis.RedisOidcTokenCacheKeyPrefix;
+
 import com.google.inject.AbstractModule;
 
 public class RedisOidcTokenCacheKeyPrefixModule extends AbstractModule {

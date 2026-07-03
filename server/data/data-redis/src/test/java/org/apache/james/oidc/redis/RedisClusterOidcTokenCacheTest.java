@@ -17,18 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.oidc;
+package org.apache.james.oidc.redis;
 
-import org.apache.james.oidc.OidcTokenCache;
-import org.apache.james.oidc.memory.CaffeineOidcTokenCache;
+import org.apache.james.backends.redis.RedisClusterExtension;
+import org.apache.james.backends.redis.RedisConfiguration;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+public class RedisClusterOidcTokenCacheTest extends RedisOidcTokenCacheContract {
+    @RegisterExtension
+    static RedisClusterExtension redisClusterExtension = new RedisClusterExtension();
 
-public class CaffeineOidcTokenCacheModule extends AbstractModule {
+    private static RedisClusterExtension.RedisClusterContainer redisClusterContainer;
+
+    @BeforeAll
+    static void setUp(RedisClusterExtension.RedisClusterContainer container) {
+        redisClusterContainer = container;
+    }
+
+    @AfterEach
+    void tearDown() {
+        redisClusterContainer.unPauseOne();
+    }
+
     @Override
-    protected void configure() {
-        bind(OidcTokenCache.class).to(CaffeineOidcTokenCache.class)
-            .in(Scopes.SINGLETON);
+    public RedisConfiguration redisConfiguration() {
+        return redisClusterContainer.getRedisConfiguration();
+    }
+
+    @Override
+    public void pauseRedis() {
+        redisClusterContainer.pauseOne();
     }
 }

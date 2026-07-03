@@ -17,18 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.oidc;
+package org.apache.james.oidc.redis;
 
-import org.apache.james.oidc.OidcTokenCache;
-import org.apache.james.oidc.memory.CaffeineOidcTokenCache;
+import org.apache.james.backends.redis.RedisConfiguration;
+import org.apache.james.backends.redis.RedisExtension;
+import org.apache.james.backends.redis.StandaloneRedisConfiguration;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+public class RedisStandaloneOidcTokenCacheTest extends RedisOidcTokenCacheContract {
+    @RegisterExtension
+    static RedisExtension redisExtension = new RedisExtension();
 
-public class CaffeineOidcTokenCacheModule extends AbstractModule {
+    @AfterEach
+    void tearDown() {
+        if (redisExtension.dockerRedis().isPaused()) {
+            redisExtension.dockerRedis().unPause();
+        }
+    }
+
     @Override
-    protected void configure() {
-        bind(OidcTokenCache.class).to(CaffeineOidcTokenCache.class)
-            .in(Scopes.SINGLETON);
+    public RedisConfiguration redisConfiguration() {
+        return StandaloneRedisConfiguration.from(redisExtension.dockerRedis().redisURI().toString());
+    }
+
+    @Override
+    public void pauseRedis() {
+        redisExtension.dockerRedis().pause();
     }
 }

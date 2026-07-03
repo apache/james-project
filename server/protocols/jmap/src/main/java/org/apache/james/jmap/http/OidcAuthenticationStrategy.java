@@ -29,14 +29,14 @@ import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
-import org.apache.james.jmap.oidc.Aud;
-import org.apache.james.jmap.oidc.OidcTokenCache;
-import org.apache.james.jmap.oidc.Token;
-import org.apache.james.jmap.oidc.TokenInfo;
 import org.apache.james.jwt.introspection.TokenIntrospectionException;
 import org.apache.james.jwt.userinfo.UserInfoCheckException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
+import org.apache.james.oidc.Aud;
+import org.apache.james.oidc.OidcTokenCache;
+import org.apache.james.oidc.Token;
+import org.apache.james.oidc.TokenInfo;
 
 import com.google.common.collect.ImmutableMap;
 

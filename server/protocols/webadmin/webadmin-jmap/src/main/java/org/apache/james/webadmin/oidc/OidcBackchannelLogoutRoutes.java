@@ -27,8 +27,8 @@ import java.util.Optional;
 import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.james.jmap.oidc.OidcTokenCache;
-import org.apache.james.jmap.oidc.Sid;
+import org.apache.james.oidc.OidcTokenCache;
+import org.apache.james.oidc.Sid;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.PublicRoutes;
 import org.apache.james.webadmin.utils.JsonTransformer;

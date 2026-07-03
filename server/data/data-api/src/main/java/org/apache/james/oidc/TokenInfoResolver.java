@@ -17,18 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.oidc;
+package org.apache.james.oidc;
 
-import org.apache.james.oidc.OidcTokenCache;
-import org.apache.james.oidc.memory.CaffeineOidcTokenCache;
+import java.util.function.Function;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import reactor.core.publisher.Mono;
 
-public class CaffeineOidcTokenCacheModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(OidcTokenCache.class).to(CaffeineOidcTokenCache.class)
-            .in(Scopes.SINGLETON);
-    }
+public interface TokenInfoResolver extends Function<Token, Mono<TokenInfo>> {
 }
