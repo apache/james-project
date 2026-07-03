@@ -38,7 +38,7 @@ class MemoryOidcAuthenticationTest extends OidcAuthenticationContract {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .usersRepository(DEFAULT)
-            .enableJMAPOidc()
+            .enableJMAP()
             .build())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())

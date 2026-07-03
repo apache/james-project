@@ -93,7 +93,6 @@ import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.UserIdentityModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
-import org.apache.james.modules.server.oidc.OidcBackchannelLogoutRoutesModule;
 import org.apache.james.modules.task.DistributedTaskManagerModule;
 import org.apache.james.modules.task.PostgresTaskExecutionDetailsProjectionGuiceModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
@@ -200,7 +199,6 @@ public class PostgresJamesServerMain implements JamesServerMain {
             .combineWith(chooseBlobStoreModules(configuration))
             .combineWith(chooseDeletedMessageVaultModules(configuration.getDeletedMessageVaultConfiguration()))
             .combineWith(chooseRLSSupportPostgresMailboxModule(configuration))
-            .combineWith(chooseJmapOidcModules(configuration))
             .overrideWith(chooseJmapModules(configuration))
             .overrideWith(chooseTaskManagerModules(configuration))
             .overrideWith(chooseDropListsModule(configuration));
@@ -263,20 +261,14 @@ public class PostgresJamesServerMain implements JamesServerMain {
     private static Module chooseJmapModules(PostgresJamesConfiguration configuration) {
         if (configuration.isJmapEnabled()) {
             if (configuration.eventBusImpl() == RABBITMQ) {
-                return Modules.combine(new JMAPEventBusModule(), new JMAPListenerModule());
+                return Modules.combine(new JMAPEventBusModule(), new JMAPListenerModule(),
+                    new JMAPOidcModule(),
+                    OidcTokenCacheModuleChooser.chooseModules(configuration.oidcTokenCacheImplementation()));
             }
-            return new JMAPListenerModule();
-        }
-        return binder -> {
-        };
-    }
-
-    private static Module chooseJmapOidcModules(PostgresJamesConfiguration configuration) {
-        if (configuration.isJmapEnabled() && configuration.isJmapOidcEnabled()) {
             return Modules.combine(
+                new JMAPListenerModule(),
                 new JMAPOidcModule(),
-                OidcTokenCacheModuleChooser.chooseModules(configuration.oidcTokenCacheImplementation()),
-                new OidcBackchannelLogoutRoutesModule());
+                OidcTokenCacheModuleChooser.chooseModules(configuration.oidcTokenCacheImplementation()));
         }
         return Modules.EMPTY_MODULE;
     }

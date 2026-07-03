@@ -22,6 +22,8 @@ package org.apache.james.jmap.rfc8621.postgres;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.apache.james.jmap.oidc.redis.OidcTokenCacheModuleChooser.Implementation.REDIS;
 
+import java.util.Optional;
+
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.PostgresJamesConfiguration;
@@ -51,7 +53,7 @@ public class PostgresOidcAuthenticationTest extends OidcAuthenticationContract {
                 .disableCache()
                 .deduplication()
                 .noCryptoConfig())
-            .enableJMAPOidc()
+            .jmapEnabled(Optional.of(true))
             .oidcTokenCacheImplementation(REDIS)
             .build())
         .extension(PostgresExtension.empty())

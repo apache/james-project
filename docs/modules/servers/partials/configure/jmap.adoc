@@ -170,8 +170,15 @@ curl -H "Authorization: Bearer $token" -XPOST http://127.0.0.1:80/jmap -d '...'
 OIDC token information is cached. The memory app uses an in-memory Caffeine cache.
 Postgres and distributed apps use the Redis cache when `redis.properties` is present, otherwise they use the in-memory cache.
 
-Backchannel logout is exposed as a WebAdmin route at `POST /add-revoked-token` and expects an `application/x-www-form-urlencoded`
-body containing the `logout_token` parameter. The token payload must contain the `sid` claim to invalidate related cached access tokens.
+Backchannel logout is available as an optional WebAdmin extension route. To expose `POST /add-revoked-token`,
+add this route to `webadmin.properties` when `OidcAuthenticationStrategy` is enabled:
+
+....
+extensions.routes=org.apache.james.webadmin.oidc.OidcBackchannelLogoutRoutes
+....
+
+The route expects an `application/x-www-form-urlencoded` body containing the `logout_token` parameter.
+The token payload must contain the `sid` claim to invalidate related cached access tokens.
 
 The use of `XUserAuthenticationStrategy` allow delegating the authentication responsibility to a third party system,
 which could be used to set up authentication against an OIDC provider.

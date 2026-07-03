@@ -69,7 +69,6 @@ import org.apache.james.modules.server.UserIdentityModule;
 import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminServerModule;
-import org.apache.james.modules.server.oidc.OidcBackchannelLogoutRoutesModule;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
@@ -178,25 +177,15 @@ public class MemoryJamesServerMain implements JamesServerMain {
             .combineWith(new UsersRepositoryModuleChooser(new MemoryUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .combineWith(chooseJmapModule(configuration))
-            .combineWith(chooseJmapOidcModules(configuration))
             .combineWith(chooseDropListsModule(configuration));
     }
 
     private static Module chooseJmapModule(MemoryJamesConfiguration configuration) {
         if (configuration.isJmapEnabled()) {
-            return new JMAPListenerModule();
-        }
-        return binder -> {
-
-        };
-    }
-
-    private static Module chooseJmapOidcModules(MemoryJamesConfiguration configuration) {
-        if (configuration.isJmapEnabled() && configuration.isJmapOidcEnabled()) {
             return Modules.combine(
+                new JMAPListenerModule(),
                 new JMAPOidcModule(),
-                new CaffeineOidcTokenCacheModule(),
-                new OidcBackchannelLogoutRoutesModule());
+                new CaffeineOidcTokenCacheModule());
         }
         return Modules.EMPTY_MODULE;
     }

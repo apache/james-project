@@ -97,7 +97,6 @@ import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
-import org.apache.james.modules.server.oidc.OidcBackchannelLogoutRoutesModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.CassandraRoutesModule;
 import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
@@ -219,7 +218,6 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .combineWith(chooseDeletedMessageVault(configuration.getVaultConfiguration()))
             .combineWith(chooseQuotaModule(configuration))
-            .combineWith(chooseJmapOidcModules(configuration))
             .overrideWith(chooseJmapModules(configuration))
             .overrideWith(chooseDropListsModule(configuration));
     }
@@ -251,19 +249,9 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
 
     private static Module chooseJmapModules(CassandraRabbitMQJamesConfiguration configuration) {
         if (configuration.isJmapEnabled()) {
-            return Modules.combine(new JMAPEventBusModule(), new JMAPListenerModule());
-        }
-        return binder -> {
-
-        };
-    }
-
-    private static Module chooseJmapOidcModules(CassandraRabbitMQJamesConfiguration configuration) {
-        if (configuration.isJmapEnabled() && configuration.isJmapOidcEnabled()) {
-            return Modules.combine(
+            return Modules.combine(new JMAPEventBusModule(), new JMAPListenerModule(),
                 new JMAPOidcModule(),
-                OidcTokenCacheModuleChooser.chooseModules(configuration.oidcTokenCacheImplementation()),
-                new OidcBackchannelLogoutRoutesModule());
+                OidcTokenCacheModuleChooser.chooseModules(configuration.oidcTokenCacheImplementation()));
         }
         return Modules.EMPTY_MODULE;
     }
