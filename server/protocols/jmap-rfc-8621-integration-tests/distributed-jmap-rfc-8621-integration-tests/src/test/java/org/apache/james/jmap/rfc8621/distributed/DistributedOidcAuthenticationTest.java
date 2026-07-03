@@ -50,7 +50,7 @@ class DistributedOidcAuthenticationTest extends OidcAuthenticationContract {
                 .deduplication()
                 .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.openSearch())
-            .enableJMAPOidc()
+            .enableJMAP()
             .oidcTokenCacheImplementation(REDIS)
             .build())
         .extension(new DockerOpenSearchExtension())

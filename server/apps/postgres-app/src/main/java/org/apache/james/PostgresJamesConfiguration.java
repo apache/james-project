@@ -29,7 +29,6 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.jmap.JMAPModule;
-import org.apache.james.jmap.oidc.JMAPOidcConfiguration;
 import org.apache.james.jmap.oidc.redis.OidcTokenCacheModuleChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.server.core.JamesServerResourceLoader;
@@ -77,7 +76,6 @@ public class PostgresJamesConfiguration implements Configuration {
         private Optional<EventBusImpl> eventBusImpl;
         private Optional<VaultConfiguration> deletedMessageVaultConfiguration;
         private Optional<Boolean> jmapEnabled;
-        private Optional<Boolean> jmapOidcEnabled;
         private Optional<OidcTokenCacheModuleChooser.Implementation> oidcTokenCacheImplementation;
         private Optional<Boolean> dropListsEnabled;
         private Optional<Boolean> rlsEnabled;
@@ -91,7 +89,6 @@ public class PostgresJamesConfiguration implements Configuration {
             eventBusImpl = Optional.empty();
             deletedMessageVaultConfiguration = Optional.empty();
             jmapEnabled = Optional.empty();
-            jmapOidcEnabled = Optional.empty();
             oidcTokenCacheImplementation = Optional.empty();
             dropListsEnabled = Optional.empty();
             rlsEnabled = Optional.empty();
@@ -152,16 +149,6 @@ public class PostgresJamesConfiguration implements Configuration {
 
         public Builder jmapEnabled(Optional<Boolean> jmapEnabled) {
             this.jmapEnabled = jmapEnabled;
-            return this;
-        }
-
-        public Builder jmapOidcEnabled(Optional<Boolean> jmapOidcEnabled) {
-            this.jmapOidcEnabled = jmapOidcEnabled;
-            return this;
-        }
-
-        public Builder enableJMAPOidc() {
-            this.jmapOidcEnabled = Optional.of(true);
             return this;
         }
 
@@ -227,18 +214,8 @@ public class PostgresJamesConfiguration implements Configuration {
                 }
             });
 
-            boolean jmapOidcEnabled = this.jmapOidcEnabled.orElseGet(() -> {
-                try {
-                    return JMAPOidcConfiguration.parseConfiguration(propertiesProvider).getOidcEnabled();
-                } catch (FileNotFoundException e) {
-                    return false;
-                } catch (ConfigurationException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-
             OidcTokenCacheModuleChooser.Implementation oidcTokenCacheImplementation = this.oidcTokenCacheImplementation.orElseGet(() -> {
-                if (jmapOidcEnabled) {
+                if (jmapEnabled) {
                     return OidcTokenCacheModuleChooser.Implementation.from(propertiesProvider);
                 }
                 return OidcTokenCacheModuleChooser.Implementation.CAFFEINE;
@@ -262,7 +239,6 @@ public class PostgresJamesConfiguration implements Configuration {
                 eventBusImpl,
                 deletedMessageVaultConfiguration,
                 jmapEnabled,
-                jmapOidcEnabled,
                 oidcTokenCacheImplementation,
                 dropListsEnabled,
                 rlsEnabled);
@@ -291,7 +267,6 @@ public class PostgresJamesConfiguration implements Configuration {
     private final EventBusImpl eventBusImpl;
     private final VaultConfiguration deletedMessageVaultConfiguration;
     private final boolean jmapEnabled;
-    private final boolean jmapOidcEnabled;
     private final OidcTokenCacheModuleChooser.Implementation oidcTokenCacheImplementation;
     private final boolean dropListsEnabled;
     private final boolean rlsEnabled;
@@ -304,7 +279,6 @@ public class PostgresJamesConfiguration implements Configuration {
                                        EventBusImpl eventBusImpl,
                                        VaultConfiguration deletedMessageVaultConfiguration,
                                        boolean jmapEnabled,
-                                       boolean jmapOidcEnabled,
                                        OidcTokenCacheModuleChooser.Implementation oidcTokenCacheImplementation,
                                        boolean dropListsEnabled,
                                        boolean rlsEnabled) {
@@ -316,7 +290,6 @@ public class PostgresJamesConfiguration implements Configuration {
         this.eventBusImpl = eventBusImpl;
         this.deletedMessageVaultConfiguration = deletedMessageVaultConfiguration;
         this.jmapEnabled = jmapEnabled;
-        this.jmapOidcEnabled = jmapOidcEnabled;
         this.oidcTokenCacheImplementation = oidcTokenCacheImplementation;
         this.dropListsEnabled = dropListsEnabled;
         this.rlsEnabled = rlsEnabled;
@@ -354,10 +327,6 @@ public class PostgresJamesConfiguration implements Configuration {
 
     public boolean isJmapEnabled() {
         return jmapEnabled;
-    }
-
-    public boolean isJmapOidcEnabled() {
-        return jmapOidcEnabled;
     }
 
     public OidcTokenCacheModuleChooser.Implementation oidcTokenCacheImplementation() {
