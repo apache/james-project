@@ -28,8 +28,8 @@ import static org.mockito.Mockito.verify;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-import org.apache.james.jmap.oidc.OidcTokenCache;
-import org.apache.james.jmap.oidc.Sid;
+import org.apache.james.oidc.OidcTokenCache;
+import org.apache.james.oidc.Sid;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;

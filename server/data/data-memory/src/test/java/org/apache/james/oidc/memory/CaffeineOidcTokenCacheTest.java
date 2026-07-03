@@ -17,18 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.oidc;
+package org.apache.james.oidc.memory;
 
-import org.apache.james.oidc.OidcTokenCache;
-import org.apache.james.oidc.memory.CaffeineOidcTokenCache;
+import java.util.Optional;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import org.apache.james.core.Username;
+import org.apache.james.oidc.OidcTokenCacheConfiguration;
+import org.apache.james.oidc.OidcTokenCacheContract;
+import org.apache.james.oidc.Token;
+import org.junit.jupiter.api.BeforeEach;
 
-public class CaffeineOidcTokenCacheModule extends AbstractModule {
+public class CaffeineOidcTokenCacheTest extends OidcTokenCacheContract {
+    private CaffeineOidcTokenCache testee;
+
+    @BeforeEach
+    void setUp() {
+        testee = new CaffeineOidcTokenCache(tokenInfoResolver, OidcTokenCacheConfiguration.DEFAULT);
+    }
+
     @Override
-    protected void configure() {
-        bind(OidcTokenCache.class).to(CaffeineOidcTokenCache.class)
-            .in(Scopes.SINGLETON);
+    public CaffeineOidcTokenCache testee() {
+        return testee;
+    }
+
+    @Override
+    public Optional<Username> getUsernameFromCache(Token token) {
+        return testee.getUsernameFromCache(token);
     }
 }

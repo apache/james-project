@@ -1472,6 +1472,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-data-redis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-deleted-messages-vault</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1638,11 +1643,6 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-jmap</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-jmap-redis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -25,6 +25,10 @@ import java.util.List;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.jwt.introspection.IntrospectionEndpoint;
+import org.apache.james.jwt.oidc.OidcEndpointsInfoResolver;
+import org.apache.james.oidc.Aud;
+import org.apache.james.oidc.OidcTokenCacheConfiguration;
+import org.apache.james.oidc.TokenInfoResolver;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.AbstractModule;
@@ -52,6 +56,12 @@ public class JMAPOidcModule extends AbstractModule {
     @Provides
     List<Aud> provideAudience(JMAPOidcConfiguration configuration) {
         return configuration.getAud();
+    }
+
+    @Provides
+    @Named("oidcClaim")
+    String provideOidcClaim(JMAPOidcConfiguration configuration) {
+        return configuration.getOidcClaim();
     }
 
     @Provides

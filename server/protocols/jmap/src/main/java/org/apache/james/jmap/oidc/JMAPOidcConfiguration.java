@@ -29,6 +29,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.jmap.http.OidcAuthenticationStrategy;
 import org.apache.james.jwt.introspection.IntrospectionEndpoint;
+import org.apache.james.oidc.Aud;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.common.collect.ImmutableList;

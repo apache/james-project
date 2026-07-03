@@ -17,18 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.oidc;
+package org.apache.james.oidc;
 
-import org.apache.james.oidc.OidcTokenCache;
-import org.apache.james.oidc.memory.CaffeineOidcTokenCache;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import com.google.common.base.MoreObjects;
 
-public class CaffeineOidcTokenCacheModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(OidcTokenCache.class).to(CaffeineOidcTokenCache.class)
-            .in(Scopes.SINGLETON);
+public record TokenInfo(String email, Optional<Sid> sid, Instant exp, Optional<List<Aud>> aud) {
+
+    public String asString() {
+        return MoreObjects.toStringHelper(this)
+            .add("email", email)
+            .add("sid", Optional.ofNullable(sid).flatMap(sidValue -> sidValue.map(Sid::value)).orElse(null))
+            .add("exp", exp)
+            .add("aud", aud.map(audList -> audList
+                    .stream()
+                    .map(Aud::value)
+                    .toList())
+                .orElse(null))
+            .toString();
     }
 }

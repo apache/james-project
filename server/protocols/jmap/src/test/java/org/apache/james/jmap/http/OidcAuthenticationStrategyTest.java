@@ -25,8 +25,8 @@ import static org.mockito.Mockito.mock;
 import java.time.Clock;
 import java.util.List;
 
-import org.apache.james.jmap.oidc.OidcTokenCache;
 import org.apache.james.mailbox.SessionProvider;
+import org.apache.james.oidc.OidcTokenCache;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
