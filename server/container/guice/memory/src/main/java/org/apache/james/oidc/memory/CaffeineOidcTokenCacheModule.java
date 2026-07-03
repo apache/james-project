@@ -17,10 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.oidc;
+package org.apache.james.oidc.memory;
 
 import org.apache.james.oidc.OidcTokenCache;
-import org.apache.james.oidc.memory.CaffeineOidcTokenCache;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;

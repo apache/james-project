@@ -62,13 +62,13 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-jmap</artifactId>
-            <type>test-jar</type>
+            <artifactId>james-server-guice-data-redis</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-jmap-redis</artifactId>
+            <artifactId>james-server-guice-jmap</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>

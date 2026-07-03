@@ -23,18 +23,22 @@
         <groupId>org.apache.james</groupId>
         <artifactId>james-server-guice</artifactId>
         <version>3.10.0-SNAPSHOT</version>
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-guice-jmap-redis</artifactId>
+    <artifactId>james-server-guice-data-redis</artifactId>
 
-    <name>Apache James :: Server :: Guice :: JMAP Redis</name>
-    <description>Redis related Guice bindings for JMAP RFC8621</description>
+    <name>Apache James :: Server :: Guice :: Data :: Redis</name>
+    <description>Redis data modules for Guice implementation of James server</description>
 
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-backends-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-data-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -46,15 +50,19 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-jmap</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-jmap</artifactId>
+            <artifactId>james-server-guice-memory</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-configuration2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 </project>

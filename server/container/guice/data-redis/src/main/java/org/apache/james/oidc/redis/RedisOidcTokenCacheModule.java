@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.oidc.redis;
+package org.apache.james.oidc.redis;
 
 import java.io.FileNotFoundException;
 import java.time.Duration;
@@ -28,10 +28,6 @@ import org.apache.james.backends.redis.RedisReactiveCommandsFactory;
 import org.apache.james.oidc.OidcTokenCache;
 import org.apache.james.oidc.OidcTokenCacheConfiguration;
 import org.apache.james.oidc.TokenInfoResolver;
-import org.apache.james.oidc.redis.RedisOidcTokenCache;
-import org.apache.james.oidc.redis.RedisOidcTokenCacheConfiguration;
-import org.apache.james.oidc.redis.RedisOidcTokenCacheKeyPrefix;
-import org.apache.james.oidc.redis.RedisTokenCacheCommands;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

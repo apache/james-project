@@ -20,7 +20,7 @@
 package org.apache.james.jmap.rfc8621.postgres;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
-import static org.apache.james.jmap.oidc.redis.OidcTokenCacheModuleChooser.Implementation.REDIS;
+import static org.apache.james.oidc.redis.OidcTokenCacheModuleChooser.Implementation.REDIS;
 
 import java.util.Optional;
 

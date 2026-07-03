@@ -17,12 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.oidc.redis;
+package org.apache.james.oidc.redis;
 
 import java.io.FileNotFoundException;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.jmap.oidc.CaffeineOidcTokenCacheModule;
+import org.apache.james.oidc.memory.CaffeineOidcTokenCacheModule;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

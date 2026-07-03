@@ -30,7 +30,6 @@ import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
 import org.apache.james.jmap.JMAPListenerModule;
 import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.oidc.JMAPOidcModule;
-import org.apache.james.jmap.oidc.redis.OidcTokenCacheModuleChooser;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -97,6 +96,7 @@ import org.apache.james.modules.task.DistributedTaskManagerModule;
 import org.apache.james.modules.task.PostgresTaskExecutionDetailsProjectionGuiceModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.TasksCleanupRoutesModule;
+import org.apache.james.oidc.redis.OidcTokenCacheModuleChooser;
 import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableList;

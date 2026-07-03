@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.rfc8621.distributed;
 
-import static org.apache.james.jmap.oidc.redis.OidcTokenCacheModuleChooser.Implementation.REDIS;
+import static org.apache.james.oidc.redis.OidcTokenCacheModuleChooser.Implementation.REDIS;
 
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
