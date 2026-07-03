@@ -43,6 +43,12 @@ public class JMAPOidcModule extends AbstractModule {
     }
 
     @Provides
+    @Singleton
+    JMAPOidcConfiguration provideJMAPOidcConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, FileNotFoundException {
+        return JMAPOidcConfiguration.parseConfiguration(propertiesProvider);
+    }
+
+    @Provides
     @Named("userInfo")
     URL provideUserInfoEndpoint(JMAPOidcConfiguration configuration) {
         return configuration.getOidcUserInfoUrl();
