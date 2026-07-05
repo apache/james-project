@@ -698,9 +698,17 @@ public class StoreMessageManager implements MessageManager {
                     .concatMap(set -> messageMapper.executeReactive(messageMapper.updateFlagsReactive(getMailboxEntity(), calculator, set)))
                     .collectList()
                     .flatMap(allUpdatedFlagsPerRange -> {
+                        // Ranges supplied by the client may overlap (eg. STORE 1:5,3:7), in which case the same
+                        // UID is updated several times. Deduplicate by UID (keeping the first, meaningful update)
+                        // so that neither the dispatched event nor the returned map contain conflicting entries.
                         ImmutableList<UpdatedFlags> allUpdatedFlags = allUpdatedFlagsPerRange.stream()
                             .flatMap(List::stream)
-                            .collect(ImmutableList.toImmutableList());
+                            .collect(ImmutableMap.toImmutableMap(
+                                UpdatedFlags::getUid,
+                                Function.identity(),
+                                (first, second) -> first))
+                            .values()
+                            .asList();
                         return eventBus.dispatch(EventFactory.flagsUpdated()
                                     .randomEventId()
                                     .mailboxSession(mailboxSession)
