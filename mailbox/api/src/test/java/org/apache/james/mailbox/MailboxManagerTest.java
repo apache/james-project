@@ -36,6 +36,7 @@ import static org.mockito.Mockito.when;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -1084,6 +1085,28 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .element(0)
                 .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(inboxId))
                 .satisfies(event -> assertThat(event.getUids()).hasSize(1));
+        }
+
+        @Test
+        void setFlagsReactiveShouldSupportOverlappingRanges() throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
+
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId))).block();
+
+            // Clients may supply overlapping ranges (eg. STORE 1:5,3:7), in which case the same UID
+            // is updated several times. This must not fail nor produce duplicated entries. See JAMES issue #5570.
+            Map<MessageUid, Flags> result = Mono.from(inboxManager.setFlagsReactive(
+                new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD,
+                List.of(MessageRange.all(), MessageRange.all()), session)).block();
+
+            assertThat(result).hasSize(2);
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof FlagsUpdated)
+                .hasSize(1)
+                .extracting(event -> (FlagsUpdated) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getUids()).hasSize(2));
         }
 
         @Test
