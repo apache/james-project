@@ -895,6 +895,26 @@ class SieveIntegrationTest {
     }
 
     @Test
+    void bodyTextShouldMatchContentOfSinglePartMessage() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyTextMatch.script");
+
+        FakeMail mail = createSinglePartTextMail();
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
+    }
+
+    @Test
+    void bodyContentShouldMatchContentOfSinglePartMessage() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyContentMatch.script");
+
+        FakeMail mail = createSinglePartTextMail();
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
+    }
+
+    @Test
     void doubleVacationShouldNotBeExecutedAndReceiverShouldHaveANotificationAboutSieveError() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/doubleVacation.script");
 
@@ -1101,10 +1121,25 @@ class SieveIntegrationTest {
                     .addToRecipient(RECEIVER_DOMAIN_COM)
                     .setMultipartWithBodyParts(
                         MimeMessageBuilder.bodyPartBuilder()
-                            .data("A text to match")
+                            .data("A text to match, followed by some trailing content.")
                             .addHeader("Content-Type", "text/plain; charset=UTF-8")
                             .filename("file.txt")
                             .disposition(MimeBodyPart.ATTACHMENT)))
+            .state(Mail.DEFAULT)
+            .recipient(RECEIVER_DOMAIN_COM)
+            .sender("sender@any.com")
+            .build();
+    }
+
+    private FakeMail createSinglePartTextMail() throws MessagingException {
+        return FakeMail.builder()
+            .name("name")
+            .mimeMessage(
+                MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("Subject")
+                    .setSender("sender@any.com")
+                    .addToRecipient(RECEIVER_DOMAIN_COM)
+                    .setText("A text to match, followed by some trailing content.", "text/plain; charset=UTF-8"))
             .state(Mail.DEFAULT)
             .recipient(RECEIVER_DOMAIN_COM)
             .sender("sender@any.com")
