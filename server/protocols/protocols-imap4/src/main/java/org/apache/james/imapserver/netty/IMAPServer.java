@@ -21,9 +21,7 @@ package org.apache.james.imapserver.netty;
 import static org.apache.james.imapserver.netty.HAProxyMessageHandler.PROXY_INFO;
 
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.net.SocketAddress;
-import java.net.URISyntaxException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -50,7 +48,6 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
-import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.GaugeRegistry;
@@ -94,64 +91,6 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private static final Logger LOG = LoggerFactory.getLogger(IMAPServer.class);
     public static final AttributeKey<Instant> CONNECTION_DATE = AttributeKey.newInstance("connectionDate");
 
-    public static class AuthenticationConfiguration {
-        private static final boolean PLAIN_AUTH_DISALLOWED_DEFAULT = true;
-        private static final boolean PLAIN_AUTH_ENABLED_DEFAULT = true;
-        private static final String OIDC_PATH = "auth.oidc";
-
-        public static AuthenticationConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
-            boolean isRequireSSL = configuration.getBoolean("auth.requireSSL", fallback(configuration));
-            boolean isPlainAuthEnabled = configuration.getBoolean("auth.plainAuthEnabled", PLAIN_AUTH_ENABLED_DEFAULT);
-
-            if (configuration.immutableConfigurationsAt(OIDC_PATH).isEmpty()) {
-                return new AuthenticationConfiguration(
-                    isRequireSSL,
-                    isPlainAuthEnabled);
-            } else {
-                try {
-                    return new AuthenticationConfiguration(
-                        isRequireSSL,
-                        isPlainAuthEnabled,
-                        OidcSASLConfiguration.parse(configuration.configurationAt(OIDC_PATH)));
-                } catch (MalformedURLException | NullPointerException | URISyntaxException exception) {
-                    throw new ConfigurationException("Failed to retrieve oauth component", exception);
-                }
-            }
-        }
-
-        private static boolean fallback(HierarchicalConfiguration<ImmutableNode> configuration) {
-            return configuration.getBoolean("plainAuthDisallowed", PLAIN_AUTH_DISALLOWED_DEFAULT);
-        }
-
-        private final boolean isSSLRequired;
-        private final boolean plainAuthEnabled;
-        private final Optional<OidcSASLConfiguration> oidcSASLConfiguration;
-
-        public AuthenticationConfiguration(boolean isSSLRequired, boolean plainAuthEnabled) {
-            this.isSSLRequired = isSSLRequired;
-            this.plainAuthEnabled = plainAuthEnabled;
-            this.oidcSASLConfiguration = Optional.empty();
-        }
-
-        public AuthenticationConfiguration(boolean isSSLRequired, boolean plainAuthEnabled, OidcSASLConfiguration oidcSASLConfiguration) {
-            this.isSSLRequired = isSSLRequired;
-            this.plainAuthEnabled = plainAuthEnabled;
-            this.oidcSASLConfiguration = Optional.of(oidcSASLConfiguration);
-        }
-
-        public boolean isSSLRequired() {
-            return isSSLRequired;
-        }
-
-        public boolean isPlainAuthEnabled() {
-            return plainAuthEnabled;
-        }
-
-        public Optional<OidcSASLConfiguration> getOidcSASLConfiguration() {
-            return oidcSASLConfiguration;
-        }
-    }
-
     private static final String SOFTWARE_TYPE = "JAMES " + VERSION + " Server ";
     private static final String DEFAULT_TIME_UNIT = "SECONDS";
     private static final String CAPABILITY_SEPARATOR = "|";
@@ -174,7 +113,6 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private int inMemorySizeLimit;
     private int timeout;
     private int literalSizeLimit;
-    private AuthenticationConfiguration authenticationConfiguration;
     private Optional<TrafficShapingConfiguration> trafficShaping = Optional.empty();
     private Optional<ConnectionLimitUpstreamHandler> connectionLimitUpstreamHandler = Optional.empty();
     private Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler = Optional.empty();
@@ -212,7 +150,6 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         if (timeout < DEFAULT_TIMEOUT) {
             throw new ConfigurationException("Minimum timeout of 30 minutes required. See rfc2060 5.4 for details");
         }
-        authenticationConfiguration = AuthenticationConfiguration.parse(configuration);
         connectionLimitUpstreamHandler = ConnectionLimitUpstreamHandler.forCount(connectionLimit);
         connectionPerIpLimitUpstreamHandler = ConnectionPerIpLimitUpstreamHandler.forCount(connPerIP);
         ignoreIDLEUponProcessing = configuration.getBoolean("ignoreIDLEUponProcessing", true);
@@ -368,7 +305,6 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .processor(processor)
             .encoder(encoder)
             .compress(compress)
-            .authenticationConfiguration(authenticationConfiguration)
             .connectionChecks(connectionChecks)
             .secure(secure)
             .imapMetrics(imapMetrics)

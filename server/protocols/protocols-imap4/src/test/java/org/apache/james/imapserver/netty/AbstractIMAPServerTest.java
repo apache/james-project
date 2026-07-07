@@ -120,7 +120,8 @@ abstract class AbstractIMAPServerTest {
                 memoryIntegrationResources.getQuotaManager(),
                 memoryIntegrationResources.getQuotaRootResolver(),
                 metricFactory,
-                localCacheConfiguration),
+                localCacheConfiguration,
+                config),
             new ImapMetrics(metricFactory),
             new NoopGaugeRegistry(), connectionChecks);
 
