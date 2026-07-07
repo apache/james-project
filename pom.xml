@@ -2163,6 +2163,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.protocols.groupId}</groupId>
+                <artifactId>protocols-sasl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.protocols.groupId}</groupId>
                 <artifactId>protocols-smtp</artifactId>
                 <version>${project.version}</version>
             </dependency>
