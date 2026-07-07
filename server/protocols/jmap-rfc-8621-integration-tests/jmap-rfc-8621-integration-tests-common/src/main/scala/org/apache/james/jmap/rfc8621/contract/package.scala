@@ -48,7 +48,9 @@ package object contract {
         .repeat()
         .take(timeout)
         .onErrorResume {
-          case _: TimeoutException =>
+          // Cancelling the time-bounded take() interrupts the blocking ws.receive(),
+          // surfacing an InterruptedException that must be swallowed like the timeout.
+          case _: TimeoutException | _: InterruptedException =>
             Flux.empty[String]
         }
         .collectSeq()
