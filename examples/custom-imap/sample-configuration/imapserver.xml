@@ -33,6 +33,13 @@ under the License.
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <plainAuthDisallowed>false</plainAuthDisallowed>
         <gracefulShutdown>false</gracefulShutdown>
+        <auth>
+            <saslMechanisms>PlainSaslMechanismFactory,org.apache.james.examples.imap.sasl.ExampleTokenSaslMechanismFactory</saslMechanisms>
+            <exampleToken>
+                <expectedToken>secret-token</expectedToken>
+                <authorizedUser>bob@domain.tld</authorizedUser>
+            </exampleToken>
+        </auth>
         <imapPackages>org.apache.james.modules.protocols.DefaultImapPackage</imapPackages>
         <imapPackages>org.apache.james.examples.imap.PingImapPackages</imapPackages>
     </imapserver>
