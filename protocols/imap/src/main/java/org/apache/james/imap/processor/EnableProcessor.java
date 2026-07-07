@@ -52,15 +52,15 @@ import reactor.core.publisher.Mono;
 public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(EnableProcessor.class);
 
-    private static final List<PermitEnableCapabilityProcessor> capabilities = new ArrayList<>();
     public static final String ENABLED_CAPABILITIES = "ENABLED_CAPABILITIES";
     private static final List<Capability> CAPS = ImmutableList.of(SUPPORTS_ENABLE);
-    private final CapabilityProcessor capabilityProcessor;
+    private final List<PermitEnableCapabilityProcessor> capabilities = new ArrayList<>();
+    private CapabilityProcessor capabilityProcessor;
 
     public EnableProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, List<PermitEnableCapabilityProcessor> capabilities,
             MetricFactory metricFactory, CapabilityProcessor capabilityProcessor) {
         this(mailboxManager, factory, metricFactory, capabilityProcessor);
-        EnableProcessor.capabilities.addAll(capabilities);
+        this.capabilities.addAll(capabilities);
     }
 
     @Inject
@@ -70,6 +70,12 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
         this.capabilityProcessor = capabilityProcessor;
     }
 
+    /**
+     * Use the capability processor from the same IMAP suite.
+     */
+    public void configureCapabilityProcessor(CapabilityProcessor capabilityProcessor) {
+        this.capabilityProcessor = capabilityProcessor;
+    }
 
     @Override
     protected Mono<Void> processRequestReactive(EnableRequest request, ImapSession session, Responder responder) {
