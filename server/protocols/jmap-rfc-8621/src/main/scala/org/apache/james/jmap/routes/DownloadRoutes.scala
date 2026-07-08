@@ -440,13 +440,18 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
       .headOption
 
   private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): SMono[Unit] =
-    SMono.fromCallable(() => ResponseSerializer.serialize(details))
-      .map(Json.stringify)
-      .map(_.getBytes(StandardCharsets.UTF_8))
-      .flatMap(bytes =>
-        SMono.fromPublisher(httpServerResponse.status(details.status)
-          .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-          .header(CONTENT_LENGTH, Integer.toString(bytes.length))
-          .sendByteArray(SMono.just(bytes))
-          .`then`).`then`)
+    if (httpServerResponse.hasSentHeaders) {
+      // Download after sending headers. It is impossible to rewrite the status (and fails msking the error). Swallow error to avoid log noise.
+      SMono.empty
+    } else {
+      SMono.fromCallable(() => ResponseSerializer.serialize(details))
+        .map(Json.stringify)
+        .map(_.getBytes(StandardCharsets.UTF_8))
+        .flatMap(bytes =>
+          SMono.fromPublisher(httpServerResponse.status(details.status)
+            .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+            .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+            .sendByteArray(SMono.just(bytes))
+            .`then`).`then`)
+    }
 }
