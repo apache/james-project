@@ -24,6 +24,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
@@ -36,6 +38,8 @@ import net.fortuna.ical4j.model.property.Uid;
 
 public class ICALAttributeDTO {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ICALAttributeDTO.class);
+
     public static final String DEFAULT_SEQUENCE_VALUE = "0";
 
     public static class Builder {
@@ -47,7 +51,7 @@ public class ICALAttributeDTO {
             Optional<String> method = optionalOf(calendar.getMethod());
             Optional<String> recurrenceId = optionalOf(vevent.getRecurrenceId());
             Optional<String> sequence = optionalOf(vevent.getSequence());
-            Optional<DtStamp> dtstamp = vevent.getDateStamp();
+            Optional<String> dtstamp = vevent.getDateStamp().flatMap(this::safeValue);
 
             Preconditions.checkNotNull(ical);
 
@@ -57,12 +61,21 @@ public class ICALAttributeDTO {
                             uid.map(Uid::getValue), sender.asString(),
                             recipient.asString(),
                             replyTo.asString(),
-                            dtstamp.map(DtStamp::getValue), method, sequence,
+                            dtstamp, method, sequence,
                             recurrenceId);
         }
 
         private Optional<String> optionalOf(Property property) {
             return Optional.ofNullable(property).map(Property::getValue);
+        }
+
+        private Optional<String> safeValue(DtStamp dtStamp) {
+            try {
+                return Optional.ofNullable(dtStamp.getValue());
+            } catch (Exception e) {
+                LOGGER.warn("Ignoring non RFC-5545 compliant DTSTAMP value", e);
+                return Optional.empty();
+            }
         }
 
         @FunctionalInterface
