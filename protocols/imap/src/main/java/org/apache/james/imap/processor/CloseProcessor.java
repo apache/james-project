@@ -78,7 +78,7 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
             }))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-                return ReactorUtils.logAsMono(() -> LOGGER.error("Close failed for mailbox {}", session.getSelected().getMailboxId(), e));
+                return ReactorUtils.logAsMono(() -> LOGGER.error("Close failed for mailbox {}", selectedMailboxId(session), e));
             }).then();
     }
 

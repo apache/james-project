@@ -98,22 +98,22 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
             .onErrorResume(MessageRangeException.class, e -> {
                 taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
                 return ReactorUtils.logAsMono(() -> LOGGER.debug("{} failed from mailbox {} to {} for invalid sequence-set {}",
-                    getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e));
+                    getOperationName(), selectedMailboxId(session), targetMailbox, request.getIdSet(), e));
             })
             .onErrorResume(OverQuotaException.class, e -> {
                 no(request, responder, HumanReadableText.FAILURE_OVERQUOTA, StatusResponse.ResponseCode.overQuota());
                 return ReactorUtils.logAsMono(() -> LOGGER.info("{} failed from mailbox {} to {} due to quota restriction",
-                    getOperationName(), session.getSelected().getMailboxId(), targetMailbox, e));
+                    getOperationName(), selectedMailboxId(session), targetMailbox, e));
             })
             .onErrorResume(OverQuotaException.class, e -> {
                 no(request, responder, HumanReadableText.FAILURE_OVERQUOTA, StatusResponse.ResponseCode.overQuota());
                 return ReactorUtils.logAsMono(() -> LOGGER.info("{} failed: quota exceeded from mailbox {} to {} for sequence-set {}",
-                    getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e.getCause()));
+                    getOperationName(), selectedMailboxId(session), targetMailbox, request.getIdSet(), e.getCause()));
             })
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return ReactorUtils.logAsMono(() -> LOGGER.error("{} failed from mailbox {} to {} for sequence-set {}",
-                    getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e.getCause()));
+                    getOperationName(), selectedMailboxId(session), targetMailbox, request.getIdSet(), e.getCause()));
             }).then();
     }
 

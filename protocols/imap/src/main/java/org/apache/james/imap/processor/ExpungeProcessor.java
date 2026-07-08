@@ -89,7 +89,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
             })
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-                return ReactorUtils.logAsMono(() -> LOGGER.error("Expunge failed for mailbox {}", session.getSelected().getMailboxId(), e));
+                return ReactorUtils.logAsMono(() -> LOGGER.error("Expunge failed for mailbox {}", selectedMailboxId(session), e));
             });
     }
 

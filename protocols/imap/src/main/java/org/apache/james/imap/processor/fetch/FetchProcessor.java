@@ -261,13 +261,13 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             .<SelectedMailbox>handle((a, sink) -> a.ifPresentOrElse(sink::next, () -> sink.error(new MailboxException("Session not in SELECTED state"))))
             .flatMap(selected -> processFetch(request, session, responder, selected, fetch, changedSince))
             .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}",
-                Optional.ofNullable(session.getSelected()).map(SelectedMailbox::getMailboxId), idSet, e)))
+                selectedMailboxId(session), idSet, e)))
             .onErrorResume(MessageRangeException.class, e -> {
                 taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
                 return Mono.empty();
             })
             .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Fetch failed for mailbox {} and sequence-set {}",
-                Optional.ofNullable(session.getSelected()).map(SelectedMailbox::getMailboxId), idSet, e)))
+                selectedMailboxId(session), idSet, e)))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.SEARCH_FAILED);
                 return Mono.empty();

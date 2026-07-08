@@ -127,10 +127,10 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                         // See RFC5182 2.1.Normative Description of the SEARCHRES Extension
                         SearchResUtil.resetSavedSequenceSet(session);
                     }
-                    return ReactorUtils.logAsMono(() -> LOGGER.error("Search failed in mailbox {}", session.getSelected().getMailboxId(), e));
+                    return ReactorUtils.logAsMono(() -> LOGGER.error("Search failed in mailbox {}", selectedMailboxId(session), e));
                 });
         } catch (MessageRangeException e) {
-            return ReactorUtils.logAsMono(() -> LOGGER.debug("Search failed in mailbox {} because of an invalid sequence-set ", session.getSelected().getMailboxId(), e))
+            return ReactorUtils.logAsMono(() -> LOGGER.debug("Search failed in mailbox {} because of an invalid sequence-set ", selectedMailboxId(session), e))
                 .then(Mono.fromRunnable(() -> taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET)));
         }
     }
