@@ -118,11 +118,11 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             })
             .onErrorResume(MessageRangeException.class, e -> {
                 taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
-                return ReactorUtils.logAsMono(() -> LOGGER.debug("Store failed for mailbox {} because of an invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e));
+                return ReactorUtils.logAsMono(() -> LOGGER.debug("Store failed for mailbox {} because of an invalid sequence-set {}", selectedMailboxId(session), idSet, e));
             })
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.SAVE_FAILED);
-                return ReactorUtils.logAsMono(() -> LOGGER.error("Store failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e));
+                return ReactorUtils.logAsMono(() -> LOGGER.error("Store failed for mailbox {} and sequence-set {}", selectedMailboxId(session), idSet, e));
             });
     }
 

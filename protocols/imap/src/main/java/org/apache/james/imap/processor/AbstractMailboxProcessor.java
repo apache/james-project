@@ -61,6 +61,7 @@ import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.exception.OverQuotaException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.metrics.api.MetricFactory;
@@ -386,6 +387,11 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
 
     protected Mono<MessageManager> getSelectedMailboxReactive(ImapSession session) {
         return getSelectedMailboxReactive(session, Mono.error(() -> new MailboxException("Session not in SELECTED state")));
+    }
+
+    protected static Optional<MailboxId> selectedMailboxId(ImapSession session) {
+        return Optional.ofNullable(session.getSelected())
+            .map(SelectedMailbox::getMailboxId);
     }
 
     /**
