@@ -76,6 +76,8 @@ public class SmtpConfiguration implements SerializableAsXml {
         private Optional<Boolean> allowUnauthenticatedSender;
         private Optional<Boolean> bracketEnforcement;
         private Optional<String> authorizedAddresses;
+        private Optional<Boolean> authRequireSSL;
+        private Optional<String> saslMechanisms;
         private final ImmutableList.Builder<HookConfigurationEntry> additionalHooks;
 
         public Builder() {
@@ -86,6 +88,8 @@ public class SmtpConfiguration implements SerializableAsXml {
             maxMessageSize = Optional.empty();
             bracketEnforcement = Optional.empty();
             allowUnauthenticatedSender = Optional.empty();
+            authRequireSSL = Optional.empty();
+            saslMechanisms = Optional.empty();
             additionalHooks = ImmutableList.builder();
         }
 
@@ -135,6 +139,16 @@ public class SmtpConfiguration implements SerializableAsXml {
             return this;
         }
 
+        public Builder requireSSLForAuth(boolean requireSSL) {
+            this.authRequireSSL = Optional.of(requireSSL);
+            return this;
+        }
+
+        public Builder withSaslMechanisms(String saslMechanisms) {
+            this.saslMechanisms = Optional.of(saslMechanisms);
+            return this;
+        }
+
         public Builder relaxedIdentityVerification() {
             this.verifyIndentity = Optional.of(SMTPConfiguration.SenderVerificationMode.RELAXED);
             return this;
@@ -158,6 +172,8 @@ public class SmtpConfiguration implements SerializableAsXml {
                     allowUnauthenticatedSender.orElse(true),
                     verifyIndentity.orElse(SMTPConfiguration.SenderVerificationMode.DISABLED),
                     maxMessageSize.orElse(DEFAULT_DISABLED),
+                    authRequireSSL.orElse(false),
+                    saslMechanisms,
                     additionalHooks.build());
         }
     }
@@ -173,6 +189,8 @@ public class SmtpConfiguration implements SerializableAsXml {
     private final boolean allowUnauthenticatedSenders;
     private final SMTPConfiguration.SenderVerificationMode verifyIndentity;
     private final String maxMessageSize;
+    private final boolean authRequireSSL;
+    private final Optional<String> saslMechanisms;
     private final ImmutableList<HookConfigurationEntry> additionalHooks;
 
     private SmtpConfiguration(Optional<String> authorizedAddresses,
@@ -182,6 +200,8 @@ public class SmtpConfiguration implements SerializableAsXml {
                               boolean allowUnauthenticatedSenders,
                               SMTPConfiguration.SenderVerificationMode verifyIndentity,
                               String maxMessageSize,
+                              boolean authRequireSSL,
+                              Optional<String> saslMechanisms,
                               ImmutableList<HookConfigurationEntry> additionalHooks) {
         this.authorizedAddresses = authorizedAddresses;
         this.authRequired = authRequired;
@@ -189,6 +209,8 @@ public class SmtpConfiguration implements SerializableAsXml {
         this.verifyIndentity = verifyIndentity;
         this.allowUnauthenticatedSenders = allowUnauthenticatedSenders;
         this.maxMessageSize = maxMessageSize;
+        this.authRequireSSL = authRequireSSL;
+        this.saslMechanisms = saslMechanisms;
         this.startTls = startTls;
         this.additionalHooks = additionalHooks;
     }
@@ -202,6 +224,9 @@ public class SmtpConfiguration implements SerializableAsXml {
         scopes.put("verifyIdentity", verifyIndentity.toString());
         scopes.put("forbidUnauthenticatedSenders", Boolean.toString(!allowUnauthenticatedSenders));
         scopes.put("maxmessagesize", maxMessageSize);
+        scopes.put("authRequireSSL", authRequireSSL);
+        scopes.put("hasSaslMechanisms", saslMechanisms.isPresent());
+        saslMechanisms.ifPresent(value -> scopes.put("saslMechanisms", value));
         scopes.put("bracketEnforcement", bracketEnforcement);
         scopes.put("startTls", startTls);
 

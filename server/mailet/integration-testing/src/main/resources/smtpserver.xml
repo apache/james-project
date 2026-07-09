@@ -39,8 +39,11 @@
 {{/hasAuthorizedAddresses}}
         <auth>
             <required>{{forbidUnauthenticatedSenders}}</required>
-            <requireSSL>false</requireSSL>
+            <requireSSL>{{authRequireSSL}}</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
+{{#hasSaslMechanisms}}
+            <saslMechanisms>{{saslMechanisms}}</saslMechanisms>
+{{/hasSaslMechanisms}}
         </auth>
         <verifyIdentity>{{verifyIdentity}}</verifyIdentity>
         <maxmessagesize>{{maxmessagesize}}</maxmessagesize>
@@ -83,6 +86,9 @@
             <required>{{forbidUnauthenticatedSenders}}</required>
             <requireSSL>true</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
+{{#hasSaslMechanisms}}
+            <saslMechanisms>{{saslMechanisms}}</saslMechanisms>
+{{/hasSaslMechanisms}}
         </auth>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
