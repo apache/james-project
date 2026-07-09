@@ -5,6 +5,165 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [unreleased]
 
+### Removals
+
+ - [REMOVAL] Remove `james-server-cassandra-app`. Please use the distributed server instead.
+ - JAMES-4155 Drop now retired Derby in favor of H2 (#2875)
+ - JAMES-4176 Retire `email_query_view_sent_at` Cassandra table
+ - JAMES-4187 Drop Cassandra email query view look up table
+
+### Security
+
+ - JAMES-4193 Correct BoringSSL TLS 1.3 cipher suite sanitizing that led to disabled TLS 1.3 (#3029)
+ - JAMES-4201 Implement granular password access control in webadmin (`password.readonly` and `password.nodelete`)
+ - JAMES-4171 Allow configuring a strong distinction between submission and MX ports
+ - JAMES-4158 Allow IMAP to specify per-port administrators
+ - JAMES-4183 AllowedUnauthenticatedSender mail hook, using PROXY protocol to inject source IP
+ - JAMES-4162 Allow usage of `<>` sender for authenticated users (cf RFC-8098)
+ - JAMES-4207 Do not announce capabilities after authentication
+ - [FIX] Correct `Right.read` check in `StoreMessageIdManager::setInMailboxesReactive` (#2842)
+ - [FIX] `MailboxManager::create` should not propagate lookup only
+ - [FIX] Handle Lookup write propagation in complex sharing scenarios
+ - [FIX] `findNonPersonalMailboxes`: handle null rights
+ - [ENHANCEMENT] OIDC SASL should validate `aud` upon token verification, without requiring introspection
+ - [UPGRADE] ActiveMQ 6.2.1 -> 6.2.7 and Artemis 2.52.0 -> 2.55.0 (fixes numerous CVEs)
+ - [UPGRADE] Netty 4.1.126.Final -> 4.1.132.Final (CVE-2025-67735)
+ - [UPGRADE] Log4J 2.24.3 -> 2.25.4 (CVE-2026-34477, CVE-2026-34478, CVE-2026-34479, CVE-2026-34480)
+ - [UPGRADE] Spark java 3.0.2 -> 3.0.4 (CVE-2026-1605)
+ - [UPGRADE] Logback 1.5.18 -> 1.5.19 (CVE-2025-11226)
+ - [UPGRADE] BouncyCastle 1.81 -> 1.82
+ - [UPGRADE] Adopt MIME4J 0.8.14 (#3032)
+ - [UPGRADE] Adopt Tika 3.2.3.0
+ - [UPGRADE] Cassandra driver 4.19.0 -> 4.19.1 (#2859)
+ - [UPGRADE] ical4j 4.1.1 -> 4.2.5
+ - [UPGRADE] RSpamD 3.12.0 -> 3.14.3 and Kvrocks 2.12.1 -> 2.15.0 (#3027)
+ - [UPGRADE] commons-text 1.13.1 -> 1.15.0, commons-configuration2 2.12.0 -> 2.15.0
+
+### New Features
+
+ - JAMES-4210 Protocol neutral SASL SPI, allowing custom IMAP SASL mechanisms to be plugged in
+ - JAMES-4195 JMAP OIDC authentication, including a Redis backed token cache and a backchannel logout route
+ - ManageSieve now supports OIDC authentication via the XOAUTH2 and OAUTHBEARER mechanisms
+ - JAMES-3340 & JAMES-4166 Support `collapseThreads` for JMAP `Email/query` (Memory, Cassandra, Postgres, OpenSearch and Lucene)
+ - JAMES-4148 JMAP filtering rules: `moveTo` action, flag criteria, `ANY` comparator for custom headers, date based criteria, plus webadmin routes to run a rule on a mailbox or on all users
+ - JAMES-4185 Ability to browse the deleted message vault, query it by messageId, and work with the vault of deleted users
+ - JAMES-4204 Webadmin endpoint to restore a mailbox backup from a zip file, with a `force` parameter
+ - JAMES-4196 Allow CRUD operations on shared folders for JMAP (#2988)
+ - [ENHANCEMENT] Implement negative ACL for JMAP
+ - JAMES-4157 Implement JMAP `Blob/copy` (#2896)
+ - JAMES-3728 Implement `MessageIdManager::updateEmail`, allowing `Email/set` update to combine move and setFlags
+ - JAMES-4203 Add Identity events, plugged into `CustomIdentityDAO`
+ - JAMES-3893 Allow deleting identities via WebAdmin
+ - JAMES-4181 Webadmin: Ability to move emails between repositories (#2954)
+ - JAMES-4189 Ability to list users by domain
+ - JAMES-4091 Paginate and sort connected users
+ - JAMES-4164 VacationMailet: add support for `replyMode`
+ - [ENHANCEMENT] Support StartTLS, SSL and Proxy protocol for LMTP (#3043)
+ - JAMES-4200 Allow configuring ActiveMQ disk and temp usage limits, with sane defaults
+ - JAMES-4152 Allow disabling sequence number (#2857)
+ - JAMES-3376 Allow configuring the `Email/query` default limit
+ - JAMES-4190 Allow registering read only IMAP annotations (#2975)
+ - JAMES-4150 Make attachment storage optional for the PostgreSQL message store (#2885)
+ - JAMES-3062 Allow ignoring non-critical groups in the event dead letters healthcheck
+ - JAMES-4165 Deprioritize non critical groups upon event dead letter redelivery (#2917)
+ - JAMES-4159 EventBus configuration for execution rate and timeout
+ - JAMES-4177 Finer grain management of Cassandra profiles (#2951)
+ - JAMES-4153 DKIMSign: allow interpolating the domain in the signature template (#2861)
+ - JAMES-4193 Configurable SSL session cache, and a TCNative based `Encryption.Factory`
+ - MAILBOX-401 Allow search on mailing list subject prefix
+ - [ENHANCEMENT] ManageSieve capabilities (#2916)
+ - [ENHANCEMENT] Allow extending subaddressing (#2946)
+ - [ENHANCEMENT] Allow using Auth Bearer with the webadmin password mechanism (#2848)
+ - [ENHANCEMENT] Enable configuring the OpenSearch timeout (#2867)
+ - [ENHANCEMENT] Attribute for forwarded mail (#3036)
+ - [ENHANCEMENT] `BlobResolver::validateAccess` allows validating user access to a blobId without fetching the full content (#3051)
+ - JAMES-4209 `CassandraMessagesDAOV3`: optionally write recovery infos (#3053)
+ - JAMES-4205 Create default mailboxes after OIDC login
+ - JAMES-4140 Allow resetting IMAP command throttling upon specific commands
+ - [AUDIT TRAIL] Mailbox creation and rename, IMAP CLOSE, message deletion, JMAP message moves, and MDC integration
+
+### Fixes
+
+ - [FIX] JMAP DownloadRoutes: avoid noisy benign `IllegalStateException` upon mid-stream errors
+ - [FIX] `ICALAttributeDTO` should sanitize invalid dtstamp (#3084)
+ - [FIX] Better handle `InterruptedException` in `receiveMessageInTimespan` (#3083)
+ - JAMES-4214 Pass message rather than InputStream so that several body parts can be read (#3081)
+ - [FIX] `MessageManager::setFlags` should support overlapping ranges
+ - [FIX] RabbitMQ: Allow disabling notification queue auto delete in favor of `x-expires`
+ - [FIX] Cross domain RRT was listing non existing addresses
+ - [FIX] Prevent PostgreSQL pool poisoning
+ - [FIX] `StoreMailboxManager::renameSubMailboxes` should change namespace
+ - [FIX] Cassandra folder rename: several correctness fixes, including using SERIAL for the initial picture and basing decisions on a truth table
+ - [FIX] `SolveMailboxInconsistencies`: run several times until convergence, address all possible failures, fix duplicated `mailboxPathV3` registration, and recover from failed `mailboxPathV3` deletion upon rename. An `autoMerge` mode (defaulting to false) was added.
+ - [FIX] Account for consistency choices within `SolveMessageInconsistenciesService` and `RecomputeMailboxCountersService`
+ - [FIX] User rename: handle submailbox edge cases, simplify the rename dance when the destination exists, and return the correct quota when the target address is not empty
+ - [FIX] Avoid 500 upon mail repository download (#3064)
+ - [FIX] Quota recomputation should trigger a QuotaUpdate event (#3054)
+ - [FIX] MOVE/COPY should not exceed batch size in published events (#3047)
+ - JAMES-4206 Don't log a stacktrace on every ManageSieve logout
+ - [FIX] Async connection checks in IMAP (#3009)
+ - [FIX] `EhloCommandHandler` should handle domain labels starting with numbers (#3006)
+ - [FIX] LDAP user listing should ignore invalid users (#3003)
+ - [FIX] Prevent stackoverflow in IMAP SEARCH (#3007)
+ - [FIX] `jakarta.mail.internet.ParseException: Unbalanced quoted string` (#3002)
+ - [FIX] DKIMHook: lenient address mode (#2990)
+ - [FIX] Subscribe `Restored-Messages` for the mailbox to be visible in IMAP (#2976)
+ - [FIX] `CassandraEventDeadLetters` should remove the group when removing the last event of the group
+ - [FIX] `VacationRoutes` error handling (#2942)
+ - [FIX] Back `MessageParser` and parsing results with LeakAware (#2937)
+ - [FIX] Improve leak management when an error occurs
+ - JAMES-4199 Ensure `MailQueueIterator` is closed to prevent memory leaks (e.g. ActiveMQ leaking open browsers)
+ - [FIX] Use `JdkZlibDecoder`/`JdkZlibEncoder` in IMAP compress for immediate flush
+ - [FIX] Failing class cast in `IMAPCommandThrottler` (#2838)
+ - JAMES-3816 Correct `ReactiveThrottler` cancellation and set an upper bound to its tasks in order to prevent depletion
+ - [ENHANCEMENT] Make IMAP `ReactiveThrottler` more reliable under load (#3012)
+ - JAMES-4172 Fix truncated downloads for non-SingleBody `EmailBodyPart` (#2940)
+ - JAMES-3872 JMAP `Email/get`: fix and test the attachment read level (#2868, #2870, #2871)
+ - [FIX] JMAP Filtering: `AddressHeader::parseFullAddress` should leniently parse malformed address headers (#2856)
+ - JAMES-4086 FoldLongLines: handle folded content exceeding the line length (#2851)
+ - JAMES-4135 Search query string heuristics should not trigger on a bracket alone, and only trigger on a leading `-`
+ - JMAP: normalize charset case (#2877)
+ - JAMES-3885 Forbid using the same user as source and target of a user rename (#2847)
+ - JAMES-2314 Log unexpected webadmin errors (#2849)
+ - [FIX] Correct Reactor error handling flow in the DTM deletion callback (#2865)
+ - JAMES-4173 Fix EE11 & EE10 mixture (#2944)
+ - JAMES-4177 Fix typo in the default `cassandra-driver.conf` (#2959)
+ - [FIX] `outgoingQueue` => `outgoing` for the RemoteDelivery mailet in `mailetcontainer.xml` examples
+ - JAMES-4191 Deleted message vault and fast view projection should only act when the owner no longer references the deleted message
+ - [ENHANCEMENT] Log stacktraces in DEBUG mode for protocol level failures
+ - [FIX] Limit the subject length for indexation to not exceed the Lucene raw indexation max size limit
+ - [FIX] Maven release plugin and maven source plugin configuration was broken
+
+### Performance
+
+ - JAMES-4182 Implement `ZstdBlobStoreDAO`, allowing blob compression (#3016)
+ - JAMES-4198 Heuristic to skip attachment parsing based on message headers
+ - JAMES-4202 OpenSearch: group single uid clauses into a single term
+ - JAMES-4166 JMAP search: drop scroll search, use from/size pagination and push the offset onto the search engine
+ - [PERF] Precompute ResultSet indexes on large IMAP processings (#2974)
+ - JAMES-4188 Improve range optimization to account for non-contiguous ranges (#2972)
+ - JAMES-4184 POP3 `TOP msg 0` only reads headers (#2965)
+ - JAMES-4194 Tiering: max threading window (#2987)
+ - JAMES-4123 Improvement for the deleted search override: handle the ALL criterion
+ - JAMES-4200 ActiveMQ: prevent the embedded broker from claiming up to 70% of the JVM memory
+ - JAMES-2937 Distributed task manager enhancements (#2858)
+ - [IMPROVEMENT] `MailboxMergingTask`: better reactive code and increased concurrency
+ - JAMES-4182 Fix a blocking call in `CassandraAttachmentMapper::loadAttachmentContent`
+ - [ENHANCEMENT] Metrics and logs for the IMAP FETCH local cache
+ - JAMES-3816 Record concurrent IMAP request count
+
+### Build
+
+ - [devscout] Bootstrap a reproducible development environment
+ - [JAMES-4175] Improve documentation build repeatability and fix the maven site build
+ - [JAMES-3187] Restructure the documentation into per-server partials, and rewrite the IMAP, SMTP, LMTP, ManageSieve, POP3 and TLS docs
+ - Improve Scala compilation caching and build config (#2967)
+ - Upgrade Testcontainers core to 2.0.2
+ - JAMES-4161 Add Mockito as a javaagent
+ - Split `IMAPServerTest` into focused test classes
+ - Isolate JMAP contract tests using different users, improving test stability
+ - ADR-75 Deleted Message Vault (#2890)
+
 ## [Unreleased 3.9.x]
 
 No changes yet.
