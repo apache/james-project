@@ -39,7 +39,6 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -50,25 +49,11 @@ class SmtpSaslMechanismIntegrationTest {
         return Base64.getEncoder().encodeToString(value.getBytes(UTF_8));
     }
 
-    private TemporaryJamesServer jamesServer;
-
-    @BeforeEach
-    void setup(@TempDir File temporaryFolder) throws Exception {
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(MemoryJamesServerMain.SMTP_ONLY_MODULE)
-            .withMailetContainer(minimalMailetContainer())
-            .withSmtpConfiguration(SmtpConfiguration.builder()
-                .doNotVerifyIdentity()
-                .requireSSLForAuth(true)
-                .withSaslMechanisms("LoginSaslMechanismFactory")
-                .build())
-            .build(temporaryFolder);
-        jamesServer.start();
-
-        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(USER, PASSWORD);
+    private static String plainInitialResponse(String username, String password) {
+        return base64(String.join("\0", "", username, password));
     }
+
+    private TemporaryJamesServer jamesServer;
 
     private MailetContainer.Builder minimalMailetContainer() {
         return MailetContainer.builder()
@@ -83,11 +68,15 @@ class SmtpSaslMechanismIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        jamesServer.shutdown();
+        if (jamesServer != null) {
+            jamesServer.shutdown();
+        }
     }
 
     @Test
-    void explicitlyConfiguredLoginSaslMechanismShouldAuthenticate() throws Exception {
+    void explicitlyConfiguredLoginSaslMechanismShouldAuthenticate(@TempDir File temporaryFolder) throws Exception {
+        startJamesServer(temporaryFolder, "LoginSaslMechanismFactory");
+
         SMTPClient smtpClient = new SMTPClient();
         try {
             smtpClient.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
@@ -108,6 +97,44 @@ class SmtpSaslMechanismIntegrationTest {
                 smtpClient.disconnect();
             }
         }
+    }
+
+    @Test
+    void explicitlyConfiguredPlainSaslMechanismShouldAuthenticateOverClearTextWhenRequireSSLIsTrue(@TempDir File temporaryFolder) throws Exception {
+        // SMTP keeps accepting AUTH PLAIN on clear-text connections even when auth.requireSSL controls capability announcement.
+        startJamesServer(temporaryFolder, "PlainSaslMechanismFactory");
+
+        SMTPClient smtpClient = new SMTPClient();
+        try {
+            smtpClient.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
+
+            smtpClient.sendCommand("EHLO", "localhost");
+            assertThat(smtpClient.getReplyCode()).isEqualTo(250);
+
+            smtpClient.sendCommand("AUTH", "PLAIN " + plainInitialResponse(USER, PASSWORD));
+            assertThat(smtpClient.getReplyCode()).isEqualTo(235);
+        } finally {
+            if (smtpClient.isConnected()) {
+                smtpClient.disconnect();
+            }
+        }
+    }
+
+    private void startJamesServer(File temporaryFolder, String saslMechanisms) throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(MemoryJamesServerMain.SMTP_ONLY_MODULE)
+            .withMailetContainer(minimalMailetContainer())
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .doNotVerifyIdentity()
+                .requireSSLForAuth(true)
+                .withSaslMechanisms(saslMechanisms)
+                .build())
+            .build(temporaryFolder);
+        jamesServer.start();
+
+        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(USER, PASSWORD);
     }
 
 }
