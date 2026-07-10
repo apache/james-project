@@ -104,6 +104,38 @@ class GuiceSaslMechanismResolverTest {
     }
 
     @Test
+    void resolveShouldReuseDefaultFactoryMatchingConfiguredSimpleNameWithoutGuiceLoadingIt() throws Exception {
+        // GIVEN a configured factory simple name matching a protocol-provided default factory
+        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new FailingGuiceLoader());
+
+        // WHEN resolving it
+        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of(ConstructorOnlySaslMechanismFactory.class.getSimpleName()),
+            ImmutableList.of(new ConstructorOnlySaslMechanismFactory("LOGIN")),
+            EMPTY_CONFIGURATION);
+
+        // THEN the default factory instance is reused instead of Guice-loading a fresh standalone factory
+        assertThat(mechanisms)
+            .extracting(SaslMechanism::name)
+            .containsExactly("LOGIN");
+    }
+
+    @Test
+    void resolveShouldReuseDefaultFactoryMatchingConfiguredFullyQualifiedNameWithoutGuiceLoadingIt() throws Exception {
+        // GIVEN a configured factory FQCN matching a protocol-provided default factory
+        GuiceSaslMechanismResolver testee = new GuiceSaslMechanismResolver(new FailingGuiceLoader());
+
+        // WHEN resolving it
+        ImmutableList<SaslMechanism> mechanisms = testee.resolve(ImmutableList.of(ConstructorOnlySaslMechanismFactory.class.getCanonicalName()),
+            ImmutableList.of(new ConstructorOnlySaslMechanismFactory("LOGIN")),
+            EMPTY_CONFIGURATION);
+
+        // THEN the default factory instance is reused before falling back to Guice loading
+        assertThat(mechanisms)
+            .extracting(SaslMechanism::name)
+            .containsExactly("LOGIN");
+    }
+
+    @Test
     void resolveShouldCreateConfiguredFactoriesFromCurrentServerConfiguration() throws Exception {
         // GIVEN two server configurations using the same configured SASL factory
         BaseHierarchicalConfiguration firstConfiguration = new BaseHierarchicalConfiguration();
@@ -177,6 +209,19 @@ class GuiceSaslMechanismResolverTest {
         return serverConfiguration -> new FixedNameSaslMechanism(mechanismName);
     }
 
+    private static class ConstructorOnlySaslMechanismFactory implements SaslMechanismFactory {
+        private final String mechanismName;
+
+        private ConstructorOnlySaslMechanismFactory(String mechanismName) {
+            this.mechanismName = mechanismName;
+        }
+
+        @Override
+        public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
+            return new FixedNameSaslMechanism(mechanismName);
+        }
+    }
+
     private static class ReflectionGuiceLoader implements GuiceLoader {
         @Override
         public <T> T instantiate(ClassName className) throws ClassNotFoundException {
@@ -191,6 +236,24 @@ class GuiceSaslMechanismResolverTest {
         @Override
         public <T> InvocationPerformer<T> withChildModule(Module childModule) {
             return new ReflectionInvocationPerformer<>(NamingScheme.IDENTITY);
+        }
+    }
+
+    private static class FailingGuiceLoader extends ReflectionGuiceLoader {
+        @Override
+        public <T> InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {
+            return new FailingInvocationPerformer<>();
+        }
+    }
+
+    private static class FailingInvocationPerformer<T> extends ReflectionInvocationPerformer<T> {
+        private FailingInvocationPerformer() {
+            super(NamingScheme.IDENTITY);
+        }
+
+        @Override
+        public T instantiate(ClassName className) {
+            throw new AssertionError("Default factory match should not instantiate " + className.getName());
         }
     }
 

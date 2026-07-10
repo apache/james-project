@@ -54,7 +54,7 @@ public class GuiceSaslMechanismResolver {
             ImmutableList<SaslMechanismFactory> factories = configuredFactoryClassNames.isEmpty()
                 ? enabledDefaultFactories
                 : configuredFactoryClassNames.stream()
-                    .map(Throwing.function(this::instantiateFactory))
+                    .map(Throwing.function(className -> resolveConfiguredFactory(className, enabledDefaultFactories)))
                     .collect(ImmutableList.toImmutableList());
 
             return factories.stream()
@@ -73,6 +73,22 @@ public class GuiceSaslMechanismResolver {
             }
             throw e;
         }
+    }
+
+    private SaslMechanismFactory resolveConfiguredFactory(String className, ImmutableList<SaslMechanismFactory> enabledDefaultFactories) throws ConfigurationException {
+        return enabledDefaultFactories.stream()
+            .filter(factory -> matchesCanonicalName(className, factory) || matchesSimpleName(className, factory))
+            .findFirst()
+            .orElseGet(Throwing.supplier(() -> instantiateFactory(className)));
+    }
+
+    private boolean matchesCanonicalName(String className, SaslMechanismFactory factory) {
+        return className.equals(factory.getClass().getCanonicalName());
+    }
+
+    private boolean matchesSimpleName(String className, SaslMechanismFactory factory) {
+        return !className.contains(".")
+            && className.equals(factory.getClass().getSimpleName());
     }
 
     private SaslMechanismFactory instantiateFactory(String className) throws ConfigurationException {
