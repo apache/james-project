@@ -23,7 +23,7 @@ import org.apache.james.jmap.rfc8621.contract.ImapSetMessagesMailboxesUpdatesCom
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class DistributedIMAPSetMessagesCompatibilityTest extends DistributedBase implements ImapSetMessagesMailboxesUpdatesCompatibilityContract {
+public class DistributedIMAPSetMessagesCompatibilityTest extends PerClassDistributedBase implements ImapSetMessagesMailboxesUpdatesCompatibilityContract {
     @RegisterExtension
     TestIMAPClient testIMAPClient = new TestIMAPClient();
 
