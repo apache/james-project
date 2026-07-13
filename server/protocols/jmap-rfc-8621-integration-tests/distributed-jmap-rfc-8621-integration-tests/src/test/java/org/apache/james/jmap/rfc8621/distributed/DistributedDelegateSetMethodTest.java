@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.DelegateSetContract;
 
-public class DistributedDelegateSetMethodTest extends DistributedBase implements DelegateSetContract {
+public class DistributedDelegateSetMethodTest extends PerClassDistributedBase implements DelegateSetContract {
 
 }
