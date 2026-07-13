@@ -21,8 +21,10 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDateTime}
-import java.util.concurrent.TimeUnit
+import java.util.UUID
+import java.util.concurrent.{TimeUnit, atomic}
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, `with`, requestSpecification}
 import io.restassured.builder.ResponseSpecBuilder
@@ -30,9 +32,10 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.EmailSubmissionSetMethodFutureReleaseContract.{DATE, future_release_session_object}
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ALICE, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.EmailSubmissionSetMethodFutureReleaseContract.{DATE, TestContext, futureReleaseSessionObject}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -49,6 +52,10 @@ import org.hamcrest.{Matcher, Matchers}
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
 case object EmailSubmissionSetMethodFutureReleaseContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username, andreAccountId: String, aliceUsername: Username)
+
+  val currentContext: atomic.AtomicReference[TestContext] = new atomic.AtomicReference[TestContext]()
+
   private val future_release_session_object: String =
     """{
       |  "capabilities" : {
@@ -152,9 +159,23 @@ case object EmailSubmissionSetMethodFutureReleaseContract {
   val DATE: Instant = Instant.parse("2023-04-14T10:00:00.00Z")
   private val CLOCK: UpdatableTickingClock = new UpdatableTickingClock(DATE)
   val now: LocalDateTime = LocalDateTime.now(CLOCK)
+
+  def futureReleaseSessionObject(bobUsername: Username, bobAccountId: String): String =
+    future_release_session_object
+      .replace("29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6", bobAccountId)
+      .replace("bob@domain.tld", bobUsername.asString())
 }
 
 trait EmailSubmissionSetMethodFutureReleaseContract {
+  def bobUsername: Username = EmailSubmissionSetMethodFutureReleaseContract.currentContext.get().bobUsername
+  def bobAccountId: String = EmailSubmissionSetMethodFutureReleaseContract.currentContext.get().bobAccountId
+  def andreUsername: Username = EmailSubmissionSetMethodFutureReleaseContract.currentContext.get().andreUsername
+  def andreAccountId: String = EmailSubmissionSetMethodFutureReleaseContract.currentContext.get().andreAccountId
+  def aliceUsername: Username = EmailSubmissionSetMethodFutureReleaseContract.currentContext.get().aliceUsername
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
+
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
     .pollInterval(slowPacedPollInterval)
@@ -164,14 +185,25 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer, updatableTickingClock: UpdatableTickingClock): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    val alice = Username.fromLocalPartWithDomain(s"alice$uniqueSuffix", DOMAIN)
+    EmailSubmissionSetMethodFutureReleaseContract.currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = accountId(bob),
+      andreUsername = andre,
+      andreAccountId = accountId(andre),
+      aliceUsername = alice))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString, ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
 
     updatableTickingClock.setInstant(DATE)
@@ -192,7 +224,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .extract()
       .body()
       .asString()
-    assertThatJson(sessionJson).isEqualTo(future_release_session_object)
+    assertThatJson(sessionJson).isEqualTo(futureReleaseSessionObject(bobUsername, bobAccountId))
   }
 
   @Test
@@ -200,15 +232,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -217,19 +249,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdFor": "76000"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -254,18 +286,18 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
-    val andreInboxPath = MailboxPath.inbox(ANDRE)
+    val andreInboxPath = MailboxPath.inbox(andreUsername)
     val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreInboxPath)
 
     val request =
@@ -273,19 +305,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdFor": "76000"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -308,7 +340,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "filter": {"inMailbox": "${andreInboxId.serialize}"}
          |    },
          |    "c1"]]
@@ -317,7 +349,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(requestAndre)
           .build, new ResponseSpecBuilder().build)
@@ -341,18 +373,18 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
-    val andreInboxPath = MailboxPath.inbox(ANDRE)
+    val andreInboxPath = MailboxPath.inbox(andreUsername)
     val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreInboxPath)
 
     val request =
@@ -360,19 +392,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdFor": "20000"
          |						  	}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -392,7 +424,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "filter": {"inMailbox": "${andreInboxId.serialize}"}
          |    },
          |    "c1"]]
@@ -402,7 +434,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       calmlyAwait.atMost(1, TimeUnit.SECONDS).untilAsserted { () =>
         val response = `given`(
           baseRequestSpecBuilder(server)
-            .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+            .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
             .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
             .setBody(requestAndre)
             .build, new ResponseSpecBuilder().build)
@@ -427,7 +459,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(requestAndre)
           .build, new ResponseSpecBuilder().build)
@@ -451,15 +483,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -468,19 +500,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdFor": "7776000"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -505,15 +537,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -522,19 +554,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdFor": "-1000"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -558,18 +590,18 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
-    val andreInboxPath = MailboxPath.inbox(ANDRE)
+    val andreInboxPath = MailboxPath.inbox(andreUsername)
     val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreInboxPath)
 
     val request =
@@ -577,19 +609,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdFor": "0"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -610,7 +642,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "filter": {"inMailbox": "${andreInboxId.serialize}"}
          |    },
          |    "c1"]]
@@ -618,7 +650,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(requestAndre)
           .build, new ResponseSpecBuilder().build)
@@ -642,15 +674,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -659,19 +691,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdFor": "not a number"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -696,18 +728,18 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
-    val andreInboxPath = MailboxPath.inbox(ANDRE)
+    val andreInboxPath = MailboxPath.inbox(andreUsername)
     val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreInboxPath)
 
     val request =
@@ -715,19 +747,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdUntil": "2023-04-14T15:00:00Z"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -750,7 +782,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "filter": {"inMailbox": "${andreInboxId.serialize}"}
          |    },
          |    "c1"]]
@@ -758,7 +790,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(requestAndre)
           .build, new ResponseSpecBuilder().build)
@@ -782,18 +814,18 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
-    val andreInboxPath = MailboxPath.inbox(ANDRE)
+    val andreInboxPath = MailboxPath.inbox(andreUsername)
     val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreInboxPath)
 
     val request =
@@ -801,19 +833,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdUntil": "2023-04-14T15:00:00Z"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -833,7 +865,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "filter": {"inMailbox": "${andreInboxId.serialize}"}
          |    },
          |    "c1"]]
@@ -843,7 +875,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       calmlyAwait.atMost(1, TimeUnit.SECONDS).untilAsserted { () =>
         val response = `given`(
           baseRequestSpecBuilder(server)
-            .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+            .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
             .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
             .setBody(requestAndre)
             .build, new ResponseSpecBuilder().build)
@@ -867,7 +899,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(requestAndre)
           .build, new ResponseSpecBuilder().build)
@@ -891,15 +923,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -908,19 +940,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdUntil": "2023-04-13T15:00:00Z"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -944,15 +976,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -961,19 +993,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdUntil": "2023-04-16T10:00:00Z"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -997,15 +1029,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -1014,19 +1046,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdUntil": "2023-04-14T10:30:00Z"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -1050,15 +1082,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -1067,20 +1099,20 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdUntil": "2023-04-14T10:30:00Z",
          |                "holdFor": "76000"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -1104,15 +1136,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -1121,19 +1153,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdUntil": "not a date"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -1157,18 +1189,18 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
-    val andreInboxPath = MailboxPath.inbox(ANDRE)
+    val andreInboxPath = MailboxPath.inbox(andreUsername)
     val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreInboxPath)
 
     val request =
@@ -1176,25 +1208,25 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdFor": "1000"
          |							}
          |						},
          |						"rcptTo": [{
-         |							  "email": "${ANDRE.asString}",
+         |							  "email": "${andreUsername.asString}",
          |                "parameters": {
          |							    "holdFor": "1000"
          |							  }
          |              },
          |              {
-         |                "email": "${ALICE.asString}"
+         |                "email": "${aliceUsername.asString}"
          |						  }]
          |					}
          |				}
@@ -1217,15 +1249,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -1234,19 +1266,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdFor": "1000"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -1268,15 +1300,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -1285,19 +1317,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdUntil": "2023-04-14T15:00:00Z"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -1319,15 +1351,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -1336,19 +1368,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "anotherParam": "whatever"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -1372,15 +1404,15 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
 
@@ -1389,20 +1421,20 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "anotherParam": "whatever",
          |                 "holdFor": "86400"
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -1425,18 +1457,18 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
-    val andreInboxPath = MailboxPath.inbox(ANDRE)
+    val andreInboxPath = MailboxPath.inbox(andreUsername)
     val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreInboxPath)
 
     val request =
@@ -1444,19 +1476,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdFor": null
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -1476,7 +1508,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "filter": {"inMailbox": "${andreInboxId.serialize}"}
          |    },
          |    "c1"]]
@@ -1484,7 +1516,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(requestAndre)
           .build, new ResponseSpecBuilder().build)
@@ -1508,18 +1540,18 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
-    val andreInboxPath = MailboxPath.inbox(ANDRE)
+    val andreInboxPath = MailboxPath.inbox(andreUsername)
     val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreInboxPath)
 
     val request =
@@ -1527,19 +1559,19 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |	"methodCalls": [
          |		["EmailSubmission/set", {
-         |			"accountId": "$ACCOUNT_ID",
+         |			"accountId": "$bobAccountId",
          |			"create": {
          |				"k1490": {
          |					"emailId": "${messageId.serialize}",
          |					"envelope": {
          |						"mailFrom": {
-         |							"email": "${BOB.asString}",
+         |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdUntil": null
          |							}
          |						},
          |						"rcptTo": [{
-         |							"email": "${ANDRE.asString}"
+         |							"email": "${andreUsername.asString}"
          |						}]
          |					}
          |				}
@@ -1559,7 +1591,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "filter": {"inMailbox": "${andreInboxId.serialize}"}
          |    },
          |    "c1"]]
@@ -1567,7 +1599,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(requestAndre)
           .build, new ResponseSpecBuilder().build)

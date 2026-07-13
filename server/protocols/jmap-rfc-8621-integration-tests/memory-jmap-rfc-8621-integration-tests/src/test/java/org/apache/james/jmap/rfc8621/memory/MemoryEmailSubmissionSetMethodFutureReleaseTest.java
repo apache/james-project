@@ -48,6 +48,7 @@ class MemoryEmailSubmissionSetMethodFutureReleaseTest implements EmailSubmission
             .overrideWith(new TestJMAPServerModule()))
         .overrideServerModule(binder -> binder.bind(Boolean.class).annotatedWith(Names.named("supportsDelaySends")).toInstance(true))
         .extensions(new ClockExtension())
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override
