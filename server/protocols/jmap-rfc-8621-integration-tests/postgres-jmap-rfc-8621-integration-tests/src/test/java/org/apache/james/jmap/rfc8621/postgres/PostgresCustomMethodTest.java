@@ -54,5 +54,6 @@ public class PostgresCustomMethodTest implements CustomMethodContract {
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new CustomMethodModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
