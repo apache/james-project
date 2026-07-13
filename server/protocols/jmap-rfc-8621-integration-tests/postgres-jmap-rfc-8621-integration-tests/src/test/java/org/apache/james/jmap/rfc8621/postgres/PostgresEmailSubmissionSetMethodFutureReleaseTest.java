@@ -66,6 +66,7 @@ public class PostgresEmailSubmissionSetMethodFutureReleaseTest implements EmailS
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new DelegationProbeModule()))
         .overrideServerModule(binder -> binder.bind(Boolean.class).annotatedWith(Names.named("supportsDelaySends")).toInstance(true))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override
