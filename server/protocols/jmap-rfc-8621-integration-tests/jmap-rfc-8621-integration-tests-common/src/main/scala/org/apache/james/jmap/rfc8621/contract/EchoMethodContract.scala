@@ -18,12 +18,15 @@
  ****************************************************************/
 package org.apache.james.jmap.rfc8621.contract
 
+import java.util.UUID
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_OK}
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.EchoMethodContract._
@@ -31,6 +34,10 @@ import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
+
+object EchoMethodContractContext {
+  val currentUsername: java.util.concurrent.atomic.AtomicReference[Username] = new java.util.concurrent.atomic.AtomicReference[Username]()
+}
 
 object EchoMethodContract {
   private val REQUEST_OBJECT_WITH_UNSUPPORTED_METHOD: String =
@@ -81,16 +88,20 @@ object EchoMethodContract {
 }
 
 trait EchoMethodContract {
+  import EchoMethodContractContext.currentUsername
+
+  def bobUsername: Username = currentUsername.get()
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    currentUsername.set(Username.fromLocalPartWithDomain(s"bob${UUID.randomUUID().toString.replace("-", "").take(8)}", DOMAIN))
     server.getProbe(classOf[DataProbeImpl])
       .fluent()
       .addDomain(DOMAIN.asString())
-      .addUser(BOB.asString(), BOB_PASSWORD)
+      .addUser(bobUsername.asString(), BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-        .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+        .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .build
   }
 

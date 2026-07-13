@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.EchoMethodContract;
 
-public class DistributedEchoMethodTest extends DistributedBase implements EchoMethodContract {
+public class DistributedEchoMethodTest extends PerClassDistributedBase implements EchoMethodContract {
 
 }
