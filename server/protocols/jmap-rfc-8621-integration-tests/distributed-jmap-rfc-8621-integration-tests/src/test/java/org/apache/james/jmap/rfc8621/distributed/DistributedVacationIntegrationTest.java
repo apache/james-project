@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.VacationIntegrationTest;
 
-public class DistributedVacationIntegrationTest extends DistributedBase implements VacationIntegrationTest {
+public class DistributedVacationIntegrationTest extends PerClassDistributedBase implements VacationIntegrationTest {
 
 }
