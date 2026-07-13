@@ -22,13 +22,17 @@ package org.apache.james.jmap.rfc8621.contract
 import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
+import java.util.concurrent.atomic
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.{SC_CREATED, SC_OK}
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.core.quota.QuotaCountLimit
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UTCDate
@@ -44,18 +48,44 @@ import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.{BeforeEach, Test}
 import play.api.libs.json.{JsString, Json}
 
+object EmailImportContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username, aliceUsername: Username)
+
+  val currentContext: atomic.AtomicReference[TestContext] = new atomic.AtomicReference[TestContext]()
+}
+
 trait EmailImportContract {
+  import EmailImportContract.{TestContext, currentContext}
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+  def aliceUsername: Username = currentContext.get().aliceUsername
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
+
   private lazy val UTC_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    val alice = Username.fromLocalPartWithDomain(s"alice$uniqueSuffix", DOMAIN)
+    currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = accountId(bob),
+      andreUsername = andre,
+      aliceUsername = alice))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent()
       .addDomain(DOMAIN.asString())
-      .addUser(BOB.asString(), BOB_PASSWORD)
+      .addUser(bob.asString(), BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-        .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+        .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -143,7 +173,7 @@ trait EmailImportContract {
 
   @Test
   def importShouldAddTheMailInTheMailbox(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
@@ -152,7 +182,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -169,7 +199,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -186,7 +216,7 @@ trait EmailImportContract {
               |      "c1"],
               |    ["Email/get",
               |     {
-              |       "accountId": "$ACCOUNT_ID",
+              |       "accountId": "$bobAccountId",
               |       "ids": ["#C42"],
               |       "properties": ["keywords", "mailboxIds", "receivedAt", "subject", "size", "bodyValues", "htmlBody"],
               |       "fetchHTMLBodyValues": true
@@ -220,7 +250,7 @@ trait EmailImportContract {
       s"""    [
          |        ["Email/import",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "created": {
          |                    "C42": {
          |                        "id": "$messageId",
@@ -232,7 +262,7 @@ trait EmailImportContract {
          |            }, "c1"],
          |        ["Email/get",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
          |                "list": [
          |                    {
@@ -270,7 +300,7 @@ trait EmailImportContract {
 
   @Test
   def importShouldSucceedWhenEmptyKeyword(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
@@ -279,7 +309,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -296,7 +326,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -311,7 +341,7 @@ trait EmailImportContract {
               |      "c1"],
               |    ["Email/get",
               |     {
-              |       "accountId": "$ACCOUNT_ID",
+              |       "accountId": "$bobAccountId",
               |       "ids": ["#C42"],
               |       "properties": ["keywords", "mailboxIds", "receivedAt", "subject", "size", "bodyValues", "htmlBody"],
               |       "fetchHTMLBodyValues": true
@@ -345,7 +375,7 @@ trait EmailImportContract {
       s"""    [
          |        ["Email/import",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "created": {
          |                    "C42": {
          |                        "id": "$messageId",
@@ -357,7 +387,7 @@ trait EmailImportContract {
          |            }, "c1"],
          |        ["Email/get",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
          |                "list": [
          |                    {
@@ -393,7 +423,7 @@ trait EmailImportContract {
 
   @Test
   def importShouldSucceedWhenNoKeyword(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
@@ -402,7 +432,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -419,7 +449,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -433,7 +463,7 @@ trait EmailImportContract {
               |      "c1"],
               |    ["Email/get",
               |     {
-              |       "accountId": "$ACCOUNT_ID",
+              |       "accountId": "$bobAccountId",
               |       "ids": ["#C42"],
               |       "properties": ["keywords", "mailboxIds", "receivedAt", "subject", "size", "bodyValues", "htmlBody"],
               |       "fetchHTMLBodyValues": true
@@ -467,7 +497,7 @@ trait EmailImportContract {
       s"""    [
          |        ["Email/import",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "created": {
          |                    "C42": {
          |                        "id": "$messageId",
@@ -479,7 +509,7 @@ trait EmailImportContract {
          |            }, "c1"],
          |        ["Email/get",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
          |                "list": [
          |                    {
@@ -515,7 +545,7 @@ trait EmailImportContract {
 
   @Test
   def importShouldSucceedWhenNoReceivedAt(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
@@ -524,7 +554,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -540,7 +570,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -553,7 +583,7 @@ trait EmailImportContract {
               |      "c1"],
               |    ["Email/get",
               |     {
-              |       "accountId": "$ACCOUNT_ID",
+              |       "accountId": "$bobAccountId",
               |       "ids": ["#C42"],
               |       "properties": ["keywords", "mailboxIds", "receivedAt", "subject", "size", "bodyValues", "htmlBody"],
               |       "fetchHTMLBodyValues": true
@@ -587,7 +617,7 @@ trait EmailImportContract {
       s"""    [
          |        ["Email/import",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "created": {
          |                    "C42": {
          |                        "id": "$messageId",
@@ -599,7 +629,7 @@ trait EmailImportContract {
          |            }, "c1"],
          |        ["Email/get",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
          |                "list": [
          |                    {
@@ -636,15 +666,15 @@ trait EmailImportContract {
   @Test
   def importShouldEnforceQuotas(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB)), QuotaCountLimit.count(0L))
-    val id1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername)), QuotaCountLimit.count(0L))
+    val id1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     val uploadResponse: String = `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -661,7 +691,7 @@ trait EmailImportContract {
          |    "urn:ietf:params:jmap:mail",
          |    "urn:apache:james:params:jmap:mail:shares"],
          |  "methodCalls": [["Email/import", {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "emails": {
          |           "C42": {
          |             "blobId": "$blobId",
@@ -696,11 +726,11 @@ trait EmailImportContract {
            |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"methodResponses": [
            |		["Email/import", {
-           |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |			"accountId": "$bobAccountId",
            |			"notCreated": {
            |				"C42": {
            |					"type": "overQuota",
-           |					"description": "You have too many messages in #private&bob@domain.tld"
+           |					"description": "You have too many messages in #private&${bobUsername.asString}"
            |				}
            |			}
            |		}, "c1"]
@@ -710,7 +740,7 @@ trait EmailImportContract {
 
   @Test
   def importShouldAddTheMailsInTheMailbox(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
@@ -719,7 +749,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -731,7 +761,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/html.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -749,7 +779,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId1",
@@ -776,7 +806,7 @@ trait EmailImportContract {
               |      "c1"],
               |    ["Email/get",
               |     {
-              |       "accountId": "$ACCOUNT_ID",
+              |       "accountId": "$bobAccountId",
               |       "ids": ["#C42", "#C43"],
               |       "properties": ["subject"],
               |       "fetchHTMLBodyValues": true
@@ -817,7 +847,7 @@ trait EmailImportContract {
          |        [
          |            "Email/import",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "created": {
          |                    "C42": {
          |                        "id": "$messageId1",
@@ -838,7 +868,7 @@ trait EmailImportContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [],
          |                "list": [
          |                    {
@@ -860,7 +890,7 @@ trait EmailImportContract {
   def importShouldDisplayOldAndNewState(server: GuiceJamesServer): Unit = {
     val oldState: String = retrieveEmailState
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
@@ -869,7 +899,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -886,7 +916,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -939,7 +969,7 @@ trait EmailImportContract {
          |  "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids":[]
          |    }, "c1"]
          |  ]
@@ -952,7 +982,7 @@ trait EmailImportContract {
 
   @Test
   def importShouldFailWhenMailboxNotOwned(server: GuiceJamesServer): Unit = {
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
@@ -961,7 +991,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body("whatever")
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -978,7 +1008,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -1011,7 +1041,7 @@ trait EmailImportContract {
       s"""[
            |  "Email/import",
            |  {
-           |    "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |    "accountId":"$bobAccountId",
            |    "notCreated":{
            |      "C42":{
            |        "type":"notFound",
@@ -1025,18 +1055,18 @@ trait EmailImportContract {
 
   @Test
   def importShouldSucceedWhenMailboxDelegated(server: GuiceJamesServer): Unit = {
-    val andrePath = MailboxPath.inbox(ANDRE)
+    val andrePath = MailboxPath.inbox(andreUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andrePath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Insert, Right.Lookup, Right.Read))
+      .replaceRights(andrePath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Insert, Right.Lookup, Right.Read))
 
     val uploadResponse: String = `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -1053,7 +1083,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -1096,7 +1126,7 @@ trait EmailImportContract {
       s"""[
            |  "Email/import",
            |  {
-           |    "accountId":"$ACCOUNT_ID",
+           |    "accountId":"$bobAccountId",
            |    "created":{
            |      "C42":{
            |        "id":"$messageId",
@@ -1112,9 +1142,9 @@ trait EmailImportContract {
 
   @Test
   def importShouldFailWhenBlobNotOwned(server: GuiceJamesServer): Unit = {
-    val andrePath = MailboxPath.inbox(ANDRE)
+    val andrePath = MailboxPath.inbox(andreUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val bobId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
@@ -1124,7 +1154,7 @@ trait EmailImportContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, andrePath, AppendCommand.from(message))
+      .appendMessage(andreUsername.asString, andrePath, AppendCommand.from(message))
       .getMessageId
     val blobId: String = messageId.serialize()
 
@@ -1136,7 +1166,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -1169,7 +1199,7 @@ trait EmailImportContract {
       s"""[
            |  "Email/import",
            |  {
-           |    "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |    "accountId":"$bobAccountId",
            |    "notCreated":{
            |      "C42":{
            |        "type":"notFound",
@@ -1183,9 +1213,9 @@ trait EmailImportContract {
 
   @Test
   def importShouldSucceedWhenBlobDelegated(server: GuiceJamesServer): Unit = {
-    val andrePath = MailboxPath.inbox(ANDRE)
+    val andrePath = MailboxPath.inbox(andreUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val bobId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
@@ -1195,11 +1225,11 @@ trait EmailImportContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val blobId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, andrePath, AppendCommand.from(message))
+      .appendMessage(andreUsername.asString, andrePath, AppendCommand.from(message))
       .getMessageId.serialize()
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andrePath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Insert, Right.Lookup, Right.Read))
+      .replaceRights(andrePath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Insert, Right.Lookup, Right.Read))
 
     val receivedAtString = UTCDate(receivedAt).asUTC.format(UTC_DATE_FORMAT)
     val response = `given`
@@ -1209,7 +1239,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -1252,7 +1282,7 @@ trait EmailImportContract {
       s"""[
            |  "Email/import",
            |  {
-           |    "accountId":"$ACCOUNT_ID",
+           |    "accountId":"$bobAccountId",
            |    "created":{
            |      "C42":{
            |        "id":"$messageId",
@@ -1275,7 +1305,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body("whatever")
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -1292,7 +1322,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -1323,7 +1353,7 @@ trait EmailImportContract {
       s"""[
            |  "Email/import",
            |  {
-           |    "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |    "accountId":"$bobAccountId",
            |    "notCreated":{
            |      "C42":{
            |        "type":"invalidArguments",
@@ -1344,7 +1374,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body("whatever")
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -1361,7 +1391,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -1395,7 +1425,7 @@ trait EmailImportContract {
       s"""[
            |  "Email/import",
            |  {
-           |    "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |    "accountId":"$bobAccountId",
            |    "notCreated":{
            |      "C42":{
            |        "type":"invalidArguments",
@@ -1409,7 +1439,7 @@ trait EmailImportContract {
 
   @Test
   def importShouldFailWhenBlobNotFound(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
@@ -1423,7 +1453,7 @@ trait EmailImportContract {
               |  "methodCalls": [
               |    ["Email/import",
               |      {
-              |        "accountId": "$ACCOUNT_ID",
+              |        "accountId": "$bobAccountId",
               |        "emails": {
               |           "C42": {
               |             "blobId": "$blobId",
@@ -1454,7 +1484,7 @@ trait EmailImportContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
       s"""{
-           |  "accountId":"$ACCOUNT_ID",
+           |  "accountId":"$bobAccountId",
            |  "notCreated":{
            |    "C42":{
            |      "type":"notFound",
@@ -1466,7 +1496,7 @@ trait EmailImportContract {
 
   @Test
   def importShouldFailWhenInvalidAccountId(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
