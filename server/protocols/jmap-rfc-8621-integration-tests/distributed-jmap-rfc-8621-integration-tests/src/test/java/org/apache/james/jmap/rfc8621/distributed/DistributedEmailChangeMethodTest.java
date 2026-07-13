@@ -59,6 +59,7 @@ public class DistributedEmailChangeMethodTest implements EmailChangesMethodContr
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(CassandraMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5)))
             .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(CassandraEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5))))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_ENCLOSING_CLASS)
         .build();
 
     @Override
