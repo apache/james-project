@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.QuotaChangesMethodContract;
 
-public class DistributedQuotaChangesMethodTest extends DistributedBase implements QuotaChangesMethodContract {
+public class DistributedQuotaChangesMethodTest extends PerClassDistributedBase implements QuotaChangesMethodContract {
 
 }
