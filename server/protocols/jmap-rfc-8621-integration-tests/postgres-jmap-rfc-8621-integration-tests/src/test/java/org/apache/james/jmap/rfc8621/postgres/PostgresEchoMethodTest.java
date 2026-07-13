@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.EchoMethodContract;
 
-public class PostgresEchoMethodTest extends PostgresBase implements EchoMethodContract {
+public class PostgresEchoMethodTest extends PerClassPostgresBase implements EchoMethodContract {
 }

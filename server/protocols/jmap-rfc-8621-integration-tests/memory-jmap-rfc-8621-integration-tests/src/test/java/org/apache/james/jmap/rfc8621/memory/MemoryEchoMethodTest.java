@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.EchoMethodContract;
 
-public class MemoryEchoMethodTest extends MemoryBase implements EchoMethodContract {
+public class MemoryEchoMethodTest extends PerClassMemoryBase implements EchoMethodContract {
 
 }
