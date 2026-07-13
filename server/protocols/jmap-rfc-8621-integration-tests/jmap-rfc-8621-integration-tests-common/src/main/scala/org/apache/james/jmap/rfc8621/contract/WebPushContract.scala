@@ -24,10 +24,12 @@ import java.security.KeyPair
 import java.security.interfaces.{ECPrivateKey, ECPublicKey}
 import java.time.temporal.ChronoUnit
 import java.util.Base64
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Consumer
 
+import com.google.common.hash.Hashing
 import com.google.crypto.tink.apps.webpush.WebPushHybridDecrypt
 import com.google.crypto.tink.subtle.EllipticCurves
 import com.google.crypto.tink.subtle.EllipticCurves.CurveType
@@ -38,9 +40,10 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -66,7 +69,18 @@ import play.api.libs.json.{JsObject, JsString, Json}
 
 import scala.jdk.CollectionConverters._
 
+object WebPushContractContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] = new java.util.concurrent.atomic.AtomicReference[TestContext]()
+}
+
 trait WebPushContract {
+  import WebPushContractContext.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+
   private lazy val awaitAtMostTenSeconds: ConditionFactory = Awaitility.`with`
     .pollInterval(ONE_HUNDRED_MILLISECONDS)
     .and.`with`.pollDelay(ONE_HUNDRED_MILLISECONDS)
@@ -76,17 +90,22 @@ trait WebPushContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    currentContext.set(WebPushContractContext.TestContext(
+      bob, Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString, andre))
     server.getProbe(classOf[DataProbeImpl])
       .fluent()
       .addDomain(DOMAIN.asString())
-      .addUser(BOB.asString(), BOB_PASSWORD)
-      .addUser(ANDRE.asString(), ANDRE_PASSWORD)
+      .addUser(bobUsername.asString(), BOB_PASSWORD)
+      .addUser(andreUsername.asString(), ANDRE_PASSWORD)
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.inbox(BOB))
+      .createMailbox(MailboxPath.inbox(bobUsername))
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build()
   }
@@ -155,8 +174,8 @@ trait WebPushContract {
   private def sendEmailToBob(server: GuiceJamesServer): Unit = {
     val smtpMessageSender: SMTPMessageSender = new SMTPMessageSender(DOMAIN.asString())
     smtpMessageSender.connect("127.0.0.1", server.getProbe(classOf[SmtpGuiceProbe]).getSmtpPort)
-      .authenticate(ANDRE.asString, ANDRE_PASSWORD)
-      .sendMessage(ANDRE.asString, BOB.asString())
+      .authenticate(andreUsername.asString, ANDRE_PASSWORD)
+      .sendMessage(andreUsername.asString, bobUsername.asString())
     smtpMessageSender.close()
 
     awaitAtMostTenSeconds.until(() => server.getProbe(classOf[SpoolerProbe]).processingFinished())
@@ -238,7 +257,7 @@ trait WebPushContract {
           s"""{
              |    "@type": "StateChange",
              |    "changed": {
-             |        "$ACCOUNT_ID": {
+             |        "$bobAccountId": {
              |          "Mailbox": "$${json-unit.any-string}"
              |        }
              |    }
@@ -264,7 +283,7 @@ trait WebPushContract {
           s"""{
              |    "@type": "StateChange",
              |    "changed": {
-             |        "$ACCOUNT_ID": {
+             |        "$bobAccountId": {
              |          "EmailDelivery": "$${json-unit.any-string}"
              |        }
              |    }
@@ -281,20 +300,20 @@ trait WebPushContract {
     setupPushSubscriptionForBob(pushServer)
 
     // WHEN bob create a draft mail
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", BOB.asString(), MailboxConstants.INBOX)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", bobUsername.asString(), MailboxConstants.INBOX)
     val request =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
          |             "${mailboxId.serialize}": true
          |          },
          |          "to": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}],
-         |          "from": [{"email": "${BOB.asString}"}]
+         |          "from": [{"email": "${bobUsername.asString}"}]
          |        }
          |      }
          |    }, "c1"]]
@@ -315,7 +334,7 @@ trait WebPushContract {
           s"""{
              |    "@type": "StateChange",
              |    "changed": {
-             |        "$ACCOUNT_ID": {
+             |        "$bobAccountId": {
              |          "EmailDelivery": "$${json-unit.any-string}"
              |        }
              |    }
@@ -337,13 +356,13 @@ trait WebPushContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
-         |             "mailFrom": {"email": "${BOB.asString}"},
-         |             "rcptTo": [{"email": "${ANDRE.asString}"}]
+         |             "mailFrom": {"email": "${bobUsername.asString}"},
+         |             "rcptTo": [{"email": "${andreUsername.asString}"}]
          |           }
          |         }
          |    }
@@ -365,7 +384,7 @@ trait WebPushContract {
           s"""{
              |    "@type": "StateChange",
              |    "changed": {
-             |        "$ACCOUNT_ID": {
+             |        "$bobAccountId": {
              |          "EmailDelivery": "$${json-unit.any-string}"
              |        }
              |    }
@@ -438,7 +457,7 @@ trait WebPushContract {
         s"""{
            |    "@type": "StateChange",
            |    "changed": {
-           |        "$ACCOUNT_ID": {
+           |        "$bobAccountId": {
            |          "Mailbox": "$${json-unit.any-string}"
            |        }
            |    }
@@ -529,7 +548,7 @@ trait WebPushContract {
         s"""{
            |    "@type": "StateChange",
            |    "changed": {
-           |        "$ACCOUNT_ID": {
+           |        "$bobAccountId": {
            |          "Mailbox": "$${json-unit.any-string}"
            |        }
            |    }
@@ -558,7 +577,7 @@ trait WebPushContract {
         s"""{
            |    "@type": "StateChange",
            |    "changed": {
-           |        "$ACCOUNT_ID": {
+           |        "$bobAccountId": {
            |          "Mailbox": "$${json-unit.any-string}"
            |        }
            |    }
@@ -672,7 +691,7 @@ trait WebPushContract {
         s"""{
            |    "@type": "StateChange",
            |    "changed": {
-           |        "$ACCOUNT_ID": {
+           |        "$bobAccountId": {
            |          "Mailbox": "$${json-unit.ignore}"
            |        }
            |    }
@@ -683,14 +702,14 @@ trait WebPushContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
-      .setTo(ANDRE.asString)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
       .build(message))
       .getMessageId
     messageId
