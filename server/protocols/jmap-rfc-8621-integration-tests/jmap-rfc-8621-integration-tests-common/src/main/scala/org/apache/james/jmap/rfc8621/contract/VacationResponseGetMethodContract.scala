@@ -19,20 +19,25 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.JmapGuiceProbe
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.VacationResponseGetMethodContract.VACATION_RESPONSE
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
@@ -51,16 +56,36 @@ object VacationResponseGetMethodContract {
       .build
 }
 
+object VacationResponseGetMethodContractContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String)
+
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+}
+
 trait VacationResponseGetMethodContract {
+  import VacationResponseGetMethodContractContext.{TestContext, currentContext}
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = accountId(bob)))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -118,7 +143,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": null
                |    },
                |    "c1"]]
@@ -138,7 +163,7 @@ trait VacationResponseGetMethodContract {
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
@@ -156,7 +181,7 @@ trait VacationResponseGetMethodContract {
   @Tag(CategoryTags.BASIC_FEATURE)
   def vacationResponseShouldReturnStoredValue(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[JmapGuiceProbe])
-      .modifyVacation(AccountId.fromUsername(BOB), VACATION_RESPONSE)
+      .modifyVacation(AccountId.fromUsername(bobUsername), VACATION_RESPONSE)
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -168,7 +193,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": null
                |    },
                |    "c1"]]
@@ -188,7 +213,7 @@ trait VacationResponseGetMethodContract {
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
@@ -218,7 +243,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": null
                |    },
                |    "c1"]]
@@ -254,7 +279,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": null
                |    },
                |    "c1"]]
@@ -293,7 +318,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["singleton"]
                |    },
                |    "c1"]]
@@ -313,7 +338,7 @@ trait VacationResponseGetMethodContract {
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
@@ -339,7 +364,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["random"]
                |    },
                |    "c1"]]
@@ -359,7 +384,7 @@ trait VacationResponseGetMethodContract {
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [],
          |      "notFound": ["random"]
@@ -380,7 +405,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["random1", "singleton", "random2"]
                |    },
                |    "c1"]]
@@ -400,7 +425,7 @@ trait VacationResponseGetMethodContract {
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
@@ -426,7 +451,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": []
                |    },
                |    "c1"]]
@@ -446,7 +471,7 @@ trait VacationResponseGetMethodContract {
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [],
          |      "notFound": []
@@ -467,7 +492,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": [""]
                |    },
                |    "c1"]]
@@ -501,7 +526,7 @@ trait VacationResponseGetMethodContract {
   @Test
   def vacationResponseShouldReturnAllPropertiesWhenNull(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[JmapGuiceProbe])
-      .modifyVacation(AccountId.fromUsername(BOB), VACATION_RESPONSE)
+      .modifyVacation(AccountId.fromUsername(bobUsername), VACATION_RESPONSE)
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -513,7 +538,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": null,
                |      "properties": null
                |    },
@@ -534,7 +559,7 @@ trait VacationResponseGetMethodContract {
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
@@ -556,7 +581,7 @@ trait VacationResponseGetMethodContract {
   @Test
   def vacationResponseShouldReturnIdWhenNoPropertiesRequested(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[JmapGuiceProbe])
-      .modifyVacation(AccountId.fromUsername(BOB), VACATION_RESPONSE)
+      .modifyVacation(AccountId.fromUsername(bobUsername), VACATION_RESPONSE)
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -568,7 +593,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": null,
                |      "properties": []
                |    },
@@ -589,7 +614,7 @@ trait VacationResponseGetMethodContract {
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
@@ -605,7 +630,7 @@ trait VacationResponseGetMethodContract {
   @Test
   def vacationResponseShouldReturnOnlyRequestedProperties(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[JmapGuiceProbe])
-      .modifyVacation(AccountId.fromUsername(BOB), VACATION_RESPONSE)
+      .modifyVacation(AccountId.fromUsername(bobUsername), VACATION_RESPONSE)
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -617,7 +642,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": null,
                |      "properties": ["id", "subject"]
                |    },
@@ -638,7 +663,7 @@ trait VacationResponseGetMethodContract {
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
@@ -655,7 +680,7 @@ trait VacationResponseGetMethodContract {
   @Test
   def vacationResponseShouldAlwaysReturnIdEvenIfNotRequestedInProperties(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[JmapGuiceProbe])
-      .modifyVacation(AccountId.fromUsername(BOB), VACATION_RESPONSE)
+      .modifyVacation(AccountId.fromUsername(bobUsername), VACATION_RESPONSE)
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -667,7 +692,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": null,
                |      "properties": ["subject"]
                |    },
@@ -688,7 +713,7 @@ trait VacationResponseGetMethodContract {
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
@@ -714,7 +739,7 @@ trait VacationResponseGetMethodContract {
                |  "methodCalls": [[
                |    "VacationResponse/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": null,
                |      "properties": ["invalidProperty"]
                |    },
