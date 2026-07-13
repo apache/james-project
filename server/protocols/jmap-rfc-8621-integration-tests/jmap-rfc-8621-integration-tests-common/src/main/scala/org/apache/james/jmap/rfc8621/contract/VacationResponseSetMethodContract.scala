@@ -19,12 +19,18 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+import java.util.concurrent.atomic
+
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
@@ -33,16 +39,36 @@ import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
+object VacationResponseSetMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String)
+
+  val currentContext: atomic.AtomicReference[TestContext] = new atomic.AtomicReference[TestContext]()
+}
+
 trait VacationResponseSetMethodContract {
+  import VacationResponseSetMethodContract.{TestContext, currentContext}
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = accountId(bob)))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -107,7 +133,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {
          |          "isEnabled": true,
@@ -120,7 +146,7 @@ trait VacationResponseSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["VacationResponse/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["singleton"]
          |    }, "c2"]
          |  ]
@@ -145,14 +171,14 @@ trait VacationResponseSetMethodContract {
          |"sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}",
          |      "updated": {
          |        "singleton": {}
          |      }
          |    }, "c1"],
          |    ["VacationResponse/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
@@ -181,7 +207,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {
          |          "isEnabled": true,
@@ -214,13 +240,13 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {}
          |      }
          |    }, "c1"],
          |    ["VacationResponse/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["singleton"]
          |    }, "c2"]
          |  ]
@@ -245,14 +271,14 @@ trait VacationResponseSetMethodContract {
          |"sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}",
          |      "updated": {
          |        "singleton": {}
          |      }
          |    }, "c1"],
          |    ["VacationResponse/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
@@ -281,7 +307,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {
          |          "htmlBody": "I'm currently enjoying <b>life</b>. <br/>Please disturb me later"
@@ -310,7 +336,7 @@ trait VacationResponseSetMethodContract {
          |"sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}",
          |      "updated": {
          |        "singleton": {}
@@ -330,7 +356,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {
          |          "isEnabled": true,
@@ -364,7 +390,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {
          |          "htmlBody": "I'm currently enjoying <b>life</b>. <br/>Please disturb me later"
@@ -372,7 +398,7 @@ trait VacationResponseSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["VacationResponse/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["singleton"]
          |    }, "c2"]
          |  ]
@@ -397,14 +423,14 @@ trait VacationResponseSetMethodContract {
          |"sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}",
          |      "updated": {
          |        "singleton": {}
          |      }
          |    }, "c1"],
          |    ["VacationResponse/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
@@ -433,7 +459,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "invalid": {
          |          "htmlBody": "I'm currently enjoying <b>life</b>. <br/>Please disturb me later"
@@ -462,7 +488,7 @@ trait VacationResponseSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}",
          |      "notUpdated": {
          |        "invalid": {
@@ -485,7 +511,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {
          |          "id": "singleton",
@@ -515,7 +541,7 @@ trait VacationResponseSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}",
          |      "notUpdated": {
          |        "singleton": {
@@ -538,7 +564,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {
          |          "fromDate": "2014/12/30"
@@ -567,7 +593,7 @@ trait VacationResponseSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}",
          |      "notUpdated": {
          |        "singleton": {
@@ -590,7 +616,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {
          |          "fromDate": "2014-11-30T14:12:00Z",
@@ -620,7 +646,7 @@ trait VacationResponseSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}",
          |      "notUpdated": {
          |        "singleton": {
@@ -643,7 +669,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {}
          |    },
          |    "c1"]
@@ -669,7 +695,7 @@ trait VacationResponseSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}"
          |    }, "c1"]
          |  ]
@@ -686,7 +712,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {
          |          "htmlBody": "I'm currently enjoying <b>life</b>. <br/>Please disturb me later"
@@ -718,7 +744,7 @@ trait VacationResponseSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}",
          |      "updated": {
          |        "singleton": {}
@@ -744,7 +770,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "singleton": {
          |          "htmlBody": "I'm currently enjoying <b>life</b>. <br/>Please disturb me later"
@@ -773,7 +799,7 @@ trait VacationResponseSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}",
          |      "notCreated": {
          |        "singleton": {
@@ -796,7 +822,7 @@ trait VacationResponseSetMethodContract {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "destroy": ["singleton"]
          |    }, "c1"]
          |  ]
@@ -821,7 +847,7 @@ trait VacationResponseSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "newState": "${INSTANCE.value}",
          |      "notDestroyed": {
          |        "singleton": {
@@ -844,7 +870,7 @@ trait VacationResponseSetMethodContract {
                |  "methodCalls": [[
                |     "VacationResponse/set",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "update": {
                |         "singleton": {}
                |       }
@@ -882,7 +908,7 @@ trait VacationResponseSetMethodContract {
                |  "methodCalls": [[
                |     "VacationResponse/set",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "update": {
                |         "singleton": {}
                |       }

@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.VacationResponseSetMethodContract;
 
-public class DistributedVacationResponseSetMethodTest extends DistributedBase implements VacationResponseSetMethodContract {
+public class DistributedVacationResponseSetMethodTest extends PerClassDistributedBase implements VacationResponseSetMethodContract {
 
 }

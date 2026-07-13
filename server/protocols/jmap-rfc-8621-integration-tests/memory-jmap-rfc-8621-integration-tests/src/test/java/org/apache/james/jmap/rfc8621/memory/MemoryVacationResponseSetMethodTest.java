@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.VacationResponseSetMethodContract;
 
-public class MemoryVacationResponseSetMethodTest extends MemoryBase implements VacationResponseSetMethodContract {
+public class MemoryVacationResponseSetMethodTest extends PerClassMemoryBase implements VacationResponseSetMethodContract {
 
 }
