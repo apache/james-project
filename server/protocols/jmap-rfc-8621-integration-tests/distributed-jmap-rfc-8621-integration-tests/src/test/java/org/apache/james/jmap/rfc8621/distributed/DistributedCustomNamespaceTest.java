@@ -52,5 +52,6 @@ public class DistributedCustomNamespaceTest implements CustomNamespaceContract {
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new CustomNamespaceModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

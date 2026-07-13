@@ -41,5 +41,6 @@ public class MemoryCustomNamespaceTest implements CustomNamespaceContract {
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new CustomNamespaceModule())
             .overrideWith(new TestJMAPServerModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
