@@ -23,7 +23,7 @@ import org.apache.james.jmap.rfc8621.contract.ImapKeywordsConsistencyContract;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MemoryIMAPKeywordsInconsistenciesTest extends MemoryBase implements ImapKeywordsConsistencyContract {
+public class MemoryIMAPKeywordsInconsistenciesTest extends PerClassMemoryBase implements ImapKeywordsConsistencyContract {
     @RegisterExtension
     TestIMAPClient testIMAPClient = new TestIMAPClient();
 

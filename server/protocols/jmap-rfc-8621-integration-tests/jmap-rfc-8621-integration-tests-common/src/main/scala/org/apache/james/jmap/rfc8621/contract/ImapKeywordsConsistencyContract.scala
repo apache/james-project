@@ -21,8 +21,10 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
 import java.util
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured
 import io.restassured.RestAssured.`given`
@@ -30,10 +32,10 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.JMAPTestingConstants.{DOMAIN, LOCALHOST_IP}
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, BOB, BOB_PASSWORD, authScheme, baseRequestSpecBuilder}
-import org.apache.james.jmap.rfc8621.contract.ImapKeywordsConsistencyContract.bobInboxPath
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB_PASSWORD, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.{MailboxConstants, MailboxPath, MessageId}
@@ -50,11 +52,21 @@ import org.junit.jupiter.params.provider.ValueSource
 
 import scala.jdk.CollectionConverters._
 
-object ImapKeywordsConsistencyContract {
-  private val bobInboxPath = MailboxPath.forUser(BOB, DefaultMailboxes.INBOX)
+object ImapKeywordsConsistencyContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] = new java.util.concurrent.atomic.AtomicReference[TestContext]()
 }
 
+object ImapKeywordsConsistencyContract {}
+
 trait ImapKeywordsConsistencyContract {
+  import ImapKeywordsConsistencyContext.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+  def bobInboxPath: MailboxPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.INBOX)
+
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
     .pollInterval(slowPacedPollInterval)
@@ -66,18 +78,23 @@ trait ImapKeywordsConsistencyContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    currentContext.set(ImapKeywordsConsistencyContext.TestContext(
+      bob, Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString, andre))
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN)
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
 
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.INBOX)
-    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.ARCHIVE)
-    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.TRASH)
+    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob.asString, DefaultMailboxes.INBOX)
+    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob.asString, DefaultMailboxes.ARCHIVE)
+    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob.asString, DefaultMailboxes.TRASH)
 
     RestAssured.requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -96,7 +113,7 @@ trait ImapKeywordsConsistencyContract {
 
     // And the user has an open IMAP connection with mailbox "<mailbox>" selected
     imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
-      .login(BOB, BOB_PASSWORD)
+      .login(bobUsername, BOB_PASSWORD)
       .select(mailbox)
 
     // And the user set flags via IMAP to "(\Flagged)" for all messages in mailbox "<mailbox>"
@@ -136,7 +153,7 @@ trait ImapKeywordsConsistencyContract {
 
     // And the user has an open IMAP connection with mailbox "<mailbox>" selected
     imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
-      .login(BOB, BOB_PASSWORD)
+      .login(bobUsername, BOB_PASSWORD)
       .select(mailbox)
 
     // And the user set flags via IMAP to "(\Draft)" for all messages in mailbox "<mailbox>"
@@ -171,7 +188,7 @@ trait ImapKeywordsConsistencyContract {
 
     // And the user has an open IMAP connection with mailbox "archive" selected
     imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
-      .login(BOB, BOB_PASSWORD)
+      .login(bobUsername, BOB_PASSWORD)
       .select(DefaultMailboxes.ARCHIVE)
 
     // And the user set flags via IMAP to "(\Flagged)" for all messages in mailbox "archive"
@@ -197,7 +214,7 @@ trait ImapKeywordsConsistencyContract {
 
     // And the user has an open IMAP connection with mailbox "archive" selected
     imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
-      .login(BOB, BOB_PASSWORD)
+      .login(bobUsername, BOB_PASSWORD)
       .select(DefaultMailboxes.ARCHIVE)
 
     // And the user set flags via IMAP to "(\Flagged)" for all messages in mailbox "archive"
@@ -223,7 +240,7 @@ trait ImapKeywordsConsistencyContract {
 
     // And the user has an open IMAP connection with mailbox "archive" selected
     imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
-      .login(BOB, BOB_PASSWORD)
+      .login(bobUsername, BOB_PASSWORD)
       .select(DefaultMailboxes.ARCHIVE)
 
     // And the user set flags via IMAP to "(\Flagged)" for all messages in mailbox "archive"
@@ -247,7 +264,7 @@ trait ImapKeywordsConsistencyContract {
 
     // And the user has an open IMAP connection with mailbox "archive" selected
     imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
-      .login(BOB, BOB_PASSWORD)
+      .login(bobUsername, BOB_PASSWORD)
       .select(DefaultMailboxes.ARCHIVE)
 
     // And the user set flags via IMAP to "(\Flagged)" for all messages in mailbox "archive"
@@ -286,7 +303,7 @@ trait ImapKeywordsConsistencyContract {
 
     // And the user has an open IMAP connection with mailbox "archive" selected
     imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
-      .login(BOB, BOB_PASSWORD)
+      .login(bobUsername, BOB_PASSWORD)
       .select(DefaultMailboxes.ARCHIVE)
 
     // And the user set flags via IMAP to "(\Flagged)" for all messages in mailbox "archive"
@@ -337,7 +354,7 @@ trait ImapKeywordsConsistencyContract {
 
     // And the user has an open IMAP connection with mailbox "archive" selected
     imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
-      .login(BOB, BOB_PASSWORD)
+      .login(bobUsername, BOB_PASSWORD)
       .select(DefaultMailboxes.ARCHIVE)
 
     // And the user set flags via IMAP to "(\Flagged)" for all messages in mailbox "archive"
@@ -368,21 +385,21 @@ trait ImapKeywordsConsistencyContract {
     val message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString)
-      .setFrom("ANDRE <" + ANDRE.asString + ">")
-      .setTo(BOB.asString)
+      .setSender(andreUsername.asString)
+      .setFrom("andreUsername <" + andreUsername.asString + ">")
+      .setTo(bobUsername.asString)
       .setSubject("My awesome subject")
       .setBody("This is the content", StandardCharsets.UTF_8)
       .build
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString(), bobInboxPath, AppendCommand.builder().build(message))
+      .appendMessage(bobUsername.asString(), bobInboxPath, AppendCommand.builder().build(message))
       .getMessageId
   }
 
   def moveMessageFromInboxToArchive(server: GuiceJamesServer, messageId: MessageId): Unit = {
     val archiveMailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.ARCHIVE)
+      .getMailboxId(MailboxConstants.USER_NAMESPACE, bobUsername.asString, DefaultMailboxes.ARCHIVE)
 
     val request =
       s"""{
@@ -391,7 +408,7 @@ trait ImapKeywordsConsistencyContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -413,9 +430,9 @@ trait ImapKeywordsConsistencyContract {
 
   def copyMessageFromInboxToArchive(server: GuiceJamesServer, messageId: MessageId): Unit = {
     val inboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.INBOX)
+      .getMailboxId(MailboxConstants.USER_NAMESPACE, bobUsername.asString, DefaultMailboxes.INBOX)
     val archiveMailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.ARCHIVE)
+      .getMailboxId(MailboxConstants.USER_NAMESPACE, bobUsername.asString, DefaultMailboxes.ARCHIVE)
 
     val request =
       s"""{
@@ -424,7 +441,7 @@ trait ImapKeywordsConsistencyContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -452,7 +469,7 @@ trait ImapKeywordsConsistencyContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ACCOUNT_ID"
+         |      "accountId": "$bobAccountId"
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -476,7 +493,7 @@ trait ImapKeywordsConsistencyContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "hasKeyword": "$keyword"
          |      }
@@ -498,7 +515,7 @@ trait ImapKeywordsConsistencyContract {
 
   def listMessageIdsArchive(server: GuiceJamesServer): util.ArrayList[String] = {
     val archiveMailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.ARCHIVE)
+      .getMailboxId(MailboxConstants.USER_NAMESPACE, bobUsername.asString, DefaultMailboxes.ARCHIVE)
 
     val request =
       s"""{
@@ -506,7 +523,7 @@ trait ImapKeywordsConsistencyContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"inMailbox": "${archiveMailboxId.serialize}"}
          |    },
          |    "c1"]]
@@ -526,7 +543,7 @@ trait ImapKeywordsConsistencyContract {
 
   def listMessageIdsByMailboxAndKeyword(server: GuiceJamesServer, mailbox: String, keyword: String): util.ArrayList[String] = {
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId(MailboxConstants.USER_NAMESPACE, BOB.asString, mailbox)
+      .getMailboxId(MailboxConstants.USER_NAMESPACE, bobUsername.asString, mailbox)
 
     val request =
       s"""{
@@ -534,7 +551,7 @@ trait ImapKeywordsConsistencyContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize}",
          |        "hasKeyword": "$keyword"
@@ -562,7 +579,7 @@ trait ImapKeywordsConsistencyContract {
          |  "methodCalls": [[
          |     "Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": [$idString]
          |     },
          |     "c1"]]
@@ -587,7 +604,7 @@ trait ImapKeywordsConsistencyContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |          "keywords": {
