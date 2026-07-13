@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.ThreadChangesContract;
 
-public class MemoryThreadChangesMethodTest extends MemoryBase implements ThreadChangesContract {
+public class MemoryThreadChangesMethodTest extends PerClassMemoryBase implements ThreadChangesContract {
 
 }
