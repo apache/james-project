@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.SearchSnippetGetMethodContract;
 
-class DistributedSearchSnippetGetMethodTest extends DistributedBase implements SearchSnippetGetMethodContract {
+class DistributedSearchSnippetGetMethodTest extends PerClassDistributedBase implements SearchSnippetGetMethodContract {
 
 }
