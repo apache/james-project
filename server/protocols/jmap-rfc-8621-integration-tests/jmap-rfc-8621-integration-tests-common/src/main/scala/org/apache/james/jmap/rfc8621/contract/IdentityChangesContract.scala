@@ -19,30 +19,49 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 
+object IdentityChangesContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] = new java.util.concurrent.atomic.AtomicReference[TestContext]()
+}
+
 trait IdentityChangesContract {
+  import IdentityChangesContract.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val accountId = Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString
+    currentContext.set(IdentityChangesContract.TestContext(bob, accountId))
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
       .addDomain("domain-alias.tld")
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bobUsername.asString, BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .build
   }
 
@@ -54,7 +73,7 @@ trait IdentityChangesContract {
          |  "methodCalls": [[
          |    "Identity/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "2c9f1b12-b35a-43e6-9af2-0106fb53a941"
          |    },
          |    "c1"]]
@@ -97,7 +116,7 @@ trait IdentityChangesContract {
          |  "methodCalls": [[
          |    "Identity/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${INSTANCE.value}"
          |    },
          |    "c1"]]
@@ -119,7 +138,7 @@ trait IdentityChangesContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-          |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+          |  "accountId": "$bobAccountId",
           |  "oldState": "${INSTANCE.value}",
           |  "newState": "${INSTANCE.value}",
           |  "hasMoreChanges": false,
