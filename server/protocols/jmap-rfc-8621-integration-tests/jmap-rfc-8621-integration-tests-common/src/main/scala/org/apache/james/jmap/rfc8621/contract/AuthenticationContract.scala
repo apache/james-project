@@ -19,19 +19,28 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.util.UUID
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.authentication.NoAuthScheme
 import io.restassured.http.Header
 import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_OK, SC_UNAUTHORIZED}
 import org.apache.james.GuiceJamesServer
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE, ALICE_PASSWORD, AUTHORIZATION_HEADER, BOB, BOB_BASIC_AUTH_HEADER, BOB_PASSWORD, DOMAIN, DOMAIN_WITH_SPACE, ECHO_REQUEST_OBJECT, INVALID_JWT_TOKEN, UNKNOWN_USER_TOKEN, USER, USER_PASSWORD, USER_TOKEN, _2_DOT_DOMAIN, baseRequestSpecBuilder, getHeadersWith, toBase64}
+import org.apache.james.core.Username
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, AUTHORIZATION_HEADER, DOMAIN, DOMAIN_WITH_SPACE, ECHO_REQUEST_OBJECT, INVALID_JWT_TOKEN, UNKNOWN_USER_TOKEN, USER, USER_PASSWORD, USER_TOKEN, _2_DOT_DOMAIN, baseRequestSpecBuilder, getHeadersWith, toBase64}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
 import org.hamcrest.Matchers.{containsString, equalTo}
 import org.junit.jupiter.api.{BeforeAll, Nested, Tag, Test}
 
 object AuthenticationContract {
+  val bob: Username = Username.fromLocalPartWithDomain(s"bob${UUID.randomUUID()}", DOMAIN)
+  val bobPassword: String = s"bobpassword${UUID.randomUUID()}"
+  val bobBasicAuthHeader: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${bob.asString}:$bobPassword")}")
+  val alice: Username = Username.fromLocalPartWithDomain(s"alice${UUID.randomUUID()}", _2_DOT_DOMAIN)
+  val alicePassword: String = s"alicepassword${UUID.randomUUID()}"
+
   @BeforeAll
   def setup(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DataProbeImpl])
@@ -39,8 +48,8 @@ object AuthenticationContract {
       .addDomain(DOMAIN.asString)
       .addDomain(_2_DOT_DOMAIN.asString)
       .addUser(USER.asString, USER_PASSWORD)
-      .addUser(ALICE.asString, ALICE_PASSWORD)
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(alice.asString, alicePassword)
+      .addUser(bob.asString, bobPassword)
 
     requestSpecification = baseRequestSpecBuilder(server)
       .setAuth(new NoAuthScheme)
@@ -55,7 +64,7 @@ trait AuthenticationContract {
     @Test
     def shouldRespond400WhenBothAuthentication(): Unit = {
       `given`
-        .headers(getHeadersWith(BOB_BASIC_AUTH_HEADER))
+        .headers(getHeadersWith(AuthenticationContract.bobBasicAuthHeader))
         .header(new Header(AUTHORIZATION_HEADER, s"Bearer $USER_TOKEN"))
         .body(ECHO_REQUEST_OBJECT)
       .when
@@ -88,7 +97,7 @@ trait AuthenticationContract {
     @Tag(CategoryTags.BASIC_FEATURE)
     def postShouldRespond200WhenHasCredentials(): Unit = {
       `given`
-        .headers(getHeadersWith(BOB_BASIC_AUTH_HEADER))
+        .headers(getHeadersWith(AuthenticationContract.bobBasicAuthHeader))
         .body(ECHO_REQUEST_OBJECT)
       .when
         .post
@@ -98,7 +107,7 @@ trait AuthenticationContract {
 
     @Test
     def postShouldRespond401WhenCredentialsWithInvalidUser(): Unit = {
-      val authHeader: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${BOB.getLocalPart}@@$DOMAIN:$BOB_PASSWORD")}")
+      val authHeader: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${AuthenticationContract.bob.getLocalPart}@@$DOMAIN:${AuthenticationContract.bobPassword}")}")
       `given`
         .headers(getHeadersWith(authHeader))
         .body(ECHO_REQUEST_OBJECT)
@@ -113,7 +122,7 @@ trait AuthenticationContract {
 
     @Test
     def postShouldRespond200WhenCredentialsWith2DotDomain(): Unit = {
-      val authHeader: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${ALICE.asString}:$ALICE_PASSWORD")}")
+      val authHeader: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${AuthenticationContract.alice.asString}:${AuthenticationContract.alicePassword}")}")
       `given`
         .headers(getHeadersWith(authHeader))
         .body(ECHO_REQUEST_OBJECT)
@@ -125,7 +134,7 @@ trait AuthenticationContract {
 
     @Test
     def postShouldRespond401WhenCredentialsWithSpaceDomain(): Unit = {
-      val authHeader: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${BOB.getLocalPart}@$DOMAIN_WITH_SPACE:$BOB_PASSWORD")}")
+      val authHeader: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${AuthenticationContract.bob.getLocalPart}@$DOMAIN_WITH_SPACE:${AuthenticationContract.bobPassword}")}")
       `given`
         .headers(getHeadersWith(authHeader))
         .body(ECHO_REQUEST_OBJECT)
@@ -140,7 +149,7 @@ trait AuthenticationContract {
 
     @Test
     def postShouldRespond401WhenUserNotFound(): Unit = {
-      val authHeader: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"usernotfound@$DOMAIN:$BOB_PASSWORD")}")
+      val authHeader: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"usernotfound@$DOMAIN:${AuthenticationContract.bobPassword}")}")
       `given`
         .headers(getHeadersWith(authHeader))
         .body(ECHO_REQUEST_OBJECT)
@@ -156,7 +165,7 @@ trait AuthenticationContract {
     @Test
     @Tag(CategoryTags.BASIC_FEATURE)
     def postShouldRespond401WhenWrongPassword(): Unit = {
-      val authHeader: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${BOB.asString}:WRONG_PASSWORD")}")
+      val authHeader: Header = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${AuthenticationContract.bob.asString}:WRONG_PASSWORD")}")
       `given`
         .headers(getHeadersWith(authHeader))
         .body(ECHO_REQUEST_OBJECT)
@@ -216,4 +225,3 @@ trait AuthenticationContract {
     }
   }
 }
-
