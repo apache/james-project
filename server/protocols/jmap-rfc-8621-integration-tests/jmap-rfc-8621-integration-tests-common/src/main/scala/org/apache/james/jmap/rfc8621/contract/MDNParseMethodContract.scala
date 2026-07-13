@@ -20,14 +20,17 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.TimeUnit
+import java.util.UUID
+import java.util.concurrent.{TimeUnit, atomic}
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.mail.MDNParseRequest
@@ -44,7 +47,21 @@ import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Test}
 import play.api.libs.json._
 
+object MDNParseMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String)
+
+  val currentContext: atomic.AtomicReference[TestContext] = new atomic.AtomicReference[TestContext]()
+}
+
 trait MDNParseMethodContract {
+  import MDNParseMethodContract.{TestContext, currentContext}
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
+
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
     .pollInterval(slowPacedPollInterval)
@@ -55,13 +72,19 @@ trait MDNParseMethodContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = accountId(bob)))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent()
       .addDomain(DOMAIN.asString())
-      .addUser(BOB.asString(), BOB_PASSWORD)
+      .addUser(bob.asString(), BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build()
   }
 
@@ -69,12 +92,12 @@ trait MDNParseMethodContract {
 
   @Test
   def parseShouldSuccessWithMDNHasAllProperties(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mdn_complex.eml")))
       .getMessageId
 
@@ -87,7 +110,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${messageId.serialize()}" ]
          |    },
          |    "c1"]]
@@ -111,7 +134,7 @@ trait MDNParseMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      [ "MDN/parse", {
-           |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |         "accountId": "$bobAccountId",
            |         "parsed": {
            |           "${messageId.serialize()}": {
            |             "subject": "Read: test",
@@ -142,20 +165,20 @@ trait MDNParseMethodContract {
 
   @Test
   def parseShouldAcceptSeveralIds(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mdn_simple.eml")))
       .getMessageId
     val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mdn_simple.eml")))
       .getMessageId
     val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mdn_simple.eml")))
       .getMessageId
 
@@ -168,7 +191,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${messageId1.serialize()}", "${messageId2.serialize()}", "${messageId3.serialize()}"]
          |    },
          |    "c1"]]
@@ -228,12 +251,12 @@ trait MDNParseMethodContract {
 
   @Test
   def parseShouldSuccessWithMDNHasMinimalProperties(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mdn_simple.eml")))
       .getMessageId
 
@@ -246,7 +269,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${messageId.serialize()}" ]
          |    },
          |    "c1"]]
@@ -270,7 +293,7 @@ trait MDNParseMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      [ "MDN/parse", {
-           |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |         "accountId": "$bobAccountId",
            |         "parsed": {
            |           "${messageId.serialize()}": {
            |             "subject": "Read: test",
@@ -344,7 +367,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds":  ${blogIdsJson}
          |    },
          |    "c1"]]
@@ -379,12 +402,12 @@ trait MDNParseMethodContract {
 
   @Test
   def parseShouldReturnNotParseableWhenNotAnMDN(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.builder()
+      .appendMessage(bobUsername.asString(), path, AppendCommand.builder()
         .build(Message.Builder
           .of
           .setSubject("Subject MDN")
@@ -405,7 +428,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${messageId.serialize()}" ]
          |    },
          |    "c1"]]
@@ -429,7 +452,7 @@ trait MDNParseMethodContract {
          |    "methodResponses": [[
          |      "MDN/parse",
          |      {
-         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |        "accountId": "$bobAccountId",
          |        "notParsable": ["${messageId.serialize()}"]
          |      },
          |      "c1"
@@ -449,7 +472,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "$blobIdShouldNotFound" ]
          |    },
          |    "c1"]]
@@ -473,7 +496,7 @@ trait MDNParseMethodContract {
          |    "methodResponses": [[
          |      "MDN/parse",
          |      {
-         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |        "accountId": "$bobAccountId",
          |        "notFound": ["$blobIdShouldNotFound"]
          |      },
          |      "c1"
@@ -492,7 +515,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "invalid" ]
          |    },
          |    "c1"]]
@@ -516,7 +539,7 @@ trait MDNParseMethodContract {
          |    "methodResponses": [[
          |      "MDN/parse",
          |      {
-         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |        "accountId": "$bobAccountId",
          |        "notFound": ["invalid"]
          |      },
          |      "c1"
@@ -526,17 +549,17 @@ trait MDNParseMethodContract {
 
   @Test
   def parseAndNotFoundAndNotParsableCanBeMixed(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val blobIdParsable: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mdn_complex.eml")))
       .getMessageId
 
     val blobIdNotParsable: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.builder()
+      .appendMessage(bobUsername.asString(), path, AppendCommand.builder()
         .build(Message.Builder
           .of
           .setSubject("Subject MDN")
@@ -557,7 +580,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${blobIdParsable.serialize()}", "${blobIdNotParsable.serialize()}", "${blobIdNotFound.serialize()}" ]
          |    },
          |    "c1"]]
@@ -582,7 +605,7 @@ trait MDNParseMethodContract {
              |    "methodResponses": [[
              |      "MDN/parse",
              |      {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "notFound": ["${blobIdNotFound.serialize()}"],
              |        "notParsable": ["${blobIdNotParsable.serialize()}"],
              |        "parsed": {
@@ -627,7 +650,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "123" ]
          |    },
          |    "c1"]]
@@ -666,7 +689,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "123" ]
          |    },
          |    "c1"]]
@@ -699,12 +722,12 @@ trait MDNParseMethodContract {
 
   @Test
   def forEmailIdShouldReturnWhenOriginalMessageIdIsRelated(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val originalMessageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mdn_relate_original_message.eml")))
       .getMessageId
 
@@ -714,7 +737,7 @@ trait MDNParseMethodContract {
         .setText(s"""Reporting-UA: UA_name; UA_product
                     |MDN-Gateway: smtp; apache.org
                     |Original-Recipient: rfc822; originalRecipient
-                    |Final-Recipient: rfc822; ${BOB.asString()}
+                    |Final-Recipient: rfc822; ${bobUsername.asString()}
                     |Original-Message-ID: <messageId1@Atlassian.JIRA>
                     |Disposition: automatic-action/MDN-sent-automatically;processed/error,failed
                     |""".replace(System.lineSeparator(), "\r\n")
@@ -724,12 +747,12 @@ trait MDNParseMethodContract {
       .build
 
     val mdnMessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.builder()
+      .appendMessage(bobUsername.asString(), path, AppendCommand.builder()
         .build(Message.Builder
           .of
           .setSubject("Subject MDN")
-          .setSender(BOB.asString())
-          .setFrom(BOB.asString())
+          .setSender(bobUsername.asString())
+          .setFrom(bobUsername.asString())
           .setBody(MultipartBuilder.create("report")
             .addTextPart("This is body of text part", StandardCharsets.UTF_8)
             .addBodyPart(mdnBodyPart)
@@ -746,7 +769,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${mdnMessageId.serialize()}" ]
          |    },
          |    "c1"]]
@@ -775,7 +798,7 @@ trait MDNParseMethodContract {
 
   @Test
   def forEmailIdShouldBeNullWhenOriginalMessageIdIsNotFound(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
     val mdnBodyPart = BodyPartBuilder
@@ -794,12 +817,12 @@ trait MDNParseMethodContract {
       .build
 
     val mdnMessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.builder()
+      .appendMessage(bobUsername.asString(), path, AppendCommand.builder()
         .build(Message.Builder
           .of
           .setSubject("Subject MDN")
-          .setSender(BOB.asString())
-          .setFrom(BOB.asString())
+          .setSender(bobUsername.asString())
+          .setFrom(bobUsername.asString())
           .setBody(MultipartBuilder.create("report")
             .addTextPart("This is body of text part", StandardCharsets.UTF_8)
             .addBodyPart(mdnBodyPart)
@@ -816,7 +839,7 @@ trait MDNParseMethodContract {
          |  "methodCalls": [[
          |    "MDN/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${mdnMessageId.serialize()}" ]
          |    },
          |    "c1"]]
