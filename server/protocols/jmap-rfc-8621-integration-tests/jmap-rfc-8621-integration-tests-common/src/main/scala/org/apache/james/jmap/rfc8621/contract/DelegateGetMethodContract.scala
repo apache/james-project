@@ -19,6 +19,11 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+import java.util.concurrent.atomic
+
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -26,31 +31,55 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.delegation.DelegationId
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.DelegateGetMethodContract.BOB_ACCOUNT_ID
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 
-object DelegateGetMethodContract {
-  val BOB_ACCOUNT_ID: String = Fixture.ACCOUNT_ID
+object DelegateGetMethodContractContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username, andreAccountId: String, cedricUsername: Username)
+
+  val currentContext: atomic.AtomicReference[TestContext] = new atomic.AtomicReference[TestContext]()
 }
+
 trait DelegateGetMethodContract {
+  import DelegateGetMethodContractContext.{TestContext, currentContext}
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+  def andreAccountId: String = currentContext.get().andreAccountId
+  def cedricUsername: Username = currentContext.get().cedricUsername
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    val cedric = Username.fromLocalPartWithDomain(s"cedric$uniqueSuffix", DOMAIN)
+    currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = accountId(bob),
+      andreUsername = andre,
+      andreAccountId = accountId(andre),
+      cedricUsername = cedric))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString(), ANDRE_PASSWORD)
-      .addUser(CEDRIC.asString(), "cedric_pass")
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString(), ANDRE_PASSWORD)
+      .addUser(cedric.asString(), "cedric_pass")
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build
   }
@@ -66,7 +95,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "$BOB_ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -86,7 +115,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "$BOB_ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "list": [],
          |      "notFound": []
          |    },
@@ -97,7 +126,7 @@ trait DelegateGetMethodContract {
   @Test
   def delegateGetShouldReturnListWhenDelegated(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, ANDRE)
+      .addAuthorizedUser(bobUsername, andreUsername)
 
     val response: String = `given`
       .body(s"""{
@@ -107,7 +136,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "$BOB_ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -130,12 +159,12 @@ trait DelegateGetMethodContract {
            |        [
            |            "Delegate/get",
            |            {
-           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "accountId": "$bobAccountId",
            |                "notFound": [],
            |                "list": [
            |                    {
-           |                        "id": "${DelegationId.from(BOB, ANDRE).serialize}",
-           |                        "username": "${ANDRE.asString()}"
+           |                        "id": "${DelegationId.from(bobUsername, andreUsername).serialize}",
+           |                        "username": "${andreUsername.asString()}"
            |                    }
            |                ]
            |            },
@@ -148,7 +177,7 @@ trait DelegateGetMethodContract {
   @Test
   def delegateGetShouldReturnEmptyListWhenIdsAreEmpty(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, ANDRE)
+      .addAuthorizedUser(bobUsername, andreUsername)
 
     val response = `given`
       .body(
@@ -159,7 +188,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "$BOB_ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": []
            |    },
            |    "c1"]]
@@ -179,7 +208,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "$BOB_ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "list": [],
          |      "notFound": []
          |    },
@@ -190,7 +219,7 @@ trait DelegateGetMethodContract {
   @Test
   def delegateGetShouldReturnNotFoundWhenIdDoesNotExist(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, ANDRE)
+      .addAuthorizedUser(bobUsername, andreUsername)
 
     val response = `given`
       .body(
@@ -201,7 +230,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "$BOB_ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": ["notFound1"]
            |    },
            |    "c1"]]
@@ -221,7 +250,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "$BOB_ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "list": [],
          |      "notFound": [ "notFound1" ]
          |    },
@@ -232,10 +261,10 @@ trait DelegateGetMethodContract {
   @Test
   def delegateGetShouldReturnNotFoundAndListWhenMixCases(server: GuiceJamesServer): Unit = {
     val delegatedId = server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, ANDRE)
+      .addAuthorizedUser(bobUsername, andreUsername)
       .serialize
     val delegatedId2 = server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, CEDRIC)
+      .addAuthorizedUser(bobUsername, cedricUsername)
       .serialize
 
     val response = `given`
@@ -247,7 +276,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "$BOB_ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": [ "notFound1", "$delegatedId", "$delegatedId2" ]
            |    },
            |    "c1"]]
@@ -261,21 +290,23 @@ trait DelegateGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .withOptions(IGNORING_ARRAY_ORDER)
+      .isEqualTo(
       s"""{
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "$BOB_ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
          |          "id": "$delegatedId",
-         |          "username": "${ANDRE.asString()}"
+         |          "username": "${andreUsername.asString()}"
          |        },
          |        {
          |          "id": "$delegatedId2",
-         |          "username": "${CEDRIC.asString()}"
+         |          "username": "${cedricUsername.asString()}"
          |        }
          |      ],
          |      "notFound": [ "notFound1" ]
@@ -287,7 +318,7 @@ trait DelegateGetMethodContract {
   @Test
   def delegateGetShouldNotReturnDelegateOfOtherUser(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(ANDRE, BOB)
+      .addAuthorizedUser(andreUsername, bobUsername)
 
     val response = `given`
       .body(
@@ -298,7 +329,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "$BOB_ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -318,7 +349,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "$BOB_ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "list": [],
          |      "notFound": []
          |    },
@@ -329,7 +360,7 @@ trait DelegateGetMethodContract {
   @Test
   def delegateGetShouldNotReturnDelegateOfOtherUserWhenProvideIds(server: GuiceJamesServer): Unit = {
     val delegateId = server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(ANDRE, BOB)
+      .addAuthorizedUser(andreUsername, bobUsername)
       .serialize
 
     val response = `given`
@@ -341,7 +372,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "$BOB_ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": ["$delegateId"]
            |    },
            |    "c1"]]
@@ -361,7 +392,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "$BOB_ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "list": [],
          |      "notFound": [ "$delegateId" ]
          |    },
@@ -372,10 +403,10 @@ trait DelegateGetMethodContract {
   @Test
   def bobShouldNotGetDelegateListOfAliceEvenDelegated(server: GuiceJamesServer): Unit = {
     val delegateId1 = server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(ANDRE, BOB)
+      .addAuthorizedUser(andreUsername, bobUsername)
       .serialize
     val delegateId2 =  server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(ANDRE, CEDRIC)
+      .addAuthorizedUser(andreUsername, cedricUsername)
       .serialize
 
     val response = `given`
@@ -387,7 +418,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "$ANDRE_ACCOUNT_ID",
+           |      "accountId": "$andreAccountId",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -422,7 +453,7 @@ trait DelegateGetMethodContract {
   @Test
   def delegateGetReturnIdWhenNoPropertiesRequested(server: GuiceJamesServer): Unit = {
     val delegateId = server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, ANDRE)
+      .addAuthorizedUser(bobUsername, andreUsername)
       .serialize
 
     val response = `given`
@@ -434,7 +465,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "$BOB_ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": null,
            |      "properties": []
            |    },
@@ -455,7 +486,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "$BOB_ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "list": [
          |        { "id" : "$delegateId" }
          |      ],
@@ -468,7 +499,7 @@ trait DelegateGetMethodContract {
   @Test
   def delegateGetShouldFailWhenInvalidProperties(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, ANDRE)
+      .addAuthorizedUser(bobUsername, andreUsername)
 
     val response = `given`
       .body(
@@ -479,7 +510,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "$BOB_ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": null,
            |      "properties": ["invalid"]
            |    },
@@ -558,7 +589,7 @@ trait DelegateGetMethodContract {
          |  "methodCalls": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "$BOB_ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "ids": null
          |    },
          |    "c1"]]
@@ -597,7 +628,7 @@ trait DelegateGetMethodContract {
          |  "methodCalls": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "$BOB_ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "ids": null
          |    },
          |    "c1"]]
