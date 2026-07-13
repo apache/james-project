@@ -58,14 +58,11 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
         .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
         .await();
 
-    private final QueryConverter queryConverter = new QueryConverter(new DefaultCriterionConverter());
-    private ReactorOpenSearchClient client;
+    @RegisterExtension
+    static org.apache.james.backends.opensearch.DockerOpenSearchExtension openSearch = new org.apache.james.backends.opensearch.DockerOpenSearchExtension();
 
     @RegisterExtension
-    org.apache.james.backends.opensearch.DockerOpenSearchExtension openSearch = new org.apache.james.backends.opensearch.DockerOpenSearchExtension();
-
-    @RegisterExtension
-    JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
@@ -82,7 +79,11 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
         .extension(new AwsS3BlobStoreExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
+
+    private final QueryConverter queryConverter = new QueryConverter(new DefaultCriterionConverter());
+    private ReactorOpenSearchClient client;
 
     @AfterEach
     void tearDown() throws IOException {

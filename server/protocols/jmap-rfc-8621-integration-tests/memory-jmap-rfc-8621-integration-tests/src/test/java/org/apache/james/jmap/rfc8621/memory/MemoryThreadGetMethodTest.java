@@ -25,7 +25,7 @@ import org.apache.james.jmap.rfc8621.contract.ThreadGetContract;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
 
-public class MemoryThreadGetMethodTest extends MemoryBase implements ThreadGetContract {
+public class MemoryThreadGetMethodTest extends PerClassMemoryBase implements ThreadGetContract {
     @Override
     public void awaitMessageCount(List<MailboxId> mailboxIds, SearchQuery query, long messageCount) {
 
