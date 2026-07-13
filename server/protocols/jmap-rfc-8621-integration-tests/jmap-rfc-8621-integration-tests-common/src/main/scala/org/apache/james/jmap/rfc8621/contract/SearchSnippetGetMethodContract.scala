@@ -20,8 +20,10 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.TimeUnit
+import java.util.UUID
+import java.util.concurrent.{TimeUnit, atomic}
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -30,6 +32,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
@@ -47,7 +50,22 @@ import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.hamcrest.Matchers.{hasItem, hasSize}
 import org.junit.jupiter.api.{BeforeEach, Test}
 
+object SearchSnippetGetMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username, andreAccountId: String)
+
+  val currentContext: atomic.AtomicReference[TestContext] = new atomic.AtomicReference[TestContext]()
+}
+
 trait SearchSnippetGetMethodContract {
+  import SearchSnippetGetMethodContract.{TestContext, currentContext}
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+  def andreAccountId: String = currentContext.get().andreAccountId
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
 
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
@@ -58,22 +76,31 @@ trait SearchSnippetGetMethodContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = accountId(bob),
+      andreUsername = andre,
+      andreAccountId = accountId(andre)))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
       .addDomain("domain-alias.tld")
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
   @Test
   def subjectShouldBeInSearchSnippetWhenMatched(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Yet another day in paradise")
@@ -89,7 +116,7 @@ trait SearchSnippetGetMethodContract {
          |  "methodCalls": [[
          |    "SearchSnippet/get",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "subject": "paradise"
          |      },
@@ -118,7 +145,7 @@ trait SearchSnippetGetMethodContract {
           s"""[
              |  "SearchSnippet/get",
              |  {
-             |    "accountId": "$ACCOUNT_ID",
+             |    "accountId": "$bobAccountId",
              |    "list": [
              |      {
              |        "emailId": "${messageId.serialize}",
@@ -135,9 +162,9 @@ trait SearchSnippetGetMethodContract {
 
   @Test
   def previewShouldBeInSearchSnippetWhenMatched(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setBody("You can close this page and return to the IDE intellij", StandardCharsets.UTF_8)
@@ -153,7 +180,7 @@ trait SearchSnippetGetMethodContract {
          |  "methodCalls": [[
          |    "SearchSnippet/get",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "body": "IDE"
          |      },
@@ -181,7 +208,7 @@ trait SearchSnippetGetMethodContract {
           s"""[
              |  "SearchSnippet/get",
              |  {
-             |    "accountId": "$ACCOUNT_ID",
+             |    "accountId": "$bobAccountId",
              |    "list": [
              |      {
              |        "emailId": "${messageId.serialize}",
@@ -201,9 +228,9 @@ trait SearchSnippetGetMethodContract {
 
   @Test
   def searchSnippetGetShouldSupportBackReference(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setBody("You can close this page and return to the IDE intellij", StandardCharsets.UTF_8)
@@ -221,7 +248,7 @@ trait SearchSnippetGetMethodContract {
          |        [
          |            "Email/query",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "filter": {
          |                    "body": "IDE"
          |                },
@@ -238,7 +265,7 @@ trait SearchSnippetGetMethodContract {
          |        [
          |            "SearchSnippet/get",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "filter": {
          |                    "body": "IDE"
          |                },
@@ -272,7 +299,7 @@ trait SearchSnippetGetMethodContract {
           s"""[
              |  "SearchSnippet/get",
              |  {
-             |    "accountId": "$ACCOUNT_ID",
+             |    "accountId": "$bobAccountId",
              |    "list": [
              |      {
              |        "emailId": "${messageId.serialize}",
@@ -294,9 +321,9 @@ trait SearchSnippetGetMethodContract {
   def searchSnippetShouldAcceptSharedMailboxesWhenExtension(server: GuiceJamesServer): Unit = {
     // Given: andres inbox with a message
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     val messageId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -306,7 +333,7 @@ trait SearchSnippetGetMethodContract {
 
     // Given: Bob has read rights on Andres mailbox
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     // When: Bob search snippet request on Andres mailbox
     val request: String =
@@ -318,7 +345,7 @@ trait SearchSnippetGetMethodContract {
          |  "methodCalls": [[
          |    "SearchSnippet/get",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "inMailbox": "${andreInboxId.serialize()}",
          |        "subject": "meeting"
@@ -349,7 +376,7 @@ trait SearchSnippetGetMethodContract {
           s"""[
              |  "SearchSnippet/get",
              |  {
-             |    "accountId": "$ACCOUNT_ID",
+             |    "accountId": "$bobAccountId",
              |    "list": [
              |      {
              |        "emailId": "${messageId.serialize}",
@@ -367,9 +394,9 @@ trait SearchSnippetGetMethodContract {
   @Test
   def searchSnippetShouldNotAcceptSharedMailboxesWhenNotExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     val messageId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -379,7 +406,7 @@ trait SearchSnippetGetMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     Thread.sleep(500)
     // request without urn:apache:james:params:jmap:mail:shares capability
@@ -392,7 +419,7 @@ trait SearchSnippetGetMethodContract {
                |  "methodCalls": [[
                |    "SearchSnippet/get",
                |    {
-               |      "accountId": "$ACCOUNT_ID",
+               |      "accountId": "$bobAccountId",
                |      "filter" : {
                |        "inMailbox": "${andreInboxId.serialize()}",
                |        "subject": "meeting"
@@ -413,9 +440,9 @@ trait SearchSnippetGetMethodContract {
   @Test
   def searchSnippetShouldNotAcceptNotSharedMailboxes(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     val messageId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -437,7 +464,7 @@ trait SearchSnippetGetMethodContract {
                |    [
                |      "SearchSnippet/get",
                |      {
-               |        "accountId": "$ACCOUNT_ID",
+               |        "accountId": "$bobAccountId",
                |        "filter": {
                |          "inMailbox": "${andreInboxId.serialize()}",
                |          "subject": "meeting"
@@ -459,10 +486,10 @@ trait SearchSnippetGetMethodContract {
 
   @Test
   def shouldReturnMultiSearchSnippetInListWhenMultiMatched(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Weekly report - vttran 27/02-03/03/2023")
@@ -471,7 +498,7 @@ trait SearchSnippetGetMethodContract {
       .getMessageId
 
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Weekly report - vttran 19/08-23/08/2024")
@@ -480,7 +507,7 @@ trait SearchSnippetGetMethodContract {
       .getMessageId
 
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Weekly report - whynotme 12/08-16/08/2024")
@@ -496,7 +523,7 @@ trait SearchSnippetGetMethodContract {
          |  "methodCalls": [[
          |    "SearchSnippet/get",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "subject": "vttran"
          |      },
@@ -525,7 +552,7 @@ trait SearchSnippetGetMethodContract {
           s"""[
              |  "SearchSnippet/get",
              |  {
-             |    "accountId": "$ACCOUNT_ID",
+             |    "accountId": "$bobAccountId",
              |    "list": [
              |      {
              |        "emailId": "${messageId1.serialize}",
@@ -547,10 +574,10 @@ trait SearchSnippetGetMethodContract {
 
   @Test
   def shouldSupportOrOperatorInFilter(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Weekly report - vttran 27/02-03/03/2023")
@@ -559,7 +586,7 @@ trait SearchSnippetGetMethodContract {
       .getMessageId
 
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Weekly report - whynotme 19/08-23/08/2024")
@@ -574,7 +601,7 @@ trait SearchSnippetGetMethodContract {
          |    [
          |      "SearchSnippet/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "filter": {
          |          "operator": "OR",
          |          "conditions": [ { "subject": "vttran" }, { "body": "vttran" } ]
@@ -606,7 +633,7 @@ trait SearchSnippetGetMethodContract {
           s"""[
              |  "SearchSnippet/get",
              |  {
-             |    "accountId": "$ACCOUNT_ID",
+             |    "accountId": "$bobAccountId",
              |    "list": [
              |      {
              |        "emailId": "${messageId1.serialize}",
@@ -628,10 +655,10 @@ trait SearchSnippetGetMethodContract {
 
   @Test
   def shouldReturnEmptyListWhenNotMatched(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Weekly report - vttran 27/02-03/03/2023")
@@ -650,7 +677,7 @@ trait SearchSnippetGetMethodContract {
                |  "methodCalls": [[
                |    "SearchSnippet/get",
                |    {
-               |      "accountId": "$ACCOUNT_ID",
+               |      "accountId": "$bobAccountId",
                |      "filter" : {
                |        "subject": "whynotme"
                |      },
@@ -669,11 +696,11 @@ trait SearchSnippetGetMethodContract {
 
   @Test
   def shouldReturnMatchedSearchSnippetWhenDelegated(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(ANDRE, BOB)
+    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(andreUsername, bobUsername)
 
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(ANDRE))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(andreUsername))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, MailboxPath.inbox(ANDRE), AppendCommand.builder().build(
+      .appendMessage(andreUsername.asString, MailboxPath.inbox(andreUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Yet another day in paradise")
@@ -689,7 +716,7 @@ trait SearchSnippetGetMethodContract {
          |  "methodCalls": [[
          |    "SearchSnippet/get",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "filter" : {
          |        "subject": "paradise"
          |      },
@@ -718,7 +745,7 @@ trait SearchSnippetGetMethodContract {
           s"""[
              |  "SearchSnippet/get",
              |  {
-             |    "accountId": "$ANDRE_ACCOUNT_ID",
+             |    "accountId": "$andreAccountId",
              |    "list": [
              |      {
              |        "emailId": "${messageId.serialize}",
@@ -735,9 +762,9 @@ trait SearchSnippetGetMethodContract {
 
   @Test
   def shouldFailWhenWrongAccountId(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Yet another day in paradise")
@@ -785,9 +812,9 @@ trait SearchSnippetGetMethodContract {
 
   @Test
   def shouldReturnNotFoundWhenEmailIdDoesNotBelongToAccount(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(ANDRE))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(andreUsername))
     val messageIdOfAndre = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, MailboxPath.inbox(ANDRE), AppendCommand.builder().build(
+      .appendMessage(andreUsername.asString, MailboxPath.inbox(andreUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Yet another day in paradise")
@@ -804,7 +831,7 @@ trait SearchSnippetGetMethodContract {
                 |  "methodCalls": [[
                 |    "SearchSnippet/get",
                 |    {
-                |      "accountId": "$ACCOUNT_ID",
+                |      "accountId": "$bobAccountId",
                 |      "filter" : {
                 |        "subject": "paradise"
                 |      },
@@ -833,7 +860,7 @@ trait SearchSnippetGetMethodContract {
            |  "methodCalls": [[
            |    "SearchSnippet/get",
            |    {
-           |      "accountId": "$ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
            |        "subject": "paradise"
            |      },
@@ -874,7 +901,7 @@ trait SearchSnippetGetMethodContract {
                 |  "methodCalls": [[
                 |    "SearchSnippet/get",
                 |    {
-                |      "accountId": "$ACCOUNT_ID",
+                |      "accountId": "$bobAccountId",
                 |      "filter" : {
                 |        "subject": "paradise"
                 |      },
@@ -893,9 +920,9 @@ trait SearchSnippetGetMethodContract {
 
   @Test
   def shouldReturnUnknownMethodWhenMissingOneCapability(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Yet another day in paradise")
@@ -911,7 +938,7 @@ trait SearchSnippetGetMethodContract {
          |  "methodCalls": [[
          |    "SearchSnippet/get",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "subject": "paradise"
          |      },
@@ -947,9 +974,9 @@ trait SearchSnippetGetMethodContract {
 
   @Test
   def shouldReturnUnknownMethodWhenMissingAllCapabilities(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         Message.Builder
           .of
           .setSubject("Yet another day in paradise")
@@ -963,7 +990,7 @@ trait SearchSnippetGetMethodContract {
          |  "methodCalls": [[
          |    "SearchSnippet/get",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "subject": "paradise"
          |      },
@@ -1001,9 +1028,9 @@ trait SearchSnippetGetMethodContract {
   @Test
   def shouldReturnMatchingResultWhenSearchSnippetInHTMLBody(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val inboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val inboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(
+      .appendMessage(bobUsername.asString(), MailboxPath.inbox(bobUsername), AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/html_body.eml")))
       .getMessageId
 
@@ -1019,7 +1046,7 @@ trait SearchSnippetGetMethodContract {
          |        [
          |            "Email/query",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "filter": {
          |                    "body": "$keywordSearch"
          |                },
@@ -1036,7 +1063,7 @@ trait SearchSnippetGetMethodContract {
          |        [
          |            "SearchSnippet/get",
          |            {
-         |                "accountId": "$ACCOUNT_ID",
+         |                "accountId": "$bobAccountId",
          |                "filter": {
          |                    "body": "$keywordSearch"
          |                },
@@ -1070,7 +1097,7 @@ trait SearchSnippetGetMethodContract {
           s"""[
              |  "SearchSnippet/get",
              |  {
-             |    "accountId": "$ACCOUNT_ID",
+             |    "accountId": "$bobAccountId",
              |    "list": [
              |      {
              |        "emailId": "${messageId1.serialize()}",

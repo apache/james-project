@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.SearchSnippetGetMethodContract;
 
-public class MemorySearchSnippetGetMethodTest extends MemoryBase implements SearchSnippetGetMethodContract {
+public class MemorySearchSnippetGetMethodTest extends PerClassMemoryBase implements SearchSnippetGetMethodContract {
 
 }
