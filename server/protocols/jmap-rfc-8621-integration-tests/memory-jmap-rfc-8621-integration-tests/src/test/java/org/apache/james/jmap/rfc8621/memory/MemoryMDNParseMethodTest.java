@@ -25,7 +25,7 @@ import org.apache.james.jmap.rfc8621.contract.MDNParseMethodContract;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;
 
-public class MemoryMDNParseMethodTest extends MemoryBase implements MDNParseMethodContract {
+public class MemoryMDNParseMethodTest extends PerClassMemoryBase implements MDNParseMethodContract {
     @Override
     public MessageId randomMessageId() {
         return InMemoryMessageId.of(ThreadLocalRandom.current().nextInt(100000) + 100);

@@ -23,7 +23,7 @@ import org.apache.james.jmap.rfc8621.contract.MDNParseMethodContract;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 
-public class PostgresMDNParseMethodTest extends PostgresBase implements MDNParseMethodContract {
+public class PostgresMDNParseMethodTest extends PerClassPostgresBase implements MDNParseMethodContract {
     public static final PostgresMessageId.Factory MESSAGE_ID_FACTORY = new PostgresMessageId.Factory();
 
     @Override
