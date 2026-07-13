@@ -19,12 +19,17 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.{CapabilityIdentifier, JmapRfc8621Configuration}
 import org.apache.james.jmap.http.UserCredential
@@ -32,6 +37,11 @@ import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.expected_session_object
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
+
+object DisabledCapabilityContractContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] = new java.util.concurrent.atomic.AtomicReference[TestContext]()
+}
 
 object DisabledCapabilityContract {
   val configuration: JmapRfc8621Configuration = JmapRfc8621Configuration(urlPrefixString = "http://127.0.0.1",
@@ -123,15 +133,24 @@ object DisabledCapabilityContract {
 
 trait DisabledCapabilityContract {
 
+  import DisabledCapabilityContractContext.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    currentContext.set(DisabledCapabilityContractContext.TestContext(
+      bob, Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString))
     server.getProbe(classOf[DataProbeImpl])
       .fluent()
       .addDomain(DOMAIN.asString())
-      .addUser(BOB.asString(), BOB_PASSWORD)
+      .addUser(bobUsername.asString(), BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-        .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+        .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .build
   }
 
@@ -189,6 +208,9 @@ trait DisabledCapabilityContract {
       .body()
       .asString()
 
-    assertThatJson(sessionJson).isEqualTo(DisabledCapabilityContract.expected_session_object)
+    assertThatJson(sessionJson).isEqualTo(
+      DisabledCapabilityContract.expected_session_object
+        .replace("29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6", bobAccountId)
+        .replace("bob@domain.tld", bobUsername.asString))
   }
 }

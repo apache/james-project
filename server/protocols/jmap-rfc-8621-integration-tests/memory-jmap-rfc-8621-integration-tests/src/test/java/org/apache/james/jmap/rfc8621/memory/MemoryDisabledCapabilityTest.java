@@ -44,5 +44,6 @@ public class MemoryDisabledCapabilityTest implements DisabledCapabilityContract 
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(JmapRfc8621Configuration.class).toInstance(DisabledCapabilityContract.configuration()))
             .overrideWith(new TestJMAPServerModule(), new DelegationProbeModule(), new IdentityProbeModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
