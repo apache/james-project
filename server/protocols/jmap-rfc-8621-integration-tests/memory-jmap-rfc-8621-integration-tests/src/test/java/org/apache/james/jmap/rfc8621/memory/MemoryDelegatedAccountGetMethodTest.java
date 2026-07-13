@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.DelegatedAccountGetMethodContract;
 
-public class MemoryDelegatedAccountGetMethodTest extends MemoryBase implements DelegatedAccountGetMethodContract {
+public class MemoryDelegatedAccountGetMethodTest extends PerClassMemoryBase implements DelegatedAccountGetMethodContract {
 
 }
