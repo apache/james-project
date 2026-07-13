@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.QuotaMailingTest;
 
-public class DistributedQuotaMailingTest extends DistributedBase implements QuotaMailingTest {
+public class DistributedQuotaMailingTest extends PerClassDistributedBase implements QuotaMailingTest {
 
 }

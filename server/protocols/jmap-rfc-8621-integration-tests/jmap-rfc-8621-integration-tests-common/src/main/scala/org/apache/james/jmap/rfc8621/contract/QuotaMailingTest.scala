@@ -21,19 +21,21 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
 import java.util
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import com.google.common.base.Strings
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured
 import io.restassured.RestAssured.`given`
 import io.restassured.builder.ResponseSpecBuilder
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.core.quota.QuotaSizeLimit
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
-import org.apache.james.jmap.rfc8621.contract.QuotaMailingTest.andreDraftsPath
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.junit.categories.BasicFeature
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -49,11 +51,23 @@ import org.junit.jupiter.api.{BeforeEach, Test}
 
 import scala.jdk.CollectionConverters._
 
+object QuotaMailingTestContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username, andreAccountId: String)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] = new java.util.concurrent.atomic.AtomicReference[TestContext]()
+}
+
 object QuotaMailingTest {
-  private val andreDraftsPath = MailboxPath.forUser(ANDRE, DefaultMailboxes.DRAFTS)
 }
 
 trait QuotaMailingTest {
+  import QuotaMailingTestContext.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+  def andreAccountId: String = currentContext.get().andreAccountId
+  def andreDraftsPath: MailboxPath = MailboxPath.forUser(andreUsername, DefaultMailboxes.DRAFTS)
+
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
     .pollInterval(slowPacedPollInterval)
@@ -63,20 +77,26 @@ trait QuotaMailingTest {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    currentContext.set(QuotaMailingTestContext.TestContext(
+      bob, Hashing.sha256().hashString(bob.asString, StandardCharsets.UTF_8).toString,
+      andre, Hashing.sha256().hashString(andre.asString, StandardCharsets.UTF_8).toString))
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString, ANDRE_PASSWORD)
 
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.INBOX)
-    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ANDRE.asString, DefaultMailboxes.INBOX)
+    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob.asString, DefaultMailboxes.INBOX)
+    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, andre.asString, DefaultMailboxes.INBOX)
 
     mailboxProbe.createMailbox(andreDraftsPath)
 
     RestAssured.requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -84,7 +104,7 @@ trait QuotaMailingTest {
   @Test
   def shouldSendANoticeWhenThresholdExceeded(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    quotaProbe.setMaxStorage(quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB)), QuotaSizeLimit.size(100 * 1000))
+    quotaProbe.setMaxStorage(quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername)), QuotaSizeLimit.size(100 * 1000))
 
     andreSendMailToBob(server)
 
@@ -100,7 +120,7 @@ trait QuotaMailingTest {
          |  "methodCalls": [[
          |     "Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": [$idString]
          |     },
          |     "c1"]]
@@ -121,7 +141,7 @@ trait QuotaMailingTest {
   @Test
   def configurationShouldBeWellLoaded(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    quotaProbe.setMaxStorage(quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB)), QuotaSizeLimit.size(100 * 1000))
+    quotaProbe.setMaxStorage(quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername)), QuotaSizeLimit.size(100 * 1000))
 
     andreSendMailToBob(server)
 
@@ -141,7 +161,7 @@ trait QuotaMailingTest {
          |  "methodCalls": [[
          |     "Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": [$idString]
          |     },
          |     "c1"]]
@@ -165,14 +185,14 @@ trait QuotaMailingTest {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString)
-      .setFrom("ANDRE <" + ANDRE.asString + ">")
-      .setTo(BOB.asString)
+      .setSender(andreUsername.asString)
+      .setFrom("andreUsername <" + andreUsername.asString + ">")
+      .setTo(bobUsername.asString)
       .setBody(Strings.repeat("123456789\n", 12 * 100), StandardCharsets.UTF_8)
       .build
 
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString(), andreDraftsPath, AppendCommand.builder().build(message))
+      .appendMessage(andreUsername.asString(), andreDraftsPath, AppendCommand.builder().build(message))
       .getMessageId
 
     val requestAndre =
@@ -180,13 +200,13 @@ trait QuotaMailingTest {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
-         |       "accountId": "$ANDRE_ACCOUNT_ID",
+         |       "accountId": "$andreAccountId",
          |       "create": {
          |         "k1490": {
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
-         |             "mailFrom": {"email": "${ANDRE.asString}"},
-         |             "rcptTo": [{"email": "${BOB.asString}"}]
+         |             "mailFrom": {"email": "${andreUsername.asString}"},
+         |             "rcptTo": [{"email": "${bobUsername.asString}"}]
          |           }
          |         }
          |    }
@@ -195,7 +215,7 @@ trait QuotaMailingTest {
 
     `given`(
       baseRequestSpecBuilder(server)
-        .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+        .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
         .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .setBody(requestAndre)
         .build, new ResponseSpecBuilder().build)
@@ -211,7 +231,7 @@ trait QuotaMailingTest {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ACCOUNT_ID"
+         |      "accountId": "$bobAccountId"
          |    },
          |    "c1"]]
          |}""".stripMargin
