@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.CorsHeaderAPITest;
 
-public class MemoryCorsHeaderAPITest extends MemoryBase implements CorsHeaderAPITest {
+public class MemoryCorsHeaderAPITest extends PerClassMemoryBase implements CorsHeaderAPITest {
 
 }

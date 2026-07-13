@@ -19,26 +19,44 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured
 import io.restassured.RestAssured.`given`
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.JMAPTestingConstants.DOMAIN
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, BOB, BOB_PASSWORD, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB_PASSWORD, authScheme, baseRequestSpecBuilder}
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 
+object CorsHeaderAPITestContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] = new java.util.concurrent.atomic.AtomicReference[TestContext]()
+}
+
 trait CorsHeaderAPITest {
+  import CorsHeaderAPITestContext.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val bob = Username.fromLocalPartWithDomain(s"bob${UUID.randomUUID().toString.replace("-", "").take(8)}", DOMAIN)
+    currentContext.set(CorsHeaderAPITestContext.TestContext(
+      bob, Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString))
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN)
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bobUsername.asString, BOB_PASSWORD)
 
     RestAssured.requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .build
   }
 
@@ -53,7 +71,7 @@ trait CorsHeaderAPITest {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "$ACCOUNT_ID"
+               |      "accountId": "$bobAccountId"
                |    },
                |    "c1"]]
                |}""".stripMargin)
