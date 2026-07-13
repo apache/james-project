@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.UploadContract;
 
-public class DistributedUploadTest extends DistributedBase implements UploadContract {
+public class DistributedUploadTest extends PerClassDistributedBase implements UploadContract {
 
 }
