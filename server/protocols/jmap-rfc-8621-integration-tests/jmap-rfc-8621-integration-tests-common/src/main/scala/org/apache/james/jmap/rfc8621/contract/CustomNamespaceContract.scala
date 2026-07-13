@@ -19,22 +19,31 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+
+import com.google.common.hash.Hashing
 import com.google.inject.AbstractModule
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.mail.{DelegatedNamespace, MailboxNamespace, NamespaceFactory, PersonalNamespace}
-import org.apache.james.jmap.rfc8621.contract.CustomNamespaceContract.{CUSTOM_NAMESPACE_MAILBOX_PATH, DELEGATED_NAMESPACE_MAILBOX_PATH, PERSONAL_NAMESPACE_MAILBOX_PATH}
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MailboxPath
 import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Test}
+
+object CustomNamespaceContractContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] = new java.util.concurrent.atomic.AtomicReference[TestContext]()
+}
 
 case class CustomMailboxNamespace(value: String) extends MailboxNamespace {
   override def serialize(): String = value
@@ -47,37 +56,46 @@ class CustomNamespaceModule extends AbstractModule {
 
 class CustomNamespaceFactory extends NamespaceFactory {
 
-  def from(mailboxPath: MailboxPath, mailboxSession: MailboxSession): MailboxNamespace = mailboxPath match {
-    case PERSONAL_NAMESPACE_MAILBOX_PATH => PersonalNamespace()
-    case DELEGATED_NAMESPACE_MAILBOX_PATH => DelegatedNamespace(mailboxSession.getUser)
-    case CUSTOM_NAMESPACE_MAILBOX_PATH => CustomMailboxNamespace("custom 123")
+  def from(mailboxPath: MailboxPath, mailboxSession: MailboxSession): MailboxNamespace = {
+    val user = mailboxSession.getUser
+    if (mailboxPath == MailboxPath.forUser(user, "personal")) PersonalNamespace()
+    else if (mailboxPath == MailboxPath.forUser(user, "delegated")) DelegatedNamespace(user)
+    else if (mailboxPath == MailboxPath.forUser(user, "custom")) CustomMailboxNamespace("custom 123")
+    else PersonalNamespace()
   }
 }
 
 object CustomNamespaceContract {
-  val CUSTOM_NAMESPACE_MAILBOX_PATH: MailboxPath = MailboxPath.forUser(BOB, "custom")
-  val PERSONAL_NAMESPACE_MAILBOX_PATH: MailboxPath = MailboxPath.forUser(BOB, "personal")
-  val DELEGATED_NAMESPACE_MAILBOX_PATH: MailboxPath = MailboxPath.forUser(BOB, "delegated")
 }
 
 trait CustomNamespaceContract {
+  import CustomNamespaceContractContext.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def customNamespaceMailboxPath: MailboxPath = MailboxPath.forUser(bobUsername, "custom")
+  def personalNamespaceMailboxPath: MailboxPath = MailboxPath.forUser(bobUsername, "personal")
+  def delegatedNamespaceMailboxPath: MailboxPath = MailboxPath.forUser(bobUsername, "delegated")
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val bob = Username.fromLocalPartWithDomain(s"bob${UUID.randomUUID().toString.replace("-", "").take(8)}", DOMAIN)
+    currentContext.set(CustomNamespaceContractContext.TestContext(
+      bob, Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString))
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bobUsername.asString, BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .build
   }
 
   @Test
   def getMailboxShouldIncludeCustomNamespaceWhenAssociated(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(CUSTOM_NAMESPACE_MAILBOX_PATH)
+      .createMailbox(customNamespaceMailboxPath)
       .serialize
 
     val namespace: String = `given`()
@@ -91,7 +109,7 @@ trait CustomNamespaceContract {
            |  "methodCalls": [[
            |    "Mailbox/get",
            |    {
-           |      "accountId": "$ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": ["${mailboxId}"]
            |    },
            |    "c1"]]
@@ -112,7 +130,7 @@ trait CustomNamespaceContract {
   @Test
   def getMailboxShouldIncludePersonalNamespaceWhenAssociated(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(PERSONAL_NAMESPACE_MAILBOX_PATH)
+      .createMailbox(personalNamespaceMailboxPath)
       .serialize
 
     val namespace: String = `given`()
@@ -126,7 +144,7 @@ trait CustomNamespaceContract {
            |  "methodCalls": [[
            |    "Mailbox/get",
            |    {
-           |      "accountId": "$ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": ["${mailboxId}"]
            |    },
            |    "c1"]]
@@ -147,7 +165,7 @@ trait CustomNamespaceContract {
   @Test
   def getMailboxShouldIncludeDelegatedNamespaceWhenAssociated(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(DELEGATED_NAMESPACE_MAILBOX_PATH)
+      .createMailbox(delegatedNamespaceMailboxPath)
       .serialize
 
     val namespace: String = `given`()
@@ -161,7 +179,7 @@ trait CustomNamespaceContract {
            |  "methodCalls": [[
            |    "Mailbox/get",
            |    {
-           |      "accountId": "$ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "ids": ["${mailboxId}"]
            |    },
            |    "c1"]]
@@ -176,6 +194,6 @@ trait CustomNamespaceContract {
       .get("methodResponses[0][1].list[0].namespace")
 
     assertThat(namespace)
-      .isEqualTo("Delegated[bob@domain.tld]")
+      .isEqualTo(s"Delegated[${bobUsername.asString}]")
   }
 }

@@ -54,5 +54,6 @@ public class PostgresCustomNamespaceTest implements CustomNamespaceContract {
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new CustomNamespaceModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
