@@ -41,5 +41,6 @@ public class MemoryCustomMethodTest implements CustomMethodContract {
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .combineWith(new CustomMethodModule())
             .overrideWith(new TestJMAPServerModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

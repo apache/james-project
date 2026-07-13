@@ -23,7 +23,10 @@ import java.io.{ByteArrayInputStream, InputStream}
 import java.lang.Boolean.valueOf
 import java.net.URI
 import java.nio.charset.StandardCharsets
+import java.util.Base64
+import java.util.UUID
 
+import com.google.common.hash.Hashing
 import com.google.inject.AbstractModule
 import com.google.inject.multibindings.Multibinder
 import eu.timepit.refined.auto._
@@ -74,6 +77,7 @@ import scala.util.{Success, Try}
 object CustomMethodContract {
   val CUSTOM: CapabilityIdentifier = "urn:apache:james:params:jmap:custom"
   val eventId = EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4")
+  private val currentUsername = new ThreadLocal[Username]()
 
   private val expected_session_object: String =
     s"""{
@@ -271,27 +275,30 @@ class JmapEventBusProbe @Inject() (@Named("JMAP") jmapEventBus: EventBus) extend
 }
 
 trait CustomMethodContract {
+  def bobUsername: Username = CustomMethodContract.currentUsername.get()
+  def bobAccountId: String = Hashing.sha256().hashString(bobUsername.asString, StandardCharsets.UTF_8).toString
 
   private lazy val backend: SttpBackend[Identity, WebSockets] = OkHttpSyncBackend()
   private lazy implicit val monadError: MonadError[Identity] = IdMonad
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    CustomMethodContract.currentUsername.set(Username.fromLocalPartWithDomain(s"bob${UUID.randomUUID().toString.replace("-", "").take(8)}", DOMAIN))
     server.getProbe(classOf[DataProbeImpl])
       .fluent()
       .addDomain(DOMAIN.asString())
-      .addUser(BOB.asString(), BOB_PASSWORD)
+      .addUser(bobUsername.asString(), BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .build
   }
 
   @Test
   def pushShouldSupportCustomTypeNameAndIntStateWhenDataTypesAreMyTypeName(server: GuiceJamesServer): Unit = {
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
     val intState = CustomTypeName.parseState("1").toOption.get
-    val stateChangeEvent: StateChangeEvent = StateChangeEvent(eventId = CustomMethodContract.eventId, username = BOB, map = Map(CustomTypeName -> intState))
+    val stateChangeEvent: StateChangeEvent = StateChangeEvent(eventId = CustomMethodContract.eventId, username = bobUsername, map = Map(CustomTypeName -> intState))
     Thread.sleep(100)
 
     val response: Either[String, String] =
@@ -317,10 +324,10 @@ trait CustomMethodContract {
     Thread.sleep(100)
 
     assertThatJson(response.toOption.get)
-      .isEqualTo("""{
+      .isEqualTo(s"""{
                    |	"@type": "StateChange",
                    |	"changed": {
-                   |		"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6": {
+                   |		"$bobAccountId": {
                    |			"MyTypeName": "1"
                    |		}
                    |	}
@@ -329,9 +336,9 @@ trait CustomMethodContract {
 
   @Test
   def pushShouldSupportCustomTypeNameAndIntStateWhenDataTypesAreNull(server: GuiceJamesServer): Unit = {
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
     val intState = CustomTypeName.parseState("1").toOption.get
-    val stateChangeEvent: StateChangeEvent = StateChangeEvent(eventId = CustomMethodContract.eventId, username = BOB, map = Map(CustomTypeName -> intState))
+    val stateChangeEvent: StateChangeEvent = StateChangeEvent(eventId = CustomMethodContract.eventId, username = bobUsername, map = Map(CustomTypeName -> intState))
     Thread.sleep(100)
 
     val response: Either[String, String] =
@@ -357,10 +364,10 @@ trait CustomMethodContract {
     Thread.sleep(100)
 
     assertThatJson(response.toOption.get)
-      .isEqualTo("""{
+      .isEqualTo(s"""{
                    |	"@type": "StateChange",
                    |	"changed": {
-                   |		"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6": {
+                   |		"$bobAccountId": {
                    |			"MyTypeName": "1"
                    |		}
                    |	}
@@ -380,7 +387,10 @@ trait CustomMethodContract {
       .body()
       .asString()
 
-    assertThatJson(sessionJson).isEqualTo(CustomMethodContract.expected_session_object)
+    assertThatJson(sessionJson).isEqualTo(
+      CustomMethodContract.expected_session_object
+        .replace("29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6", bobAccountId)
+        .replace("bob@domain.tld", bobUsername.asString))
   }
 
   @Test
@@ -519,7 +529,7 @@ trait CustomMethodContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
-      .get(s"/download/$accountId/gabouh")
+      .get(s"/download/$bobAccountId/gabouh")
     .`then`
       .statusCode(SC_OK)
       .contentType("application/bytes")
@@ -537,7 +547,7 @@ trait CustomMethodContract {
       .getValue
 
     basicRequest.get(Uri.apply(new URI(s"ws://127.0.0.1:$port/jmap/ws")))
-      .header("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+      .header("Authorization", s"Basic ${Base64.getEncoder.encodeToString(s"${bobUsername.asString}:$BOB_PASSWORD".getBytes(StandardCharsets.UTF_8))}")
       .header("Accept", ACCEPT_RFC8621_VERSION_HEADER)
   }
 }
