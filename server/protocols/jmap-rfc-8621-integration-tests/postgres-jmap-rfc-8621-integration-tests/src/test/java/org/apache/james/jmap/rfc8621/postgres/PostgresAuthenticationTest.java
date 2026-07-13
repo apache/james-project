@@ -19,39 +19,7 @@
 
 package org.apache.james.jmap.rfc8621.postgres;
 
-import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
-
-import org.apache.james.JamesServerBuilder;
-import org.apache.james.JamesServerExtension;
-import org.apache.james.PostgresJamesConfiguration;
-import org.apache.james.PostgresJamesServerMain;
-import org.apache.james.SearchConfiguration;
-import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.jmap.rfc8621.contract.AuthenticationContract;
-import org.apache.james.modules.RabbitMQExtension;
-import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.modules.blobstore.BlobStoreConfiguration;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class PostgresAuthenticationTest implements AuthenticationContract {
-    @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
-        PostgresJamesConfiguration.builder()
-            .workingDirectory(tmpDir)
-            .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.scanning())
-            .usersRepository(DEFAULT)
-            .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.RABBITMQ)
-            .blobStore(BlobStoreConfiguration.builder()
-                .postgres()
-                .disableCache()
-                .deduplication()
-                .noCryptoConfig())
-            .build())
-        .extension(PostgresExtension.empty())
-        .extension(new RabbitMQExtension())
-        .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule()))
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_ENCLOSING_CLASS)
-        .build();
+public class PostgresAuthenticationTest extends PerEnclosingClassPostgresBase implements AuthenticationContract {
 }
