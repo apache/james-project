@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.UploadContract;
 
-public class PostgresUploadTest extends PostgresBase implements UploadContract {
+public class PostgresUploadTest extends PerClassPostgresBase implements UploadContract {
 }

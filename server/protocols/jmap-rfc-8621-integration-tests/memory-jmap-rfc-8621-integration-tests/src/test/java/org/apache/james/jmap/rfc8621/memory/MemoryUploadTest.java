@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.UploadContract;
 
-public class MemoryUploadTest extends MemoryBase implements UploadContract {
+public class MemoryUploadTest extends PerClassMemoryBase implements UploadContract {
 
 }

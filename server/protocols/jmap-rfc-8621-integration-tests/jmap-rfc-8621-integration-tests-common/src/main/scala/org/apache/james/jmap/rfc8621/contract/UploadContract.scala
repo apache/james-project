@@ -20,15 +20,17 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType
 import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_CREATED, SC_FORBIDDEN, SC_OK, SC_UNAUTHORIZED}
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.AccountId
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ALICE, ALICE_ACCOUNT_ID, ALICE_PASSWORD, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE_PASSWORD, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.UploadContract.{BIG_INPUT, VALID_INPUT}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
@@ -37,24 +39,44 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.{BeforeEach, RepeatedTest, Test}
 import play.api.libs.json.{JsString, Json}
 
+object UploadContractContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String, aliceUsername: Username, aliceAccountId: String, andreUsername: Username)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] = new java.util.concurrent.atomic.AtomicReference[TestContext]()
+}
+
 object UploadContract {
   private val BIG_INPUT: Array[Byte] = "123456789\r\n".repeat(1024 * 1024 * 4).getBytes(StandardCharsets.UTF_8)
   private val VALID_INPUT: Array[Byte] = "123456789\r\n".repeat(1024 * 1024).getBytes(StandardCharsets.UTF_8)
 }
 
 trait UploadContract {
+  import UploadContractContext.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def aliceUsername: Username = currentContext.get().aliceUsername
+  def aliceAccountId: String = currentContext.get().aliceAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val alice = Username.fromLocalPartWithDomain(s"alice$uniqueSuffix", _2_DOT_DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    currentContext.set(UploadContractContext.TestContext(
+      bob, AccountId.from(bob).toOption.get.id.value,
+      alice, AccountId.from(alice).toOption.get.id.value, andre))
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
       .addDomain(_2_DOT_DOMAIN.asString())
-      .addUser(ALICE.asString(), ALICE_PASSWORD)
-      .addUser(ANDRE.asString(), ANDRE_PASSWORD)
+      .addUser(alice.asString(), ALICE_PASSWORD)
+      .addUser(andre.asString(), ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -65,7 +87,7 @@ trait UploadContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(VALID_INPUT)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -78,7 +100,7 @@ trait UploadContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
-      .get(s"/download/$ACCOUNT_ID/$blobId")
+      .get(s"/download/$bobAccountId/$blobId")
     .`then`
       .statusCode(SC_OK)
       .contentType("application/json")
@@ -97,7 +119,7 @@ trait UploadContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(VALID_INPUT)
     .when
-      .post(s"/upload/$ALICE_ACCOUNT_ID")
+      .post(s"/upload/$aliceAccountId")
     .`then`
       .statusCode(SC_FORBIDDEN)
       .header("Content-Length", "84")
@@ -113,7 +135,7 @@ trait UploadContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(VALID_INPUT)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -123,11 +145,11 @@ trait UploadContract {
     val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
 
     `given`
-      .auth().basic(ALICE.asString(), ALICE_PASSWORD)
+      .auth().basic(aliceUsername.asString(), ALICE_PASSWORD)
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
-      .get(s"/download/$ALICE_ACCOUNT_ID/$blobId")
+      .get(s"/download/$bobAccountId/$blobId")
     .`then`
       .statusCode(SC_FORBIDDEN)
       .body("status", equalTo(403))
@@ -143,7 +165,7 @@ trait UploadContract {
       .contentType(ContentType.BINARY)
       .body(BIG_INPUT)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_BAD_REQUEST)
       .body("status", equalTo(400))
@@ -161,7 +183,7 @@ trait UploadContract {
       .contentType(ContentType.BINARY)
       .body(VALID_INPUT)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_UNAUTHORIZED)
       .header("WWW-Authenticate", "Basic realm=\"simple\", Bearer realm=\"JWT\"")
@@ -172,9 +194,9 @@ trait UploadContract {
 
   @Test
   def bobShouldBeAllowedToUploadInAliceAccountWhenDelegated(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(ALICE, BOB)
+    server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(aliceUsername, bobUsername)
 
-    val aliceAccountId: String = AccountId.from(ALICE).toOption.get.id.value
+    val aliceAccountId: String = AccountId.from(aliceUsername).toOption.get.id.value
 
     `given`
       .basePath("")
@@ -192,9 +214,9 @@ trait UploadContract {
 
   @Test
   def bobShouldBeNotAllowedToUploadInAliceAccountWhenNotDelegated(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(ALICE, ANDRE)
+    server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(aliceUsername, andreUsername)
 
-    val aliceAccountId: String = AccountId.from(ALICE).toOption.get.id.value
+    val aliceAccountId: String = AccountId.from(aliceUsername).toOption.get.id.value
 
     `given`
       .basePath("")
