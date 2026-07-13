@@ -19,8 +19,11 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
 import java.util.UUID
+import java.util.concurrent.atomic
 
+import com.google.common.hash.Hashing
 import com.google.inject.AbstractModule
 import com.google.inject.multibindings.Multibinder
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
@@ -31,15 +34,17 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
-import org.apache.james.core.{MailAddress, Username}
+import org.apache.james.core.{Domain, MailAddress, Username}
 import org.apache.james.jmap.api.identity.{IdentityCreationRequest, IdentityHtmlSignatureUpdate, IdentityRepository, IdentityUpdateRequest}
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, TextSignature}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
+import org.apache.james.rrt.api.RecipientRewriteTable
+import org.apache.james.rrt.lib.MappingSource
 import org.apache.james.utils.{DataProbeImpl, GuiceProbe}
-import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.api.{AfterEach, BeforeEach, Test}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
@@ -51,23 +56,64 @@ class IdentityProbeModule extends AbstractModule{
   }
 }
 
-class IdentityProbe @Inject()(identityRepository: IdentityRepository) extends GuiceProbe {
+class IdentityProbe @Inject()(identityRepository: IdentityRepository, recipientRewriteTable: RecipientRewriteTable) extends GuiceProbe {
   def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] = identityRepository.save(user, creationRequest)
   def update(user: Username, identityId: IdentityId, identityUpdateRequest: IdentityUpdateRequest): SMono[Unit] = SMono(identityRepository.update(user, identityId, identityUpdateRequest))
+  def removeDomainAliasMapping(aliasDomain: String, targetDomain: String): Unit =
+    recipientRewriteTable.removeDomainAliasMapping(MappingSource.fromDomain(Domain.of(aliasDomain)), Domain.of(targetDomain))
+}
+
+object IdentityGetContract {
+  case class TestContext(bobUsername: Username, bobLocalPart: String, bobAccountId: String, bobAliasLocalPart: String, domainAlias: String, defaultIdentityId: String)
+
+  val currentContext: atomic.AtomicReference[TestContext] = new atomic.AtomicReference[TestContext]()
 }
 
 trait IdentityGetContract {
+  import IdentityGetContract.{TestContext, currentContext}
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobLocalPart: String = currentContext.get().bobLocalPart
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def bobAliasLocalPart: String = currentContext.get().bobAliasLocalPart
+  def domainAlias: String = currentContext.get().domainAlias
+  def defaultIdentityId: String = currentContext.get().defaultIdentityId
+  def bobAliasIdentityId: String = UUID.nameUUIDFromBytes(s"$bobAliasLocalPart@${DOMAIN.asString}".getBytes(StandardCharsets.UTF_8)).toString
+  def bobDomainAliasIdentityId: String = UUID.nameUUIDFromBytes(s"$bobLocalPart@$domainAlias".getBytes(StandardCharsets.UTF_8)).toString
+  def bobAliasDomainAliasIdentityId: String = UUID.nameUUIDFromBytes(s"$bobAliasLocalPart@$domainAlias".getBytes(StandardCharsets.UTF_8)).toString
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val domainAlias = s"domain-alias-$uniqueSuffix.tld"
+    currentContext.set(TestContext(
+      bobUsername = bob,
+      bobLocalPart = s"bob$uniqueSuffix",
+      bobAccountId = accountId(bob),
+      bobAliasLocalPart = s"bob-alias-$uniqueSuffix",
+      domainAlias = domainAlias,
+      defaultIdentityId = UUID.nameUUIDFromBytes(bob.asString.getBytes(StandardCharsets.UTF_8)).toString))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addDomain("domain-alias.tld")
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addDomain(domainAlias)
+      .addUser(bob.asString, BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .build
+  }
+
+  @AfterEach
+  def tearDown(server: GuiceJamesServer): Unit = {
+    val context = currentContext.get()
+    server.getProbe(classOf[DataProbeImpl]).removeUserAliasMapping(context.bobAliasLocalPart, DOMAIN.asString, context.bobUsername.asString)
+    server.getProbe(classOf[IdentityProbe]).removeDomainAliasMapping(context.domainAlias, DOMAIN.asString)
   }
 
   @Test
@@ -78,7 +124,7 @@ trait IdentityGetContract {
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": null
          |    },
          |    "c1"]]
@@ -100,13 +146,13 @@ trait IdentityGetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
       s"""{
-        |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |  "accountId": "$bobAccountId",
         |  "state": "${INSTANCE.value}",
         |  "list": [
         |      {
-        |          "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
-        |          "name": "bob@domain.tld",
-        |          "email": "bob@domain.tld",
+        |          "id": "$defaultIdentityId",
+        |          "name": "${bobUsername.asString}",
+        |          "email": "${bobUsername.asString}",
         |          "mayDelete": false,
         |          "textSignature":"",
         |          "htmlSignature":""
@@ -118,8 +164,8 @@ trait IdentityGetContract {
   @Test
   def getIdentityShouldReturnCustomIdentity(server: GuiceJamesServer): Unit = {
     val id = SMono(server.getProbe(classOf[IdentityProbe])
-      .save(BOB, IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
-        email = BOB.asMailAddress(),
+      .save(bobUsername, IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
+        email = bobUsername.asMailAddress(),
         replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
         bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
         textSignature = Some(TextSignature("text signature")),
@@ -133,7 +179,7 @@ trait IdentityGetContract {
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["$id"]
          |    },
          |    "c1"]]
@@ -159,7 +205,7 @@ trait IdentityGetContract {
          |		"email": "boss2@domain.tld",
          |		"name": "My Boss 2"
          |	}],
-         |	"email": "bob@domain.tld",
+         |	"email": "${bobUsername.asString}",
          |	"htmlSignature": "html signature",
          |	"id": "$id",
          |	"mayDelete": true,
@@ -174,14 +220,14 @@ trait IdentityGetContract {
 
   @Test
   def getIdentityShouldReturnAliases(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, "domain.tld", bobUsername.asString)
     val request =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": null
          |    },
          |    "c1"]]
@@ -204,21 +250,21 @@ trait IdentityGetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
       s"""{
-        |    "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |    "accountId": "$bobAccountId",
         |    "state": "${INSTANCE.value}",
         |    "list": [
         |        {
-        |            "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
-        |            "name": "bob@domain.tld",
-        |            "email": "bob@domain.tld",
+        |            "id": "$defaultIdentityId",
+        |            "name": "${bobUsername.asString}",
+        |            "email": "${bobUsername.asString}",
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
         |        },
         |        {
-        |            "id": "3739a34e-cd8c-3a42-bf28-578ba24da9da",
-        |            "name": "bob-alias@domain.tld",
-        |            "email": "bob-alias@domain.tld",
+        |            "id": "$bobAliasIdentityId",
+        |            "name": "${bobAliasLocalPart}@domain.tld",
+        |            "email": "${bobAliasLocalPart}@domain.tld",
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
@@ -229,15 +275,15 @@ trait IdentityGetContract {
 
   @Test
   def getIdentityShouldSupportIdsField(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, "domain.tld", bobUsername.asString)
     val request =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["idNotFound", "3739a34e-cd8c-3a42-bf28-578ba24da9da"]
+         |      "accountId": "$bobAccountId",
+         |      "ids": ["idNotFound", "$bobAliasIdentityId"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -258,13 +304,13 @@ trait IdentityGetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
       s"""{
-        |    "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |    "accountId": "$bobAccountId",
         |    "state": "${INSTANCE.value}",
         |    "list": [
         |        {
-        |            "id": "3739a34e-cd8c-3a42-bf28-578ba24da9da",
-        |            "name": "bob-alias@domain.tld",
-        |            "email": "bob-alias@domain.tld",
+        |            "id": "$bobAliasIdentityId",
+        |            "name": "${bobAliasLocalPart}@domain.tld",
+        |            "email": "${bobAliasLocalPart}@domain.tld",
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
@@ -276,15 +322,15 @@ trait IdentityGetContract {
 
   @Test
   def getIdentityShouldReturnDomainAliases(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
-    server.getProbe(classOf[DataProbeImpl]).addDomainAliasMapping("domain-alias.tld", "domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, "domain.tld", bobUsername.asString)
+    server.getProbe(classOf[DataProbeImpl]).addDomainAliasMapping(domainAlias, "domain.tld")
     val request =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": null
          |    },
          |    "c1"]]
@@ -307,37 +353,37 @@ trait IdentityGetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
       s"""{
-        |    "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |    "accountId": "$bobAccountId",
         |    "state": "${INSTANCE.value}",
         |    "list": [
         |        {
-        |            "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
-        |            "name": "bob@domain.tld",
-        |            "email": "bob@domain.tld",
+        |            "id": "$defaultIdentityId",
+        |            "name": "${bobUsername.asString}",
+        |            "email": "${bobUsername.asString}",
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
         |        },
         |        {
-        |            "id": "b025b9f1-95c6-30fb-a9d4-0fddfcc3a92c",
-        |            "name": "bob@domain-alias.tld",
-        |            "email": "bob@domain-alias.tld",
+        |            "id": "$bobDomainAliasIdentityId",
+        |            "name": "${bobLocalPart}@$domainAlias",
+        |            "email": "${bobLocalPart}@$domainAlias",
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
         |        },
         |        {
-        |            "id": "3739a34e-cd8c-3a42-bf28-578ba24da9da",
-        |            "name": "bob-alias@domain.tld",
-        |            "email": "bob-alias@domain.tld",
+        |            "id": "$bobAliasIdentityId",
+        |            "name": "${bobAliasLocalPart}@domain.tld",
+        |            "email": "${bobAliasLocalPart}@domain.tld",
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
         |        },
         |        {
-        |            "id": "d2e1e9d2-78ef-3967-87c6-cdc2e0f1541d",
-        |            "name": "bob-alias@domain-alias.tld",
-        |            "email": "bob-alias@domain-alias.tld",
+        |            "id": "$bobAliasDomainAliasIdentityId",
+        |            "name": "${bobAliasLocalPart}@$domainAlias",
+        |            "email": "${bobAliasLocalPart}@$domainAlias",
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
@@ -348,15 +394,15 @@ trait IdentityGetContract {
 
   @Test
   def getIdentityShouldReturnSortOrder(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
-    server.getProbe(classOf[DataProbeImpl]).addDomainAliasMapping("domain-alias.tld", "domain.tld")
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, "domain.tld", bobUsername.asString)
+    server.getProbe(classOf[DataProbeImpl]).addDomainAliasMapping(domainAlias, "domain.tld")
     val request =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission", "urn:apache:james:params:jmap:mail:identity:sortorder"],
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": null
          |    },
          |    "c1"]]
@@ -379,40 +425,40 @@ trait IdentityGetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
       s"""{
-        |    "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |    "accountId": "$bobAccountId",
         |    "state": "${INSTANCE.value}",
         |    "list": [
         |        {
-        |            "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
-        |            "name": "bob@domain.tld",
-        |            "email": "bob@domain.tld",
+        |            "id": "$defaultIdentityId",
+        |            "name": "${bobUsername.asString}",
+        |            "email": "${bobUsername.asString}",
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":"",
         |            "sortOrder": 100
         |        },
         |        {
-        |            "id": "b025b9f1-95c6-30fb-a9d4-0fddfcc3a92c",
-        |            "name": "bob@domain-alias.tld",
-        |            "email": "bob@domain-alias.tld",
+        |            "id": "$bobDomainAliasIdentityId",
+        |            "name": "${bobLocalPart}@$domainAlias",
+        |            "email": "${bobLocalPart}@$domainAlias",
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":"",
         |            "sortOrder": 100
         |        },
         |        {
-        |            "id": "3739a34e-cd8c-3a42-bf28-578ba24da9da",
-        |            "name": "bob-alias@domain.tld",
-        |            "email": "bob-alias@domain.tld",
+        |            "id": "$bobAliasIdentityId",
+        |            "name": "${bobAliasLocalPart}@domain.tld",
+        |            "email": "${bobAliasLocalPart}@domain.tld",
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":"",
         |            "sortOrder": 100
         |        },
         |        {
-        |            "id": "d2e1e9d2-78ef-3967-87c6-cdc2e0f1541d",
-        |            "name": "bob-alias@domain-alias.tld",
-        |            "email": "bob-alias@domain-alias.tld",
+        |            "id": "$bobAliasDomainAliasIdentityId",
+        |            "name": "${bobAliasLocalPart}@$domainAlias",
+        |            "email": "${bobAliasLocalPart}@$domainAlias",
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":"",
@@ -430,7 +476,7 @@ trait IdentityGetContract {
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": null,
          |      "properties": ["id", "name", "email", "replyTo", "bcc", "textSignature", "htmlSignature", "mayDelete"]
          |    },
@@ -454,13 +500,13 @@ trait IdentityGetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-          |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+          |  "accountId": "$bobAccountId",
           |  "state": "${INSTANCE.value}",
           |  "list": [
           |      {
-          |          "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
-          |          "name": "bob@domain.tld",
-          |          "email": "bob@domain.tld",
+          |          "id": "$defaultIdentityId",
+          |          "name": "${bobUsername.asString}",
+          |          "email": "${bobUsername.asString}",
           |          "mayDelete": false,
           |          "textSignature":"",
           |          "htmlSignature":""
@@ -477,7 +523,7 @@ trait IdentityGetContract {
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": null,
          |      "properties": ["id", "email"]
          |    },
@@ -501,12 +547,12 @@ trait IdentityGetContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-          |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+          |  "accountId": "$bobAccountId",
           |  "state": "${INSTANCE.value}",
           |  "list": [
           |      {
-          |          "id": "becaf930-ea9e-3ef4-81ea-206eecb04aa7",
-          |          "email": "bob@domain.tld"
+          |          "id": "$defaultIdentityId",
+          |          "email": "${bobUsername.asString}"
           |      }
           |  ]
           |}""".stripMargin)
@@ -520,7 +566,7 @@ trait IdentityGetContract {
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": null,
          |      "properties": ["id", "bad"]
          |    },
@@ -608,7 +654,7 @@ trait IdentityGetContract {
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["$id"]
          |    },
          |    "c1"]]
@@ -634,7 +680,7 @@ trait IdentityGetContract {
            |		[
            |			"Identity/get",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"notFound": [
            |					"$id"
            |				],
@@ -656,7 +702,7 @@ trait IdentityGetContract {
                 |  "methodCalls": [[
                 |    "Identity/get",
                 |    {
-                |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                |      "accountId": "$bobAccountId",
                 |      "ids": null
                 |    },
                 |    "c1"]]
@@ -673,7 +719,7 @@ trait IdentityGetContract {
 
     // When admin update the server set identity
     server.getProbe(classOf[IdentityProbe])
-      .update(BOB, IdentityId(UUID.fromString(serverSetIdentityId)), IdentityUpdateRequest(htmlSignature = Some(IdentityHtmlSignatureUpdate(HtmlSignature("html signature")))))
+      .update(bobUsername, IdentityId(UUID.fromString(serverSetIdentityId)), IdentityUpdateRequest(htmlSignature = Some(IdentityHtmlSignatureUpdate(HtmlSignature("html signature")))))
       .block()
 
     // Then mayDelete always return false
@@ -684,7 +730,7 @@ trait IdentityGetContract {
                 |  "methodCalls": [[
                 |    "Identity/get",
                 |    {
-                |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                |      "accountId": "$bobAccountId",
                 |      "ids": [ "$serverSetIdentityId" ],
                 |      "properties": ["id", "mayDelete"]
                 |    },

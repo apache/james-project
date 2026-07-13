@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.IdentityGetContract;
 
-public class PostgresIdentityGetTest extends PostgresBase implements IdentityGetContract {
+public class PostgresIdentityGetTest extends PerClassPostgresBase implements IdentityGetContract {
 }
