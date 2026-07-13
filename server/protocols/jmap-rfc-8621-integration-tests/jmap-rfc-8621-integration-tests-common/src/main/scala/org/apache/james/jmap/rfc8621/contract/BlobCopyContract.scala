@@ -21,6 +21,8 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
 import com.google.common.base.Strings
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
@@ -30,10 +32,11 @@ import io.restassured.path.json.JsonPath
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.{SC_CREATED, SC_OK}
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.AccountId
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.BlobCopyContract.{ALICE_ACCOUNT_ID, TEN_KILO_BYTES}
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE, ALICE_PASSWORD, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder, ACCOUNT_ID => BOB_ACCOUNT_ID}
+import org.apache.james.jmap.rfc8621.contract.BlobCopyContract.TEN_KILO_BYTES
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE_PASSWORD, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.junit.categories.BasicFeature
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
@@ -43,22 +46,41 @@ import org.junit.jupiter.api.{BeforeEach, Test}
 object BlobCopyContract {
   val TWENTY_KILO_BYTES_UPLOAD_QUOTA_LIMIT: String = "20K"
   val TEN_KILO_BYTES: Array[Byte] = Strings.repeat("0123456789\r\n", 853).getBytes(StandardCharsets.UTF_8)
-  val ALICE_ACCOUNT_ID: String = AccountId.from(ALICE).toOption.get.id.value
+
+  case class TestContext(bob: Username, alice: Username, andre: Username)
+
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
 }
 
 trait BlobCopyContract {
+  import BlobCopyContract.currentContext
+
+  def BOB: Username = currentContext.get().bob
+  def ALICE: Username = currentContext.get().alice
+  def ANDRE: Username = currentContext.get().andre
+  def accountId(username: Username): String = AccountId.from(username).toOption.get.id.value
+  def BOB_ACCOUNT_ID: String = accountId(BOB)
+  def ALICE_ACCOUNT_ID: String = accountId(ALICE)
+  def ANDRE_ACCOUNT_ID: String = accountId(ANDRE)
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val alice = Username.fromLocalPartWithDomain(s"alice$uniqueSuffix", _2_DOT_DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    currentContext.set(BlobCopyContract.TestContext(bob, alice, andre))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
       .addDomain(_2_DOT_DOMAIN.asString())
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ALICE.asString(), ALICE_PASSWORD)
-      .addUser(ANDRE.asString(), ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(alice.asString, ALICE_PASSWORD)
+      .addUser(andre.asString, ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
