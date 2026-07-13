@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.IdentityGetContract;
 
-public class MemoryIdentityGetMethodTest extends MemoryBase implements IdentityGetContract {
+public class MemoryIdentityGetMethodTest extends PerClassMemoryBase implements IdentityGetContract {
 }
