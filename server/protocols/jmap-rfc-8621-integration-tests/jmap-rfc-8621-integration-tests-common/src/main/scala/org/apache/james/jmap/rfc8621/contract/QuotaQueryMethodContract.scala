@@ -19,19 +19,24 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
 import java.time.Duration
-import java.util.concurrent.TimeUnit
+import java.util.UUID
+import java.util.concurrent.{TimeUnit, atomic}
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaSizeLimit}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.mail.{CountResourceType, OctetsResourceType, QuotaIdFactory, ResourceType}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.model.MailboxACL.Right.Read
 import org.apache.james.mailbox.model.{MailboxACL, MailboxPath}
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl, QuotaProbesImpl}
@@ -39,7 +44,27 @@ import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.{BeforeEach, Test}
 
+object QuotaQueryMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username)
+
+  val currentContext: atomic.AtomicReference[TestContext] = new atomic.AtomicReference[TestContext]()
+}
+
 trait QuotaQueryMethodContract {
+  import QuotaQueryMethodContract.{TestContext, currentContext}
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
+
+  private def quotaId(server: GuiceJamesServer, username: Username, resourceType: ResourceType): String =
+    QuotaIdFactory.from(server.getProbe(classOf[QuotaProbesImpl]).getQuotaRoot(MailboxPath.inbox(username)), resourceType).value
+
+  private def queryState(ids: String*): String =
+    Hashing.murmur3_32_fixed().hashUnencodedChars(ids.sorted.mkString(" ")).toString
 
   private lazy val awaitAtMostTenSeconds = Awaitility.`with`
     .await
@@ -48,14 +73,22 @@ trait QuotaQueryMethodContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = accountId(bob),
+      andreUsername = andre))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString, ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build
   }
@@ -71,7 +104,7 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {}
            |    },
            |    "c1"]]
@@ -92,7 +125,7 @@ trait QuotaQueryMethodContract {
          |        [
          |            "Quota/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "queryState": "00000000",
          |                "canCalculateChanges": false,
          |                "ids": [
@@ -110,7 +143,7 @@ trait QuotaQueryMethodContract {
   @Test
   def queryShouldReturnAllWhenFilterIsEmpty(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -123,7 +156,7 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {}
            |    },
            |    "c1"]]
@@ -144,12 +177,12 @@ trait QuotaQueryMethodContract {
          |        [
          |            "Quota/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "queryState": "a06886ff",
+         |                "accountId": "$bobAccountId",
+         |                "queryState": "${queryState(quotaId(server, bobUsername, CountResourceType), quotaId(server, bobUsername, OctetsResourceType))}",
          |                "canCalculateChanges": false,
          |                "ids": [
-         |                    "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                    "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947"
+         |                    "${quotaId(server, bobUsername, CountResourceType)}",
+         |                    "${quotaId(server, bobUsername, OctetsResourceType)}"
          |                ],
          |                "position": 0,
          |                "limit": 256
@@ -163,7 +196,7 @@ trait QuotaQueryMethodContract {
   @Test
   def filterResourceTypesShouldWork(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -176,7 +209,7 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
            |        "resourceType": "count"
            |      }
@@ -199,11 +232,11 @@ trait QuotaQueryMethodContract {
          |        [
          |            "Quota/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "queryState": "d8d3e770",
+         |                "accountId": "$bobAccountId",
+         |                "queryState": "${queryState(quotaId(server, bobUsername, CountResourceType))}",
          |                "canCalculateChanges": false,
          |                "ids": [
-         |                    "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528"
+         |                    "${quotaId(server, bobUsername, CountResourceType)}"
          |                ],
          |                "position": 0,
          |                "limit": 256
@@ -217,7 +250,7 @@ trait QuotaQueryMethodContract {
   @Test
   def filterResourceTypesShoulFailWhenInvalidResourceTypes(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -230,7 +263,7 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
            |        "resourceType": "invalid"
            |      }
@@ -265,7 +298,7 @@ trait QuotaQueryMethodContract {
   @Test
   def filterDataTypeShouldWork(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -278,7 +311,7 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
            |        "type": "Mail"
            |      }
@@ -301,12 +334,12 @@ trait QuotaQueryMethodContract {
          |        [
          |            "Quota/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "queryState": "a06886ff",
+         |                "accountId": "$bobAccountId",
+         |                "queryState": "${queryState(quotaId(server, bobUsername, CountResourceType), quotaId(server, bobUsername, OctetsResourceType))}",
          |                "canCalculateChanges": false,
          |                "ids": [
-         |                    "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                    "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947"
+         |                    "${quotaId(server, bobUsername, CountResourceType)}",
+         |                    "${quotaId(server, bobUsername, OctetsResourceType)}"
          |                ],
          |                "position": 0,
          |                "limit": 256
@@ -320,7 +353,7 @@ trait QuotaQueryMethodContract {
   @Test
   def filterDataTypeShouldFailWhenInvalidDataType(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -333,7 +366,7 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
            |        "type": "invalid"
            |      }
@@ -368,7 +401,7 @@ trait QuotaQueryMethodContract {
   @Test
   def filterScopeShouldWork(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -381,7 +414,7 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
            |        "scope": "account"
            |      }
@@ -404,12 +437,12 @@ trait QuotaQueryMethodContract {
          |        [
          |            "Quota/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "queryState": "a06886ff",
+         |                "accountId": "$bobAccountId",
+         |                "queryState": "${queryState(quotaId(server, bobUsername, CountResourceType), quotaId(server, bobUsername, OctetsResourceType))}",
          |                "canCalculateChanges": false,
          |                "ids": [
-         |                    "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                    "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947"
+         |                    "${quotaId(server, bobUsername, CountResourceType)}",
+         |                    "${quotaId(server, bobUsername, OctetsResourceType)}"
          |                ],
          |                "position": 0,
          |                "limit": 256
@@ -423,7 +456,7 @@ trait QuotaQueryMethodContract {
   @Test
   def filterScopeShouldFailWhenInvalidScope(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -436,7 +469,7 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
            |        "scope": "invalidScope"
            |      }
@@ -471,7 +504,7 @@ trait QuotaQueryMethodContract {
   @Test
   def filterQuotaNameShouldWork(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -484,9 +517,9 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
-           |        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail"
+           |        "name": "#private&${bobUsername.asString}@domain.tld:account:octets:Mail"
            |      }
            |    },
            |    "c1"]]
@@ -507,11 +540,11 @@ trait QuotaQueryMethodContract {
          |        [
          |            "Quota/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "queryState": "6cacd8a2",
+         |                "accountId": "$bobAccountId",
+         |                "queryState": "${queryState(quotaId(server, bobUsername, OctetsResourceType))}",
          |                "canCalculateChanges": false,
          |                "ids": [
-         |                    "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947"
+         |                    "${quotaId(server, bobUsername, OctetsResourceType)}"
          |                ],
          |                "position": 0,
          |                "limit": 256
@@ -525,7 +558,7 @@ trait QuotaQueryMethodContract {
   @Test
   def filterQuotaNameShouldReturnEmptyResultWhenNameIsNotFound(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -538,7 +571,7 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
            |        "name": "notFound"
            |      }
@@ -561,7 +594,7 @@ trait QuotaQueryMethodContract {
          |        [
          |            "Quota/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "queryState": "00000000",
          |                "canCalculateChanges": false,
          |                "ids": [],
@@ -577,7 +610,7 @@ trait QuotaQueryMethodContract {
   @Test
   def filterMultiPropertyShouldWork(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -590,9 +623,9 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
-           |        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
+           |        "name": "#private&${bobUsername.asString}@domain.tld:account:octets:Mail",
            |        "type": "Mail",
            |        "scope": "account",
            |        "resourceType": "octets"
@@ -616,11 +649,11 @@ trait QuotaQueryMethodContract {
          |        [
          |            "Quota/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "queryState": "6cacd8a2",
+         |                "accountId": "$bobAccountId",
+         |                "queryState": "${queryState(quotaId(server, bobUsername, OctetsResourceType))}",
          |                "canCalculateChanges": false,
          |                "ids": [
-         |                    "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947"
+         |                    "${quotaId(server, bobUsername, OctetsResourceType)}"
          |                ],
          |                "position": 0,
          |                "limit": 256
@@ -634,7 +667,7 @@ trait QuotaQueryMethodContract {
   @Test
   def filterShouldBeANDLogic(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -647,9 +680,9 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
-           |        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
+           |        "name": "#private&${bobUsername.asString}@domain.tld:account:octets:Mail",
            |        "resourceType": "count"
            |      }
            |    },
@@ -671,7 +704,7 @@ trait QuotaQueryMethodContract {
          |        [
          |            "Quota/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "queryState": "00000000",
          |                "canCalculateChanges": false,
          |                "ids": [],
@@ -687,7 +720,7 @@ trait QuotaQueryMethodContract {
   @Test
   def filterShouldFailWhenInvalidFilter(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
     quotaProbe.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(99L))
 
@@ -700,7 +733,7 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
            |        "filterName1": "filterValue2"
            |      }
@@ -781,7 +814,7 @@ trait QuotaQueryMethodContract {
          |  "methodCalls": [[
          |    "Quota/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {}
          |    },
          |    "c1"]]
@@ -820,7 +853,7 @@ trait QuotaQueryMethodContract {
          |  "methodCalls": [[
          |    "Quota/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {}
          |    },
          |    "c1"]]
@@ -854,10 +887,10 @@ trait QuotaQueryMethodContract {
   @Test
   def quotaQueryShouldReturnEmptyIdsWhenDoesNotPermission(server: GuiceJamesServer): Unit ={
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
 
-    val andreMailbox = MailboxPath.forUser(ANDRE, "mailbox")
+    val andreMailbox = MailboxPath.forUser(andreUsername, "mailbox")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
     quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(andreMailbox), QuotaCountLimit.count(88L))
 
@@ -871,9 +904,9 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
-           |        "name" : "#private&andre@domain.tld@domain.tld:account:count:Mail"
+           |        "name" : "#private&${andreUsername.asString}@domain.tld:account:count:Mail"
            |      }
            |    },
            |    "c1"]]
@@ -894,7 +927,7 @@ trait QuotaQueryMethodContract {
          |        [
          |            "Quota/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "queryState": "00000000",
          |                "canCalculateChanges": false,
          |                "ids": [],
@@ -910,13 +943,13 @@ trait QuotaQueryMethodContract {
   @Test
   def quotaQueryShouldReturnIdsWhenHasPermission(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
+    val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
 
-    val andreMailbox = MailboxPath.forUser(ANDRE, "mailbox")
+    val andreMailbox = MailboxPath.forUser(andreUsername, "mailbox")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailbox, BOB.asString, new MailboxACL.Rfc4314Rights(Read))
+      .replaceRights(andreMailbox, bobUsername.asString, new MailboxACL.Rfc4314Rights(Read))
 
     quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(andreMailbox), QuotaCountLimit.count(88L))
 
@@ -930,9 +963,9 @@ trait QuotaQueryMethodContract {
            |  "methodCalls": [[
            |    "Quota/query",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "filter" : {
-           |        "name" : "#private&andre@domain.tld@domain.tld:account:count:Mail"
+           |        "name" : "#private&${andreUsername.asString}@domain.tld:account:count:Mail"
            |      }
            |    },
            |    "c1"]]
@@ -953,10 +986,10 @@ trait QuotaQueryMethodContract {
          |        [
          |            "Quota/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "queryState": "980c0716",
+         |                "accountId": "$bobAccountId",
+         |                "queryState": "${queryState(quotaId(server, andreUsername, CountResourceType))}",
          |                "canCalculateChanges": false,
-         |                "ids": ["04cbe4578878e02a74e47ae6be66c88cc8aafd3a5fc698457d712ee5f9a5b4ca"],
+         |                "ids": ["${quotaId(server, andreUsername, CountResourceType)}"],
          |                "position": 0,
          |                "limit": 256
          |            },
