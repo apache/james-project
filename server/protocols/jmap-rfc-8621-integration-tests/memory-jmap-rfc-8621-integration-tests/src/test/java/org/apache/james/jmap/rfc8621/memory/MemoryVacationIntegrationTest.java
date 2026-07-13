@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.VacationIntegrationTest;
 
-public class MemoryVacationIntegrationTest extends MemoryBase implements VacationIntegrationTest {
+public class MemoryVacationIntegrationTest extends PerClassMemoryBase implements VacationIntegrationTest {
 
 }

@@ -20,8 +20,10 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured
 import io.restassured.RestAssured.`given`
@@ -35,8 +37,8 @@ import org.apache.james.jmap.JMAPTestingConstants.DOMAIN
 import org.apache.james.jmap.JmapGuiceProbe
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, authScheme, baseRequestSpecBuilder}
-import org.apache.james.jmap.rfc8621.contract.VacationIntegrationTest.{andreDraftsPath, html_reason, original_message_text_body, reason}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.VacationIntegrationTest.{html_reason, original_message_text_body, reason}
 import org.apache.james.junit.categories.BasicFeature
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -50,14 +52,26 @@ import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.junit.experimental.categories.Category
 import org.junit.jupiter.api.{BeforeEach, Test}
 
+object VacationIntegrationTestContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username, andreAccountId: String)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] = new java.util.concurrent.atomic.AtomicReference[TestContext]()
+}
+
 object VacationIntegrationTest {
   private val reason = "Message explaining my wonderful vacations"
   private val html_reason = "<b>" + reason + "</b>"
   private val original_message_text_body = "Hello someone, and thank you for joining example.com!"
-  private val andreDraftsPath = MailboxPath.forUser(ANDRE, DefaultMailboxes.DRAFTS)
 }
 
 trait VacationIntegrationTest {
+  import VacationIntegrationTestContext.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+  def andreAccountId: String = currentContext.get().andreAccountId
+  def andreDraftsPath: MailboxPath = MailboxPath.forUser(andreUsername, DefaultMailboxes.DRAFTS)
+
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
     .pollInterval(slowPacedPollInterval)
@@ -67,20 +81,26 @@ trait VacationIntegrationTest {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    currentContext.set(VacationIntegrationTestContext.TestContext(
+      bob, Hashing.sha256().hashString(bob.asString, StandardCharsets.UTF_8).toString,
+      andre, Hashing.sha256().hashString(andre.asString, StandardCharsets.UTF_8).toString))
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString, ANDRE_PASSWORD)
 
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.SENT)
-    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ANDRE.asString, DefaultMailboxes.SENT)
+    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bob.asString, DefaultMailboxes.SENT)
+    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, andre.asString, DefaultMailboxes.SENT)
 
     mailboxProbe.createMailbox(andreDraftsPath)
 
     RestAssured.requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -95,8 +115,8 @@ trait VacationIntegrationTest {
     */
 
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.INBOX)
-    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ANDRE.asString, DefaultMailboxes.INBOX)
+    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bobUsername.asString, DefaultMailboxes.INBOX)
+    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, andreUsername.asString, DefaultMailboxes.INBOX)
 
     // Bob sets a Vacation on its account
     setVacationResponse()
@@ -107,41 +127,41 @@ trait VacationIntegrationTest {
 
     // Then
     // Bob should well receive this mail
-    isMessageReceived(server, ACCOUNT_ID, bobInboxId, BOB, BOB_PASSWORD, original_message_text_body)
+    isMessageReceived(server, bobAccountId, bobInboxId, bobUsername, BOB_PASSWORD, original_message_text_body)
     // andre should well receive a notification about user 1 vacation
-    isMessageReceived(server, ANDRE_ACCOUNT_ID, andreInboxId, ANDRE, ANDRE_PASSWORD, reason)
+    isMessageReceived(server, andreAccountId, andreInboxId, andreUsername, ANDRE_PASSWORD, reason)
   }
 
   @Test
   def jmapVacationShouldGenerateAReplyEvenWhenNoText(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.INBOX)
-    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ANDRE.asString, DefaultMailboxes.INBOX)
+    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bobUsername.asString, DefaultMailboxes.INBOX)
+    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, andreUsername.asString, DefaultMailboxes.INBOX)
 
     server.getProbe(classOf[JmapGuiceProbe])
-      .modifyVacation(AccountId.fromUsername(BOB), VacationPatch.builder.isEnabled(true).build)
+      .modifyVacation(AccountId.fromUsername(bobUsername), VacationPatch.builder.isEnabled(true).build)
     // When
     andreSendMailToBob(server)
     // Then
     // Bob should well receive this mail
-    isMessageReceived(server, ACCOUNT_ID, bobInboxId, BOB, BOB_PASSWORD, original_message_text_body)
+    isMessageReceived(server, bobAccountId, bobInboxId, bobUsername, BOB_PASSWORD, original_message_text_body)
 
     // Andre should well receive a notification about user 1 vacation
-    isMessageReceived(server, ANDRE_ACCOUNT_ID, andreInboxId, ANDRE, ANDRE_PASSWORD, "")
+    isMessageReceived(server, andreAccountId, andreInboxId, andreUsername, ANDRE_PASSWORD, "")
   }
 
   @Test
   def jmapVacationShouldHaveSupportForHtmlMail(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.INBOX)
-    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ANDRE.asString, DefaultMailboxes.INBOX)
+    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bobUsername.asString, DefaultMailboxes.INBOX)
+    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, andreUsername.asString, DefaultMailboxes.INBOX)
 
     setHtmlVacationResponse()
     // When
     andreSendMailToBob(server)
     // Then
-    isMessageReceived(server, ACCOUNT_ID, bobInboxId, BOB, BOB_PASSWORD, original_message_text_body)
-    isMessageReceived(server, ANDRE_ACCOUNT_ID, andreInboxId, ANDRE, ANDRE_PASSWORD, reason)
+    isMessageReceived(server, bobAccountId, bobInboxId, bobUsername, BOB_PASSWORD, original_message_text_body)
+    isMessageReceived(server, andreAccountId, andreInboxId, andreUsername, ANDRE_PASSWORD, reason)
   }
 
   @Test
@@ -152,15 +172,15 @@ trait VacationIntegrationTest {
         - Andre should not receive a notification
     */
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.INBOX)
-    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ANDRE.asString, DefaultMailboxes.INBOX)
+    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bobUsername.asString, DefaultMailboxes.INBOX)
+    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, andreUsername.asString, DefaultMailboxes.INBOX)
 
     // When
     // Andre sends User 1 a mail
     andreSendMailToBob(server)
     // Then
     // Bob should well receive this mail
-    isMessageReceived(server, ACCOUNT_ID, bobInboxId, BOB, BOB_PASSWORD, original_message_text_body)
+    isMessageReceived(server, bobAccountId, bobInboxId, bobUsername, BOB_PASSWORD, original_message_text_body)
     // Andre should not receive a notification
     Thread.sleep(1000L)
 
@@ -170,7 +190,7 @@ trait VacationIntegrationTest {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "filter": {"inMailbox": "${andreInboxId.serialize}"}
          |    },
          |    "c1"]]
@@ -178,7 +198,7 @@ trait VacationIntegrationTest {
 
     val response = `given`(
       baseRequestSpecBuilder(server)
-        .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+        .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
         .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .setBody(request)
         .build, new ResponseSpecBuilder().build)
@@ -206,8 +226,8 @@ trait VacationIntegrationTest {
         - Andre should well receive only one notification about user 1 vacation
     */
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.INBOX)
-    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ANDRE.asString, DefaultMailboxes.INBOX)
+    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bobUsername.asString, DefaultMailboxes.INBOX)
+    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, andreUsername.asString, DefaultMailboxes.INBOX)
 
     // Bob sets a Vacation on its account
     setVacationResponse()
@@ -218,11 +238,11 @@ trait VacationIntegrationTest {
     andreSendMailToBob(server)
     // Then
     // Andre should well receive a notification about user 1 vacation
-    isMessageReceived(server, ANDRE_ACCOUNT_ID, andreInboxId, ANDRE, ANDRE_PASSWORD, reason)
+    isMessageReceived(server, andreAccountId, andreInboxId, andreUsername, ANDRE_PASSWORD, reason)
     // Andre should not receive another notification
     Thread.sleep(1000L)
 
-    isMessageReceived(server, ANDRE_ACCOUNT_ID, andreInboxId, ANDRE, ANDRE_PASSWORD, reason)
+    isMessageReceived(server, andreAccountId, andreInboxId, andreUsername, ANDRE_PASSWORD, reason)
   }
 
   @Test
@@ -235,15 +255,15 @@ trait VacationIntegrationTest {
         - Andre should well receive only one notification about user 1 vacation
     */
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString, DefaultMailboxes.INBOX)
-    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ANDRE.asString, DefaultMailboxes.INBOX)
+    val bobInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bobUsername.asString, DefaultMailboxes.INBOX)
+    val andreInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, andreUsername.asString, DefaultMailboxes.INBOX)
 
     // Bob sets a Vacation on its account
     setVacationResponse()
     // Andre sends Bob a mail
     andreSendMailToBob(server)
     // Wait Bob to receive the eMail before reset of vacation
-    isMessageReceived(server, ANDRE_ACCOUNT_ID, andreInboxId, ANDRE, ANDRE_PASSWORD, reason)
+    isMessageReceived(server, andreAccountId, andreInboxId, andreUsername, ANDRE_PASSWORD, reason)
     // When
     // Bob resets a Vacation on its account
     setVacationResponse()
@@ -251,7 +271,7 @@ trait VacationIntegrationTest {
     andreSendMailToBob(server)
     // Then
     // Andre should well receive two notification about user 1 vacation
-    are2MessageReceived(server, ANDRE_ACCOUNT_ID, andreInboxId, ANDRE, ANDRE_PASSWORD)
+    are2MessageReceived(server, andreAccountId, andreInboxId, andreUsername, ANDRE_PASSWORD)
   }
 
   private def setVacationResponse(): Unit = {
@@ -263,7 +283,7 @@ trait VacationIntegrationTest {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {
          |          "isEnabled": true,
@@ -295,7 +315,7 @@ trait VacationIntegrationTest {
          |    "urn:ietf:params:jmap:vacationresponse" ],
          |  "methodCalls": [
          |    ["VacationResponse/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "singleton": {
          |          "isEnabled": true,
@@ -322,14 +342,14 @@ trait VacationIntegrationTest {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString)
-      .setFrom("ANDRE <" + ANDRE.asString + ">")
-      .setTo(BOB.asString)
+      .setSender(andreUsername.asString)
+      .setFrom("andreUsername <" + andreUsername.asString + ">")
+      .setTo(bobUsername.asString)
       .setBody(original_message_text_body, StandardCharsets.UTF_8)
       .build
 
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString(), andreDraftsPath, AppendCommand.builder().build(message))
+      .appendMessage(andreUsername.asString(), andreDraftsPath, AppendCommand.builder().build(message))
       .getMessageId
 
     val requestAndre =
@@ -337,13 +357,13 @@ trait VacationIntegrationTest {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
-         |       "accountId": "$ANDRE_ACCOUNT_ID",
+         |       "accountId": "$andreAccountId",
          |       "create": {
          |         "k1490": {
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
-         |             "mailFrom": {"email": "${ANDRE.asString}"},
-         |             "rcptTo": [{"email": "${BOB.asString}"}]
+         |             "mailFrom": {"email": "${andreUsername.asString}"},
+         |             "rcptTo": [{"email": "${bobUsername.asString}"}]
          |           }
          |         }
          |    }
@@ -352,7 +372,7 @@ trait VacationIntegrationTest {
 
     `given`(
       baseRequestSpecBuilder(server)
-        .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+        .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
         .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .setBody(requestAndre)
         .build, new ResponseSpecBuilder().build)
