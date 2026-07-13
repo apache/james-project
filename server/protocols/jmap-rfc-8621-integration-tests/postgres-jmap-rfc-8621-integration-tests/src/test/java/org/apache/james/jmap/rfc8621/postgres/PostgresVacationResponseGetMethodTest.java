@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.VacationResponseGetMethodContract;
 
-public class PostgresVacationResponseGetMethodTest extends PostgresBase implements VacationResponseGetMethodContract {
+public class PostgresVacationResponseGetMethodTest extends PerClassPostgresBase implements VacationResponseGetMethodContract {
 }
