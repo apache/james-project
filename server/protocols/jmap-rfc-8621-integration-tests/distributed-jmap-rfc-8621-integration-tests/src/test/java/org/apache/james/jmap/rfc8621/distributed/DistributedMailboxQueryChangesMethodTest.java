@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.MailboxQueryChangesContract;
 
-public class DistributedMailboxQueryChangesMethodTest extends DistributedBase implements MailboxQueryChangesContract {
+public class DistributedMailboxQueryChangesMethodTest extends PerClassDistributedBase implements MailboxQueryChangesContract {
 }

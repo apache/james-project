@@ -19,30 +19,53 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
+
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_OK}
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 
+object MailboxQueryChangesContractContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreAccountId: String)
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+}
+
 trait MailboxQueryChangesContract {
+  import MailboxQueryChangesContractContext.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreAccountId: String = currentContext.get().andreAccountId
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val bob = Username.of(s"bob${UUID.randomUUID().toString.replace("-", "").take(8)}@${DOMAIN.asString}")
+    val andre = Username.of(s"andre${UUID.randomUUID().toString.replace("-", "").take(8)}@${DOMAIN.asString}")
+    currentContext.set(MailboxQueryChangesContractContext.TestContext(
+      bob,
+      Hashing.sha256().hashString(bob.asString, StandardCharsets.UTF_8).toString,
+      Hashing.sha256().hashString(andre.asString, StandardCharsets.UTF_8).toString))
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
       .addDomain("domain-alias.tld")
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bobUsername.asString, BOB_PASSWORD)
+      .addUser(s"andre${bobUsername.asString.drop(3)}", ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .build
   }
 
@@ -54,7 +77,7 @@ trait MailboxQueryChangesContract {
          |  "methodCalls": [[
          |    "Mailbox/queryChanges",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceQueryState": "2c9f1b12-b35a-43e6-9af2-0106fb53a941",
          |      "calculateTotal": false
          |    },
@@ -98,7 +121,7 @@ trait MailboxQueryChangesContract {
          |  "methodCalls": [[
          |    "Mailbox/queryChanges",
          |    {
-         |      "accountId": "1e8584548eca20f26faf6becc1704a0f352839f12c208a47fbd486d60f491f7c",
+         |      "accountId": "$andreAccountId",
          |      "sinceQueryState": "2c9f1b12-b35a-43e6-9af2-0106fb53a941",
          |      "calculateTotal": false
          |    },
@@ -141,7 +164,7 @@ trait MailboxQueryChangesContract {
          |  "methodCalls": [[
          |    "Mailbox/queryChanges",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceQueryState": "2c9f1b12-b35a-43e6-9af2-0106fb53a941",
          |      "calculateTotal": false
          |    },

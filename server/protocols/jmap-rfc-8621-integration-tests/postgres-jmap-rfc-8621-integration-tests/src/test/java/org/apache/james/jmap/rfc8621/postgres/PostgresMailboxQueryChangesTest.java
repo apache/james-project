@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.MailboxQueryChangesContract;
 
-public class PostgresMailboxQueryChangesTest extends PostgresBase implements MailboxQueryChangesContract {
+public class PostgresMailboxQueryChangesTest extends PerClassPostgresBase implements MailboxQueryChangesContract {
 }
