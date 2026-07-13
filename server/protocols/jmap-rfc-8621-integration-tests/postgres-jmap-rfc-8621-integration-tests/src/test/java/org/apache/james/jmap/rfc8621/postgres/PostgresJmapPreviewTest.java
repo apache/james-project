@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.JmapPreviewContract;
 
-public class PostgresJmapPreviewTest extends PostgresBase implements JmapPreviewContract {
+public class PostgresJmapPreviewTest extends PerClassPostgresBase implements JmapPreviewContract {
 
 }

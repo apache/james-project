@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.JmapPreviewContract;
 
-public class DistributedJmapPreviewTest extends DistributedBase implements JmapPreviewContract {
+public class DistributedJmapPreviewTest extends PerClassDistributedBase implements JmapPreviewContract {
 
 }
