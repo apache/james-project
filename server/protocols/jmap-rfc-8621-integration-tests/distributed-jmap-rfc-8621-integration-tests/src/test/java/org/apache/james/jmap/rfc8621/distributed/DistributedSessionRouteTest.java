@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract;
 
-public class DistributedSessionRouteTest extends DistributedBase implements SessionRoutesContract {
+public class DistributedSessionRouteTest extends PerClassDistributedBase implements SessionRoutesContract {
 
 }

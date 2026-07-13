@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract;
 
-public class MemorySessionRouteTest extends MemoryBase implements SessionRoutesContract {
+public class MemorySessionRouteTest extends PerClassMemoryBase implements SessionRoutesContract {
 
 }
