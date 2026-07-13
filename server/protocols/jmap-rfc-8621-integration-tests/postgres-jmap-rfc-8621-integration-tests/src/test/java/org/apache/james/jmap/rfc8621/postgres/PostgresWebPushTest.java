@@ -59,6 +59,7 @@ public class PostgresWebPushTest implements WebPushContract {
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new PushSubscriptionProbeModule())
             .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @RegisterExtension

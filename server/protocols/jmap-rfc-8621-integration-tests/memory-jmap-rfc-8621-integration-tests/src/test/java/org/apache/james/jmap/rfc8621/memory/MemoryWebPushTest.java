@@ -46,6 +46,7 @@ public class MemoryWebPushTest implements WebPushContract {
             .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule())
             .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))
         .extension(new ClockExtension())
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @RegisterExtension
