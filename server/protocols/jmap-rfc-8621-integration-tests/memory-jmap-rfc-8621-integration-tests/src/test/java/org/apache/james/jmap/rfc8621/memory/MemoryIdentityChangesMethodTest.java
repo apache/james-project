@@ -39,5 +39,6 @@ public class MemoryIdentityChangesMethodTest implements IdentityChangesContract 
             .build())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
