@@ -21,6 +21,5 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.EventSourceContract;
 
-public class MemoryEventSourceTest extends MemoryBase implements EventSourceContract {
-
+public class MemoryEventSourceTest extends PerClassMemoryBase implements EventSourceContract {
 }
