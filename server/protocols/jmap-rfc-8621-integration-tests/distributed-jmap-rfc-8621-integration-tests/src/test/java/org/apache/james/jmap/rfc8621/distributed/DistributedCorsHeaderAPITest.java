@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.CorsHeaderAPITest;
 
-public class DistributedCorsHeaderAPITest extends DistributedBase implements CorsHeaderAPITest {
+public class DistributedCorsHeaderAPITest extends PerClassDistributedBase implements CorsHeaderAPITest {
 
 }
