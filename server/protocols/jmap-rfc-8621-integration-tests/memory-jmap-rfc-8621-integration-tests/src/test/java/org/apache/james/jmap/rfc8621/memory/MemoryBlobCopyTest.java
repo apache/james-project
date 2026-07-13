@@ -45,5 +45,6 @@ public class MemoryBlobCopyTest implements BlobCopyContract {
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule(ImmutableMap.of("upload.quota.limit", BlobCopyContract$.MODULE$.TWENTY_KILO_BYTES_UPLOAD_QUOTA_LIMIT())),
                 new DelegationProbeModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

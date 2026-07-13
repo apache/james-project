@@ -57,5 +57,6 @@ public class PostgresBlobCopyTest implements BlobCopyContract {
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule(ImmutableMap.of("upload.quota.limit", BlobCopyContract$.MODULE$.TWENTY_KILO_BYTES_UPLOAD_QUOTA_LIMIT())))
             .overrideWith(new DelegationProbeModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
