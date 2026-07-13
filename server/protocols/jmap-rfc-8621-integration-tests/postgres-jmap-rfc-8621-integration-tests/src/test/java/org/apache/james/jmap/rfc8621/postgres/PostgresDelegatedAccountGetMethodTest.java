@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.DelegatedAccountGetMethodContract;
 
-public class PostgresDelegatedAccountGetMethodTest extends PostgresBase implements DelegatedAccountGetMethodContract {
+public class PostgresDelegatedAccountGetMethodTest extends PerClassPostgresBase implements DelegatedAccountGetMethodContract {
 }
