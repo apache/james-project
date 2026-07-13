@@ -58,6 +58,7 @@ public class PostgresThreadGetTest implements ThreadGetContract {
         .extension(new DockerOpenSearchExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override
