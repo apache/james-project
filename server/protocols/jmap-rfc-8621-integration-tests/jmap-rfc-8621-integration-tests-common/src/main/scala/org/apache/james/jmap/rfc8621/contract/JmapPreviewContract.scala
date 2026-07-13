@@ -22,7 +22,9 @@ package org.apache.james.jmap.rfc8621.contract
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.Optional
+import java.util.UUID
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 import com.google.common.collect.ImmutableList
 import com.google.inject.AbstractModule
@@ -30,9 +32,10 @@ import com.google.inject.multibindings.Multibinder
 import io.restassured.RestAssured.requestSpecification
 import jakarta.inject.Inject
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperties, MessageFastViewProjection}
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ANDRE, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.JmapPreviewContract.createTestMessage
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -60,18 +63,26 @@ class JmapPreviewProbeModule extends AbstractModule {
 }
 
 object JmapPreviewContract {
-  private def createTestMessage: Message = Message.Builder
+  def createTestMessage(sender: Username): Message = Message.Builder
     .of
     .setSubject("test")
-    .setSender(ANDRE.asString())
-    .setFrom(ANDRE.asString())
+    .setSender(sender.asString())
+    .setFrom(sender.asString())
     .setSubject("World domination \r\n" +
       " and this is also part of the header")
     .setBody("testmail", StandardCharsets.UTF_8)
     .build
 }
 
+object JmapPreviewContractContext {
+  val currentUsername: AtomicReference[Username] = new AtomicReference[Username]()
+}
+
 trait JmapPreviewContract {
+  import JmapPreviewContractContext.currentUsername
+
+  def bobUsername: Username = currentUsername.get()
+
   private lazy val slowPacedPollInterval = Duration.ofMillis(100)
   private lazy val calmlyAwait = Awaitility.`with`
     .pollInterval(slowPacedPollInterval)
@@ -81,57 +92,58 @@ trait JmapPreviewContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    currentUsername.set(Username.of("user" + UUID.randomUUID().toString.replace("-", "").take(8) + "@" + DOMAIN.asString))
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bobUsername.asString, BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .build
   }
 
   @Test
   def jmapPreviewShouldBeWellRemovedWhenDeleteMailbox(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox("#private", BOB.asString, DefaultMailboxes.INBOX)
+    mailboxProbe.createMailbox("#private", bobUsername.asString, DefaultMailboxes.INBOX)
 
-    val messageId = mailboxProbe.appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .build(createTestMessage))
+    val messageId = mailboxProbe.appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
+        .build(createTestMessage(bobUsername)))
       .getMessageId
 
     val messageFastViewProjectionProbe: MessageFastViewProjectionProbe = server.getProbe(classOf[MessageFastViewProjectionProbe])
     awaitAtMostTenSeconds.until(() => messageFastViewProjectionProbe.retrieve(messageId).isPresent)
 
-    mailboxProbe.deleteMailbox("#private", BOB.asString, DefaultMailboxes.INBOX)
+    mailboxProbe.deleteMailbox("#private", bobUsername.asString, DefaultMailboxes.INBOX)
     awaitAtMostTenSeconds.until(() => messageFastViewProjectionProbe.retrieve(messageId).isEmpty)
   }
 
   @Test
   def jmapPreviewShouldBeWellRemovedWhenDeleteMessage(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox("#private", BOB.asString, DefaultMailboxes.INBOX)
+    mailboxProbe.createMailbox("#private", bobUsername.asString, DefaultMailboxes.INBOX)
 
-    val composedMessageId = mailboxProbe.appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .build(createTestMessage))
+    val composedMessageId = mailboxProbe.appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
+        .build(createTestMessage(bobUsername)))
 
     val messageFastViewProjectionProbe: MessageFastViewProjectionProbe = server.getProbe(classOf[MessageFastViewProjectionProbe])
     awaitAtMostTenSeconds.until(() => messageFastViewProjectionProbe.retrieve(composedMessageId.getMessageId).isPresent)
 
-    mailboxProbe.deleteMessage(ImmutableList.of(composedMessageId.getUid), MailboxPath.inbox(BOB), BOB)
+    mailboxProbe.deleteMessage(ImmutableList.of(composedMessageId.getUid), MailboxPath.inbox(bobUsername), bobUsername)
     awaitAtMostTenSeconds.until(() => messageFastViewProjectionProbe.retrieve(composedMessageId.getMessageId).isEmpty)
   }
 
   @Test
   def shouldKeepPreviewWhenExpungedAndStillReferenced(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox("#private", BOB.asString, DefaultMailboxes.INBOX)
-    mailboxProbe.createMailbox("#private", BOB.asString, "otherBox")
+    mailboxProbe.createMailbox("#private", bobUsername.asString, DefaultMailboxes.INBOX)
+    mailboxProbe.createMailbox("#private", bobUsername.asString, "otherBox")
 
-    val composedMessageId = mailboxProbe.appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-      .build(createTestMessage))
+    val composedMessageId = mailboxProbe.appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
+      .build(createTestMessage(bobUsername)))
 
-    mailboxProbe.moveMessages(MessageRange.all, MailboxPath.inbox(BOB), MailboxPath.forUser(BOB, "otherBox"), BOB)
+    mailboxProbe.moveMessages(MessageRange.all, MailboxPath.inbox(bobUsername), MailboxPath.forUser(bobUsername, "otherBox"), bobUsername)
 
     val messageFastViewProjectionProbe: MessageFastViewProjectionProbe = server.getProbe(classOf[MessageFastViewProjectionProbe])
     awaitAtMostTenSeconds.until(() => messageFastViewProjectionProbe.retrieve(composedMessageId.getMessageId).isPresent)
