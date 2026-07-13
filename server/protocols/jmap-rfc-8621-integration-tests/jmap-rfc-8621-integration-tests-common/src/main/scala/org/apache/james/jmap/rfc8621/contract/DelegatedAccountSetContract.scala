@@ -19,17 +19,21 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.delegation.DelegationId
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.DelegatedAccountSetContract.BOB_ACCOUNT_ID
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
@@ -38,29 +42,45 @@ import org.junit.jupiter.api.{BeforeEach, Test}
 import scala.jdk.CollectionConverters._
 
 object DelegatedAccountSetContract {
-  val BOB_ACCOUNT_ID: String = Fixture.ACCOUNT_ID
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username, andreAccountId: String, cedricUsername: Username)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] = new java.util.concurrent.atomic.AtomicReference[TestContext]()
 }
 
 trait DelegatedAccountSetContract {
+  import DelegatedAccountSetContract.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+  def andreAccountId: String = currentContext.get().andreAccountId
+  def cedricUsername: Username = currentContext.get().cedricUsername
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    val cedric = Username.fromLocalPartWithDomain(s"cedric$uniqueSuffix", DOMAIN)
+    currentContext.set(DelegatedAccountSetContract.TestContext(
+      bob, Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString,
+      andre, Hashing.sha256().hashString(andre.asString(), StandardCharsets.UTF_8).toString, cedric))
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString(), ANDRE_PASSWORD)
-      .addUser(CEDRIC.asString(), "secret")
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString, ANDRE_PASSWORD)
+      .addUser(cedric.asString, "secret")
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .build
   }
 
   @Test
   def delegatedAccountDestroyShouldSucceed(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(ANDRE, BOB)
-    val andreToBobDelegationId = DelegationId.from(ANDRE, BOB).serialize
+      .addAuthorizedUser(andreUsername, bobUsername)
+    val andreToBobDelegationId = DelegationId.from(andreUsername, bobUsername).serialize
 
     val request =
       s"""{
@@ -68,7 +88,7 @@ trait DelegatedAccountSetContract {
          |	"methodCalls": [
          |		[
          |			"DelegatedAccount/set", {
-         |				"accountId": "$BOB_ACCOUNT_ID",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["$andreToBobDelegationId"]
          |			}, "0"
          |		]
@@ -95,7 +115,7 @@ trait DelegatedAccountSetContract {
            |        [
            |            "DelegatedAccount/set",
            |            {
-           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "destroyed": ["$andreToBobDelegationId"]
            |            },
@@ -104,17 +124,17 @@ trait DelegatedAccountSetContract {
            |    ]
            |}""".stripMargin)
 
-    assertThat(server.getProbe(classOf[DelegationProbe]).getDelegatedUsers(BOB).asJavaCollection)
+    assertThat(server.getProbe(classOf[DelegationProbe]).getDelegatedUsers(bobUsername).asJavaCollection)
       .isEmpty()
   }
 
   @Test
   def mixedCaseShouldDestroyOnlyRequestedEntry(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(ANDRE, BOB)
+      .addAuthorizedUser(andreUsername, bobUsername)
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(CEDRIC, BOB)
-    val andreToBobDelegationId = DelegationId.from(ANDRE, BOB).serialize
+      .addAuthorizedUser(cedricUsername, bobUsername)
+    val andreToBobDelegationId = DelegationId.from(andreUsername, bobUsername).serialize
 
     val request =
       s"""{
@@ -122,7 +142,7 @@ trait DelegatedAccountSetContract {
          |	"methodCalls": [
          |		[
          |			"DelegatedAccount/set", {
-         |				"accountId": "$BOB_ACCOUNT_ID",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["$andreToBobDelegationId"]
          |			}, "0"
          |		]
@@ -149,7 +169,7 @@ trait DelegatedAccountSetContract {
            |        [
            |            "DelegatedAccount/set",
            |            {
-           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "destroyed": ["$andreToBobDelegationId"]
            |            },
@@ -158,15 +178,15 @@ trait DelegatedAccountSetContract {
            |    ]
            |}""".stripMargin)
 
-    assertThat(server.getProbe(classOf[DelegationProbe]).getDelegatedUsers(BOB).asJavaCollection)
-      .containsExactly(CEDRIC)
+    assertThat(server.getProbe(classOf[DelegationProbe]).getDelegatedUsers(bobUsername).asJavaCollection)
+      .containsExactly(cedricUsername)
   }
 
   @Test
   def delegatedAccountDestroyShouldFailWhenMissingDelegationCapability(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(ANDRE, BOB)
-    val delegationId = DelegationId.from(ANDRE, BOB).serialize
+      .addAuthorizedUser(andreUsername, bobUsername)
+    val delegationId = DelegationId.from(andreUsername, bobUsername).serialize
 
     val request =
       s"""{
@@ -174,7 +194,7 @@ trait DelegatedAccountSetContract {
          |	"methodCalls": [
          |		[
          |			"DelegatedAccount/set", {
-         |				"accountId": "$BOB_ACCOUNT_ID",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["$delegationId"]
          |			}, "0"
          |		]
@@ -213,8 +233,8 @@ trait DelegatedAccountSetContract {
   @Test
   def delegatedAccountDestroyShouldBeIdempotent(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(ANDRE, BOB)
-    val andreToBobDelegationId = DelegationId.from(ANDRE, BOB).serialize
+      .addAuthorizedUser(andreUsername, bobUsername)
+    val andreToBobDelegationId = DelegationId.from(andreUsername, bobUsername).serialize
 
     val request =
       s"""{
@@ -222,7 +242,7 @@ trait DelegatedAccountSetContract {
          |	"methodCalls": [
          |		[
          |			"DelegatedAccount/set", {
-         |				"accountId": "$BOB_ACCOUNT_ID",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["$andreToBobDelegationId", "$andreToBobDelegationId"]
          |			}, "0"
          |		]
@@ -249,7 +269,7 @@ trait DelegatedAccountSetContract {
            |        [
            |            "DelegatedAccount/set",
            |            {
-           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "destroyed": ["$andreToBobDelegationId", "$andreToBobDelegationId"]
            |            },
@@ -267,7 +287,7 @@ trait DelegatedAccountSetContract {
          |	"methodCalls": [
          |		[
          |			"DelegatedAccount/set", {
-         |				"accountId": "$ANDRE_ACCOUNT_ID",
+         |				"accountId": "$andreAccountId",
          |				"destroy": ["any"]
          |			}, "0"
          |		]
@@ -296,7 +316,7 @@ trait DelegatedAccountSetContract {
 
   @Test
   def bobCanOnlyManageHisPrimaryAccountSetting(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(ANDRE, BOB)
+    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(andreUsername, bobUsername)
 
     val request =
       s"""{
@@ -304,7 +324,7 @@ trait DelegatedAccountSetContract {
          |	"methodCalls": [
          |		[
          |			"DelegatedAccount/set", {
-         |				"accountId": "$ANDRE_ACCOUNT_ID",
+         |				"accountId": "$andreAccountId",
          |				"destroy": ["any"]
          |			}, "0"
          |		]
@@ -345,7 +365,7 @@ trait DelegatedAccountSetContract {
          |	"methodCalls": [
          |		[
          |			"DelegatedAccount/set", {
-         |				"accountId": "$BOB_ACCOUNT_ID",
+         |				"accountId": "$bobAccountId",
          |				"destroy": ["invalid"]
          |			}, "0"
          |		]
@@ -370,7 +390,7 @@ trait DelegatedAccountSetContract {
         s"""[
            |	"DelegatedAccount/set",
            |	{
-           |		"accountId": "$BOB_ACCOUNT_ID",
+           |		"accountId": "$bobAccountId",
            |		"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |		"notDestroyed": {
            |			"invalid": {

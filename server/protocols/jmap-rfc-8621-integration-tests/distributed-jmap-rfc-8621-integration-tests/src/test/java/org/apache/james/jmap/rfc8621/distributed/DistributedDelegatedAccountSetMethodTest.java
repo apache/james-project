@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.DelegatedAccountSetContract;
 
-public class DistributedDelegatedAccountSetMethodTest extends DistributedBase implements DelegatedAccountSetContract {
+public class DistributedDelegatedAccountSetMethodTest extends PerClassDistributedBase implements DelegatedAccountSetContract {
 
 }
