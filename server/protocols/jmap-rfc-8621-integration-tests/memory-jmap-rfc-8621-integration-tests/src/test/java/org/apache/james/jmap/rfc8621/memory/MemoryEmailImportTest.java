@@ -27,7 +27,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 
-public class MemoryEmailImportTest extends MemoryBase implements EmailImportContract {
+public class MemoryEmailImportTest extends PerClassMemoryBase implements EmailImportContract {
     @Override
     public MessageId randomMessageId() {
         return InMemoryMessageId.of(ThreadLocalRandom.current().nextInt(100000) + 100);
