@@ -19,20 +19,22 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
 import java.util.UUID
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{TimeUnit, atomic}
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.delegation.DelegationId
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.DelegateSetContract.BOB_ACCOUNT_ID
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
@@ -42,10 +44,24 @@ import org.junit.jupiter.api.{BeforeEach, Test}
 
 import scala.jdk.CollectionConverters._
 
-object DelegateSetContract {
-  val BOB_ACCOUNT_ID: String = Fixture.ACCOUNT_ID
+object DelegateSetContractContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username, andreAccountId: String, cedricUsername: Username)
+
+  val currentContext: atomic.AtomicReference[TestContext] = new atomic.AtomicReference[TestContext]()
 }
+
 trait DelegateSetContract {
+  import DelegateSetContractContext.{TestContext, currentContext}
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+  def andreAccountId: String = currentContext.get().andreAccountId
+  def cedricUsername: Username = currentContext.get().cedricUsername
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
+
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
     .pollInterval(slowPacedPollInterval)
@@ -55,15 +71,26 @@ trait DelegateSetContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    val cedric = Username.fromLocalPartWithDomain(s"cedric$uniqueSuffix", DOMAIN)
+    currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = accountId(bob),
+      andreUsername = andre,
+      andreAccountId = accountId(andre),
+      cedricUsername = cedric))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString(), ANDRE_PASSWORD)
-      .addUser(CEDRIC.asString(), "secret")
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString(), ANDRE_PASSWORD)
+      .addUser(cedric.asString(), "secret")
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build
   }
@@ -76,10 +103,10 @@ trait DelegateSetContract {
          |	"methodCalls": [
          |		[
          |			"Delegate/set", {
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
-         |						"username": "andre@domain.tld"
+         |						"username": "${andreUsername.asString}"
          |					}
          |				}
          |			}, "0"
@@ -98,7 +125,7 @@ trait DelegateSetContract {
       .extract
       .body
       .asString
-    val delegationId = DelegationId.from(BOB, ANDRE).serialize
+    val delegationId = DelegationId.from(bobUsername, andreUsername).serialize
 
     assertThatJson(response)
       .isEqualTo(
@@ -106,7 +133,7 @@ trait DelegateSetContract {
            |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"methodResponses": [
            |		["Delegate/set", {
-           |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |			"accountId": "$bobAccountId",
            |			"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |			"created": {
            |				"4f29": {
@@ -118,8 +145,8 @@ trait DelegateSetContract {
            |}""".stripMargin)
 
     awaitAtMostTenSeconds.untilAsserted(() =>
-      assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(BOB).asJavaCollection)
-        .containsExactly(ANDRE))
+      assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(bobUsername).asJavaCollection)
+        .containsExactly(andreUsername))
   }
 
   @Test
@@ -131,13 +158,13 @@ trait DelegateSetContract {
          |	"methodCalls": [
          |		[
          |			"Delegate/set", {
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
-         |						"username": "andre@domain.tld"
+         |						"username": "${andreUsername.asString}"
          |					},
          |					"4f30": {
-         |						"username": "cedric@domain.tld"
+         |						"username": "${cedricUsername.asString}"
          |					}
          |				}
          |			}, "0"
@@ -156,8 +183,8 @@ trait DelegateSetContract {
       .extract
       .body
       .asString
-    val andreDelegationId = DelegationId.from(BOB, ANDRE).serialize
-    val cedricDelegationId = DelegationId.from(BOB, CEDRIC).serialize
+    val andreDelegationId = DelegationId.from(bobUsername, andreUsername).serialize
+    val cedricDelegationId = DelegationId.from(bobUsername, cedricUsername).serialize
 
     assertThatJson(response)
       .isEqualTo(
@@ -165,7 +192,7 @@ trait DelegateSetContract {
            |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"methodResponses": [
            |		["Delegate/set", {
-           |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |			"accountId": "$bobAccountId",
            |			"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |			"created": {
            |				"4f29": {
@@ -180,8 +207,8 @@ trait DelegateSetContract {
            |}""".stripMargin)
 
     awaitAtMostTenSeconds.untilAsserted(() =>
-      assertThat(delegationProbe.getAuthorizedUsers(BOB).asJavaCollection)
-        .containsExactlyInAnyOrder(ANDRE, CEDRIC))
+      assertThat(delegationProbe.getAuthorizedUsers(bobUsername).asJavaCollection)
+        .containsExactlyInAnyOrder(andreUsername, cedricUsername))
   }
 
   @Test
@@ -192,7 +219,7 @@ trait DelegateSetContract {
          |	"methodCalls": [
          |		[
          |			"Delegate/set", {
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
          |					}
@@ -222,7 +249,7 @@ trait DelegateSetContract {
            |		[
            |			"Delegate/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"notCreated": {
            |					"4f29": {
@@ -245,7 +272,7 @@ trait DelegateSetContract {
          |	"methodCalls": [
          |		[
          |			"Delegate/set", {
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
          |						"username": null
@@ -276,7 +303,7 @@ trait DelegateSetContract {
            |		[
            |			"Delegate/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"notCreated": {
            |					"4f29": {
@@ -302,7 +329,7 @@ trait DelegateSetContract {
          |				"accountId": "unknownAccountId",
          |				"create": {
          |					"4f29": {
-         |						"username": "andre@domain.tld"
+         |						"username": "${andreUsername.asString}"
          |					}
          |				}
          |			}, "0"
@@ -346,10 +373,10 @@ trait DelegateSetContract {
          |	"methodCalls": [
          |		[
          |			"Delegate/set", {
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
-         |						"username": "andre@domain.tld"
+         |						"username": "${andreUsername.asString}"
          |					}
          |				}
          |			}, "0"
@@ -394,7 +421,7 @@ trait DelegateSetContract {
          |	"methodCalls": [
          |		[
          |			"Delegate/set", {
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
          |						"username": "nonexistuser@domain.tld"
@@ -425,7 +452,7 @@ trait DelegateSetContract {
            |		[
            |			"Delegate/set",
            |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"accountId": "$bobAccountId",
            |				"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |				"notCreated": {
            |					"4f29": {
@@ -448,13 +475,13 @@ trait DelegateSetContract {
          |	"methodCalls": [
          |		[
          |			"Delegate/set", {
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"create": {
          |					"4f29": {
-         |						"username": "andre@domain.tld"
+         |						"username": "${andreUsername.asString}"
          |					},
          |					"4f30": {
-         |						"username": "andre@domain.tld"
+         |						"username": "${andreUsername.asString}"
          |					}
          |				}
          |			}, "0"
@@ -473,7 +500,7 @@ trait DelegateSetContract {
       .extract
       .body
       .asString
-    val delegationId = DelegationId.from(BOB, ANDRE).serialize
+    val delegationId = DelegationId.from(bobUsername, andreUsername).serialize
 
     assertThatJson(response)
       .isEqualTo(
@@ -481,7 +508,7 @@ trait DelegateSetContract {
            |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"methodResponses": [
            |		["Delegate/set", {
-           |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |			"accountId": "$bobAccountId",
            |			"newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |			"created": {
            |				"4f29": {
@@ -496,8 +523,8 @@ trait DelegateSetContract {
            |}""".stripMargin)
 
     awaitAtMostTenSeconds.untilAsserted(() =>
-      assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(BOB).asJavaCollection)
-        .containsExactly(ANDRE))
+      assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(bobUsername).asJavaCollection)
+        .containsExactly(andreUsername))
   }
 
   @Test
@@ -508,10 +535,10 @@ trait DelegateSetContract {
          |	"methodCalls": [
          |		[
          |			"Delegate/set", {
-         |				"accountId": "$ANDRE_ACCOUNT_ID",
+         |				"accountId": "$andreAccountId",
          |				"create": {
          |					"4f29": {
-         |						"username": "cedric@domain.tld"
+         |						"username": "${cedricUsername.asString}"
          |					}
          |				}
          |			}, "0"
@@ -541,17 +568,17 @@ trait DelegateSetContract {
 
   @Test
   def bobCanOnlyManageHisPrimaryAccountSetting(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(ANDRE, BOB)
+    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(andreUsername, bobUsername)
     val request =
       s"""{
          |	"using": ["urn:ietf:params:jmap:core", "urn:apache:james:params:jmap:delegation"],
          |	"methodCalls": [
          |		[
          |			"Delegate/set", {
-         |				"accountId": "$ANDRE_ACCOUNT_ID",
+         |				"accountId": "$andreAccountId",
          |				"create": {
          |					"4f29": {
-         |						"username": "cedric@domain.tld"
+         |						"username": "${cedricUsername.asString}"
          |					}
          |				}
          |			}, "0"
@@ -587,9 +614,9 @@ trait DelegateSetContract {
   @Test
   def destroyShouldSucceed(server: GuiceJamesServer) : Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, ANDRE)
+      .addAuthorizedUser(bobUsername, andreUsername)
 
-    val delegationId = DelegationId.from(BOB, ANDRE).serialize
+    val delegationId = DelegationId.from(bobUsername, andreUsername).serialize
 
     val request: String =
       s"""{
@@ -598,7 +625,7 @@ trait DelegateSetContract {
          |      [
          |        "Delegate/set",
          |        {
-         |            "accountId": "$BOB_ACCOUNT_ID",
+         |            "accountId": "$bobAccountId",
          |            "destroy": ["${delegationId}"]
          |        },
          |        "c1"
@@ -625,7 +652,7 @@ trait DelegateSetContract {
            |        [
            |            "Delegate/set",
            |            {
-           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "destroyed": ["${delegationId}"]
            |            },
@@ -634,7 +661,7 @@ trait DelegateSetContract {
            |    ]
            |}""".stripMargin)
 
-    assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(BOB)
+    assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(bobUsername)
       .asJava).isEmpty()
   }
 
@@ -647,7 +674,7 @@ trait DelegateSetContract {
          |      [
          |        "Delegate/set",
          |        {
-         |            "accountId": "$BOB_ACCOUNT_ID",
+         |            "accountId": "$bobAccountId",
          |            "destroy": ["invalid"]
          |        },
          |        "c1"
@@ -674,7 +701,7 @@ trait DelegateSetContract {
            |        [
            |            "Delegate/set",
            |            {
-           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "notDestroyed": {
            |                    "invalid": {
@@ -700,7 +727,7 @@ trait DelegateSetContract {
          |      [
          |        "Delegate/set",
          |        {
-         |            "accountId": "$BOB_ACCOUNT_ID",
+         |            "accountId": "$bobAccountId",
          |            "destroy": ["$id"]
          |        },
          |        "c1"
@@ -727,7 +754,7 @@ trait DelegateSetContract {
            |        [
            |            "Delegate/set",
            |            {
-           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "destroyed": ["$id"]
            |            },
@@ -740,11 +767,11 @@ trait DelegateSetContract {
   @Test
   def destroyShouldHandleMixedCases(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, ANDRE)
+      .addAuthorizedUser(bobUsername, andreUsername)
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, CEDRIC)
+      .addAuthorizedUser(bobUsername, cedricUsername)
 
-    val delegationId = DelegationId.from(BOB, ANDRE).serialize
+    val delegationId = DelegationId.from(bobUsername, andreUsername).serialize
 
     val request: String =
       s"""{
@@ -753,7 +780,7 @@ trait DelegateSetContract {
          |      [
          |        "Delegate/set",
          |        {
-         |            "accountId": "$BOB_ACCOUNT_ID",
+         |            "accountId": "$bobAccountId",
          |            "destroy": ["$delegationId"]
          |        },
          |        "c1"
@@ -780,7 +807,7 @@ trait DelegateSetContract {
            |        [
            |            "Delegate/set",
            |            {
-           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "destroyed": ["$delegationId"]
            |            },
@@ -793,11 +820,11 @@ trait DelegateSetContract {
   @Test
   def destroyShouldNotRemoveUnAssignId(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, ANDRE)
+      .addAuthorizedUser(bobUsername, andreUsername)
     server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(BOB, CEDRIC)
+      .addAuthorizedUser(bobUsername, cedricUsername)
 
-    val delegationId = DelegationId.from(BOB, ANDRE).serialize
+    val delegationId = DelegationId.from(bobUsername, andreUsername).serialize
 
     val request: String =
       s"""{
@@ -806,7 +833,7 @@ trait DelegateSetContract {
          |      [
          |        "Delegate/set",
          |        {
-         |            "accountId": "$BOB_ACCOUNT_ID",
+         |            "accountId": "$bobAccountId",
          |            "destroy": ["$delegationId"]
          |        },
          |        "c1"
@@ -833,7 +860,7 @@ trait DelegateSetContract {
            |        [
            |            "Delegate/set",
            |            {
-           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "accountId": "$bobAccountId",
            |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |                "destroyed": ["$delegationId"]
            |            },
@@ -842,7 +869,7 @@ trait DelegateSetContract {
            |    ]
            |}""".stripMargin)
 
-    assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(BOB)
-      .asJava).containsExactlyInAnyOrder(CEDRIC)
+    assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(bobUsername)
+      .asJava).containsExactlyInAnyOrder(cedricUsername)
   }
 }
