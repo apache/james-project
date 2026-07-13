@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.QuotaMailingTest;
 
-public class MemoryQuotaMailingTest extends MemoryBase implements QuotaMailingTest {
+public class MemoryQuotaMailingTest extends PerClassMemoryBase implements QuotaMailingTest {
 
 }
