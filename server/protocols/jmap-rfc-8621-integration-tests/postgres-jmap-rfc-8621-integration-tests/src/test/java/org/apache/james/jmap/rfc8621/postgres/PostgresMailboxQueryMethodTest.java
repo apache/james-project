@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.MailboxQueryMethodContract;
 
-public class PostgresMailboxQueryMethodTest extends PostgresBase implements MailboxQueryMethodContract {
+public class PostgresMailboxQueryMethodTest extends PerClassPostgresBase implements MailboxQueryMethodContract {
 }

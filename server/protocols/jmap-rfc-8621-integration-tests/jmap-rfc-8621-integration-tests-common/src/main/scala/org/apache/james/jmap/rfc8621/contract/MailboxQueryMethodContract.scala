@@ -19,6 +19,10 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
+
 import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
@@ -26,26 +30,45 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 
+object MailboxQueryMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username)
+
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+}
+
 trait MailboxQueryMethodContract {
+  import MailboxQueryMethodContract.{TestContext, currentContext}
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    val bobAccountId = Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString
+    currentContext.set(TestContext(bob, bobAccountId, andre))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString, ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -92,7 +115,7 @@ trait MailboxQueryMethodContract {
   @Test
   def roleShouldAllowToRetrieveTheInbox(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
 
     val request =
       s"""{
@@ -102,7 +125,7 @@ trait MailboxQueryMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
          |      "filter": {"role":"Inbox"}
          |    },
          |    "c1"]]
@@ -128,7 +151,7 @@ trait MailboxQueryMethodContract {
            |        [
            |            "Mailbox/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(mailboxId)}",
            |                "canCalculateChanges": false,
            |                "ids": [
@@ -146,7 +169,7 @@ trait MailboxQueryMethodContract {
   @Test
   def roleShouldAllowToRetrieveTheInboxUponCaseVariation(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "InBoX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "InBoX"))
 
     val request =
       s"""{
@@ -156,7 +179,7 @@ trait MailboxQueryMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
          |      "filter": {"role":"Inbox"}
          |    },
          |    "c1"]]
@@ -183,14 +206,14 @@ trait MailboxQueryMethodContract {
 
   @Test
   def queryByRoleShouldNotReturnDelegatedMailboxes(server: GuiceJamesServer): Unit = {
-    val andreInbox = MailboxPath.inbox(ANDRE)
+    val andreInbox = MailboxPath.inbox(andreUsername)
     server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreInbox)
     val bobInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.inbox(BOB))
+      .createMailbox(MailboxPath.inbox(bobUsername))
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreInbox, BOB.asString, MailboxACL.FULL_RIGHTS)
+      .replaceRights(andreInbox, bobUsername.asString, MailboxACL.FULL_RIGHTS)
 
     val request =
       s"""{
@@ -201,7 +224,7 @@ trait MailboxQueryMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
          |      "filter": {"role":"Inbox"}
          |    },
          |    "c1"]]
@@ -227,7 +250,7 @@ trait MailboxQueryMethodContract {
            |        [
            |            "Mailbox/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(bobInboxId)}",
            |                "canCalculateChanges": false,
            |                "ids": [
@@ -244,14 +267,14 @@ trait MailboxQueryMethodContract {
 
   @Test
   def queryByRoleShouldNotReturnDelegatedMailboxesWhenCaseVariation(server: GuiceJamesServer): Unit = {
-    val andreInbox = MailboxPath.inbox(ANDRE)
+    val andreInbox = MailboxPath.inbox(andreUsername)
     server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreInbox)
     val bobInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "InBoX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "InBoX"))
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreInbox, BOB.asString, MailboxACL.FULL_RIGHTS)
+      .replaceRights(andreInbox, bobUsername.asString, MailboxACL.FULL_RIGHTS)
 
     val request =
       s"""{
@@ -262,7 +285,7 @@ trait MailboxQueryMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
          |      "filter": {"role":"Inbox"}
          |    },
          |    "c1"]]
@@ -288,7 +311,7 @@ trait MailboxQueryMethodContract {
            |        [
            |            "Mailbox/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(bobInboxId)}",
            |                "canCalculateChanges": false,
            |                "ids": [
@@ -313,7 +336,7 @@ trait MailboxQueryMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
          |      "filter": {"role":"Invalid"}
          |    },
          |    "c1"]]
@@ -358,7 +381,7 @@ trait MailboxQueryMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
          |      "filter": {"role":123}
          |    },
          |    "c1"]]
@@ -404,7 +427,7 @@ trait MailboxQueryMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
          |      "filter": {}
          |    },
          |    "c1"]]
@@ -449,7 +472,7 @@ trait MailboxQueryMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
          |      "filter":{
          |        "unsupported_option": "blahh_blahh",
          |        "role":"Inbox"
@@ -497,7 +520,7 @@ trait MailboxQueryMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+           |      "accountId": "$bobAccountId"
          |    },
          |    "c1"]]
          |}""".stripMargin

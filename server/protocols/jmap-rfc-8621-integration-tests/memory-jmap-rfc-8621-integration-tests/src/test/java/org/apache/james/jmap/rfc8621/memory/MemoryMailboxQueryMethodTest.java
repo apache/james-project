@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.MailboxQueryMethodContract;
 
-public class MemoryMailboxQueryMethodTest extends MemoryBase implements MailboxQueryMethodContract {
+public class MemoryMailboxQueryMethodTest extends PerClassMemoryBase implements MailboxQueryMethodContract {
 
 }
