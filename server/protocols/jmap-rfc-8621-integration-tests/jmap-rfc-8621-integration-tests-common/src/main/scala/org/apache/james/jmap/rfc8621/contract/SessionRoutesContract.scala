@@ -19,7 +19,9 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.builder.RequestSpecBuilder
@@ -30,7 +32,9 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.JmapGuiceProbe
+import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.{EXPECTED_BASE_PATH, expected_session_object}
@@ -38,6 +42,11 @@ import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
+
+object SessionRoutesContractContext {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] = new java.util.concurrent.atomic.AtomicReference[TestContext]()
+}
 
 object SessionRoutesContract {
   private val expected_session_object: String = """{
@@ -142,14 +151,29 @@ object SessionRoutesContract {
 }
 
 trait SessionRoutesContract {
+  import SessionRoutesContractContext.currentContext
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+  def andreUsername: Username = currentContext.get().andreUsername
+
+  private def expectedSessionObject: String = expected_session_object
+    .replace("29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6", bobAccountId)
+    .replace("bob@domain.tld", bobUsername.asString)
+
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    currentContext.set(SessionRoutesContractContext.TestContext(
+      bob, Hashing.sha256().hashString(bob.asString, StandardCharsets.UTF_8).toString, andre))
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bobUsername.asString, BOB_PASSWORD)
+      .addUser(andreUsername.asString, ANDRE_PASSWORD)
 
     val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
     requestSpecification = new RequestSpecBuilder()
@@ -160,7 +184,7 @@ trait SessionRoutesContract {
       .getJmapPort
       .getValue)
     .setBasePath(EXPECTED_BASE_PATH)
-        .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+        .setAuth(authScheme(UserCredential(bobUsername, BOB_PASSWORD)))
       .build
   }
 
@@ -178,7 +202,10 @@ trait SessionRoutesContract {
         .body()
         .asString()
 
-    assertThatJson(sessionJson).isEqualTo(expected_session_object)
+    assertThatJson(sessionJson).isEqualTo(
+      expected_session_object
+        .replace("29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6", bobAccountId)
+        .replace("bob@domain.tld", bobUsername.asString))
   }
 
   @Test
@@ -213,12 +240,12 @@ trait SessionRoutesContract {
       .body()
       .asString()
 
-    assertThatJson(sessionJson).isEqualTo(expected_session_object)
+    assertThatJson(sessionJson).isEqualTo(expectedSessionObject)
   }
 
   @Test
   def getResponseShouldReturnDelegatedUsersWhenDelegated(server: GuiceJamesServer): Unit = {
-     server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(ANDRE, BOB)
+     server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(andreUsername, bobUsername)
 
     val sessionJson: String = `given`()
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -332,12 +359,16 @@ trait SessionRoutesContract {
                    |            "urn:apache:james:params:jmap:mail:identity:sortorder": {}
                    |        }
                    |    }
-                   |}""".stripMargin)
+                   |}""".stripMargin
+        .replace("29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6", bobAccountId)
+        .replace("1e8584548eca20f26faf6becc1704a0f352839f12c208a47fbd486d60f491f7c", Hashing.sha256().hashString(andreUsername.asString, StandardCharsets.UTF_8).toString)
+        .replace("bob@domain.tld", bobUsername.asString)
+        .replace("andre@domain.tld", andreUsername.asString))
   }
 
   @Test
   def getResponseShouldNotReturnDelegatedUsersWhenNotDelegated(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(BOB, ANDRE)
+    server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(bobUsername, andreUsername)
 
     val sessionJson: String = `given`()
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -349,7 +380,7 @@ trait SessionRoutesContract {
       .body()
       .asString()
 
-    assertThatJson(sessionJson).isEqualTo(expected_session_object)
+    assertThatJson(sessionJson).isEqualTo(expectedSessionObject)
   }
 
 }

@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract;
 
-public class PostgresSessionRoutesTest extends PostgresBase implements SessionRoutesContract {
+public class PostgresSessionRoutesTest extends PerClassPostgresBase implements SessionRoutesContract {
 }
