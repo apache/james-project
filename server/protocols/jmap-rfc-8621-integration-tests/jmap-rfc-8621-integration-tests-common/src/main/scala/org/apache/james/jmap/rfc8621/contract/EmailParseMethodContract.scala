@@ -19,15 +19,20 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
+
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.DownloadContract.accountId
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.{MailboxPath, MessageId}
@@ -37,16 +42,36 @@ import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Test}
 
+object EmailParseMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String)
+
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+}
+
 trait EmailParseMethodContract {
+  import EmailParseMethodContract.{TestContext, currentContext}
+
+  def bobUsername: Username = currentContext.get().bobUsername
+  def bobAccountId: String = currentContext.get().bobAccountId
+
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = accountId(bob)))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent()
       .addDomain(DOMAIN.asString())
-      .addUser(BOB.asString(), BOB_PASSWORD)
+      .addUser(bob.asString(), BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build()
   }
 
@@ -54,12 +79,12 @@ trait EmailParseMethodContract {
 
   @Test
   def parseShouldSuccess(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/html.eml")))
       .getMessageId
 
@@ -71,7 +96,7 @@ trait EmailParseMethodContract {
          |  "methodCalls": [[
          |    "Email/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${messageId.serialize()}" ]
          |    },
          |    "c1"]]
@@ -97,7 +122,7 @@ trait EmailParseMethodContract {
            |        [
            |            "Email/parse",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "parsed": {
            |                    "${messageId.serialize()}": {
            |                        "inReplyTo": null,
@@ -183,12 +208,12 @@ trait EmailParseMethodContract {
 
   @Test
   def attachmentsOfNestedMessagesShouldBeDownloadable(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nested.eml")))
       .getMessageId
 
@@ -196,7 +221,7 @@ trait EmailParseMethodContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
-      .get(s"/download/$accountId/${messageId.serialize()}_3_3")
+      .get(s"/download/$bobAccountId/${messageId.serialize()}_3_3")
     .`then`
       .statusCode(SC_OK)
       .contentType("text/plain")
@@ -210,12 +235,12 @@ trait EmailParseMethodContract {
 
   @Test
   def parseShouldSuccessWhenAttachment(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nested.eml")))
       .getMessageId
 
@@ -227,7 +252,7 @@ trait EmailParseMethodContract {
          |  "methodCalls": [[
          |    "Email/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${messageId.serialize()}_3" ],
          |      "properties":["bodyValues", "preview", "hasAttachment", "attachments", "blobId", "size", "headers", "references", "subject", "inReplyTo", "messageId", "from", "to", "sentAt"],
          |      "fetchTextBodyValues": true,
@@ -257,7 +282,7 @@ trait EmailParseMethodContract {
            |        [
            |            "Email/parse",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "parsed": {
            |                    "${messageId.serialize()}_3": {
            |                        "inReplyTo": null,
@@ -350,12 +375,12 @@ trait EmailParseMethodContract {
 
   @Test
   def parseShouldSupportAllProperties(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/html.eml")))
       .getMessageId
 
@@ -367,7 +392,7 @@ trait EmailParseMethodContract {
          |  "methodCalls": [[
          |    "Email/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${messageId.serialize()}" ],
          |      "properties": ["blobId", "size", "headers", "references", "subject", "inReplyTo", "messageId", "from", "to", "sentAt"]
          |    },
@@ -393,7 +418,7 @@ trait EmailParseMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      [ "Email/parse", {
-           |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |         "accountId": "$bobAccountId",
            |         "parsed": {
            |           "${messageId.serialize()}": {
            |             "size": 2725,
@@ -460,12 +485,12 @@ trait EmailParseMethodContract {
 
   @Test
   def parseShouldFilterProperties(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/html.eml")))
       .getMessageId
 
@@ -477,7 +502,7 @@ trait EmailParseMethodContract {
          |  "methodCalls": [[
          |    "Email/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${messageId.serialize()}" ],
          |      "properties": ["blobId"]
          |    },
@@ -502,7 +527,7 @@ trait EmailParseMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      [ "Email/parse", {
-           |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |         "accountId": "$bobAccountId",
            |         "parsed": {
            |           "${messageId.serialize()}": {
            |             "blobId": "${messageId.serialize()}"
@@ -514,12 +539,12 @@ trait EmailParseMethodContract {
 
   @Test
   def parseShouldAllowRetrievingBody(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/html.eml")))
       .getMessageId
 
@@ -531,7 +556,7 @@ trait EmailParseMethodContract {
          |  "methodCalls": [[
          |    "Email/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${messageId.serialize()}" ],
          |      "properties":["bodyValues", "preview", "hasAttachment", "attachments"],
          |      "fetchTextBodyValues": true,
@@ -559,7 +584,7 @@ trait EmailParseMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      [ "Email/parse", {
-           |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |         "accountId": "$bobAccountId",
            |         "parsed":{
            |         "${messageId.serialize()}": {
            |           "preview": "Send concerted from html",
@@ -649,12 +674,12 @@ trait EmailParseMethodContract {
 
   @Test
   def parseShouldApplyBodyFiltering(guiceJamesServer: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString(), path, AppendCommand.from(
+      .appendMessage(bobUsername.asString(), path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/html.eml")))
       .getMessageId
 
@@ -666,7 +691,7 @@ trait EmailParseMethodContract {
          |  "methodCalls": [[
          |    "Email/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "${messageId.serialize()}" ],
          |      "properties":["bodyValues", "preview", "hasAttachment", "attachments"],
          |      "fetchTextBodyValues": true,
@@ -694,7 +719,7 @@ trait EmailParseMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      [ "Email/parse", {
-           |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |         "accountId": "$bobAccountId",
            |         "parsed":{
            |         "${messageId.serialize()}": {
            |           "preview": "Send concerted from html",
@@ -790,7 +815,7 @@ trait EmailParseMethodContract {
          |  "methodCalls": [[
          |    "Email/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "$blobIdShouldNotFound" ]
          |    },
          |    "c1"]]
@@ -814,7 +839,7 @@ trait EmailParseMethodContract {
          |    "methodResponses": [[
          |      "Email/parse",
          |      {
-         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |        "accountId": "$bobAccountId",
          |        "parsed":{},
          |        "notFound": ["$blobIdShouldNotFound"]
          |      },
@@ -833,7 +858,7 @@ trait EmailParseMethodContract {
          |  "methodCalls": [[
          |    "Email/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "invalid" ]
          |    },
          |    "c1"]]
@@ -857,7 +882,7 @@ trait EmailParseMethodContract {
          |    "methodResponses": [[
          |      "Email/parse",
          |      {
-         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |        "accountId": "$bobAccountId",
          |        "parsed":{},
          |        "notFound": ["invalid"]
          |      },
@@ -875,7 +900,7 @@ trait EmailParseMethodContract {
          |  "methodCalls": [[
          |    "Email/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "123" ]
          |    },
          |    "c1"]]
@@ -914,7 +939,7 @@ trait EmailParseMethodContract {
          |  "methodCalls": [[
          |    "Email/parse",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "blobIds": [ "123" ]
          |    },
          |    "c1"]]

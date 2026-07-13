@@ -43,6 +43,7 @@ public class MemoryEmailParseMethodTest implements EmailParseMethodContract {
             .build())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override
