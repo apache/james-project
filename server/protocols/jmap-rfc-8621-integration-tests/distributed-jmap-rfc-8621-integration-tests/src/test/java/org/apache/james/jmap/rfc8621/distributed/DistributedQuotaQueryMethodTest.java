@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.QuotaQueryMethodContract;
 
-public class DistributedQuotaQueryMethodTest extends DistributedBase implements QuotaQueryMethodContract {
+public class DistributedQuotaQueryMethodTest extends PerClassDistributedBase implements QuotaQueryMethodContract {
 
 }

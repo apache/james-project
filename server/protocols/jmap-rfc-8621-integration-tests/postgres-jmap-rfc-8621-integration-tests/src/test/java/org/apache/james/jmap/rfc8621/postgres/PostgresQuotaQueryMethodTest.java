@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.QuotaQueryMethodContract;
 
-public class PostgresQuotaQueryMethodTest extends PostgresBase implements QuotaQueryMethodContract {
+public class PostgresQuotaQueryMethodTest extends PerClassPostgresBase implements QuotaQueryMethodContract {
 }

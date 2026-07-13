@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.QuotaQueryMethodContract;
 
-public class MemoryQuotaQueryMethodTest extends MemoryBase implements QuotaQueryMethodContract {
+public class MemoryQuotaQueryMethodTest extends PerClassMemoryBase implements QuotaQueryMethodContract {
 
 }
