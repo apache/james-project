@@ -47,6 +47,7 @@ public class MemoryEmailChangesMethodTest implements EmailChangesMethodContract 
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(MemoryMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5)))
             .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(MemoryEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5))))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_ENCLOSING_CLASS)
         .build();
 
     @Override

@@ -60,6 +60,7 @@ public class PostgresEmailChangesMethodTest implements EmailChangesMethodContrac
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(PostgresEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5)))
             .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(PostgresEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5))))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_ENCLOSING_CLASS)
         .build();
 
     @Override
