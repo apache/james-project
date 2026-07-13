@@ -19,17 +19,19 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import com.github.fge.lambdas.Throwing
 import org.apache.commons.net.smtp.SMTPClient
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.MailAddress
+import org.apache.james.core.Username
 import org.apache.james.dnsservice.api.InMemoryDNSService
 import org.apache.james.jmap.JMAPTestingConstants.{DOMAIN, LOCALHOST_IP, calmlyAwait}
 import org.apache.james.jmap.JmapGuiceProbe
 import org.apache.james.jmap.api.model.AccountId
-import org.apache.james.jmap.rfc8621.contract.VacationRelayIntegrationTest.{PASSWORD, REASON, USER_WITH_DOMAIN}
+import org.apache.james.jmap.rfc8621.contract.VacationRelayIntegrationTest.{PASSWORD, REASON}
 import org.apache.james.junit.categories.BasicFeature
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.model.MailboxConstants
@@ -44,29 +46,37 @@ import org.assertj.core.api.SoftAssertions
 import org.junit.experimental.categories.Category
 import org.junit.jupiter.api.{AfterEach, BeforeEach, Test}
 
+object VacationRelayIntegrationTestContext {
+  val currentUsername: java.util.concurrent.atomic.AtomicReference[String] = new java.util.concurrent.atomic.AtomicReference[String]()
+}
+
 object VacationRelayIntegrationTest {
-  private val USER = "benwa"
-  private val USER_WITH_DOMAIN = USER + '@' + DOMAIN
   private val PASSWORD = "secret"
   private val REASON = "Message explaining my wonderful vacations"
 }
 
 trait VacationRelayIntegrationTest {
+  import VacationRelayIntegrationTestContext.currentUsername
+
+  def userWithDomain: String = currentUsername.get()
+
   def getFakeSmtp: MockSmtpServerExtension
   def getInMemoryDns: InMemoryDNSService
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val user = s"user${UUID.randomUUID().toString.replace("-", "").take(8)}@$DOMAIN"
+    currentUsername.set(user)
     getInMemoryDns.registerMxRecord("yopmail.com", getFakeSmtp.getMockSmtp.getIPAddress)
 
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN)
-      .addUser(USER_WITH_DOMAIN, PASSWORD)
+      .addUser(user, PASSWORD)
 
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_WITH_DOMAIN, DefaultMailboxes.SENT)
-    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_WITH_DOMAIN, DefaultMailboxes.INBOX)
+    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, user, DefaultMailboxes.SENT)
+    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, user, DefaultMailboxes.INBOX)
   }
 
   @AfterEach
@@ -79,7 +89,7 @@ trait VacationRelayIntegrationTest {
   @Test
   def forwardingAnEmailShouldWork(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[JmapGuiceProbe])
-      .modifyVacation(AccountId.fromString(USER_WITH_DOMAIN), VacationPatch.builder.isEnabled(true).textBody(REASON).build)
+      .modifyVacation(AccountId.fromString(userWithDomain), VacationPatch.builder.isEnabled(true).textBody(REASON).build)
 
     val externalMail = "ray@yopmail.com"
 
@@ -88,7 +98,7 @@ trait VacationRelayIntegrationTest {
     smtpClient.connect(LOCALHOST_IP, server.getProbe(classOf[SmtpGuiceProbe]).getSmtpPort.getValue)
     smtpClient.helo(DOMAIN)
     smtpClient.setSender(externalMail)
-    smtpClient.rcpt("<" + USER_WITH_DOMAIN + ">")
+    smtpClient.rcpt("<" + userWithDomain + ">")
     smtpClient.sendShortMessageData("From: " + externalMail + "\r\n\r\nReply-To: <" + externalMail + ">\r\n\r\ncontent")
     calmlyAwait.atMost(1, TimeUnit.MINUTES).untilAsserted(() => {
       val mails = getFakeSmtp.getMockSmtp.getConfigurationClient.listMails

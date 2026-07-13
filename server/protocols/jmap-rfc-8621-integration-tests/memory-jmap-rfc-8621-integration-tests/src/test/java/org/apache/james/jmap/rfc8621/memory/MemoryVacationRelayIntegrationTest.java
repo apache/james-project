@@ -51,6 +51,7 @@ public class MemoryVacationRelayIntegrationTest implements VacationRelayIntegrat
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule(), new DelegationProbeModule(), new IdentityProbeModule())
             .overrideWith((binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override

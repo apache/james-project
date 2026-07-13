@@ -64,6 +64,7 @@ public class DistributedVacationRelayIntegrationTest implements VacationRelayInt
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule(), new DelegationProbeModule(), new IdentityProbeModule())
             .overrideWith((binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override
