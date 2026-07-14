@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 
 import org.apache.james.jmap.rfc8621.contract.ProvisioningContract;
 
-public class DistributedProvisioningTest extends DistributedBase implements ProvisioningContract {
+public class DistributedProvisioningTest extends PerClassDistributedBase implements ProvisioningContract {
 
 }

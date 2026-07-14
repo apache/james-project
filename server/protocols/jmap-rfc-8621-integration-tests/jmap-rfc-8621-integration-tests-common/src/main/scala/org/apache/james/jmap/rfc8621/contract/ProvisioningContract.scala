@@ -19,13 +19,18 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.authentication.NoAuthScheme
 import io.restassured.http.Header
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
-import org.apache.james.jmap.rfc8621.contract.Fixture._
+import org.apache.james.core.Username
+import org.apache.james.jmap.core.AccountId
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, AUTHORIZATION_HEADER, BOB_PASSWORD, DOMAIN, USER, USER_TOKEN, baseRequestSpecBuilder, toBase64}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.utils.DataProbeImpl
@@ -35,17 +40,40 @@ import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
 object ProvisioningContract {
   private val ARGUMENTS: String = "methodResponses[0][1]"
+
+  case class TestContext(bobAccountId: String, bobBasicAuthHeader: Header)
+
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
 }
 
 trait ProvisioningContract {
   import ProvisioningContract._
 
+  private def getAllMailboxesRequest(accountId: String): String =
+    s"""{
+       |  "using": [
+       |    "urn:ietf:params:jmap:core",
+       |    "urn:ietf:params:jmap:mail"],
+       |  "methodCalls": [[
+       |      "Mailbox/get",
+       |      {
+       |        "accountId": "$accountId",
+       |        "ids": null
+       |      },
+       |      "c1"]]
+       |}""".stripMargin
+
   @BeforeEach
   def setup(server: GuiceJamesServer): Unit = {
+    val bob = Username.fromLocalPartWithDomain(s"bob${UUID.randomUUID().toString.replace("-", "").take(8)}", DOMAIN)
+    val bobAccountId = AccountId.from(bob).toOption.get.id.value
+    val bobBasicAuthHeader = new Header(AUTHORIZATION_HEADER, s"Basic ${toBase64(s"${bob.asString}:$BOB_PASSWORD")}")
+    currentContext.set(TestContext(bobAccountId, bobBasicAuthHeader))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
       .setAuth(new NoAuthScheme())
@@ -58,7 +86,7 @@ trait ProvisioningContract {
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .header(new Header(AUTHORIZATION_HEADER, s"Bearer $USER_TOKEN"))
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(getAllMailboxesRequest(currentContext.get().bobAccountId))
     .when
       .post
 
@@ -71,8 +99,8 @@ trait ProvisioningContract {
   def provisionMailboxesShouldCreateMissingMailboxes(): Unit = {
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .header(BOB_BASIC_AUTH_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .header(currentContext.get().bobBasicAuthHeader)
+      .body(getAllMailboxesRequest(currentContext.get().bobAccountId))
     .when
       .post
     .`then`
