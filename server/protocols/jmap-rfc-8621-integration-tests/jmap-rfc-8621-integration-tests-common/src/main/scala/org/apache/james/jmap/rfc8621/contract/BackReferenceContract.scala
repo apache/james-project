@@ -19,35 +19,56 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
+import io.restassured.path.json.JsonPath
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
+import org.apache.james.jmap.core.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture._
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.{MailboxId, MailboxPath, MessageId}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.utils.DataProbeImpl
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Test}
 
+object BackReferenceContract {
+  case class TestContext(bob: Username)
+
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+}
+
 trait BackReferenceContract {
+  import BackReferenceContract.currentContext
+
+  def BOB: Username = currentContext.get().bob
+  def BOB_ACCOUNT_ID: String = AccountId.from(BOB).toOption.get.id.value
+
+  private def withBobAccountId(value: String): String = value.replace(ACCOUNT_ID, BOB_ACCOUNT_ID)
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val bob = Username.fromLocalPartWithDomain(s"bob${UUID.randomUUID().toString.replace("-", "").take(8)}", DOMAIN)
+    currentContext.set(BackReferenceContract.TestContext(bob))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -55,7 +76,7 @@ trait BackReferenceContract {
   def backReferenceResolvingShouldWork(): Unit = {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(
+      .body(withBobAccountId(
         s"""{
            |  "using": [
            |    "urn:ietf:params:jmap:core",
@@ -79,20 +100,23 @@ trait BackReferenceContract {
            |       }
            |     },
            |     "c2"]]
-           |}""".stripMargin)
+           |}""".stripMargin))
     .when
       .post
     .`then`
       .statusCode(SC_OK)
-      .header("Content-Length", "573")
       .extract()
       .body()
       .asString()
 
+    val jsonPath = JsonPath.from(response)
+    assertThat(jsonPath.getList[AnyRef]("methodResponses[1][1].list"))
+      .isEqualTo(jsonPath.getList[AnyRef]("methodResponses[0][1].list"))
+
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[1][1].state")
+      .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[0][1].list", "methodResponses[1][1].state", "methodResponses[1][1].list")
       .withOptions(Option.IGNORING_ARRAY_ORDER)
-      .isEqualTo(
+      .isEqualTo(withBobAccountId(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -132,14 +156,14 @@ trait BackReferenceContract {
          |            "c2"
          |        ]
          |    ]
-         |}""".stripMargin)
+         |}""".stripMargin))
   }
 
   @Test
   def pathShouldBeResolvable(): Unit = {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(
+      .body(withBobAccountId(
         s"""{
            |  "using": [
            |    "urn:ietf:params:jmap:core",
@@ -163,7 +187,7 @@ trait BackReferenceContract {
            |       }
            |     },
            |     "c2"]]
-           |}""".stripMargin)
+           |}""".stripMargin))
     .when
       .post
     .`then`
@@ -173,9 +197,9 @@ trait BackReferenceContract {
       .asString()
 
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].state")
+      .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[0][1].list")
       .withOptions(Option.IGNORING_ARRAY_ORDER)
-      .isEqualTo(
+      .isEqualTo(withBobAccountId(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -205,14 +229,14 @@ trait BackReferenceContract {
          |            "c2"
          |        ]
          |    ]
-         |}""".stripMargin)
+         |}""".stripMargin))
   }
 
   @Test
   def wildcardRequiresAnArray(): Unit = {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(
+      .body(withBobAccountId(
         s"""{
            |  "using": [
            |    "urn:ietf:params:jmap:core",
@@ -236,7 +260,7 @@ trait BackReferenceContract {
            |       }
            |     },
            |     "c2"]]
-           |}""".stripMargin)
+           |}""".stripMargin))
     .when
       .post
     .`then`
@@ -246,9 +270,9 @@ trait BackReferenceContract {
       .asString()
 
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].state")
+      .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[0][1].list")
       .withOptions(Option.IGNORING_ARRAY_ORDER)
-      .isEqualTo(
+      .isEqualTo(withBobAccountId(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -278,14 +302,14 @@ trait BackReferenceContract {
          |            "c2"
          |        ]
          |    ]
-         |}""".stripMargin)
+         |}""".stripMargin))
   }
 
   @Test
   def resolvedBackReferenceShouldHaveTheRightMethodName(): Unit = {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(
+      .body(withBobAccountId(
         s"""{
            |  "using": [
            |    "urn:ietf:params:jmap:core",
@@ -309,7 +333,7 @@ trait BackReferenceContract {
            |       }
            |     },
            |     "c2"]]
-           |}""".stripMargin)
+           |}""".stripMargin))
     .when
       .post
     .`then`
@@ -319,9 +343,9 @@ trait BackReferenceContract {
       .asString()
 
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].state")
+      .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[0][1].list")
       .withOptions(Option.IGNORING_ARRAY_ORDER)
-      .isEqualTo(
+      .isEqualTo(withBobAccountId(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -351,14 +375,14 @@ trait BackReferenceContract {
          |            "c2"
          |        ]
          |    ]
-         |}""".stripMargin)
+         |}""".stripMargin))
   }
 
   @Test
   def resolvingAnUnexistingMethodCallIdShouldFail(): Unit = {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(
+      .body(withBobAccountId(
         s"""{
            |  "using": [
            |    "urn:ietf:params:jmap:core",
@@ -382,7 +406,7 @@ trait BackReferenceContract {
            |       }
            |     },
            |     "c2"]]
-           |}""".stripMargin)
+           |}""".stripMargin))
     .when
       .post
     .`then`
@@ -392,9 +416,9 @@ trait BackReferenceContract {
       .asString()
 
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].state")
+      .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[0][1].list")
       .withOptions(Option.IGNORING_ARRAY_ORDER)
-      .isEqualTo(
+      .isEqualTo(withBobAccountId(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -424,7 +448,7 @@ trait BackReferenceContract {
          |            "c2"
          |        ]
          |    ]
-         |}""".stripMargin)
+         |}""".stripMargin))
   }
 
   @Test
@@ -453,7 +477,7 @@ trait BackReferenceContract {
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(
+      .body(withBobAccountId(
         s"""{
            |  "using": [
            |    "urn:ietf:params:jmap:core",
@@ -492,7 +516,7 @@ trait BackReferenceContract {
            |       }
            |     },
            |     "c3"]]
-           |}""".stripMargin)
+           |}""".stripMargin))
     .when
       .post
     .`then`
@@ -503,8 +527,8 @@ trait BackReferenceContract {
 
     assertThatJson(response)
       .withOptions(Option.IGNORING_ARRAY_ORDER)
-      .whenIgnoringPaths("methodResponses[2][1].state")
-      .isEqualTo(
+      .whenIgnoringPaths("methodResponses[0][1].queryState", "methodResponses[1][1].queryState", "methodResponses[2][1].state")
+      .isEqualTo(withBobAccountId(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -547,6 +571,6 @@ trait BackReferenceContract {
          |            "c3"
          |        ]
          |    ]
-         |}""".stripMargin)
+         |}""".stripMargin))
   }
 }
