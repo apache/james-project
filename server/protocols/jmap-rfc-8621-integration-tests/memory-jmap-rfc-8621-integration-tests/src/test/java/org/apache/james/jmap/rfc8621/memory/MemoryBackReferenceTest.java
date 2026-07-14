@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.BackReferenceContract;
 
-public class MemoryBackReferenceTest extends MemoryBase implements BackReferenceContract {
+public class MemoryBackReferenceTest extends PerClassMemoryBase implements BackReferenceContract {
 
 }
