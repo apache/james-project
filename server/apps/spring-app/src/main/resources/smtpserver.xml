@@ -226,14 +226,21 @@
             <!--
             <handler class="org.apache.james.smtpserver.fastfail.ValidSenderDomainHandler"/>
              -->
-         
-            <!-- With ValidRcptHandler, all email will get rejected which has no valid user -->
-            <!-- You need to add the recipient to the validRecipient list if you want -->
-            <!-- to accept email for a recipient which not exist on the server -->
-            <!-- If you want James to act as a spamtrap or honeypot, you may comment ValidRcptHandler -->
-            <!-- and implement the needed processors in spoolmanager.xml -->
+
+            <!-- The ValidRcptHandler rejects all emails for which this email server does not handle the recipient. -->
+            <!-- In any case, recipients for which a mailbox exists locally are accepted. -->
+            <!-- Additionally, recipients with a valid entry in the RRT are accepted. -->
+            <!-- This behavior can be disabled by setting the option `enableRecipientRewriteTable` to `false`. It is `true` by default. -->
+            <!-- If the RRT is enabled, there are three options how to check it. -->
+            <!-- The desired option can be set with `recipientRewriteTableCheck` and must be one of the following: -->
+            <!-- - `mappingExists` (default): The RRT must contain at least one mapping from the recipient. It may point to a mailbox on another email server or to a non-existing local mailbox. It may also be a mapping of type error. -->
+            <!-- - `anyMappingValid`: After resolving the recipient using the RRT, at least one target must be an existing local mailbox. This ignores error mappings. -->
+            <!-- - `allMappingsValid`: After resolving the recipient using the RRT, every target must be an existing local mailbox. If there is an error mapping, the check fails. -->
+            <!-- Note that the last option completely forbids aliases to mailboxes on other email servers. -->
+            <!-- Depending on your configuration of the recipient rewrite table, the recipient is resolved recursively. -->
+            <!-- This handler is considered stable. -->
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
-            
+
             <!-- If activated you can limit the maximal recipients -->
             <!-- 
             <handler class="org.apache.james.smtpserver.fastfail.MaxRcptHandler">
