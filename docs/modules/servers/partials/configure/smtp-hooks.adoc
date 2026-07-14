@@ -328,23 +328,34 @@ Example configuration:
 
 == ValidRcptHandler
 
-With ValidRcptHandler, all email will get rejected which has no valid user.
+The ValidRcptHandler rejects all emails for which this email server does not handle the recipient.
 
-You need to add the recipient to the validRecipient list if you want
-to accept email for a recipient which not exist on the server.
+In any case, recipients for which a mailbox exists locally are accepted.
+Additionally, recipients with a valid entry in the RRT are accepted.
+This behavior can be disabled by setting the option `enableRecipientRewriteTable` to `false`. It is `true` by default.
 
-If you want James to act as a spamtrap or honeypot, you may comment ValidRcptHandler
-and implement the needed processors in spoolmanager.xml.
+If the RRT is enabled, there are three options how to check it.
+The desired option can be set with `recipientRewriteTableCheck` and must be one of the following:
 
-This handler should be considered stable.
+- `mappingExists` (default): The RRT must contain at least one mapping from the recipient. It may point to a mailbox on another email server or to a non-existing local mailbox. It may also be a mapping of type error.
+- `anyMappingValid`: After resolving the recipient using the RRT, at least one target must be an existing local mailbox. This ignores error mappings.
+- `allMappingsValid`: After resolving the recipient using the RRT, every target must be an existing local mailbox. If there is an error mapping, the check fails.
 
-Example configuration:
+Note that the last option completely forbids aliases to mailboxes on other email servers.
+Depending on your configuration of the recipient rewrite table, the recipient is resolved recursively.
+
+This handler is considered stable.
+
+Example configuration with default values:
 
 [source,xml]
 ....
 <handlerchain>
     <!-- ... -->
-    <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
+    <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler">
+        <enableRecipientRewriteTable>true</enableRecipientRewriteTable>
+        <recipientRewriteTableCheck>mappingExists</recipientRewriteTableCheck>
+    </handler>
 </handlerchain>
 ....
 
