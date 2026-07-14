@@ -134,7 +134,7 @@ class ValidRcptHandlerTest {
     }
 
     @Test
-    void doRcptShouldRejectNotExistingLocalUsersWhenNoRelay() {
+    void doRcptShouldDenyNotExistingLocalUsersWhenNoRelay() {
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
         HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, invalidUserEmail).getResult();
@@ -195,13 +195,13 @@ class ValidRcptHandlerTest {
 
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
-        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, validUserEmail).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
 
         assertThat(rCode).isEqualTo(HookReturnCode.declined());
     }
 
     @Test
-    void doRcptShouldDenyWhenHasMappingLoop() throws Exception {
+    void doRcptShouldDeclineWhenHasMappingLoop() throws Exception {
         memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), USER2 + "@domain.tld");
         memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER2, DOMAIN_1), USER1 + "@domain.tld");
         // The loop needs to be created by a domain mapping
@@ -226,7 +226,7 @@ class ValidRcptHandlerTest {
     }
 
     @Test
-    void doRcptShouldReturnDenySoftWhenUsersRepositoryError() throws Exception {
+    void doRcptShouldDenySoftWhenUsersRepositoryError() throws Exception {
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
         UsersRepository users = mock(UsersRepository.class);
@@ -239,7 +239,7 @@ class ValidRcptHandlerTest {
     }
 
     @Test
-    void doRcptShouldReturnDeclineWhenInvalidUsername() throws Exception {
+    void doRcptShouldDenyWhenInvalidUsername() throws Exception {
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
         HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, new MailAddress("\"abc@\"@localhost")).getResult();
