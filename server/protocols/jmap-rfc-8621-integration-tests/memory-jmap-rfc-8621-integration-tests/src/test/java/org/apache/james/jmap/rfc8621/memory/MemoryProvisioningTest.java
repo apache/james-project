@@ -21,6 +21,6 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import org.apache.james.jmap.rfc8621.contract.ProvisioningContract;
 
-class MemoryProvisioningTest extends MemoryBase implements ProvisioningContract {
+class MemoryProvisioningTest extends PerClassMemoryBase implements ProvisioningContract {
 
 }

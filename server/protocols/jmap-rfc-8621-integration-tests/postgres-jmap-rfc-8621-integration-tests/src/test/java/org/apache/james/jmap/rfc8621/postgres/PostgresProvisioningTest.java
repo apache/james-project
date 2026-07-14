@@ -21,5 +21,5 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import org.apache.james.jmap.rfc8621.contract.ProvisioningContract;
 
-public class PostgresProvisioningTest extends PostgresBase implements ProvisioningContract {
+public class PostgresProvisioningTest extends PerClassPostgresBase implements ProvisioningContract {
 }
