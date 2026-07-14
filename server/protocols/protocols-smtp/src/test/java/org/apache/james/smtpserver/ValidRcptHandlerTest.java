@@ -41,6 +41,7 @@ import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler;
+import org.apache.james.smtpserver.fastfail.ValidRcptHandler.RecipientRewriteTableCheck;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -190,7 +191,7 @@ class ValidRcptHandlerTest {
     }
 
     @Test
-    void doRcptShouldDeclineWhenHasAddressMapping() throws Exception {
+    void doRcptMappingExistsShouldDeclineWhenHasAddressMapping() throws Exception {
         memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "address");
 
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
@@ -201,7 +202,77 @@ class ValidRcptHandlerTest {
     }
 
     @Test
-    void doRcptShouldDeclineWhenHasMappingLoop() throws Exception {
+    void doRcptAnyTargetValidShouldDenyWithoutAddressMapping() throws Exception {
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+        handler.setRecipientRewriteTableCheck(RecipientRewriteTableCheck.ANY_TARGET_HAS_LOCAL_MAILBOX);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.deny());
+    }
+
+    @Test
+    void doRcptAnyTargetValidShouldDenyWhenHasOnlyInvalidAddressMapping() throws Exception {
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "address");
+
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+        handler.setRecipientRewriteTableCheck(RecipientRewriteTableCheck.ANY_TARGET_HAS_LOCAL_MAILBOX);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.deny());
+    }
+
+    @Test
+    void doRcptAnyTargetValidShouldDeclineWhenHasValidAddressMapping() throws Exception {
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "address");
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), VALID_USER.asString());
+
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+        handler.setRecipientRewriteTableCheck(RecipientRewriteTableCheck.ANY_TARGET_HAS_LOCAL_MAILBOX);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
+    }
+
+    @Test
+    void doRcptAllTargetsValidShouldDenyWithoutAddressMapping() throws Exception {
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+        handler.setRecipientRewriteTableCheck(RecipientRewriteTableCheck.ALL_TARGETS_HAVE_LOCAL_MAILBOX);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.deny());
+    }
+
+    @Test
+    void doRcptAllTargetsValidShouldDenyWhenHasInvalidAddressMapping() throws Exception {
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "address");
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), VALID_USER.asString());
+
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+        handler.setRecipientRewriteTableCheck(RecipientRewriteTableCheck.ALL_TARGETS_HAVE_LOCAL_MAILBOX);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.deny());
+    }
+
+    @Test
+    void doRcptAllTargetsValidShouldDeclineWhenHasOnlyValidAddressMapping() throws Exception {
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), VALID_USER.asString());
+
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+        handler.setRecipientRewriteTableCheck(RecipientRewriteTableCheck.ALL_TARGETS_HAVE_LOCAL_MAILBOX);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
+    }
+
+    @Test
+    void doRcptMappingExistsShouldDeclineWhenHasMappingLoop() throws Exception {
         memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), USER2 + "@domain.tld");
         memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER2, DOMAIN_1), USER1 + "@domain.tld");
         // The loop needs to be created by a domain mapping
@@ -215,7 +286,37 @@ class ValidRcptHandlerTest {
     }
 
     @Test
-    void doRcptShouldDeclineWhenHasErrorMapping() throws Exception {
+    void doRcptAnyTargetValidShouldDenyWhenHasMappingLoop() throws Exception {
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), USER2 + "@domain.tld");
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER2, DOMAIN_1), USER1 + "@domain.tld");
+        // The loop needs to be created by a domain mapping
+        memoryRecipientRewriteTable.addDomainMapping(MappingSource.fromDomain(DOMAIN_1), Domain.LOCALHOST);
+
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+        handler.setRecipientRewriteTableCheck(RecipientRewriteTableCheck.ANY_TARGET_HAS_LOCAL_MAILBOX);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.deny());
+    }
+
+    @Test
+    void doRcptAllTargetsValidShouldDenyWhenHasMappingLoop() throws Exception {
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), USER2 + "@domain.tld");
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER2, DOMAIN_1), USER1 + "@domain.tld");
+        // The loop needs to be created by a domain mapping
+        memoryRecipientRewriteTable.addDomainMapping(MappingSource.fromDomain(DOMAIN_1), Domain.LOCALHOST);
+
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+        handler.setRecipientRewriteTableCheck(RecipientRewriteTableCheck.ALL_TARGETS_HAVE_LOCAL_MAILBOX);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.deny());
+    }
+
+    @Test
+    void doRcptMappingExistsShouldDeclineWhenHasErrorMapping() throws Exception {
         memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "554 BOUNCE");
 
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
@@ -223,6 +324,44 @@ class ValidRcptHandlerTest {
         HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
 
         assertThat(rCode).isEqualTo(HookReturnCode.declined());
+    }
+
+    @Test
+    void doRcptAnyTargetValidShouldDenyWhenHasOnlyErrorMapping() throws Exception {
+        memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "554 BOUNCE");
+
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+        handler.setRecipientRewriteTableCheck(RecipientRewriteTableCheck.ANY_TARGET_HAS_LOCAL_MAILBOX);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.deny());
+    }
+
+    @Test
+    void doRcptAnyTargetValidShouldDeclineWhenHasErrorMapping() throws Exception {
+        memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "554 BOUNCE");
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), VALID_USER.asString());
+
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+        handler.setRecipientRewriteTableCheck(RecipientRewriteTableCheck.ANY_TARGET_HAS_LOCAL_MAILBOX);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
+    }
+
+    @Test
+    void doRcptAllTargetsValidShouldDenyWhenHasErrorMapping() throws Exception {
+        memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "554 BOUNCE");
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), VALID_USER.asString());
+
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+        handler.setRecipientRewriteTableCheck(RecipientRewriteTableCheck.ALL_TARGETS_HAVE_LOCAL_MAILBOX);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.deny());
     }
 
     @Test
