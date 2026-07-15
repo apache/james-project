@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.pop3server.core;
 
+import static org.apache.james.protocols.sasl.plain.PlainSaslMechanism.ENABLED;
+import static org.apache.james.protocols.sasl.plain.PlainSaslMechanism.REQUIRE_SSL;
+
 import java.io.IOException;
 import java.util.Optional;
 
@@ -59,7 +62,7 @@ import reactor.core.publisher.Mono;
  */
 public class PassCmdHandler extends AbstractPassCmdHandler  {
     private static final Logger LOGGER = LoggerFactory.getLogger(PassCmdHandler.class);
-    private static final PlainSaslMechanism PLAIN_SASL_MECHANISM = new PlainSaslMechanism(true, false);
+    private static final PlainSaslMechanism PLAIN_SASL_MECHANISM = new PlainSaslMechanism(ENABLED, !REQUIRE_SSL);
 
     private final MailboxManager manager;
     private final MailboxAdapterFactory mailboxAdapterFactory;
