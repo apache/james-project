@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.pop3server.core;
 
+import static org.apache.james.protocols.sasl.plain.PlainSaslMechanism.ENABLED;
+import static org.apache.james.protocols.sasl.plain.PlainSaslMechanism.REQUIRE_SSL;
+
 import java.io.IOException;
 import java.util.Optional;
 
@@ -28,7 +31,6 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -36,11 +38,16 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.pop3server.mailbox.MailboxAdapterFactory;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslFailure;
+import org.apache.james.protocols.api.sasl.SaslStep;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
+import org.apache.james.protocols.sasl.JamesSaslAuthenticator;
+import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,15 +62,18 @@ import reactor.core.publisher.Mono;
  */
 public class PassCmdHandler extends AbstractPassCmdHandler  {
     private static final Logger LOGGER = LoggerFactory.getLogger(PassCmdHandler.class);
+    private static final PlainSaslMechanism PLAIN_SASL_MECHANISM = new PlainSaslMechanism(ENABLED, !REQUIRE_SSL);
 
     private final MailboxManager manager;
     private final MailboxAdapterFactory mailboxAdapterFactory;
+    private final SaslAuthenticator saslAuthenticator;
 
     @Inject
     public PassCmdHandler(@Named("mailboxmanager") MailboxManager manager, MailboxAdapterFactory mailboxAdapterFactory, MetricFactory metricFactory) {
         super(metricFactory);
         this.manager = manager;
         this.mailboxAdapterFactory = mailboxAdapterFactory;
+        this.saslAuthenticator = JamesSaslAuthenticator.jamesSaslAuthenticator(manager);
     }
 
     @Override
@@ -81,13 +91,34 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
         return MDCBuilder.withMdc(
             MDCBuilder.create()
                 .addToContext(MDCBuilder.USER, username.asString()),
-            Throwing.supplier(() -> auth(session, password)).sneakyThrow());
+            Throwing.supplier(() -> authenticate(session, username, password)).sneakyThrow());
     }
 
-    private Mailbox auth(POP3Session session, String password) throws IOException {
+    private Mailbox authenticate(POP3Session session, Username username, String password) throws IOException {
+        return switch (PLAIN_SASL_MECHANISM.authenticate(username, password, saslAuthenticator)) {
+            case SaslStep.Success success -> openMailbox(session, success.identity().authorizationId());
+            case SaslStep.Failure failure -> handleAuthenticationFailure(session, failure.failure());
+            case SaslStep.Challenge ignored -> throw new IllegalStateException("Direct PLAIN authentication must be terminal");
+        };
+    }
+
+    private Mailbox handleAuthenticationFailure(POP3Session session, SaslFailure failure) throws IOException {
+        if (failure.type() == SaslFailure.Type.SERVER_ERROR) {
+            throw failure.cause()
+                .map(cause -> new IOException("Unable to authenticate POP3 user " + session.getUsername().asString(), cause))
+                .orElseGet(() -> new IOException("Unable to authenticate POP3 user " + session.getUsername().asString()));
+        }
+
+        LOGGER.info("Bad credential supplied for {} with remote address {}",
+            session.getUsername().asString(),
+            session.getRemoteAddress().getAddress().getHostAddress());
+        return null;
+    }
+
+    private Mailbox openMailbox(POP3Session session, Username username) throws IOException {
         MailboxSession mSession = null;
         try {
-            mSession = manager.authenticate(session.getUsername(), password).withoutDelegation();
+            mSession = manager.authenticate(username).withoutDelegation();
             session.stopDetectingCommandInjection();
             manager.startProcessingRequest(mSession);
             MailboxPath inbox = MailboxPath.inbox(mSession);
@@ -103,11 +134,6 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
                 mailbox.getMailboxPath().asString(),
                 mSession.getSessionId().getValue());
             return mailboxAdapterFactory.create(mailbox, mSession);
-        } catch (BadCredentialsException e) {
-            LOGGER.info("Bad credential supplied for {} with remote address {}",
-                session.getUsername().asString(),
-                session.getRemoteAddress().getAddress().getHostAddress());
-            return null;
         } catch (MailboxException e) {
             throw new IOException("Unable to access mailbox for user " + session.getUsername().asString(), e);
         } finally {
