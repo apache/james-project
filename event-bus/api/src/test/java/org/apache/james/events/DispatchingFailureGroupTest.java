@@ -20,7 +20,6 @@
 package org.apache.james.events;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
@@ -39,8 +38,11 @@ public class DispatchingFailureGroupTest {
     }
 
     @Test
-    void deserializeShouldThrowWhenMissingDelimiter() {
-        assertThatThrownBy(() -> Group.deserialize(DispatchingFailureGroup.class.getName()))
-            .isInstanceOf(Group.GroupDeserializationException.class);
+    void deserializeShouldNotReturnDispatchingFailureGroupWhenMissingDelimiter() throws Group.GroupDeserializationException {
+        // Without the delimiter the value is treated as a plain group identity, not as a DispatchingFailureGroup.
+        assertThat(Group.deserialize(DispatchingFailureGroup.class.getName()))
+            .isNotInstanceOf(DispatchingFailureGroup.class)
+            .extracting(Group::asString)
+            .isEqualTo(DispatchingFailureGroup.class.getName());
     }
 }
