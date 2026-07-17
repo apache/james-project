@@ -22,20 +22,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
 import org.apache.commons.net.pop3.POP3Reply;
@@ -44,6 +53,7 @@ import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.jwt.OidcJwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -58,27 +68,103 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.pop3server.mailbox.DefaultMailboxAdapterFactory;
 import org.apache.james.pop3server.mailbox.MailboxAdapterFactory;
 import org.apache.james.pop3server.netty.POP3Server;
+import org.apache.james.pop3server.netty.POP3ServerFactory;
+import org.apache.james.protocols.api.OIDCSASLHelper;
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslExchange;
+import org.apache.james.protocols.api.sasl.SaslIdentity;
+import org.apache.james.protocols.api.sasl.SaslInitialRequest;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismNames;
+import org.apache.james.protocols.api.sasl.SaslStep;
+import org.apache.james.protocols.api.utils.BogusSslContextFactory;
+import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
+import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
+import org.apache.james.protocols.sasl.oidc.OAuthSaslMechanism;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.name.Names;
 
 import reactor.core.publisher.Flux;
 
 public class POP3ServerTest {
     private static final DomainList NO_DOMAIN_LIST = null;
+    private static final String OAUTH_TOKEN = "token";
+    private static final byte[] INVALID_TOKEN_RESPONSE = "{\"status\":\"invalid_token\"}".getBytes(StandardCharsets.UTF_8);
+    private static final int OVERSIZED_SASL_CONTINUATION_LENGTH = 65537;
+
+    private static class TestOidcJwtTokenVerifier extends OidcJwtTokenVerifier {
+        private final Optional<Username> validationResult;
+
+        private TestOidcJwtTokenVerifier(Optional<Username> validationResult) {
+            super(null);
+            this.validationResult = validationResult;
+        }
+
+        @Override
+        public Optional<Username> validateToken(String token) {
+            return validationResult;
+        }
+    }
+
+    private static class ServerDataSaslMechanism implements SaslMechanism {
+        private static final byte[] CHALLENGE = "challenge".getBytes(StandardCharsets.US_ASCII);
+        private static final byte[] SERVER_DATA = "server-data".getBytes(StandardCharsets.US_ASCII);
+
+        private final Username username;
+        private final AtomicBoolean closed;
+        private final String name;
+
+        private ServerDataSaslMechanism(Username username, AtomicBoolean closed) {
+            this("TEST", username, closed);
+        }
+
+        private ServerDataSaslMechanism(String name, Username username, AtomicBoolean closed) {
+            this.name = name;
+            this.username = username;
+            this.closed = closed;
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator) {
+            return new SaslExchange() {
+                @Override
+                public SaslStep firstStep() {
+                    return new SaslStep.Challenge(Optional.of(CHALLENGE));
+                }
+
+                @Override
+                public SaslStep onResponse(byte[] clientResponse) {
+                    return new SaslStep.Success(new SaslIdentity(username, username), Optional.of(SERVER_DATA));
+                }
+
+                @Override
+                public void close() {
+                    closed.set(true);
+                }
+            };
+        }
+    }
 
     private XMLConfiguration pop3Configuration;
     protected final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
@@ -97,6 +183,11 @@ public class POP3ServerTest {
         setUpServiceManager();
         setUpPOP3Server();
         pop3Configuration = ConfigLoader.getConfig(fileSystem.getResource("classpath://pop3server.xml"));
+        configureSaslMechanismsFromConfiguration();
+    }
+
+    private void configureSaslMechanismsFromConfiguration() throws ConfigurationException {
+        pop3Server.setSaslMechanisms(POP3ServerFactory.Pop3SaslMechanismLoader.defaultLoader().load(pop3Configuration));
     }
 
     @AfterEach
@@ -852,6 +943,371 @@ public class POP3ServerTest {
 
     }
 
+    @Test
+    void authPlainWithInitialResponseShouldAuthenticate() throws Exception {
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(Username.of("auth-user"), "secret");
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "AUTH PLAIN " + plainInitialResponse("auth-user", "secret"));
+            assertThat(reader.readLine()).isEqualTo("+OK Welcome auth-user");
+
+            send(writer, "STAT");
+            assertThat(reader.readLine()).startsWith("+OK");
+        }
+    }
+
+    @Test
+    void authPlainShouldSupportContinuation() throws Exception {
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(Username.of("auth-user"), "secret");
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "AUTH PLAIN");
+            assertThat(reader.readLine()).isEqualTo("+ ");
+
+            send(writer, plainInitialResponse("auth-user", "secret"));
+            assertThat(reader.readLine()).isEqualTo("+OK Welcome auth-user");
+        }
+    }
+
+    @Test
+    void malformedAuthShouldPreserveUserPassAuthentication() throws Exception {
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(Username.of("auth-user"), "secret");
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "USER auth-user");
+            assertThat(reader.readLine()).startsWith("+OK");
+            send(writer, "AUTH PLAIN " + encoded("malformed"));
+            assertThat(reader.readLine()).isEqualTo("-ERR Invalid AUTH request.");
+
+            send(writer, "PASS secret");
+            assertThat(reader.readLine()).isEqualTo("+OK Welcome auth-user");
+        }
+    }
+
+    @Test
+    void capaShouldAdvertiseAvailableSaslMechanisms() throws Exception {
+        finishSetUp(pop3Configuration);
+
+        pop3Client = new POP3Client();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        assertThat(pop3Client.sendCommand("CAPA")).isEqualTo(POP3Reply.OK);
+        pop3Client.getAdditionalReply();
+
+        assertThat(pop3Client.getReplyStrings()).contains("SASL PLAIN");
+    }
+
+    @Test
+    void capaShouldAdvertisePlainOnlyAfterStartTlsWhenRequireSSL() throws Exception {
+        pop3Configuration.setProperty("auth.requireSSL", true);
+        configureSaslMechanismsFromConfiguration();
+        finishSetUp(pop3Configuration);
+
+        POP3SClient client = new POP3SClient(false, BogusSslContextFactory.getClientContext());
+        client.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
+        pop3Client = client;
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        assertThat(client.sendCommand("CAPA")).isEqualTo(POP3Reply.OK);
+        client.getAdditionalReply();
+        assertThat(client.getReplyStrings()).doesNotContain("SASL PLAIN");
+
+        assertThat(client.execTLS()).isTrue();
+        assertThat(client.sendCommand("CAPA")).isEqualTo(POP3Reply.OK);
+        client.getAdditionalReply();
+        assertThat(client.getReplyStrings()).contains("SASL PLAIN");
+    }
+
+    @Test
+    void unknownAuthMechanismShouldBeRejectedAsUnsupported() throws Exception {
+        finishSetUp(pop3Configuration);
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "AUTH UNKNOWN");
+            assertThat(reader.readLine()).isEqualTo("-ERR Unsupported authentication mechanism.");
+        }
+    }
+
+    @Test
+    void clearTextPassAndAuthPlainShouldBeRejectedByDefault() throws Exception {
+        pop3Configuration.clearProperty("auth.requireSSL"); // absent "auth.requireSSL" defaults to true
+        configureSaslMechanismsFromConfiguration();
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(Username.of("auth-user"), "secret");
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "AUTH PLAIN " + plainInitialResponse("auth-user", "secret"));
+            assertThat(reader.readLine()).isEqualTo("-ERR Authentication requires TLS.");
+
+            send(writer, "USER auth-user");
+            assertThat(reader.readLine()).startsWith("+OK");
+            send(writer, "PASS secret");
+            assertThat(reader.readLine()).isEqualTo("-ERR Authentication requires TLS.");
+        }
+    }
+
+    @Test
+    void userPassShouldBeAvailableAfterStartTlsWhenRequireSSL() throws Exception {
+        pop3Configuration.setProperty("auth.requireSSL", true);
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(Username.of("auth-user"), "secret");
+
+        POP3SClient client = new POP3SClient(false, BogusSslContextFactory.getClientContext());
+        client.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
+        pop3Client = client;
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        assertThat(client.execTLS()).isTrue();
+        assertThat(client.login("auth-user", "secret")).isTrue();
+    }
+
+    @Test
+    void authPlainShouldBeAvailableAfterStartTlsWhenRequireSSL() throws Exception {
+        pop3Configuration.setProperty("auth.requireSSL", true);
+        configureSaslMechanismsFromConfiguration();
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(Username.of("auth-user"), "secret");
+
+        POP3SClient client = new POP3SClient(false, BogusSslContextFactory.getClientContext());
+        client.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
+        pop3Client = client;
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        assertThat(client.execTLS()).isTrue();
+        assertThat(client.sendCommand("AUTH PLAIN " + plainInitialResponse("auth-user", "secret"))).isEqualTo(POP3Reply.OK);
+        assertThat(client.getReplyString()).contains("+OK Welcome auth-user");
+        assertThat(client.sendCommand("STAT")).isEqualTo(POP3Reply.OK);
+    }
+
+    @Test
+    void clearTextPassAndAuthPlainShouldBeAvailableWhenRequireSSLIsFalse() throws Exception {
+        pop3Configuration.setProperty("auth.requireSSL", false);
+        configureSaslMechanismsFromConfiguration();
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(Username.of("auth-user"), "secret");
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "AUTH PLAIN " + plainInitialResponse("auth-user", "secret"));
+            assertThat(reader.readLine()).isEqualTo("+OK Welcome auth-user");
+        }
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "USER auth-user");
+            assertThat(reader.readLine()).startsWith("+OK");
+            send(writer, "PASS secret");
+            assertThat(reader.readLine()).isEqualTo("+OK Welcome auth-user");
+        }
+    }
+
+    @Test
+    void authShouldSupportFinalServerDataAndCloseExchange() throws Exception {
+        Username username = Username.of("auth-user");
+        AtomicBoolean closed = new AtomicBoolean();
+        pop3Server.setSaslMechanisms(ImmutableList.of(new ServerDataSaslMechanism(username, closed)));
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(username, "secret");
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "AUTH TEST");
+            assertThat(reader.readLine()).isEqualTo("+ " + encoded("challenge"));
+            // RFC 5034 allows SASL continuations to exceed normal POP3 command line limits.
+            send(writer, encoded("x".repeat(AbstractChannelPipelineFactory.MAX_LINE_LENGTH)));
+            assertThat(reader.readLine()).isEqualTo("+ " + encoded("server-data"));
+            send(writer, "");
+
+            assertThat(reader.readLine()).isEqualTo("+OK Welcome auth-user");
+            assertThat(closed).isTrue();
+
+            send(writer, "AUTH TEST");
+            assertThat(reader.readLine()).startsWith("-ERR");
+            send(writer, "CAPA");
+            assertThat(reader.readLine()).startsWith("+OK");
+            assertThat(readMultilineResponse(reader)).contains("SASL TEST");
+        }
+    }
+
+    @Test
+    void authCancellationShouldCloseExchangeAndPreserveUserPassAuthentication() throws Exception {
+        Username username = Username.of("auth-user");
+        AtomicBoolean closed = new AtomicBoolean();
+        pop3Configuration.setProperty("auth.requireSSL", false);
+        pop3Server.setSaslMechanisms(ImmutableList.of(new ServerDataSaslMechanism(username, closed)));
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(username, "secret");
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "USER auth-user");
+            assertThat(reader.readLine()).startsWith("+OK");
+            send(writer, "AUTH TEST");
+            assertThat(reader.readLine()).isEqualTo("+ " + encoded("challenge"));
+            send(writer, "*");
+            assertThat(reader.readLine()).startsWith("-ERR");
+            assertThat(closed).isTrue();
+
+            send(writer, "PASS secret");
+            assertThat(reader.readLine()).isEqualTo("+OK Welcome auth-user");
+        }
+    }
+
+    @Test
+    void oversizedSaslContinuationShouldCloseExchangeAndConnection() throws Exception {
+        Username username = Username.of("auth-user");
+        AtomicBoolean closed = new AtomicBoolean();
+        pop3Server.setSaslMechanisms(ImmutableList.of(new ServerDataSaslMechanism(username, closed)));
+        finishSetUp(pop3Configuration);
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            socket.setSoTimeout(5_000);
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "AUTH TEST");
+            assertThat(reader.readLine()).isEqualTo("+ " + encoded("challenge"));
+            send(writer, "A".repeat(OVERSIZED_SASL_CONTINUATION_LENGTH));
+
+            assertThat(reader.readLine()).isEqualTo("-ERR Exceed maximal line length");
+            assertThat(reader.readLine()).isNull();
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilTrue(closed);
+        }
+    }
+
+    @Test
+    void authShouldEnforceInitialCommandLength() throws Exception {
+        Username username = Username.of("auth-user");
+        AtomicBoolean closed = new AtomicBoolean();
+        pop3Server.setSaslMechanisms(ImmutableList.of(new ServerDataSaslMechanism("TST", username, closed)));
+        finishSetUp(pop3Configuration);
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            String maximumLengthInitialResponse = "A".repeat(244);
+            send(writer, "AUTH TST " + maximumLengthInitialResponse);
+            assertThat(reader.readLine()).isEqualTo("+ " + encoded("challenge"));
+            send(writer, "*");
+            assertThat(reader.readLine()).startsWith("-ERR");
+
+            send(writer, "AUTH TST " + maximumLengthInitialResponse + "A");
+            assertThat(reader.readLine()).startsWith("-ERR");
+
+            // RFC 5034 applies the 255-octet limit to the original command, before parser whitespace normalization.
+            send(writer, "AUTH TST" + " ".repeat(246));
+            assertThat(reader.readLine()).startsWith("-ERR");
+        }
+    }
+
+    @Test
+    void authOauthBearerShouldAuthenticateWithValidToken() throws Exception {
+        Username username = Username.of("auth-user");
+        pop3Server.setSaslMechanisms(ImmutableList.of(oauthBearerMechanism(Optional.of(username))));
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(username, "secret");
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            String initialResponse = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(username.asString(), OAUTH_TOKEN);
+            send(writer, "AUTH OAUTHBEARER " + initialResponse);
+
+            assertThat(reader.readLine()).isEqualTo("+OK Welcome auth-user");
+        }
+    }
+
+    @Test
+    void authOauthBearerShouldAuthenticateLargeTokenThroughContinuation() throws Exception {
+        Username username = Username.of("auth-user");
+        pop3Server.setSaslMechanisms(ImmutableList.of(oauthBearerMechanism(Optional.of(username))));
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(username, "secret");
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "AUTH OAUTHBEARER");
+            assertThat(reader.readLine()).isEqualTo("+ ");
+
+            // RFC 5034 permits SASL continuations to exceed regular POP3 command limits. A large token
+            // must therefore be sent after the empty challenge instead of as an initial AUTH response.
+            String clientResponse = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(
+                username.asString(), "x".repeat(AbstractChannelPipelineFactory.MAX_LINE_LENGTH));
+            assertThat(clientResponse.length()).isGreaterThan(AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
+            send(writer, clientResponse);
+
+            assertThat(reader.readLine()).isEqualTo("+OK Welcome auth-user");
+        }
+    }
+
+    @Test
+    void authOauthBearerShouldSendErrorChallengeBeforeRejectingInvalidToken() throws Exception {
+        Username username = Username.of("auth-user");
+        pop3Server.setSaslMechanisms(ImmutableList.of(oauthBearerMechanism(Optional.empty())));
+        finishSetUp(pop3Configuration);
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            String initialResponse = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(username.asString(), OAUTH_TOKEN);
+            send(writer, "AUTH OAUTHBEARER " + initialResponse);
+            assertThat(reader.readLine()).isEqualTo("+ " + Base64.getEncoder().encodeToString(INVALID_TOKEN_RESPONSE));
+
+            // RFC 7628 section 3.2.3 requires a dummy client response before the server completes the failure.
+            send(writer, "AQ==");
+            assertThat(reader.readLine()).startsWith("-ERR");
+        }
+    }
+
     /*
      * See JAMES-649 The same happens when using RETR
      *
@@ -966,6 +1422,49 @@ public class POP3ServerTest {
 
     protected void finishSetUp(XMLConfiguration pop3Configuration) throws Exception {
         initPOP3Server(pop3Configuration);
+    }
+
+    private Socket connectToPop3Server() throws IOException {
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        return new Socket(bindedAddress.getAddress(), bindedAddress.getPort());
+    }
+
+    private BufferedReader reader(Socket socket) throws IOException {
+        return new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
+    }
+
+    private BufferedWriter writer(Socket socket) throws IOException {
+        return new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII));
+    }
+
+    private void send(BufferedWriter writer, String command) throws IOException {
+        writer.write(command);
+        writer.write("\r\n");
+        writer.flush();
+    }
+
+    private String plainInitialResponse(String username, String password) {
+        return Base64.getEncoder().encodeToString(("\0" + username + "\0" + password).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private String encoded(String value) {
+        return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.US_ASCII));
+    }
+
+    private OAuthSaslMechanism oauthBearerMechanism(Optional<Username> validationResult) {
+        return new OAuthSaslMechanism(SaslMechanismNames.OAUTHBEARER,
+            new TestOidcJwtTokenVerifier(validationResult), false, INVALID_TOKEN_RESPONSE);
+    }
+
+    private ImmutableList<String> readMultilineResponse(BufferedReader reader) throws IOException {
+        ImmutableList.Builder<String> lines = ImmutableList.builder();
+        while (true) {
+            String line = reader.readLine();
+            if (line.equals(".")) {
+                return lines.build();
+            }
+            lines.add(line);
+        }
     }
 
     protected void setUpServiceManager() {
