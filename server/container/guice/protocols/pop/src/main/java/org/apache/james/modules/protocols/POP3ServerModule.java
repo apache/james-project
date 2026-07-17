@@ -19,6 +19,12 @@
 
 package org.apache.james.modules.protocols;
 
+import java.util.Arrays;
+
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.ProtocolConfigurationSanitizer;
 import org.apache.james.RunArguments;
 import org.apache.james.filesystem.api.FileSystem;
@@ -26,15 +32,26 @@ import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.pop3server.mailbox.DefaultMailboxAdapterFactory;
 import org.apache.james.pop3server.mailbox.MailboxAdapterFactory;
 import org.apache.james.pop3server.netty.POP3ServerFactory;
+import org.apache.james.pop3server.netty.POP3ServerFactory.Pop3SaslMechanismLoader;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
 import org.apache.james.protocols.lib.netty.CertificateReloadable;
+import org.apache.james.protocols.sasl.BuiltInSaslMechanismFactories;
+import org.apache.james.protocols.sasl.OauthBearerSaslMechanismFactory;
+import org.apache.james.protocols.sasl.PlainSaslMechanismFactory;
+import org.apache.james.protocols.sasl.XOauth2SaslMechanismFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
+import org.apache.james.utils.GuiceSaslMechanismResolver;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.KeystoreCreator;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
@@ -49,6 +66,46 @@ public class POP3ServerModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(Pop3GuiceProbe.class);
 
         Multibinder.newSetBinder(binder(), CertificateReloadable.Factory.class).addBinding().to(POP3ServerFactory.class);
+    }
+
+    @Provides
+    @Singleton
+    @Pop3DefaultSaslMechanismFactories
+    ImmutableList<SaslMechanismFactory> provideDefaultPop3SaslMechanismFactories(OauthBearerSaslMechanismFactory oauthBearer,
+                                                                                 XOauth2SaslMechanismFactory xoauth2) {
+        return ImmutableList.of(new PlainSaslMechanismFactory(), oauthBearer, xoauth2);
+    }
+
+    @Provides
+    @Singleton
+    Pop3SaslMechanismLoader providePop3SaslMechanismLoader(GuiceSaslMechanismResolver saslMechanismResolver,
+                                                           @Pop3DefaultSaslMechanismFactories ImmutableList<SaslMechanismFactory> defaultSaslMechanismFactories) {
+        return configuration -> retrieveSaslMechanisms(saslMechanismResolver, defaultSaslMechanismFactories, configuration);
+    }
+
+    private ImmutableList<SaslMechanism> retrieveSaslMechanisms(GuiceSaslMechanismResolver saslMechanismResolver,
+                                                                ImmutableList<SaslMechanismFactory> defaultSaslMechanismFactories,
+                                                                HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
+        ImmutableList<String> mechanismFactoryClassNames = retrieveSaslMechanismFactoryClassNames(configuration);
+        ImmutableList<SaslMechanismFactory> enabledDefaultFactories =
+            BuiltInSaslMechanismFactories.enabledForServer(defaultSaslMechanismFactories, configuration);
+        return saslMechanismResolver.resolve(mechanismFactoryClassNames, enabledDefaultFactories, configuration);
+    }
+
+    ImmutableList<String> retrieveSaslMechanismFactoryClassNames(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
+        if (!configuration.containsKey("auth.saslMechanisms")) {
+            return ImmutableList.of();
+        }
+
+        ImmutableList<String> mechanismFactoryClassNames = Arrays.stream(configuration.getStringArray("auth.saslMechanisms"))
+            .flatMap(value -> Arrays.stream(value.split(",")))
+            .map(String::trim)
+            .collect(ImmutableList.toImmutableList());
+
+        if (mechanismFactoryClassNames.isEmpty() || mechanismFactoryClassNames.stream().anyMatch(StringUtils::isBlank)) {
+            throw new ConfigurationException("auth.saslMechanisms must not be blank when configured");
+        }
+        return mechanismFactoryClassNames;
     }
 
     @ProvidesIntoSet
