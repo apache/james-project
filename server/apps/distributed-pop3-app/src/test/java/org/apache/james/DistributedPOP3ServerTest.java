@@ -52,7 +52,7 @@ public class DistributedPOP3ServerTest implements Pop3ServerContract  {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = baseExtensionBuilder()
         .extension(new AwsS3BlobStoreExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .overrideServerModule(new POP3ViewProbeModule())
         .build();
 }
