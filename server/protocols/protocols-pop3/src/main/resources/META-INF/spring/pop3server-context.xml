@@ -19,9 +19,13 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
     <bean id="pop3server" class="org.apache.james.pop3server.netty.POP3ServerFactory">
+        <constructor-arg index="0" ref="pop3SaslMechanismLoader"/>
         <property name="protocolHandlerLoader" ref="protocolhandlerloader"/>
         <property name="fileSystem" ref="filesystem"/>
     </bean>
+
+    <bean id="pop3SaslMechanismLoader" class="org.apache.james.pop3server.netty.POP3ServerFactory$Pop3SaslMechanismLoader"
+          factory-method="defaultLoader"/>
 
     <bean id="mailboxAdapter" class="org.apache.james.pop3server.mailbox.DefaultMailboxAdapterFactory">
         <constructor-arg index="0" ref="mailboxmanager"/>
