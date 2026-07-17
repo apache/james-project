@@ -21,12 +21,21 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.IntStream;
 
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
+import org.apache.commons.net.pop3.POP3Reply;
 import org.apache.james.backends.cassandra.TestingSession;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.core.Username;
@@ -101,6 +110,68 @@ public interface Pop3ServerContract {
     String USER = "bob@examplebis.local";
     String PASSWORD = "123456";
     String DOMAIN = "examplebis.local";
+
+    private static String plainInitialResponse(String username, String password) {
+        return Base64.getEncoder()
+            .encodeToString(("\0" + username + "\0" + password).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static void send(BufferedWriter writer, String command) throws IOException {
+        writer.write(command + "\r\n");
+        writer.flush();
+    }
+
+    @Test
+    default void capaShouldAdvertisePlainSaslMechanism(GuiceJamesServer server) throws Exception {
+        POP3Client pop3Client = new POP3Client();
+        pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
+
+        assertThat(pop3Client.sendCommand("CAPA")).isEqualTo(POP3Reply.OK);
+        pop3Client.getAdditionalReply();
+        assertThat(pop3Client.getReplyStrings()).contains("SASL PLAIN");
+
+        pop3Client.disconnect();
+    }
+
+    @Test
+    default void authPlainShouldSucceed(GuiceJamesServer server) throws Exception {
+        server.getProbe(DataProbeImpl.class).fluent()
+            .addDomain(DOMAIN)
+            .addUser(USER, PASSWORD);
+
+        try (Socket socket = new Socket("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII))) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            // WHEN authenticating with an RFC 5034 PLAIN initial response
+            send(writer, "AUTH PLAIN " + plainInitialResponse(USER, PASSWORD));
+
+            // THEN authentication succeeds and POP3 transaction commands are available
+            assertThat(reader.readLine()).isEqualTo("+OK Welcome " + USER);
+            send(writer, "STAT");
+            assertThat(reader.readLine()).matches("\\+OK \\d+ \\d+");
+        }
+    }
+
+    @Test
+    default void authPlainShouldRejectInvalidCredentials(GuiceJamesServer server) throws Exception {
+        server.getProbe(DataProbeImpl.class).fluent()
+            .addDomain(DOMAIN)
+            .addUser(USER, PASSWORD);
+
+        try (Socket socket = new Socket("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII))) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "AUTH PLAIN " + plainInitialResponse(USER, "invalid-password"));
+            assertThat(reader.readLine()).isEqualTo("-ERR Authentication failed.");
+
+            send(writer, "STAT");
+            assertThat(reader.readLine()).isEqualTo("-ERR");
+        }
+    }
 
     @Test
     default void mailsCanBeReadInPop3(GuiceJamesServer server) throws Exception {
