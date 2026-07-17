@@ -20,6 +20,22 @@ Change list:
  - [Adding thread_id column to Postgresql email_query_view table](#adding-thread_id-column-to-postgresql-email_query_view-table)
  - [Lucene mailbox index schema update for collapseThreads support](#lucene-mailbox-index-schema-update-for-collapsethreads-support)
  - [JAMES-4210 SMTP AuthHook deprecation](#james-4210-smtp-authhook-deprecation)
+ - [JAMES-4210 POP3 USER/PASS requires TLS by default](#james-4210-pop3-userpass-requires-tls-by-default)
+
+### JAMES-4210 POP3 USER/PASS requires TLS by default
+
+Date: 16/07/2026
+
+Concerned products: POP3 servers allowing USER/PASS authentication over clear-text connections
+
+POP3 USER/PASS authentication now follows the `auth.requireSSL` setting and requires TLS by default. Deployments that
+intentionally allow clear-text USER/PASS authentication must add the following to each concerned `pop3server.xml` entry:
+
+```xml
+<auth>
+    <requireSSL>false</requireSSL>
+</auth>
+```
 
 ### JAMES-4210 SMTP AuthHook deprecation
 

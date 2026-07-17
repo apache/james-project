@@ -66,6 +66,14 @@
         <dd>Set the maximum simultaneous incoming connections for this service</dd>
         <dt><strong>handler.connectionLimitPerIP</strong></dt>
         <dd>Set the maximum simultaneous incoming connections per IP for this service</dd>
+        <dt><strong>auth.requireSSL</strong></dt>
+        <dd>Controls whether plaintext SASL mechanisms such as PLAIN require TLS. It defaults to true.
+            This setting applies to both the RFC 5034 AUTH command and the legacy USER/PASS commands.</dd>
+        <dt><strong>auth.plainAuthEnabled</strong></dt>
+        <dd>Controls whether PLAIN is available to AUTH. It defaults to true and does not disable the legacy USER/PASS commands.</dd>
+        <dt><strong>auth.saslMechanisms</strong></dt>
+        <dd>Optional ordered, comma-separated list of SASL mechanism factory class names for Guice applications.
+            Built-in factories can use simple names, for example PlainSaslMechanismFactory. Extensions use their fully qualified class name.</dd>
         <dt><strong>handler.handlerchain</strong></dt>
         <dd>This loads the core CommandHandlers. Only remove this if you really 
              know what you are doing</dd>
@@ -91,9 +99,12 @@
           <dd>true or false - If true attemps a graceful shutdown, which is safer but can take time. Defaults to true.</dd>
       </dl>
 
+      <p>James implements the RFC 5034 AUTH command and advertises currently available mechanisms through CAPA as
+         <strong>SASL mechanism ...</strong>. The initial AUTH command is limited to 255 octets. SASL continuation lines support
+         up to 65,536 bytes. Negotiated SASL integrity and privacy layers are not supported.</p>
+
   </section>
 
 </body>
 
 </document>
-
