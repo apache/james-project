@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableList;
 public class PlainSaslMechanism implements SaslMechanism {
     public static final String NAME = SaslMechanismNames.PLAIN;
     public static final boolean ENABLED = true;
-    public static final boolean REQUIRE_SSL = true;
 
     protected record PlainCredentials(Optional<Username> authorizationId, Username authenticationId, String password) {
     }
