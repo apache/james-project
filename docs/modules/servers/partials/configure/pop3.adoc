@@ -5,6 +5,36 @@ It contains one `pop3servers` element that can contain multiple `pop3server` ele
 
 The `pop3server` element can be configured using the common options described xref:{pages-path}/configure/server.adoc[here].
 
+== Authentication
+
+The optional `auth` element configures RFC 5034 AUTH.
+
+.`auth` element
+|===
+| Property Name | Explanation
+
+| `auth.requireSSL`
+| Configures whether plaintext password authentication requires a secure connection (TLS or STARTTLS).
+It applies to both AUTH PLAIN and legacy USER/PASS, and defaults to `true` for these mechanisms.
+OAuth mechanisms also honor this option when it is explicitly configured, but retain their historical default of `false` when it is absent.
+Configure it to `true` when enabling OAuth bearer mechanisms, as bearer tokens must be protected by TLS.
+
+| `auth.plainAuthEnabled`
+| Enables the PLAIN mechanism for AUTH.
+It is an optional boolean that defaults to `true` and does not disable legacy USER/PASS authentication.
+
+| `auth.saslMechanisms`
+| Configures an optional ordered, comma-separated list of SASL mechanism factory class names for Guice applications.
+Built-in factories can use simple class names, while extensions use fully qualified class names.
+
+| `auth.oidc`
+| Configures the OAUTHBEARER and XOAUTH2 mechanisms via OIDC.
+The configuration is described in more detail xref:{pages-path}/configure/oidc.adoc[here].
+
+|===
+
+James advertises currently available SASL mechanisms through CAPA.
+
 Additionally, it contains a mandatory `handlerchain` element that configures the behavior of the server using handlers.
 The `handlerchain` element has the following optional attributes:
 

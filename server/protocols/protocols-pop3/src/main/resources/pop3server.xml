@@ -33,6 +33,14 @@
     <connectiontimeout>1200</connectiontimeout>
     <connectionLimit> 0 </connectionLimit>
     <connectionLimitPerIP> 0 </connectionLimitPerIP>
+    <auth>
+      <!-- PLAIN through AUTH and legacy USER/PASS are available only after TLS by default. -->
+      <requireSSL>true</requireSSL>
+      <!-- Controls AUTH PLAIN only. Legacy USER/PASS remains enabled. -->
+      <plainAuthEnabled>true</plainAuthEnabled>
+      <!-- Guice applications can configure built-in simple names or extension factory FQCNs. -->
+      <!-- <saslMechanisms>PlainSaslMechanismFactory,OauthBearerSaslMechanismFactory,XOauth2SaslMechanismFactory</saslMechanisms> -->
+    </auth>
     <handlerchain enableJmx="true">
       <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
     </handlerchain>
