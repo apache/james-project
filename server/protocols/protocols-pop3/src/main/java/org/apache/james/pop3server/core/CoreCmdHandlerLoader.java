@@ -21,13 +21,13 @@ package org.apache.james.pop3server.core;
 
 import java.util.List;
 
-import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.pop3.core.CapaCmdHandler;
 import org.apache.james.protocols.pop3.core.DeleCmdHandler;
 import org.apache.james.protocols.pop3.core.ListCmdHandler;
 import org.apache.james.protocols.pop3.core.NoopCmdHandler;
+import org.apache.james.protocols.pop3.core.Pop3CommandDispatcher;
 import org.apache.james.protocols.pop3.core.QuitCmdHandler;
 import org.apache.james.protocols.pop3.core.RetrCmdHandler;
 import org.apache.james.protocols.pop3.core.RsetCmdHandler;
@@ -45,8 +45,9 @@ public class CoreCmdHandlerLoader implements HandlersPackage {
     private static final List<String> commands = List.of(
             // Insert the base commands in the Map
             WelcomeMessageHandler.class.getName(),
-            CommandDispatcher.class.getName(),
+            Pop3CommandDispatcher.class.getName(),
             CapaCmdHandler.class.getName(),
+            AuthCmdHandler.class.getName(),
             UserCmdHandler.class.getName(),
             PassCmdHandler.class.getName(),
             ListCmdHandler.class.getName(),

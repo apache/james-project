@@ -18,8 +18,7 @@
  ****************************************************************/
 package org.apache.james.pop3server.core;
 
-import static org.apache.james.protocols.sasl.plain.PlainSaslMechanism.ENABLED;
-import static org.apache.james.protocols.sasl.plain.PlainSaslMechanism.REQUIRE_SSL;
+import static org.apache.james.pop3server.core.AuthCmdHandler.AUTH_REQUIRES_TLS;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -29,11 +28,6 @@ import jakarta.inject.Named;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.pop3server.mailbox.MailboxAdapterFactory;
 import org.apache.james.protocols.api.Request;
@@ -54,35 +48,48 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 
-import reactor.core.publisher.Mono;
-
 /**
  * {@link PassCmdHandler} which also handles POP3 Before SMTP
  * 
  */
 public class PassCmdHandler extends AbstractPassCmdHandler  {
     private static final Logger LOGGER = LoggerFactory.getLogger(PassCmdHandler.class);
-    private static final PlainSaslMechanism PLAIN_SASL_MECHANISM = new PlainSaslMechanism(ENABLED, !REQUIRE_SSL);
 
-    private final MailboxManager manager;
-    private final MailboxAdapterFactory mailboxAdapterFactory;
+    private final Pop3MailboxProvider mailboxProvider;
     private final SaslAuthenticator saslAuthenticator;
+    private Optional<PlainSaslMechanism> plainSaslMechanism;
 
     @Inject
     public PassCmdHandler(@Named("mailboxmanager") MailboxManager manager, MailboxAdapterFactory mailboxAdapterFactory, MetricFactory metricFactory) {
         super(metricFactory);
-        this.manager = manager;
-        this.mailboxAdapterFactory = mailboxAdapterFactory;
+        this.mailboxProvider = new Pop3MailboxProvider(manager, mailboxAdapterFactory);
         this.saslAuthenticator = JamesSaslAuthenticator.jamesSaslAuthenticator(manager);
+        this.plainSaslMechanism = Optional.empty();
+    }
+
+    public void configurePlainSaslMechanism(PlainSaslMechanism plainSaslMechanism) {
+        this.plainSaslMechanism = Optional.of(plainSaslMechanism);
     }
 
     @Override
     public Response onCommand(POP3Session session, Request request) {
+        boolean authenticationRequiresTls = authenticationRequiresTls(session, request);
         Response response =  super.onCommand(session, request);
+        if (authenticationRequiresTls) {
+            response = AUTH_REQUIRES_TLS;
+        }
         if (POP3Response.OK_RESPONSE.equals(response.getRetCode())) {
             POP3BeforeSMTPHelper.addIPAddress(session.getRemoteAddress().getAddress().getHostAddress());
         }
         return response;
+    }
+
+    private boolean authenticationRequiresTls(POP3Session session, Request request) {
+        return session.getHandlerState() == POP3Session.AUTHENTICATION_USERSET
+            && request.getArgument() != null
+            && !session.isTLSStarted()
+            && availablePlainSaslMechanism(session).isEmpty()
+            && plainSaslMechanism.filter(mechanism -> mechanism.isAvailableOnTransport(true)).isPresent();
     }
 
 
@@ -95,11 +102,22 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
     }
 
     private Mailbox authenticate(POP3Session session, Username username, String password) throws IOException {
-        return switch (PLAIN_SASL_MECHANISM.authenticate(username, password, saslAuthenticator)) {
-            case SaslStep.Success success -> openMailbox(session, success.identity().authorizationId());
+        Optional<PlainSaslMechanism> availablePlainSaslMechanism = availablePlainSaslMechanism(session);
+        if (availablePlainSaslMechanism.isEmpty()) {
+            LOGGER.warn("PASS rejected because authentication is unavailable on the current transport");
+            return null;
+        }
+
+        return switch (availablePlainSaslMechanism.orElseThrow().authenticate(username, password, saslAuthenticator)) {
+            case SaslStep.Success success -> mailboxProvider.open(session, success.identity().authorizationId());
             case SaslStep.Failure failure -> handleAuthenticationFailure(session, failure.failure());
             case SaslStep.Challenge ignored -> throw new IllegalStateException("Direct PLAIN authentication must be terminal");
         };
+    }
+
+    private Optional<PlainSaslMechanism> availablePlainSaslMechanism(POP3Session session) {
+        return plainSaslMechanism
+            .filter(mechanism -> mechanism.isAvailableOnTransport(session.isTLSStarted()));
     }
 
     private Mailbox handleAuthenticationFailure(POP3Session session, SaslFailure failure) throws IOException {
@@ -115,31 +133,4 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
         return null;
     }
 
-    private Mailbox openMailbox(POP3Session session, Username username) throws IOException {
-        MailboxSession mSession = null;
-        try {
-            mSession = manager.authenticate(username).withoutDelegation();
-            session.stopDetectingCommandInjection();
-            manager.startProcessingRequest(mSession);
-            MailboxPath inbox = MailboxPath.inbox(mSession);
-            
-            // check if the mailbox exists, if not create it
-            if (!Mono.from(manager.mailboxExists(inbox, mSession)).block()) {
-                Optional<MailboxId> mailboxId = manager.createMailbox(inbox, mSession);
-                LOGGER.info("Provisioning INBOX. {} created.", mailboxId);
-            }
-            MessageManager mailbox = manager.getMailbox(MailboxPath.inbox(mSession), mSession);
-            LOGGER.info("Opening mailbox {} {} with mailbox session {}",
-                mailbox.getId().serialize(),
-                mailbox.getMailboxPath().asString(),
-                mSession.getSessionId().getValue());
-            return mailboxAdapterFactory.create(mailbox, mSession);
-        } catch (MailboxException e) {
-            throw new IOException("Unable to access mailbox for user " + session.getUsername().asString(), e);
-        } finally {
-            if (mSession != null) {
-                manager.endProcessingRequest(mSession);
-            }
-        }
-    }
 }

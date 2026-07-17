@@ -35,6 +35,9 @@
         <connectiontimeout>1200</connectiontimeout>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
+        <auth>
+            <requireSSL>false</requireSSL>
+        </auth>
         <handlerchain>
             <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
         </handlerchain>
