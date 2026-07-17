@@ -9,6 +9,9 @@
         <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
     </tls>
     <connectiontimeout>3600</connectiontimeout>
+    <auth>
+        <requireSSL>false</requireSSL>
+    </auth>
     <handlerchain>
         <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
     </handlerchain>
