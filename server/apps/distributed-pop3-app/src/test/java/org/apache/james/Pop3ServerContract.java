@@ -31,6 +31,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.apache.commons.net.pop3.POP3Client;
@@ -107,9 +108,18 @@ public interface Pop3ServerContract {
         }
     }
 
-    String USER = "bob@examplebis.local";
     String PASSWORD = "123456";
     String DOMAIN = "examplebis.local";
+
+    private static String randomUser() {
+        return UUID.randomUUID() + "@" + DOMAIN;
+    }
+
+    private static List<String> generateNUsers(int nbUsers) {
+        return IntStream.range(0, nbUsers)
+            .mapToObj(index -> randomUser())
+            .collect(ImmutableList.toImmutableList());
+    }
 
     private static String plainInitialResponse(String username, String password) {
         return Base64.getEncoder()
@@ -135,9 +145,10 @@ public interface Pop3ServerContract {
 
     @Test
     default void authPlainShouldSucceed(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         try (Socket socket = new Socket("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
@@ -145,10 +156,10 @@ public interface Pop3ServerContract {
             assertThat(reader.readLine()).startsWith("+OK");
 
             // WHEN authenticating with an RFC 5034 PLAIN initial response
-            send(writer, "AUTH PLAIN " + plainInitialResponse(USER, PASSWORD));
+            send(writer, "AUTH PLAIN " + plainInitialResponse(user, PASSWORD));
 
             // THEN authentication succeeds and POP3 transaction commands are available
-            assertThat(reader.readLine()).isEqualTo("+OK Welcome " + USER);
+            assertThat(reader.readLine()).isEqualTo("+OK Welcome " + user);
             send(writer, "STAT");
             assertThat(reader.readLine()).matches("\\+OK \\d+ \\d+");
         }
@@ -156,16 +167,17 @@ public interface Pop3ServerContract {
 
     @Test
     default void authPlainShouldRejectInvalidCredentials(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         try (Socket socket = new Socket("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.US_ASCII))) {
             assertThat(reader.readLine()).startsWith("+OK");
 
-            send(writer, "AUTH PLAIN " + plainInitialResponse(USER, "invalid-password"));
+            send(writer, "AUTH PLAIN " + plainInitialResponse(user, "invalid-password"));
             assertThat(reader.readLine()).isEqualTo("-ERR Authentication failed.");
 
             send(writer, "STAT");
@@ -175,23 +187,24 @@ public interface Pop3ServerContract {
 
     @Test
     default void mailsCanBeReadInPop3(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given a message in INBOX
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage("bob@" + JMAPTestingConstants.DOMAIN, USER);
+            .sendMessage("bob@" + JMAPTestingConstants.DOMAIN, user);
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // Them I can retrieve it in POP3
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listUniqueIdentifiers());
         assertThat(pop3MessageInfos).hasSize(1);
         Reader message = pop3Client.retrieveMessage(pop3MessageInfos.get(0).number);
@@ -201,10 +214,11 @@ public interface Pop3ServerContract {
 
     @Test
     default void dandlingMetadataShouldBeCleanedUpForFollowingSessions(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
-        MailboxPath inbox = MailboxPath.inbox(Username.of(Pop3ServerContract.USER));
+            .addUser(user, PASSWORD);
+        MailboxPath inbox = MailboxPath.inbox(Username.of(user));
         server.getProbe(MailboxProbeImpl.class)
             .createMailbox(inbox);
 
@@ -215,7 +229,7 @@ public interface Pop3ServerContract {
         // When I retrieve it a first time it fails
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listUniqueIdentifiers());
         assertThat(pop3MessageInfos).hasSize(1);
         assertThat(pop3Client.retrieveMessage(pop3MessageInfos.get(0).number)).isNull();
@@ -223,7 +237,7 @@ public interface Pop3ServerContract {
         // Then subsequent POP3 session do not encounter the inconsistency
         POP3Client pop3Client2 = new POP3Client();
         pop3Client2.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client2.login(USER, PASSWORD);
+        pop3Client2.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos2 = ImmutableList.copyOf(pop3Client2.listUniqueIdentifiers());
         assertThat(pop3MessageInfos2).isEmpty();
         pop3Client.disconnect();
@@ -232,25 +246,26 @@ public interface Pop3ServerContract {
 
     @Test
     default void manyMessagesCanBeRetrievedWithPOP3(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given 50 messages in INBOX
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
 
         IntStream.range(0, 50)
-            .forEach(Throwing.intConsumer(i -> smtpMessageSender.sendMessage("bob@" + JMAPTestingConstants.DOMAIN, USER)));
+            .forEach(Throwing.intConsumer(i -> smtpMessageSender.sendMessage("bob@" + JMAPTestingConstants.DOMAIN, user)));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 50).size() == 50);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 50).size() == 50);
 
         // Them I can retrieve them in POP3
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listUniqueIdentifiers());
         assertThat(pop3MessageInfos).hasSize(50);
         // And all messages should be retrievable
@@ -264,24 +279,25 @@ public interface Pop3ServerContract {
 
     @Test
     default void aMailWithAnAttachmentCanBeRetrieved(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given 50 messages in INBOX
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
-        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             ClassLoaderUtils.getSystemResourceAsString("attachment.eml"));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // Them I can retrieve them in POP3
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listUniqueIdentifiers());
         assertThat(pop3MessageInfos).hasSize(1);
         Reader message = pop3Client.retrieveMessage(pop3MessageInfos.get(0).number);
@@ -291,24 +307,25 @@ public interface Pop3ServerContract {
 
     @Test
     default void pop3SizeShouldMatch(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given one message
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
-        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             ClassLoaderUtils.getSystemResourceAsString("attachment.eml"));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // Then the advertized size is the downloadable size
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listMessages());
         Reader message = pop3Client.retrieveMessage(pop3MessageInfos.get(0).number);
         assertThat(pop3MessageInfos).hasSize(1);
@@ -318,24 +335,25 @@ public interface Pop3ServerContract {
 
     @Test
     default void mailReceivedDuringPOP3TransactionShouldBeIgnored(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given a TRANSACTION POP3 session
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
 
         // When a message is received
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
-        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             ClassLoaderUtils.getSystemResourceAsString("attachment.eml"));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // Then the message is not shown for existing POP3 sessions
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listMessages());
@@ -345,24 +363,25 @@ public interface Pop3ServerContract {
 
     @Test
     default void rsetShouldRefreshPOP3Session(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given a TRANSACTION POP3 session
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
 
         // When a message is received
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
-        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             ClassLoaderUtils.getSystemResourceAsString("attachment.eml"));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // Then the message is not shown for existing POP3 sessions
         pop3Client.reset();
@@ -373,24 +392,25 @@ public interface Pop3ServerContract {
 
     @Test
     default void rsetShouldCancelDeletes(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given a message is received
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
-        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             ClassLoaderUtils.getSystemResourceAsString("attachment.eml"));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // When I delete it in POP3
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listMessages());
         assertThat(pop3MessageInfos).hasSize(1);
         pop3Client.deleteMessage(pop3MessageInfos.get(0).number);
@@ -404,24 +424,25 @@ public interface Pop3ServerContract {
 
     @Test
     default void deletesAreImmediateWithinASession(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given a message is received
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
-        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             ClassLoaderUtils.getSystemResourceAsString("attachment.eml"));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // When I delete it in POP3
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listMessages());
         assertThat(pop3MessageInfos).hasSize(1);
         pop3Client.deleteMessage(pop3MessageInfos.get(0).number);
@@ -433,24 +454,25 @@ public interface Pop3ServerContract {
 
     @Test
     default void pendingDeletesAreNotSeenByOtherSessions(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given a message is received
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
-        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             ClassLoaderUtils.getSystemResourceAsString("attachment.eml"));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // When I delete it in POP3
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listMessages());
         assertThat(pop3MessageInfos).hasSize(1);
         pop3Client.deleteMessage(pop3MessageInfos.get(0).number);
@@ -458,7 +480,7 @@ public interface Pop3ServerContract {
         // Then other sessions can still retrieve them
         POP3Client pop3Client2 = new POP3Client();
         pop3Client2.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client2.login(USER, PASSWORD);
+        pop3Client2.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos2 = ImmutableList.copyOf(pop3Client2.listUniqueIdentifiers());
         assertThat(pop3MessageInfos2).hasSize(1);
         pop3Client.disconnect();
@@ -467,24 +489,25 @@ public interface Pop3ServerContract {
 
     @Test
     default void disconnectsShouldNotPerformPendingDeletes(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given a message is received
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
-        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             ClassLoaderUtils.getSystemResourceAsString("attachment.eml"));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // When I delete it in POP3
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listMessages());
         assertThat(pop3MessageInfos).hasSize(1);
         pop3Client.deleteMessage(pop3MessageInfos.get(0).number);
@@ -493,7 +516,7 @@ public interface Pop3ServerContract {
         // Then other sessions can still retrieve them
         POP3Client pop3Client2 = new POP3Client();
         pop3Client2.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client2.login(USER, PASSWORD);
+        pop3Client2.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos2 = ImmutableList.copyOf(pop3Client2.listUniqueIdentifiers());
         assertThat(pop3MessageInfos2).hasSize(1);
         pop3Client.disconnect();
@@ -501,9 +524,10 @@ public interface Pop3ServerContract {
 
     @Test
     default void linesStartingWithDotShouldBeWellHandled(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given one message
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
@@ -511,17 +535,17 @@ public interface Pop3ServerContract {
         String content = "subject: test\r\n" +
             "\r\n" +
             ".content\r\n";
-        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             content);
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // Then the advertized size is the downloadable size
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listMessages());
         Reader message = pop3Client.retrieveMessage(pop3MessageInfos.get(0).number);
         assertThat(CharStreams.toString(message)).endsWith(content);
@@ -530,24 +554,25 @@ public interface Pop3ServerContract {
 
     @Test
     default void aBigMailCanBeRetrieved(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given 50 messages in INBOX
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
-        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        smtpMessageSender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             ClassLoaderUtils.getSystemResourceAsString("big.eml"));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // Them I can retrieve them in POP3
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listUniqueIdentifiers());
         assertThat(pop3MessageInfos).hasSize(1);
         Reader message = pop3Client.retrieveMessage(pop3MessageInfos.get(0).number);
@@ -559,8 +584,7 @@ public interface Pop3ServerContract {
     @Test
     default void aMailCanBeSentToManyRecipients(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class).fluent()
-            .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addDomain(DOMAIN);
         List<String> users = generateNUsers(10);
         users.forEach((ThrowingConsumer<String>) user -> server.getProbe(DataProbeImpl.class)
             .fluent()
@@ -588,64 +612,59 @@ public interface Pop3ServerContract {
         });
     }
 
-    private List<String> generateNUsers(int nbUsers) {
-        return IntStream.range(0, nbUsers)
-            .boxed()
-            .map(index -> "user" + index + "@" + DOMAIN)
-            .collect(ImmutableList.toImmutableList());
-    }
-
     @Test
     default void messageCanBeDeleted(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given a message in INBOX
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage("bob@" + JMAPTestingConstants.DOMAIN, USER);
+            .sendMessage("bob@" + JMAPTestingConstants.DOMAIN, user);
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
         // When I connect in POP3 and delete it
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         pop3Client.deleteMessage(pop3Client.listUniqueIdentifiers()[0].number);
         pop3Client.logout();
 
         // Then subsequent POP3 sessions do not read it
         POP3Client pop3Client2 = new POP3Client();
         pop3Client2.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client2.login(USER, PASSWORD);
+        pop3Client2.login(user, PASSWORD);
         assertThat(pop3Client2.listUniqueIdentifiers()).isEmpty();
         pop3Client2.disconnect();
     }
 
     @Test
     default void manyMessagesCanBeDeletedWithPOP3(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given 50 messages in INBOX
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
 
         IntStream.range(0, 50)
-            .forEach(Throwing.intConsumer(i -> smtpMessageSender.sendMessage("bob@" + JMAPTestingConstants.DOMAIN, USER)));
+            .forEach(Throwing.intConsumer(i -> smtpMessageSender.sendMessage("bob@" + JMAPTestingConstants.DOMAIN, user)));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 50).size() == 50);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 50).size() == 50);
 
         // When I delete all of them
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listUniqueIdentifiers());
         assertThat(pop3MessageInfos).hasSize(50);
         pop3MessageInfos.forEach(Throwing.consumer(info -> pop3Client.deleteMessage(info.number)));
@@ -654,16 +673,17 @@ public interface Pop3ServerContract {
         // Then subsequent POP3 sessions do not read it
         POP3Client pop3Client2 = new POP3Client();
         pop3Client2.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client2.login(USER, PASSWORD);
+        pop3Client2.login(user, PASSWORD);
         assertThat(pop3Client2.listUniqueIdentifiers()).isEmpty();
         pop3Client2.disconnect();
     }
 
     @Test
     default void deletingAMessageDeletesOnlyOne(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given 50 messages in INBOX
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
@@ -671,16 +691,16 @@ public interface Pop3ServerContract {
 
         var mailCount = 50;
         IntStream.range(0, mailCount)
-            .forEach(Throwing.intConsumer(i -> smtpMessageSender.sendMessage("bob@" + JMAPTestingConstants.DOMAIN, USER)));
+            .forEach(Throwing.intConsumer(i -> smtpMessageSender.sendMessage("bob@" + JMAPTestingConstants.DOMAIN, user)));
 
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, mailCount).size() == mailCount);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, mailCount).size() == mailCount);
 
         // When I delete all of them
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         List<POP3MessageInfo> pop3MessageInfos = ImmutableList.copyOf(pop3Client.listUniqueIdentifiers());
         assertThat(pop3MessageInfos).hasSize(mailCount);
         pop3Client.deleteMessage(pop3MessageInfos.get(45).number);
@@ -689,36 +709,37 @@ public interface Pop3ServerContract {
         // Then subsequent POP3 sessions do not read it
         POP3Client pop3Client2 = new POP3Client();
         pop3Client2.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client2.login(USER, PASSWORD);
+        pop3Client2.login(user, PASSWORD);
         assertThat(pop3Client2.listUniqueIdentifiers()).hasSize(49);
         pop3Client2.disconnect();
     }
 
     @Test
     default void messagesShouldBeOrderedByReceivedDate(GuiceJamesServer server) throws Exception {
+        String user = randomUser();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(user, PASSWORD);
 
         // Given two messages received
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender(JMAPTestingConstants.DOMAIN);
         SMTPMessageSender sender = smtpMessageSender.connect("127.0.0.1", server.getProbe(SmtpGuiceProbe.class).getSmtpPort());
-        sender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        sender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             "Subject: Message 1\r\n\r\nBody 1");
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 1).size() == 1);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 1).size() == 1);
 
-        sender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, USER,
+        sender.sendMessageWithHeaders("bob@" + JMAPTestingConstants.DOMAIN, user,
             "Subject: Message 2\r\n\r\nBody 2");
         Awaitility.await().until(() ->
             server.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), USER, 2).size() == 2);
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), user, 2).size() == 2);
 
         // When I connect in POP3 and read them
         POP3Client pop3Client = new POP3Client();
         pop3Client.connect("127.0.0.1", server.getProbe(Pop3GuiceProbe.class).getPop3Port());
-        pop3Client.login(USER, PASSWORD);
+        pop3Client.login(user, PASSWORD);
         POP3MessageInfo[] pop3MessageInfos = pop3Client.listUniqueIdentifiers();
 
         // then they are ordered by received at
