@@ -32,6 +32,9 @@
             <secret>james72laBalle</secret>
             <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
         </tls>
+        <auth>
+            <requireSSL>false</requireSSL>
+        </auth>
         <connectiontimeout>1200</connectiontimeout>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
@@ -53,6 +56,9 @@
             <secret>james72laBalle</secret>
             <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
         </tls>
+        <auth>
+            <requireSSL>false</requireSSL>
+        </auth>
         <connectiontimeout>1200</connectiontimeout>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
