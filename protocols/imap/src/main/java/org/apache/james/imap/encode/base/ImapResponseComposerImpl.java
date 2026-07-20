@@ -70,6 +70,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     // Text chunks and literals gathered to be emitted as a single SequencedLiteral (one flush, no copy). Null until a literal is buffered.
     private List<Literal> pendingLiteralParts;
+    private long pendingLiteralSize;
 
     public ImapResponseComposerImpl(ImapResponseWriter writer, int bufferSize) {
         skipNextSpace = false;
@@ -158,10 +159,19 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
             List<Literal> parts = pendingLiteralParts;
             // Reset before writing: the writer flush callback may re-enter flush(), which must then be a no-op.
             pendingLiteralParts = null;
+            pendingLiteralSize = 0;
             writer.write(new SequencedLiteral(parts));
         } else if (buffer.size() > 0) {
             writer.write(buffer.toByteArray());
             buffer.reset();
+        }
+    }
+
+    @Override
+    public void flushIfNeeded() throws IOException {
+        // Bound deferred bytes: lets FetchSubscriber push data to the channel so isWritable()/backpressure react.
+        if (buffer.size() + pendingLiteralSize > FLUSH_BUFFER_SIZE) {
+            flush();
         }
     }
 
@@ -336,13 +346,16 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
             }
             snapshotBufferAsPart();
             pendingLiteralParts.add(literal);
+            pendingLiteralSize += size;
         }
         return this;
     }
 
     private void snapshotBufferAsPart() {
         if (buffer.size() > 0) {
-            pendingLiteralParts.add(BytesBackedLiteral.of(buffer.toByteArray()));
+            byte[] bytes = buffer.toByteArray();
+            pendingLiteralParts.add(BytesBackedLiteral.of(bytes));
+            pendingLiteralSize += bytes.length;
             buffer.reset();
         }
     }

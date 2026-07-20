@@ -112,6 +112,25 @@ class ImapResponseComposerImplTest {
     }
 
     @Test
+    void flushIfNeededShouldNotFlushWhenBelowTheThreshold() throws Exception {
+        composer.message("BODY[]");
+        composer.literal(BytesBackedLiteral.of("small".getBytes(US_ASCII)));
+        composer.flushIfNeeded();
+
+        assertThat(literalWrites).hasValue(0);
+        assertThat(byteWrites).hasValue(0);
+    }
+
+    @Test
+    void flushIfNeededShouldFlushWhenDeferredBytesExceedTheThreshold() throws Exception {
+        composer.message("BODY[]");
+        composer.literal(BytesBackedLiteral.of(new byte[9000]));
+        composer.flushIfNeeded();
+
+        assertThat(literalWrites).hasValue(1);
+    }
+
+    @Test
     void emptyLiteralShouldNotForceASequencedLiteral() throws Exception {
         composer.message("BODY[]");
         composer.literal(BytesBackedLiteral.of(new byte[0]));

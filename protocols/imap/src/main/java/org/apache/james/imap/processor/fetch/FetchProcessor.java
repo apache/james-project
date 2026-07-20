@@ -191,6 +191,8 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         public void onNext(FetchResponse fetchResponse) {
             AtomicBoolean mustRequestOne = new AtomicBoolean(true);
             responder.respond(fetchResponse);
+            // Push deferred literals to the channel when they pile up, so the backpressure check below sees an up-to-date writability.
+            responder.flushIfNeeded();
             Runnable requestOne = () -> {
                 if (mustRequestOne.getAndSet(false)) {
                     LOGGER.info("Resuming IMAP FETCH for user {}", imapSession.getUserName().asString());

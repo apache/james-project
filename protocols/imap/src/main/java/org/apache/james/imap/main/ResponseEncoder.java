@@ -64,4 +64,13 @@ public class ResponseEncoder implements Responder {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public void flushIfNeeded() {
+        try {
+            composer.flushIfNeeded();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

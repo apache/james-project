@@ -67,5 +67,10 @@ public interface ImapProcessor {
         void respond(ImapResponseMessage message);
 
         void flush();
+
+        /** Flushes only if enough bytes are buffered/deferred, letting callers preserve backpressure. */
+        default void flushIfNeeded() {
+
+        }
     }
 }
