@@ -25,10 +25,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
+import java.util.Optional;
 
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.ImapResponseWriter;
 import org.apache.james.imap.message.Literal;
+import org.apache.james.imap.message.SequencedLiteral;
 import org.apache.james.util.MDCStructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,25 +99,38 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
     public void write(Literal literal) throws IOException {
         flushCallback.run();
         if (channel.isActive()) {
-            if (literal.asBytesSequence().isPresent()) {
-                channel.writeAndFlush(Unpooled.wrappedBuffer(literal.asBytesSequence().get()));
-                return;
-            }
-            InputStream in = literal.getInputStream();
-            if (in instanceof FileInputStream) {
-                FileChannel fc = ((FileInputStream) in).getChannel();
-                // Zero-copy is only possible if no SSL/TLS  and no COMPRESS is in place
-                //
-                // See JAMES-1305 and JAMES-1306
-                ChannelPipeline cp = channel.pipeline();
-                if (zeroCopy && cp.get(SslHandler.class) == null && cp.get(ZlibEncoder.class) == null) {
-                    channel.writeAndFlush(new DefaultFileRegion(fc, fc.position(), literal.size()));
-                } else {
-                    channel.writeAndFlush(new ChunkedNioFile(fc, 8192));
+            // A SequencedLiteral's parts are written in one pass and flushed once, each keeping its best representation.
+            if (literal instanceof SequencedLiteral sequencedLiteral) {
+                for (Literal part : sequencedLiteral.parts()) {
+                    writePart(part);
                 }
             } else {
-                channel.writeAndFlush(new ChunkedStream(in));
+                writePart(literal);
             }
+            channel.flush();
+        }
+    }
+
+    private void writePart(Literal literal) throws IOException {
+        Optional<byte[][]> bytesSequence = literal.asBytesSequence();
+        if (bytesSequence.isPresent()) {
+            channel.write(Unpooled.wrappedBuffer(bytesSequence.get()));
+            return;
+        }
+        InputStream in = literal.getInputStream();
+        if (in instanceof FileInputStream) {
+            FileChannel fc = ((FileInputStream) in).getChannel();
+            // Zero-copy is only possible if no SSL/TLS  and no COMPRESS is in place
+            //
+            // See JAMES-1305 and JAMES-1306
+            ChannelPipeline cp = channel.pipeline();
+            if (zeroCopy && cp.get(SslHandler.class) == null && cp.get(ZlibEncoder.class) == null) {
+                channel.write(new DefaultFileRegion(fc, fc.position(), literal.size()));
+            } else {
+                channel.write(new ChunkedNioFile(fc, 8192));
+            }
+        } else {
+            channel.write(new ChunkedStream(in));
         }
     }
     

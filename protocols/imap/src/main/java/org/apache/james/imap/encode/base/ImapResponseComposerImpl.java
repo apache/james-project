@@ -22,6 +22,8 @@ package org.apache.james.imap.encode.base;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import jakarta.mail.Flags;
@@ -34,7 +36,9 @@ import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.ImapResponseWriter;
+import org.apache.james.imap.message.BytesBackedLiteral;
 import org.apache.james.imap.message.Literal;
+import org.apache.james.imap.message.SequencedLiteral;
 import org.apache.james.imap.utils.FastByteArrayOutputStream;
 
 /**
@@ -63,6 +67,9 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     private final FastByteArrayOutputStream buffer;
 
     private boolean skipNextSpace;
+
+    // Text chunks and literals gathered to be emitted as a single SequencedLiteral (one flush, no copy). Null until a literal is buffered.
+    private List<Literal> pendingLiteralParts;
 
     public ImapResponseComposerImpl(ImapResponseWriter writer, int bufferSize) {
         skipNextSpace = false;
@@ -146,7 +153,13 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     }
 
     public void flush() throws IOException {
-        if (buffer.size() > 0) {
+        if (pendingLiteralParts != null) {
+            snapshotBufferAsPart();
+            List<Literal> parts = pendingLiteralParts;
+            // Reset before writing: the writer flush callback may re-enter flush(), which must then be a no-op.
+            pendingLiteralParts = null;
+            writer.write(new SequencedLiteral(parts));
+        } else if (buffer.size() > 0) {
             writer.write(buffer.toByteArray());
             buffer.reset();
         }
@@ -317,9 +330,21 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         buffer.write(BYTE_CLOSE_BRACE);
         end();
         if (size > 0) {
-            writer.write(literal);
+            // Defer: snapshot accumulated text then the literal, coalesced into one SequencedLiteral at flush().
+            if (pendingLiteralParts == null) {
+                pendingLiteralParts = new ArrayList<>();
+            }
+            snapshotBufferAsPart();
+            pendingLiteralParts.add(literal);
         }
         return this;
+    }
+
+    private void snapshotBufferAsPart() {
+        if (buffer.size() > 0) {
+            pendingLiteralParts.add(BytesBackedLiteral.of(buffer.toByteArray()));
+            buffer.reset();
+        }
     }
 
     @Override

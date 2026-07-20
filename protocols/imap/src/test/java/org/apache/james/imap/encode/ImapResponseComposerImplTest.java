@@ -19,20 +19,42 @@
 
 package org.apache.james.imap.encode;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
+import org.apache.james.imap.message.BytesBackedLiteral;
+import org.apache.james.imap.message.Literal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ImapResponseComposerImplTest {
+    private AtomicInteger byteWrites;
+    private AtomicInteger literalWrites;
     private ByteImapResponseWriter writer;
     private ImapResponseComposer composer;
 
     @BeforeEach
     void setUp() {
-        writer = new ByteImapResponseWriter();
+        byteWrites = new AtomicInteger();
+        literalWrites = new AtomicInteger();
+        writer = new ByteImapResponseWriter() {
+            @Override
+            public void write(byte[] buffer) throws IOException {
+                byteWrites.incrementAndGet();
+                super.write(buffer);
+            }
+
+            @Override
+            public void write(Literal literal) throws IOException {
+                literalWrites.incrementAndGet();
+                super.write(literal);
+            }
+        };
         composer = new ImapResponseComposerImpl(writer);
     }
 
@@ -44,5 +66,60 @@ class ImapResponseComposerImplTest {
         composer.flush();
 
         assertThat(writer.getString()).isEqualTo(" \"?\"\r\n");
+    }
+
+    @Test
+    void plainResponseShouldBeWrittenAsBytesWithoutLiteralWrite() throws Exception {
+        composer.untaggedResponse("OK completed");
+        composer.flush();
+
+        assertThat(writer.getString()).isEqualTo("* OK completed\r\n");
+        assertThat(byteWrites).hasValue(1);
+        assertThat(literalWrites).hasValue(0);
+    }
+
+    @Test
+    void fetchBodyResponseShouldBeEmittedAsASingleSequencedLiteral() throws Exception {
+        composer.untagged().message("1").message("FETCH");
+        composer.openParen();
+        composer.message("BODY[]");
+        composer.literal(BytesBackedLiteral.of("Body of Initial".getBytes(US_ASCII)));
+        composer.closeParen();
+        composer.end();
+        composer.flush();
+
+        assertThat(writer.getString()).isEqualTo("* 1 FETCH (BODY[] {15}\r\nBody of Initial)\r\n");
+        // Whole response (prefix + literal + trailing ")" + CRLF) leaves through a single writer call, no
+        // separate byte[] write that would split the literal from the ")".
+        assertThat(literalWrites).hasValue(1);
+        assertThat(byteWrites).hasValue(0);
+    }
+
+    @Test
+    void multipleLiteralsShouldBeEmittedAsASingleSequencedLiteral() throws Exception {
+        composer.openParen();
+        composer.message("BODY[HEADER]");
+        composer.literal(BytesBackedLiteral.of("H".getBytes(US_ASCII)));
+        composer.message("BODY[TEXT]");
+        composer.literal(BytesBackedLiteral.of("T".getBytes(US_ASCII)));
+        composer.closeParen();
+        composer.end();
+        composer.flush();
+
+        assertThat(writer.getString()).isEqualTo(" (BODY[HEADER] {1}\r\nH BODY[TEXT] {1}\r\nT)\r\n");
+        assertThat(literalWrites).hasValue(1);
+        assertThat(byteWrites).hasValue(0);
+    }
+
+    @Test
+    void emptyLiteralShouldNotForceASequencedLiteral() throws Exception {
+        composer.message("BODY[]");
+        composer.literal(BytesBackedLiteral.of(new byte[0]));
+        composer.end();
+        composer.flush();
+
+        assertThat(writer.getString()).isEqualTo(" BODY[] {0}\r\n\r\n");
+        assertThat(byteWrites).hasValue(1);
+        assertThat(literalWrites).hasValue(0);
     }
 }
