@@ -42,6 +42,7 @@ import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslCodec;
 import org.apache.james.protocols.api.sasl.SaslExchange;
 import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
@@ -55,7 +56,6 @@ import org.apache.james.protocols.pop3.core.CapaCapability;
 import org.apache.james.protocols.pop3.core.MDCConstants;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
-import org.apache.james.protocols.pop3.sasl.Pop3SaslBridge;
 import org.apache.james.protocols.sasl.JamesSaslAuthenticator;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -79,7 +79,6 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
     private static final Response INVALID_AUTH_REQUEST = new POP3Response(POP3Response.ERR_RESPONSE, "Invalid AUTH request.").immutable();
     private static final Response UNSUPPORTED_MECHANISM = new POP3Response(POP3Response.ERR_RESPONSE, "Unsupported authentication mechanism.").immutable();
     private static final Response UNEXPECTED_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Unexpected error accessing mailbox").immutable();
-    private static final Pop3SaslBridge SASL_BRIDGE = new Pop3SaslBridge();
     private static final AttachmentKey<SaslExchange> ACTIVE_SASL_EXCHANGE = AttachmentKey.of("ACTIVE_SASL_EXCHANGE", SaslExchange.class);
 
     private final Pop3MailboxProvider mailboxProvider;
@@ -149,7 +148,7 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
             }
             return UNSUPPORTED_MECHANISM;
         }
-        return start(session, mechanism, SASL_BRIDGE.initialRequest(request.mechanismName(), request.initialResponse()));
+        return start(session, mechanism, SaslCodec.initialRequest(request.mechanismName(), request.initialResponse()));
     }
 
     private Response start(POP3Session session, SaslMechanism mechanism, SaslInitialRequest request) {
@@ -161,9 +160,9 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
     private void registerExchange(POP3Session session, SaslExchange exchange) {
         try {
             session.setAttachment(ACTIVE_SASL_EXCHANGE, exchange, State.Connection)
-                .ifPresent(SASL_BRIDGE::close);
+                .ifPresent(SaslExchange::close);
         } catch (RuntimeException e) {
-            SASL_BRIDGE.close(exchange);
+            exchange.close();
             throw e;
         }
     }
@@ -183,7 +182,7 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
                 if (!continuationActive) {
                     pushContinuationHandler(session, exchange);
                 }
-                yield respondActiveContinuation(session, exchange, () -> SASL_BRIDGE.challenge(challenge));
+                yield respondActiveContinuation(session, exchange, () -> challengeResponse(challenge.payload()));
             }
             case SaslStep.Success success -> {
                 if (continuationActive) {
@@ -223,7 +222,7 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
 
     private Optional<SaslStep> nextStep(POP3Session session, SaslExchange exchange, byte[] line) {
         try {
-            return Optional.of(SASL_BRIDGE.onClientResponse(exchange, line));
+            return Optional.of(exchange.onResponse(SaslCodec.decodeClientResponse(line)));
         } catch (IllegalArgumentException e) {
             closeActiveContinuation(session, exchange);
             return Optional.empty();
@@ -236,7 +235,7 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
     private Response handleSuccess(POP3Session session, SaslExchange exchange, SaslStep.Success success) {
         if (success.serverData().isPresent()) {
             pushSuccessDataAcknowledgementHandler(session, exchange, success);
-            return respondActiveContinuation(session, exchange, () -> SASL_BRIDGE.successData(success));
+            return respondActiveContinuation(session, exchange, () -> challengeResponse(success.serverData()));
         }
         return completeAuthentication(session, exchange, success);
     }
@@ -267,7 +266,7 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
 
     private boolean isAbort(POP3Session session, SaslExchange exchange, byte[] line) {
         try {
-            return SASL_BRIDGE.isAbort(line);
+            return SaslCodec.isAbort(line);
         } catch (RuntimeException e) {
             closeActiveContinuation(session, exchange);
             throw e;
@@ -276,7 +275,7 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
 
     private boolean isEmptyClientResponse(POP3Session session, SaslExchange exchange, byte[] line) {
         try {
-            return SASL_BRIDGE.isEmptyClientResponse(line);
+            return SaslCodec.isEmptyClientResponse(line);
         } catch (RuntimeException e) {
             closeActiveContinuation(session, exchange);
             throw e;
@@ -290,6 +289,10 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
             closeActiveContinuation(session, exchange);
             throw e;
         }
+    }
+
+    private Response challengeResponse(Optional<byte[]> payload) {
+        return new POP3Response("+", SaslCodec.encode(payload)).immutable();
     }
 
     private void popActiveContinuation(POP3Session session, SaslExchange exchange) {
@@ -366,19 +369,19 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
 
     private void closeExchange(POP3Session session, SaslExchange exchange) {
         session.removeAttachment(ACTIVE_SASL_EXCHANGE, State.Connection);
-        SASL_BRIDGE.close(exchange);
+        exchange.close();
     }
 
     private void abortExchange(POP3Session session, SaslExchange exchange) {
         session.removeAttachment(ACTIVE_SASL_EXCHANGE, State.Connection);
-        SASL_BRIDGE.abort(exchange);
+        exchange.abort();
     }
 
     @Override
     public void onDisconnect(POP3Session session) {
         if (session != null) {
             session.removeAttachment(ACTIVE_SASL_EXCHANGE, State.Connection)
-                .ifPresent(SASL_BRIDGE::close);
+                .ifPresent(SaslExchange::close);
         }
     }
 
