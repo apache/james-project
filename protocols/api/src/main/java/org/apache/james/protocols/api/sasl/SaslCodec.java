@@ -26,7 +26,7 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Wire encoding shared by the line based protocols carrying SASL exchanges (IMAP, SMTP).
+ * Wire encoding shared by the line based protocols carrying SASL exchanges (IMAP, SMTP, POP3).
  *
  * Those protocols agree on the encoding rules defined by RFC 4422: payloads travel base64
  * encoded on a single line, "*" cancels the exchange, and an empty line acknowledges final
