@@ -34,10 +34,10 @@ import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.AuthenticateRequest;
 import org.apache.james.imap.message.request.IRAuthenticateRequest;
 import org.apache.james.imap.message.response.AuthenticateResponse;
-import org.apache.james.imap.processor.sasl.ImapSaslBridge;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslCodec;
 import org.apache.james.protocols.api.sasl.SaslExchange;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
@@ -62,7 +62,6 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     public static final Capability SASL_CAPABILITY = Capability.of("SASL-IR");
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticateProcessor.class);
 
-    private final ImapSaslBridge saslBridge;
     private final JamesSaslAuthenticator jamesSaslAuthenticator;
     private ImmutableList<SaslMechanism> saslMechanisms;
 
@@ -71,7 +70,6 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                                  MetricFactory metricFactory, PathConverter.Factory pathConverterFactory,
                                  JamesSaslAuthenticator jamesSaslAuthenticator) {
         super(AuthenticateRequest.class, mailboxManager, factory, metricFactory, pathConverterFactory);
-        this.saslBridge = new ImapSaslBridge();
         this.jamesSaslAuthenticator = jamesSaslAuthenticator;
         this.saslMechanisms = ImmutableList.of();
     }
@@ -97,7 +95,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         }
 
         try {
-            SaslInitialRequest initialRequest = saslBridge.initialRequest(request.getAuthType(), initialClientResponse(request));
+            SaslInitialRequest initialRequest = SaslCodec.initialRequest(request.getAuthType(), initialClientResponse(request));
             SaslAuthenticator authenticator = jamesSaslAuthenticator.withExtraAuthorizator(withAdminUsers());
             SaslExchange exchange = mechanism.get().start(initialRequest, authenticator);
             handleFirstStep(exchange, firstStep(exchange), session, request, responder);
@@ -142,7 +140,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         try {
             return exchange.firstStep();
         } catch (RuntimeException e) {
-            saslBridge.close(exchange);
+            exchange.close();
             throw e;
         }
     }
@@ -188,7 +186,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                                                    ImapSession session, AuthenticateRequest request, Responder responder) {
         pushContinuationHandler(exchange, session, request, responder);
         respondActiveContinuation(exchange, session, () ->
-            responder.respond(new AuthenticateResponse(saslBridge.continuation(challenge))));
+            responder.respond(new AuthenticateResponse(SaslCodec.encode(challenge.payload()))));
     }
 
     private void pushContinuationHandler(SaslExchange exchange, ImapSession session, AuthenticateRequest request, Responder responder) {
@@ -197,7 +195,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                 .then());
         } catch (RuntimeException e) {
-            saslBridge.close(exchange);
+            exchange.close();
             throw e;
         }
     }
@@ -216,7 +214,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
 
     private Optional<SaslStep> nextStep(SaslExchange exchange, ImapSession session, AuthenticateRequest request, Responder responder, byte[] data) {
         try {
-            return Optional.of(saslBridge.onClientResponse(exchange, data));
+            return Optional.of(exchange.onResponse(SaslCodec.decodeClientResponse(data)));
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid syntax in AUTHENTICATE client response", e);
             closeActiveContinuation(exchange, session);
@@ -233,7 +231,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     private void handleContinuationStep(SaslExchange exchange, SaslStep step, ImapSession session, AuthenticateRequest request, Responder responder) {
         if (step instanceof SaslStep.Challenge challenge) {
             try {
-                responder.respond(new AuthenticateResponse(saslBridge.continuation(challenge)));
+                responder.respond(new AuthenticateResponse(SaslCodec.encode(challenge.payload())));
                 responder.flush();
             } catch (RuntimeException e) {
                 closeActiveContinuation(exchange, session);
@@ -263,7 +261,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
 
     private boolean isAbort(SaslExchange exchange, ImapSession session, byte[] data) {
         try {
-            return saslBridge.isAbort(data);
+            return SaslCodec.isAbort(data);
         } catch (RuntimeException e) {
             closeActiveContinuation(exchange, session);
             throw e;
@@ -272,7 +270,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
 
     private boolean isEmptyClientResponse(SaslExchange exchange, ImapSession session, byte[] data) {
         try {
-            return saslBridge.isEmptyClientResponse(data);
+            return SaslCodec.isEmptyClientResponse(data);
         } catch (RuntimeException e) {
             closeActiveContinuation(exchange, session);
             throw e;
@@ -283,7 +281,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         try {
             session.popLineHandler();
         } finally {
-            saslBridge.close(exchange);
+            exchange.close();
         }
     }
 
@@ -291,7 +289,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         try {
             session.popLineHandler();
         } finally {
-            saslBridge.abort(exchange);
+            exchange.abort();
         }
     }
 
@@ -299,7 +297,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         try {
             session.popLineHandler();
         } catch (RuntimeException e) {
-            saslBridge.close(exchange);
+            exchange.close();
             throw e;
         }
     }
@@ -308,7 +306,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                                              AuthenticateRequest request, Responder responder) {
         pushSuccessDataAcknowledgementHandler(exchange, success, session, request, responder);
         respondActiveContinuation(exchange, session, () -> {
-            responder.respond(new AuthenticateResponse(saslBridge.successData(success)));
+            responder.respond(new AuthenticateResponse(SaslCodec.encode(success.serverData())));
             responder.flush();
         });
     }
@@ -320,7 +318,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                 .then());
         } catch (RuntimeException e) {
-            saslBridge.close(exchange);
+            exchange.close();
             throw e;
         }
     }
@@ -350,7 +348,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         try {
             handleSaslStep(step, session, request, responder, successLog(request));
         } finally {
-            saslBridge.close(exchange);
+            exchange.close();
         }
     }
 

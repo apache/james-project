@@ -36,6 +36,7 @@ import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslCodec;
 import org.apache.james.protocols.api.sasl.SaslExchange;
 import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
@@ -81,8 +82,6 @@ public class AuthCmdHandler
     private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, "Authentication Failed").immutable();
     private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, "Unrecognized Authentication Type").immutable();
     private static final Response SERVER_ERROR = new SMTPResponse(SMTPRetCode.LOCAL_ERROR, "Unable to process request").immutable();
-
-    private static final SmtpSaslBridge SASL_BRIDGE = new SmtpSaslBridge();
 
     private ImmutableList<SaslMechanism> saslMechanisms = ImmutableList.of();
     private Optional<SaslAuthenticator> saslAuthenticator = Optional.empty();
@@ -136,7 +135,7 @@ public class AuthCmdHandler
         }
 
         try {
-            SaslExchange exchange = startExchange(maybeMechanism.get(), SASL_BRIDGE.initialRequest(authType, initialResponse));
+            SaslExchange exchange = startExchange(maybeMechanism.get(), SaslCodec.initialRequest(authType, initialResponse));
             return handleFirstSaslStep(session, authType, exchange);
         } catch (IllegalArgumentException e) {
             LOGGER.info("Could not decode parameters for AUTH {}", authType, e);
@@ -149,12 +148,12 @@ public class AuthCmdHandler
             SaslStep step = exchange.firstStep();
             if (step instanceof SaslStep.Challenge challenge) {
                 session.pushLineHandler(saslLineHandler(authType, exchange));
-                return SASL_BRIDGE.challenge(challenge);
+                return challengeResponse(challenge.payload());
             }
             return handleTerminalSaslStep(session, authType, exchange, step, () -> {
             });
         } catch (RuntimeException e) {
-            SASL_BRIDGE.close(exchange);
+            exchange.close();
             throw e;
         }
     }
@@ -175,28 +174,28 @@ public class AuthCmdHandler
 
     private Response handleSaslContinuation(SMTPSession session, String authType, SaslExchange exchange, String line) {
         try {
-            SaslStep step = SASL_BRIDGE.onClientResponse(exchange, line.getBytes(session.getCharset()));
+            SaslStep step = exchange.onResponse(SaslCodec.decodeClientResponse(line.getBytes(session.getCharset())));
             if (step instanceof SaslStep.Challenge challenge) {
-                return SASL_BRIDGE.challenge(challenge);
+                return challengeResponse(challenge.payload());
             }
             return handleTerminalSaslStep(session, authType, exchange, step, session::popLineHandler);
         } catch (IllegalArgumentException e) {
             LOGGER.info("Could not decode parameters for AUTH {}", authType, e);
             session.popLineHandler();
-            SASL_BRIDGE.close(exchange);
+            exchange.close();
             return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, "Could not decode parameters for AUTH " + authType);
         } catch (RuntimeException e) {
             session.popLineHandler();
-            SASL_BRIDGE.close(exchange);
+            exchange.close();
             throw e;
         }
     }
 
     private LineHandler<SMTPSession> saslLineHandler(String authType, SaslExchange exchange) {
         return (session, line) -> {
-            if (SASL_BRIDGE.isAbort(line)) {
+            if (SaslCodec.isAbort(line)) {
                 session.popLineHandler();
-                SASL_BRIDGE.abort(exchange);
+                exchange.abort();
                 return AUTH_ABORTED;
             }
             return handleSaslContinuation(session, authType, exchange, new String(line, session.getCharset()));
@@ -205,13 +204,16 @@ public class AuthCmdHandler
 
     private Response handleSaslSuccess(SMTPSession session, String authType, SaslExchange exchange, SaslStep.Success success) {
         if (success.serverData().isPresent()) {
+            // Per RFC 4422, when a mechanism has additional success data and the protocol
+            // outcome has no dedicated field for it, the server sends it as a challenge,
+            // waits for an empty client response, then returns the successful outcome.
             session.pushLineHandler(successDataAcknowledgementLineHandler(authType, exchange, success));
-            return SASL_BRIDGE.successData(success);
+            return challengeResponse(success.serverData());
         }
         try {
             return applySaslSuccess(session, authType, exchange, success);
         } finally {
-            SASL_BRIDGE.close(exchange);
+            exchange.close();
         }
     }
 
@@ -225,18 +227,18 @@ public class AuthCmdHandler
         boolean aborted = false;
         try {
             byte[] bytes = line.getBytes(session.getCharset());
-            if (SASL_BRIDGE.isAbort(bytes)) {
+            if (SaslCodec.isAbort(bytes)) {
                 aborted = true;
-                SASL_BRIDGE.abort(exchange);
+                exchange.abort();
                 return AUTH_ABORTED;
             }
-            if (!SASL_BRIDGE.isEmptyClientResponse(bytes)) {
+            if (!SaslCodec.isEmptyClientResponse(bytes)) {
                 return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, "Could not decode parameters for AUTH " + authType);
             }
             return applySaslSuccess(session, authType, exchange, success);
         } finally {
             if (!aborted) {
-                SASL_BRIDGE.close(exchange);
+                exchange.close();
             }
         }
     }
@@ -281,8 +283,12 @@ public class AuthCmdHandler
                     case INVALID_CREDENTIALS, AUTHENTICATION_FAILED, USER_DOES_NOT_EXIST, DELEGATION_FORBIDDEN -> AUTH_FAILED;
                 });
         } finally {
-            SASL_BRIDGE.close(exchange);
+            exchange.close();
         }
+    }
+
+    private Response challengeResponse(Optional<byte[]> payload) {
+        return new SMTPResponse(SMTPRetCode.AUTH_READY, SaslCodec.encode(payload)).immutable();
     }
 
     private Optional<SaslMechanism> findAvailableMechanism(SMTPSession session, String authType) {
