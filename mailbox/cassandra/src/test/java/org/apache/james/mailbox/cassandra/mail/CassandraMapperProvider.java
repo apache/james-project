@@ -42,6 +42,7 @@ import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.utils.UpdatableTickingClock;
 
 import com.google.common.collect.ImmutableList;
@@ -60,10 +61,11 @@ public class CassandraMapperProvider implements MapperProvider {
     public CassandraMapperProvider(CassandraCluster cassandra,
                                    CassandraConfiguration cassandraConfiguration) {
         this.cassandra = cassandra;
-        messageUidProvider = new CassandraUidProvider(this.cassandra.getConf(), cassandraConfiguration);
+        messageUidProvider = new CassandraUidProvider(this.cassandra.getConf(), cassandraConfiguration, new RecordingMetricFactory());
         cassandraModSeqProvider = new CassandraModSeqProvider(
                 this.cassandra.getConf(),
-                cassandraConfiguration);
+                cassandraConfiguration,
+                new RecordingMetricFactory());
         updatableTickingClock = new UpdatableTickingClock(Instant.now());
         mapperFactory = createMapperFactory(cassandraConfiguration, updatableTickingClock);
     }

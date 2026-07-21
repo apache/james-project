@@ -46,6 +46,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraModSeqDataDefinition;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +70,8 @@ class CassandraModSeqProviderTest {
     void setUp(CassandraCluster cassandra) {
         modSeqProvider = new CassandraModSeqProvider(
             cassandra.getConf(),
-            CassandraConfiguration.DEFAULT_CONFIGURATION);
+            CassandraConfiguration.DEFAULT_CONFIGURATION,
+            new RecordingMetricFactory());
         MailboxPath path = new MailboxPath("gsoc", Username.of("ieugen"), "Trash");
         mailbox = new Mailbox(path, UidValidity.of(1234), CASSANDRA_ID);
     }
@@ -161,7 +163,8 @@ class CassandraModSeqProviderTest {
         modSeqProvider = new CassandraModSeqProvider(cassandra.getConf(),
             CassandraConfiguration.builder()
                 .uidModseqIncrement(10)
-                .build());
+                .build(),
+            new RecordingMetricFactory());
 
         ModSeq modseq0 = modSeqProvider.highestModSeq(mailbox);
         ModSeq modseq1 = modSeqProvider.nextModSeq(mailbox);

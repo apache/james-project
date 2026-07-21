@@ -46,6 +46,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
+import org.apache.james.metrics.api.MetricFactory;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
@@ -61,6 +62,7 @@ import reactor.util.retry.RetryBackoffSpec;
 public class CassandraModSeqProvider implements ModSeqProvider {
 
     public static final String MOD_SEQ_CONDITION = "modSeqCondition";
+    private static final String NEXT_MODSEQ_METRIC = "cassandra-nextModseq";
 
     public static class ExceptionRelay extends RuntimeException {
         private final MailboxException underlying;
@@ -94,9 +96,10 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     private final DriverExecutionProfile lwtProfile;
     private final CassandraConfiguration cassandraConfiguration;
     private final DriverExecutionProfile readProfile;
+    private final MetricFactory metricFactory;
 
     @Inject
-    public CassandraModSeqProvider(CqlSession session, CassandraConfiguration cassandraConfiguration) {
+    public CassandraModSeqProvider(CqlSession session, CassandraConfiguration cassandraConfiguration, MetricFactory metricFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
         this.insert = prepareInsert(session);
@@ -107,6 +110,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
             .scheduler(Schedulers.parallel());
         this.cassandraConfiguration = cassandraConfiguration;
         this.readProfile = ProfileLocator.READ.locateProfile(session, "MODSEQ");
+        this.metricFactory = metricFactory;
     }
 
     private PreparedStatement prepareInsert(CqlSession session) {
@@ -205,13 +209,14 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     @Override
     public Mono<ModSeq> nextModSeqReactive(MailboxId mailboxId) {
         CassandraId cassandraId = (CassandraId) mailboxId;
-        return findHighestModSeq(cassandraId, Optional.of(lwtProfile))
-            .flatMap(maybeHighestModSeq -> maybeHighestModSeq
-                .map(highestModSeq -> tryUpdateModSeq(cassandraId, highestModSeq))
-                .orElseGet(() -> tryInsertModSeq(cassandraId, ModSeq.first())))
-            .single()
-            .retryWhen(retrySpec)
-            .map(modSeq -> modSeq.add(cassandraConfiguration.getUidModseqIncrement()));
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric(NEXT_MODSEQ_METRIC,
+            findHighestModSeq(cassandraId, Optional.of(lwtProfile))
+                .flatMap(maybeHighestModSeq -> maybeHighestModSeq
+                    .map(highestModSeq -> tryUpdateModSeq(cassandraId, highestModSeq))
+                    .orElseGet(() -> tryInsertModSeq(cassandraId, ModSeq.first())))
+                .single()
+                .retryWhen(retrySpec)
+                .map(modSeq -> modSeq.add(cassandraConfiguration.getUidModseqIncrement()))));
     }
 
     @Override
