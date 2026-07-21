@@ -22,8 +22,6 @@ package org.apache.james.imap.message;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
@@ -60,15 +58,24 @@ public class SequencedLiteral implements Literal {
 
     @Override
     public Optional<byte[][]> asBytesSequence() {
-        List<byte[]> chunks = new ArrayList<>();
-        for (Literal part : parts) {
-            Optional<byte[][]> partChunks = part.asBytesSequence();
+        byte[][][] partsChunks = new byte[parts.size()][][];
+        int count = 0;
+        for (int i = 0; i < parts.size(); i++) {
+            Optional<byte[][]> partChunks = parts.get(i).asBytesSequence();
             if (partChunks.isEmpty()) {
                 // A single non-in-memory part forces the whole sequence to be streamed.
                 return Optional.empty();
             }
-            Collections.addAll(chunks, partChunks.get());
+            partsChunks[i] = partChunks.get();
+            count += partsChunks[i].length;
         }
-        return Optional.of(chunks.toArray(new byte[0][]));
+        byte[][] chunks = new byte[count][];
+        int index = 0;
+        for (byte[][] partChunks : partsChunks) {
+            for (byte[] chunk : partChunks) {
+                chunks[index++] = chunk;
+            }
+        }
+        return Optional.of(chunks);
     }
 }
