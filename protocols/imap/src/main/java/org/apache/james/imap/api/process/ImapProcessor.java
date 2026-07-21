@@ -68,7 +68,7 @@ public interface ImapProcessor {
 
         void flush();
 
-        /** Flushes only if enough bytes are buffered/deferred, letting callers preserve backpressure. */
+        /** Flushes iff the response just written deferred a literal, so its short-lived source is read while live. */
         default void flushIfNeeded() {
 
         }

@@ -191,7 +191,8 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         public void onNext(FetchResponse fetchResponse) {
             AtomicBoolean mustRequestOne = new AtomicBoolean(true);
             responder.respond(fetchResponse);
-            // Push deferred literals to the channel when they pile up, so the backpressure check below sees an up-to-date writability.
+            // Flush iff a literal was deferred, while the message content is still live; keeps the backpressure
+            // check below on an up-to-date writability, without penalizing literal-free responses.
             responder.flushIfNeeded();
             Runnable requestOne = () -> {
                 if (mustRequestOne.getAndSet(false)) {
