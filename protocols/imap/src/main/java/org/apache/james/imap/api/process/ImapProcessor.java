@@ -67,5 +67,10 @@ public interface ImapProcessor {
         void respond(ImapResponseMessage message);
 
         void flush();
+
+        /** Flushes iff the response just written deferred a literal, so its short-lived source is read while live. */
+        default void flushIfNeeded() {
+
+        }
     }
 }

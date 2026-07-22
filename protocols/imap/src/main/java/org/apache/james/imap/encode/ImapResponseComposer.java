@@ -34,6 +34,9 @@ public interface ImapResponseComposer {
 
     void flush() throws IOException;
 
+    /** Flushes iff a literal was deferred (its source may be short-lived), leaving literal-free responses to batch. */
+    void flushIfNeeded() throws IOException;
+
     /**
      * Writes an untagged NO response. Indicates that a warning. The command may
      * still complete sucessfully.
