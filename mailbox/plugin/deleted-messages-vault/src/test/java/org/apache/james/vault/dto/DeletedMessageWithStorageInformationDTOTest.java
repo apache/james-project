@@ -31,7 +31,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import jakarta.mail.internet.AddressException;
 
-import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
@@ -73,7 +72,6 @@ class DeletedMessageWithStorageInformationDTOTest {
             .setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
 
         this.converter = new DeletedMessageWithStorageInformationConverter(
-            new PlainBlobId.Factory(),
             new InMemoryMessageId.Factory(),
             new InMemoryId.Factory());
     }
