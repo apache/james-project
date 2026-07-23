@@ -55,6 +55,7 @@ import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -91,6 +92,7 @@ public class GuiceUtils {
             binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
             binder -> binder.bind(BatchSizes.class).toInstance(BatchSizes.defaultValues()),
             binder -> binder.bind(UidProvider.class).to(CassandraUidProvider.class),
+            binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class),
             binder -> binder.bind(AttachmentIdAssignationStrategy.class).to(AttachmentIdAssignationStrategy.Default.class),
             binder -> binder.bind(ModSeqProvider.class).to(CassandraModSeqProvider.class),
             binder -> binder.bind(ACLMapper.class).to(CassandraACLMapper.class),

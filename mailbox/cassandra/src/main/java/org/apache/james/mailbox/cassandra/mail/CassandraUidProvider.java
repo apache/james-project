@@ -46,6 +46,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.metrics.api.MetricFactory;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
@@ -61,6 +62,7 @@ import reactor.util.retry.RetryBackoffSpec;
 
 public class CassandraUidProvider implements UidProvider {
     private static final String CONDITION = "Condition";
+    private static final String NEXT_UID_METRIC = "cassandra-nextUid";
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement insertStatement;
@@ -70,9 +72,10 @@ public class CassandraUidProvider implements UidProvider {
     private final RetryBackoffSpec retrySpec;
     private final CassandraConfiguration cassandraConfiguration;
     private final DriverExecutionProfile readProfile;
+    private final MetricFactory metricFactory;
 
     @Inject
-    public CassandraUidProvider(CqlSession session, CassandraConfiguration cassandraConfiguration) {
+    public CassandraUidProvider(CqlSession session, CassandraConfiguration cassandraConfiguration, MetricFactory metricFactory) {
         this.executor = new CassandraAsyncExecutor(session);
         this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
         this.selectStatement = prepareSelect(session);
@@ -83,6 +86,7 @@ public class CassandraUidProvider implements UidProvider {
             .scheduler(Schedulers.parallel());
         this.cassandraConfiguration = cassandraConfiguration;
         this.readProfile = ProfileLocator.READ.locateProfile(session, "UID");
+        this.metricFactory = metricFactory;
     }
 
     private PreparedStatement prepareSelect(CqlSession session) {
@@ -127,12 +131,13 @@ public class CassandraUidProvider implements UidProvider {
         Mono<MessageUid> updateUid = findHighestUid(cassandraId, Optional.of(lwtProfile))
             .flatMap(messageUid -> tryUpdateUid(cassandraId, messageUid));
 
-        return updateUid
-            .switchIfEmpty(tryInsert(cassandraId))
-            .switchIfEmpty(updateUid)
-            .single()
-            .retryWhen(retrySpec)
-            .map(uid -> uid.add(cassandraConfiguration.getUidModseqIncrement()));
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric(NEXT_UID_METRIC,
+            updateUid
+                .switchIfEmpty(tryInsert(cassandraId))
+                .switchIfEmpty(updateUid)
+                .single()
+                .retryWhen(retrySpec)
+                .map(uid -> uid.add(cassandraConfiguration.getUidModseqIncrement()))));
     }
 
     @Override
