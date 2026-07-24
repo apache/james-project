@@ -44,6 +44,9 @@ public class QuotaMailingListenerConfigurationTest {
     private static final String OTHER_BODY_TEMPLATE = "other_body.mustache";
     private static final String YET_ANOTHER_SUBJECT_TEMPLATE = "yet_another_sbj.mustache";
     private static final String YET_ANOTHER_BODY_TEMPLATE = "yet_another_body.mustache";
+    private static final String HTML_BODY_TEMPLATE = "html_body.mustache";
+    private static final String OTHER_HTML_BODY_TEMPLATE = "other_html_body.mustache";
+    private static final String YET_ANOTHER_HTML_BODY_TEMPLATE = "yet_another_html_body.mustache";
 
     @Test
     public void shouldMatchBeanContract() {
@@ -60,15 +63,18 @@ public class QuotaMailingListenerConfigurationTest {
                 "      <value>0.85</value>" +
                 "      <subjectTemplate>" + SUBJECT_TEMPLATE + "</subjectTemplate>\n" +
                 "      <bodyTemplate>" + BODY_TEMPLATE + "</bodyTemplate>\n" +
+                "      <htmlBodyTemplate>" + HTML_BODY_TEMPLATE + "</htmlBodyTemplate>\n" +
                 "    </threshold>\n" +
                 "    <threshold>\n" +
                 "      <value>0.98</value>\n" +
                 "      <subjectTemplate>" + OTHER_SUBJECT_TEMPLATE + "</subjectTemplate>\n" +
                 "      <bodyTemplate>" + OTHER_BODY_TEMPLATE + "</bodyTemplate>\n" +
+                "      <htmlBodyTemplate>" + OTHER_HTML_BODY_TEMPLATE + "</htmlBodyTemplate>\n" +
                 "    </threshold>\n" +
                 "  </thresholds>\n" +
                 "  <subjectTemplate>" + YET_ANOTHER_SUBJECT_TEMPLATE + "</subjectTemplate>\n" +
                 "  <bodyTemplate>" + YET_ANOTHER_BODY_TEMPLATE + "</bodyTemplate>\n" +
+                "  <htmlBodyTemplate>" + YET_ANOTHER_HTML_BODY_TEMPLATE + "</htmlBodyTemplate>\n" +
                 "  <gracePeriod>3 days</gracePeriod>\n" +
                 "  <name>listener-name</name>\n" +
                 "</configuration>"));
@@ -78,12 +84,13 @@ public class QuotaMailingListenerConfigurationTest {
         assertThat(result)
             .isEqualTo(QuotaMailingListenerConfiguration.builder()
                 .addThreshold(new QuotaThreshold(0.85),
-                    RenderingInformation.from(BODY_TEMPLATE, SUBJECT_TEMPLATE))
+                    RenderingInformation.from(BODY_TEMPLATE, SUBJECT_TEMPLATE, HTML_BODY_TEMPLATE))
                 .addThreshold(new QuotaThreshold(0.98),
-                    RenderingInformation.from(OTHER_BODY_TEMPLATE, OTHER_SUBJECT_TEMPLATE))
+                    RenderingInformation.from(OTHER_BODY_TEMPLATE, OTHER_SUBJECT_TEMPLATE, OTHER_HTML_BODY_TEMPLATE))
                 .gracePeriod(Duration.ofDays(3))
                 .subjectTemplate(YET_ANOTHER_SUBJECT_TEMPLATE)
                 .bodyTemplate(YET_ANOTHER_BODY_TEMPLATE)
+                .htmlBodyTemplate(YET_ANOTHER_HTML_BODY_TEMPLATE)
                 .name("listener-name")
                 .build());
     }
@@ -208,6 +215,59 @@ public class QuotaMailingListenerConfigurationTest {
                 "    </threshold>\n" +
                 "  </thresholds>\n" +
                 "  <gracePeriod>3 days</gracePeriod>\n" +
+                "  <name>listener-name</name>\n" +
+                "</configuration>"));
+
+        assertThatThrownBy(() -> QuotaMailingListenerConfiguration.from(xmlConfiguration))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void fromShouldNotSetHtmlBodyTemplateWhenOmitted() throws Exception {
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
+            "<configuration>\n" +
+                "  <thresholds>\n" +
+                "    <threshold>" +
+                "      <value>0.85</value>" +
+                "      <bodyTemplate>" + BODY_TEMPLATE + "</bodyTemplate>\n" +
+                "    </threshold>\n" +
+                "  </thresholds>\n" +
+                "</configuration>"));
+
+        QuotaMailingListenerConfiguration result = QuotaMailingListenerConfiguration.from(xmlConfiguration);
+
+        assertThat(result.getHtmlBodyTemplate(new QuotaThreshold(0.85)))
+            .isEmpty();
+    }
+
+    @Test
+    public void getHtmlBodyTemplateShouldFallbackToGlobalValueWhenThresholdValueIsOmitted() throws Exception {
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
+            "<configuration>\n" +
+                "  <thresholds>\n" +
+                "    <threshold>" +
+                "      <value>0.85</value>" +
+                "    </threshold>\n" +
+                "  </thresholds>\n" +
+                "  <htmlBodyTemplate>" + HTML_BODY_TEMPLATE + "</htmlBodyTemplate>\n" +
+                "</configuration>"));
+
+        QuotaMailingListenerConfiguration result = QuotaMailingListenerConfiguration.from(xmlConfiguration);
+
+        assertThat(result.getHtmlBodyTemplate(new QuotaThreshold(0.85)))
+            .contains(HTML_BODY_TEMPLATE);
+    }
+
+    @Test
+    public void fromShouldThrowOnEmptyHtmlBodyTemplate() throws Exception {
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
+            "<configuration>\n" +
+                "  <thresholds>\n" +
+                "    <threshold>" +
+                "      <value>0.85</value>" +
+                "      <htmlBodyTemplate></htmlBodyTemplate>\n" +
+                "    </threshold>\n" +
+                "  </thresholds>\n" +
                 "  <name>listener-name</name>\n" +
                 "</configuration>"));
 

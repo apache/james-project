@@ -29,6 +29,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -450,6 +453,95 @@ class QuotaThresholdNoticeTest {
     }
 
     @Test
+    void generateHtmlReportShouldBeEmptyWhenHtmlTemplateIsNotConfigured() throws Exception {
+        QuotaThresholdChange sizeThresholdChange = new QuotaThresholdChange(_80, NOW);
+
+        assertThat(noticeFor(DEFAULT_CONFIGURATION, sizeThresholdChange)
+            .generateHtmlReport(fileSystem))
+            .isEmpty();
+    }
+
+    @Test
+    void generateHtmlReportShouldUsePerThresholdTemplate() throws Exception {
+        QuotaMailingListenerConfiguration configuration = QuotaMailingListenerConfiguration.builder()
+            .addThreshold(_80, RenderingInformation.from(
+                "classpath://templates/body1.mustache",
+                "classpath://templates/subject1.mustache",
+                "classpath://templates/html1.mustache"))
+            .htmlBodyTemplate("classpath://templates/html2.mustache")
+            .build();
+
+        assertThat(noticeFor(configuration, new QuotaThresholdChange(_80, NOW))
+            .generateHtmlReport(fileSystem))
+            .contains("[HTML_1]");
+    }
+
+    @Test
+    void generateHtmlReportShouldFallbackToGlobalTemplateWhenSpecificThresholdValueIsOmitted() throws Exception {
+        QuotaMailingListenerConfiguration configuration = QuotaMailingListenerConfiguration.builder()
+            .addThreshold(_80, RenderingInformation.from(
+                "classpath://templates/body1.mustache",
+                "classpath://templates/subject1.mustache"))
+            .htmlBodyTemplate("classpath://templates/html2.mustache")
+            .build();
+
+        assertThat(noticeFor(configuration, new QuotaThresholdChange(_80, NOW))
+            .generateHtmlReport(fileSystem))
+            .contains("[HTML_2]");
+    }
+
+    @Test
+    void generateMimeMessageShouldBePlainTextWhenHtmlTemplateIsNotConfigured() throws Exception {
+        MimeMessage mimeMessage = noticeFor(DEFAULT_CONFIGURATION, new QuotaThresholdChange(_80, NOW))
+            .generateMimeMessage(fileSystem)
+            .build();
+
+        assertThat(mimeMessage.getContentType()).startsWith("text/plain");
+    }
+
+    @Test
+    void generateMimeMessageShouldCombineBothAlternativesWhenHtmlTemplateIsConfigured() throws Exception {
+        QuotaMailingListenerConfiguration configuration = QuotaMailingListenerConfiguration.builder()
+            .bodyTemplate("classpath://templates/body1.mustache")
+            .htmlBodyTemplate("classpath://templates/html1.mustache")
+            .build();
+
+        MimeMessage mimeMessage = noticeFor(configuration, new QuotaThresholdChange(_80, NOW))
+            .generateMimeMessage(fileSystem)
+            .build();
+        MimeMultipart multipart = (MimeMultipart) mimeMessage.getContent();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(mimeMessage.getContentType()).startsWith("multipart/alternative");
+        softly.assertThat(multipart.getCount()).isEqualTo(2);
+        softly.assertThat(multipart.getBodyPart(0).getContentType()).startsWith("text/plain");
+        softly.assertThat(multipart.getBodyPart(0).getContent()).isEqualTo("[BODY_1]");
+        softly.assertThat(multipart.getBodyPart(1).getContentType()).startsWith("text/html");
+        softly.assertThat(multipart.getBodyPart(1).getContent()).isEqualTo("[HTML_1]");
+        softly.assertAll();
+    }
+
+    @Test
+    void defaultHtmlTemplateShouldGenerateAHumanReadableMessage() throws Exception {
+        QuotaMailingListenerConfiguration configuration = QuotaMailingListenerConfiguration.builder()
+            .htmlBodyTemplate(QuotaMailingListenerConfiguration.SAMPLE_HTML_BODY_TEMPLATE)
+            .build();
+
+        assertThat(QuotaThresholdNotice.builder()
+            .withConfiguration(configuration)
+            .sizeQuota(Sizes._82_PERCENT)
+            .countQuota(Counts._92_PERCENT)
+            .sizeThreshold(HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, NOW), NotAlreadyReachedDuringGracePeriod))
+            .countThreshold(HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, NOW), NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get()
+            .generateHtmlReport(fileSystem)
+            .get())
+            .contains("You currently occupy <strong>82 bytes</strong> on a total of <strong>100 bytes</strong> allocated to you.")
+            .contains("You currently have <strong>92</strong> messages on a total of <strong>100</strong> allowed for you.");
+    }
+
+    @Test
     void renderingShouldDefaultToDefaultValueWhenSpecificThresholdAndGlobalValueIsOmited() throws Exception {
         QuotaMailingListenerConfiguration configuration = QuotaMailingListenerConfiguration.builder()
             .addThreshold(_80, RenderingInformation.from(
@@ -471,5 +563,15 @@ class QuotaThresholdNoticeTest {
         softly.assertThat(quotaThresholdNotice1.generateReport(fileSystem))
             .isEqualTo("[BODY_2]");
         softly.assertAll();
+    }
+
+    private QuotaThresholdNotice noticeFor(QuotaMailingListenerConfiguration configuration, QuotaThresholdChange sizeThresholdChange) {
+        return QuotaThresholdNotice.builder()
+            .withConfiguration(configuration)
+            .sizeQuota(Sizes._82_PERCENT)
+            .countQuota(Counts._92_PERCENT)
+            .sizeThreshold(HistoryEvolution.higherThresholdReached(sizeThresholdChange, NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get();
     }
 }
