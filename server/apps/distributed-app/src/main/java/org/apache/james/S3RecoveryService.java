@@ -88,7 +88,6 @@ public class S3RecoveryService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(S3RecoveryService.class);
     private static final String RESTORE_MAILBOX = "Restored-messages";
-    private static final int CONCURRENCY = 8;
     private static final String DELIVERED_TO = "Delivered-To";
     private static final Report RESTORED = new Report(1, 1, 0, 0, 0);
     private static final Report SKIPPED_BY_DATE = new Report(1, 0, 1, 0, 0);
@@ -118,11 +117,11 @@ public class S3RecoveryService {
     public Mono<Report> run() {
         BucketName bucket = blobStore.getDefaultBucketName();
         String prefix = RECOVERY_BLOB_PREFIX + configuration.headerBlobPrefix();
-        LOGGER.info("Starting S3 recovery on bucket {} (prefix: {}, restore after: {})",
-            bucket.asString(), prefix, configuration.restoreAfter());
+        LOGGER.info("Starting S3 recovery on bucket {} (prefix: {}, restore after: {}, concurrency: {})",
+            bucket.asString(), prefix, configuration.restoreAfter(), configuration.concurrency());
         return Flux.from(blobStoreDAO.listBlobs(bucket, prefix))
             .map(BlobId::asString)
-            .flatMap(recoveryKey -> restoreOne(bucket, recoveryKey), CONCURRENCY)
+            .flatMap(recoveryKey -> restoreOne(bucket, recoveryKey), configuration.concurrency())
             .reduce(Report.empty(), Report::merge)
             .doOnNext(report -> LOGGER.info("S3 recovery finished: {}", report));
     }
