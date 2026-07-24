@@ -1,0 +1,94 @@
+James supports Kerberos authentication for IMAP and SMTP through the SASL `GSSAPI` mechanism defined by
+link:https://www.rfc-editor.org/rfc/rfc4752.html[RFC 4752].
+This mechanism is an optional extension and is not enabled or announced by default.
+
+== Installation
+
+Build the `protocols/sasl-kerberos` Maven module and copy its JAR into the `extensions-jars` directory of the Guice James distribution.
+The JAR is not included as a runtime dependency of the standard James applications.
+
+The James host needs a working Kerberos configuration, synchronized time, correct forward DNS, and service principals matching the public mail hostname.
+Create distinct service principals and keytabs for each protocol, for example:
+
+....
+imap/mail.example.com@EXAMPLE.COM
+smtp/mail.example.com@EXAMPLE.COM
+....
+
+Run James with an operating-system account that can read the keytabs, and restrict their filesystem permissions to that account.
+
+== Configuration
+
+Add the GSSAPI factory to `auth.saslMechanisms` in each protocol configuration.
+An explicit `auth.saslMechanisms` value replaces the protocol defaults, so list every mechanism that should remain enabled.
+
+For IMAP, `PlainSaslMechanismFactory` also backs the IMAP `LOGIN` command:
+
+[source,xml]
+....
+<auth>
+    <requireSSL>true</requireSSL>
+    <saslMechanisms>PlainSaslMechanismFactory,org.apache.james.protocols.sasl.kerberos.GssapiSaslMechanismFactory</saslMechanisms>
+    <gssapi>
+        <serviceName>imap</serviceName>
+        <serverName>mail.example.com</serverName>
+        <principal>imap/mail.example.com@EXAMPLE.COM</principal>
+        <keyTab>/run/secrets/james/imap.keytab</keyTab>
+    </gssapi>
+</auth>
+....
+
+For SMTP, list both password mechanism factories when retaining `LOGIN` and `PLAIN`:
+
+[source,xml]
+....
+<auth>
+    <announce>always</announce>
+    <requireSSL>true</requireSSL>
+    <saslMechanisms>LoginSaslMechanismFactory,PlainSaslMechanismFactory,org.apache.james.protocols.sasl.kerberos.GssapiSaslMechanismFactory</saslMechanisms>
+    <gssapi>
+        <serviceName>smtp</serviceName>
+        <serverName>mail.example.com</serverName>
+        <principal>smtp/mail.example.com@EXAMPLE.COM</principal>
+        <keyTab>/run/secrets/james/smtp.keytab</keyTab>
+    </gssapi>
+</auth>
+<maxLineLength>65536</maxLineLength>
+....
+
+The `auth.gssapi` properties are:
+
+|===
+| Property | Description
+
+| `serviceName`
+| Kerberos service component used by the protocol, e.g. `imap` or `smtp`.
+
+| `serverName`
+| Kerberos host component. It must be the canonical hostname clients use when requesting a service ticket.
+
+| `principal`
+| Acceptor principal. It must exactly match `serviceName/serverName@REALM`.
+
+| `keyTab`
+| Absolute path or `file:` URI of a readable keytab containing the acceptor principal.
+
+|===
+
+GSSAPI uses the top-level `auth.requireSSL` transport policy and defaults to requiring TLS when that property is absent.
+SMTP also applies `auth.announce` and `auth.requireSSL` when advertising authentication.
+Kerberos tokens can exceed SMTP's default 8,192-byte line limit; set `maxLineLength` to a measured operational value when needed.
+The value applies globally to SMTP input and must remain bounded.
+
+== Identity And Security
+
+The authenticated Kerberos principal is mapped to a James username, including its realm.
+Because James usernames are case-insensitive while Kerberos principals are case-sensitive, James accepts only canonical client principals:
+the identity must contain only ASCII characters, principal components must be lower case, and the realm must be upper case, for example `alice@EXAMPLE.COM`.
+Noncanonical variants such as `Alice@EXAMPLE.COM` and `alice@example.com` are rejected so that distinct Kerberos principals cannot map to the same James identity.
+The resulting James username is lower case; provision that username and domain when the protocol needs a local account, notably for IMAP mailbox access.
+When a client requests a different SASL authorization identity, James applies its normal authorization rules.
+
+The implementation accepts only the SASL `auth` quality of protection.
+It does not negotiate a SASL integrity or confidentiality layer; use TLS to protect protocol traffic.
+Keeping `auth.requireSSL` set to `true` is recommended.

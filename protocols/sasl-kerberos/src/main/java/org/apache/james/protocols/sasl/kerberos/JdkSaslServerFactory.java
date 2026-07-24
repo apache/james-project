@@ -17,15 +17,27 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.api.sasl;
+package org.apache.james.protocols.sasl.kerberos;
 
-public final class SaslMechanismNames {
-    public static final String GSSAPI = "GSSAPI";
-    public static final String LOGIN = "LOGIN";
-    public static final String PLAIN = "PLAIN";
-    public static final String OAUTHBEARER = "OAUTHBEARER";
-    public static final String XOAUTH2 = "XOAUTH2";
+import java.util.Map;
 
-    private SaslMechanismNames() {
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.sasl.Sasl;
+import javax.security.sasl.SaslException;
+import javax.security.sasl.SaslServer;
+
+class JdkSaslServerFactory implements GssapiSaslServerFactory {
+    private static final Map<String, String> PROPERTIES = Map.of(
+        Sasl.POLICY_NOANONYMOUS, "true",
+        Sasl.POLICY_NOPLAINTEXT, "true",
+        Sasl.QOP, "auth");
+
+    @Override
+    public SaslServer create(GssapiSaslConfiguration configuration, CallbackHandler callbackHandler) throws SaslException {
+        SaslServer saslServer = Sasl.createSaslServer("GSSAPI", configuration.serviceName(), configuration.serverName(), PROPERTIES, callbackHandler);
+        if (saslServer == null) {
+            throw new SaslException("No JDK GSSAPI SASL server provider is available");
+        }
+        return saslServer;
     }
 }

@@ -1,0 +1,5 @@
+= Distributed James Server &mdash; Kerberos GSSAPI Configuration
+:navtitle: Kerberos GSSAPI Configuration
+
+:pages-path: distributed
+include::partial$configure/kerberos.adoc[]

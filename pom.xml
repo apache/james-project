@@ -661,6 +661,7 @@
         <es-reporter.version>6.0.0-RC3</es-reporter.version>
         <guava.version>33.4.8-jre</guava.version>
         <jutf7.version>1.0.0</jutf7.version>
+        <kerby.version>2.1.1</kerby.version>
         <apache.httpcomponents.version>4.5.14</apache.httpcomponents.version>
 
         <!-- maven-mailetdocs-plugin artifacts -->
@@ -2168,6 +2169,17 @@
             </dependency>
             <dependency>
                 <groupId>${james.protocols.groupId}</groupId>
+                <artifactId>protocols-sasl-kerberos</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.protocols.groupId}</groupId>
+                <artifactId>protocols-sasl-kerberos</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.protocols.groupId}</groupId>
                 <artifactId>protocols-smtp</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -2777,6 +2789,11 @@
                         <artifactId>dnsjnio</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kerby</groupId>
+                <artifactId>kerb-simplekdc</artifactId>
+                <version>${kerby.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
