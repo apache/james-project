@@ -175,6 +175,37 @@ generation instead of scanning the whole bucket:
 ... org.apache.james.S3RecoveryMain --header-blob-prefix=1_42_
 ----
 
+The dominant cost of a recovery run is not the listing but the per-message work: three blob reads plus
+a full re-store of each message through the mailbox. The `--concurrency=<n>` argument (default `8`, also
+settable via the `RECOVERY_CONCURRENCY` environment variable or the `recovery.concurrency` system
+property) controls how many messages are restored in parallel and is therefore the main lever on
+wall-clock recovery time. Raise it to saturate the object store and Cassandra; watch their load and
+back off if they become the bottleneck:
+
+[source,bash]
+----
+... org.apache.james.S3RecoveryMain --concurrency=32
+----
+
+=== Scaling recovery: shard by generation
+
+For very large recoveries, a single process is limited by its own concurrency and offers no easy resume
+point. Because `--header-blob-prefix` scopes a run to a slice of the key space, you can *shard* the
+recovery across several independent processes &mdash; typically one per blob generation
+(`family_generation_`) &mdash; and run them in parallel, each with its own concurrency:
+
+[source,bash]
+----
+# On different hosts / containers, in parallel
+... org.apache.james.S3RecoveryMain --header-blob-prefix=1_40_ --concurrency=16
+... org.apache.james.S3RecoveryMain --header-blob-prefix=1_41_ --concurrency=16
+... org.apache.james.S3RecoveryMain --header-blob-prefix=1_42_ --concurrency=16
+----
+
+The shards are disjoint (a given header blob belongs to exactly one generation), so they never restore
+the same message twice, aggregate throughput scales with the number of shards, and a shard that fails
+can be re-run on its own without redoing the others.
+
 Notes:
 
 * Restored messages are re-stored (and get a fresh `recovery/` sidecar), so re-running the recovery

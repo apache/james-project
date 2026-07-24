@@ -163,6 +163,27 @@ Because header blob ids are generation-aware (`family_generation_...`), a clever
 $ java ... org.apache.james.S3RecoveryMain --header-blob-prefix=1_42_
 ----
 
+The `--concurrency=<n>` argument (default `8`, also settable via the `RECOVERY_CONCURRENCY` environment
+variable or the `recovery.concurrency` system property) controls how many messages are restored in
+parallel. The per-message work (blob reads plus a full re-store through the mailbox) dominates recovery
+time, so this is the main lever on wall-clock duration:
+
+[source]
+----
+$ java ... org.apache.james.S3RecoveryMain --concurrency=32
+----
+
+For very large recoveries, shard the run by generation and run several processes in parallel, each on a
+disjoint slice of the key space with its own concurrency. The shards never restore the same message
+twice, throughput scales with their number, and a failed shard can be re-run on its own:
+
+[source]
+----
+$ java ... org.apache.james.S3RecoveryMain --header-blob-prefix=1_40_ --concurrency=16
+$ java ... org.apache.james.S3RecoveryMain --header-blob-prefix=1_41_ --concurrency=16
+$ java ... org.apache.james.S3RecoveryMain --header-blob-prefix=1_42_ --concurrency=16
+----
+
 Notes:
 
 * Restored messages are re-stored (and get a fresh `recovery/` sidecar), so re-running the recovery

@@ -54,4 +54,28 @@ class RecoveryConfigurationTest {
         assertThat(RecoveryConfiguration.parse(new String[] {"--header-blob-prefix=1_42_"}).headerBlobPrefix())
             .isEqualTo("1_42_");
     }
+
+    @Test
+    void parseShouldDefaultConcurrency() {
+        assertThat(RecoveryConfiguration.parse(new String[] {}).concurrency())
+            .isEqualTo(RecoveryConfiguration.DEFAULT_CONCURRENCY);
+    }
+
+    @Test
+    void parseShouldReadConcurrencyArgument() {
+        assertThat(RecoveryConfiguration.parse(new String[] {"--concurrency=32"}).concurrency())
+            .isEqualTo(32);
+    }
+
+    @Test
+    void parseShouldRejectNonPositiveConcurrency() {
+        assertThatThrownBy(() -> RecoveryConfiguration.parse(new String[] {"--concurrency=0"}))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void parseShouldRejectNonNumericConcurrency() {
+        assertThatThrownBy(() -> RecoveryConfiguration.parse(new String[] {"--concurrency=many"}))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
 }

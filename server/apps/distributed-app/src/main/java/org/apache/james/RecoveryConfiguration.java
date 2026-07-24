@@ -24,6 +24,8 @@ import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Optional;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Configuration for the S3 blob store recovery run.
  *
@@ -39,19 +41,34 @@ import java.util.Optional;
  * recovery sidecars) and can be provided as a {@code --header-blob-prefix=<prefix>} program argument,
  * the {@code RECOVERY_HEADER_BLOB_PREFIX} environment variable, or the {@code recovery.header.blob.prefix}
  * system property.</p>
+ *
+ * <p>The {@code concurrency} controls how many messages are restored in parallel. Since the dominant
+ * cost is the per-message work (blob reads plus a full re-store through the mailbox), this is the main
+ * lever on recovery wall-clock time. It defaults to {@value #DEFAULT_CONCURRENCY} and can be provided
+ * as a {@code --concurrency=<n>} program argument, the {@code RECOVERY_CONCURRENCY} environment
+ * variable, or the {@code recovery.concurrency} system property.</p>
  */
-public record RecoveryConfiguration(Optional<Instant> restoreAfter, String headerBlobPrefix) {
+public record RecoveryConfiguration(Optional<Instant> restoreAfter, String headerBlobPrefix, int concurrency) {
+    public static final int DEFAULT_CONCURRENCY = 8;
     private static final String RESTORE_AFTER_ARG = "--restore-after=";
     private static final String RESTORE_AFTER_ENV = "RESTORE_MESSAGES_AFTER";
     private static final String RESTORE_AFTER_PROPERTY = "restore.messages.after";
     private static final String HEADER_BLOB_PREFIX_ARG = "--header-blob-prefix=";
     private static final String HEADER_BLOB_PREFIX_ENV = "RECOVERY_HEADER_BLOB_PREFIX";
     private static final String HEADER_BLOB_PREFIX_PROPERTY = "recovery.header.blob.prefix";
+    private static final String CONCURRENCY_ARG = "--concurrency=";
+    private static final String CONCURRENCY_ENV = "RECOVERY_CONCURRENCY";
+    private static final String CONCURRENCY_PROPERTY = "recovery.concurrency";
+
+    public RecoveryConfiguration {
+        Preconditions.checkArgument(concurrency > 0, "'concurrency' must be strictly positive");
+    }
 
     public static RecoveryConfiguration parse(String[] args) {
         return new RecoveryConfiguration(
             option(args, RESTORE_AFTER_ARG, RESTORE_AFTER_ENV, RESTORE_AFTER_PROPERTY).map(RecoveryConfiguration::parseInstant),
-            option(args, HEADER_BLOB_PREFIX_ARG, HEADER_BLOB_PREFIX_ENV, HEADER_BLOB_PREFIX_PROPERTY).orElse(""));
+            option(args, HEADER_BLOB_PREFIX_ARG, HEADER_BLOB_PREFIX_ENV, HEADER_BLOB_PREFIX_PROPERTY).orElse(""),
+            option(args, CONCURRENCY_ARG, CONCURRENCY_ENV, CONCURRENCY_PROPERTY).map(RecoveryConfiguration::parseConcurrency).orElse(DEFAULT_CONCURRENCY));
     }
 
     private static Optional<String> option(String[] args, String argPrefix, String envName, String propertyName) {
@@ -71,6 +88,17 @@ public record RecoveryConfiguration(Optional<Instant> restoreAfter, String heade
         } catch (DateTimeParseException e) {
             throw new IllegalArgumentException("Invalid '" + RESTORE_AFTER_ARG + "' value: '" + value
                 + "'. Expected an ISO-8601 instant, e.g. 2026-01-01T00:00:00Z", e);
+        }
+    }
+
+    private static int parseConcurrency(String value) {
+        try {
+            int concurrency = Integer.parseInt(value);
+            Preconditions.checkArgument(concurrency > 0);
+            return concurrency;
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid '" + CONCURRENCY_ARG + "' value: '" + value
+                + "'. Expected a strictly positive integer", e);
         }
     }
 }
