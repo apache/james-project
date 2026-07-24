@@ -25,6 +25,7 @@ import org.reactivestreams.Publisher;
 
 import com.google.common.io.ByteSource;
 
+import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
 
 /**
@@ -97,4 +98,15 @@ public interface BlobStore {
     Publisher<Boolean> delete(BucketName bucketName, BlobId blobId);
 
     Publisher<BlobId> listBlobs(BucketName bucketName);
+
+    /**
+     * Lists the blobs of a bucket whose id starts with the given prefix.
+     *
+     * <p>The default implementation filters the full listing. Implementations backed by a store able to
+     * push the prefix down (eg. S3 {@code ListObjectsV2}) should override this for efficiency.</p>
+     */
+    default Publisher<BlobId> listBlobs(BucketName bucketName, String prefix) {
+        return Flux.from(listBlobs(bucketName))
+            .filter(blobId -> blobId.asString().startsWith(prefix));
+    }
 }

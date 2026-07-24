@@ -1,0 +1,315 @@
+= Distributed James Server &mdash; Backup
+:navtitle: Backup
+
+A Distributed James deployment keeps its data in two independent stores, and a sound backup strategy
+must cover both:
+
+* The *object store* (S3 or S3-compatible) holds the immutable *message content* &mdash; the header and
+body blobs, attachments, deleted message vault, etc. See
+xref:distributed/architecture/blobstore.adoc[the blob store architecture].
+* *Cassandra* holds the *metadata* &mdash; the mailbox structure, message flags, UIDs, indexes, users,
+quotas... everything that ties blobs together into usable mailboxes.
+
+The two are complementary: a blob is worthless without the Cassandra rows that reference it, and a
+mailbox row is worthless without its blob. This page describes how to protect each store, and how to
+recover message content from the object store alone should the Cassandra metadata be lost.
+
+== Object store: S3 versioning
+
+James addresses blobs by content (deduplication) and never mutates a blob in place: a blob is written
+once and later either kept or deleted by the
+xref:distributed/operate/webadmin.adoc#_running_blob_garbage_collection[blob garbage collection]. This immutability
+makes *S3 bucket versioning* the natural safety net: enabling it turns every deletion into a reversible
+*delete marker* and preserves overwritten or removed objects as *noncurrent versions* that can be
+restored.
+
+Versioning protects against the failure modes James itself cannot guard against:
+
+* an operator or a bug running the blob GC too aggressively,
+* an application-level compromise deleting blobs,
+* accidental bulk deletions.
+
+=== A policy that makes sense
+
+Two principles drive the recommended policy:
+
+. *The application must have no rights over the version history.* James is given credentials that can
+read, write and _logically_ delete current objects, but that *cannot* delete object versions, disable
+versioning, or alter the lifecycle configuration. This way, whatever happens to the running
+application &mdash; bug or compromise &mdash; the history remains intact and recoverable. Version
+management and permanent reclamation are the responsibility of a *separate, more privileged role* used
+only by operators / backup tooling.
+
+. *Deletion propagates after 30 days.* When James deletes a blob, S3 keeps the previous version as a
+noncurrent version. A lifecycle rule permanently expires those noncurrent versions after 30 days. This
+gives a 30-day window during which any wrongly deleted blob can still be restored, while still bounding
+storage growth.
+
+==== Application IAM policy (no history rights)
+
+The credentials configured in `blobstore.properties` for James should be restricted to operations on
+*current* objects only. Note the *absence* of `s3:DeleteObjectVersion`, `s3:PutBucketVersioning` and
+`s3:PutLifecycleConfiguration`:
+
+[source,json]
+----
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "JamesCurrentObjectsOnly",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject",
+        "s3:ListBucket",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": [
+        "arn:aws:s3:::james-blobs",
+        "arn:aws:s3:::james-blobs/*"
+      ]
+    }
+  ]
+}
+----
+
+`s3:DeleteObject` only creates a delete marker when versioning is enabled; it never removes history.
+Managing versioning and the lifecycle configuration, and permanently deleting versions
+(`s3:DeleteObjectVersion`, `s3:GetObjectVersion`, `s3:PutBucketVersioning`,
+`s3:PutLifecycleConfiguration`), must be granted to a distinct operator/backup role only.
+
+==== Bucket versioning and lifecycle
+
+Enable versioning on the bucket, then apply a lifecycle configuration that propagates deletions after
+30 days and keeps the bucket tidy:
+
+[source,json]
+----
+{
+  "Rules": [
+    {
+      "ID": "expire-noncurrent-after-30-days",
+      "Status": "Enabled",
+      "Filter": {},
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 30
+      },
+      "Expiration": {
+        "ExpiredObjectDeleteMarker": true
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 7
+      }
+    }
+  ]
+}
+----
+
+* `NoncurrentVersionExpiration: 30` &mdash; a blob deleted (or overwritten) by James stays recoverable
+for 30 days, then its noncurrent versions are permanently removed. This is where the deletion is
+finally *propagated*.
+* `ExpiredObjectDeleteMarker: true` &mdash; cleans up delete markers once their versions are gone.
+* `AbortIncompleteMultipartUpload` &mdash; reclaims storage from interrupted uploads.
+
+NOTE: MinIO, Scality and most S3-compatible stores implement versioning and lifecycle rules with the
+same API. Consult your provider's documentation for the exact tooling.
+
+== Message content recovery from S3
+
+Even with versioning, you may face the worst case: *the Cassandra metadata is lost but the object store
+survives*. Because blobs alone do not tell which user a message belonged to, James can optionally write,
+next to each stored message, a small `recovery/<headerBlobId>` *sidecar* blob holding the matching
+`bodyBlobId`. The blob garbage collection is aware of these sidecars and never deletes a live one.
+
+Recording of the sidecars is controlled in `cassandra.properties`:
+
+[source,properties]
+----
+# none (default), synchronous or asynchronous
+mailbox.blob.recovery.mode=synchronous
+----
+
+* `synchronous` &mdash; the sidecar is written as part of message storage; a failure fails the delivery.
+* `asynchronous` &mdash; the sidecar is written in the background; failures are only logged.
+* `none` &mdash; no sidecar is written, and content recovery is not possible.
+
+When recovery is needed, run the dedicated `org.apache.james.S3RecoveryMain` entrypoint. It reuses the
+regular mailbox, DAO and blob store modules and the existing `blobstore.properties` (so AES encryption
+and compression are applied transparently), but starts neither the protocol servers nor RabbitMQ. It
+walks the object store, reads each `recovery/` sidecar, rebuilds the message from its header and body
+blobs, reads the `Delivered-To` recipients, and appends the message into a `Restored-messages` mailbox
+of each local recipient.
+
+Run it by overriding the container entrypoint main class (Cassandra and S3 must be reachable):
+
+[source,bash]
+----
+docker run --rm --entrypoint java \
+  -v /path/conf:/root/conf \
+  apache/james:distributed-latest \
+  -Dworking.directory=/root -Dextra.props=/root/conf/jvm.properties \
+  -cp '/app/resources:/app/classes:/app/libs/*' \
+  org.apache.james.S3RecoveryMain
+----
+
+An optional `--restore-after=<ISO-8601 instant>` argument (also settable via the
+`RESTORE_MESSAGES_AFTER` environment variable or the `restore.messages.after` system property)
+restricts recovery to messages whose `Date` header is strictly after the given instant:
+
+[source,bash]
+----
+... org.apache.james.S3RecoveryMain --restore-after=2026-01-01T00:00:00Z
+----
+
+An optional `--header-blob-prefix=<prefix>` argument (also settable via the
+`RECOVERY_HEADER_BLOB_PREFIX` environment variable or the `recovery.header.blob.prefix` system
+property) narrows the walk to the recovery sidecars whose header blob id starts with the given prefix,
+pushing the filter down to S3's `ListObjectsV2`. Header blob ids are generation-aware
+(`family_generation_...`), so a clever admin can pass e.g. `1_42_` to iterate solely the latest
+generation instead of scanning the whole bucket:
+
+[source,bash]
+----
+... org.apache.james.S3RecoveryMain --header-blob-prefix=1_42_
+----
+
+The dominant cost of a recovery run is not the listing but the per-message work: three blob reads plus
+a full re-store of each message through the mailbox. The `--concurrency=<n>` argument (default `8`, also
+settable via the `RECOVERY_CONCURRENCY` environment variable or the `recovery.concurrency` system
+property) controls how many messages are restored in parallel and is therefore the main lever on
+wall-clock recovery time. Raise it to saturate the object store and Cassandra; watch their load and
+back off if they become the bottleneck:
+
+[source,bash]
+----
+... org.apache.james.S3RecoveryMain --concurrency=32
+----
+
+=== Scaling recovery: shard by generation
+
+For very large recoveries, a single process is limited by its own concurrency and offers no easy resume
+point. Because `--header-blob-prefix` scopes a run to a slice of the key space, you can *shard* the
+recovery across several independent processes &mdash; typically one per blob generation
+(`family_generation_`) &mdash; and run them in parallel, each with its own concurrency:
+
+[source,bash]
+----
+# On different hosts / containers, in parallel
+... org.apache.james.S3RecoveryMain --header-blob-prefix=1_40_ --concurrency=16
+... org.apache.james.S3RecoveryMain --header-blob-prefix=1_41_ --concurrency=16
+... org.apache.james.S3RecoveryMain --header-blob-prefix=1_42_ --concurrency=16
+----
+
+The shards are disjoint (a given header blob belongs to exactly one generation), so they never restore
+the same message twice, aggregate throughput scales with the number of shards, and a shard that fails
+can be re-run on its own without redoing the others.
+
+Notes:
+
+* Restored messages are re-stored (and get a fresh `recovery/` sidecar), so re-running the recovery
+restores them again. Restore into an empty deployment, or clean up between runs.
+* The search index is not populated during recovery. Run a
+xref:distributed/operate/cli.adoc#_re_indexing[re-indexing] afterwards if search is needed.
+
+Content recovery is a last resort. It rebuilds *content* into a flat `Restored-messages` mailbox; it
+does not restore the original folder layout, flags or read state. For a faithful point-in-time
+restoration of the metadata, back up Cassandra as described below.
+
+== Deleted Messages Vault
+
+The strategies above protect against infrastructure-level loss. The most common data loss, however, is
+mundane: a user (or a buggy client, or an over-eager retention rule) *deletes a message by mistake*.
+For that, James ships a built-in safety net &mdash; the *Deleted Messages Vault*.
+
+When enabled, a pre-deletion hook diverts every message a user permanently deletes into the vault
+instead of dropping it immediately. Messages are retained there for a configurable duration and can be
+searched, exported and *restored back into the user's mailbox* &mdash; without any need to touch S3
+versions or a Cassandra snapshot. It is, in effect, a continuous, per-user, self-service backup of
+deleted mail, with a much lower operational cost and RTO than a full restore.
+
+Enable it by configuring the pre-deletion hook and a retention time, as described in
+xref:distributed/operate/guide.adoc#_deleted_message_vault[the operator guide] and
+xref:distributed/configure/vault.adoc[deletedMessageVault.properties].
+
+Restore and manage vaulted messages through webadmin, e.g.
+xref:distributed/operate/webadmin.adoc#_restore_deleted_messages[restoring deleted messages] for a
+user, or browsing, exporting and purging them.
+
+A few things to keep in mind:
+
+* The vault stores its content *in the same object store* as the mailboxes (it is one of the blob store
+users). It therefore shares the object store's fate: it protects against user-level deletion, *not*
+against loss of the object store itself. Combine it with S3 versioning above.
+* Vault retention is a deliberate trade-off between the recovery window and storage cost &mdash; the
+same tension as the S3 noncurrent-version window. Keep the two windows coherent.
+* Messages are removed from the vault when their retention elapses (`Purge`), so it is a bounded-window
+undo, not an archive.
+
+== Cassandra backup with Medusa
+
+link:https://github.com/thelastpickle/cassandra-medusa[Medusa] is a backup and restore tool for
+Apache Cassandra that stores backups directly in object storage (S3, GCS, Azure...). It is the
+recommended way to protect the Distributed server metadata.
+
+Medusa supports two backup modes:
+
+Full backup:: A complete copy of every SSTable of the node. Self-contained: a single full backup is
+enough to restore the node. Larger and slower, it is typically run periodically as a baseline.
+
+Differential backup:: The default and recommended mode. Medusa compares the current SSTables with what
+is already present in the backup storage and uploads only the *new* SSTables, referencing the unchanged
+ones. Because Cassandra SSTables are immutable, differential backups are cheap in both bandwidth and
+storage while remaining individually restorable. They are well suited to frequent (e.g. daily) runs.
+
+A sensible schedule combines both, for example:
+
+[source,bash]
+----
+# Weekly baseline (full)
+medusa backup --backup-name weekly-$(date +%Y%m%d) --mode full
+
+# Daily differential
+medusa backup --backup-name daily-$(date +%Y%m%d) --mode differential
+----
+
+List and restore backups with:
+
+[source,bash]
+----
+medusa list-backups
+medusa restore-cluster --backup-name daily-20260724
+----
+
+Point Medusa at its own bucket (or at least its own prefix and credentials), *separate from the James
+blob bucket*, so that the two backup lifecycles and access policies stay independent.
+
+[IMPORTANT]
+====
+The Cassandra metadata references blobs by id. When restoring Cassandra to a point in time, the
+referenced blobs must still exist in the object store. Keep the blob store retention window (the 30-day
+noncurrent version expiration above, and the blob GC schedule) *at least as long as* your Cassandra
+backup retention, so that a restored Cassandra snapshot never points at blobs that have already been
+permanently reclaimed.
+====
+
+== Summary
+
+[cols="1,2,2", options="header"]
+|===
+| Data | Protection | Recovery
+
+| Accidental user deletion
+| Deleted Messages Vault &mdash; pre-deletion hook + bounded retention
+| Self-service restore back into the user's mailbox (webadmin)
+
+| Message content (blobs)
+| S3 versioning + 30-day noncurrent expiration, application denied history rights
+| Restore object versions; or `S3RecoveryMain` to rebuild messages when metadata is lost
+
+| Cassandra metadata
+| Medusa &mdash; periodic full + frequent differential backups to a dedicated bucket
+| `medusa restore-cluster`
+
+|===
