@@ -117,10 +117,11 @@ public class S3RecoveryService {
 
     public Mono<Report> run() {
         BucketName bucket = blobStore.getDefaultBucketName();
-        LOGGER.info("Starting S3 recovery on bucket {} (restore after: {})", bucket.asString(), configuration.restoreAfter());
-        return Flux.from(blobStoreDAO.listBlobs(bucket))
+        String prefix = RECOVERY_BLOB_PREFIX + configuration.headerBlobPrefix();
+        LOGGER.info("Starting S3 recovery on bucket {} (prefix: {}, restore after: {})",
+            bucket.asString(), prefix, configuration.restoreAfter());
+        return Flux.from(blobStoreDAO.listBlobs(bucket, prefix))
             .map(BlobId::asString)
-            .filter(key -> key.startsWith(RECOVERY_BLOB_PREFIX))
             .flatMap(recoveryKey -> restoreOne(bucket, recoveryKey), CONCURRENCY)
             .reduce(Report.empty(), Report::merge)
             .doOnNext(report -> LOGGER.info("S3 recovery finished: {}", report));

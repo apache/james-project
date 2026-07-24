@@ -163,6 +163,18 @@ restricts recovery to messages whose `Date` header is strictly after the given i
 ... org.apache.james.S3RecoveryMain --restore-after=2026-01-01T00:00:00Z
 ----
 
+An optional `--header-blob-prefix=<prefix>` argument (also settable via the
+`RECOVERY_HEADER_BLOB_PREFIX` environment variable or the `recovery.header.blob.prefix` system
+property) narrows the walk to the recovery sidecars whose header blob id starts with the given prefix,
+pushing the filter down to S3's `ListObjectsV2`. Header blob ids are generation-aware
+(`family_generation_...`), so a clever admin can pass e.g. `1_42_` to iterate solely the latest
+generation instead of scanning the whole bucket:
+
+[source,bash]
+----
+... org.apache.james.S3RecoveryMain --header-blob-prefix=1_42_
+----
+
 Notes:
 
 * Restored messages are re-stored (and get a fresh `recovery/` sidecar), so re-running the recovery

@@ -38,6 +38,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSource;
 import com.google.common.io.FileBackedOutputStream;
 
+import reactor.core.publisher.Flux;
+
 /**
  * James virtual blob store abstraction.
  *
@@ -291,4 +293,15 @@ public interface BlobStoreDAO {
     Publisher<BucketName> listBuckets();
 
     Publisher<BlobId> listBlobs(BucketName bucketName);
+
+    /**
+     * Lists the blobs of a bucket whose id starts with the given prefix (eg. {@link #RECOVERY_BLOB_PREFIX}).
+     *
+     * <p>The default implementation filters the full listing. Connectors able to push the prefix down to
+     * their backend (eg. S3 {@code ListObjectsV2}) should override this for efficiency.</p>
+     */
+    default Publisher<BlobId> listBlobs(BucketName bucketName, String prefix) {
+        return Flux.from(listBlobs(bucketName))
+            .filter(blobId -> blobId.asString().startsWith(prefix));
+    }
 }

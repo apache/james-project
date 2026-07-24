@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.function.Consumer;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -68,6 +69,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
@@ -455,7 +457,16 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Publisher<BlobId> listBlobs(BucketName bucketName) {
-        return Flux.from(client.listObjectsV2Paginator(builder -> builder.bucket(bucketName.asString())))
+        return listBlobs(bucketName, builder -> builder.bucket(bucketName.asString()));
+    }
+
+    @Override
+    public Publisher<BlobId> listBlobs(BucketName bucketName, String prefix) {
+        return listBlobs(bucketName, builder -> builder.bucket(bucketName.asString()).prefix(prefix));
+    }
+
+    private Publisher<BlobId> listBlobs(BucketName bucketName, Consumer<ListObjectsV2Request.Builder> request) {
+        return Flux.from(client.listObjectsV2Paginator(request))
             .flatMapIterable(ListObjectsV2Response::contents)
             .map(S3Object::key)
             .map(blobIdFactory::parse)

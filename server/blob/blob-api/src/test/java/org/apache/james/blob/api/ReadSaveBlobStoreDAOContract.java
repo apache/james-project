@@ -295,6 +295,30 @@ public interface ReadSaveBlobStoreDAOContract {
             .containsOnly(TEST_BLOB_ID.asString(), OTHER_TEST_BLOB_ID.asString());
     }
 
+    @Test
+    default void listWithPrefixShouldReturnOnlyMatchingBlobs() {
+        BlobStoreDAO store = testee();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
+
+        assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NAME, "test-"))
+            .map(BlobId::asString)
+            .collectList()
+            .block())
+            .containsOnly(TEST_BLOB_ID.asString());
+    }
+
+    @Test
+    default void listWithPrefixShouldReturnEmptyWhenNoMatch() {
+        BlobStoreDAO store = testee();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
+
+        assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NAME, "no-such-prefix-"))
+            .collectList()
+            .block())
+            .isEmpty();
+    }
+
     static Stream<Arguments> blobs() {
         return Stream.of(new Object[]{"SHORT", SHORT_BYTEARRAY}, new Object[]{"LONG", ELEVEN_KILOBYTES}, new Object[]{"BIG", TWELVE_MEGABYTES})
             .map(Arguments::of);
