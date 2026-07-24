@@ -17,15 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.api.sasl;
+package org.apache.james.protocols.sasl.kerberos;
 
-public final class SaslMechanismNames {
-    public static final String GSSAPI = "GSSAPI";
-    public static final String LOGIN = "LOGIN";
-    public static final String PLAIN = "PLAIN";
-    public static final String OAUTHBEARER = "OAUTHBEARER";
-    public static final String XOAUTH2 = "XOAUTH2";
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.sasl.SaslException;
+import javax.security.sasl.SaslServer;
 
-    private SaslMechanismNames() {
-    }
+interface GssapiSaslServerFactory {
+    SaslServer create(GssapiSaslConfiguration configuration, CallbackHandler callbackHandler) throws SaslException;
 }
