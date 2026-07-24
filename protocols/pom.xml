@@ -43,6 +43,7 @@
         <module>netty</module>
         <module>pop3</module>
         <module>sasl</module>
+        <module>sasl-kerberos</module>
         <module>smtp</module>
     </modules>
 

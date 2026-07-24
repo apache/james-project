@@ -17,15 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.api.sasl;
+package org.apache.james.protocols.sasl.kerberos;
 
-public final class SaslMechanismNames {
-    public static final String GSSAPI = "GSSAPI";
-    public static final String LOGIN = "LOGIN";
-    public static final String PLAIN = "PLAIN";
-    public static final String OAUTHBEARER = "OAUTHBEARER";
-    public static final String XOAUTH2 = "XOAUTH2";
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 
-    private SaslMechanismNames() {
+class KerberosLoginContext implements AutoCloseable {
+    private final LoginContext loginContext;
+    private boolean closed;
+
+    KerberosLoginContext(LoginContext loginContext) {
+        this.loginContext = loginContext;
+    }
+
+    Subject subject() {
+        return loginContext.getSubject();
+    }
+
+    @Override
+    public void close() throws LoginException {
+        if (!closed) {
+            closed = true;
+            loginContext.logout();
+        }
     }
 }

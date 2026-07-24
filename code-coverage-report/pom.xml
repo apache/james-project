@@ -1146,6 +1146,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james.protocols</groupId>
+            <artifactId>protocols-sasl-kerberos</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.protocols</groupId>
             <artifactId>protocols-smtp</artifactId>
             <version>${project.version}</version>
         </dependency>
