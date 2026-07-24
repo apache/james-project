@@ -20,6 +20,7 @@ package org.apache.james.smtpserver;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 
 import java.io.BufferedReader;
@@ -188,6 +189,32 @@ public class SMTPServerTest {
 
         smtpProtocol.quit();
         smtpProtocol.disconnect();
+    }
+
+    @Test
+    void configuredMaxLineLengthShouldAcceptLargerCommand() throws Exception {
+        smtpConfiguration.setMaxLineLength(65536);
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("EHLO " + "A".repeat(AbstractChannelPipelineFactory.MAX_LINE_LENGTH * 2));
+
+        assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+        smtpProtocol.disconnect();
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 999, 1048577 })
+    void maxLineLengthShouldBeBounded(int maxLineLength) {
+        smtpConfiguration.setMaxLineLength(maxLineLength);
+        smtpConfiguration.init();
+
+        assertThatThrownBy(() -> initSMTPServer(smtpConfiguration))
+            .isInstanceOf(org.apache.commons.configuration2.ex.ConfigurationException.class)
+            .hasMessage("maxLineLength must be between 1000 and 1048576");
     }
 
     @Test

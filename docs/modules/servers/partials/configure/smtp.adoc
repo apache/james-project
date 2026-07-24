@@ -51,6 +51,11 @@ The last character of the value may be a unit.
 Supported units are `B` for bytes, `K` for kibibyte (1,024 bytes), `M` for mebibyte (1,024 kibibytes), and `G` for gibibyte (1,024 mebibytes).
 If no unit is given, the value is interpreted as kibibytes.
 
+| `maxLineLength`
+| Sets the maximum SMTP command or SASL continuation line length in bytes.
+It is an optional integer that defaults to 8,192 and must be between 1,000 and 1,048,576.
+Increase it only when required by measured SASL token sizes, as the limit applies to every SMTP input line and larger values increase memory exposure.
+
 | `heloEhloEnforcement`
 | Configures whether to enforce the use of the HELO / EHLO salutation before a MAIL command is accepted.
 It is an optional boolean that defaults to `true`.
