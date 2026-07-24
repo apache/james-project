@@ -314,11 +314,14 @@ class SolveMailboxInconsistenciesServiceTest {
 
         testee.fixMailboxInconsistencies(new Context()).block();
 
+        // The path table is the source of truth: rather than dropping the dangling path registration
+        // (and losing the reference to a mailbox that may still hold messages), the missing projection
+        // is re-created from it, yielding a consistent registration on both sides.
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
-                .isEmpty();
+                .containsExactlyInAnyOrder(MAILBOX);
             softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
-                .isEmpty();
+                .containsExactlyInAnyOrder(MAILBOX);
         });
     }
 
