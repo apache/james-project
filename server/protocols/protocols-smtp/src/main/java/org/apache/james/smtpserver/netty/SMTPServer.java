@@ -77,6 +77,8 @@ import io.netty.util.concurrent.GlobalEventExecutor;
  * NIO SMTPServer which use Netty
  */
 public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServerMBean, Disconnector, ConnectionDescriptionSupplier {
+    private static final int MIN_LINE_LENGTH = 1000;
+    private static final int MAX_LINE_LENGTH = 1024 * 1024;
     private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServer.class);
     private SMTPProtocol transport;
 
@@ -166,6 +168,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
      * 0, means no limit.
      */
     private long maxMessageSize = 0;
+    private int maxLineLength = AbstractChannelPipelineFactory.MAX_LINE_LENGTH;
 
     /**
      * The configuration data to be passed to the handler
@@ -242,6 +245,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
                 LOGGER.info("The maximum allowed message size is {} bytes.", maxMessageSize);
             } else {
                 LOGGER.info("No maximum message size is enforced for this server.");
+            }
+
+            maxLineLength = configuration.getInt("maxLineLength", AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
+            if (maxLineLength < MIN_LINE_LENGTH || maxLineLength > MAX_LINE_LENGTH) {
+                throw new ConfigurationException(String.format("maxLineLength must be between %d and %d", MIN_LINE_LENGTH, MAX_LINE_LENGTH));
             }
 
             heloEhloEnforcement = configuration.getBoolean("heloEhloEnforcement", true);
@@ -399,7 +407,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     @Override
     protected ChannelHandlerFactory createFrameHandlerFactory() {
-        return new AllButStartTlsLineChannelHandlerFactory("starttls", AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
+        return new AllButStartTlsLineChannelHandlerFactory("starttls", maxLineLength);
     }
 
     public AuthenticationAnnounceMode getAuthRequired() {

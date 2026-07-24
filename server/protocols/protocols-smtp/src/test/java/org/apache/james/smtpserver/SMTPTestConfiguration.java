@@ -29,6 +29,7 @@ import org.apache.james.smtpserver.fastfail.ValidSenderDomainHandler;
 public class SMTPTestConfiguration extends BaseHierarchicalConfiguration {
 
     private int maxMessageSizeKB = 0;
+    private Integer maxLineLength;
     private String authorizedAddresses = "127.0.0.0/8";
     private String authorizingMode = "false";
     private boolean verifyIdentity = false;
@@ -52,6 +53,10 @@ public class SMTPTestConfiguration extends BaseHierarchicalConfiguration {
 
     public void setMaxMessageSize(int kilobytes) {
         maxMessageSizeKB = kilobytes;
+    }
+
+    public void setMaxLineLength(int maxLineLength) {
+        this.maxLineLength = maxLineLength;
     }
 
     public void setAuthorizedAddresses(String authorizedAddresses) {
@@ -128,6 +133,9 @@ public class SMTPTestConfiguration extends BaseHierarchicalConfiguration {
         addProperty("connectiontimeout", 360000);
         addProperty("authorizedAddresses", authorizedAddresses);
         addProperty("maxmessagesize", maxMessageSizeKB);
+        if (maxLineLength != null) {
+            addProperty("maxLineLength", maxLineLength);
+        }
         addProperty("authRequired", authorizingMode);
         addProperty("heloEhloEnforcement", heloEhloEnforcement);
         addProperty("addressBracketsEnforcement", addressBracketsEnforcement);
