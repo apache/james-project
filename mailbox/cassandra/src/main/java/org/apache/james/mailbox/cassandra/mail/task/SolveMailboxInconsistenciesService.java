@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -149,9 +148,11 @@ public class SolveMailboxInconsistenciesService {
      *
      * This inconsistency arise if mailbox creation fails or upon partial deletes.
      *
-     * In both case removing the dandling path registration solves the inconsistency
-     *
-     * In order to solve this inconsistency, we can simply re-reference the mailboxPath.
+     * The path table being the source of truth, we re-create the missing MailboxDao projection
+     * from the registered path entry rather than dropping the path registration: the mailbox may
+     * still hold messages (keyed by id) that would otherwise become unreachable. We re-read the
+     * path entry with STRONG consistency first, so a registration that has meanwhile been removed
+     * is left untouched.
      */
     private static class OrphanMailboxPathDAOEntry implements Inconsistency {
         private final Mailbox mailbox;
@@ -162,7 +163,8 @@ public class SolveMailboxInconsistenciesService {
 
         @Override
         public Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO) {
-            return pathV3DAO.delete(mailbox.generateAssociatedPath())
+            return pathV3DAO.retrieve(mailbox.generateAssociatedPath(), STRONG)
+                .flatMap(mailboxDAO::save)
                 .doOnSuccess(any -> {
                     LOGGER.info("Inconsistency fixed for orphan mailboxPath {} - {}",
                         mailbox.getMailboxId().serialize(),
