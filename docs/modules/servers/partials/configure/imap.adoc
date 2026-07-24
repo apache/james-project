@@ -114,12 +114,19 @@ The `auth` element mentioned above has the following options.
 | Enables the authentication mechanisms `PLAIN` and `LOGIN`.
 It is an optional boolean that defaults to `true`.
 
+| `auth.saslMechanisms`
+| Optional comma-separated list of SASL mechanism factory class names.
+When present, this list replaces the default mechanisms.
+Built-in factories can be named by their simple class name; extension factories must use their fully qualified class name.
+See xref:{pages-path}/configure/kerberos.adoc[Kerberos GSSAPI authentication] for an extension example.
+
 | `auth.requireSSL`
-| Configures whether the authentication mechanisms `PLAIN` and `LOGIN` require a secure connection (TLS or STARTTLS).
+| Configures whether the authentication mechanisms `PLAIN`, `LOGIN`, and optional `GSSAPI` require a secure connection (TLS or STARTTLS).
 It has no effect on other authentication mechanisms.
-It also has no effect if `plainAuthEnabled` is `false`.
+For `PLAIN` and `LOGIN`, it has no effect if `plainAuthEnabled` is `false`.
 The value is optional.
-If not configured, it uses the value of `plainAuthDisallowed` (which defaults to `true`) as fallback.
+For `PLAIN` and `LOGIN`, if not configured, it uses the value of `plainAuthDisallowed` (which defaults to `true`) as fallback.
+For `GSSAPI`, if not configured, it defaults to `true`.
 
 | `auth.adminUsers`
 | Configures admin users that are authorized to impersonate any IMAP user.
@@ -129,6 +136,10 @@ It is an optional element containing `adminUser` elements.
 | `auth.oidc`
 | Configures authentication via OIDC.
 The configuration is described in more detail xref:{pages-path}/configure/oidc.adoc[here].
+
+| `auth.gssapi`
+| Configures optional Kerberos authentication through the `GSSAPI` SASL mechanism.
+The configuration is described in more detail xref:{pages-path}/configure/kerberos.adoc[here].
 
 |===
 

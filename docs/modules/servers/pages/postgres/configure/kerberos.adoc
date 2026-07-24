@@ -1,0 +1,5 @@
+= Postgresql James Server &mdash; Kerberos GSSAPI Configuration
+:navtitle: Kerberos GSSAPI Configuration
+
+:pages-path: postgres
+include::partial$configure/kerberos.adoc[]

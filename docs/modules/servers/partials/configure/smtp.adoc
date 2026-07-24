@@ -136,20 +136,32 @@ However, if authentication capabilities are not announced, only the mechanisms `
 | Configures whether announcing authentication capabilities requires a secure connection (TLS or STARTTLS).
 If this value is `true` and the connection is not secure, authentication capabilities are not announced.
 This always holds, even if `auth.announce` is set to `always`.
+The optional `GSSAPI` mechanism also uses this value to reject authentication attempts over an insecure connection.
 
 It is an optional boolean that defaults to `true`.
 
-Note that this configures only the **announcement** of authentication capabilities.
-Even if authentication capabilities are not announced, clients can still use the SMTP AUTH command with the mechanisms `PLAIN` and `LOGIN`.
+For the built-in mechanisms, this configures only the **announcement** of authentication capabilities.
+Even if authentication capabilities are not announced, clients can still use the SMTP AUTH command with `PLAIN` and `LOGIN`.
 However, as the mechanisms `XOAUTH2` and `OAUTHBEARER` are only available if authentication mechanisms are announced, those mechanisms can only be used in secure connections if `auth.requireSSL` is set to `true`.
+When `GSSAPI` is configured and `auth.requireSSL` is `true`, it is both unannounced and unavailable on insecure connections.
 
 | `auth.plainAuthEnabled`
 | Enables the authentication mechanisms `PLAIN` and `LOGIN`.
 It is an optional boolean that defaults to `true`.
 
+| `auth.saslMechanisms`
+| Optional comma-separated list of SASL mechanism factory class names.
+When present, this list replaces the default mechanisms.
+Built-in factories can be named by their simple class name; extension factories must use their fully qualified class name.
+See xref:{pages-path}/configure/kerberos.adoc[Kerberos GSSAPI authentication] for an extension example.
+
 | `auth.oidc`
 | Configures authentication via OIDC.
 The configuration is described in more detail xref:{pages-path}/configure/oidc.adoc[here].
+
+| `auth.gssapi`
+| Configures optional Kerberos authentication through the `GSSAPI` SASL mechanism.
+The configuration is described in more detail xref:{pages-path}/configure/kerberos.adoc[here].
 
 | `auth.required`
 | Requires authentication for submitting an email to the SMTP server.
@@ -165,7 +177,7 @@ Note that `authorizedAddresses` are considered authenticated.
 
 == Security
 
-James supports authentication with username / password (`PLAIN` and `LOGIN`) and OIDC (`XOAUTH2` and `OAUTHBEARER`).
+James supports authentication with username / password (`PLAIN` and `LOGIN`), OIDC (`XOAUTH2` and `OAUTHBEARER`), and optional Kerberos (`GSSAPI`).
 SMTP authentication is essential to prevent sender address spoofing and open relays.
 
 For the concepts explained below, the distinction between local and external users is important.
