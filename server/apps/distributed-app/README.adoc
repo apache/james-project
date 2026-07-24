@@ -152,6 +152,17 @@ environment variable, or the `restore.messages.after` system property:
 $ java ... org.apache.james.S3RecoveryMain --restore-after=2026-01-01T00:00:00Z
 ----
 
+An optional `--header-blob-prefix=<prefix>` argument (also settable via the `RECOVERY_HEADER_BLOB_PREFIX`
+environment variable or the `recovery.header.blob.prefix` system property) narrows the walk to the
+recovery sidecars whose header blob id starts with the given prefix, and lets S3 filter server-side.
+Because header blob ids are generation-aware (`family_generation_...`), a clever admin can pass e.g.
+`1_42_` to iterate solely the latest generation instead of scanning the whole bucket:
+
+[source]
+----
+$ java ... org.apache.james.S3RecoveryMain --header-blob-prefix=1_42_
+----
+
 Notes:
 
 * Restored messages are re-stored (and get a fresh `recovery/` sidecar), so re-running the recovery

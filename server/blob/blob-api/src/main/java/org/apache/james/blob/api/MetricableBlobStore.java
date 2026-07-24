@@ -131,4 +131,9 @@ public class MetricableBlobStore implements BlobStore {
     public Publisher<BlobId> listBlobs(BucketName bucketName) {
         return blobStoreImpl.listBlobs(bucketName);
     }
+
+    @Override
+    public Publisher<BlobId> listBlobs(BucketName bucketName, String prefix) {
+        return blobStoreImpl.listBlobs(bucketName, prefix);
+    }
 }

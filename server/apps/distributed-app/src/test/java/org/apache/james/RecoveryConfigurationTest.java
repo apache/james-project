@@ -43,4 +43,15 @@ class RecoveryConfigurationTest {
         assertThatThrownBy(() -> RecoveryConfiguration.parse(new String[] {"--restore-after=not-a-date"}))
             .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void parseShouldDefaultHeaderBlobPrefixToEmpty() {
+        assertThat(RecoveryConfiguration.parse(new String[] {}).headerBlobPrefix()).isEmpty();
+    }
+
+    @Test
+    void parseShouldReadHeaderBlobPrefixArgument() {
+        assertThat(RecoveryConfiguration.parse(new String[] {"--header-blob-prefix=1_42_"}).headerBlobPrefix())
+            .isEqualTo("1_42_");
+    }
 }

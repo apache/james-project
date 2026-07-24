@@ -190,6 +190,11 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
         return underlying.listBlobs(bucketName);
     }
 
+    @Override
+    public Publisher<BlobId> listBlobs(BucketName bucketName, String prefix) {
+        return underlying.listBlobs(bucketName, prefix);
+    }
+
     private InputStreamBlob decompress(InputStreamBlob blob) throws ObjectStoreIOException {
         try {
             metricRecorder.recordDecompression();

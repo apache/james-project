@@ -405,4 +405,9 @@ public class CachedBlobStore implements BlobStore {
     public Publisher<BlobId> listBlobs(BucketName bucketName) {
         return backend.listBlobs(bucketName);
     }
+
+    @Override
+    public Publisher<BlobId> listBlobs(BucketName bucketName, String prefix) {
+        return backend.listBlobs(bucketName, prefix);
+    }
 }
