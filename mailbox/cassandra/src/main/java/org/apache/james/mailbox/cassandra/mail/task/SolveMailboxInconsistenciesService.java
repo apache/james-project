@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -628,7 +629,7 @@ public class SolveMailboxInconsistenciesService {
     }
 
     private Flux<Result> processMailboxPathDaoInconsistencies(Context context, boolean autoMerge) {
-        return mailboxPathV3DAO.listAll()
+        return mailboxPathV3DAO.listAll(STRONG)
             .flatMap(entry -> detectMailboxPathDaoInconsistency(entry, autoMerge), DEFAULT_CONCURRENCY)
             .doOnNext(any -> context.incrementProcessedMailboxPathEntries())
             // Detect every inconsistency first, then fix them one at a time. Resolving a same-mailbox
