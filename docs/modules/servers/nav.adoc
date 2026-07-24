@@ -76,6 +76,7 @@
 **** xref:distributed/operate/migrating.adoc[]
 **** xref:distributed/operate/cli.adoc[]
 **** xref:distributed/operate/cassandra-migration.adoc[]
+**** xref:distributed/operate/backup.adoc[]
 **** xref:distributed/operate/security.adoc[]
 *** xref:distributed/customization/index.adoc[]
 **** xref:distributed/customization/imap.adoc[]
