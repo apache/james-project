@@ -106,3 +106,59 @@ $ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.
 
 Note that binding ports below 1024 requires administrative rights.
 
+== S3 blob store recovery
+
+When the S3 (or compatible) object store survives but the Cassandra mailbox structure is lost, messages
+can be rebuilt from the blob store alone, provided `mailbox.blob.recovery.mode` was set to `synchronous`
+or `asynchronous` in `cassandra.properties` while messages were being stored. In that mode James writes,
+next to each stored message, a `recovery/<headerBlobId>` sidecar blob holding the matching `bodyBlobId`.
+
+Recovery is packaged as an alternate main class, `org.apache.james.S3RecoveryMain`, that reuses the same
+mailbox, DAO and blob store modules and the same `blobstore.properties` (so AES encryption and
+compression are applied transparently). It starts neither the protocol servers nor RabbitMQ.
+
+It walks the blob store, reads each `recovery/` sidecar, rebuilds the message from its header and body
+blobs, reads the `Delivered-To` recipients, and appends the message into a `Restored-messages` mailbox
+of each local recipient.
+
+Run it by overriding the entrypoint main class (Cassandra and S3 must be reachable, RabbitMQ is not
+needed):
+
+[source]
+----
+$ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml \
+    -cp james-server-distributed-app.jar:james-server-distributed-app.lib/* \
+    org.apache.james.S3RecoveryMain
+----
+
+Or, from the docker image, by overriding the container main class:
+
+[source]
+----
+$ docker run --rm --entrypoint java \
+    -v /path/conf:/root/conf \
+    apache/james:distributed-latest \
+    -Dworking.directory=/root -Dextra.props=/root/conf/jvm.properties \
+    -cp '/app/resources:/app/classes:/app/libs/*' \
+    org.apache.james.S3RecoveryMain
+----
+
+An optional date filter restricts recovery to messages whose `Date` header is strictly after the given
+ISO-8601 instant. It can be passed as a `--restore-after=<instant>` argument, the `RESTORE_MESSAGES_AFTER`
+environment variable, or the `restore.messages.after` system property:
+
+[source]
+----
+$ java ... org.apache.james.S3RecoveryMain --restore-after=2026-01-01T00:00:00Z
+----
+
+Notes:
+
+* Restored messages are re-stored (and get a fresh `recovery/` sidecar), so re-running the recovery
+restores them again. Restore into an empty deployment, or clean up between runs.
+* The search index module is not started during recovery, so restored messages are not indexed on the
+fly. Run a re-indexing afterwards if search is needed.
+
+The same class can be reused for Twake mail by pointing its distributed image at
+`org.apache.james.S3RecoveryMain`.
+
