@@ -74,7 +74,10 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
 
         return getSelectedMailboxReactive(session)
             .flatMap(Throwing.function(mailbox -> {
-                if (!getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
+                // https://datatracker.ietf.org/doc/html/rfc3501#section-6.3.2
+                //      No changes to the permanent state of the mailbox, including per-user state, are permitted.
+                if (session.getSelected().isReadOnly()
+                    || !getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
                     no(request, responder, HumanReadableText.MAILBOX_IS_READ_ONLY);
                     return Mono.empty();
                 } else {

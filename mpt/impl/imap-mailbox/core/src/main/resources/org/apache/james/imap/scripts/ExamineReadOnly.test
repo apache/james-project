@@ -1,0 +1,124 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# A mailbox selected by EXAMINE is read-only: no change to its permanent state, including
+# per-user state, is permitted.
+#
+# https://datatracker.ietf.org/doc/html/rfc3501#section-6.3.2
+C: A003 APPEND inbox {254+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: Test 01
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Test 01
+C:
+S: A003 OK (\[.+\] )?APPEND completed.
+
+C: A003 APPEND inbox {254+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: Test 02
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Test 02
+C:
+S: A003 OK (\[.+\] )?APPEND completed.
+
+# Mark the first message \Deleted while the mailbox is still writeable, so that we can later
+# assert that CLOSE on a read-only mailbox does not expunge it.
+C: rw1 SELECT inbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 2 EXISTS
+S: \* 2 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 3\].*
+S: rw1 OK \[READ-WRITE\] SELECT completed.
+
+C: rw2 STORE 1 +FLAGS.SILENT (\Deleted)
+S: rw2 OK STORE completed.
+
+# Re-selecting the very same mailbox with EXAMINE must turn the selection read-only.
+C: ro1 EXAMINE inbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 2 EXISTS
+S: \* 2 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 3\].*
+S: ro1 OK \[READ-ONLY\] EXAMINE completed.
+
+# A non peeking BODY[] implicitly sets \Seen: not here. No FLAGS response either, as no flag changed.
+C: ro2 FETCH 2 (BODY[])
+S: \* 2 FETCH \(BODY\[\] \{254\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: Subject: Test 02
+S: To: mooch@owatagu\.siam\.edu
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: Test 02
+S: \)
+S: ro2 OK FETCH completed.
+
+C: ro3 FETCH 2 (FLAGS)
+S: \* 2 FETCH \(FLAGS \(\\Recent\)\)
+S: ro3 OK FETCH completed.
+
+C: ro4 STORE 2 +FLAGS (\Flagged)
+S: ro4 NO STORE failed. Mailbox is read only.
+
+C: ro5 EXPUNGE
+S: ro5 NO EXPUNGE failed. Mailbox is read only.
+
+# CLOSE removes no message and gives no error when the mailbox is selected read-only.
+C: ro6 CLOSE
+S: ro6 OK CLOSE completed.
+
+# Nothing was persisted: the \Deleted message is still there, the fetched one is still unseen.
+C: rw3 SELECT inbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 2 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 3\].*
+S: rw3 OK \[READ-WRITE\] SELECT completed.
+
+C: rw4 FETCH 1:2 (FLAGS)
+S: \* 1 FETCH \(FLAGS \(\\Deleted\)\)
+S: \* 2 FETCH \(FLAGS \(\)\)
+S: rw4 OK FETCH completed.

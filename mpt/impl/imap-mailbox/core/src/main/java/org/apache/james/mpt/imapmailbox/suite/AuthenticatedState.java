@@ -75,6 +75,11 @@ public abstract class AuthenticatedState extends BasicImapCommands {
     }
 
     @Test
+    public void testExamineReadOnlyUS() throws Exception {
+        simpleScriptedTestProtocol.run("ExamineReadOnly");
+    }
+
+    @Test
     public void testAppendSelectInboxUS() throws Exception {
         simpleScriptedTestProtocol.run("AppendSelectInbox");
     }

@@ -136,6 +136,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     private final AtomicBoolean isDeletedByOtherSession = new AtomicBoolean(false);
     private final AtomicBoolean sizeChanged = new AtomicBoolean(false);
     private final AtomicBoolean silentFlagChanges = new AtomicBoolean(false);
+    private final AtomicBoolean readOnly = new AtomicBoolean(false);
     private ApplicableFlags applicableFlags = ApplicableFlags.from(new Flags());
 
     public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, MailboxSession session, MessageManager messageManager) {
@@ -217,6 +218,16 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     @Override
     public MessageManager getMessageManager() {
         return messageManager;
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return readOnly.get();
+    }
+
+    @Override
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly.set(readOnly);
     }
 
     @Override

@@ -180,6 +180,24 @@ public interface SelectedMailbox {
     List<MessageUid> allUids();
     
     /**
+     * Was this mailbox selected read-only, that is to say by EXAMINE rather than by SELECT ?
+     *
+     * https://datatracker.ietf.org/doc/html/rfc3501#section-6.3.2
+     *      [EXAMINE] is identical to SELECT and returns the same output; however, the selected
+     *      mailbox is identified as read-only. No changes to the permanent state of the mailbox,
+     *      including per-user state, are permitted.
+     *
+     * @return true when the mailbox was selected by EXAMINE
+     */
+    boolean isReadOnly();
+
+    /**
+     * Set whether this mailbox is selected read-only. A mailbox already selected by SELECT can be
+     * re-selected by EXAMINE - and the other way around - within the same session.
+     */
+    void setReadOnly(boolean readOnly);
+
+    /**
      * Return all applicable Flags for the selected mailbox
      */
     Flags getApplicableFlags();
