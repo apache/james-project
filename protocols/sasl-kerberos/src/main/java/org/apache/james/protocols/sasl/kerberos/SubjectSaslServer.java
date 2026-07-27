@@ -27,7 +27,7 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 
-final class SubjectSaslServer {
+class SubjectSaslServer {
     static SaslServer create(Subject subject,
                              GssapiSaslServerFactory saslServerFactory,
                              GssapiSaslConfiguration configuration,
