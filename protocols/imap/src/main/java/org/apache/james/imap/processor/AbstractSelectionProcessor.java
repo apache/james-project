@@ -422,6 +422,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 }
             }))
             .flatMap(Throwing.function(mailbox -> selectMailbox(session, responder, mailbox, currentMailbox)
+                .doOnNext(sessionMailbox -> sessionMailbox.setReadOnly(openReadOnly))
                 .flatMap(Throwing.function(sessionMailbox ->
                     mailbox.getMetaDataReactive(recentMode(!openReadOnly, mailbox, mailboxSession), mailboxSession, EnumSet.of(MailboxMetaData.Item.FirstUnseen, MailboxMetaData.Item.HighestModSeq, MailboxMetaData.Item.NextUid, MailboxMetaData.Item.MailboxCounters))
                         .doOnNext(next -> addRecent(next, sessionMailbox))))));
