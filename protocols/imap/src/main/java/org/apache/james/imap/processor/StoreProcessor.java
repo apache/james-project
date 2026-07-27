@@ -91,6 +91,12 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         }
 
         SelectedMailbox selected = session.getSelected();
+        if (selected.isReadOnly()) {
+            // https://datatracker.ietf.org/doc/html/rfc3501#section-6.3.2
+            //      No changes to the permanent state of the mailbox, including per-user state, are permitted.
+            no(request, responder, HumanReadableText.MAILBOX_IS_READ_ONLY);
+            return Mono.empty();
+        }
         MailboxSession mailboxSession = session.getMailboxSession();
 
         return getSelectedMailboxReactive(session)

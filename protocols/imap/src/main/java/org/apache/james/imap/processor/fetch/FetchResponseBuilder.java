@@ -229,7 +229,7 @@ public final class FetchResponseBuilder {
     }
 
     private Mono<Void> addFlags(FetchData fetch, MessageManager mailbox, SelectedMailbox selected, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) {
-        return ensureFlagResponse(fetch, mailbox, resultUid, mailboxSession, flags)
+        return ensureFlagResponse(fetch, mailbox, selected, resultUid, mailboxSession, flags)
             .doOnNext(ensureFlagsResponse -> {
                 if (fetch.contains(Item.FLAGS) || ensureFlagsResponse) {
                     if (selected.isRecent(resultUid)) {
@@ -241,8 +241,13 @@ public final class FetchResponseBuilder {
             .then();
     }
 
-    private Mono<Boolean> ensureFlagResponse(FetchData fetch, MessageManager mailbox, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) {
-        if (fetch.isSetSeen() && !flags.contains(Flags.Flag.SEEN)) {
+    private Mono<Boolean> ensureFlagResponse(FetchData fetch, MessageManager mailbox, SelectedMailbox selected, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) {
+        // A BODY[] - as opposed to a BODY.PEEK[] - implicitly sets \Seen, which a mailbox selected by
+        // EXAMINE does not allow.
+        //
+        // https://datatracker.ietf.org/doc/html/rfc3501#section-6.3.2
+        //      No changes to the permanent state of the mailbox, including per-user state, are permitted.
+        if (fetch.isSetSeen() && !selected.isReadOnly() && !flags.contains(Flags.Flag.SEEN)) {
             return Mono.from(mailbox.setFlagsReactive(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(resultUid), mailboxSession))
                 .then(Mono.fromCallable(() -> {
                     flags.add(Flags.Flag.SEEN);

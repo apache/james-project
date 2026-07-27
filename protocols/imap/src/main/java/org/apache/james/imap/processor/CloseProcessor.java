@@ -57,6 +57,13 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
         MailboxSession mailboxSession = session.getMailboxSession();
         return getSelectedMailboxReactive(session)
             .flatMap(Throwing.function(mailbox -> {
+                // https://datatracker.ietf.org/doc/html/rfc3501#section-6.4.2
+                //      no messages are removed, and no error is given, if the mailbox is selected by an
+                //      EXAMINE command or is otherwise selected read-only.
+                if (session.getSelected().isReadOnly()) {
+                    return session.deselect()
+                        .then(Mono.fromRunnable(() -> okComplete(request, responder)));
+                }
                 if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
                     return mailbox.expungeReactive(MessageRange.all(), mailboxSession)
                         .count()
