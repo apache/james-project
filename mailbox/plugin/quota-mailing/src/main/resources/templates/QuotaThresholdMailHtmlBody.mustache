@@ -1,0 +1,22 @@
+<html>
+<head>
+    <meta charset="UTF-8"/>
+</head>
+<body style="font-family: Helvetica, Arial, sans-serif; color: #333333;">
+<p>You receive this email because you recently exceeded a threshold related to the quotas of your email account.</p>
+{{#hasExceededSizeThreshold}}
+<p>
+    You currently occupy more than <strong>{{sizeThreshold}} %</strong> of the total size allocated to you.<br/>
+    You currently occupy <strong>{{usedSize}}</strong>{{#hasSizeLimit}} on a total of <strong>{{limitSize}}</strong> allocated to you{{/hasSizeLimit}}.
+</p>
+{{/hasExceededSizeThreshold}}
+{{#hasExceededCountThreshold}}
+<p>
+    You currently occupy more than <strong>{{countThreshold}} %</strong> of the total message count allocated to you.<br/>
+    You currently have <strong>{{usedCount}}</strong> messages{{#hasCountLimit}} on a total of <strong>{{limitCount}}</strong> allowed for you{{/hasCountLimit}}.
+</p>
+{{/hasExceededCountThreshold}}
+<p>You need to be aware that actions leading to exceeded quotas will be denied. This will result in a degraded service.</p>
+<p>To mitigate this issue you might reach your administrator in order to increase your configured quota. You might also delete some non important emails.</p>
+</body>
+</html>

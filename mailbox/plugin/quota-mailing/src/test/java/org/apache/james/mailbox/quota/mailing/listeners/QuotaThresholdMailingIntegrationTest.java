@@ -37,6 +37,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 
+import jakarta.mail.internet.MimeMultipart;
+
 import org.apache.james.events.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
@@ -45,6 +47,7 @@ import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.mailet.base.test.FakeMailContext;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
 public interface QuotaThresholdMailingIntegrationTest {
@@ -314,6 +317,33 @@ public interface QuotaThresholdMailingIntegrationTest {
 
         assertThat(mailetContext.getSentMails())
             .hasSize(2);
+    }
+
+    @Test
+    default void shouldSendMultipartAlternativeMailWhenHtmlTemplateIsConfigured(EventStore store) throws Exception {
+        FakeMailContext mailetContext = mailetContext();
+        QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store,
+            QuotaMailingListenerConfiguration.builder()
+                .addThresholds(_50)
+                .htmlBodyTemplate(QuotaMailingListenerConfiguration.SAMPLE_HTML_BODY_TEMPLATE)
+                .gracePeriod(GRACE_PERIOD)
+                .build());
+
+        testee.event(eventBase()
+            .quotaCount(Counts._52_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(NOW)
+            .build());
+
+        MimeMultipart content = (MimeMultipart) mailetContext.getSentMails().get(0).getMsg().getContent();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(content.getContentType()).startsWith("multipart/alternative");
+        softly.assertThat(content.getBodyPart(0).getContentType()).startsWith("text/plain");
+        softly.assertThat((String) content.getBodyPart(1).getContent())
+            .startsWith("<html>")
+            .contains("You currently occupy more than <strong>50 %</strong> of the total message count allocated to you.");
+        softly.assertAll();
     }
 
     @Test

@@ -32,6 +32,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.mail.MessagingException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -46,6 +48,7 @@ import org.apache.james.mailbox.quota.model.QuotaThreshold;
 import org.apache.james.mailbox.quota.model.QuotaThresholdChange;
 import org.apache.james.util.SizeFormat;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
@@ -53,6 +56,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class QuotaThresholdNotice {
+    private static final String ALTERNATIVE_SUB_TYPE = "alternative";
+    private static final String TEXT_HTML_UTF8_TYPE = "text/html; charset=UTF-8";
 
     public static class Builder {
         private Optional<QuotaThreshold> countThreshold;
@@ -135,10 +140,22 @@ public class QuotaThresholdNotice {
         this.configuration = configuration;
     }
 
-    public MimeMessageBuilder generateMimeMessage(FileSystem fileSystem) throws IOException {
-        return MimeMessageBuilder.mimeMessageBuilder()
-            .setSubject(generateSubject(fileSystem))
-            .setText(generateReport(fileSystem));
+    public MimeMessageBuilder generateMimeMessage(FileSystem fileSystem) throws IOException, MessagingException {
+        MimeMessageBuilder mimeMessageBuilder = MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject(generateSubject(fileSystem));
+
+        Optional<String> htmlReport = generateHtmlReport(fileSystem);
+        if (htmlReport.isEmpty()) {
+            return mimeMessageBuilder.setText(generateReport(fileSystem));
+        }
+        return mimeMessageBuilder.setContent(MimeMessageBuilder.multipartBuilder()
+            .subType(ALTERNATIVE_SUB_TYPE)
+            .addBody(MimeMessageBuilder.bodyPartBuilder()
+                .data(generateReport(fileSystem))
+                .type(MimeMessageBuilder.DEFAULT_TEXT_PLAIN_UTF8_TYPE))
+            .addBody(MimeMessageBuilder.bodyPartBuilder()
+                .data(htmlReport.get())
+                .type(TEXT_HTML_UTF8_TYPE)));
     }
 
     @VisibleForTesting
@@ -153,6 +170,12 @@ public class QuotaThresholdNotice {
             configuration.getBodyTemplate(mostSignificantThreshold()));
     }
 
+    @VisibleForTesting
+    Optional<String> generateHtmlReport(FileSystem fileSystem) throws IOException {
+        return configuration.getHtmlBodyTemplate(mostSignificantThreshold())
+            .map(Throwing.function((String template) -> renderTemplate(fileSystem, template)).sneakyThrow());
+    }
+
     private QuotaThreshold mostSignificantThreshold() {
         return Stream.of(countThreshold, sizeThreshold)
             .flatMap(Optional::stream)
@@ -162,7 +185,7 @@ public class QuotaThresholdNotice {
 
     private String renderTemplate(FileSystem fileSystem, String template) throws IOException {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-             Writer writer = new OutputStreamWriter(byteArrayOutputStream)) {
+             Writer writer = new OutputStreamWriter(byteArrayOutputStream, StandardCharsets.UTF_8)) {
 
             MustacheFactory mf = new DefaultMustacheFactory();
             Mustache mustache = mf.compile(getPatternReader(fileSystem, template), "example");

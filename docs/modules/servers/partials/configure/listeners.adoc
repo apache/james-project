@@ -99,6 +99,11 @@ different occupation thresholds.
 | bodyTemplate
 | Mustache template for rendering the body of the warning email.
 
+| htmlBodyTemplate
+| Optional. Mustache template for rendering an HTML body of the warning email. When specified, the email is sent as a
+`multipart/alternative` message combining the plain text body (from `bodyTemplate`) and this HTML body. It is exposed the
+same rendering variables as `bodyTemplate`.
+
 | thresholds
 | Floating number between 0 and 1 representing the threshold of quota occupation from which a mail should be sent.
 Configuring several thresholds is supported.
