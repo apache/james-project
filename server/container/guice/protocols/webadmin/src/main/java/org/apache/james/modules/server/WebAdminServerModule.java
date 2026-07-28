@@ -60,6 +60,7 @@ import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import org.apache.james.webadmin.authentication.PasswordFilter;
+import org.apache.james.webadmin.authentication.PasswordGenerator;
 import org.apache.james.webadmin.dto.DTOModuleInjections;
 import org.apache.james.webadmin.mdc.RequestLogger;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -83,6 +84,7 @@ public class WebAdminServerModule extends AbstractModule {
 
     private static final boolean DEFAULT_JWT_DISABLED = false;
     private static final boolean DEFAULT_DISABLED = false;
+    private static final boolean DEFAULT_PASSWORD_GENERATION_ENABLED = true;
     private static final String DEFAULT_NO_CORS_ORIGIN = null;
     private static final boolean DEFAULT_CORS_DISABLED = false;
     private static final String DEFAULT_NO_KEYSTORE = null;
@@ -142,9 +144,10 @@ public class WebAdminServerModule extends AbstractModule {
             Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
 
             List<String> additionalRoutes = additionalRoutes(configurationFile);
+            boolean webAdminEnabled = configurationFile.getBoolean("enabled", DEFAULT_DISABLED);
 
             return WebAdminConfiguration.builder()
-                .enable(configurationFile.getBoolean("enabled", DEFAULT_DISABLED))
+                .enable(webAdminEnabled)
                 .port(port(configurationFile))
                 .tls(readHttpsConfiguration(configurationFile))
                 .enableCORS(configurationFile.getBoolean("cors.enable", DEFAULT_CORS_DISABLED))
@@ -155,7 +158,7 @@ public class WebAdminServerModule extends AbstractModule {
                     Optional.ofNullable(configurationFile.getString("jwt.publickeypem.url", null))))
                 .maxThreadCount(Optional.ofNullable(configurationFile.getInteger("maxThreadCount", null)))
                 .minThreadCount(Optional.ofNullable(configurationFile.getInteger("minThreadCount", null)))
-                .password(Optional.ofNullable(configurationFile.getString("password", null)))
+                .password(password(configurationFile, webAdminEnabled))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");
@@ -170,6 +173,33 @@ public class WebAdminServerModule extends AbstractModule {
             return new RandomPortSupplier();
         }
         return new FixedPortSupplier(portNumber);
+    }
+
+    @VisibleForTesting
+    Optional<String> password(Configuration configurationFile, boolean webAdminEnabled) {
+        Optional<String> configuredPassword = Optional.ofNullable(configurationFile.getString("password", null));
+
+        if (configuredPassword.isPresent()) {
+            return configuredPassword;
+        }
+        if (shouldGeneratePassword(configurationFile, webAdminEnabled)) {
+            return Optional.of(generateAndLogPassword());
+        }
+        return Optional.empty();
+    }
+
+    private boolean shouldGeneratePassword(Configuration configurationFile, boolean webAdminEnabled) {
+        return configurationFile.getBoolean("password.generate", DEFAULT_PASSWORD_GENERATION_ENABLED)
+            && webAdminEnabled
+            && !configurationFile.getBoolean("jwt.enabled", DEFAULT_JWT_DISABLED);
+    }
+
+    private String generateAndLogPassword() {
+        String password = PasswordGenerator.generate();
+        LOGGER.warn("No WebAdmin password had been configured: a random one had been generated for this run. " +
+            "Supply it within the `Password` header of your WebAdmin requests, or pin it with the `password` entry " +
+            "of webadmin.properties. Generated WebAdmin password: {}", password);
+        return password;
     }
 
     @VisibleForTesting

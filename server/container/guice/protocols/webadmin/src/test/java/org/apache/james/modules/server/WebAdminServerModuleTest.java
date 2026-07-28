@@ -21,11 +21,18 @@ package org.apache.james.modules.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.utils.PropertiesProvider;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class WebAdminServerModuleTest {
+    private static final boolean WEBADMIN_ENABLED = true;
+    private static final boolean WEBADMIN_DISABLED = false;
+
     @Test
     void shouldReturnEmptyWhenNoField() throws Exception {
         Configuration configuration = getConfiguration("webadmin-none");
@@ -60,5 +67,70 @@ class WebAdminServerModuleTest {
 
     private Configuration getConfiguration(String name) throws Exception {
         return PropertiesProvider.forTesting().getConfiguration(name);
+    }
+
+    @Nested
+    class PasswordGeneration {
+        @Test
+        void passwordShouldBeGeneratedByDefault() {
+            assertThat(new WebAdminServerModule().password(new PropertiesConfiguration(), WEBADMIN_ENABLED))
+                .isNotEmpty();
+        }
+
+        @Test
+        void passwordShouldBeEmptyWhenGenerationIsDisabled() {
+            assertThat(new WebAdminServerModule().password(configuration("password.generate", false), WEBADMIN_ENABLED))
+                .isEmpty();
+        }
+
+        @Test
+        void passwordShouldBeGeneratedWhenGenerationIsEnabled() {
+            assertThat(new WebAdminServerModule().password(configuration("password.generate", true), WEBADMIN_ENABLED))
+                .isNotEmpty();
+        }
+
+        @Test
+        void generatedPasswordShouldNotContainThePasswordSeparator() {
+            assertThat(new WebAdminServerModule().password(configuration("password.generate", true), WEBADMIN_ENABLED))
+                .hasValueSatisfying(password -> assertThat(password).doesNotContain(","));
+        }
+
+        @Test
+        void generatedPasswordsShouldBeRandom() {
+            Optional<String> firstPassword = new WebAdminServerModule().password(configuration("password.generate", true), WEBADMIN_ENABLED);
+            Optional<String> secondPassword = new WebAdminServerModule().password(configuration("password.generate", true), WEBADMIN_ENABLED);
+
+            assertThat(firstPassword).isNotEqualTo(secondPassword);
+        }
+
+        @Test
+        void configuredPasswordShouldTakePrecedenceOverGeneration() {
+            PropertiesConfiguration configuration = configuration("password.generate", true);
+            configuration.addProperty("password", "secret");
+
+            assertThat(new WebAdminServerModule().password(configuration, WEBADMIN_ENABLED))
+                .contains("secret");
+        }
+
+        @Test
+        void passwordShouldNotBeGeneratedWhenWebAdminIsDisabled() {
+            assertThat(new WebAdminServerModule().password(configuration("password.generate", true), WEBADMIN_DISABLED))
+                .isEmpty();
+        }
+
+        @Test
+        void passwordShouldNotBeGeneratedWhenJwtIsEnabled() {
+            PropertiesConfiguration configuration = configuration("password.generate", true);
+            configuration.addProperty("jwt.enabled", true);
+
+            assertThat(new WebAdminServerModule().password(configuration, WEBADMIN_ENABLED))
+                .isEmpty();
+        }
+
+        private PropertiesConfiguration configuration(String key, Object value) {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            configuration.addProperty(key, value);
+            return configuration;
+        }
     }
 }
