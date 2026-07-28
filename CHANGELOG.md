@@ -7,7 +7,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased 3.9.x]
 
-No changes yet.
+### Security
+
+ - Webadmin `password.generate`: generate a random password upon start up when none is configured, and log it.
+ **Breaking change**: this defaults to `true`, thus webadmin is no longer unauthenticated out of the box, existing
+ deployments included. Set `password.generate=false` in `webadmin.properties` to opt back into an unauthenticated
+ webadmin, or configure `password` to pin a stable secret.
 
 ## [3.9.0] - 2025-xx-xx
 
