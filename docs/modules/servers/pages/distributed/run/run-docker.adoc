@@ -82,7 +82,8 @@ Where :
 
 - HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
-Webadmin port binding is restricted to loopback as users are not authenticated by default on webadmin server. Thus you should avoid exposing it in production.
+Webadmin port binding is restricted to loopback. Webadmin is protected by a password randomly generated upon
+each start up and written in the logs (see `password.generate`), yet you should avoid exposing it in production.
 Note that the above example assumes `127.0.0.1` is your loopback interface for convenience but you should change it if this is not the case on your machine.
 
 If you want to pass additional options to the underlying java command, you can configure a _JAVA_TOOL_OPTIONS_ env variable, for example add:
