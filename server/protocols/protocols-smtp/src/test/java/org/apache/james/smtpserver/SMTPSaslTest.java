@@ -26,8 +26,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -55,6 +57,7 @@ import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
 import org.apache.james.protocols.smtp.core.esmtp.LoginSaslMechanismFactory;
 import org.apache.james.util.ClassLoaderUtils;
 import org.assertj.core.api.SoftAssertions;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -621,6 +624,57 @@ class SMTPSaslTest {
     }
 
     @Test
+    void disconnectDuringSaslContinuationShouldCloseExchangeOnce() throws Exception {
+        AtomicInteger closeCount = new AtomicInteger();
+        resetWithMechanisms(ImmutableList.of(new RecordingSaslMechanism(closeCount)));
+        SMTPClient client = connectedClient();
+
+        client.sendCommand("AUTH RECORDING");
+        assertThat(client.getReplyString()).contains("334 " + base64("challenge"));
+        client.disconnect();
+
+        // Disconnect cleanup closes the pending SASL exchange exactly once.
+        Awaitility.await().atMost(Duration.ofSeconds(2))
+            .untilAsserted(() -> assertThat(closeCount.get()).isEqualTo(1));
+    }
+
+    @Test
+    void abortDuringSaslContinuationShouldAbortExchangeOnce() throws Exception {
+        AtomicInteger closeCount = new AtomicInteger();
+        AtomicInteger abortCount = new AtomicInteger();
+        resetWithMechanisms(ImmutableList.of(new RecordingSaslMechanism(closeCount, abortCount)));
+        SMTPClient client = connectedClient();
+
+        client.sendCommand("AUTH RECORDING");
+        assertThat(client.getReplyString()).contains("334 " + base64("challenge"));
+        client.sendCommand("*");
+        assertThat(client.getReplyString()).contains("501 5.7.1 Authentication aborted");
+        client.disconnect();
+
+        Awaitility.await().during(Duration.ofMillis(100)).atMost(Duration.ofSeconds(2))
+            .untilAsserted(() -> {
+                assertThat(abortCount.get()).isEqualTo(1);
+                assertThat(closeCount.get()).isZero();
+            });
+    }
+
+    @Test
+    void disconnectAfterTerminalSaslStepShouldNotCloseExchangeAgain() throws Exception {
+        AtomicInteger closeCount = new AtomicInteger();
+        resetWithMechanisms(ImmutableList.of(new RecordingSaslMechanism(closeCount)));
+        SMTPClient client = connectedClient();
+
+        client.sendCommand("AUTH RECORDING");
+        assertThat(client.getReplyString()).contains("334 " + base64("challenge"));
+        client.sendCommand(base64("response"));
+        assertThat(client.getReplyString()).contains("535 Authentication Failed");
+        client.disconnect();
+
+        Awaitility.await().during(Duration.ofMillis(100)).atMost(Duration.ofSeconds(2))
+            .untilAsserted(() -> assertThat(closeCount.get()).isEqualTo(1));
+    }
+
+    @Test
     void mechanismUnavailableOnClearTransportShouldNotBeAdvertisedAndShouldBeRejected() throws Exception {
         PlainSaslMechanism plain = new PlainSaslMechanism(true, true);
         resetWithMechanisms(smtpPlainAndLoginMechanisms(plain));
@@ -720,6 +774,51 @@ class SMTPSaslTest {
 
                 @Override
                 public void close() {
+                }
+            };
+        }
+    }
+
+    private static class RecordingSaslMechanism implements SaslMechanism {
+        private final AtomicInteger closeCount;
+        private final AtomicInteger abortCount;
+
+        private RecordingSaslMechanism(AtomicInteger closeCount) {
+            this(closeCount, new AtomicInteger());
+        }
+
+        private RecordingSaslMechanism(AtomicInteger closeCount, AtomicInteger abortCount) {
+            this.closeCount = closeCount;
+            this.abortCount = abortCount;
+        }
+
+        @Override
+        public String name() {
+            return "RECORDING";
+        }
+
+        @Override
+        public SaslExchange start(SaslInitialRequest request, SaslAuthenticator authenticator) {
+            return new SaslExchange() {
+                @Override
+                public SaslStep firstStep() {
+                    return new SaslStep.Challenge(Optional.of("challenge".getBytes(UTF_8)));
+                }
+
+                @Override
+                public SaslStep onResponse(byte[] clientResponse) {
+                    return new SaslStep.Failure(SaslFailure.authenticationFailed(
+                        Optional.empty(), Optional.empty(), "Test-only mechanism"));
+                }
+
+                @Override
+                public void abort() {
+                    abortCount.incrementAndGet();
+                }
+
+                @Override
+                public void close() {
+                    closeCount.incrementAndGet();
                 }
             };
         }
