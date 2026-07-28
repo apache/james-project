@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Security
+
+ - Webadmin `password.generate`: generate a random password upon start up when none is configured, and log it.
+ **Breaking change**: this defaults to `true`, thus WebAdmin is no longer unauthenticated out of the box, existing
+ deployments included. Set `password.generate=false` in `webadmin.properties` to opt back into an unauthenticated
+ WebAdmin, or configure `password` to pin a stable secret.
+
 This release brings the following significant changes:
 
  - Upgrade TCP protocols to Netty 4
