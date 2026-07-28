@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
  - JAMES-4193 Correct BoringSSL TLS 1.3 cipher suite sanitizing that led to disabled TLS 1.3 (#3029)
  - JAMES-4201 Implement granular password access control in webadmin (`password.readonly` and `password.nodelete`)
+ - Webadmin `password.generate`: generate a random password upon start up when none is configured, and log it.
+ **Breaking change**: this defaults to `true`, thus webadmin is no longer unauthenticated out of the box, existing
+ deployments included. Set `password.generate=false` in `webadmin.properties` to opt back into an unauthenticated
+ webadmin, or configure `password` to pin a stable secret.
  - JAMES-4171 Allow configuring a strong distinction between submission and MX ports
  - JAMES-4158 Allow IMAP to specify per-port administrators
  - JAMES-4183 AllowedUnauthenticatedSender mail hook, using PROXY protocol to inject source IP

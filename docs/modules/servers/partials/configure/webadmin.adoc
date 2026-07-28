@@ -39,6 +39,26 @@ to get some examples and hints.
 | cors.origin
 | Specify ths CORS origin (default: null)
 
+| password.generate
+| Generates a random password upon start up when no `password` is configured, allowing a secure setup without
+hardcoded credentials (default: true). As such, WebAdmin is never unauthenticated unless explicitly asked for.
+
+....
+password.generate=false
+....
+
+The generated password is written in the logs upon start up:
+
+....
+WARN  No WebAdmin password had been configured: a random one had been generated for this run. [...]
+Generated WebAdmin password: 8Kj2mXqT4vZ...
+....
+
+Beware: the generated password changes upon each restart, and is exposed to whoever can read the logs. Configure
+`password` explicitly for setups needing a stable secret, or set `password.generate=false` to opt back into an
+unauthenticated WebAdmin. This option is ignored when `password` is configured, when `jwt.enabled` is true, and when
+WebAdmin is disabled.
+
 | password
 | Uses a configured static value for authentication. It relies on the Password header.
 It supports several passwords, configured as a comma separated list.
