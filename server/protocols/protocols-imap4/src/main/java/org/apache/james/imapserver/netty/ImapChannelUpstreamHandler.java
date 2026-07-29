@@ -43,6 +43,7 @@ import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapProcessor;
+import org.apache.james.imap.api.process.ImapSaslExchangeTracker;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.ImapSession.SessionId;
 import org.apache.james.imap.encode.ImapEncoder;
@@ -274,6 +275,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
             LOGGER.info("Connection closed for {} and user {}", address.getAddress().getHostAddress(), retrieveUsername(imapSession));
 
+            closeSaslExchange(imapSession);
             Optional.ofNullable(imapSession).ifPresent(ImapSession::cancelOngoingProcessing);
             Optional.ofNullable(imapSession)
                 .map(ImapSession::logout)
@@ -300,6 +302,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).getAndSet(null);
         String username = retrieveUsername(imapSession);
         try (Closeable closeable = mdc(imapSession).build()) {
+            closeSaslExchange(imapSession);
             if (cause instanceof SocketException) {
                 logExpectedException("Socket exception encountered for user " + username, cause);
             } else if (isSslHandshkeException(cause)) {
@@ -336,6 +339,15 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             } else {
                 manageUnknownError(ctx);
             }
+        }
+    }
+
+    private void closeSaslExchange(ImapSession imapSession) {
+        try {
+            // Fallback when the connection terminates or encounters an unexpected transport exception during a pending exchange.
+            Optional.ofNullable(imapSession).ifPresent(ImapSaslExchangeTracker::closeForSession);
+        } catch (RuntimeException e) {
+            LOGGER.warn("Failed to close the active IMAP SASL exchange", e);
         }
     }
 

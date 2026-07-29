@@ -29,6 +29,7 @@ import jakarta.inject.Inject;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
+import org.apache.james.imap.api.process.ImapSaslExchangeTracker;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.AuthenticateRequest;
@@ -97,8 +98,9 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         try {
             SaslInitialRequest initialRequest = SaslCodec.initialRequest(request.getAuthType(), initialClientResponse(request));
             SaslAuthenticator authenticator = jamesSaslAuthenticator.withExtraAuthorizator(withAdminUsers());
-            SaslExchange exchange = mechanism.get().start(initialRequest, authenticator);
-            handleFirstStep(exchange, firstStep(exchange), session, request, responder);
+            SaslExchange exchange = ImapSaslExchangeTracker.forSession(session)
+                .register(mechanism.get().start(initialRequest, authenticator));
+            handleFirstStep(exchange, firstStep(exchange, session), session, request, responder);
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid syntax in AUTHENTICATE initial client response", e);
             authFailure(session, request, responder, HumanReadableText.AUTHENTICATION_FAILED, Optional.empty(),
@@ -136,11 +138,11 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         return Optional.empty();
     }
 
-    private SaslStep firstStep(SaslExchange exchange) {
+    private SaslStep firstStep(SaslExchange exchange, ImapSession session) {
         try {
             return exchange.firstStep();
         } catch (RuntimeException e) {
-            exchange.close();
+            ImapSaslExchangeTracker.forSession(session).closeExchange(exchange);
             throw e;
         }
     }
@@ -195,7 +197,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                 .then());
         } catch (RuntimeException e) {
-            exchange.close();
+            ImapSaslExchangeTracker.forSession(session).closeExchange(exchange);
             throw e;
         }
     }
@@ -281,7 +283,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         try {
             session.popLineHandler();
         } finally {
-            exchange.close();
+            ImapSaslExchangeTracker.forSession(session).closeExchange(exchange);
         }
     }
 
@@ -289,7 +291,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         try {
             session.popLineHandler();
         } finally {
-            exchange.abort();
+            ImapSaslExchangeTracker.forSession(session).abortExchange(exchange);
         }
     }
 
@@ -297,7 +299,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         try {
             session.popLineHandler();
         } catch (RuntimeException e) {
-            exchange.close();
+            ImapSaslExchangeTracker.forSession(session).closeExchange(exchange);
             throw e;
         }
     }
@@ -318,7 +320,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                 .then());
         } catch (RuntimeException e) {
-            exchange.close();
+            ImapSaslExchangeTracker.forSession(session).closeExchange(exchange);
             throw e;
         }
     }
@@ -348,7 +350,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         try {
             handleSaslStep(step, session, request, responder, successLog(request));
         } finally {
-            exchange.close();
+            ImapSaslExchangeTracker.forSession(session).closeExchange(exchange);
         }
     }
 

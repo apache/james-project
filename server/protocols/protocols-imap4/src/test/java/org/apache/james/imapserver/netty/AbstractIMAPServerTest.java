@@ -27,6 +27,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -37,10 +38,16 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.net.imap.AuthenticatingIMAPClient;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ConnectionCheck;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
+import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
+import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
+import org.apache.james.imap.processor.DefaultProcessor;
+import org.apache.james.imap.processor.base.UnknownRequestProcessor;
 import org.apache.james.imap.processor.fetch.FetchProcessor;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
+import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.FakeAuthenticator;
@@ -48,6 +55,7 @@ import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
@@ -102,26 +110,33 @@ abstract class AbstractIMAPServerTest {
     protected IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config,
                                           InMemoryIntegrationResources inMemoryIntegrationResources,
                                           FetchProcessor.LocalCacheConfiguration localCacheConfiguration) throws Exception {
+        return createImapServer(config, inMemoryIntegrationResources, localCacheConfiguration, Optional.empty());
+    }
+
+    protected IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config,
+                                          InMemoryIntegrationResources inMemoryIntegrationResources,
+                                          FetchProcessor.LocalCacheConfiguration localCacheConfiguration,
+                                          ImmutableList<SaslMechanism> saslMechanisms) throws Exception {
+        return createImapServer(config, inMemoryIntegrationResources, localCacheConfiguration, Optional.of(saslMechanisms));
+    }
+
+    private IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config,
+                                        InMemoryIntegrationResources inMemoryIntegrationResources,
+                                        FetchProcessor.LocalCacheConfiguration localCacheConfiguration,
+                                        Optional<ImmutableList<SaslMechanism>> saslMechanisms) throws Exception {
         memoryIntegrationResources = inMemoryIntegrationResources;
 
         RecordingMetricFactory metricFactory = new RecordingMetricFactory();
         Set<ConnectionCheck> connectionChecks = defaultConnectionChecks();
         mailboxManager = spy(memoryIntegrationResources.getMailboxManager());
+        StoreSubscriptionManager subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory(),
+            mailboxManager.getMapperFactory(),
+            mailboxManager.getEventBus());
+        ImapProcessor processor = createProcessor(config, localCacheConfiguration, metricFactory, subscriptionManager, saslMechanisms);
         IMAPServer imapServer = new IMAPServer(
             new DefaultImapDecoderFactory().buildImapDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
-            DefaultImapProcessorFactory.createXListSupportingProcessor(
-                mailboxManager,
-                memoryIntegrationResources.getEventBus(),
-                new StoreSubscriptionManager(mailboxManager.getMapperFactory(),
-                    mailboxManager.getMapperFactory(),
-                    mailboxManager.getEventBus()),
-                null,
-                memoryIntegrationResources.getQuotaManager(),
-                memoryIntegrationResources.getQuotaRootResolver(),
-                metricFactory,
-                localCacheConfiguration,
-                config),
+            processor,
             new ImapMetrics(metricFactory),
             new NoopGaugeRegistry(), connectionChecks);
 
@@ -135,13 +150,57 @@ abstract class AbstractIMAPServerTest {
         return imapServer;
     }
 
+    private ImapProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> config,
+                                          FetchProcessor.LocalCacheConfiguration localCacheConfiguration,
+                                          RecordingMetricFactory metricFactory,
+                                          StoreSubscriptionManager subscriptionManager,
+                                          Optional<ImmutableList<SaslMechanism>> saslMechanisms) throws Exception {
+        if (saslMechanisms.isEmpty()) {
+            return DefaultImapProcessorFactory.createXListSupportingProcessor(
+                mailboxManager,
+                memoryIntegrationResources.getEventBus(),
+                subscriptionManager,
+                null,
+                memoryIntegrationResources.getQuotaManager(),
+                memoryIntegrationResources.getQuotaRootResolver(),
+                metricFactory,
+                localCacheConfiguration,
+                config);
+        }
+
+        StatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
+        return DefaultProcessor.createDefaultProcessor(
+            new UnknownRequestProcessor(statusResponseFactory),
+            mailboxManager,
+            memoryIntegrationResources.getEventBus(),
+            subscriptionManager,
+            statusResponseFactory,
+            null,
+            memoryIntegrationResources.getQuotaManager(),
+            memoryIntegrationResources.getQuotaRootResolver(),
+            MailboxCounterCorrector.DEFAULT,
+            metricFactory,
+            localCacheConfiguration,
+            saslMechanisms.orElseThrow());
+    }
+
     protected IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config, FetchProcessor.LocalCacheConfiguration localCacheConfiguration) throws Exception {
+        return createImapServer(config, defaultIntegrationResources(), localCacheConfiguration);
+    }
+
+    protected IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config,
+                                          FetchProcessor.LocalCacheConfiguration localCacheConfiguration,
+                                          ImmutableList<SaslMechanism> saslMechanisms) throws Exception {
+        return createImapServer(config, defaultIntegrationResources(), localCacheConfiguration, saslMechanisms);
+    }
+
+    private InMemoryIntegrationResources defaultIntegrationResources() {
         authenticator = new FakeAuthenticator();
         authenticator.addUser(USER, USER_PASS);
         authenticator.addUser(USER2, USER_PASS);
         authenticator.addUser(USER3, USER_PASS);
 
-        memoryIntegrationResources = InMemoryIntegrationResources.builder()
+        return InMemoryIntegrationResources.builder()
             .authenticator(authenticator)
             .authorizator(FakeAuthorizator.defaultReject())
             .inVmEventBus()
@@ -151,8 +210,6 @@ abstract class AbstractIMAPServerTest {
             .noPreDeletionHooks()
             .storeQuotaManager()
             .build();
-
-        return createImapServer(config, memoryIntegrationResources, localCacheConfiguration);
     }
 
     protected IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
@@ -161,6 +218,13 @@ abstract class AbstractIMAPServerTest {
 
     protected IMAPServer createImapServer(String configurationFile, FetchProcessor.LocalCacheConfiguration localCacheConfiguration) throws Exception {
         return createImapServer(ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream(configurationFile)), localCacheConfiguration);
+    }
+
+    protected IMAPServer createImapServer(String configurationFile, ImmutableList<SaslMechanism> saslMechanisms) throws Exception {
+        return createImapServer(
+            ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream(configurationFile)),
+            FetchProcessor.LocalCacheConfiguration.DEFAULT,
+            saslMechanisms);
     }
 
     protected IMAPServer createImapServer(String configurationFile) throws Exception {
