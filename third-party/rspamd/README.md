@@ -89,8 +89,14 @@ If true `virusProcessor` and `rejectSpamProcessor` are honnered per user, at the
 - Declare the webadmin for Rspamd in `webadmin.properties`
 
 ```
+password.generate=false
 extensions.routes=org.apache.james.rspamd.route.FeedMessageRoute
 ```
+
+The sample configuration explicitly disables WebAdmin password generation so its local example commands can remain
+unauthenticated. Password generation is enabled by default when no `password` is explicitly configured. Do not disable
+WebAdmin authentication when exposing it beyond this local customization sample.
+
 How to use admin endpoint, see more at [Additional webadmin endpoints](README.md)
 
 - Docker compose file example: [docker-compose.yml](docker-compose.yml) or [docker-compose-distributed.yml](docker-compose-distributed.yml).
