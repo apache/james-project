@@ -48,11 +48,19 @@ enabled=true
 port=8000
 host=localhost
 
+# Disable WebAdmin authentication for this local customization demo.
+# Password generation defaults to true when no password is explicitly configured.
+password.generate=false
+
 # List of fully qualified class names that should be exposed over webadmin
 # in addition to your product default routes. Routes needs to be located
 # within the classpath or in the ./extensions-jars folder.
 extensions.routes=org.apache.james.examples.RouteA
 ```
+
+This example explicitly disables WebAdmin password generation to keep the customization demo simple. By default,
+`password.generate` is enabled and James generates a random WebAdmin password at startup when no `password` is
+explicitly configured. Do not disable WebAdmin authentication when exposing it beyond this local demo.
 
 Then start a James server with your JAR and the configuration:
 
