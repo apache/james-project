@@ -314,11 +314,14 @@ class SolveMailboxInconsistenciesServiceTest {
 
         testee.fixMailboxInconsistencies(new Context()).block();
 
+        // The path table is the source of truth: rather than dropping the dangling path registration
+        // (and losing the reference to a mailbox that may still hold messages), the missing projection
+        // is re-created from it, yielding a consistent registration on both sides.
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
-                .isEmpty();
+                .containsExactlyInAnyOrder(MAILBOX);
             softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
-                .isEmpty();
+                .containsExactlyInAnyOrder(MAILBOX);
         });
     }
 
@@ -386,11 +389,15 @@ class SolveMailboxInconsistenciesServiceTest {
 
         testee.fixMailboxInconsistencies(new Context()).block();
 
+        // The path registration is the source of truth and is thus preserved: the missing projection
+        // is re-created for the registered mailbox instead of dropping the registration. The stale
+        // projection squatting that path is left untouched and reported as a conflicting entry, as
+        // merging the two mailboxes requires the admin (or auto-merge) to arbitrate.
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
-                .containsExactlyInAnyOrder(MAILBOX);
+                .containsExactlyInAnyOrder(MAILBOX, MAILBOX_2);
             softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
-                .isEmpty();
+                .containsExactlyInAnyOrder(MAILBOX_2);
         });
     }
 
@@ -402,11 +409,13 @@ class SolveMailboxInconsistenciesServiceTest {
         testee.fixMailboxInconsistencies(new Context()).block();
         testee.fixMailboxInconsistencies(new Context()).block();
 
+        // Re-creating the missing projection reaches a stable state: further runs only keep reporting
+        // the unresolved conflict, they do not alter the data any more.
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
-                .containsExactlyInAnyOrder(MAILBOX);
+                .containsExactlyInAnyOrder(MAILBOX, MAILBOX_2);
             softly.assertThat(mailboxPathV3DAO.listAll().collectList().block())
-                .containsExactlyInAnyOrder(MAILBOX);
+                .containsExactlyInAnyOrder(MAILBOX_2);
         });
     }
 

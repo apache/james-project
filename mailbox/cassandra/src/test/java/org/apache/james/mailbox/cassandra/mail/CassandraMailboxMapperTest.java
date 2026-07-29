@@ -342,11 +342,16 @@ class CassandraMailboxMapperTest {
                         .onErrorResume(e -> Mono.empty())
                         .block());
 
+                // The path table is the source of truth: the missing mailbox projection is re-created
+                // from the registered path entry, rather than dropping that registration, so that
+                // messages held by this mailbox (keyed by id) do not become unreachable.
                 SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                    softly.assertThatThrownBy(() -> MailboxReactorUtils.blockOptional(testee.findMailboxById(MAILBOX_ID)))
-                        .isInstanceOf(MailboxNotFoundException.class);
-                    softly.assertThat(MailboxReactorUtils.blockOptional(testee.findMailboxByPath(MAILBOX_PATH)))
-                        .isEmpty();
+                    softly(softly)
+                        .assertThat(testee.findMailboxById(MAILBOX_ID).block())
+                        .isEqualTo(MAILBOX);
+                    softly(softly)
+                        .assertThat(testee.findMailboxByPath(MAILBOX_PATH).block())
+                        .isEqualTo(MAILBOX);
                 }));
             }
         }

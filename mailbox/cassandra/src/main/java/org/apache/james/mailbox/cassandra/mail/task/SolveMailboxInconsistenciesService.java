@@ -148,9 +148,11 @@ public class SolveMailboxInconsistenciesService {
      *
      * This inconsistency arise if mailbox creation fails or upon partial deletes.
      *
-     * In both case removing the dandling path registration solves the inconsistency
-     *
-     * In order to solve this inconsistency, we can simply re-reference the mailboxPath.
+     * The path table being the source of truth, we re-create the missing MailboxDao projection
+     * from the registered path entry rather than dropping the path registration: the mailbox may
+     * still hold messages (keyed by id) that would otherwise become unreachable. We re-read the
+     * path entry with STRONG consistency first, so a registration that has meanwhile been removed
+     * is left untouched.
      */
     private static class OrphanMailboxPathDAOEntry implements Inconsistency {
         private final Mailbox mailbox;
@@ -161,7 +163,8 @@ public class SolveMailboxInconsistenciesService {
 
         @Override
         public Mono<Result> fix(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO) {
-            return pathV3DAO.delete(mailbox.generateAssociatedPath())
+            return pathV3DAO.retrieve(mailbox.generateAssociatedPath(), STRONG)
+                .flatMap(mailboxDAO::save)
                 .doOnSuccess(any -> {
                     LOGGER.info("Inconsistency fixed for orphan mailboxPath {} - {}",
                         mailbox.getMailboxId().serialize(),
@@ -628,7 +631,7 @@ public class SolveMailboxInconsistenciesService {
     }
 
     private Flux<Result> processMailboxPathDaoInconsistencies(Context context, boolean autoMerge) {
-        return mailboxPathV3DAO.listAll()
+        return mailboxPathV3DAO.listAll(STRONG)
             .flatMap(entry -> detectMailboxPathDaoInconsistency(entry, autoMerge), DEFAULT_CONCURRENCY)
             .doOnNext(any -> context.incrementProcessedMailboxPathEntries())
             // Detect every inconsistency first, then fix them one at a time. Resolving a same-mailbox
