@@ -20,7 +20,7 @@ Run this command to create the `webadmin.properties` file:
 
 [source,bash]
 ----
-printf 'enabled=true\nport=8000\nhost=localhost' >> webadmin.properties
+printf 'enabled=true\nport=8000\nhost=localhost\npassword.generate=false\n' >> webadmin.properties
 ----
 
 Explanation:
@@ -28,7 +28,14 @@ Explanation:
  * `enabled=true` instructs James to run the Admin API service
  * `port=8000` configures the Admin API to be made available via port 8000
  * `host=localhost` configures the Admin API to respond on localhost
+ * `password.generate=false` disables WebAdmin authentication for this local demo
 
+[NOTE]
+====
+This demo explicitly disables WebAdmin password generation to keep the first-run experience simple.
+By default, `password.generate` is enabled and James generates a random WebAdmin password at startup when no
+`password` is explicitly configured. Do not disable WebAdmin authentication when exposing it beyond this local demo.
+====
 
 Now run the James demo server using this command:
 
@@ -219,4 +226,3 @@ docker stop james ; docker rm james
 ----
 
 That's all, folks!
-
