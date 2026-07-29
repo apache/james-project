@@ -175,7 +175,17 @@ public class CassandraMailboxPathV3DAO {
     }
 
     public Flux<Mailbox> listAll() {
-        return cassandraAsyncExecutor.executeRows(selectAll.bind())
+        return listAll(JamesExecutionProfiles.ConsistencyChoice.WEAK);
+    }
+
+    public Flux<Mailbox> listAll(JamesExecutionProfiles.ConsistencyChoice consistencyChoice) {
+        BoundStatementBuilder statementBuilder = selectAll.boundStatementBuilder();
+
+        if (consistencyChoice.equals(STRONG)) {
+            statementBuilder.setExecutionProfile(lwtProfile);
+        }
+
+        return cassandraAsyncExecutor.executeRows(statementBuilder.build())
             .map(this::fromRowToCassandraIdAndPath)
             .map(FunctionalUtils.toFunction(this::logReadSuccess));
     }

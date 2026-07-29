@@ -33,6 +33,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -217,7 +218,7 @@ class ConsistencyTasksIntegrationTest {
     }
 
     @Test
-    void shouldSolveMailboxesInconsistency(GuiceJamesServer server) {
+    void shouldSolveMailboxesInconsistency(GuiceJamesServer server) throws Exception {
         // schema version 6 or higher required to run solve mailbox inconsistencies task
         String upgradeTaskId = with().post(UPGRADE_TO_LATEST_VERSION)
             .jsonPath()
@@ -257,7 +258,14 @@ class ConsistencyTasksIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(solveConsistenciesTaskId + "/await");
 
-        assertThatCode(() -> testIMAPClient.create(TEST_MAILBOX)).doesNotThrowAnyException();
+        // The path registration is the source of truth: the task re-creates the missing mailbox
+        // projection from it rather than dropping the registration, as the mailbox may already hold
+        // messages (keyed by id) that would otherwise become unreachable. The mailbox thus ends up
+        // fully usable - hence selectable, and no longer creatable.
+        assertThat(testIMAPClient.sendCommand("SELECT " + TEST_MAILBOX))
+            .contains("SELECT completed.");
+        assertThatThrownBy(() -> testIMAPClient.create(TEST_MAILBOX))
+            .hasMessageContaining("Mailbox already exists");
     }
 
     @Tag(Unstable.TAG)
