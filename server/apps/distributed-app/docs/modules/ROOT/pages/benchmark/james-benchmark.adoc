@@ -55,6 +55,13 @@ chmod +x provision.sh
 sudo apt-get install postfix
 ----
 
+* Retrieve the generated WebAdmin password from the James startup logs and expose it to the provisioning script:
+----
+export WEBADMIN_PASSWORD="replace-with-generated-webadmin-password"
+----
+
+Omit this variable only when WebAdmin password authentication is explicitly disabled.
+
 * Run the provision script:
 ----
 ./provision.sh
@@ -98,4 +105,3 @@ A sample IMAP performance testing result (PlatformValidationSimulation):
 image::james-imap-base-performance.png[]
 
 If you get a IMAP performance far below this base performance, you should consider investigating for performance issues.
-
