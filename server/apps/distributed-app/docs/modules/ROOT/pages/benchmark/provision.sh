@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 export WEBADMIN_BASE_URL="http://localhost:8000"
 export SMTP_URL="localhost:25"
 export DOMAIN_NAME="domain.org"
@@ -7,32 +9,40 @@ export USERS_COUNT=10
 export DUMMY_MAILBOXES_COUNT=10
 export DUMMY_EMAILS_COUNT=100
 
+call_webadmin() {
+  if [ -n "${WEBADMIN_PASSWORD:-}" ]; then
+    curl --fail --header "Password: ${WEBADMIN_PASSWORD}" "$@"
+  else
+    curl --fail "$@"
+  fi
+}
+
 # Create domain
-curl -X PUT ${WEBADMIN_BASE_URL}/domains/${DOMAIN_NAME}
+call_webadmin -X PUT ${WEBADMIN_BASE_URL}/domains/${DOMAIN_NAME}
 
 for i in $(seq 1 $USERS_COUNT)
 do
   # Create user
    echo "Creating user $i"
    username=user${i}@$DOMAIN_NAME
-   curl -XPUT ${WEBADMIN_BASE_URL}/users/$username \
+   call_webadmin -XPUT ${WEBADMIN_BASE_URL}/users/$username \
      -d '{"password":"secret"}' \
      -H "Content-Type: application/json"
 
   # Create mailboxes for each user
    echo "Creating user $i mailboxes"
    # Create some basic mailboxes
-   curl -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/INBOX
-   curl -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/Outbox
-   curl -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/Sent
-   curl -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/Draft
-   curl -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/Trash
+   call_webadmin -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/INBOX
+   call_webadmin -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/Outbox
+   call_webadmin -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/Sent
+   call_webadmin -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/Draft
+   call_webadmin -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/Trash
 
    # Create some other dummy mailboxes
    for j in $(seq 1 $DUMMY_MAILBOXES_COUNT)
    do
      dummyMailbox=MAILBOX${j}
-     curl -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/$dummyMailbox
+     call_webadmin -XPUT ${WEBADMIN_BASE_URL}/users/${username}/mailboxes/$dummyMailbox
    done
 done
 
