@@ -19,6 +19,7 @@
 
 package org.apache.james.vault;
 
+import static org.apache.james.vault.VaultConfiguration.DEFAULT_SINGLE_BUCKET_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -40,13 +41,19 @@ class VaultConfigurationTest {
 
     @Test
     void constructorShouldThrowWhenRetentionPeriodIsNull() {
-        assertThatThrownBy(() -> new VaultConfiguration(true, null, DefaultMailboxes.RESTORED_MESSAGES))
+        assertThatThrownBy(() -> new VaultConfiguration(true, null, DefaultMailboxes.RESTORED_MESSAGES, DEFAULT_SINGLE_BUCKET_NAME))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void constructorShouldThrowWhenRestoreLocationIsNull() {
-        assertThatThrownBy(() -> new VaultConfiguration(true, ChronoUnit.YEARS.getDuration(), null))
+        assertThatThrownBy(() -> new VaultConfiguration(true, ChronoUnit.YEARS.getDuration(), null, DEFAULT_SINGLE_BUCKET_NAME))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void constructorShouldThrowWhenSingleBucketNameIsNull() {
+        assertThatThrownBy(() -> new VaultConfiguration(true, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES, null))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -62,7 +69,7 @@ class VaultConfigurationTest {
         configuration.addProperty("restoreLocation", "INBOX");
 
         assertThat(VaultConfiguration.from(configuration)).isEqualTo(
-            new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.INBOX));
+            new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.INBOX, DEFAULT_SINGLE_BUCKET_NAME));
     }
 
     @Test
@@ -71,7 +78,7 @@ class VaultConfigurationTest {
         configuration.addProperty("retentionPeriod", "15d");
 
         assertThat(VaultConfiguration.from(configuration)).isEqualTo(
-            new VaultConfiguration(false, Duration.ofDays(15), DefaultMailboxes.RESTORED_MESSAGES));
+            new VaultConfiguration(false, Duration.ofDays(15), DefaultMailboxes.RESTORED_MESSAGES, DEFAULT_SINGLE_BUCKET_NAME));
     }
 
     @Test
@@ -80,7 +87,7 @@ class VaultConfigurationTest {
         configuration.addProperty("retentionPeriod", "15h");
 
         assertThat(VaultConfiguration.from(configuration)).isEqualTo(
-            new VaultConfiguration(false, Duration.ofHours(15), DefaultMailboxes.RESTORED_MESSAGES));
+            new VaultConfiguration(false, Duration.ofHours(15), DefaultMailboxes.RESTORED_MESSAGES, DEFAULT_SINGLE_BUCKET_NAME));
     }
 
     @Test
@@ -89,7 +96,16 @@ class VaultConfigurationTest {
         configuration.addProperty("retentionPeriod", "15");
 
         assertThat(VaultConfiguration.from(configuration)).isEqualTo(
-            new VaultConfiguration(false, Duration.ofDays(15), DefaultMailboxes.RESTORED_MESSAGES));
+            new VaultConfiguration(false, Duration.ofDays(15), DefaultMailboxes.RESTORED_MESSAGES, DEFAULT_SINGLE_BUCKET_NAME));
+    }
+
+    @Test
+    void fromShouldReturnConfiguredSingleBucketName() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("singleBucketName", "bucketBlabla");
+
+        assertThat(VaultConfiguration.from(configuration)).isEqualTo(
+            new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES, "bucketBlabla"));
     }
 
     @Test

@@ -39,7 +39,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class StorageInformationDAOTest {
     private static final BucketName BUCKET_NAME = BucketName.of("deletedMessages-2019-06-01");
     private static final BucketName BUCKET_NAME_2 = BucketName.of("deletedMessages-2019-07-01");
-    private static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
     private static final Username OWNER = Username.of("owner");
     private static final TestMessageId MESSAGE_ID = TestMessageId.of(36);
     private static final BlobId BLOB_ID = new PlainBlobId.Factory().parse("05dcb33b-8382-4744-923a-bc593ad84d23");
@@ -54,7 +53,7 @@ class StorageInformationDAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new StorageInformationDAO(cassandra.getConf(), BLOB_ID_FACTORY);
+        testee = new StorageInformationDAO(cassandra.getConf());
     }
 
     @Test
