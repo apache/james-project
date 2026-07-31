@@ -70,7 +70,6 @@ class SaslMechanismContractTest {
 
     private static class FixedStepExchange implements SaslExchange {
         private final SaslStep firstStep;
-        private boolean aborted;
         private boolean closed;
 
         private FixedStepExchange(SaslStep firstStep) {
@@ -85,11 +84,6 @@ class SaslMechanismContractTest {
         @Override
         public SaslStep onResponse(byte[] clientResponse) {
             return firstStep;
-        }
-
-        @Override
-        public void abort() {
-            aborted = true;
         }
 
         @Override
@@ -131,10 +125,6 @@ class SaslMechanismContractTest {
                 return new SaslStep.Success(SAME_USER_IDENTITY, Optional.empty());
             }
             return new SaslStep.Failure(SaslFailure.invalidCredentials(AUTHENTICATION_ID, Optional.empty(), "rejected"));
-        }
-
-        @Override
-        public void abort() {
         }
 
         @Override
@@ -226,16 +216,14 @@ class SaslMechanismContractTest {
     }
 
     @Test
-    void exchangeShouldExposeAbortAndCloseLifecycle() {
+    void exchangeShouldExposeCloseLifecycle() {
         // GIVEN an active exchange
         FixedStepExchange exchange = new FixedStepExchange(new SaslStep.Failure(SaslFailure.malformed("failure")));
 
-        // WHEN the protocol aborts and then closes it
-        exchange.abort();
+        // WHEN the protocol terminates it
         exchange.close();
 
-        // THEN mechanisms can observe both lifecycle events
-        assertThat(exchange.aborted).isTrue();
+        // THEN the mechanism can release its resources
         assertThat(exchange.closed).isTrue();
     }
 

@@ -83,12 +83,6 @@ public class ImapSaslExchangeTracker {
         }
     }
 
-    public void abortExchange(SaslExchange exchange) {
-        if (release(exchange)) {
-            exchange.abort();
-        }
-    }
-
     public void close() {
         SaslExchange exchange;
         synchronized (this) {

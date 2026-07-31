@@ -55,10 +55,6 @@ public class FixedNameSaslMechanism implements SaslMechanism {
         }
 
         @Override
-        public void abort() {
-        }
-
-        @Override
         public void close() {
         }
 

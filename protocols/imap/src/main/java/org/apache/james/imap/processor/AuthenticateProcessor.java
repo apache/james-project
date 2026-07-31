@@ -204,7 +204,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
 
     private void handleContinuationLine(SaslExchange exchange, ImapSession session, AuthenticateRequest request, Responder responder, byte[] data) {
         if (isAbort(exchange, session, data)) {
-            abortActiveContinuation(exchange, session);
+            closeActiveContinuation(exchange, session);
             no(request, responder, HumanReadableText.AUTHENTICATION_FAILED);
             responder.flush();
             return;
@@ -287,14 +287,6 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         }
     }
 
-    private void abortActiveContinuation(SaslExchange exchange, ImapSession session) {
-        try {
-            session.popLineHandler();
-        } finally {
-            ImapSaslExchangeTracker.forSession(session).abortExchange(exchange);
-        }
-    }
-
     private void popActiveContinuation(SaslExchange exchange, ImapSession session) {
         try {
             session.popLineHandler();
@@ -328,7 +320,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     private void handleSuccessDataAcknowledgement(SaslExchange exchange, SaslStep.Success success, ImapSession session,
                                                   AuthenticateRequest request, Responder responder, byte[] data) {
         if (isAbort(exchange, session, data)) {
-            abortActiveContinuation(exchange, session);
+            closeActiveContinuation(exchange, session);
             no(request, responder, HumanReadableText.AUTHENTICATION_FAILED);
             responder.flush();
             return;

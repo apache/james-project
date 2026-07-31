@@ -48,11 +48,9 @@ class IMAPServerSaslExchangeLifecycleTest extends AbstractIMAPServerTest {
 
     private static class RecordingSaslMechanism implements SaslMechanism {
         private final AtomicInteger closeCount;
-        private final AtomicInteger abortCount;
 
-        private RecordingSaslMechanism(AtomicInteger closeCount, AtomicInteger abortCount) {
+        private RecordingSaslMechanism(AtomicInteger closeCount) {
             this.closeCount = closeCount;
-            this.abortCount = abortCount;
         }
 
         @Override
@@ -75,11 +73,6 @@ class IMAPServerSaslExchangeLifecycleTest extends AbstractIMAPServerTest {
                 }
 
                 @Override
-                public void abort() {
-                    abortCount.incrementAndGet();
-                }
-
-                @Override
                 public void close() {
                     closeCount.incrementAndGet();
                 }
@@ -88,7 +81,6 @@ class IMAPServerSaslExchangeLifecycleTest extends AbstractIMAPServerTest {
     }
 
     private final AtomicInteger closeCount = new AtomicInteger();
-    private final AtomicInteger abortCount = new AtomicInteger();
 
     private IMAPServer imapServer;
     private int port;
@@ -96,7 +88,7 @@ class IMAPServerSaslExchangeLifecycleTest extends AbstractIMAPServerTest {
     @BeforeEach
     void setUp() throws Exception {
         imapServer = createImapServer("imapServer.xml",
-            ImmutableList.of(new RecordingSaslMechanism(closeCount, abortCount)));
+            ImmutableList.of(new RecordingSaslMechanism(closeCount)));
         port = imapServer.getListenAddresses().get(0).getPort();
     }
 
@@ -122,7 +114,7 @@ class IMAPServerSaslExchangeLifecycleTest extends AbstractIMAPServerTest {
     }
 
     @Test
-    void abortDuringSaslContinuationShouldAbortExchangeOnce() throws Exception {
+    void cancellationDuringSaslContinuationShouldCloseExchangeOnce() throws Exception {
         IMAPClient client = connectedClient();
         try {
             assertThat(client.sendCommand("AUTHENTICATE RECORDING")).isEqualTo(IMAPReply.CONT);
@@ -134,10 +126,7 @@ class IMAPServerSaslExchangeLifecycleTest extends AbstractIMAPServerTest {
         }
 
         Awaitility.await().during(Duration.ofMillis(100)).atMost(Duration.ofSeconds(2))
-            .untilAsserted(() -> {
-                assertThat(abortCount.get()).isEqualTo(1);
-                assertThat(closeCount.get()).isZero();
-            });
+            .untilAsserted(() -> assertThat(closeCount.get()).isEqualTo(1));
     }
 
     @Test

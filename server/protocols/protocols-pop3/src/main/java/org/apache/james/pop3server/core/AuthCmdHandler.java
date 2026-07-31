@@ -211,7 +211,7 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
     private LineHandler<POP3Session> continuationHandler(SaslExchange exchange) {
         return (session, line) -> {
             if (isAbort(session, exchange, line)) {
-                abortActiveContinuation(session, exchange);
+                closeActiveContinuation(session, exchange);
                 return AUTH_ABORTED;
             }
             return nextStep(session, exchange, line)
@@ -252,7 +252,7 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
     private LineHandler<POP3Session> successDataAcknowledgementHandler(SaslExchange exchange, SaslStep.Success success) {
         return (session, line) -> {
             if (isAbort(session, exchange, line)) {
-                abortActiveContinuation(session, exchange);
+                closeActiveContinuation(session, exchange);
                 return AUTH_ABORTED;
             }
             if (!isEmptyClientResponse(session, exchange, line)) {
@@ -312,14 +312,6 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
         }
     }
 
-    private void abortActiveContinuation(POP3Session session, SaslExchange exchange) {
-        try {
-            session.popLineHandler();
-        } finally {
-            abortExchange(session, exchange);
-        }
-    }
-
     private Response completeAuthentication(POP3Session session, SaslExchange exchange, SaslStep.Success success) {
         Username authorizationId = success.identity().authorizationId();
         try {
@@ -370,11 +362,6 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
     private void closeExchange(POP3Session session, SaslExchange exchange) {
         session.removeAttachment(ACTIVE_SASL_EXCHANGE, State.Connection);
         exchange.close();
-    }
-
-    private void abortExchange(POP3Session session, SaslExchange exchange) {
-        session.removeAttachment(ACTIVE_SASL_EXCHANGE, State.Connection);
-        exchange.abort();
     }
 
     @Override
