@@ -40,6 +40,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.mail.util.SharedByteArrayInputStream;
 
@@ -127,17 +128,25 @@ public class POP3ServerTest {
         private static final byte[] SERVER_DATA = "server-data".getBytes(StandardCharsets.US_ASCII);
 
         private final Username username;
-        private final AtomicBoolean closed;
+        private final Runnable closeAction;
         private final String name;
 
         private ServerDataSaslMechanism(Username username, AtomicBoolean closed) {
             this("TEST", username, closed);
         }
 
+        private ServerDataSaslMechanism(Username username, AtomicInteger closeCount) {
+            this("TEST", username, closeCount::incrementAndGet);
+        }
+
         private ServerDataSaslMechanism(String name, Username username, AtomicBoolean closed) {
+            this(name, username, () -> closed.set(true));
+        }
+
+        private ServerDataSaslMechanism(String name, Username username, Runnable closeAction) {
             this.name = name;
             this.username = username;
-            this.closed = closed;
+            this.closeAction = closeAction;
         }
 
         @Override
@@ -160,7 +169,7 @@ public class POP3ServerTest {
 
                 @Override
                 public void close() {
-                    closed.set(true);
+                    closeAction.run();
                 }
             };
         }
@@ -1168,9 +1177,9 @@ public class POP3ServerTest {
     @Test
     void authCancellationShouldCloseExchangeAndPreserveUserPassAuthentication() throws Exception {
         Username username = Username.of("auth-user");
-        AtomicBoolean closed = new AtomicBoolean();
+        AtomicInteger closeCount = new AtomicInteger();
         pop3Configuration.setProperty("auth.requireSSL", false);
-        pop3Server.setSaslMechanisms(ImmutableList.of(new ServerDataSaslMechanism(username, closed)));
+        pop3Server.setSaslMechanisms(ImmutableList.of(new ServerDataSaslMechanism(username, closeCount)));
         finishSetUp(pop3Configuration);
         usersRepository.addUser(username, "secret");
 
@@ -1184,11 +1193,12 @@ public class POP3ServerTest {
             send(writer, "AUTH TEST");
             assertThat(reader.readLine()).isEqualTo("+ " + encoded("challenge"));
             send(writer, "*");
-            assertThat(reader.readLine()).startsWith("-ERR");
-            assertThat(closed).isTrue();
+            assertThat(reader.readLine()).isEqualTo("-ERR Authentication aborted.");
+            assertThat(closeCount.get()).isEqualTo(1);
 
             send(writer, "PASS secret");
             assertThat(reader.readLine()).isEqualTo("+OK Welcome auth-user");
+            assertThat(closeCount.get()).isEqualTo(1);
         }
     }
 
@@ -1212,6 +1222,28 @@ public class POP3ServerTest {
             assertThat(reader.readLine()).isEqualTo("-ERR Exceed maximal line length");
             assertThat(reader.readLine()).isNull();
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilTrue(closed);
+        }
+    }
+
+    @Test
+    void disconnectDuringSaslContinuationShouldCloseExchange() throws Exception {
+        Username username = Username.of("auth-user");
+        AtomicInteger closeCount = new AtomicInteger();
+        pop3Server.setSaslMechanisms(ImmutableList.of(new ServerDataSaslMechanism(username, closeCount)));
+        finishSetUp(pop3Configuration);
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "AUTH TEST");
+            assertThat(reader.readLine()).isEqualTo("+ " + encoded("challenge"));
+            socket.close();
+
+            // Disconnect cleanup closes the pending SASL exchange.
+            Awaitility.await().atMost(Duration.ofSeconds(2))
+                .untilAsserted(() -> assertThat(closeCount.get()).isEqualTo(1));
         }
     }
 

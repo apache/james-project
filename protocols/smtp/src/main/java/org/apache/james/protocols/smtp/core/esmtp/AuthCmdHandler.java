@@ -29,9 +29,11 @@ import java.util.Locale;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
+import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.handler.WiringException;
@@ -67,12 +69,14 @@ import com.google.common.collect.ImmutableSet;
  * Authentication is delegated to configured SASL mechanisms.
  */
 public class AuthCmdHandler
-    implements CommandHandler<SMTPSession>, EhloExtension, ExtensibleHandler, MailParametersHook {
+    implements CommandHandler<SMTPSession>, DisconnectHandler<SMTPSession>, EhloExtension, ExtensibleHandler, MailParametersHook {
     private static final Collection<String> COMMANDS = ImmutableSet.of("AUTH");
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthCmdHandler.class);
     private static final Logger AUTHENTICATION_DEDICATED_LOGGER = LoggerFactory.getLogger("org.apache.james.protocols.smtp.AUTHENTICATION");
     private static final String[] MAIL_PARAMS = { "AUTH" };
     private static final String AUTH_TYPES_DELIMITER = " ";
+    private static final ProtocolSession.AttachmentKey<SaslExchange> ACTIVE_SASL_EXCHANGE =
+        ProtocolSession.AttachmentKey.of("SMTP_ACTIVE_SASL_EXCHANGE", SaslExchange.class);
 
     private static final Response AUTH_ABORTED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " Authentication aborted").immutable();
     private static final Response ALREADY_AUTH = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER) + " User has previously authenticated. "
@@ -136,6 +140,7 @@ public class AuthCmdHandler
 
         try {
             SaslExchange exchange = startExchange(maybeMechanism.get(), SaslCodec.initialRequest(authType, initialResponse));
+            registerExchange(session, exchange);
             return handleFirstSaslStep(session, authType, exchange);
         } catch (IllegalArgumentException e) {
             LOGGER.info("Could not decode parameters for AUTH {}", authType, e);
@@ -153,7 +158,7 @@ public class AuthCmdHandler
             return handleTerminalSaslStep(session, authType, exchange, step, () -> {
             });
         } catch (RuntimeException e) {
-            exchange.close();
+            closeExchange(session);
             throw e;
         }
     }
@@ -182,11 +187,11 @@ public class AuthCmdHandler
         } catch (IllegalArgumentException e) {
             LOGGER.info("Could not decode parameters for AUTH {}", authType, e);
             session.popLineHandler();
-            exchange.close();
+            closeExchange(session);
             return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, "Could not decode parameters for AUTH " + authType);
         } catch (RuntimeException e) {
             session.popLineHandler();
-            exchange.close();
+            closeExchange(session);
             throw e;
         }
     }
@@ -195,7 +200,7 @@ public class AuthCmdHandler
         return (session, line) -> {
             if (SaslCodec.isAbort(line)) {
                 session.popLineHandler();
-                exchange.abort();
+                closeExchange(session);
                 return AUTH_ABORTED;
             }
             return handleSaslContinuation(session, authType, exchange, new String(line, session.getCharset()));
@@ -213,7 +218,7 @@ public class AuthCmdHandler
         try {
             return applySaslSuccess(session, authType, exchange, success);
         } finally {
-            exchange.close();
+            closeExchange(session);
         }
     }
 
@@ -224,12 +229,9 @@ public class AuthCmdHandler
     private Response handleSaslSuccessDataAcknowledgement(SMTPSession session, String authType, SaslExchange exchange,
                                                           SaslStep.Success success, String line) {
         session.popLineHandler();
-        boolean aborted = false;
         try {
             byte[] bytes = line.getBytes(session.getCharset());
             if (SaslCodec.isAbort(bytes)) {
-                aborted = true;
-                exchange.abort();
                 return AUTH_ABORTED;
             }
             if (!SaslCodec.isEmptyClientResponse(bytes)) {
@@ -237,9 +239,7 @@ public class AuthCmdHandler
             }
             return applySaslSuccess(session, authType, exchange, success);
         } finally {
-            if (!aborted) {
-                exchange.close();
-            }
+            closeExchange(session);
         }
     }
 
@@ -283,7 +283,25 @@ public class AuthCmdHandler
                     case INVALID_CREDENTIALS, AUTHENTICATION_FAILED, USER_DOES_NOT_EXIST, DELEGATION_FORBIDDEN -> AUTH_FAILED;
                 });
         } finally {
-            exchange.close();
+            closeExchange(session);
+        }
+    }
+
+    private void registerExchange(SMTPSession session, SaslExchange exchange) {
+        session.setAttachment(ACTIVE_SASL_EXCHANGE, exchange, ProtocolSession.State.Connection)
+            .ifPresent(SaslExchange::close);
+    }
+
+    private void closeExchange(SMTPSession session) {
+        session.removeAttachment(ACTIVE_SASL_EXCHANGE, ProtocolSession.State.Connection)
+            .ifPresent(SaslExchange::close);
+    }
+
+    @Override
+    public void onDisconnect(SMTPSession session) {
+        if (session != null) {
+            session.removeAttachment(ACTIVE_SASL_EXCHANGE, ProtocolSession.State.Connection)
+                .ifPresent(SaslExchange::close);
         }
     }
 
