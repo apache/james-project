@@ -1177,9 +1177,9 @@ public class POP3ServerTest {
     @Test
     void authCancellationShouldCloseExchangeAndPreserveUserPassAuthentication() throws Exception {
         Username username = Username.of("auth-user");
-        AtomicBoolean closed = new AtomicBoolean();
+        AtomicInteger closeCount = new AtomicInteger();
         pop3Configuration.setProperty("auth.requireSSL", false);
-        pop3Server.setSaslMechanisms(ImmutableList.of(new ServerDataSaslMechanism(username, closed)));
+        pop3Server.setSaslMechanisms(ImmutableList.of(new ServerDataSaslMechanism(username, closeCount)));
         finishSetUp(pop3Configuration);
         usersRepository.addUser(username, "secret");
 
@@ -1193,11 +1193,12 @@ public class POP3ServerTest {
             send(writer, "AUTH TEST");
             assertThat(reader.readLine()).isEqualTo("+ " + encoded("challenge"));
             send(writer, "*");
-            assertThat(reader.readLine()).startsWith("-ERR");
-            assertThat(closed).isTrue();
+            assertThat(reader.readLine()).isEqualTo("-ERR Authentication aborted.");
+            assertThat(closeCount.get()).isEqualTo(1);
 
             send(writer, "PASS secret");
             assertThat(reader.readLine()).isEqualTo("+OK Welcome auth-user");
+            assertThat(closeCount.get()).isEqualTo(1);
         }
     }
 

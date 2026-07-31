@@ -200,7 +200,7 @@ public class AuthCmdHandler
         return (session, line) -> {
             if (SaslCodec.isAbort(line)) {
                 session.popLineHandler();
-                abortExchange(session);
+                closeExchange(session);
                 return AUTH_ABORTED;
             }
             return handleSaslContinuation(session, authType, exchange, new String(line, session.getCharset()));
@@ -229,12 +229,9 @@ public class AuthCmdHandler
     private Response handleSaslSuccessDataAcknowledgement(SMTPSession session, String authType, SaslExchange exchange,
                                                           SaslStep.Success success, String line) {
         session.popLineHandler();
-        boolean aborted = false;
         try {
             byte[] bytes = line.getBytes(session.getCharset());
             if (SaslCodec.isAbort(bytes)) {
-                aborted = true;
-                abortExchange(session);
                 return AUTH_ABORTED;
             }
             if (!SaslCodec.isEmptyClientResponse(bytes)) {
@@ -242,9 +239,7 @@ public class AuthCmdHandler
             }
             return applySaslSuccess(session, authType, exchange, success);
         } finally {
-            if (!aborted) {
-                closeExchange(session);
-            }
+            closeExchange(session);
         }
     }
 
@@ -300,11 +295,6 @@ public class AuthCmdHandler
     private void closeExchange(SMTPSession session) {
         session.removeAttachment(ACTIVE_SASL_EXCHANGE, ProtocolSession.State.Connection)
             .ifPresent(SaslExchange::close);
-    }
-
-    private void abortExchange(SMTPSession session) {
-        session.removeAttachment(ACTIVE_SASL_EXCHANGE, ProtocolSession.State.Connection)
-            .ifPresent(SaslExchange::abort);
     }
 
     @Override

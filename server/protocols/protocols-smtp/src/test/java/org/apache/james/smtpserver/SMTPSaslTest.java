@@ -639,10 +639,9 @@ class SMTPSaslTest {
     }
 
     @Test
-    void abortDuringSaslContinuationShouldAbortExchangeOnce() throws Exception {
+    void cancellationDuringSaslContinuationShouldCloseExchangeOnce() throws Exception {
         AtomicInteger closeCount = new AtomicInteger();
-        AtomicInteger abortCount = new AtomicInteger();
-        resetWithMechanisms(ImmutableList.of(new RecordingSaslMechanism(closeCount, abortCount)));
+        resetWithMechanisms(ImmutableList.of(new RecordingSaslMechanism(closeCount)));
         SMTPClient client = connectedClient();
 
         client.sendCommand("AUTH RECORDING");
@@ -652,10 +651,7 @@ class SMTPSaslTest {
         client.disconnect();
 
         Awaitility.await().during(Duration.ofMillis(100)).atMost(Duration.ofSeconds(2))
-            .untilAsserted(() -> {
-                assertThat(abortCount.get()).isEqualTo(1);
-                assertThat(closeCount.get()).isZero();
-            });
+            .untilAsserted(() -> assertThat(closeCount.get()).isEqualTo(1));
     }
 
     @Test
@@ -781,15 +777,9 @@ class SMTPSaslTest {
 
     private static class RecordingSaslMechanism implements SaslMechanism {
         private final AtomicInteger closeCount;
-        private final AtomicInteger abortCount;
 
         private RecordingSaslMechanism(AtomicInteger closeCount) {
-            this(closeCount, new AtomicInteger());
-        }
-
-        private RecordingSaslMechanism(AtomicInteger closeCount, AtomicInteger abortCount) {
             this.closeCount = closeCount;
-            this.abortCount = abortCount;
         }
 
         @Override
@@ -809,11 +799,6 @@ class SMTPSaslTest {
                 public SaslStep onResponse(byte[] clientResponse) {
                     return new SaslStep.Failure(SaslFailure.authenticationFailed(
                         Optional.empty(), Optional.empty(), "Test-only mechanism"));
-                }
-
-                @Override
-                public void abort() {
-                    abortCount.incrementAndGet();
                 }
 
                 @Override

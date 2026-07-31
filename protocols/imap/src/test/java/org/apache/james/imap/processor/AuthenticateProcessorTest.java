@@ -121,10 +121,6 @@ class AuthenticateProcessorTest {
         }
 
         @Override
-        public void abort() {
-        }
-
-        @Override
         public void close() {
             closed = true;
         }
@@ -144,10 +140,6 @@ class AuthenticateProcessorTest {
         }
 
         @Override
-        public void abort() {
-        }
-
-        @Override
         public void close() {
             closed = true;
         }
@@ -164,10 +156,6 @@ class AuthenticateProcessorTest {
         @Override
         public SaslStep onResponse(byte[] clientResponse) {
             throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void abort() {
         }
 
         @Override
