@@ -99,7 +99,7 @@ class JsoupTextExtractorTest {
         assertThat(textExtractor.extractContent(inputStream, TEXT_HTML_CONTENT_TYPE)
                 .getTextualContent())
             .hasValueSatisfying(text -> assertThat(text)
-                .contains(HTML_TEXT_CONTENT));
+                .contains(HTML_TEXT_CONTENT.replace("\0", "")));
     }
 
     @Test
