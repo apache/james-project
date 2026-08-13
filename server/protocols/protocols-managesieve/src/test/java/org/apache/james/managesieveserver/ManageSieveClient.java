@@ -30,9 +30,12 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Optional;
 
+import javax.net.ssl.SSLSocket;
+
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.net.SocketClient;
 import org.apache.commons.net.io.CRLFLineReader;
+import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 
 public class ManageSieveClient extends SocketClient {
     private static final String ENCODING = StandardCharsets.UTF_8.name();
@@ -57,6 +60,20 @@ public class ManageSieveClient extends SocketClient {
     @Override
     protected void _connectAction_() throws IOException {
         super._connectAction_();
+        resetStreams();
+    }
+
+    public void execTLS() throws IOException {
+        SSLSocket sslSocket = (SSLSocket) BogusSslContextFactory.getClientContext().getSocketFactory()
+            .createSocket(_socket_, _socket_.getInetAddress().getHostAddress(), _socket_.getPort(), true);
+        sslSocket.startHandshake();
+        _socket_ = sslSocket;
+        _input_ = sslSocket.getInputStream();
+        _output_ = sslSocket.getOutputStream();
+        resetStreams();
+    }
+
+    private void resetStreams() throws IOException {
         this.reader = new CRLFLineReader(new InputStreamReader(_input_, ENCODING));
         this.writer = new BufferedWriter(new OutputStreamWriter(_output_, ENCODING));
     }

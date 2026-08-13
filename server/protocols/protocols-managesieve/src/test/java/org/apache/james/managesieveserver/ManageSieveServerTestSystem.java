@@ -19,7 +19,11 @@
 
 package org.apache.james.managesieveserver;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -74,6 +78,9 @@ class ManageSieveServerTestSystem {
 
     private void setUp(HierarchicalConfiguration<ImmutableNode> configuration, ImmutableList<SaslMechanism> saslMechanisms) throws Exception {
         this.fileSystem.clear();
+        if (configuration.containsKey("tls.keystore")) {
+            prepareKeystore();
+        }
         Authenticator authenticator = (username, password) -> {
             try {
                 return usersRepository.test(username, password.toString());
@@ -93,6 +100,16 @@ class ManageSieveServerTestSystem {
         this.manageSieveServer.setEncryptionFactory(new LegacyJavaEncryptionFactory(this.fileSystem));
         this.manageSieveServer.configure(configuration);
         this.manageSieveServer.init();
+    }
+
+    private void prepareKeystore() throws IOException {
+        Files.createDirectories(this.fileSystem.getBasedir().toPath());
+        try (InputStream keystore = ClassLoader.getSystemResourceAsStream("keystore")) {
+            if (keystore == null) {
+                throw new IOException("ManageSieve test keystore is missing");
+            }
+            Files.copy(keystore, this.fileSystem.getFile("file://keystore").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     public void setUp(String configFilePath) throws Exception {

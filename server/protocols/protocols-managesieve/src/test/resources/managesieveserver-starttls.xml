@@ -1,0 +1,15 @@
+<managesieveserver enabled="true">
+    <jmxName>managesieveserver</jmxName>
+    <bind>0.0.0.0:4190</bind>
+
+    <tls socketTLS="false" startTLS="true">
+        <keystore>file://keystore</keystore>
+        <secret>james72laBalle</secret>
+        <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+    </tls>
+
+    <connectionBacklog>200</connectionBacklog>
+    <connectiontimeout>360</connectiontimeout>
+    <connectionLimit>0</connectionLimit>
+    <connectionLimitPerIP>0</connectionLimitPerIP>
+</managesieveserver>
