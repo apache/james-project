@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Optional;
 
 import org.apache.commons.lang3.EnumUtils;
@@ -93,12 +94,31 @@ public class ManageSieveClient extends SocketClient {
                 response = new ServerResponse(responseType, responseCode, explanation, lines);
             } else if (tokens[0].equals("+")) {
                 Optional<String> explanation = Optional.of(tokens[1].substring(1, tokens[1].length() - 1));
-                response = new ServerResponse(ResponseType.CONTINUATION, Optional.empty(), explanation, new ArrayList<String>());
+                response = new ServerResponse(ResponseType.CONTINUATION, Optional.empty(), explanation, new ArrayList<>());
             } else {
                 lines.addLast(line);
             }
         }
         return response;
+    }
+
+    public ServerResponse readSaslChallenge() throws IOException {
+        String line = this.reader.readLine();
+        if (line.startsWith("\"") && line.endsWith("\"")) {
+            return new ServerResponse(ResponseType.CONTINUATION, Optional.empty(),
+                Optional.of(line.substring(1, line.length() - 1)), new ArrayList<>());
+        }
+        throw new IOException("Expected a ManageSieve SASL challenge but received: " + line);
+    }
+
+    public byte[] readSaslSuccessData() throws IOException {
+        String line = this.reader.readLine();
+        String prefix = "OK (SASL \"";
+        String suffix = "\")";
+        if (line.startsWith(prefix) && line.endsWith(suffix)) {
+            return Base64.getDecoder().decode(line.substring(prefix.length(), line.length() - suffix.length()));
+        }
+        throw new IOException("Expected a ManageSieve SASL success response but received: " + line);
     }
 
     public void sendCommand(String command) throws IOException {
