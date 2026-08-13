@@ -20,10 +20,14 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
     <bean id="managesieveserver" class="org.apache.james.managesieveserver.netty.ManageSieveServerFactory">
+        <constructor-arg index="0" ref="manageSieveSaslMechanismLoader"/>
         <property name="fileSystem" ref="filesystem"/>
         <property name="sieveRepository" ref="sieverepository"/>
-        <property name="usersRepository" ref="usersrepository"/>
+        <property name="authenticator" ref="authenticator"/>
         <property name="parser" ref="sieveparser"/>
     </bean>
+
+    <bean id="manageSieveSaslMechanismLoader" class="org.apache.james.managesieveserver.netty.ManageSieveServerFactory$ManageSieveSaslMechanismLoader"
+          factory-method="defaultLoader"/>
 
 </beans>

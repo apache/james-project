@@ -21,9 +21,7 @@ package org.apache.james.managesieveserver.netty;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
-import java.util.Optional;
 
-import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
@@ -53,14 +51,11 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
     private final ManageSieveProcessor manageSieveProcessor;
     private final Encryption secure;
     private final int maxLineLength;
-    private final Optional<OidcSASLConfiguration> oidcConfiguration;
 
-    public ManageSieveChannelUpstreamHandler(
-        ManageSieveProcessor manageSieveProcessor, Encryption secure, int maxLineLength, Optional<OidcSASLConfiguration> oidcConfiguration) {
+    public ManageSieveChannelUpstreamHandler(ManageSieveProcessor manageSieveProcessor, Encryption secure, int maxLineLength) {
         this.manageSieveProcessor = manageSieveProcessor;
         this.secure = secure;
         this.maxLineLength = maxLineLength;
-        this.oidcConfiguration = oidcConfiguration;
     }
 
     private boolean isSSL() {
@@ -160,7 +155,7 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
             LOGGER.info("Connection established from {}", address.getAddress().getHostAddress());
 
             Session session = new SettableSession();
-            session.setOidcSASLConfiguration(this.oidcConfiguration);
+            session.setStartTlsSupported(supportsStartTLS());
             if (isSSL()) {
                 session.setSslEnabled(true);
             }
