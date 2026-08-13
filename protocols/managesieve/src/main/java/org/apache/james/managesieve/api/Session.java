@@ -23,10 +23,12 @@ package org.apache.james.managesieve.api;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
-import org.apache.james.jwt.OidcSASLConfiguration;
-import org.apache.james.managesieve.api.commands.Authenticate;
+import org.apache.james.protocols.api.sasl.SaslExchange;
 
 public interface Session {
+
+    record ActiveSaslExchange(String mechanismName, SaslExchange exchange) {
+    }
 
     enum State {
         UNAUTHENTICATED,
@@ -46,15 +48,18 @@ public interface Session {
 
     void setState(State state);
 
-    Authenticate.SupportedMechanism getChoosedAuthenticationMechanism();
+    Optional<ActiveSaslExchange> getActiveSaslExchange();
 
-    void setChoosedAuthenticationMechanism(Authenticate.SupportedMechanism choosedAuthenticationMechanism);
+    void setActiveSaslExchange(ActiveSaslExchange activeSaslExchange);
+
+    Optional<ActiveSaslExchange> clearActiveSaslExchange();
 
     void setSslEnabled(boolean sslEnabled);
 
     boolean isSslEnabled();
 
-    Optional<OidcSASLConfiguration> getOidcSASLConfiguration();
+    void setStartTlsSupported(boolean startTlsSupported);
 
-    void setOidcSASLConfiguration(Optional<OidcSASLConfiguration> configuration);
+    boolean supportStartTLS();
+
 }
