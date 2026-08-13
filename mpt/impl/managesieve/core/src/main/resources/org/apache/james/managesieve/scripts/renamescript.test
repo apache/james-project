@@ -27,7 +27,7 @@ C: RENAMESCRIPT "foo" "bar"
 S: NO
 
 C: AUTHENTICATE "PLAIN"
-S: \+ ""
+S: ""
 C: user password
 S: OK
 

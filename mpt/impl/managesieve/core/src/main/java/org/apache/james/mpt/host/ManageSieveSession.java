@@ -48,6 +48,7 @@ public class ManageSieveSession implements Session {
         this.out = new ByteBufferOutputStream(continuation);
         this.in = new ByteBufferInputStream();
         this.settableSession = new SettableSession();
+        this.settableSession.setStartTlsSupported(true);
     }
 
     @Override

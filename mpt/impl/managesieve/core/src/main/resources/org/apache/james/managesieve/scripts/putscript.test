@@ -39,7 +39,7 @@ C:
 S: NO
 
 C: AUTHENTICATE "PLAIN"
-S: \+ ""
+S: ""
 C: user password
 S: OK
 
