@@ -39,5 +39,56 @@ It contains one `managesieveservers` element that can contain multiple `managesi
 
 The `managesieveserver` element can be configured using the common options described xref:{pages-path}/configure/server.adoc[here].
 
-Additionally, it can contain an optional `oidc` element.
-The OIDC configuration is described xref:{pages-path}/configure/oidc.adoc[here].
+== Authentication
+
+ManageSieve supports the `PLAIN`, `OAUTHBEARER`, and `XOAUTH2` SASL mechanisms, by default. `PLAIN` is enabled by default.
+The OAuth mechanisms are enabled when `auth.oidc` is configured. Their stable default order is `PLAIN`,
+`OAUTHBEARER`, then `XOAUTH2`.
+
+Guice applications can also load extension-provided SASL mechanisms, such as the optional `GSSAPI` Kerberos
+mechanism, as well as other custom or community mechanisms, through their SASL mechanism factories.
+
+The optional `auth` element supports the following properties:
+
+.`auth` element
+|===
+| Property Name | Explanation
+
+| `auth.saslMechanisms`
+| Configures an ordered, comma-separated list of SASL mechanism factory class names.
+Built-in factories can be referenced by simple name, for example `PlainSaslMechanismFactory`.
+Guice applications can load a custom factory by its fully qualified class name when the implementation and its
+dependencies are available to Guice. Spring applications support built-in factories only.
+
+| `auth.plainAuthEnabled`
+| Enables the `PLAIN` mechanism. It is an optional boolean that defaults to `true`.
+
+| `auth.requireSSL`
+| Requires a secure connection (TLS or STARTTLS) before affected SASL mechanisms are advertised or accepted.
+It is an optional boolean that defaults to `false` for compatibility. Enabling it is strongly recommended for
+`PLAIN` and bearer-token authentication.
+
+| `auth.oidc`
+| Configures authentication via OIDC. The configuration is described in more detail
+xref:{pages-path}/configure/oidc.adoc[here].
+
+|===
+
+Example:
+
+[source,xml]
+----
+<managesieveserver enabled="true">
+    <!-- ... -->
+    <auth>
+        <requireSSL>true</requireSSL>
+        <saslMechanisms>PlainSaslMechanismFactory,OauthBearerSaslMechanismFactory,XOauth2SaslMechanismFactory</saslMechanisms>
+        <oidc>
+            <!-- See the OIDC configuration documentation. -->
+        </oidc>
+    </auth>
+</managesieveserver>
+----
+
+The former root-level `oidc` element remains accepted as a compatibility alias. New configurations should use
+`auth.oidc`; configuring both paths for one server is rejected.
