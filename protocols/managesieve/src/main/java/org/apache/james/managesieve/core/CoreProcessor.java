@@ -227,6 +227,9 @@ public class CoreProcessor implements CoreCommands {
 
     @Override
     public String startTLS(Session session) {
+        if (!session.supportStartTLS()) {
+            return "NO STARTTLS is not available";
+        }
         if (session.getState() == Session.State.UNAUTHENTICATED) {
             if (session.isSslEnabled()) {
                 return "NO You can't enable two time SSL encryption";
