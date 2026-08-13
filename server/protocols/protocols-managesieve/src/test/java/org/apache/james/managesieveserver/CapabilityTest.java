@@ -124,6 +124,24 @@ class CapabilityTest {
         assertThatThrownBy(client::readResponse).isInstanceOf(EOFException.class);
     }
 
+    @Test
+    void shouldAcceptCommandsAfterSuccessfulStartTls() throws Exception {
+        this.testSystem.setUp("managesieveserver-starttls.xml");
+
+        ManageSieveClient client = new ManageSieveClient();
+        client.connect(this.testSystem.getBindedIP(), this.testSystem.getBindedPort());
+        client.readResponse();
+
+        client.sendCommand("STARTTLS");
+        assertThat(client.readResponse().responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
+        client.execTLS();
+        assertThat(client.readResponse().responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
+
+        client.sendCommand("CAPABILITY");
+
+        assertThat(client.readResponse().responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
+    }
+
     private String[] getSASLMechanisms(ManageSieveClient.ServerResponse response) {
         String saslLine = assertThat(response.responseLines())
             .filteredOn(line -> line.startsWith("\"SASL\""))

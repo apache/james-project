@@ -27,7 +27,8 @@ import io.netty.util.AttributeKey;
  * Just some constants which are used with the Netty implementation
  */
 public interface NettyConstants {
-    AttributeKey<ChannelManageSieveResponseWriter> RESPONSE_WRITER_ATTRIBUTE_KEY = AttributeKey.valueOf("ResponseWriter");
+    // AllButStartTlsLineBasedChannelHandler reads this shared key to disable command-injection detection after STARTTLS.
+    AttributeKey<ChannelManageSieveResponseWriter> RESPONSE_WRITER_ATTRIBUTE_KEY = AttributeKey.valueOf("session");
     AttributeKey<ProxyInformation> PROXY_INFO = AttributeKey.valueOf("ProxyInfo");
     AttributeKey<Session> SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("Session");
 }
