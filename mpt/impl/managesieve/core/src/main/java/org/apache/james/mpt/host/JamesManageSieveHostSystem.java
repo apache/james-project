@@ -21,15 +21,24 @@ package org.apache.james.mpt.host;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.mailbox.Authenticator;
+import org.apache.james.mailbox.Authorizator;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.jsieve.Parser;
 import org.apache.james.managesieve.transcode.ArgumentParser;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.Session;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.sasl.JamesSaslAuthenticator;
+import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.jsieve.ConfigurationManager;
+
+import com.google.common.collect.ImmutableList;
 
 public abstract class JamesManageSieveHostSystem implements ManageSieveHostSystem {
 
@@ -41,7 +50,18 @@ public abstract class JamesManageSieveHostSystem implements ManageSieveHostSyste
     public void beforeTest() throws Exception {
         this.usersRepository = createUsersRepository();
         this.sieveRepository = createSieveRepository();
-        this.processor = new ManageSieveProcessor(new ArgumentParser(new CoreProcessor(sieveRepository, usersRepository, new Parser(new ConfigurationManager()))));
+        ImmutableList<SaslMechanism> saslMechanisms = ImmutableList.of(new PlainSaslMechanism(true, false));
+        Authenticator authenticator = (username, password) -> {
+            try {
+                return usersRepository.test(username, password.toString());
+            } catch (UsersRepositoryException e) {
+                throw new MailboxException("Unable to access users repository", e);
+            }
+        };
+        this.processor = new ManageSieveProcessor(
+            new ArgumentParser(new CoreProcessor(sieveRepository, new Parser(new ConfigurationManager()), saslMechanisms)),
+            saslMechanisms,
+            new JamesSaslAuthenticator(authenticator, (user, otherUser) -> Authorizator.AuthorizationState.FORBIDDEN));
     }
 
     @Override

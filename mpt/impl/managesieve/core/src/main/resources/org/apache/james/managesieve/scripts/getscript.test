@@ -24,7 +24,7 @@ C: GETSCRIPT "foo"
 S: NO
 
 C: AUTHENTICATE "PLAIN"
-S: \+ ""
+S: ""
 C: user password
 S: OK
 

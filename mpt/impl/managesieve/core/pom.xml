@@ -32,6 +32,10 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-mailbox-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mpt-core</artifactId>
         </dependency>
         <dependency>
@@ -46,6 +50,10 @@
         <dependency>
             <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-managesieve</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-sasl</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
