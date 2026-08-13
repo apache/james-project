@@ -33,15 +33,19 @@ import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.Authenticator;
+import org.apache.james.mailbox.Authorizator;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.transcode.ArgumentParser;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.util.SettableSession;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.sasl.JamesSaslAuthenticator;
+import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.managesieve.transcode.MessageToCoreToMessage;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -49,6 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <code>ManageSieveMailet</code> interprets mail from a local sender as
@@ -98,7 +103,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
     private SieveRepository sieveRepository = null;
     // Injected
     private SieveParser sieveParser = null;
-    private UsersRepository usersRepository;
+    private Authenticator authenticator;
     private MessageToCoreToMessage transcoder = null;
     private URL helpURL = null;
     private String help = null;
@@ -117,8 +122,11 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         
         setHelpURL(getInitParameter("helpURL"));
         cache = getInitParameter("cache", true);
+        ImmutableList<SaslMechanism> saslMechanisms = ImmutableList.of(new PlainSaslMechanism(true, false));
         transcoder = new MessageToCoreToMessage(new ManageSieveProcessor(
-                new ArgumentParser(new CoreProcessor(sieveRepository, usersRepository, sieveParser), false)),
+                new ArgumentParser(new CoreProcessor(sieveRepository, sieveParser, saslMechanisms), false),
+                saslMechanisms,
+                new JamesSaslAuthenticator(authenticator, (user, otherUser) -> Authorizator.AuthorizationState.FORBIDDEN)),
             this);
     }
 
@@ -136,6 +144,8 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
 
         // Update the Session for the current mail and execute
         SettableSession session = new SettableSession();
+        // ManageSieve-over-mail has historically exposed STARTTLS through its virtual session.
+        session.setStartTlsSupported(true);
         if (mail.getAttribute(Mail.SMTP_AUTH_USER).isPresent()) {
             session.setState(Session.State.AUTHENTICATED);
         } else {
@@ -163,8 +173,8 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
     }
 
     @Inject
-    public void setUsersRepository(UsersRepository usersRepository) {
-        this.usersRepository = usersRepository;
+    public void setAuthenticator(Authenticator authenticator) {
+        this.authenticator = authenticator;
     }
 
     @Override
