@@ -21,6 +21,7 @@ Change list:
  - [Lucene mailbox index schema update for collapseThreads support](#lucene-mailbox-index-schema-update-for-collapsethreads-support)
  - [JAMES-4210 SMTP AuthHook deprecation](#james-4210-smtp-authhook-deprecation)
  - [JAMES-4210 POP3 USER/PASS requires TLS by default](#james-4210-pop3-userpass-requires-tls-by-default)
+ - [JAMES-4210 ManageSieve SASL adoption](#james-4210-managesieve-sasl-adoption)
 
 ### JAMES-4210 POP3 USER/PASS requires TLS by default
 
@@ -36,6 +37,25 @@ intentionally allow clear-text USER/PASS authentication must add the following t
     <requireSSL>false</requireSSL>
 </auth>
 ```
+
+### JAMES-4210 ManageSieve SASL adoption
+
+Date: 13/08/2026
+
+Concerned products: ManageSieve servers and custom ManageSieve authentication extensions
+
+ManageSieve authentication now uses the shared SASL mechanism stack. The non-standard empty challenge `+ ""` is
+now emitted as the RFC 5804 string `""`. Clients should send quoted or literal strings for SASL continuations;
+legacy bare continuations remain accepted for compatibility.
+
+Invalid OIDC tokens now follow RFC 7628: the server sends an error challenge, the client acknowledges it, and the
+server completes the failed authentication with `NO`.
+
+OIDC configuration should move from the root `oidc` element to `auth.oidc`, to align with other protocol's pattern. The root `oidc` element remains accepted as a
+compatibility alias, but configuring both paths is rejected.
+
+The internal ManageSieve `AuthenticationProcessor` extension point was removed. Custom authentication extensions
+should provide a `SaslMechanismFactory` and list its fully qualified class name in `auth.saslMechanisms`.
 
 ### JAMES-4210 SMTP AuthHook deprecation
 
