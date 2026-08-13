@@ -41,6 +41,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.mailbox.Authenticator;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.sieverepository.api.ScriptContent;
@@ -48,7 +49,6 @@ import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
@@ -73,16 +73,15 @@ class ManageSieveMailetTestCase {
     private ManageSieveMailet mailet;
     private SieveRepository sieveRepository;
     private SieveParser sieveParser;
-    private UsersRepository usersRepository;
+    private Authenticator authenticator;
     private FakeMailContext fakeMailContext;
 
     @BeforeEach
     void setUp() throws Exception {
         sieveRepository = mock(SieveRepository.class);
         sieveParser = mock(SieveParser.class);
-        usersRepository = mock(UsersRepository.class);
+        authenticator = mock(Authenticator.class);
         initializeMailet();
-        when(usersRepository.contains(USERNAME)).thenReturn(true);
     }
 
     @Test
@@ -499,7 +498,7 @@ class ManageSieveMailetTestCase {
         mailet = new ManageSieveMailet();
         mailet.setSieveParser(sieveParser);
         mailet.setSieveRepository(sieveRepository);
-        mailet.setUsersRepository(usersRepository);
+        mailet.setAuthenticator(authenticator);
         fakeMailContext = FakeMailContext.defaultContext();
         FakeMailetConfig config = FakeMailetConfig.builder()
                 .mailetName("ManageSieve mailet")
