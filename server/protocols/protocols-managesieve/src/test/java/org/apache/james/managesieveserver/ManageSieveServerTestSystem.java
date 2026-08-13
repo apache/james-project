@@ -26,16 +26,25 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
+import org.apache.james.mailbox.Authenticator;
+import org.apache.james.mailbox.Authorizator;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.jsieve.Parser;
 import org.apache.james.managesieve.transcode.ArgumentParser;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieveserver.netty.ManageSieveServer;
+import org.apache.james.managesieveserver.netty.ManageSieveServerFactory.ManageSieveSaslMechanismLoader;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
+import org.apache.james.protocols.sasl.JamesSaslAuthenticator;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.sieverepository.file.SieveFileRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
+
+import com.google.common.collect.ImmutableList;
 
 class ManageSieveServerTestSystem {
     private static final int MAX_LINE_LENGTH = 8000;
@@ -43,8 +52,6 @@ class ManageSieveServerTestSystem {
     public static final String PASSWORD = "bobpwd";
     public static final Username USERNAME = Username.of("bob");
 
-
-    private ManageSieveProcessor manageSieveProcessor;
     public ManageSieveServer manageSieveServer;
     private MemoryUsersRepository usersRepository;
     private MockFileSystem fileSystem;
@@ -53,22 +60,34 @@ class ManageSieveServerTestSystem {
         this.usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
         this.usersRepository.addUser(USERNAME, PASSWORD);
         this.fileSystem = new MockFileSystem();
-        this.manageSieveProcessor = new ManageSieveProcessor(
-            new ArgumentParser(
-                new CoreProcessor(
-                    new SieveFileRepository(this.fileSystem),
-                    this.usersRepository,
-                    new Parser()
-                )
-            )
-        );
     }
 
     public void setUp(HierarchicalConfiguration<ImmutableNode> configuration) throws Exception {
+        ImmutableList<SaslMechanism> saslMechanisms = ManageSieveSaslMechanismLoader.defaultLoader().load(configuration);
+        setUp(configuration, saslMechanisms);
+    }
+
+    public void setUp(ImmutableList<SaslMechanism> saslMechanisms) throws Exception {
+        HierarchicalConfiguration<ImmutableNode> configuration = FileConfigurationProvider.getConfig(ClassLoader.getSystemResourceAsStream("managesieveserver.xml"));
+        setUp(configuration, saslMechanisms);
+    }
+
+    private void setUp(HierarchicalConfiguration<ImmutableNode> configuration, ImmutableList<SaslMechanism> saslMechanisms) throws Exception {
         this.fileSystem.clear();
+        Authenticator authenticator = (username, password) -> {
+            try {
+                return usersRepository.test(username, password.toString());
+            } catch (UsersRepositoryException e) {
+                throw new MailboxException("Unable to access users repository", e);
+            }
+        };
+        ManageSieveProcessor manageSieveProcessor = new ManageSieveProcessor(
+            new ArgumentParser(new CoreProcessor(new SieveFileRepository(this.fileSystem), new Parser(), saslMechanisms)),
+            saslMechanisms,
+            new JamesSaslAuthenticator(authenticator, (user, otherUser) -> Authorizator.AuthorizationState.FORBIDDEN));
         this.manageSieveServer = new ManageSieveServer(
             MAX_LINE_LENGTH,
-            this.manageSieveProcessor
+            manageSieveProcessor
         );
         this.manageSieveServer.setFileSystem(this.fileSystem);
         this.manageSieveServer.setEncryptionFactory(new LegacyJavaEncryptionFactory(this.fileSystem));

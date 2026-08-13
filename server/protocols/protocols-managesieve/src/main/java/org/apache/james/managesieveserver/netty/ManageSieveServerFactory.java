@@ -20,32 +20,112 @@
 package org.apache.james.managesieveserver.netty;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mailbox.Authenticator;
+import org.apache.james.mailbox.Authorizator;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.jsieve.Parser;
 import org.apache.james.managesieve.transcode.ArgumentParser;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 import org.apache.james.protocols.netty.Encryption;
+import org.apache.james.protocols.sasl.BuiltInSaslMechanismFactories;
+import org.apache.james.protocols.sasl.JamesSaslAuthenticator;
+import org.apache.james.protocols.sasl.OauthBearerSaslMechanismFactory;
+import org.apache.james.protocols.sasl.PlainSaslMechanismFactory;
+import org.apache.james.protocols.sasl.XOauth2SaslMechanismFactory;
 import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.user.api.UsersRepository;
+
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 public class ManageSieveServerFactory extends AbstractServerFactory {
+    @FunctionalInterface
+    public interface ManageSieveSaslMechanismLoader {
+        static ManageSieveSaslMechanismLoader defaultLoader() {
+            ImmutableList<SaslMechanismFactory> defaultFactories = ImmutableList.of(
+                new PlainSaslMechanismFactory(false),
+                new OauthBearerSaslMechanismFactory(),
+                new XOauth2SaslMechanismFactory());
+            return configuration -> loadBuiltInMechanisms(defaultFactories, normalizeSaslConfiguration(configuration));
+        }
+
+        ImmutableList<SaslMechanism> load(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException;
+    }
+
+    private static final Authorizator DENY_DELEGATION = (authenticationId, authorizationId) -> Authorizator.AuthorizationState.FORBIDDEN;
+
+    private static ImmutableList<SaslMechanism> loadBuiltInMechanisms(ImmutableList<SaslMechanismFactory> defaultFactories,
+                                                                      HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
+        ImmutableList<SaslMechanismFactory> enabledFactories = BuiltInSaslMechanismFactories.enabledForServer(defaultFactories, configuration);
+        ImmutableList<String> configuredFactories = retrieveSaslMechanismFactoryClassNames(configuration);
+        ImmutableList<SaslMechanismFactory> selectedFactories = configuredFactories.isEmpty()
+            ? enabledFactories
+            : configuredFactories.stream()
+                .map(className -> findBuiltInFactory(className, enabledFactories))
+                .collect(ImmutableList.toImmutableList());
+        try {
+            return selectedFactories.stream()
+                .map(Throwing.function(factory -> factory.create(configuration)))
+                .collect(ImmutableList.toImmutableList());
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof ConfigurationException configurationException) {
+                throw configurationException;
+            }
+            throw e;
+        }
+    }
+
+    private static SaslMechanismFactory findBuiltInFactory(String className,
+                                                           ImmutableList<SaslMechanismFactory> enabledFactories) {
+        return enabledFactories.stream()
+            .filter(factory -> className.equals(factory.getClass().getCanonicalName())
+                || (!className.contains(".") && className.equals(factory.getClass().getSimpleName())))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Unsupported SASL mechanism factory: " + className));
+    }
+
+    public static ImmutableList<String> retrieveSaslMechanismFactoryClassNames(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
+        if (!configuration.containsKey("auth.saslMechanisms")) {
+            return ImmutableList.of();
+        }
+        ImmutableList<String> factoryClassNames = Arrays.stream(configuration.getStringArray("auth.saslMechanisms"))
+            .flatMap(value -> Arrays.stream(value.split(",")))
+            .map(String::trim)
+            .collect(ImmutableList.toImmutableList());
+        if (factoryClassNames.isEmpty() || factoryClassNames.stream().anyMatch(String::isBlank)) {
+            throw new ConfigurationException("auth.saslMechanisms must not be blank when configured");
+        }
+        return factoryClassNames;
+    }
 
     private FileSystem fileSystem;
     private Encryption.Factory encryptionFactory;
-    private ManageSieveProcessor manageSieveProcessor;
     private SieveRepository sieveRepository;
-    private UsersRepository usersRepository;
+    private Authenticator authenticator;
     private Parser sieveParser;
+    private ManageSieveSaslMechanismLoader saslMechanismLoader = ManageSieveSaslMechanismLoader.defaultLoader();
+
+    public ManageSieveServerFactory() {
+    }
+
+    @Inject
+    public ManageSieveServerFactory(ManageSieveSaslMechanismLoader saslMechanismLoader) {
+        this.saslMechanismLoader = saslMechanismLoader;
+    }
 
     @Inject
     public void setFileSystem(FileSystem fileSystem) {
@@ -63,8 +143,8 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
     }
 
     @Inject
-    public void setUsersRepository(UsersRepository usersRepository) {
-        this.usersRepository = usersRepository;
+    public void setAuthenticator(Authenticator authenticator) {
+        this.authenticator = authenticator;
     }
 
     @Inject
@@ -72,27 +152,53 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
         this.sieveParser = sieveParser;
     }
 
-
-    @Override
-    @PostConstruct
-    public void init() throws Exception {
-        manageSieveProcessor = new ManageSieveProcessor(new ArgumentParser(new CoreProcessor(sieveRepository, usersRepository, sieveParser)));
-        super.init();
-    }
-
     @Override
     protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("managesieveserver");
 
-        for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
-            ManageSieveServer server = new ManageSieveServer(8000, manageSieveProcessor);
+        for (HierarchicalConfiguration<ImmutableNode> serverConfig : configs) {
+            HierarchicalConfiguration<ImmutableNode> saslConfiguration = normalizeSaslConfiguration(serverConfig);
+            ImmutableList<SaslMechanism> saslMechanisms = saslMechanismLoader.load(saslConfiguration);
+            ManageSieveProcessor processor = new ManageSieveProcessor(
+                new ArgumentParser(new CoreProcessor(sieveRepository, sieveParser, saslMechanisms)),
+                saslMechanisms,
+                new JamesSaslAuthenticator(authenticator, DENY_DELEGATION));
+            ManageSieveServer server = new ManageSieveServer(8000, processor);
             server.setFileSystem(fileSystem);
             server.setEncryptionFactory(encryptionFactory);
             server.configure(serverConfig);
             servers.add(server);
         }
-
         return servers;
+    }
+
+    static HierarchicalConfiguration<ImmutableNode> normalizeSaslConfiguration(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
+        if (!serverConfiguration.immutableConfigurationsAt("auth.oidc").isEmpty()) {
+            if (!serverConfiguration.immutableConfigurationsAt("oidc").isEmpty()) {
+                throw new ConfigurationException("Configure OIDC only once using auth.oidc");
+            }
+            return serverConfiguration;
+        }
+        if (serverConfiguration.immutableConfigurationsAt("oidc").isEmpty()) {
+            return serverConfiguration;
+        }
+
+        BaseHierarchicalConfiguration normalized = new BaseHierarchicalConfiguration();
+        copyProperties(serverConfiguration, normalized, "");
+        copyProperties(serverConfiguration.configurationAt("oidc"), normalized, "auth.oidc.");
+        return normalized;
+    }
+
+    private static void copyProperties(HierarchicalConfiguration<ImmutableNode> source,
+                                       BaseHierarchicalConfiguration target,
+                                       String prefix) {
+        Iterator<String> keys = source.getKeys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            if (!prefix.isEmpty() || !key.startsWith("oidc.")) {
+                target.setProperty(prefix + key, source.getProperty(key));
+            }
+        }
     }
 }
