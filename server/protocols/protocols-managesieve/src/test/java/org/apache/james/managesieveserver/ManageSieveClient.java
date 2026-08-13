@@ -21,6 +21,7 @@ package org.apache.james.managesieveserver;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -72,6 +73,9 @@ public class ManageSieveClient extends SocketClient {
         ArrayList<String> lines = new ArrayList<>();
         while (response == null) {
             String line = this.reader.readLine();
+            if (line == null) {
+                throw new EOFException("ManageSieve connection closed without a response");
+            }
             String[] tokens = line.split(" ", 3);
             if (EnumUtils.isValidEnumIgnoreCase(ResponseType.class, tokens[0])) {
                 ResponseType responseType = EnumUtils.getEnumIgnoreCase(ResponseType.class, tokens[0]);
