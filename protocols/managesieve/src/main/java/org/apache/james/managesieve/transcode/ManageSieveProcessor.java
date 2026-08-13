@@ -20,16 +20,16 @@
 
 package org.apache.james.managesieve.transcode;
 
-import jakarta.inject.Inject;
-
 import org.apache.james.managesieve.api.ManageSieveException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
-import org.apache.james.managesieve.util.ParserUtils;
+import org.apache.james.protocols.api.sasl.SaslAuthenticator;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 
-public class ManageSieveProcessor {
+import com.google.common.collect.ImmutableList;
 
+public class ManageSieveProcessor {
     public static final String AUTHENTICATE = "AUTHENTICATE";
     public static final String CAPABILITY = "CAPABILITY";
     public static final String CHECKSCRIPT = "CHECKSCRIPT";
@@ -47,80 +47,58 @@ public class ManageSieveProcessor {
     public static final String UNAUTHENTICATE = "UNAUTHENTICATE";
 
     private final ArgumentParser argumentParser;
+    private final ManageSieveSaslProcessor saslProcessor;
 
-    @Inject
-    public ManageSieveProcessor(ArgumentParser argumentParser) {
+    public ManageSieveProcessor(ArgumentParser argumentParser,
+                                ImmutableList<SaslMechanism> saslMechanisms,
+                                SaslAuthenticator saslAuthenticator) {
         this.argumentParser = argumentParser;
+        this.saslProcessor = new ManageSieveSaslProcessor(saslMechanisms, saslAuthenticator);
     }
 
     public String handleRequest(Session session, String request) throws ManageSieveException, SieveRepositoryException {
-        if (request.endsWith("\n")) {
-            request = request.substring(0, request.length() - 1);
-        }
-        if (request.endsWith("\r")) {
-            request = request.substring(0, request.length() - 1);
-        }
-
+        String requestWithoutLineEnding = removeLineEnding(request);
         if (session.getState() == Session.State.AUTHENTICATION_IN_PROGRESS) {
-            return matchCommandWithImplementation(session, request.trim(), AUTHENTICATE) + "\r\n";
+            return saslProcessor.handleContinuation(session, requestWithoutLineEnding) + "\r\n";
         }
 
-        int firstWordEndIndex = request.indexOf(' ');
-        String arguments = parseArguments(request, firstWordEndIndex);
-        String command = parseCommand(request, firstWordEndIndex);
+        int firstWordEndIndex = requestWithoutLineEnding.indexOf(' ');
+        String arguments = parseArguments(requestWithoutLineEnding, firstWordEndIndex);
+        String command = parseCommand(requestWithoutLineEnding, firstWordEndIndex);
         return matchCommandWithImplementation(session, arguments, command) + "\r\n";
     }
 
-    private String parseCommand(String request, int firstWordEndIndex) {
-        String command;
-        if (request.contains(" ")) {
-            command = request.substring(0, firstWordEndIndex);
-        } else {
-            command = request;
+    public void close(Session session) {
+        saslProcessor.close(session);
+    }
+
+    private String removeLineEnding(String request) {
+        if (request.endsWith("\r\n")) {
+            return request.substring(0, request.length() - 2);
         }
-        return command;
+        if (request.endsWith("\n") || request.endsWith("\r")) {
+            return request.substring(0, request.length() - 1);
+        }
+        return request;
+    }
+
+    private String parseCommand(String request, int firstWordEndIndex) {
+        if (firstWordEndIndex >= 0) {
+            return request.substring(0, firstWordEndIndex);
+        }
+        return request;
     }
 
     private String parseArguments(String request, int firstWordEndIndex) {
-        if (request.contains(" ")) {
-            return request.substring(firstWordEndIndex).trim();
-        } else {
-            return "";
+        if (firstWordEndIndex >= 0) {
+            return request.substring(firstWordEndIndex + 1).trim();
         }
+        return "";
     }
 
     private String matchCommandWithImplementation(Session session, String arguments, String command) throws SessionTerminatedException {
         if (command.equalsIgnoreCase(AUTHENTICATE)) {
-            // The RFC forbids the AUTHENTICATE command if the session is already authenticated.
-            if (session.isAuthenticated()) {
-                return "NO \"already authenticated\"";
-            }
-
-            // If no authentication is in progress, the authentication mechanism needs to be chosen.
-            if (session.getState() != Session.State.AUTHENTICATION_IN_PROGRESS) {
-                String mechanism = ParserUtils.unquoteFirst(arguments);
-                String result = argumentParser.chooseMechanism(session, mechanism);
-                // If the authentication is not in progress, return the result (error) because choosing the mechanism has failed.
-                if (session.getState() != Session.State.AUTHENTICATION_IN_PROGRESS) {
-                    return result;
-                }
-
-                // Skips the whole mechanism, the closing quote, and the space if present.
-                // If the request is well-formatted, the arguments are now empty or contain the client's initial response.
-                arguments = arguments.substring(arguments.indexOf(mechanism) + mechanism.length() + 1);
-                if (arguments.startsWith(" ")) {
-                    arguments = arguments.substring(1);
-                }
-                // If there are is no initial client response left, return the result (initial server response).
-                if (arguments.isEmpty()) {
-                    return result;
-                }
-                // Unquote the argument in this case because continuation is not used.
-                arguments = ParserUtils.unquoteFirst(arguments);
-            }
-
-            // The authentication is in progress, the mechanism has been chosen, and the arguments contain an initial client response.
-            return argumentParser.authenticate(session, arguments);
+            return saslProcessor.startAuthentication(session, arguments);
         } else if (command.equalsIgnoreCase(CAPABILITY)) {
             return argumentParser.capability(session, arguments);
         } else if (command.equalsIgnoreCase(CHECKSCRIPT)) {
@@ -154,5 +132,4 @@ public class ManageSieveProcessor {
     public String getAdvertisedCapabilities(Session session) {
         return argumentParser.capability(session, "") + "\r\n";
     }
-
 }

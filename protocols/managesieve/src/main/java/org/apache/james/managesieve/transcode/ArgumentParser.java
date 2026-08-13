@@ -22,8 +22,6 @@ package org.apache.james.managesieve.transcode;
 
 import java.util.Iterator;
 
-import jakarta.inject.Inject;
-
 import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
@@ -42,7 +40,6 @@ public class ArgumentParser {
     private final CoreCommands core;
     private final boolean validatePutSize;
 
-    @Inject
     public ArgumentParser(CoreCommands core) {
         this.core = core;
         this.validatePutSize = true;
@@ -76,14 +73,6 @@ public class ArgumentParser {
         core.logout();
     }
 
-    public String chooseMechanism(Session session, String mechanism) {
-        return core.chooseMechanism(session, mechanism);
-    }
-
-    public String authenticate(Session session, String suppliedData) {
-        return core.authenticate(session, suppliedData);
-    }
-    
     public String deleteScript(Session session, String args) {
         Iterator<String> argumentIterator = Splitter.on(' ').omitEmptyStrings().split(args).iterator();
         if (!argumentIterator.hasNext()) {

@@ -25,6 +25,6 @@ package org.apache.james.managesieve.api.commands;
  * 
  *  @see <a href=http://tools.ietf.org/html/rfc5804#section-1.8>RFC 5804 Transport</a>
  */
-public interface LineCommands extends Authenticate, Unauthenticate, Logout, Noop {
+public interface LineCommands extends Unauthenticate, Logout, Noop {
 
 }

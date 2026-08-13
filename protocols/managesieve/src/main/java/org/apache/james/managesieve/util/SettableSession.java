@@ -23,17 +23,15 @@ package org.apache.james.managesieve.util;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
-import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.managesieve.api.Session;
-import org.apache.james.managesieve.api.commands.Authenticate;
 
 public class SettableSession implements Session {
 
     private Username user;
     private State state;
-    private Authenticate.SupportedMechanism choosedAuthenticationMechanism;
+    private Optional<ActiveSaslExchange> activeSaslExchange = Optional.empty();
     private boolean sslEnabled;
-    private Optional<OidcSASLConfiguration> oidcSASLConfiguration = Optional.empty();
+    private boolean startTlsSupported;
 
     public SettableSession() {
         this.state = State.UNAUTHENTICATED;
@@ -66,13 +64,20 @@ public class SettableSession implements Session {
     }
 
     @Override
-    public Authenticate.SupportedMechanism getChoosedAuthenticationMechanism() {
-        return choosedAuthenticationMechanism;
+    public Optional<ActiveSaslExchange> getActiveSaslExchange() {
+        return activeSaslExchange;
     }
 
     @Override
-    public void setChoosedAuthenticationMechanism(Authenticate.SupportedMechanism choosedAuthenticationMechanism) {
-        this.choosedAuthenticationMechanism = choosedAuthenticationMechanism;
+    public void setActiveSaslExchange(ActiveSaslExchange activeSaslExchange) {
+        this.activeSaslExchange = Optional.of(activeSaslExchange);
+    }
+
+    @Override
+    public Optional<ActiveSaslExchange> clearActiveSaslExchange() {
+        Optional<ActiveSaslExchange> previousExchange = activeSaslExchange;
+        this.activeSaslExchange = Optional.empty();
+        return previousExchange;
     }
 
     @Override
@@ -86,12 +91,13 @@ public class SettableSession implements Session {
     }
 
     @Override
-    public Optional<OidcSASLConfiguration> getOidcSASLConfiguration() {
-        return this.oidcSASLConfiguration;
+    public void setStartTlsSupported(boolean startTlsSupported) {
+        this.startTlsSupported = startTlsSupported;
     }
 
     @Override
-    public void setOidcSASLConfiguration(Optional<OidcSASLConfiguration> configuration) {
-        this.oidcSASLConfiguration = configuration;
+    public boolean supportStartTLS() {
+        return startTlsSupported;
     }
+
 }

@@ -27,21 +27,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import jakarta.inject.Inject;
-
 import org.apache.commons.io.IOUtils;
-import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.AuthenticationException;
-import org.apache.james.managesieve.api.AuthenticationProcessor;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
 import org.apache.james.managesieve.api.ManageSieveException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
-import org.apache.james.managesieve.api.UnknownSaslMechanism;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.util.ParserUtils;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -51,11 +47,11 @@ import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 import org.apache.james.sieverepository.api.exception.StorageException;
-import org.apache.james.user.api.UsersRepository;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
 public class CoreProcessor implements CoreCommands {
@@ -70,15 +66,13 @@ public class CoreProcessor implements CoreCommands {
     private final SieveRepository sieveRepository;
     private final SieveParser parser;
     private final Map<Capabilities, String> capabilitiesBase;
-    private final Map<SupportedMechanism, AuthenticationProcessor> authenticationProcessorMap;
+    private final ImmutableList<SaslMechanism> saslMechanisms;
 
-    @Inject
-    public CoreProcessor(SieveRepository repository, UsersRepository usersRepository, SieveParser parser) {
+    public CoreProcessor(SieveRepository repository, SieveParser parser, ImmutableList<SaslMechanism> saslMechanisms) {
         this.sieveRepository = repository;
         this.parser = parser;
         this.capabilitiesBase = precomputedCapabilitiesBase(parser);
-        this.authenticationProcessorMap = new HashMap<>();
-        this.authenticationProcessorMap.put(SupportedMechanism.PLAIN, new PlainAuthenticationProcessor(usersRepository));
+        this.saslMechanisms = saslMechanisms;
     }
 
     @Override
@@ -96,17 +90,17 @@ public class CoreProcessor implements CoreCommands {
 
     private Map<Capabilities, String> computeCapabilityMap(Session session) {
         Map<Capabilities, String> capabilities = Maps.newHashMap(capabilitiesBase);
-        if (!session.isSslEnabled()) {
+        if (!session.isSslEnabled() && session.supportStartTLS()) {
             capabilities.put(Capabilities.STARTTLS, null);
         }
         if (session.isAuthenticated()) {
             capabilities.put(Capabilities.OWNER, session.getUser().asString());
         }
-        session.getOidcSASLConfiguration().ifPresent(oidcConfiguration -> {
-            this.authenticationProcessorMap.putIfAbsent(SupportedMechanism.XOAUTH2, new OAUTHAuthenticationProcessor(oidcConfiguration));
-            this.authenticationProcessorMap.putIfAbsent(SupportedMechanism.OAUTHBEARER, new OAUTHAuthenticationProcessor(oidcConfiguration));
-        });
-        capabilities.put(Capabilities.SASL, constructSaslSupportedAuthenticationMechanisms());
+        String saslMechanisms = constructSaslSupportedAuthenticationMechanisms(session);
+        // RFC 5804 section 1.7 allows an empty SASL list only when STARTTLS is also advertised.
+        if (!saslMechanisms.isEmpty() || capabilities.containsKey(Capabilities.STARTTLS)) {
+            capabilities.put(Capabilities.SASL, saslMechanisms);
+        }
         return capabilities;
     }
 
@@ -212,60 +206,6 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-    public String chooseMechanism(Session session, String mechanism) {
-        try {
-            if (Strings.isNullOrEmpty(mechanism)) {
-                throw new SyntaxException("quoted SASL mechanism must be supplied");
-            }
-
-            SupportedMechanism supportedMechanism = SupportedMechanism.retrieveMechanism(mechanism);
-            if (!this.authenticationProcessorMap.containsKey(supportedMechanism)) {
-                throw new UnknownSaslMechanism("SASL mechanism disabled: " + mechanism);
-            }
-
-            session.setChoosedAuthenticationMechanism(supportedMechanism);
-            session.setState(Session.State.AUTHENTICATION_IN_PROGRESS);
-            AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(supportedMechanism);
-            return authenticationProcessor.initialServerResponse(session);
-        } catch (UnknownSaslMechanism e) {
-            resetSession(session);
-            return "NO \"" + e.getMessage() + "\"";
-        } catch (SyntaxException e) {
-            resetSession(session);
-            return "NO \"ManageSieve syntax is incorrect: " + e.getMessage() + "\"";
-        }
-    }
-
-    @Override
-    public String authenticate(Session session, String suppliedData) {
-        try {
-            SupportedMechanism currentAuthenticationMechanism = session.getChoosedAuthenticationMechanism();
-            AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(currentAuthenticationMechanism);
-            if (Strings.isNullOrEmpty(suppliedData)) {
-                throw new SyntaxException("authentication data must be supplied");
-            }
-            if (suppliedData.equals("*")) {
-                throw new AuthenticationException("authentication aborted by client");
-            }
-            Username authenticatedUsername = authenticationProcessor.isAuthenticationSuccesfull(session, suppliedData);
-            if (authenticatedUsername != null) {
-                session.setUser(authenticatedUsername);
-                session.setState(Session.State.AUTHENTICATED);
-                return "OK";
-            } else {
-                resetSession(session);
-                return "NO \"authentication failed\"";
-            }
-        } catch (AuthenticationException e) {
-            resetSession(session);
-            return "NO \"Authentication failed with: " + e.getMessage() + "\"";
-        } catch (SyntaxException e) {
-            resetSession(session);
-            return "NO \"ManageSieve syntax is incorrect: " + e.getMessage() + "\"";
-        }
-    }
-
-    @Override
     public String unauthenticate(Session session) {
         if (session.isAuthenticated()) {
             resetSession(session);
@@ -278,7 +218,6 @@ public class CoreProcessor implements CoreCommands {
     private static void resetSession(Session session) {
         session.setState(Session.State.UNAUTHENTICATED);
         session.setUser(null);
-        session.setChoosedAuthenticationMechanism(null);
     }
 
     @Override
@@ -354,11 +293,11 @@ public class CoreProcessor implements CoreCommands {
         return capabilitiesBase;
     }
 
-    private String constructSaslSupportedAuthenticationMechanisms() {
-        return Joiner.on(' ').join(this.authenticationProcessorMap
-            .keySet()
+    private String constructSaslSupportedAuthenticationMechanisms(Session session) {
+        return Joiner.on(' ').join(this.saslMechanisms
             .stream()
-            .map(Enum::toString)
+            .filter(mechanism -> mechanism.isAvailableOnTransport(session.isSslEnabled()))
+            .map(SaslMechanism::name)
             .iterator()
         );
     }
