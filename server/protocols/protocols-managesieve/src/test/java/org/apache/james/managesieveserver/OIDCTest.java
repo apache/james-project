@@ -20,6 +20,7 @@
 package org.apache.james.managesieveserver;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -122,7 +123,7 @@ public class OIDCTest {
         @Test
         void oauthbearerLoginWithValidTokenAndContinuationShouldSucceed() throws Exception {
             this.client.sendCommand("AUTHENTICATE \"OAUTHBEARER\"");
-            ManageSieveClient.ServerResponse continuationResponse = this.client.readResponse();
+            ManageSieveClient.ServerResponse continuationResponse = this.client.readSaslChallenge();
             Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
             Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
@@ -134,7 +135,7 @@ public class OIDCTest {
         @Test
         void oauthbearerLoginWithValidTokenAndContinuationCanBeAborted() throws Exception {
             this.client.sendCommand("AUTHENTICATE \"OAUTHBEARER\"");
-            ManageSieveClient.ServerResponse continuationResponse = this.client.readResponse();
+            ManageSieveClient.ServerResponse continuationResponse = this.client.readSaslChallenge();
             Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
             Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
@@ -147,8 +148,7 @@ public class OIDCTest {
         @Test
         void oauthbearerLoginWithInvalidTokenShouldNotSucceed() throws Exception {
             this.client.sendCommand("AUTHENTICATE \"OAUTHBEARER\" \"" + INVALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertOauthFailure(this.client);
         }
 
         @Test
@@ -161,7 +161,7 @@ public class OIDCTest {
         @Test
         void xoauth2LoginWithValidTokenAndContinuationShouldSucceed() throws Exception {
             this.client.sendCommand("AUTHENTICATE \"XOAUTH2\"");
-            ManageSieveClient.ServerResponse continuationResponse = this.client.readResponse();
+            ManageSieveClient.ServerResponse continuationResponse = this.client.readSaslChallenge();
             Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
             Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
@@ -173,7 +173,7 @@ public class OIDCTest {
         @Test
         void xoauth2LoginWithValidTokenAndContinuationCanBeAborted() throws Exception {
             this.client.sendCommand("AUTHENTICATE \"XOAUTH2\"");
-            ManageSieveClient.ServerResponse continuationResponse = this.client.readResponse();
+            ManageSieveClient.ServerResponse continuationResponse = this.client.readSaslChallenge();
             Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
             Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
@@ -186,8 +186,7 @@ public class OIDCTest {
         @Test
         void xoauth2LoginWithInvalidTokenShouldNotSucceed() throws Exception {
             this.client.sendCommand("AUTHENTICATE \"XOAUTH2\" \"" + INVALID_XOAUTH2_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertOauthFailure(this.client);
         }
     }
 
@@ -264,8 +263,7 @@ public class OIDCTest {
             client.readResponse();
 
             client.sendCommand("AUTHENTICATE \"OAUTHBEARER\" \"" + VALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertOauthFailure(client);
         }
 
         @Test
@@ -295,8 +293,7 @@ public class OIDCTest {
             client.readResponse();
 
             client.sendCommand("AUTHENTICATE \"OAUTHBEARER\" \"" + VALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertOauthFailure(client);
         }
 
         @Test
@@ -326,8 +323,7 @@ public class OIDCTest {
             client.readResponse();
 
             client.sendCommand("AUTHENTICATE \"OAUTHBEARER\" \"" + VALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertImmediateOauthFailure(client);
         }
 
         @Test
@@ -357,8 +353,7 @@ public class OIDCTest {
             client.readResponse();
 
             client.sendCommand("AUTHENTICATE \"OAUTHBEARER\" \"" + VALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertOauthFailure(client);
         }
 
         @Test
@@ -386,8 +381,7 @@ public class OIDCTest {
             client.readResponse();
 
             client.sendCommand("AUTHENTICATE \"OAUTHBEARER\" \"" + VALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertImmediateOauthFailure(client);
         }
 
         @Test
@@ -415,8 +409,7 @@ public class OIDCTest {
             client.readResponse();
 
             client.sendCommand("AUTHENTICATE \"OAUTHBEARER\" \"" + VALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertImmediateOauthFailure(client);
         }
     }
 
@@ -503,8 +496,7 @@ public class OIDCTest {
             client.readResponse();
 
             client.sendCommand("AUTHENTICATE \"OAUTHBEARER\" \"" + VALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertOauthFailure(client);
         }
 
         @Test
@@ -533,8 +525,7 @@ public class OIDCTest {
             client.readResponse();
 
             client.sendCommand("AUTHENTICATE \"OAUTHBEARER\" \"" + VALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertOauthFailure(client);
         }
 
         @Test
@@ -561,8 +552,7 @@ public class OIDCTest {
             client.readResponse();
 
             client.sendCommand("AUTHENTICATE \"OAUTHBEARER\" \"" + VALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertImmediateOauthFailure(client);
         }
 
         @Test
@@ -589,8 +579,28 @@ public class OIDCTest {
             client.readResponse();
 
             client.sendCommand("AUTHENTICATE \"OAUTHBEARER\" \"" + VALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
-            ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
-            Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+            assertImmediateOauthFailure(client);
         }
+    }
+
+    private static void assertOauthFailure(ManageSieveClient client) throws Exception {
+        ManageSieveClient.ServerResponse errorChallenge = client.readSaslChallenge();
+        Assertions.assertThat(errorChallenge.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
+        String errorPayload = errorChallenge.explanation()
+            .map(Base64.getDecoder()::decode)
+            .map(bytes -> new String(bytes, StandardCharsets.UTF_8))
+            .orElseThrow();
+        Assertions.assertThat(errorPayload)
+            .contains("\"status\":\"invalid_token\"");
+
+        // RFC 7628 section 3.2.3 requires an acknowledgement before the terminal failure.
+        client.sendCommand("\"AQ==\"");
+        ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
+        Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+    }
+
+    private static void assertImmediateOauthFailure(ManageSieveClient client) throws Exception {
+        ManageSieveClient.ServerResponse authenticationResponse = client.readResponse();
+        Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
     }
 }
