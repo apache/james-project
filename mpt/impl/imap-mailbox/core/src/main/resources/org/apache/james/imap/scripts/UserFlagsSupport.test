@@ -78,3 +78,32 @@ S: A9 OK (\[.+\] )?APPEND completed\.
 C: A10 FETCH 2:2 (FLAGS)
 S: \* 2 FETCH \(FLAGS \(\\Recent appendflag\)\)
 S: A10 OK FETCH completed.
+
+C: A11 CREATE othermailbox
+S: A11 OK \[MAILBOXID \(.+\)\] CREATE completed\.
+
+C: A12 SELECT othermailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\].*
+S: A12 OK \[READ-WRITE\] SELECT completed\.
+
+C: A13 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(.*appendflag.*\)
+S: \* 2 EXISTS
+S: \* \d+ RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(.*appendflag.*\\\*\)\] Limited
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 3\].*
+S: A13 OK \[READ-WRITE\] SELECT completed\.
+
+C: A14 NOOP
+S: A14 OK NOOP completed\.
