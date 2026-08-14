@@ -60,3 +60,21 @@ S: A7 OK STORE completed\.
 C: A8 FETCH 1:1 (FLAGS)
 S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
 S: A8 OK FETCH completed.
+
+C: A9 APPEND testmailbox (appendflag) {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C:
+C: This is a very simple email.
+C:
+S: \* 2 EXISTS
+S: \* 2 RECENT
+S: \* FLAGS \(.*appendflag.*\)
+S: \* OK \[PERMANENTFLAGS \(.*appendflag.*\\\*\)\] Limited
+S: A9 OK (\[.+\] )?APPEND completed\.
+
+C: A10 FETCH 2:2 (FLAGS)
+S: \* 2 FETCH \(FLAGS \(\\Recent appendflag\)\)
+S: A10 OK FETCH completed.
