@@ -129,6 +129,8 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
       .asByteArray()
       .map(array => ByteBuffer.wrap(array))))
       .flatMap(content => handle(targetAccountId, contentType, content, session, response))
+      // Reading that Flux[ByteBuffer] backed InputStream blocks, and authentication may well have completed on a non blocking thread
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 
   def handle(accountId: AccountId, contentType: ContentType, content: InputStream, mailboxSession: MailboxSession, response: HttpServerResponse): SMono[Void] = {
     val maxSize: Long = configuration.maxUploadSize.value.value
