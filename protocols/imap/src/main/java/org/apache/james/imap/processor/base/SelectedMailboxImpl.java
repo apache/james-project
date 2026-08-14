@@ -59,6 +59,7 @@ import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.reactivestreams.Publisher;
@@ -476,6 +477,9 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
         sizeChanged.set(true);
         uidMsnConverter.addAll(added.getUids());
         recentUids.addAll(added.getUids());
+        long stamp = applicableFlagsLock.writeLock();
+        applicableFlags = updateApplicableFlags(applicableFlags, added);
+        applicableFlagsLock.unlockWrite(stamp);
         return VOID;
     }
 
@@ -485,10 +489,24 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
         return applicableFlags.updateWithNewFlags(updatedFlags);
     }
 
+    @VisibleForTesting
+    static ApplicableFlags updateApplicableFlags(ApplicableFlags applicableFlags, Added added) {
+        Flags addedFlags = mergeAllNewFlags(added);
+        return applicableFlags.updateWithNewFlags(addedFlags);
+    }
+
     private static Flags mergeAllNewFlags(FlagsUpdated flagsUpdated) {
         List<UpdatedFlags> flags = flagsUpdated.getUpdatedFlags();
         FlagsBuilder builder = FlagsBuilder.builder();
         flags.stream().map(UpdatedFlags::getNewFlags).forEach(builder::add);
+        return builder.build();
+    }
+
+    private static Flags mergeAllNewFlags(Added added) {
+        FlagsBuilder builder = FlagsBuilder.builder();
+        added.getAdded().values().stream()
+            .map(MessageMetaData::getFlags)
+            .forEach(builder::add);
         return builder.build();
     }
 

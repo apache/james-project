@@ -40,6 +40,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 import jakarta.mail.Flags;
 
@@ -56,6 +57,7 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.model.Mailbox;
@@ -313,6 +315,75 @@ class SelectedMailboxImplTest {
                 assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add("Foo").build());
             });
         }
+
+        @Test
+        void updateApplicableFlagsShouldNotUpdateWhenAddedWithoutUserFlag() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            Added added = added(flagsBuilder().add(ANSWERED).build());
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, added);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add(ANSWERED).build());
+            });
+        }
+
+        @Test
+        void updateApplicableFlagsShouldNotIncludeRecentWhenAdded() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            Added added = added(flagsBuilder().add(RECENT).build());
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, added);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).build());
+            });
+        }
+
+        @Test
+        void updateApplicableFlagsShouldUpdateWhenAddedWithNewUserFlag() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            Added added = added(flagsBuilder().add("Foo").build());
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, added);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isTrue();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add("Foo").build());
+            });
+        }
+
+        @Test
+        void updateApplicableFlagsShouldNotUpdateWhenAddedWithAlreadyKnownUserFlag() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).add("Foo").build());
+            Added added = added(flagsBuilder().add("Foo").build());
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, added);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isFalse();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add("Foo").build());
+            });
+        }
+
+        @Test
+        void updateApplicableFlagsShouldMergeUserFlagsOfAllAddedMessages() {
+            ApplicableFlags applicableFlags = ApplicableFlags.from(flagsBuilder().add(SEEN).build());
+            Added added = added(flagsBuilder().add("Foo").build(), flagsBuilder().add("Bar").build());
+            ApplicableFlags actual = SelectedMailboxImpl.updateApplicableFlags(applicableFlags, added);
+            assertThat(actual).satisfies(ap -> {
+                assertThat(ap.updated()).isTrue();
+                assertThat(ap.flags()).isEqualTo(flagsBuilder().add(SEEN).add("Foo").add("Bar").build());
+            });
+        }
+    }
+
+    private Added added(Flags... flags) {
+        return EventFactory.added()
+            .randomEventId()
+            .mailboxSession(MailboxSessionUtil.create(BOB))
+            .mailbox(mailbox)
+            .addMetaData(IntStream.range(0, flags.length)
+                .mapToObj(i -> new MessageMetaData(MessageUid.of(i + 1), MOD_SEQ, flags[i], SIZE, new Date(),
+                    Optional.empty(), new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId())))
+                .collect(ImmutableList.toImmutableList()))
+            .isDelivery(!IS_DELIVERY)
+            .isAppended(IS_APPENDED)
+            .build();
     }
 
     private static FlagsBuilder flagsBuilder() {
