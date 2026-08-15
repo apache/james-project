@@ -180,22 +180,23 @@ class SSRFValidator(hostResolver: HostResolver = SYSTEM_HOST_RESOLVER,
 }
 
 private class SSRFPreventingAddressResolverGroup(validator: SSRFValidator) extends AddressResolverGroup[InetSocketAddress] {
-  override def newResolver(executor: EventExecutor): AddressResolver[InetSocketAddress] =
+  override protected def newResolver(executor: EventExecutor): AddressResolver[InetSocketAddress] =
     new SSRFPreventingNameResolver(executor, validator).asAddressResolver()
 }
 
 private class SSRFPreventingNameResolver(executor: EventExecutor, validator: SSRFValidator) extends InetNameResolver(executor) {
   override protected def doResolve(inetHost: String, promise: Promise[InetAddress]): Unit =
-    resolve(inetHost).subscribe(
+    safeResolve(inetHost).subscribe(
       (addresses: Seq[InetAddress]) => { promise.trySuccess(addresses.head); () },
       (error: Throwable) => { promise.tryFailure(error); () })
 
   override protected def doResolveAll(inetHost: String, promise: Promise[util.List[InetAddress]]): Unit =
-    resolve(inetHost).subscribe(
+    safeResolve(inetHost).subscribe(
       (addresses: Seq[InetAddress]) => { promise.trySuccess(addresses.asJava); () },
       (error: Throwable) => { promise.tryFailure(error); () })
 
-  private def resolve(inetHost: String): Mono[Seq[InetAddress]] =
+  // Not named `resolve`: SimpleNameResolver::resolve is final
+  private def safeResolve(inetHost: String): Mono[Seq[InetAddress]] =
     Mono.fromCallable(() => validator.checkedResolve(inetHost, s"JMAP Push subscription resolution of $inetHost"))
       .subscribeOn(Schedulers.boundedElastic())
 }
