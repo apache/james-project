@@ -27,6 +27,7 @@ import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
@@ -78,4 +79,8 @@ class S3PassThroughBlobStoreTest implements BlobStoreContract {
         return new HashBlobId.Factory();
     }
 
+    @Override
+    @Disabled("Unstable: Duplicate handler name: HttpStreamsClientHandler#0-body-subscriber")
+    public void readBytesShouldReturnBigSavedByteSource(BlobStore.StoragePolicy storagePolicy) {
+    }
 }
