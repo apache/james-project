@@ -166,7 +166,7 @@ class SSRFValidatorTest {
     val validator = new SSRFValidator(_ => throw new UnknownHostException("push.example.com"))
 
     assertThatThrownBy(() => validator.validate(url("http://push.example.com")).block())
-      .isInstanceOf(classOf[UnknownHostException])
+      .hasRootCauseInstanceOf(classOf[UnknownHostException])
   }
 
   @Test
