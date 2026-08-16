@@ -37,6 +37,12 @@ public interface CassandraMailRepositoryDataDefinition {
 
         .table(MailRepositoryTable.KEYS_TABLE_NAME)
         .comment("Per-mailRepository mail key list")
+        .options(options -> options
+            // A mail repository holds all its keys within a single partition, thus deletions quickly pile up
+            // tombstones there, up to the point reads (list, count) start failing. As CassandraMailRepository
+            // auto-heals the keys that would be resurrected by an unreplicated deletion, we can afford to
+            // collect those tombstones right away.
+            .withGcGraceSeconds(0))
         .statement(statement -> types -> statement
             .withPartitionKey(MailRepositoryTable.REPOSITORY_NAME, TEXT)
             .withClusteringColumn(MailRepositoryTable.MAIL_KEY, TEXT))

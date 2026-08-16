@@ -212,4 +212,71 @@ class CassandraMailRepositoryTest {
         }
     }
 
+    @Nested
+    class LonelyKeysTest {
+        static final MailKey LONELY_KEY = new MailKey("lonely");
+
+        CassandraMailRepositoryKeysDAO keysDAO;
+        MailRepository testee;
+
+        @BeforeEach
+        void setUp(CassandraCluster cassandra) {
+            CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
+            keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
+            BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
+                .passthrough();
+
+            testee = new CassandraMailRepository(URL, keysDAO, v2, MimeMessageStore.factory(blobStore));
+        }
+
+        @Test
+        void retrieveShouldReturnNullWhenKeyIsNotBackedByAnyContent() throws Exception {
+            keysDAO.store(URL, LONELY_KEY).block();
+
+            assertThat(testee.retrieve(LONELY_KEY)).isNull();
+        }
+
+        @Test
+        void retrieveShouldRemoveKeysThatAreNotBackedByAnyContent() throws Exception {
+            keysDAO.store(URL, LONELY_KEY).block();
+
+            testee.retrieve(LONELY_KEY);
+
+            assertThat(testee.list()).toIterable().isEmpty();
+        }
+
+        @Test
+        void listWithConditionShouldIgnoreKeysThatAreNotBackedByAnyContent() throws Exception {
+            keysDAO.store(URL, LONELY_KEY).block();
+            MailKey key = testee.store(MailImpl.builder()
+                .name("mail1")
+                .sender("sender@domain.com")
+                .addRecipient("rec1@domain.com")
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().build())
+                .build());
+
+            assertThat(testee.list(new MailRepository.SenderCondition("sender@domain.com")))
+                .toIterable()
+                .containsOnly(key);
+        }
+
+        @Test
+        void listWithConditionShouldRemoveKeysThatAreNotBackedByAnyContent() throws Exception {
+            keysDAO.store(URL, LONELY_KEY).block();
+
+            testee.list(new MailRepository.SenderCondition("sender@domain.com")).forEachRemaining(key -> { });
+
+            assertThat(testee.list()).toIterable().isEmpty();
+        }
+
+        @Test
+        void removeAllShouldRemoveKeysThatAreNotBackedByAnyContent() throws Exception {
+            keysDAO.store(URL, LONELY_KEY).block();
+
+            testee.removeAll();
+
+            assertThat(testee.list()).toIterable().isEmpty();
+        }
+    }
+
 }
