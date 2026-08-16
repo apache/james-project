@@ -21,6 +21,7 @@ package org.apache.james.mailrepository.postgres;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
@@ -80,6 +81,11 @@ public class PostgresMailRepository implements MailRepository {
 
     @Override
     public void removeAll() {
-        postgresMailRepositoryContentDAO.removeAll(url);
+        postgresMailRepositoryContentDAO.removeAll(url, any -> { });
+    }
+
+    @Override
+    public void removeAll(Consumer<MailKey> progressCallback) {
+        postgresMailRepositoryContentDAO.removeAll(url, progressCallback);
     }
 }

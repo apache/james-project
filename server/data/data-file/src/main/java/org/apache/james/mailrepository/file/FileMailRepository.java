@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -293,8 +294,16 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
 
     @Override
     public void removeAll() {
+        removeAll(any -> { });
+    }
+
+    @Override
+    public void removeAll(Consumer<MailKey> progressCallback) {
         listStream()
-            .forEach(Throwing.<MailKey>consumer(this::remove).sneakyThrow());
+            .forEach(Throwing.<MailKey>consumer(key -> {
+                remove(key);
+                progressCallback.accept(key);
+            }).sneakyThrow());
     }
 
     private void internalRemove(MailKey key) {
