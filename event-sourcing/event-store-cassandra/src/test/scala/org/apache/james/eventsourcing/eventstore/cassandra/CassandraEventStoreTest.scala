@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.eventsourcing.eventstore.cassandra
 
+import com.datastax.oss.driver.api.core.CqlSession
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder.{literal, update}
 import org.apache.james.eventsourcing.eventstore.dto.SnapshotEvent
 import org.apache.james.eventsourcing.{EventId, TestEvent}
 import org.apache.james.eventsourcing.eventstore.{EventStore, EventStoreContract, History}
@@ -54,5 +56,22 @@ class CassandraEventStoreTest extends EventStoreContract {
 
     assertThat(SMono(testee.getEventsOfAggregate(EventStoreContract.AGGREGATE_1)).block())
       .isEqualTo(History.of(event3))
+  }
+
+  @Test
+  def getEventsOfAggregateShouldFallBackToFullHistoryWhenSnapshotPointsToMissingEvents(testee: EventStore, session: CqlSession) : Unit = {
+    val event1 = TestEvent(EventId.first, EventStoreContract.AGGREGATE_1, "first")
+
+    SMono(testee.append(event1)).block()
+
+    // The snapshot is a static column written by a blind update, outside of the LWT appending the events:
+    // it can thus end up referencing events that are no longer part of the partition.
+    session.execute(update(CassandraEventStoreTable.EVENTS_TABLE)
+      .setColumn(CassandraEventStoreTable.SNAPSHOT, literal(5))
+      .whereColumn(CassandraEventStoreTable.AGGREGATE_ID).isEqualTo(literal(EventStoreContract.AGGREGATE_1.asAggregateKey))
+      .build())
+
+    assertThat(SMono(testee.getEventsOfAggregate(EventStoreContract.AGGREGATE_1)).block())
+      .isEqualTo(History.of(event1))
   }
 }
