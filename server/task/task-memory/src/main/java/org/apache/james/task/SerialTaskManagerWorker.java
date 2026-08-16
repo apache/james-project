@@ -81,7 +81,9 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
             runningTasks.put(taskWithId.getId(), future);
 
             Mono<Task.Result> pollingMono = Mono.using(
-                () -> pollAdditionalInformation(taskWithId).subscribe(),
+                () -> pollAdditionalInformation(taskWithId).subscribe(
+                    any -> { },
+                    e -> LOGGER.error("Stopped polling additional information updates of task {}", taskWithId.getId().asString(), e)),
                 ignored -> Mono.fromFuture(future)
                     .onErrorResume(exception -> Mono.from(handleExecutionError(taskWithId, listener, exception))
                         .thenReturn(Task.Result.PARTIAL)),
@@ -119,9 +121,23 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
         }
     }
 
+    /**
+     * Polls the progress of a task until it terminates.
+     *
+     * Computing the additional information of a task can fail - typically when it is backed by the very data
+     * the task is struggling with. Such a failure needs to be swallowed: it would otherwise terminate this
+     * Flux, silently depriving the task of any progress reporting for the rest of its execution.
+     *
+     * Note that the delay needs to be applied upon subscription rather than upon emission: an errored, hence
+     * empty, poll would otherwise complete right away and have `repeat` resubscribe in a tight loop.
+     */
     private Flux<TaskExecutionDetails.AdditionalInformation> pollAdditionalInformation(TaskWithId taskWithId) {
         return Mono.from(taskWithId.getTask().detailsReactive())
-            .delayElement(pollingInterval, Schedulers.parallel())
+            .onErrorResume(e -> {
+                LOGGER.error("Error while computing additional information updates of task {}", taskWithId.getId().asString(), e);
+                return Mono.empty();
+            })
+            .delaySubscription(pollingInterval, Schedulers.parallel())
             .repeat()
             .handle(publishIfPresent())
             .flatMap(information -> Mono.from(listener.updated(taskWithId.getId(), Mono.just(information)))

@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
@@ -44,6 +45,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.ThrowingSupplier;
+import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 
@@ -112,6 +115,62 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
                 .filteredOn(event -> event instanceof CancelRequested)
                 .extracting("hostname")
                 .containsOnly(HOSTNAME));
+    }
+
+    @Test
+    void taskShouldCompleteWhenAdditionalInformationCanNotBeComputed() {
+        TaskId taskId = taskManager.submit(new BrokenDetailsTask(() -> Task.Result.COMPLETED));
+
+        awaitUntilTaskHasStatus(taskId, TaskManager.Status.COMPLETED, taskManager);
+    }
+
+    @Test
+    void taskShouldFailWhenAdditionalInformationCanNotBeComputed() {
+        TaskId taskId = taskManager.submit(new BrokenDetailsTask(() -> Task.Result.PARTIAL));
+
+        awaitUntilTaskHasStatus(taskId, TaskManager.Status.FAILED, taskManager);
+    }
+
+    @Test
+    void taskShouldBeCancelledWhenAdditionalInformationCanNotBeComputed(CountDownLatch countDownLatch) {
+        TaskId taskId = taskManager.submit(new BrokenDetailsTask(() -> {
+            countDownLatch.await();
+            return Task.Result.COMPLETED;
+        }));
+
+        awaitUntilTaskHasStatus(taskId, TaskManager.Status.IN_PROGRESS, taskManager);
+        taskManager.cancel(taskId);
+        countDownLatch.countDown();
+
+        awaitUntilTaskHasStatus(taskId, TaskManager.Status.CANCELLED, taskManager);
+    }
+
+    /**
+     * A task computing its additional information out of the very data it is working on: its progress reporting
+     * breaks down exactly when things go wrong. Recording the outcome of such a task needs to keep working, as
+     * it would otherwise be left in progress forever.
+     */
+    private static class BrokenDetailsTask implements Task {
+        private final ThrowingSupplier<Result> task;
+
+        BrokenDetailsTask(ThrowingSupplier<Result> task) {
+            this.task = task;
+        }
+
+        @Override
+        public Result run() throws InterruptedException {
+            return new MemoryReferenceTask(task).run();
+        }
+
+        @Override
+        public TaskType type() {
+            return TaskType.of("broken-details");
+        }
+
+        @Override
+        public Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> detailsReactive() {
+            return Mono.error(new RuntimeException("Additional information can not be computed"));
+        }
     }
 
     @Test
