@@ -22,6 +22,7 @@ package org.apache.james.webadmin.service;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.inject.Inject;
 
@@ -31,7 +32,6 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
-import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -102,18 +102,24 @@ public class ClearMailRepositoryTask implements Task {
 
     private final MailRepositoryStore mailRepositoryStore;
     private final MailRepositoryPath mailRepositoryPath;
-    private long initialCount = 0;
+    private final AtomicLong initialCount;
+    private final AtomicLong removedCount;
 
     public ClearMailRepositoryTask(MailRepositoryStore mailRepositoryStore, MailRepositoryPath path) {
         this.mailRepositoryStore = mailRepositoryStore;
         this.mailRepositoryPath = path;
+        this.initialCount = new AtomicLong(0);
+        this.removedCount = new AtomicLong(0);
     }
 
     @Override
     public Result run() {
-        initialCount = getRemainingSize().block();
+        initialCount.set(getRemainingSize().block());
         try {
             removeAllInAllRepositories();
+            // Repositories deleting in bulk do not report any progress: only their completion tells us the
+            // repository is now empty.
+            removedCount.set(initialCount.get());
             return Result.COMPLETED;
         } catch (MailRepositoryStore.MailRepositoryStoreException e) {
             LOGGER.error("Encountered error while clearing repository", e);
@@ -123,7 +129,8 @@ public class ClearMailRepositoryTask implements Task {
 
     private void removeAllInAllRepositories() throws MailRepositoryStore.MailRepositoryStoreException {
         mailRepositoryStore.getByPath(mailRepositoryPath)
-            .forEach(Throwing.consumer(MailRepository::removeAll).sneakyThrow());
+            .forEach(Throwing.<MailRepository>consumer(repository -> repository.removeAll(any -> removedCount.incrementAndGet()))
+                .sneakyThrow());
     }
 
     @Override
@@ -135,14 +142,21 @@ public class ClearMailRepositoryTask implements Task {
         return mailRepositoryPath;
     }
 
+    /**
+     * Progress is tracked in memory rather than by counting the remaining mails: counting is a full partition
+     * scan on distributed implementations, and running it upon each and every progress update is prohibitive on
+     * large repositories. Critically, it also used to make the task unable to reach a terminal state whenever
+     * that count failed, as recording completion, failure or cancellation all require these details.
+     */
     @Override
-    public Publisher<Optional<TaskExecutionDetails.AdditionalInformation>> detailsReactive() {
-        return getRemainingSize()
-            .map(remainingSize -> new AdditionalInformation(mailRepositoryPath, initialCount, remainingSize, Clock.systemUTC().instant()))
-            .map(Optional::of);
+    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
+        return Optional.of(new AdditionalInformation(mailRepositoryPath,
+            initialCount.get(),
+            Math.max(initialCount.get() - removedCount.get(), 0),
+            Clock.systemUTC().instant()));
     }
 
-    public Mono<Long> getRemainingSize() {
+    private Mono<Long> getRemainingSize() {
         try {
             return Flux.fromStream(mailRepositoryStore.getByPath(mailRepositoryPath))
                 .flatMap(MailRepository::sizeReactive)

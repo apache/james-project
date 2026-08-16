@@ -22,6 +22,7 @@ package org.apache.james.mailrepository.api;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import jakarta.mail.MessagingException;
@@ -211,5 +212,19 @@ public interface MailRepository {
      * @throws MessagingException
      */
     void removeAll() throws MessagingException;
+
+    /**
+     * Removes all mails from this repository, notifying the caller of the mails being removed.
+     *
+     * Implementations deleting mails one by one should override this in order to report their progress: this
+     * allows long running deletions to be monitored without counting the remaining mails over and over, which
+     * is a costly operation on large repositories.
+     *
+     * Implementations relying on a bulk deletion can keep the default: the caller then only learns about the
+     * progress once the deletion completed.
+     */
+    default void removeAll(Consumer<MailKey> progressCallback) throws MessagingException {
+        removeAll();
+    }
 
 }

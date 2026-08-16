@@ -24,6 +24,7 @@ import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
@@ -178,8 +179,14 @@ public class CassandraMailRepository implements MailRepository {
 
     @Override
     public void removeAll() {
+        removeAll(any -> { });
+    }
+
+    @Override
+    public void removeAll(Consumer<MailKey> progressCallback) {
         keysDAO.list(url)
-            .flatMap(this::removeAsync, DEFAULT_CONCURRENCY)
+            .flatMap(key -> removeAsync(key).thenReturn(key), DEFAULT_CONCURRENCY)
+            .doOnNext(progressCallback)
             .then()
             .block();
     }

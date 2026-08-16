@@ -339,9 +339,10 @@ public class PostgresMailRepositoryContentDAO {
             .block();
     }
 
-    public void removeAll(MailRepositoryUrl url) {
+    public void removeAll(MailRepositoryUrl url, Consumer<MailKey> progressCallback) {
         listMailKeys(url)
-            .flatMap(mailKey -> removeReactive(mailKey, url), DEFAULT_CONCURRENCY)
+            .flatMap(mailKey -> removeReactive(mailKey, url).thenReturn(mailKey), DEFAULT_CONCURRENCY)
+            .doOnNext(progressCallback)
             .then()
             .block();
     }
