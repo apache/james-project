@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.eventsourcing.eventstore.cassandra
 
+import com.datastax.oss.driver.api.core.CqlSession
 import org.apache.james.backends.cassandra.CassandraClusterExtension
 import org.apache.james.eventsourcing.eventstore.{EventStore, JsonEventSerializer}
 import org.junit.jupiter.api.extension.{AfterAllCallback, AfterEachCallback, BeforeAllCallback, BeforeEachCallback, ExtensionContext, ParameterContext, ParameterResolutionException, ParameterResolver}
@@ -40,9 +41,14 @@ class CassandraEventStoreExtension(var cassandra: CassandraClusterExtension, val
 
   @throws[ParameterResolutionException]
   override def supportsParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): Boolean =
-    parameterContext.getParameter.getType eq classOf[EventStore]
+    (parameterContext.getParameter.getType eq classOf[EventStore]) ||
+      (parameterContext.getParameter.getType eq classOf[CqlSession])
 
   @throws[ParameterResolutionException]
-  override def resolveParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): CassandraEventStore =
-    new CassandraEventStore(eventStoreDao.get)
+  override def resolveParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): AnyRef =
+    if (parameterContext.getParameter.getType eq classOf[CqlSession]) {
+      cassandra.getCassandraCluster.getConf
+    } else {
+      new CassandraEventStore(eventStoreDao.get)
+    }
 }
