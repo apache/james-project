@@ -59,7 +59,13 @@ class RequestCancelCommandHandler(private val loadHistory: TaskAggregateId => SM
   override def handledClass: Class[RequestCancel] = classOf[RequestCancel]
 
   override def handle(command: RequestCancel): Publisher[List[EventWithState]] = {
-    loadAggregate(loadHistory, command.id).map(_.requestCancel(hostname).map(EventWithState.noState).asJava)
+    val aggregateId = TaskAggregateId(command.id)
+    loadHistory(aggregateId).map(history =>
+      if (history.getEvents.isEmpty) {
+        Seq.empty[EventWithState].asJava
+      } else {
+        TaskAggregate.fromHistory(aggregateId, history).requestCancel(hostname).map(EventWithState.noState).asJava
+      })
   }
 }
 
