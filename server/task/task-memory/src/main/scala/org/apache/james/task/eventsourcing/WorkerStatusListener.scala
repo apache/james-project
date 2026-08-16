@@ -25,29 +25,51 @@ import org.apache.james.task.Task.Result
 import org.apache.james.task.eventsourcing.TaskCommand._
 import org.apache.james.task.{TaskExecutionDetails, TaskId, TaskManagerWorker}
 import org.reactivestreams.Publisher
+import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.scala.publisher.SMono
 
 import java.util.Optional
 import scala.jdk.OptionConverters._
 
+object WorkerStatusListener {
+  private val LOGGER: Logger = LoggerFactory.getLogger(classOf[WorkerStatusListener])
+}
+
 case class WorkerStatusListener(eventSourcingSystem: EventSourcingSystem) extends TaskManagerWorker.Listener {
+
+  import WorkerStatusListener.LOGGER
 
   override def started(taskId: TaskId): Publisher[Void] = SMono(eventSourcingSystem.dispatch(Start(taskId))).`then`()
 
   override def completed(taskId: TaskId, result: Result, additionalInformationPublisher: Publisher[Optional[TaskExecutionDetails.AdditionalInformation]]): Publisher[Void] =
-    SMono.fromPublisher(additionalInformationPublisher)
-      .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Complete(taskId, result, additionalInformation.toScala))))
+    additionalInformation(taskId, additionalInformationPublisher)
+      .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Complete(taskId, result, additionalInformation))))
       .`then`()
 
   override def failed(taskId: TaskId, additionalInformationPublisher: Publisher[Optional[TaskExecutionDetails.AdditionalInformation]], errorMessage: Optional[String], t: Optional[Throwable]): Publisher[Void] =
-    SMono.fromPublisher(additionalInformationPublisher)
-    .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Fail(taskId, additionalInformation.toScala, errorMessage.toScala, t.toScala.map(t => Throwables.getStackTraceAsString(t))))))
+    additionalInformation(taskId, additionalInformationPublisher)
+    .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Fail(taskId, additionalInformation, errorMessage.toScala, t.toScala.map(t => Throwables.getStackTraceAsString(t))))))
     .`then`()
 
   override def cancelled(taskId: TaskId, additionalInformationPublisher: Publisher[Optional[TaskExecutionDetails.AdditionalInformation]]): Publisher[Void] =
-    SMono.fromPublisher(additionalInformationPublisher)
-      .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Cancel(taskId, additionalInformation.toScala))))
+    additionalInformation(taskId, additionalInformationPublisher)
+      .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Cancel(taskId, additionalInformation))))
       .`then`()
+
+  /**
+   * A task needs to be able to reach a terminal state even when its progress reporting is broken: some tasks
+   * compute their additional information by querying the very data they are working on, which can well be the
+   * failure being recorded. Letting such an error propagate would skip the dispatch altogether, leaving the
+   * task in progress forever - neither completable, nor failable, nor cancellable.
+   */
+  private def additionalInformation(taskId: TaskId, additionalInformationPublisher: Publisher[Optional[TaskExecutionDetails.AdditionalInformation]]): SMono[Option[TaskExecutionDetails.AdditionalInformation]] =
+    SMono.fromPublisher(additionalInformationPublisher)
+      .map(_.toScala)
+      .onErrorResume(e => {
+        LOGGER.warn("Could not retrieve additional information of task {}. Recording its outcome without it.", taskId.asString(), e)
+        SMono.just(None)
+      })
+      .defaultIfEmpty(None)
 
   override def updated(taskId: TaskId, additionalInformationPublisher: Publisher[TaskExecutionDetails.AdditionalInformation]): Publisher[Void] =
     SMono.fromPublisher(additionalInformationPublisher)

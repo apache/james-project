@@ -184,6 +184,9 @@ public class RabbitMQWorkQueue implements WorkQueue {
             .map(taskIdValue -> TaskId.fromString(taskIdValue.toString()))
             .flatMap(taskId -> Mono.fromCallable(() -> new String(delivery.getBody(), StandardCharsets.UTF_8))
                 .flatMap(bodyValue -> deserialize(bodyValue, taskId))
+                // Deserialization failures yield no task: the delivery would otherwise be neither acked nor
+                // nacked, and thus be redelivered over and over.
+                .switchIfEmpty(Mono.fromRunnable(() -> delivery.nack(!REQUEUE)))
                 .doOnNext(task -> delivery.ack())
                 .flatMap(task -> executeOnWorker(taskId, task))
                 .doOnSuccess(result -> LOGGER.info("Executed task {} yield {}", taskId, result)))
