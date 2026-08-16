@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.StringTokenizer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -77,6 +78,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.UnmodifiableIterator;
 
 /**
  * Implementation of a MailRepository on a database via JPA.
@@ -84,6 +86,7 @@ import com.google.common.collect.ImmutableMap;
 public class JPAMailRepository implements MailRepository, Configurable, Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(JPAMailRepository.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final int DELETION_BATCH_SIZE = 100;
 
     private String repositoryName;
 
@@ -374,6 +377,20 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
             throw new MessagingException("Exception while removing message(s): " + e.getMessage(), e);
         } finally {
             EntityManagerUtils.safelyClose(entityManager);
+        }
+    }
+
+    /**
+     * Deletes by batches rather than in one go, so that the caller gets to observe the progress being made.
+     */
+    @Override
+    public void removeAll(Consumer<MailKey> progressCallback) throws MessagingException {
+        UnmodifiableIterator<List<MailKey>> batches = com.google.common.collect.Iterators.partition(list(), DELETION_BATCH_SIZE);
+
+        while (batches.hasNext()) {
+            List<MailKey> batch = batches.next();
+            remove(batch);
+            batch.forEach(progressCallback);
         }
     }
 

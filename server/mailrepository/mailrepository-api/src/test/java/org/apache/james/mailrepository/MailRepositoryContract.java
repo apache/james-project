@@ -270,6 +270,28 @@ public interface MailRepositoryContract {
     }
 
     @Test
+    default void removeAllShouldReportTheRemovedMails() throws Exception {
+        MailRepository testee = retrieveRepository();
+        testee.store(createMail(MAIL_1));
+        testee.store(createMail(MAIL_2));
+
+        ImmutableList.Builder<MailKey> removed = ImmutableList.builder();
+        testee.removeAll(removed::add);
+
+        assertThat(removed.build()).containsExactlyInAnyOrder(MAIL_1, MAIL_2);
+    }
+
+    @Test
+    default void removeAllShouldReportNothingWhenEmpty() throws Exception {
+        MailRepository testee = retrieveRepository();
+
+        ImmutableList.Builder<MailKey> removed = ImmutableList.builder();
+        testee.removeAll(removed::add);
+
+        assertThat(removed.build()).isEmpty();
+    }
+
+    @Test
     default void retrieveShouldGetStoredEmojiMail() throws Exception {
         MailRepository testee = retrieveRepository();
         Mail mail = createMail(MAIL_1, "my content contains 🐋");

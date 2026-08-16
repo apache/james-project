@@ -22,6 +22,7 @@ package org.apache.james.mailrepository.memory;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -87,6 +88,15 @@ public class MemoryMailRepository implements MailRepository {
     @Override
     public void removeAll() {
         mails.clear();
+    }
+
+    @Override
+    public void removeAll(Consumer<MailKey> progressCallback) {
+        mails.keySet()
+            .forEach(key -> {
+                mails.remove(key);
+                progressCallback.accept(key);
+            });
     }
 
     private Mail cloneMail(Mail mail) {
