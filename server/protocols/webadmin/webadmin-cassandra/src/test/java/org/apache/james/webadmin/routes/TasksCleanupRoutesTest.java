@@ -319,14 +319,96 @@ public class TasksCleanupRoutesTest {
 
     @ParameterizedTest
     @MethodSource(value = "inProgressStatus")
-    void tasksCleanupShouldNotRemoveInProgressTask(TaskManager.Status status) {
+    void tasksCleanupShouldRemoveStaleUnfinishedTask(TaskManager.Status status) {
+        // Not updated since the cleanup horizon: the node running it is gone.
         TaskExecutionDetails taskExecutionDetail = new TaskExecutionDetails(TaskId.generateTaskId(),
             TaskType.of("type"),
             status,
-            ZonedDateTime.now(),
+            ZonedDateTime.now().minus(20, ChronoUnit.DAYS),
             new Hostname("foo"),
             Optional::empty,
             Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+
+        taskExecutionDetailsProjection.update(taskExecutionDetail);
+        Created event = new Created(new TaskAggregateId(taskExecutionDetail.taskId()), EventId.first(), new MemoryReferenceWithCounterTask((counter) -> Task.Result.COMPLETED), new Hostname("foo"));
+        Mono.from(eventStore.append(event)).block();
+
+        String taskId = given()
+            .queryParam("olderThan", "15day")
+            .delete()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(taskId))
+            .body("type", is("tasks-cleanup"))
+            .body("additionalInformation.removedTaskCount", is(1))
+            .body("additionalInformation.processedTaskCount", is(1));
+
+        assertThat(taskExecutionDetailsProjection.list().size())
+            .isEqualTo(0);
+    }
+
+    @Test
+    void tasksCleanupShouldRemoveUnfinishedTaskWhenEventsAreMissing() {
+        // Still recently active, yet the event store holds no history for it: the entry can not be
+        // running, and neither cancelling nor deleting it individually gets rid of it.
+        TaskExecutionDetails taskExecutionDetail = new TaskExecutionDetails(TaskId.generateTaskId(),
+            TaskType.of("type"),
+            TaskManager.Status.IN_PROGRESS,
+            ZonedDateTime.now().minus(20, ChronoUnit.DAYS),
+            new Hostname("foo"),
+            Optional::empty,
+            Optional.of(ZonedDateTime.now()),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+
+        taskExecutionDetailsProjection.update(taskExecutionDetail);
+
+        String taskId = given()
+            .queryParam("olderThan", "15day")
+            .delete()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(taskId))
+            .body("type", is("tasks-cleanup"))
+            .body("additionalInformation.removedTaskCount", is(1))
+            .body("additionalInformation.processedTaskCount", is(1));
+
+        assertThat(taskExecutionDetailsProjection.list().size())
+            .isEqualTo(0);
+    }
+
+    @Test
+    void tasksCleanupShouldNotRemoveInProgressTask() {
+        // Started recently: the task is genuinely being executed, whatever the age of its submission.
+        TaskExecutionDetails taskExecutionDetail = new TaskExecutionDetails(TaskId.generateTaskId(),
+            TaskType.of("type"),
+            TaskManager.Status.IN_PROGRESS,
+            ZonedDateTime.now().minus(20, ChronoUnit.DAYS),
+            new Hostname("foo"),
+            Optional::empty,
+            Optional.of(ZonedDateTime.now()),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
