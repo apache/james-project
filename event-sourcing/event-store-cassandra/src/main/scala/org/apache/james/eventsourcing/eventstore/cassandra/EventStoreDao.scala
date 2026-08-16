@@ -73,6 +73,7 @@ class EventStoreDao @Inject() (val session: CqlSession,
       .selectFrom(EVENTS_TABLE)
       .column(SNAPSHOT)
       .whereColumn(AGGREGATE_ID).isEqualTo(bindMarker(AGGREGATE_ID))
+      .limit(1)
       .build())
 
   private def prepareSelectFrom(session: CqlSession): PreparedStatement =
