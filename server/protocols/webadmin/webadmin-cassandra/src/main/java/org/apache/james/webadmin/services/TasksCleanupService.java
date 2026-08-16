@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.services;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.inject.Inject;
@@ -27,6 +28,7 @@ import jakarta.inject.Inject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.task.Task;
+import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.eventsourcing.TaskAggregateId;
@@ -108,8 +110,7 @@ public class TasksCleanupService {
 
     private Flux<Pair<TaskId, Task.Result>> removeTask(Instant beforeDate) {
         return Flux.from(taskExecutionDetailsProjection.listDetailsByBeforeDate(beforeDate))
-            .filter(oldTaskDetail -> !(oldTaskDetail.getStatus().equals(TaskManager.Status.WAITING)
-                || oldTaskDetail.getStatus().equals(TaskManager.Status.IN_PROGRESS)))
+            .filterWhen(oldTaskDetail -> canBeRemoved(oldTaskDetail, beforeDate))
             .flatMap(oldTaskDetail -> Mono.from(eventStore.remove(new TaskAggregateId(oldTaskDetail.getTaskId())))
                 .then(Mono.from(taskExecutionDetailsProjection.remove(oldTaskDetail)))
                 .then(Mono.just(Pair.of(oldTaskDetail.getTaskId(), Task.Result.COMPLETED)))
@@ -117,6 +118,48 @@ public class TasksCleanupService {
                     LOGGER.error("Error while cleanup task {}", oldTaskDetail.getTaskId().asString(), error);
                     return Mono.just(Pair.of(oldTaskDetail.getTaskId(), Task.Result.PARTIAL));
                 }));
+    }
+
+    private Mono<Boolean> canBeRemoved(TaskExecutionDetails taskDetail, Instant beforeDate) {
+        if (!isUnfinished(taskDetail)) {
+            return Mono.just(true);
+        }
+        if (isStale(taskDetail, beforeDate)) {
+            LOGGER.warn("Removing task {} of type {}, left in {} status with no activity since {}: " +
+                    "the node running it died before completing it.",
+                taskDetail.getTaskId().asString(), taskDetail.getType().asString(),
+                taskDetail.getStatus().getValue(), lastActivity(taskDetail));
+            return Mono.just(true);
+        }
+        // Still showing signs of life, yet a task without any event can not be running either: its history
+        // was lost. As cancelling it has no effect, removing it is the only way to get rid of such an entry.
+        return Mono.from(eventStore.getEventsOfAggregate(new TaskAggregateId(taskDetail.getTaskId())))
+            .map(history -> history.getEventsJava().isEmpty());
+    }
+
+    private boolean isUnfinished(TaskExecutionDetails taskDetail) {
+        return taskDetail.getStatus().equals(TaskManager.Status.WAITING)
+            || taskDetail.getStatus().equals(TaskManager.Status.IN_PROGRESS);
+    }
+
+    /**
+     * A task being executed keeps refreshing its execution details. One left untouched since the cleanup
+     * horizon lost the node running it, and would otherwise stay in the listing forever: such an entry can
+     * neither be cancelled nor deleted through any other route.
+     */
+    private boolean isStale(TaskExecutionDetails taskDetail, Instant beforeDate) {
+        return lastActivity(taskDetail).isBefore(beforeDate);
+    }
+
+    private Instant lastActivity(TaskExecutionDetails taskDetail) {
+        Instant lastKnownDate = taskDetail.getStartedDate()
+            .map(ZonedDateTime::toInstant)
+            .orElseGet(() -> taskDetail.getSubmittedDate().toInstant());
+
+        return taskDetail.getAdditionalInformation()
+            .map(TaskExecutionDetails.AdditionalInformation::timestamp)
+            .filter(lastKnownDate::isBefore)
+            .orElse(lastKnownDate);
     }
 
     private static void doOnNext(Pair<TaskId, Task.Result> next, Context context) {
