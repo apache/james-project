@@ -89,20 +89,16 @@ class EventStoreDao @Inject() (val session: CqlSession,
       .build())
 
   private[cassandra] def appendAll(events: Iterable[Event], lastSnapShot: Option[EventId]): SMono[Boolean] =
-    SMono(cassandraAsyncExecutor.executeReturnApplied(appendQuery(events))
+    SMono(cassandraAsyncExecutor.executeReturnApplied(appendQuery(events, lastSnapShot))
       .map(_.booleanValue()))
-      .flatMap((success: Boolean) => lastSnapShot
-        .filter(_ => success)
-        .map(id => SMono(cassandraAsyncExecutor.executeVoid(insertSnapshot(events.head.getAggregateId, id))))
-        .getOrElse(SMono.empty)
-        .`then`(SMono.just(success)))
 
-  private def appendQuery(events: Iterable[Event]): Statement[_] =
-    if (events.size == 1)
+  private def appendQuery(events: Iterable[Event], lastSnapShot: Option[EventId]): Statement[_] =
+    if (events.size == 1 && lastSnapShot.isEmpty)
       insertEvent(events.head)
     else {
       val batch: BatchStatementBuilder = new BatchStatementBuilder(BatchType.LOGGED)
       events.foreach((event: Event) => batch.addStatement(insertEvent(event)))
+      lastSnapShot.foreach(snapshotId => batch.addStatement(insertSnapshot(events.head.getAggregateId, snapshotId)))
       batch.build()
     }
 
