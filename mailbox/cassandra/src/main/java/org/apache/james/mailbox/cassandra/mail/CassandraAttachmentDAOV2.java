@@ -49,6 +49,8 @@ import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.util.DurationParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
@@ -61,6 +63,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentDAOV2 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraAttachmentDAOV2.class);
     private static final Optional<Duration> TTL = Optional.ofNullable(System.getProperty("james.jmap.attachment.ttl", null))
         .map(DurationParser::parse);
 
@@ -135,6 +138,14 @@ public class CassandraAttachmentDAOV2 {
             blobId,
             attachment.getType(),
             attachment.getSize());
+    }
+
+    private static boolean isWellFormed(Row row, AttachmentId attachmentId) {
+        if (row.getString(ID) == null || row.getString(BLOB_ID) == null) {
+            LOGGER.warn("Ignoring partially written attachment row {}", attachmentId.getId());
+            return false;
+        }
+        return true;
     }
 
     private static DAOAttachment fromRow(Row row, BlobId.Factory blobIfFactory) {
@@ -212,6 +223,7 @@ public class CassandraAttachmentDAOV2 {
                 selectStatement.bind()
                     .setUuid(ID_AS_UUID, attachmentId.asUUID())
                     .setExecutionProfile(readProfile))
+            .filter(row -> isWellFormed(row, attachmentId))
             .map(row -> CassandraAttachmentDAOV2.fromRow(row, blobIdFactory));
     }
 
@@ -237,6 +249,8 @@ public class CassandraAttachmentDAOV2 {
 
     public Flux<BlobId> listBlobs() {
         return cassandraAsyncExecutor.executeRows(listBlobs.bind())
-            .map(row -> blobIdFactory.parse(row.getString(BLOB_ID)));
+            .map(row -> row.getString(BLOB_ID))
+            .filter(Objects::nonNull)
+            .map(blobIdFactory::parse);
     }
 }
