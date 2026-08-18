@@ -34,6 +34,7 @@ import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_1;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_2;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_3;
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
+import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID_2;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
 import static org.apache.james.vault.DeletedMessageFixture.USERNAME_2;
@@ -1442,6 +1443,72 @@ class DeletedMessagesVaultRoutesTest {
             }
 
             @Nested
+            class MessageIdTest {
+
+                @Test
+                void restoreShouldAppendMessageToMailboxWhenMatchingMessageId() throws Exception {
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"messageId\"," +
+                        "  \"operator\": \"equals\"," +
+                        "  \"value\": \"" + MESSAGE_ID.serialize() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(BOB_PATH)
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(restoreMessageContents(USERNAME))
+                        .hasSize(1)
+                        .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+                }
+
+                @Test
+                void restoreShouldNotAppendMessageToMailboxWhenMessageIdDoesntMatch() throws Exception {
+                    Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+                    String query =
+                        "{" +
+                        "  \"fieldName\": \"messageId\"," +
+                        "  \"operator\": \"equals\"," +
+                        "  \"value\": \"" + MESSAGE_ID_2.serialize() + "\"" +
+                        "}";
+
+                    String taskId =
+                        given()
+                            .queryParam("action", "restore")
+                            .body(query)
+                        .when()
+                            .post(BOB_PATH)
+                            .jsonPath()
+                            .get("taskId");
+
+                    given()
+                        .basePath(TasksRoutes.BASE)
+                    .when()
+                        .get(taskId + "/await")
+                    .then()
+                        .body("status", is("completed"));
+
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
+                }
+            }
+
+            @Nested
             class MultipleCriteriaTest {
 
                 @Test
@@ -2501,6 +2568,29 @@ class DeletedMessagesVaultRoutesTest {
 
             given()
                 .body(subjectQuery)
+            .when()
+                .post(BOB_MESSAGES_PATH)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .body("", hasSize(1))
+                .body("[0].messageId", is(MESSAGE_ID.serialize()));
+        }
+
+        @Test
+        void browseMessagesShouldFilterByMessageId() {
+            storeDeletedMessage(DELETED_MESSAGE);
+            storeDeletedMessage(DELETED_MESSAGE_2);
+
+            String messageIdQuery = "{" +
+                "\"combinator\": \"and\"," +
+                "\"criteria\": [{" +
+                "  \"fieldName\": \"messageId\"," +
+                "  \"operator\": \"equals\"," +
+                "  \"value\": \"" + MESSAGE_ID.serialize() + "\"" +
+                "}]}";
+
+            given()
+                .body(messageIdQuery)
             .when()
                 .post(BOB_MESSAGES_PATH)
             .then()

@@ -206,6 +206,16 @@ class QueryTranslatorTest {
     }
 
     @Test
+    void toDTOShouldConvertQueryWithMessageIdEquals() {
+        Query query = Query.of(
+            CriterionFactory.messageId().equals("42")
+        );
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.MESSAGE_ID.getValue(), Operator.EQUALS.getValue(), "42")
+        ));
+    }
+
+    @Test
     void toDTOShouldConvertFlattenQuery() throws Exception {
         Query query = Query.of(
             CriterionFactory.subject().contains("james"),
