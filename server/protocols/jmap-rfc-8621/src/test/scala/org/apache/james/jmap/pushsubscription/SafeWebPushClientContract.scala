@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.pushsubscription
 
-import java.net.URL
+import java.net.{URI, URL}
 import java.nio.charset.StandardCharsets
 
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
