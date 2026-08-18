@@ -33,7 +33,11 @@ public interface CassandraEventDeadLettersDataDefinition {
         .table(CassandraEventDeadLettersTable.TABLE_NAME)
         .comment("Holds event dead letter")
         .options(options -> options
-            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
+            // All the dead lettered events of a group are stored within a single partition, thus deletions
+            // (upon redelivery) quickly pile up tombstones there, up to the point reads start failing.
+            // A resurrected event would only lead to an extra redelivery, which is harmless.
+            .withGcGraceSeconds(0))
         .statement(statement -> types -> statement
             .withPartitionKey(CassandraEventDeadLettersTable.GROUP, DataTypes.TEXT)
             .withClusteringColumn(CassandraEventDeadLettersTable.INSERTION_ID, DataTypes.UUID)
