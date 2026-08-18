@@ -61,7 +61,7 @@ public interface DeletedMessageVaultSearchContract {
     DeletedMessageVault getVault();
 
     interface AllContracts extends SubjectContract, DeletionDateContract, DeliveryDateContract, RecipientsContract, SenderContract,
-        HasAttachmentsContract, OriginMailboxesContract, PerUserContract, MultipleSearchCriterionsContract, StringByLocaleContract {
+        HasAttachmentsContract, OriginMailboxesContract, MessageIdContract, PerUserContract, MultipleSearchCriterionsContract, StringByLocaleContract {
     }
 
     interface DeliveryDateContract extends DeletedMessageVaultSearchContract {
@@ -242,6 +242,27 @@ public interface DeletedMessageVaultSearchContract {
             storeMessageWithOriginMailboxes(MAILBOX_ID_2);
 
             assertThat(search(Query.of(CriterionFactory.containsOriginMailbox(MAILBOX_ID_3))))
+                .isEmpty();
+        }
+    }
+
+    interface MessageIdContract extends DeletedMessageVaultSearchContract {
+
+        @Test
+        default void shouldReturnMessagesWithMessageIdWhenEquals() {
+            DeletedMessage message1 = storeDefaultMessage();
+            storeDefaultMessage();
+
+            assertThat(search(Query.of(CriterionFactory.messageId().equals(message1.getMessageId().serialize()))))
+                .containsOnly(message1);
+        }
+
+        @Test
+        default void shouldReturnNoMessageWhenMessageIdDoesntEquals() {
+            storeDefaultMessage();
+
+            assertThat(search(Query.of(CriterionFactory.messageId()
+                    .equals(InMemoryMessageId.of(MESSAGE_ID_GENERATOR.incrementAndGet()).serialize()))))
                 .isEmpty();
         }
     }
