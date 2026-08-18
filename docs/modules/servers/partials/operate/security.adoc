@@ -65,7 +65,7 @@ or xref:{xref-base}/configure/jmx.adoc[disabling JMX]. JMX is needed to use the 
 features. Set the `jmx.remote.x.mlet.allow.getMBeansFromURL` to `false` to disable JMX remote code execution feature.
 
  - 9. If JMAP is enabled, be sure that JMAP PUSH cannot be used for server side request forgery. This can be
-xref:{xref-base}/configure/jmap.adoc[configured] using the `push.prevent.server.side.request.forgery=true` property,
+xref:{xref-base}/configure/jmap.adoc[configured] using the `webpush.prevent.server.side.request.forgery=true` property,
 forbidding push to private addresses.
 
 === Best practice: Should

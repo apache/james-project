@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
 import org.apache.james.jmap.pushsubscription.WebPushClientTestFixture.PUSH_REQUEST_SAMPLE
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import reactor.core.publisher.Mono
@@ -46,9 +47,23 @@ trait SafeWebPushClientContract {
   def testee: WebPushClient
 
   @ParameterizedTest
-  @ValueSource(strings = Array("127.0.0.1", "127.0.0.9", "10.9.0.3", "192.168.102.35"))
+  @ValueSource(strings = Array(
+    "127.0.0.1", "127.0.0.9", "10.9.0.3", "192.168.102.35",
+    // The wildcard address reaches local services and is covered by none of the JDK predicates
+    "0.0.0.0", "[::]",
+    "[::1]", "169.254.169.254", "224.0.0.1", "255.255.255.255", "100.64.0.1",
+    // IPv6 unique local addresses, which hold the IPv6 cloud metadata endpoint
+    "[fc00::1]", "[fd00::1]", "[fd00:ec2::254]",
+    // IPv6 addresses embedding a forbidden IPv4 one
+    "[::127.0.0.1]", "[64:ff9b::7f00:1]", "[2002:7f00:1::1]"))
   def serverSideRequestForgeryAttemptsShouldBeRejected(ip: String): Unit = {
     assertThatThrownBy(() => Mono.from(testee.push(PushSubscriptionServerURL(new URI(s"http://$ip").toURL), PUSH_REQUEST_SAMPLE)).block)
+      .isInstanceOf(classOf[IllegalArgumentException])
+  }
+
+  @Test
+  def pushShouldRejectNonHttpSchemes(): Unit = {
+    assertThatThrownBy(() => Mono.from(testee.push(PushSubscriptionServerURL(new URI("file:///etc/passwd").toURL), PUSH_REQUEST_SAMPLE)).block)
       .isInstanceOf(classOf[IllegalArgumentException])
   }
 }
