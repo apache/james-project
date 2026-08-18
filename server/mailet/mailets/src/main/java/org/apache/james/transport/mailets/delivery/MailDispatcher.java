@@ -194,6 +194,7 @@ public class MailDispatcher {
                                         .orElse(""),
                                     "sender", mail.getMaybeSender().asString(),
                                     "mailboxId", success.getMailboxId().serialize(),
+                                    "messageId", success.getMessageId().serialize(),
                                     "uid", Long.toString(success.getUid().asLong()),
                                     "recipient", recipient.asString())))
                                 .log("Local delivered mail.")))
