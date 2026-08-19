@@ -44,6 +44,8 @@ import org.apache.james.util.AuditTrail;
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
@@ -51,6 +53,8 @@ import com.google.common.collect.ImmutableMap;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailRepository implements MailRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailRepository.class);
+
     private final MailRepositoryUrl url;
     private final CassandraMailRepositoryKeysDAO keysDAO;
     private final CassandraMailRepositoryMailDaoV2 mailDAO;
@@ -102,26 +106,43 @@ public class CassandraMailRepository implements MailRepository {
     @Override
     public Iterator<MailKey> list(Condition condition) {
         return Iterators.toStream(list())
-            .filter(key -> {
-                Mail mail = retrieveMetadata(key);
-                return condition.test(mail);
-            }).iterator();
+            .filter(key -> Optional.ofNullable(retrieveMetadata(key))
+                .map(condition::test)
+                .orElse(false))
+            .iterator();
     }
 
     private Mail retrieveMetadata(MailKey key) {
-        return mailDAO.read(url, key)
-            .handle(publishIfPresent())
+        return readMail(key)
             .map(mailDTO -> mailDTO.getMailBuilder().build())
             .block();
     }
 
     @Override
     public Mail retrieve(MailKey key) {
-        return mailDAO.read(url, key)
-            .handle(publishIfPresent())
+        return readMail(key)
             .flatMap(this::toMail)
             .blockOptional()
             .orElse(null);
+    }
+
+    /**
+     * Reads the content of a mail, auto-healing the keys that are no longer backed by any content.
+     *
+     * Such 'lonely' keys can be encountered when a key deletion gets resurrected - the keys table relies on a
+     * zero gc_grace_seconds in order not to accumulate tombstones. Leaving them behind would make the repository
+     * report mails that can not be read anymore.
+     */
+    private Mono<MailDTO> readMail(MailKey key) {
+        return mailDAO.read(url, key)
+            .handle(publishIfPresent())
+            .switchIfEmpty(Mono.defer(() -> removeLonelyKey(key)));
+    }
+
+    private Mono<MailDTO> removeLonelyKey(MailKey key) {
+        return keysDAO.remove(url, key)
+            .doOnNext(any -> LOGGER.info("Removed key {} of mail repository {} as it was not backed by any content", key.asString(), url.asString()))
+            .then(Mono.empty());
     }
 
     private Mono<Mail> toMail(MailDTO mailDTO) {
