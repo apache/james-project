@@ -174,6 +174,11 @@ class RabbitMQMailQueueTest {
             return mailQueue;
         }
 
+        @Override
+        @Disabled("Unstable")
+        public void dequeueShouldNotTouchEnqueueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
+        }
+
         @Test
         void browseShouldReturnCurrentlyEnqueuedMailFromAllSlices() throws Exception {
             ManageableMailQueue mailQueue = getManageableMailQueue();

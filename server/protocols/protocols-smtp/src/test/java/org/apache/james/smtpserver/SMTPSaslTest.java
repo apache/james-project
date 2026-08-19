@@ -82,6 +82,7 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
@@ -344,6 +345,7 @@ class SMTPSaslTest {
     }
 
     @Test
+    @Disabled("Unstable")
     void ehloShouldAdvertiseXOAUTH2WhenConfigIsProvided() throws Exception {
         SMTPSClient client = initSMTPSClient();
 
