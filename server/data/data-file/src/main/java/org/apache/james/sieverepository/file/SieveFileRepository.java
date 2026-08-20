@@ -30,12 +30,14 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.function.Predicate;
@@ -229,8 +231,7 @@ public class SieveFileRepository implements SieveRepository {
     @Override
     public void putScript(Username username, ScriptName name, ScriptContent content) throws StorageException, QuotaExceededException {
         synchronized (lock) {
-            File file = new File(getUserDirectory(username), name.getValue());
-            enforceRoot(file);
+            File file = resolveUserScript(username, name);
             haveSpace(username, name, content.length());
             toFile(file, content.getValue());
         }
@@ -241,8 +242,7 @@ public class SieveFileRepository implements SieveRepository {
             throws ScriptNotFoundException, DuplicateException, StorageException {
         synchronized (lock) {
             File oldFile = getScriptFile(username, oldName);
-            File newFile = new File(getUserDirectory(username), newName.getValue());
-            enforceRoot(newFile);
+            File newFile = resolveUserScript(username, newName);
             if (newFile.exists()) {
                 throw new DuplicateException("User: " + username.asString() + "Script: " + newName);
             }
@@ -322,6 +322,33 @@ public class SieveFileRepository implements SieveRepository {
         }
     }
 
+    /**
+     * Resolves a script name within the directory of its owner.
+     *
+     * Enforcing the sieve root alone is not enough: it prevents escaping the repository but still lets a crafted
+     * name reach a sibling user directory, and thus lets one user write another user's scripts and '.active' marker.
+     * Scripts therefore need to resolve as a direct child of their own user directory.
+     */
+    private File resolveInUserDirectory(File userDirectory, String name) throws StorageException {
+        if (name == null || name.trim().isEmpty()) {
+            throw new StorageException(new IllegalArgumentException("Script name should not be empty"));
+        }
+        if (SYSTEM_FILES.contains(name)) {
+            throw new StorageException(new IllegalArgumentException("Script name should not collide with system file '" + name + "'"));
+        }
+        File file = new File(userDirectory, name);
+        Path parent = file.toPath().normalize().getParent();
+        if (!Objects.equals(parent, userDirectory.toPath().normalize())) {
+            throw new StorageException(new IllegalArgumentException("Script name should not allow path traversal outside of the user directory"));
+        }
+        enforceRoot(file);
+        return file;
+    }
+
+    private File resolveUserScript(Username username, ScriptName name) throws StorageException {
+        return resolveInUserDirectory(getUserDirectory(username), name.getValue());
+    }
+
     protected File getUserDirectoryFile(Username username) throws StorageException {
         final File userFile = new File(getSieveRootDirectory(), username.asString() + '/');
         enforceRoot(userFile);
@@ -336,9 +363,7 @@ public class SieveFileRepository implements SieveRepository {
         } catch (FileNotFoundException ex) {
             throw new ScriptNotFoundException("There is no active script for user " + username.asString());
         }
-        File scriptFile = new File(dir, content);
-        enforceRoot(scriptFile);
-        return scriptFile;
+        return resolveInUserDirectory(dir, content);
     }
 
     protected boolean isActiveFile(Username username, File file) throws StorageException {
@@ -374,11 +399,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     protected File getScriptFile(Username username, ScriptName name) throws ScriptNotFoundException, StorageException {
-        if (name.getValue().contains("/")) {
-            throw new StorageException(new IllegalArgumentException("Script name should not contain '/' as it can allow path traversal"));
-        }
-        File file = new File(getUserDirectory(username), name.getValue());
-        enforceRoot(file);
+        File file = resolveUserScript(username, name);
         if (!file.exists()) {
             throw new ScriptNotFoundException("User: " + username + "Script: " + name);
         }

@@ -2,12 +2,14 @@
 
 package org.apache.james.sieverepository.file;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.core.Username;
@@ -91,6 +93,75 @@ class SieveFileRepositoryTest implements SieveRepositoryContract {
 
         assertThatThrownBy(() ->  sieveRepository().getScript(Username.of("test"),
             new ScriptName("../other/script")))
+            .isInstanceOf(StorageException.class);
+    }
+
+    @Test
+    void putScriptShouldNotAllowToWriteScriptsOfOtherUsers() throws Exception {
+        sieveRepository().putScript(Username.of("victim"), new ScriptName("script"), SCRIPT_CONTENT);
+
+        assertThatThrownBy(() -> sieveRepository().putScript(Username.of("attacker"),
+                new ScriptName("../victim/script"), new ScriptContent("PWND!!!")))
+            .isInstanceOf(StorageException.class);
+
+        assertThat(sieveRepository().getScript(Username.of("victim"), new ScriptName("script")))
+            .hasContent(SCRIPT_CONTENT.getValue());
+    }
+
+    @Test
+    void putScriptShouldNotAllowToOverwriteTheActiveMarkerOfOtherUsers() throws Exception {
+        sieveRepository().putScript(Username.of("victim"), new ScriptName("script"), SCRIPT_CONTENT);
+
+        assertThatThrownBy(() -> sieveRepository().putScript(Username.of("attacker"),
+                new ScriptName("../victim/.active"), new ScriptContent("script")))
+            .isInstanceOf(StorageException.class);
+
+        assertThat(new File(fileSystem.getFile(SIEVE_ROOT), "victim/.active")).doesNotExist();
+    }
+
+    @Test
+    void putScriptShouldNotAllowToOverwriteSystemFiles() {
+        assertThatThrownBy(() -> sieveRepository().putScript(Username.of("test"),
+                new ScriptName(".active"), SCRIPT_CONTENT))
+            .isInstanceOf(StorageException.class);
+
+        assertThatThrownBy(() -> sieveRepository().putScript(Username.of("test"),
+                new ScriptName(".quota"), SCRIPT_CONTENT))
+            .isInstanceOf(StorageException.class);
+    }
+
+    @Test
+    void putScriptShouldNotAllowToOverwriteTheGlobalQuotaFile() throws Exception {
+        assertThatThrownBy(() -> sieveRepository().putScript(Username.of("test"),
+                new ScriptName("../.quota"), new ScriptContent("1")))
+            .isInstanceOf(StorageException.class);
+
+        assertThat(new File(fileSystem.getFile(SIEVE_ROOT), ".quota")).doesNotExist();
+    }
+
+    @Test
+    void renameScriptShouldNotAllowToWriteScriptsOfOtherUsers() throws Exception {
+        Username attacker = Username.of("attacker");
+        sieveRepository().putScript(Username.of("victim"), new ScriptName("script"), SCRIPT_CONTENT);
+        sieveRepository().putScript(attacker, new ScriptName("evil"), new ScriptContent("PWND!!!"));
+        sieveRepository().setActive(attacker, new ScriptName("evil"));
+
+        assertThatThrownBy(() -> sieveRepository().renameScript(attacker,
+                new ScriptName("evil"), new ScriptName("../victim/evil")))
+            .isInstanceOf(StorageException.class);
+
+        assertThat(new File(fileSystem.getFile(SIEVE_ROOT), "victim/evil")).doesNotExist();
+        assertThat(new File(fileSystem.getFile(SIEVE_ROOT), "victim/.active")).doesNotExist();
+    }
+
+    @Test
+    void getActiveShouldNotFollowACraftedActiveMarker() throws Exception {
+        sieveRepository().putScript(Username.of("other"), new ScriptName("script"), new ScriptContent("PWND!!!"));
+        sieveRepository().putScript(Username.of("test"), new ScriptName("script"), SCRIPT_CONTENT);
+        FileUtils.write(new File(fileSystem.getFile(SIEVE_ROOT), "test/.active"),
+            "../other/script", StandardCharsets.UTF_8);
+
+        assertThatThrownBy(() -> sieveRepository().getActive(Username.of("test")))
             .isInstanceOf(StorageException.class);
     }
 }
