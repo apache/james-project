@@ -21,6 +21,8 @@
 package org.apache.james.managesieve.transcode;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.function.Function;
 
 import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.Session;
@@ -52,7 +54,7 @@ public class ArgumentParser {
 
     public String capability(Session session, String args) {
         if (!args.trim().isEmpty()) {
-            return "NO \"Too many arguments: " + args + "\"";
+            return no("Too many arguments: " + args);
         }
         return core.capability(session);
     }
@@ -74,28 +76,28 @@ public class ArgumentParser {
     }
 
     public String deleteScript(Session session, String args) {
-        Iterator<String> argumentIterator = Splitter.on(' ').omitEmptyStrings().split(args).iterator();
-        if (!argumentIterator.hasNext()) {
-            return "NO \"Missing argument: script name\"";
-        }
-        String scriptName = ParserUtils.unquote(argumentIterator.next());
-        if (argumentIterator.hasNext()) {
-            return "NO \"Too many arguments: " + argumentIterator.next() + "\"";
-        }
-        return core.deleteScript(session, scriptName);
-    }    
-    
+        return withArguments(args, arguments -> {
+            if (arguments.isEmpty()) {
+                return no("Missing argument: script name");
+            }
+            if (arguments.size() > 1) {
+                return no("Too many arguments: " + arguments.get(1));
+            }
+            return core.deleteScript(session, arguments.get(0));
+        });
+    }
+
     public String getScript(Session session, String args) {
-        Iterator<String> argumentIterator = Splitter.on(' ').omitEmptyStrings().split(args).iterator();
-        if (!argumentIterator.hasNext()) {
-            return "NO \"Missing argument: script name\"";
-        }
-        String scriptName = ParserUtils.unquote(argumentIterator.next());
-        if (argumentIterator.hasNext()) {
-            return "NO \"Too many arguments: " + argumentIterator.next() + "\"";
-        }
-        return core.getScript(session, scriptName);
-    }     
+        return withArguments(args, arguments -> {
+            if (arguments.isEmpty()) {
+                return no("Missing argument: script name");
+            }
+            if (arguments.size() > 1) {
+                return no("Too many arguments: " + arguments.get(1));
+            }
+            return core.getScript(session, arguments.get(0));
+        });
+    }
     
     public String checkScript(Session session, String args) {
         Iterator<String> firstLine = Splitter.on("\r\n").split(args.trim()).iterator();
@@ -108,121 +110,129 @@ public class ArgumentParser {
             try {
                 size = ParserUtils.getSize(arguments.next());
             } catch (ArgumentException e) {
-                return "NO \"" + e.getMessage() + "\"";
+                return no(e.getMessage());
             }
         }
         if (arguments.hasNext()) {
-            return "NO \"Extra arguments not supported\"";
+            return no("Extra arguments not supported");
         } else {
-            String content = Joiner.on("\r\n").join(firstLine);
-            if (validatePutSize) {
-                content += "\r\n";
-            }
+            String content = readContent(firstLine);
             if (content.length() < size && validatePutSize) {
                 throw new NotEnoughDataException();
             }
             if (Strings.isNullOrEmpty(content)) {
-                return "NO \"Missing argument: script content\"";
+                return no("Missing argument: script content");
             }
             return core.checkScript(session, content);
         }
     }
 
     public String haveSpace(Session session, String args) {
-        Iterator<String> argumentIterator = Splitter.on(' ').omitEmptyStrings().split(args.trim()).iterator();
-        if (!argumentIterator.hasNext()) {
-            return "NO \"Missing argument: script name\"";
-        }
-        String scriptName = ParserUtils.unquote(argumentIterator.next());
-        long size;
-        if (!argumentIterator.hasNext()) {
-            return "NO \"Missing argument: script size\"";
-        }
-        try {
-            size = Long.parseLong(argumentIterator.next());
-        } catch (NumberFormatException e) {
-            return "NO \"Invalid argument: script size\"";
-        }
-        if (argumentIterator.hasNext()) {
-            return "NO \"Too many arguments: " + argumentIterator.next().trim() + "\"";
-        }
-        return core.haveSpace(session, scriptName, size);
+        return withArguments(args.trim(), arguments -> {
+            if (arguments.isEmpty()) {
+                return no("Missing argument: script name");
+            }
+            if (arguments.size() < 2) {
+                return no("Missing argument: script size");
+            }
+            try {
+                long size = Long.parseLong(arguments.get(1));
+                if (arguments.size() > 2) {
+                    return no("Too many arguments: " + arguments.get(2));
+                }
+                return core.haveSpace(session, arguments.get(0), size);
+            } catch (NumberFormatException e) {
+                return no("Invalid argument: script size");
+            }
+        });
     }
 
     public String listScripts(Session session, String args) {
         if (!args.trim().isEmpty()) {
-            return "NO \"Too many arguments: " + args + "\"";
+            return no("Too many arguments: " + args);
         }
         return core.listScripts(session);
     }
 
     public String putScript(Session session, String args) {
-        Iterator<String> firstLine = Splitter.on("\r\n").split(args.trim()).iterator();
-        Iterator<String> arguments = Splitter.on(' ').split(firstLine.next().trim()).iterator();
-
-        String scriptName;
-        long size;
-        if (! arguments.hasNext()) {
-             return "NO \"Missing argument: script name\"";
-        } else {
-            scriptName = ParserUtils.unquote(arguments.next());
-            if (Strings.isNullOrEmpty(scriptName)) {
-               return "NO \"Missing argument: script name\"";
+        Iterator<String> lines = Splitter.on("\r\n").split(args.trim()).iterator();
+        return withArguments(lines.next().trim(), arguments -> {
+            if (arguments.isEmpty() || Strings.isNullOrEmpty(arguments.get(0))) {
+                return no("Missing argument: script name");
             }
-        }
-        if (! arguments.hasNext()) {
-            return "NO \"Missing argument: script size\"";
-        } else {
+            if (arguments.size() < 2) {
+                return no("Missing argument: script size");
+            }
+            long size;
             try {
-                size = ParserUtils.getSize(arguments.next());
+                size = ParserUtils.getSize(arguments.get(1));
             } catch (ArgumentException e) {
-                return "NO \"" + e.getMessage() + "\"";
+                return no(e.getMessage());
             }
-        }
-        if (arguments.hasNext()) {
-            return "NO \"Extra arguments not supported\"";
-        } else {
-            String content = Joiner.on("\r\n").join(firstLine);
-            if (validatePutSize) {
-                content += "\r\n";
+            if (arguments.size() > 2) {
+                return no("Extra arguments not supported");
             }
+            String content = readContent(lines);
             if (content.length() < size && validatePutSize) {
                 throw new NotEnoughDataException();
             }
-            return core.putScript(session, ParserUtils.unquote(scriptName), content);
-        }
+            return core.putScript(session, arguments.get(0), content);
+        });
     }
 
     public String renameScript(Session session, String args) {
-        Iterator<String> argumentIterator = Splitter.on(' ').omitEmptyStrings().split(args).iterator();
-        if (!argumentIterator.hasNext()) {
-            return "NO \"Missing argument: old script name\"";
-        }
-        String oldName = ParserUtils.unquote(argumentIterator.next());
-        if (!argumentIterator.hasNext()) {
-            return "NO \"Missing argument: new script name\"";
-        }
-        String newName = ParserUtils.unquote(argumentIterator.next());
-        if (argumentIterator.hasNext()) {
-            return "NO \"Too many arguments: " + argumentIterator.next() + "\"";
-        }
-        return core.renameScript(session, oldName, newName);
+        return withArguments(args, arguments -> {
+            if (arguments.isEmpty()) {
+                return no("Missing argument: old script name");
+            }
+            if (arguments.size() < 2) {
+                return no("Missing argument: new script name");
+            }
+            if (arguments.size() > 2) {
+                return no("Too many arguments: " + arguments.get(2));
+            }
+            return core.renameScript(session, arguments.get(0), arguments.get(1));
+        });
     }
 
     public String setActive(Session session, String args) {
-        Iterator<String> argumentIterator = Splitter.on(' ').omitEmptyStrings().split(args).iterator();
-        if (!argumentIterator.hasNext()) {
-            return "NO \"Missing argument: script name\"";
-        }
-        String scriptName = ParserUtils.unquote(argumentIterator.next());
-        if (argumentIterator.hasNext()) {
-            return "NO \"Too many arguments: " + argumentIterator.next() + "\"";
-        }
-        return core.setActive(session, scriptName);
+        return withArguments(args, arguments -> {
+            if (arguments.isEmpty()) {
+                return no("Missing argument: script name");
+            }
+            if (arguments.size() > 1) {
+                return no("Too many arguments: " + arguments.get(1));
+            }
+            return core.setActive(session, arguments.get(0));
+        });
     }
 
     public String startTLS(Session session) {
         return core.startTLS(session);
+    }
+
+    /**
+     * Splits the arguments of a command line, then hands them over to the command implementation. Command lines
+     * violating the string syntax of RFC 5804 are rejected before reaching it.
+     */
+    private String withArguments(String args, Function<List<String>, String> command) {
+        try {
+            return command.apply(ParserUtils.splitArguments(args));
+        } catch (ArgumentException e) {
+            return no(e.getMessage());
+        }
+    }
+
+    private String readContent(Iterator<String> remainingLines) {
+        String content = Joiner.on("\r\n").join(remainingLines);
+        if (validatePutSize) {
+            return content + "\r\n";
+        }
+        return content;
+    }
+
+    private static String no(String message) {
+        return "NO " + ParserUtils.quote(message);
     }
 
 }

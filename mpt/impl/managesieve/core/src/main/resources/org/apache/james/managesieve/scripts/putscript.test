@@ -30,7 +30,7 @@ C: PUTSCRIPT "scriptname" error
 S: NO "error is an invalid size literal : it should be at least 4 char looking like \{_\+\}"
 
 C: PUTSCRIPT "scriptname" {error+}
-S: NO "Size is not a long : For input string: "error""
+S: NO "Size is not a long : For input string: \\"error\\""
 
 C: PUTSCRIPT "foo" {31+}
 C: #comment
@@ -42,6 +42,29 @@ C: AUTHENTICATE "PLAIN"
 S: ""
 C: user password
 S: OK
+
+C: PUTSCRIPT "new script" {7+}
+C: #test
+S: OK
+
+C: GETSCRIPT "new script"
+S: \{7\}
+S: #test
+S:
+S: OK
+
+C: LISTSCRIPTS
+S: "new script"
+S: OK
+
+C: RENAMESCRIPT "new script" "renamed script"
+S: OK
+
+C: DELETESCRIPT "renamed script"
+S: OK
+
+C: PUTSCRIPT "unterminated script {7+}
+S: NO "Unterminated quoted string"
 
 C: PUTSCRIPT "mysievescript" {97+}
 C: require ["fileinto"];
