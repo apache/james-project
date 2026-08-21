@@ -163,6 +163,30 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBl
     }
 
     @Test
+    void fallbackBucketNameShouldNotBeAffectedByBucketPrefix(DockerAwsS3Container dockerAwsS3) {
+        S3BlobStoreConfiguration prefixedConfiguration = S3BlobStoreConfiguration.builder()
+            .authConfiguration(AwsS3AuthConfiguration.builder()
+                .endpoint(dockerAwsS3.getEndpoint())
+                .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
+                .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
+                .build())
+            .region(dockerAwsS3.dockerAwsS3().region())
+            .defaultBucketName(BucketName.DEFAULT)
+            .bucketPrefix("prefix-")
+            .fallbackBucketName(Optional.of(fallbackBucket))
+            .build();
+        S3BlobStoreDAO prefixedStore = new S3BlobStoreDAO(s3ClientFactory, prefixedConfiguration, new TestBlobId.Factory(), S3RequestOption.DEFAULT);
+
+        TestBlobId blobId = new TestBlobId("id");
+        // Save in the un-prefixed fallback bucket
+        Mono.from(testee.save(fallbackBucket, blobId, ELEVEN_KILOBYTES)).block();
+
+        InputStream read = prefixedStore.read(BucketName.DEFAULT, blobId).payload();
+
+        assertThat(read).hasSameContentAs(ELEVEN_KILOBYTES.asInputStream().payload());
+    }
+
+    @Test
     void shouldNotReadOnFallbackBucketWhenNotReadingOnDefaultOne() {
         BlobStoreDAO store = testee();
 

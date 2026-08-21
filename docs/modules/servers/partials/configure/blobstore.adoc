@@ -166,6 +166,8 @@ Unless a special case like storing blobs of deleted messages.
 | objectstorage.namespace.read.fallback
 | BlobStore fallback bucket name. Allows to fallback to a previous used bucket when blob is missing from the default one.
 It can be useful when migrating blobs to a new bucket for example.
+This is a read only fallback: James never writes to, nor deletes from, that bucket.
+This bucket name is used as is: `objectstorage.bucketPrefix` is not applied to it.
 |===
 
 ==== SSE-C Configuration

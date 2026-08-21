@@ -173,8 +173,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
         return getObjectFromStore(bucketName, blobId)
             .onErrorResume(e -> e instanceof NoSuchKeyException || e instanceof NoSuchBucketException, e -> {
                 if (fallbackNamespace.isPresent() && bucketNameResolver.isNameSpace(bucketName)) {
-                    BucketName resolvedFallbackBucketName = bucketNameResolver.resolve(fallbackNamespace.get());
-                    return getObjectFromStore(resolvedFallbackBucketName, blobId);
+                    return getObjectFromStore(fallbackNamespace.get(), blobId);
                 }
                 return Mono.error(e);
             });
@@ -229,8 +228,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
         return getObjectBytesFromStore(bucketName, blobId)
                 .onErrorResume(e -> e instanceof NoSuchKeyException || e instanceof NoSuchBucketException, e -> {
                     if (fallbackNamespace.isPresent() && bucketNameResolver.isNameSpace(bucketName)) {
-                        BucketName resolvedFallbackBucketName = bucketNameResolver.resolve(fallbackNamespace.get());
-                        return getObjectBytesFromStore(resolvedFallbackBucketName, blobId);
+                        return getObjectBytesFromStore(fallbackNamespace.get(), blobId);
                     }
                     return Mono.error(e);
                 });
