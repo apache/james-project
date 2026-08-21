@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.pushsubscription
 
-import java.net.InetAddress
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.temporal.ChronoUnit
@@ -33,12 +32,9 @@ import org.apache.james.jmap.pushsubscription.WebPushClientHeader.{CONTENT_ENCOD
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
 import reactor.netty.ByteBufMono
 import reactor.netty.http.client.{HttpClient, HttpClientResponse}
 import reactor.netty.resources.ConnectionProvider
-
-import scala.util.{Failure, Success, Try}
 
 trait WebPushClient {
   def push(pushServerUrl: PushSubscriptionServerURL, request: PushRequest): Publisher[Unit]
@@ -72,7 +68,7 @@ case class WebPushTemporarilyUnavailableException(detailError: String) extends W
 object DefaultWebPushClient {
   val PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH: Int = 1024
 
-  private def buildHttpClient(configuration: PushClientConfiguration): HttpClient = {
+  private def buildHttpClient(configuration: PushClientConfiguration, ssrfValidator: SSRFValidator): HttpClient = {
     val connectionProviderBuilder: ConnectionProvider.Builder = ConnectionProvider.builder(DefaultWebPushClient.getClass.getName)
     configuration.maxConnections.foreach(configValue => connectionProviderBuilder.maxConnections(configValue))
 
@@ -80,18 +76,32 @@ object DefaultWebPushClient {
       .map(configValue => Duration.of(configValue, ChronoUnit.SECONDS))
       .getOrElse(DEFAULT_TIMEOUT)
 
-    HttpClient.create(connectionProviderBuilder.build())
+    val httpClient: HttpClient = HttpClient.create(connectionProviderBuilder.build())
       .disableRetry(true)
+      // Redirects are not followed (which is the default) as their target would otherwise be reached
+      // without the user supplied URL being the one we validated.
+      .followRedirect(false)
       .responseTimeout(responseTimeout)
       .headers(builder => {
         builder.add("Content-Type", "application/json charset=utf-8")
       })
+
+    if (configuration.preventServerSideRequestForgery) {
+      // The push URL is resolved again when the connection is established: unless the very resolution
+      // the connection relies on is validated, a DNS rebinding attack slips through.
+      httpClient.resolver(ssrfValidator.addressResolverGroup)
+    } else {
+      httpClient
+    }
   }
 }
 
-class DefaultWebPushClient @Inject()(configuration: PushClientConfiguration) extends WebPushClient {
+class DefaultWebPushClient(configuration: PushClientConfiguration, ssrfValidator: SSRFValidator) extends WebPushClient {
 
-  val httpClient: HttpClient = buildHttpClient(configuration)
+  @Inject
+  def this(configuration: PushClientConfiguration) = this(configuration, new SSRFValidator())
+
+  val httpClient: HttpClient = buildHttpClient(configuration, ssrfValidator)
 
   override def push(pushServerUrl: PushSubscriptionServerURL, request: PushRequest): Publisher[Unit] =
     validate(pushServerUrl)
@@ -110,20 +120,10 @@ class DefaultWebPushClient @Inject()(configuration: PushClientConfiguration) ext
 
   private def validate(pushServerUrl: PushSubscriptionServerURL): SMono[PushSubscriptionServerURL] =
     if (configuration.preventServerSideRequestForgery) {
-      SMono.just(pushServerUrl.value.getHost)
-        .flatMap(host => SMono.fromCallable(() => InetAddress.getByName(host)).subscribeOn(Schedulers.boundedElastic()))
-        .handle[InetAddress]((inetAddress, sink) => validate(pushServerUrl, inetAddress).fold(sink.error, sink.next))
-        .`then`(SMono.just(pushServerUrl))
+      ssrfValidator.validate(pushServerUrl)
     } else {
       SMono.just(pushServerUrl)
     }
-
-  private def validate(pushServerUrl: PushSubscriptionServerURL, inetAddress: InetAddress): Try[InetAddress] = inetAddress match {
-    case address if address.isSiteLocalAddress => Failure(new IllegalArgumentException(s"JMAP Push subscription $pushServerUrl is targeting a site local address $inetAddress. This could be an attempt for server-side request forgery."))
-    case address if address.isLoopbackAddress => Failure(new IllegalArgumentException(s"JMAP Push subscription $pushServerUrl is targeting a loopback address $inetAddress. This could be an attempt for server-side request forgery."))
-    case address if address.isLinkLocalAddress => Failure(new IllegalArgumentException(s"JMAP Push subscription $pushServerUrl is targeting a link local address $inetAddress. This could be an attempt for server-side request forgery."))
-    case _ => Success(inetAddress)
-  }
 
   private def afterHTTPResponseHandler(httpResponse: HttpClientResponse, dataBuf: ByteBufMono): Mono[Void] =
     Mono.just(httpResponse.status())
@@ -138,9 +138,5 @@ class DefaultWebPushClient @Inject()(configuration: PushClientConfiguration) ext
   private def preProcessingData(dataBuf: ByteBufMono): Mono[String] =
     dataBuf.asString(StandardCharsets.UTF_8)
       .switchIfEmpty(Mono.just(""))
-      .map(content => if (content.length > PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH) {
-        content.substring(PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH)
-      } else {
-        content
-      })
+      .map(content => content.take(PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH))
 }
