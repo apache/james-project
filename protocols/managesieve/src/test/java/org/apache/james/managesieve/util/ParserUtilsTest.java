@@ -28,6 +28,78 @@ import org.junit.jupiter.api.Test;
 
 class ParserUtilsTest {
     @Test
+    void splitArgumentsShouldReturnEmptyListOnEmptyInput() throws Exception {
+        assertThat(ParserUtils.splitArguments("")).isEmpty();
+    }
+
+    @Test
+    void splitArgumentsShouldSplitOnSpaces() throws Exception {
+        assertThat(ParserUtils.splitArguments("name {12+}")).containsExactly("name", "{12+}");
+    }
+
+    @Test
+    void splitArgumentsShouldIgnoreExtraSpaces() throws Exception {
+        assertThat(ParserUtils.splitArguments("  name   {12+}  ")).containsExactly("name", "{12+}");
+    }
+
+    @Test
+    void splitArgumentsShouldUnquoteArguments() throws Exception {
+        assertThat(ParserUtils.splitArguments("\"name\" {12+}")).containsExactly("name", "{12+}");
+    }
+
+    @Test
+    void splitArgumentsShouldNotSplitQuotedArgumentsContainingSpaces() throws Exception {
+        assertThat(ParserUtils.splitArguments("\"new script\" {12+}")).containsExactly("new script", "{12+}");
+    }
+
+    @Test
+    void splitArgumentsShouldSupportEscapedQuotes() throws Exception {
+        assertThat(ParserUtils.splitArguments("\"new \\\"script\\\"\"")).containsExactly("new \"script\"");
+    }
+
+    @Test
+    void splitArgumentsShouldSupportEscapedBackslashes() throws Exception {
+        assertThat(ParserUtils.splitArguments("\"new\\\\script\"")).containsExactly("new\\script");
+    }
+
+    @Test
+    void splitArgumentsShouldSupportEmptyQuotedArgument() throws Exception {
+        assertThat(ParserUtils.splitArguments("\"\" {12+}")).containsExactly("", "{12+}");
+    }
+
+    @Test
+    void splitArgumentsShouldThrowOnTrailingEscapeWithinQuotedArgument() {
+        assertThatThrownBy(() -> ParserUtils.splitArguments("\"new script\\"))
+            .isInstanceOf(ArgumentException.class);
+    }
+
+    @Test
+    void splitArgumentsShouldNotTreatQuotesWithinAtomsAsDelimiters() throws Exception {
+        assertThat(ParserUtils.splitArguments("a\"b c")).containsExactly("a\"b", "c");
+    }
+
+    @Test
+    void splitArgumentsShouldThrowOnUnterminatedQuotedArgument() {
+        assertThatThrownBy(() -> ParserUtils.splitArguments("\"new script {12+}"))
+            .isInstanceOf(ArgumentException.class);
+    }
+
+    @Test
+    void quoteShouldEscapeQuotes() {
+        assertThat(ParserUtils.quote("For input string: \"error\"")).isEqualTo("\"For input string: \\\"error\\\"\"");
+    }
+
+    @Test
+    void quoteShouldEscapeBackslashes() {
+        assertThat(ParserUtils.quote("a\\b")).isEqualTo("\"a\\\\b\"");
+    }
+
+    @Test
+    void quoteShouldNotAlterRegularMessages() {
+        assertThat(ParserUtils.quote("Missing argument: script name")).isEqualTo("\"Missing argument: script name\"");
+    }
+
+    @Test
     void getSizeShouldThrowOnNullInput() {
         assertThatThrownBy(() -> ParserUtils.getSize(null))
             .isInstanceOf(ArgumentException.class);
