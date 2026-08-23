@@ -21,6 +21,8 @@ package org.apache.james.protocols.smtp.core;
 
 import java.net.IDN;
 
+import org.apache.james.core.MailAddress;
+
 /**
  * Address-string normalisation helpers shared by MAIL FROM and RCPT TO
  * handling. Address validity proper lives in
@@ -61,5 +63,14 @@ final class AddressNormalization {
                 "Malformed A-label in domain: " + domain);
         }
         return localPart + "@" + unicodeDomain;
+    }
+
+    /**
+     * Whether {@code s} carries anything outside US-ASCII, i.e. whether the
+     * client needed to declare SMTPUTF8 (RFC 6531) to send it. Delegates to
+     * {@link MailAddress#isAscii(String)} so the check has a single definition.
+     */
+    static boolean containsNonAscii(String s) {
+        return !MailAddress.isAscii(s);
     }
 }

@@ -166,7 +166,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
 
         session.setAttachment(SMTPSession.RAW_CURRENT_RECIPIENT_STRING, recipient, State.Transaction);
 
-        if (containsNonAscii(recipient)
+        if (AddressNormalization.containsNonAscii(recipient)
                 && !session.getAttachment(SMTPSession.SMTPUTF8_REQUESTED, State.Transaction).orElse(Boolean.FALSE)) {
             LOGGER.info("Rejected non-ASCII recipient address without SMTPUTF8: {}", recipient);
             return NON_ASCII_RECIPIENT_WITHOUT_SMTPUTF8;
@@ -219,15 +219,6 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         session.setAttachment(CURRENT_RECIPIENT, recipientAddress, State.Transaction);
 
         return null;
-    }
-
-    private static boolean containsNonAscii(String s) {
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) > 0x7F) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private String getContext(SMTPSession session, MailAddress recipientAddress, String recipient) {
