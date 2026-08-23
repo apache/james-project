@@ -50,6 +50,11 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
 
     @Override
+    protected String greetingCommand() {
+        return "LHLO";
+    }
+
+    @Override
     protected Protocol createProtocol(ProtocolHandler... handlers) throws WiringException {
         LMTPProtocolHandlerChain chain = new LMTPProtocolHandlerChain();
         List<ProtocolHandler> hList = new ArrayList<>();
