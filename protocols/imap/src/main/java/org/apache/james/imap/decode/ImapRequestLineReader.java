@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.decode;
 
-import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.Closeable;
@@ -633,11 +632,15 @@ public abstract class ImapRequestLineReader {
      * this method.
      * 
      * @param charset
-     *            , or null for <code>US-ASCII</code>
+     *            , or null for <code>UTF-8</code>
      */
     public String consumeLiteral(Charset charset) throws DecodingException {
         if (charset == null) {
-            return consumeLiteral(US_ASCII);
+            // RFC 9051/6855: literals carry UTF-8 octets once UTF8=ACCEPT is
+            // enabled. Accept them unconditionally, as consumeQuoted() does:
+            // UTF-8 is a superset of US-ASCII, so unextended sessions are
+            // unaffected except that 8-bit octets are no longer rejected.
+            return consumeLiteral(UTF_8);
         } else {
             try {
                 ImmutablePair<Integer, Literal> literal = consumeLiteral(false);
