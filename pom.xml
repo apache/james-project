@@ -3645,7 +3645,7 @@
                         <includeOnlyProperty>git.commit.message.short</includeOnlyProperty>
                         <includeOnlyProperty>git.dirty</includeOnlyProperty>
                     </includeOnlyProperties>
-                    <skip>false</skip>
+                    <skip>true</skip>
                     <useNativeGit>true</useNativeGit>
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <gitDescribe>
