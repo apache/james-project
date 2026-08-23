@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -35,9 +37,13 @@ import org.apache.james.task.Task;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class EventDeadLettersService {
+    public record DeadLetteredEvent(Group group, EventDeadLetters.InsertionId insertionId, Event event) {
+    }
+
     private final EventDeadLettersRedeliverService redeliverService;
     private final EventDeadLetters deadLetters;
     private final Set<Group> nonCriticalGroups;
@@ -69,6 +75,24 @@ public class EventDeadLettersService {
 
     public Mono<Event> getEvent(Group group, EventDeadLetters.InsertionId insertionId) {
         return deadLetters.failedEvent(group, insertionId);
+    }
+
+    public Mono<DeadLetteredEvent> searchEvent(Event.EventId eventId) {
+        return deadLetters.groupsWithFailedEvents()
+            .flatMap(group -> searchEventInGroup(group, eventId), DEFAULT_CONCURRENCY)
+            .next();
+    }
+
+    public Mono<DeadLetteredEvent> searchEvent(Group group, Event.EventId eventId) {
+        return searchEventInGroup(group, eventId)
+            .next();
+    }
+
+    private Flux<DeadLetteredEvent> searchEventInGroup(Group group, Event.EventId eventId) {
+        return deadLetters.failedIds(group)
+            .flatMap(insertionId -> deadLetters.failedEvent(group, insertionId)
+                .filter(event -> event.getEventId().equals(eventId))
+                .map(event -> new DeadLetteredEvent(group, insertionId, event)), DEFAULT_CONCURRENCY);
     }
 
     public void deleteEvent(Group group, EventDeadLetters.InsertionId insertionId) {
