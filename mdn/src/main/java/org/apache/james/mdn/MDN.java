@@ -181,7 +181,7 @@ public class MDN {
             .findAny()
             .flatMap(entity -> {
                 try (InputStream inputStream = ((SingleBody) entity.getBody()).getInputStream()) {
-                    Try<MDNReport> result = MDNReportParser.parse(inputStream, entity.getCharset());
+                    Try<MDNReport> result = MDNReportParser.parse(inputStream, reportCharset(entity));
                     if (result.isSuccess()) {
                         return Optional.of(result.get());
                     } else {
@@ -191,6 +191,19 @@ public class MDN {
                     return Optional.empty();
                 }
             });
+    }
+
+    /**
+     * RFC 6533 defines {@code message/global-disposition-notification} as UTF-8;
+     * no charset parameter is defined for it, so senders legitimately omit one and
+     * mime4j then falls back to us-ascii. Only the RFC 3798 form honours the
+     * declared charset.
+     */
+    private static String reportCharset(Entity entity) {
+        if (GLOBAL_DISPOSITION_CONTENT_TYPE.equals(entity.getMimeType())) {
+            return StandardCharsets.UTF_8.name();
+        }
+        return entity.getCharset();
     }
 
     public boolean isReport(Entity entity) {
