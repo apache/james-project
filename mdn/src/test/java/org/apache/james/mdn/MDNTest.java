@@ -603,7 +603,7 @@ class MDNTest {
     private MDNReport parseReportWithContentType(String body, String contentType) throws Exception {
         BodyPart mdnBodyPart = BodyPartBuilder
             .create()
-            .setBody(SingleBodyBuilder.create().setText(body).buildText())
+            .setBody(SingleBodyBuilder.create().setText(body).setCharset(StandardCharsets.UTF_8).buildText())
             .setContentType(contentType)
             .build();
         Message message = Message.Builder.of()
