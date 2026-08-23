@@ -25,6 +25,7 @@ import java.util.Collection;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 
 /**
@@ -107,13 +108,13 @@ public final class SmtpUtf8Strategy {
     private static boolean hasNonAsciiLocalPart(MaybeSender sender,
                                                 Collection<InternetAddress> recipients) {
         if (!sender.isNullSender()
-                && containsNonAscii(sender.asString().substring(0, Math.max(0, sender.asString().lastIndexOf('@'))))) {
+                && !MailAddress.isAscii(sender.asString().substring(0, Math.max(0, sender.asString().lastIndexOf('@'))))) {
             return true;
         }
         for (InternetAddress a : recipients) {
             int at = a.getAddress().lastIndexOf('@');
             String localPart = at < 0 ? a.getAddress() : a.getAddress().substring(0, at);
-            if (containsNonAscii(localPart)) {
+            if (!MailAddress.isAscii(localPart)) {
                 return true;
             }
         }
@@ -124,22 +125,13 @@ public final class SmtpUtf8Strategy {
                                              Collection<InternetAddress> recipients) {
         if (!sender.isNullSender()) {
             int at = sender.asString().lastIndexOf('@');
-            if (at >= 0 && containsNonAscii(sender.asString().substring(at + 1))) {
+            if (at >= 0 && !MailAddress.isAscii(sender.asString().substring(at + 1))) {
                 return true;
             }
         }
         for (InternetAddress a : recipients) {
             int at = a.getAddress().lastIndexOf('@');
-            if (at >= 0 && containsNonAscii(a.getAddress().substring(at + 1))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean containsNonAscii(String s) {
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) > 0x7F) {
+            if (at >= 0 && !MailAddress.isAscii(a.getAddress().substring(at + 1))) {
                 return true;
             }
         }

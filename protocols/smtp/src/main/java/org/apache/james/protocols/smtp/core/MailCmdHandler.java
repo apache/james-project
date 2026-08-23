@@ -218,7 +218,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
             }
             String senderAddressString = removeBrackets(sender);
             session.setAttachment(SMTPSession.RAW_SENDER_STRING, senderAddressString, State.Transaction);
-            if (containsNonAscii(senderAddressString)
+            if (AddressNormalization.containsNonAscii(senderAddressString)
                     && !session.getAttachment(SMTPSession.SMTPUTF8_REQUESTED, State.Transaction).orElse(Boolean.FALSE)) {
                 LOGGER.info("Rejected non-ASCII sender address without SMTPUTF8: {}", sender);
                 return NON_ASCII_SENDER_WITHOUT_SMTPUTF8;
@@ -251,15 +251,6 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
         }
         return MaybeSender.of(new MailAddress(
             appendDefaultDomainIfNeeded(senderAsString)));
-    }
-
-    private static boolean containsNonAscii(String s) {
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) > 0x7F) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private String removeBrackets(String input) {

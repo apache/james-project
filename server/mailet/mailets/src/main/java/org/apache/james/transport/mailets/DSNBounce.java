@@ -497,7 +497,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
                 .append(LINE_BREAK));
 
         for (MailAddress rec : originalMail.getRecipients()) {
-            anyNonAsciiAddress |= containsNonAscii(rec);
+            anyNonAsciiAddress |= !rec.isAscii();
             appendRecipient(buffer, rec, getDeliveryError(originalMail), originalMail.getLastUpdated());
         }
 
@@ -543,17 +543,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     }
 
     private static String addrType(MailAddress mailAddress) {
-        return containsNonAscii(mailAddress) ? "utf-8" : "rfc822";
-    }
-
-    private static boolean containsNonAscii(MailAddress mailAddress) {
-        String s = mailAddress.toString();
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) > 0x7F) {
-                return true;
-            }
-        }
-        return false;
+        return mailAddress.isAscii() ? "rfc822" : "utf-8";
     }
 
     private String getDeliveryError(Mail originalMail) {
