@@ -121,6 +121,9 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
 
     @Override
     public Mono<Void> enable(ImapMessage message, Responder responder, ImapSession session, Capability capability) {
+        if (SUPPORTS_UTF8_ACCEPT.equals(capability)) {
+            session.enableUtf8();
+        }
         return Mono.empty();
     }
     
