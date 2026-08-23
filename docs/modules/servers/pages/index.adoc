@@ -1,7 +1,7 @@
 = Apache James Mail Servers
 :navtitle: Servers
 
-James offers five types of ready-made Mail Servers. The servers are intended 
+James offers four types of ready-made Mail Servers. The servers are intended 
 for those with different needs, ranging from Operators
 who are interested in setting up a server for the first time, to experienced teams of 
 Developers
@@ -13,7 +13,6 @@ Mail Server with confidence.
 The available James Servers are:
 
  * <<demo,James Demo Mail Server>>
- * <<basic,James Basic Mail Server>>
  * <<distributed,James Distributed Mail Server>>
  * <<postgres,James Postgres Mail Server>>
  * <<test,James Test Server>>
@@ -22,33 +21,13 @@ If you are just checking out James for the first time, then we highly recommend
 investigating the servers in this order:
 
 . Initiate yourself with James by using the <<demo,Demo Server>>
-. Install the <<basic,Basic Server>>
-. If and only if the Basic Server is not enough, then try the <<extendable,Extendable Server>>
+. Deploy the <<distributed,Distributed Server>>, or its <<postgres,Postgres variant>>
 
 [#demo]
 == James Demo Server
 The xref:demo.adoc[Demo Server] is intended for those who just want 
 to give James a quick spin on their local machine to see what all
 the fuss is about.
-
-
-
-[#basic]
-== James Basic Mail Server
-
-If you just want to get up and running quickly, if you have very simple needs,
-or you want to try deploying a mail server for the first time, then the
-xref:basic/index.adoc[*Basic Server*] is the right choice for you. If you are
-not sure which server you should be using, then this server is probably the right
-choice.
-
-This server is intended to be the simplest to set up and use in production.
-It has the least amount of complexity and configurations to worry about.
-The last thing you need is
-to have to resolve difficult issues on a production server when you have not
-yet acquired the requisite knowledge to deal with those issues. Using the
-xref:basic/index.adoc[*Basic Server*] will help you reduce the risk of running into 
-production issues.
 
 
 
