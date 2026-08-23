@@ -72,7 +72,7 @@ class FutureReleaseTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
-            softly.assertThat(smtpProtocol.getReplyString()).contains("250 FUTURERELEASE 86400 2023-04-15T10:00:00Z");
+            softly.assertThat(smtpProtocol.getReplyString()).contains("250-FUTURERELEASE 86400 2023-04-15T10:00:00Z");
         });
     }
 
