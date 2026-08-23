@@ -291,7 +291,7 @@ public abstract class ImapRequestLineReader {
 
     protected char nextChar; // unknown
     protected boolean nextSeen = false;
-    private boolean utf8Accept;
+    private boolean utf8Accept = false;
     private final StringBuilder stringBuilder = new StringBuilder();
 
     /**
@@ -503,8 +503,7 @@ public abstract class ImapRequestLineReader {
     /**
      * When set, {@link #mailbox()} treats the astring as UTF-8 and does not
      * run Modified UTF-7 decoding. Callers should set this from
-     * {@code EnableProcessor.getEnabledCapabilities(session).contains(SUPPORTS_UTF8_ACCEPT)}
-     * after the session state is known.
+     * {@code ImapSession#utf8Enabled()} once the session state is known.
      */
     public ImapRequestLineReader setUtf8Accept(boolean utf8Accept) {
         this.utf8Accept = utf8Accept;
