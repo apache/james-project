@@ -55,6 +55,17 @@ public final class SmtpUtf8Strategy {
     private SmtpUtf8Strategy() {
     }
 
+    /**
+     * Whether any envelope address carries non-ASCII, i.e. whether this
+     * delivery may need SMTPUTF8 at all. Unlike {@link #pick}, this needs no
+     * connection to the remote, so the caller can decide before building the
+     * transport -- Angus reads {@code mail.mime.allowutf8} in the
+     * {@code SMTPTransport} constructor, too early for {@link #pick}'s verdict.
+     */
+    public static boolean envelopeNeedsUtf8(MaybeSender sender, Collection<InternetAddress> recipients) {
+        return hasNonAsciiLocalPart(sender, recipients) || hasNonAsciiDomain(sender, recipients);
+    }
+
     public static Action pick(MaybeSender sender,
                               Collection<InternetAddress> recipients,
                               boolean remoteSupportsSmtpUtf8) {
