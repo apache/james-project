@@ -2,13 +2,13 @@
 :navtitle: Servers
 
 James offers five types of ready-made Mail Servers. The servers are intended 
-for those with different needs, ranging from xref:concepts:user/index.adoc#Operators[Operators]
+for those with different needs, ranging from Operators
 who are interested in setting up a server for the first time, to experienced teams of 
-xref:concepts:user/index.adoc#Developer[Developers]
+Developers
 looking to deploy an advanced distributed system.
 Each of the servers has been tested and verified so you can 
 deploy a production-grade 
-xref:concepts/insert-link[Mail Server] with confidence.
+Mail Server with confidence.
 
 The available James Servers are:
 
