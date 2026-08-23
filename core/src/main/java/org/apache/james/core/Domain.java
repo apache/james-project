@@ -43,6 +43,22 @@ public class Domain implements Serializable {
     public static final Domain LOCALHOST = Domain.of("localhost");
     public static final int MAXIMUM_DOMAIN_LENGTH = 253;
 
+    /**
+     * Whether {@code s} is pure US-ASCII. Defined here rather than in
+     * {@link MailAddress} -- which exposes it as public API -- because
+     * {@code Domain} must not depend on {@code MailAddress}: the two would
+     * then initialise each other, and {@link #LOCALHOST} is built in this
+     * class's static initialiser.
+     */
+    static boolean isAscii(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) > 0x7F) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static String removeBrackets(String domainName) {
         if (!(domainName.startsWith("[") && domainName.endsWith("]"))) {
             return domainName;
@@ -55,16 +71,26 @@ public class Domain implements Serializable {
         Preconditions.checkArgument(domain.length() <= MAXIMUM_DOMAIN_LENGTH,
             "Domain name length should not exceed %s characters", MAXIMUM_DOMAIN_LENGTH);
 
+        String withoutBrackets = removeBrackets(domain);
         String domainWithoutBrackets;
-        try {
-            domainWithoutBrackets = IDN.toASCII(removeBrackets(domain), IDN.ALLOW_UNASSIGNED);
-        } catch (IllegalArgumentException e) {
-            // IDN.toASCII's own message can be cryptic ("Empty label is not
-            // a legal name", "A prohibited code point was found in the
-            // input..."). Let's save wear and tear on the poor developer's
-            // brain.
-            throw new IllegalArgumentException(
-                "Domain '" + domain + "' is invalid according to IDNA: " + e.getMessage(), e);
+        if (isAscii(withoutBrackets)) {
+            // RFC 3490 4.1: ToASCII skips both nameprep and Punycode when the
+            // input is already all-ASCII and hands it back unchanged, so IDN
+            // would only cost time here -- and it is on the path of every
+            // address James parses. The empty-label and length checks it also
+            // performs are done below by assertValidPart anyway.
+            domainWithoutBrackets = withoutBrackets;
+        } else {
+            try {
+                domainWithoutBrackets = IDN.toASCII(withoutBrackets, IDN.ALLOW_UNASSIGNED);
+            } catch (IllegalArgumentException e) {
+                // IDN.toASCII's own message can be cryptic ("Empty label is
+                // not a legal name", "A prohibited code point was found in
+                // the input..."). Let's save wear and tear on the poor
+                // developer's brain.
+                throw new IllegalArgumentException(
+                    "Domain '" + domain + "' is invalid according to IDNA: " + e.getMessage(), e);
+            }
         }
         Preconditions.checkArgument(PART_CHAR_MATCHER.matchesAllOf(domainWithoutBrackets),
                                     "Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in %s", domain);

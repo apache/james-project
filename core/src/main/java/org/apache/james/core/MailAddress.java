@@ -178,9 +178,12 @@ public class MailAddress implements java.io.Serializable {
         // Unicode strings (for example U+00E9 vs U+0065 U+0301 — both render
         // as "é") then produce equal MailAddress objects with equal hashCode
         // values, which dedup, alias resolution and routing-table lookups
-        // rely on. NFC is a no-op for pure ASCII, so ASCII addresses are
-        // unaffected.
-        address = Normalizer.normalize(address.trim(), Normalizer.Form.NFC);
+        // rely on. NFC is a no-op for pure ASCII, and this runs for every
+        // address James parses, so ASCII skips the normaliser outright.
+        address = address.trim();
+        if (!Domain.isAscii(address)) {
+            address = Normalizer.normalize(address, Normalizer.Form.NFC);
+        }
         int pos = 0;
 
         // Test if mail address has source routing information (RFC-821) and get rid of it!!
@@ -403,6 +406,24 @@ public class MailAddress implements java.io.Serializable {
 
     public String asString() {
         return localPart + "@" + domain.asString();
+    }
+
+    /**
+     * Whether this address is pure US-ASCII, i.e. it can be carried without
+     * RFC 6531 (SMTPUTF8) and reported with the RFC 3798 {@code rfc822}
+     * addr-type rather than the RFC 6533 {@code utf-8} one.
+     */
+    public boolean isAscii() {
+        return isAscii(localPart) && isAscii(domain.asString());
+    }
+
+    /**
+     * Whether {@code s} is pure US-ASCII. Shared by the callers that hold an
+     * address as a raw string rather than as a {@link MailAddress} -- the SMTP
+     * command handlers and the remote-delivery SMTPUTF8 strategy.
+     */
+    public static boolean isAscii(String s) {
+        return Domain.isAscii(s);
     }
 
     @Override
