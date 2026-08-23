@@ -2,6 +2,21 @@ name: james-project
 title: Apache James Server
 version: '3.10.0'
 prerelease: SNAPSHOT
+asciidoc:
+  attributes:
+    # Latest released version, as published on Maven central and Docker Hub. Bump on release.
+    james-version: '3.9.0@'
+    # Third party versions James is built, shipped and tested against.
+    # Bump them together with the docker-compose files of server/apps/*.
+    java-version: '21@'
+    cassandra-version: '4.1.9@'
+    opensearch-version: '2.19.2@'
+    rabbitmq-version: '4.1.1@'
+    postgresql-version: '16.9@'
+    tika-version: '3.2.3.0@'
+    cloudserver-version: 'c1ba296859690c1cbbec609aaae430f6b04b4745@'
+    fluent-bit-version: '1.5.7@'
+
 nav:
 - modules/servers/nav.adoc
 - modules/development/nav.adoc
