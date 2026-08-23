@@ -46,6 +46,47 @@ class SmtpUtf8StrategyTest {
     }
 
     @Test
+    void envelopeNeedsUtf8ShouldBeFalseForAsciiEnvelope() throws Exception {
+        assertThat(SmtpUtf8Strategy.envelopeNeedsUtf8(
+                sender("arnt@example.com"),
+                rcpts("info@example.com")))
+            .isFalse();
+    }
+
+    @Test
+    void envelopeNeedsUtf8ShouldBeTrueForUnicodeDomain() throws Exception {
+        assertThat(SmtpUtf8Strategy.envelopeNeedsUtf8(
+                sender("arnt@grå.org"),
+                rcpts("info@example.com")))
+            .isTrue();
+    }
+
+    @Test
+    void envelopeNeedsUtf8ShouldBeTrueForUnicodeLocalPart() throws Exception {
+        assertThat(SmtpUtf8Strategy.envelopeNeedsUtf8(
+                sender("arnt@example.com"),
+                rcpts("réception@example.com")))
+            .isTrue();
+    }
+
+    @Test
+    void envelopeNeedsUtf8ShouldBeFalseForNullSenderAndAsciiRecipient() throws Exception {
+        assertThat(SmtpUtf8Strategy.envelopeNeedsUtf8(
+                MaybeSender.nullSender(),
+                rcpts("info@example.com")))
+            .isFalse();
+    }
+
+    @Test
+    void envelopeNeedsUtf8ShouldBeTrueForAceRecipientOnlyWhenNotYetEncoded() throws Exception {
+        // An address already in A-label form is pure ASCII: nothing to negotiate.
+        assertThat(SmtpUtf8Strategy.envelopeNeedsUtf8(
+                sender("arnt@example.com"),
+                rcpts("info@xn--gr-eka.org")))
+            .isFalse();
+    }
+
+    @Test
     void allAsciiShouldNotNeedUtf8() throws Exception {
         assertThat(SmtpUtf8Strategy.pick(
                 sender("arnt@example.com"),

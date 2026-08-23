@@ -127,6 +127,20 @@ public class MailDelivrerToHost {
         // "mail.smtp.dsn.ret"        //default to nothing... appended as RET= after MAIL FROM line.
         // "mail.smtp.dsn.notify"     //default to nothing... appended as NOTIFY= after RCPT TO line.
 
+        // Angus reads mail.mime.allowutf8 in the SMTPTransport constructor, so it
+        // has to be decided here -- before the transport exists, hence before we
+        // can know whether the remote advertises SMTPUTF8. The envelope alone
+        // tells us whether UTF-8 could ever be needed, and that is enough: Angus
+        // only emits the SMTPUTF8 keyword on MAIL FROM when the remote also
+        // advertises it, and SmtpUtf8Strategy below still decides the downgrade.
+        // Left alone for the ASCII envelopes that make up the bulk of the
+        // traffic, so they neither change behaviour nor trip Angus' "allowutf8
+        // set but server doesn't advertise SMTPUTF8" log line. The pool clears
+        // the property again when the session is passivated.
+        if (SmtpUtf8Strategy.envelopeNeedsUtf8(mail.getMaybeSender(), addr)) {
+            props.put("mail.mime.allowutf8", "true");
+        }
+
         SMTPTransport transport = null;
         try {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
@@ -150,11 +164,6 @@ public class MailDelivrerToHost {
                 addr = toAceDomains(addr);
                 props.put(inContext(session, "mail.smtp.from"),
                     SmtpUtf8Strategy.aceAddressString(mail.getMaybeSender().asString()));
-            } else if (utf8Action == SmtpUtf8Strategy.Action.USE_EXTENSION) {
-                // Enable Angus Mail's UTF-8 mode for this session; since the
-                // remote advertises SMTPUTF8, the transport will emit it on
-                // MAIL FROM and accept UTF-8 in the envelope.
-                session.getProperties().put("mail.mime.allowutf8", "true");
             }
             if (mail.dsnParameters().isPresent()) {
                 sendDSNAwareEmail(mail, transport, addr);
