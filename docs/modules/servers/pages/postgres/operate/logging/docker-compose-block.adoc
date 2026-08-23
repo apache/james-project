@@ -1,4 +1,4 @@
-[source,docker-compose]
+[source,docker-compose,subs=attributes+]
 ----
 version: "3"
 
@@ -34,7 +34,7 @@ services:
       - discovery.type=single-node
 
   postgres:
-    image: postgres:16.9
+    image: postgres:{postgresql-version}
     ports:
       - "5432:5432"
     environment:
@@ -43,13 +43,13 @@ services:
       - POSTGRES_PASSWORD=secret1
 
   rabbitmq:
-    image: rabbitmq:4.1.1-management
+    image: rabbitmq:{rabbitmq-version}-management
     ports:
       - "5672:5672"
       - "15672:15672"
 
   s3:
-    image: registry.scality.com/cloudserver/cloudserver:8.7.25
+    image: ghcr.io/scality/cloudserver:{cloudserver-version}
     container_name: s3.docker.test
     environment:
       - SCALITY_ACCESS_KEY_ID=accessKey1
@@ -59,7 +59,7 @@ services:
       - REMOTE_MANAGEMENT_DISABLE=1
 
   fluent-bit:
-    image: fluent/fluent-bit:1.5.7
+    image: fluent/fluent-bit:{fluent-bit-version}
     volumes:
       - ./fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
       - ./fluentbit/parsers.conf:/fluent-bit/etc/parsers.conf

@@ -58,7 +58,10 @@ Then load the James Postgresql server docker image:
 
 Alternatively we provide convenience distribution for the latest release:
 
-    docker pull apache/james:postgres-3.9.0
+[subs=attributes+]
+----
+docker pull apache/james:postgres-{james-version}
+----
 
 === Running with Postgresql only
 
@@ -68,12 +71,18 @@ Firstly, create your own user network on Docker for the James environment:
 
 You need a running *Postgresql* in docker which connects to *james* network. To achieve this run:
 
-    $ docker run -d --network james --name=postgres --env 'POSTGRES_DB=james' --env 'POSTGRES_USER=james' --env 'POSTGRES_PASSWORD=secret1' postgres:16.9
+[subs=attributes+]
+----
+$ docker run -d --network james --name=postgres --env 'POSTGRES_DB=james' --env 'POSTGRES_USER=james' --env 'POSTGRES_PASSWORD=secret1' postgres:{postgresql-version}
+----
 
 To run this container :
 
-    $ docker run --network james --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000" --name james_run
-        -v $PWD/keystore:/root/conf/keystore -t apache/james:postgres-3.9.0 --generate-keystore
+[subs=attributes+]
+----
+$ docker run --network james --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000" --name james_run
+    -v $PWD/keystore:/root/conf/keystore -t apache/james:postgres-{james-version} --generate-keystore
+----
 
 Where :
 
@@ -95,15 +104,21 @@ Same as above, except that you need to run before James instances of RabbitMQ, S
 
 You need a running *rabbitmq* in docker which connects to *james* network. To achieve this run:
 
-    $ docker run -d --network james --name=rabbitmq rabbitmq:4.1.1-management
+[subs=attributes+]
+----
+$ docker run -d --network james --name=rabbitmq rabbitmq:{rabbitmq-version}-management
+----
 
 You need a running *Zenko Cloudserver* objectstorage in docker which connects to *james* network. To achieve this run:
 
-    $ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 registry.scality.com/cloudserver/cloudserver:8.7.25
+[subs=attributes+]
+----
+$ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 ghcr.io/scality/cloudserver:{cloudserver-version}
+----
 
 You need a running *OpenSearch* in docker which connects to *james* network. To achieve this run:
 
-$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.19.2
+$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:{opensearch-version}
 
 Then run James like in the section above.
 
@@ -136,7 +151,10 @@ You can handle attachment text extraction before indexing in OpenSearch. This ma
 
 Run tika connect to *james* network:
 
-    $ docker run -d --network james --name tika apache/tika:3.2.0.0
+[subs=attributes+]
+----
+$ docker run -d --network james --name tika apache/tika:{tika-version}
+----
 
 Run James:
 
