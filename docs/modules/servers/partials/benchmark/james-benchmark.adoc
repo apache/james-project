@@ -28,70 +28,140 @@ include::{benchmark_prepare_extend}[]
 Before doing the performance test, you should make sure you have a {server-name} up and running with some provisioned testing
 data so that it is representative of reality.
 
-Please follow these steps to provision testing data:
+We provision that data over IMAP with the `james-provisioning` tool: it creates mailboxes and appends messages into
+**already existing** accounts. Message sizes follow a predefined distribution (1% carry a 10 MB attachment, 4% a 5 MB one,
+5% a 1 MB one, 10% a 500 KB one, the rest are small sized), which averages roughly 400 KB per message.
 
-* Prepare James with a custom `mailetcontainer.xml` having Random storing mailet. This help us easily setting a good amount of
-provisioned emails.
+==== Create the test users
 
-Add this under transport processor
+The provisioning tool does not create accounts: create them first with WebAdmin, and record their credentials in a CSV
+file (one `username,password` per line) that both the provisioning tool and Gatling will later reuse.
 
-[source,xml]
-----
-<mailet match="All" class="RandomStoring"/>
-----
+Retrieve the generated WebAdmin password from the James startup logs and expose it to your shell. Omit this variable
+only when WebAdmin password authentication is explicitly disabled:
 
-* Modify {provision_file_url}[provision.sh]
-upon your need (number of users, mailboxes, emails to be provisioned).
-
-Currently, this script provisions 10 users, 15 mailboxes and hundreds of emails for example. Normally to make the performance test representative, you
-should provision thousands of users, thousands of mailboxes and millions of emails.
-
-* Add the permission to execute the script:
-----
-chmod +x provision.sh
-----
-
-* Install postfix (to get the smtp-source command):
-----
-sudo apt-get install postfix
-----
-
-* Retrieve the generated WebAdmin password from the James startup logs and expose it to the provisioning script:
 ----
 export WEBADMIN_PASSWORD="replace-with-generated-webadmin-password"
 ----
 
-Omit this variable only when WebAdmin password authentication is explicitly disabled.
-
-* Run the provision script:
+[source,bash]
 ----
-./provision.sh
+WEBADMIN_BASE_URL="http://localhost:8000"
+DOMAIN_NAME="domain.org"
+USERS_COUNT=1000
+
+curl --fail --header "Password: ${WEBADMIN_PASSWORD}" -XPUT ${WEBADMIN_BASE_URL}/domains/${DOMAIN_NAME}
+
+for i in $(seq 1 $USERS_COUNT); do
+  username=user${i}@${DOMAIN_NAME}
+  curl --fail --header "Password: ${WEBADMIN_PASSWORD}" -XPUT ${WEBADMIN_BASE_URL}/users/${username} \
+    -d '{"password":"secret"}' -H "Content-Type: application/json"
+  echo "${username},secret" >> users.csv
+done
 ----
 
-After provisioning once, you should remove the Random storing mailet and move on to performance testing phase.
+Normally, to make the performance test representative, you should provision thousands of users, thousands of mailboxes
+and millions of emails.
+
+==== Run the provisioning
+
+Adapt `provisioning.properties` upon your need (URL of the server, number of mailboxes and emails to be provisioned,
+concurrency):
+
+[source,properties]
+----
+# IMAP(S) URL of the James server. Certificates are blindly trusted
+url=imaps://localhost:993
+
+# Count of mailboxes to create per user
+mailbox.count=4
+# Count of messages to create per folder
+message.per.folder.count=5
+# Count of messages to create in INBOX
+message.inbox.count=5
+
+# Count of threads of the IMAP client
+thread.count=8
+# Concurrent count of users to provision simultaneously
+concurrent.user.count=10
+# Connections to use per user
+connection.per.user.count=2
+# Read timeout of IMAP connections
+read.timeout.ms=180000
+# Connect timeout
+connect.timeout.ms=30000
+
+# Count of users to offset (ignore) in the provisioning
+users.offset=0
+# Count of users to provision
+# users.limit=100
+----
+
+`provisioning.properties` and `users.csv` are read from the working directory of the container (`/provisioning`), so
+both are meant to be mounted:
+
+----
+docker run --rm --network host \
+  -v $PWD/provisioning.properties:/provisioning/provisioning.properties:ro \
+  -v $PWD/users.csv:/provisioning/users.csv:ro \
+  linagora/james-provisioning:latest
+----
+
+JVM options can be passed through `JAVA_TOOL_OPTIONS`, for instance `-e JAVA_TOOL_OPTIONS=-Xmx2g`.
 
 === Provide performance testing method
 
 We introduce the tailored https://github.com/linagora/james-gatling[James Gatling] which bases on https://gatling.io/[Gatling - Load testing framework]
 for performance testing against IMAP/JMAP servers. Other testing method is welcome as long as you feel it is appropriate.
 
-Here are steps to do performance testing with James Gatling:
+The easiest way to run it is its Docker packaging, which ships the simulations along with their `sbt` toolchain.
 
-* Setup James Gatling with `sbt` build tool
+* Get the runner image, either from Docker Hub:
 
-* Configure the `Configuration.scala` to point to your {server-name} IMAP/JMAP server(s). For more configuration details, please read
-https://github.com/linagora/james-gatling#readme[James Gatling Readme].
-
-* Run the performance testing simulation:
 ----
-$ sbt
-> gatling:testOnly SIMULATION_FQDN
+docker pull linagora/james-gatling-runner:branch-master
 ----
 
-In there: `SIMULATION_FQDN` is fully qualified class name of a performance test simulation.
+Or build it from the sources of https://github.com/linagora/james-gatling[James Gatling] - the build context is the
+root of the project, so that the image ships the code being built:
+
+----
+docker build -f dockerfiles/docker-runner/Dockerfile -t james-gatling-runner .
+----
+
+* Point the runner to your {server-name} IMAP/JMAP server(s) with an environment file. Start from the `sample.env` of the
+project:
+
+[source,properties]
+----
+IMAP_SERVER_HOSTNAME=james.example.com
+IMAP_PORT=993
+IMAP_PROTOCOL=imaps
+
+# Count of virtual users, and injection duration in minutes
+USER_COUNT=1000
+DURATION=60
+# Force the run to terminate after that many minutes, even if some virtual users are still running
+MAX_DURATION=120
+----
+
+* Supply the test users: reuse the `users.csv` written when provisioning, prepending the `username,password` header line
+that Gatling expects.
+
+* Run a simulation. Mounting `target/gatling` keeps the generated HTML reports on your host once the container exits:
+
+----
+docker run --env-file sample.env \
+    --mount type=bind,source="$(pwd)"/users.csv,target=/home/sbtuser/james-gatling/src/test/resources/users.csv \
+    --mount type=bind,source="$(pwd)"/results,target=/home/sbtuser/james-gatling/target/gatling \
+    -it --rm linagora/james-gatling-runner:branch-master SIMULATION_FQDN
+----
+
+In there: `SIMULATION_FQDN` is fully qualified class name of a performance test simulation. Omitting it drops you into an
+`sbt` prompt inside the container, from which you can run `gatling:testOnly SIMULATION_FQDN` interactively.
 
 We did provide a lot of simulations in `org.apache.james.gatling.simulation` path. You can have a look and choose the suitable simulation.
-`sbt gatling:testOnly org.apache.james.gatling.simulation.imap.PlatformValidationSimulation` is a good starting point. Or you can even customize your simulation also!
+`org.apache.james.gatling.simulation.imap.PlatformValidationSimulation` is a good starting point. Or you can even customize your simulation also!
 
 Some symbolic simulations we often use:
 
