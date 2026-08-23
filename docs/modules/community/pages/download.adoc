@@ -1,4 +1,0 @@
-= Download Apache James releases
-:navtitle: Download releases
-
-https://james.apache.org/download[Download Apache James releases]
