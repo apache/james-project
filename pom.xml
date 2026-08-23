@@ -3065,8 +3065,8 @@
                         </args>
                         <jvmArgs>
                             <jvmArg>-Xss128m</jvmArg>
-                            <jvmArg>-Xms4g</jvmArg>
-                            <jvmArg>-Xmx4g</jvmArg>
+                            <jvmArg>-Xms512m</jvmArg>
+                            <jvmArg>-Xmx2g</jvmArg>
                             <jvmArg>-XX:MaxMetaspaceSize=2g</jvmArg>
                         </jvmArgs>
                         <compilerPlugins>
@@ -3645,7 +3645,7 @@
                         <includeOnlyProperty>git.commit.message.short</includeOnlyProperty>
                         <includeOnlyProperty>git.dirty</includeOnlyProperty>
                     </includeOnlyProperties>
-                    <skip>false</skip>
+                    <skip>true</skip>
                     <useNativeGit>true</useNativeGit>
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <gitDescribe>

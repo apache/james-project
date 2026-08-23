@@ -111,6 +111,24 @@ trait WebPushClientContract {
   }
 
   @Test
+  def pushRequestShouldTruncateLongErrorResponsesFromPushServer(pushServer: ClientAndServer): Unit = {
+    val head: String = "a".repeat(DefaultWebPushClient.PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH)
+    pushServer
+      .when(request
+        .withPath("/invalid"))
+      .respond(response
+        .withStatusCode(500)
+        .withBody(head + "beyond-the-truncation-limit"))
+
+    assertThatThrownBy(() => SMono.fromPublisher(
+      testee.push(PushSubscriptionServerURL.from(s"${pushServerBaseUrl.toString}/invalid").get,
+        PUSH_REQUEST_SAMPLE))
+      .block())
+      .hasMessageContaining(head)
+      .hasMessageNotContaining("beyond-the-truncation-limit")
+  }
+
+  @Test
   def pushRequestShouldParserErrorResponseFromPushServerWhenFail(pushServer: ClientAndServer): Unit = {
     pushServer
       .when(request
