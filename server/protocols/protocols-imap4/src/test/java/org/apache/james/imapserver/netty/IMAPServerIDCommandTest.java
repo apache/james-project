@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -61,15 +62,21 @@ class IMAPServerIDCommandTest extends AbstractIMAPServerTest {
     }
 
     @Test
-    void concurrentIdCommandsInTheSameSessionShouldSucceed() throws Exception {
+    void concurrentIdCommandsShouldSucceed() throws Exception {
         imapServer = createImapServer("imapServer.xml");
+        int port = imapServer.getListenAddresses().getFirst().getPort();
 
-        testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().getFirst().getPort());
+        // One client per thread: a single TestIMAPClient wraps one socket and one
+        // reader, so sharing it across threads interleaves the replies and a thread
+        // can read an empty string that belongs to nobody.
         ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> {
-                assertThat(testIMAPClient.sendCommand("ID (\"name\" \"Apache James\")"))
-                    .contains("* ID NIL")
-                    .contains("OK ID completed.");
+                try (TestIMAPClient client = new TestIMAPClient()) {
+                    client.connect("127.0.0.1", port);
+                    assertThat(client.sendCommand("ID (\"name\" \"Apache James\")"))
+                        .contains("* ID NIL")
+                        .contains("OK ID completed.");
+                }
             })
             .threadCount(20)
             .operationCount(1)
