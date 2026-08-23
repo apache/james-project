@@ -3,6 +3,5 @@ title: Apache James Server
 version: '3.10.0'
 prerelease: SNAPSHOT
 nav:
-- modules/concepts/nav.adoc
 - modules/servers/nav.adoc
 - modules/development/nav.adoc

@@ -5,7 +5,6 @@
 ** xref:basic/index.adoc[]
 *** xref:basic/context.adoc[]
 *** xref:basic/objectives.adoc[]
-*** xref:basic/concepts.adoc[]
 *** xref:basic/architecture.adoc[]
 *** xref:basic/configure/index.adoc[]
 *** xref:basic/help.adoc[]

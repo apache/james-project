@@ -1,5 +1,0 @@
-= Mail Processing Domain Model
-:navtitle: Processing
-
-(TODO)
-

@@ -8,10 +8,6 @@ James runs on the JVM and is highly customizable.
 
 This Reference Book is divided into the following Parts:
 
-* xref:james-project:concepts:index.adoc[James Core Concepts]
-**    These are the core concepts that describe what James is all about.
-    Start here if you want to learn more about what James can do
-    and how it is designed.
 * xref:james-project:servers:index.adoc[James Servers]
 **    We provide a few out-of-the-box servers that you can 
     choose from depending on your needs. Start here if you just
