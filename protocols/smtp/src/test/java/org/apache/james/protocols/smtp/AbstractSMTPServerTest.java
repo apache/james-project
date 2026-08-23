@@ -985,6 +985,16 @@ public abstract class AbstractSMTPServerTest {
 
     }
 
+    /**
+     * The greeting verb of the protocol under test. LMTP forbids EHLO and uses
+     * LHLO instead, so the RFC 6531 tests below ask rather than assume -- they
+     * cover both protocols, which is the point: SMTPUTF8 is an ESMTP extension
+     * that LMTP inherits.
+     */
+    protected String greetingCommand() {
+        return "EHLO";
+    }
+
     // RFC 6531 SMTPUTF8
 
     @Test
@@ -997,7 +1007,7 @@ public abstract class AbstractSMTPServerTest {
             SMTPClient client = createClient();
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
             client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-            client.sendCommand("EHLO", "localhost");
+            client.sendCommand(greetingCommand(), "localhost");
 
             assertThat(client.getReplyString()).contains("SMTPUTF8");
 
@@ -1020,7 +1030,7 @@ public abstract class AbstractSMTPServerTest {
             SMTPClient client = createClient();
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
             client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-            client.sendCommand("EHLO", "localhost");
+            client.sendCommand(greetingCommand(), "localhost");
 
             client.sendCommand("MAIL", "FROM:<arnt@grå.org>");
 
@@ -1045,7 +1055,7 @@ public abstract class AbstractSMTPServerTest {
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
 
             String reply = rawUtf8Exchange(bindedAddress,
-                "EHLO localhost\r\n",
+                greetingCommand() + " localhost\r\n",
                 "MAIL FROM:<arnt@grå.org> SMTPUTF8\r\n",
                 "QUIT\r\n");
 
@@ -1069,7 +1079,7 @@ public abstract class AbstractSMTPServerTest {
             SMTPClient client = createClient();
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
             client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-            client.sendCommand("EHLO", "localhost");
+            client.sendCommand(greetingCommand(), "localhost");
             client.sendCommand("MAIL", "FROM:<" + SENDER + ">");
             assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode()))
                 .as("Reply=" + client.getReplyString()).isTrue();
@@ -1097,7 +1107,7 @@ public abstract class AbstractSMTPServerTest {
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
 
             String reply = rawUtf8Exchange(bindedAddress,
-                "EHLO localhost\r\n",
+                greetingCommand() + " localhost\r\n",
                 "MAIL FROM:<" + SENDER + "> SMTPUTF8\r\n",
                 "RCPT TO:<arnt@grå.org>\r\n",
                 "QUIT\r\n");
@@ -1126,7 +1136,7 @@ public abstract class AbstractSMTPServerTest {
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
 
             rawUtf8Exchange(bindedAddress,
-                "EHLO localhost\r\n",
+                greetingCommand() + " localhost\r\n",
                 "MAIL FROM:<arnt@xn--gr-zia.org>\r\n",
                 "RCPT TO:<someone@xn--gr-zia.org>\r\n",
                 "DATA\r\n",
@@ -1161,7 +1171,7 @@ public abstract class AbstractSMTPServerTest {
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
 
             String reply = rawUtf8Exchange(bindedAddress,
-                "EHLO localhost\r\n",
+                greetingCommand() + " localhost\r\n",
                 "MAIL FROM:<arnt@xn--gr-zia.org>\r\n",
                 "QUIT\r\n");
 
@@ -1183,7 +1193,7 @@ public abstract class AbstractSMTPServerTest {
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
 
             String reply = rawUtf8Exchange(bindedAddress,
-                "EHLO localhost\r\n",
+                greetingCommand() + " localhost\r\n",
                 "MAIL FROM:<" + SENDER + ">\r\n",
                 "RCPT TO:<someone@xn--gr-zia.org>\r\n",
                 "QUIT\r\n");
@@ -1208,7 +1218,7 @@ public abstract class AbstractSMTPServerTest {
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
 
             String reply = rawUtf8Exchange(bindedAddress,
-                "EHLO localhost\r\n",
+                greetingCommand() + " localhost\r\n",
                 "MAIL FROM:<arnt@xn--.example.com>\r\n",
                 "QUIT\r\n");
 
@@ -1230,7 +1240,7 @@ public abstract class AbstractSMTPServerTest {
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
 
             String reply = rawUtf8Exchange(bindedAddress,
-                "EHLO localhost\r\n",
+                greetingCommand() + " localhost\r\n",
                 "MAIL FROM:<" + SENDER + ">\r\n",
                 "RCPT TO:<someone@xn--.example.com>\r\n",
                 "QUIT\r\n");
@@ -1249,8 +1259,17 @@ public abstract class AbstractSMTPServerTest {
      * server response as one UTF-8 decoded string. Reads until the server
      * closes the socket (which it does on QUIT).
      */
+    /**
+     * Opens the socket {@link #rawUtf8Exchange} talks over. Overridden by the
+     * implicit-TLS variants so the raw exchanges below run there too, rather
+     * than being skipped for lack of an SSL-aware helper.
+     */
+    protected java.net.Socket createRawSocket(InetSocketAddress address) throws IOException {
+        return new java.net.Socket(address.getAddress().getHostAddress(), address.getPort());
+    }
+
     private String rawUtf8Exchange(InetSocketAddress address, String... commands) throws IOException {
-        try (java.net.Socket socket = new java.net.Socket(address.getAddress().getHostAddress(), address.getPort())) {
+        try (java.net.Socket socket = createRawSocket(address)) {
             socket.getOutputStream().write(String.join("", commands).getBytes(StandardCharsets.UTF_8));
             socket.getOutputStream().flush();
             java.io.ByteArrayOutputStream collected = new java.io.ByteArrayOutputStream();
@@ -1273,7 +1292,7 @@ public abstract class AbstractSMTPServerTest {
             SMTPClient client = createClient();
             InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
             client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-            client.sendCommand("EHLO", "localhost");
+            client.sendCommand(greetingCommand(), "localhost");
 
             client.sendCommand("MAIL", "FROM:<arnt@example.com>");
             assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode()))
