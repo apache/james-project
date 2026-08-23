@@ -4652,6 +4652,32 @@ Response codes:
  - 400: Invalid group name or `insertionId`
  - 404: No event with this `insertionId`
 
+### Searching an event by its event id
+
+```
+curl -XGET http://ip:port/events/deadLetter?eventId=6e0dd59d-660e-4d9b-b22f-0354479f47b4
+```
+
+Will look up the supplied `eventId` across all the groups holding dead lettered events, and return the full JSON
+associated with the first matching event. The group and the `insertionId` of the returned event are carried by the
+`X-Group` and `X-Insertion-Id` response headers, which can then be used to interact with the rest of this API
+(replay, deletion).
+
+An optional `group` query parameter narrows the search down to a single group, which is significantly cheaper when
+the group holding the event is known:
+
+```
+curl -XGET http://ip:port/events/deadLetter?eventId=6e0dd59d-660e-4d9b-b22f-0354479f47b4&group=org.apache.james.mailbox.events.EventBusTestFixture$GroupA
+```
+
+Note that this operation scans the dead letter content, thus can be slow when many events are dead lettered.
+
+Response codes:
+
+ - 200: Success. A JSON representing this event is returned. `X-Group` and `X-Insertion-Id` headers locate it.
+ - 400: Missing or invalid `eventId`, or invalid `group`
+ - 404: No dead lettered event with this `eventId` (in this `group`, if supplied)
+
 ### Deleting an event
 
 ```

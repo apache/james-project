@@ -324,6 +324,162 @@ class EventDeadLettersRoutesTest {
     }
 
     @Nested
+    class SearchEvent {
+        @Test
+        void searchEventShouldReturnEventAndItsLocation() {
+            InsertionId insertionId = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+
+            assertThat(insertionId).isNotNull();
+
+            String response = given()
+                .queryParam("eventId", UUID_1)
+            .when()
+                .get("/events/deadLetter")
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .header("X-Group", SERIALIZED_GROUP_A)
+                .header("X-Insertion-Id", insertionId.asString())
+                .extract()
+                .asString();
+
+            assertThatJson(response).isEqualTo(JSON_1);
+        }
+
+        @Test
+        void searchEventShouldSearchAcrossAllGroups() {
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+            InsertionId insertionId = deadLetters.store(new EventBusTestFixture.GroupB(), EVENT_2).block();
+
+            assertThat(insertionId).isNotNull();
+
+            given()
+                .queryParam("eventId", UUID_2)
+            .when()
+                .get("/events/deadLetter")
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .header("X-Group", SERIALIZED_GROUP_B)
+                .header("X-Insertion-Id", insertionId.asString());
+        }
+
+        @Test
+        void searchEventShouldReturn404WhenNotFound() {
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+
+            given()
+                .queryParam("eventId", UUID_2)
+            .when()
+                .get("/events/deadLetter")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
+        void searchEventShouldReturn404WhenNoDeadLetteredEvent() {
+            given()
+                .queryParam("eventId", UUID_1)
+            .when()
+                .get("/events/deadLetter")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
+        void searchEventShouldFailWhenInvalidEventId() {
+            given()
+                .queryParam("eventId", "invalid")
+            .when()
+                .get("/events/deadLetter")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Can not deserialize the supplied eventId: invalid"));
+        }
+
+        @Test
+        void searchEventShouldReturnEventOfTheSuppliedGroup() {
+            InsertionId insertionId = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+
+            assertThat(insertionId).isNotNull();
+
+            String response = given()
+                .queryParam("eventId", UUID_1)
+                .queryParam("group", SERIALIZED_GROUP_A)
+            .when()
+                .get("/events/deadLetter")
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .header("X-Group", SERIALIZED_GROUP_A)
+                .header("X-Insertion-Id", insertionId.asString())
+                .extract()
+                .asString();
+
+            assertThatJson(response).isEqualTo(JSON_1);
+        }
+
+        @Test
+        void searchEventShouldReturn404WhenEventBelongsToAnotherGroup() {
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+
+            given()
+                .queryParam("eventId", UUID_1)
+                .queryParam("group", SERIALIZED_GROUP_B)
+            .when()
+                .get("/events/deadLetter")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
+        void searchEventShouldFailWhenInvalidGroup() {
+            given()
+                .queryParam("eventId", UUID_1)
+                .queryParam("group", "invalid")
+            .when()
+                .get("/events/deadLetter")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Can not deserialize the supplied group: invalid"));
+        }
+
+        @Test
+        void searchEventShouldSearchAllGroupsWhenEmptyGroup() {
+            InsertionId insertionId = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+
+            assertThat(insertionId).isNotNull();
+
+            given()
+                .queryParam("eventId", UUID_1)
+                .queryParam("group", "")
+            .when()
+                .get("/events/deadLetter")
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .header("X-Group", SERIALIZED_GROUP_A)
+                .header("X-Insertion-Id", insertionId.asString());
+        }
+
+        @Test
+        void searchEventShouldFailWhenMissingEventId() {
+            when()
+                .get("/events/deadLetter")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("'eventId' query parameter is compulsory"));
+        }
+    }
+
+    @Nested
     class Delete {
         @Test
         void deleteShouldReturnOk() {

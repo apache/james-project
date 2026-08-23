@@ -21,8 +21,11 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.service.EventDeadLettersRedeliverService.RunningOptions;
 
+import java.util.Optional;
+
 import jakarta.inject.Inject;
 
+import org.apache.james.events.Event;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventSerializer;
 import org.apache.james.events.Group;
@@ -39,6 +42,8 @@ import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.google.common.base.Strings;
+
 import reactor.core.publisher.Mono;
 import spark.Request;
 import spark.Response;
@@ -50,6 +55,10 @@ public class EventDeadLettersRoutes implements Routes {
     public static final String BASE_PATH = "/events/deadLetter";
     private static final String GROUP_PARAM = ":group";
     private static final String INSERTION_ID_PARAMETER = ":insertionId";
+    private static final String EVENT_ID_QUERY_PARAMETER = "eventId";
+    private static final String GROUP_QUERY_PARAMETER = "group";
+    private static final String GROUP_HEADER = "X-Group";
+    private static final String INSERTION_ID_HEADER = "X-Insertion-Id";
     private static final TaskRegistrationKey RE_DELIVER = TaskRegistrationKey.of("reDeliver");
 
     private final EventDeadLettersService eventDeadLettersService;
@@ -74,6 +83,7 @@ public class EventDeadLettersRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.post(BASE_PATH, performActionOnAllEvents(), jsonTransformer);
+        service.get(BASE_PATH, this::searchEvent);
         service.get(BASE_PATH + "/groups", this::listGroups, jsonTransformer);
         service.get(BASE_PATH + "/groups/" + GROUP_PARAM, this::listFailedEvents, jsonTransformer);
         service.post(BASE_PATH + "/groups/" + GROUP_PARAM, performActionOnGroupEvents(), jsonTransformer);
@@ -114,6 +124,23 @@ public class EventDeadLettersRoutes implements Routes {
             .block();
     }
 
+    private String searchEvent(Request request, Response response) {
+        Event.EventId eventId = parseEventId(request);
+
+        return parseGroupQueryParameter(request)
+            .map(group -> eventDeadLettersService.searchEvent(group, eventId))
+            .orElseGet(() -> eventDeadLettersService.searchEvent(eventId))
+            .map(deadLetteredEvent -> {
+                response.header(GROUP_HEADER, deadLetteredEvent.group().asString());
+                response.header(INSERTION_ID_HEADER, deadLetteredEvent.insertionId().asString());
+                return eventSerializer.toJson(deadLetteredEvent.event());
+            })
+            .filter(SerializationResult::isSuccess)
+            .map(SerializationResult::json)
+            .switchIfEmpty(Mono.fromRunnable(() -> response.status(HttpStatus.NOT_FOUND_404)))
+            .block();
+    }
+
     private String deleteEvent(Request request, Response response) {
         Group group = parseGroup(request);
         EventDeadLetters.InsertionId insertionId = parseInsertionId(request);
@@ -136,7 +163,10 @@ public class EventDeadLettersRoutes implements Routes {
     }
 
     private Group parseGroup(Request request) {
-        String groupAsString = request.params(GROUP_PARAM);
+        return deserializeGroup(request.params(GROUP_PARAM));
+    }
+
+    private static Group deserializeGroup(String groupAsString) {
         try {
             return Group.deserialize(groupAsString);
         } catch (Group.GroupDeserializationException e) {
@@ -157,6 +187,32 @@ public class EventDeadLettersRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .message("Can not deserialize the supplied insertionId: %s", insertionIdAsString)
+                .cause(e)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .haltError();
+        }
+    }
+
+    private Optional<Group> parseGroupQueryParameter(Request request) {
+        return Optional.ofNullable(Strings.emptyToNull(request.queryParams(GROUP_QUERY_PARAMETER)))
+            .map(EventDeadLettersRoutes::deserializeGroup);
+    }
+
+    private Event.EventId parseEventId(Request request) {
+        String eventIdAsString = request.queryParams(EVENT_ID_QUERY_PARAMETER);
+        if (Strings.isNullOrEmpty(eventIdAsString)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .message("'%s' query parameter is compulsory", EVENT_ID_QUERY_PARAMETER)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .haltError();
+        }
+        try {
+            return Event.EventId.of(eventIdAsString);
+        } catch (Exception e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .message("Can not deserialize the supplied eventId: %s", eventIdAsString)
                 .cause(e)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .haltError();
