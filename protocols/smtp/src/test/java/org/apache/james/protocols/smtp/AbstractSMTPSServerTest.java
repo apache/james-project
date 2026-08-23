@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.james.protocols.api.Protocol;
@@ -25,8 +29,6 @@ import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.netty.Encryption;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 
 
 public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest {
@@ -47,49 +49,15 @@ public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest {
 
     protected abstract ProtocolServer createEncryptedServer(Protocol protocol, Encryption enc);
 
-    // The UTF-8 "accepted" tests use a raw TCP socket to control bytes on the
-    // wire. That does not speak TLS, so skip those cases under SMTPS — the plain
-    // variant covers the server-side logic. Rejection tests still work under
-    // SMTPS via the regular SMTPClient path.
+    /**
+     * The UTF-8 tests drive a raw socket to control the bytes on the wire; under
+     * implicit TLS that socket has to speak TLS too, otherwise the exchange
+     * silently reads back nothing.
+     */
     @Override
-    @Test
-    @Disabled("Raw-socket UTF-8 test is not SSL-aware; covered by NettySMTPServerTest")
-    void mailFromWithNonAsciiSenderShouldBeAcceptedWhenSmtpUtf8IsAsserted() {
-    }
-
-    @Override
-    @Test
-    @Disabled("Raw-socket UTF-8 test is not SSL-aware; covered by NettySMTPServerTest")
-    void rcptToWithNonAsciiRecipientShouldBeAcceptedWhenSmtpUtf8IsAsserted() {
-    }
-
-    @Override
-    @Test
-    @Disabled("Raw-socket test is not SSL-aware; covered by NettySMTPServerTest")
-    void mailFromWithAceLabelDomainShouldBeAcceptedWithoutSmtpUtf8() {
-    }
-
-    @Override
-    @Test
-    @Disabled("Raw-socket test is not SSL-aware; covered by NettySMTPServerTest")
-    void rcptToWithAceLabelDomainShouldBeAcceptedWithoutSmtpUtf8() {
-    }
-
-    @Override
-    @Test
-    @Disabled("Raw-socket test is not SSL-aware; covered by NettySMTPServerTest")
-    void mailFromWithMalformedAceLabelShouldBeRejected() {
-    }
-
-    @Override
-    @Test
-    @Disabled("Raw-socket test is not SSL-aware; covered by NettySMTPServerTest")
-    void rcptToWithMalformedAceLabelShouldBeRejected() {
-    }
-
-    @Override
-    @Test
-    @Disabled("Raw-socket test is not SSL-aware; covered by NettySMTPServerTest")
-    void aceLabelDomainsShouldBeExposedToHooksAsUnicode() {
+    protected Socket createRawSocket(InetSocketAddress address) throws IOException {
+        return BogusSslContextFactory.getClientContext()
+            .getSocketFactory()
+            .createSocket(address.getAddress().getHostAddress(), address.getPort());
     }
 }
