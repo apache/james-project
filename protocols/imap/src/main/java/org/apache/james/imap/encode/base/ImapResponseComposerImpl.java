@@ -69,7 +69,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     private boolean skipNextSpace;
 
-    private boolean utf8Accept;
+    private boolean utf8Accepted = false;
 
     // Text chunks and literals gathered to be emitted as a single SequencedLiteral (one flush, no copy). Null until a literal is buffered.
     private List<Literal> pendingLiteralParts;
@@ -263,7 +263,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     
     @Override
     public ImapResponseComposer mailbox(String mailboxName) throws IOException {
-        if (utf8Accept) {
+        if (utf8Accepted) {
             quote(mailboxName);
         } else {
             quote(ModifiedUtf7.encodeModifiedUTF7(mailboxName));
@@ -274,10 +274,10 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     /**
      * Per RFC 9755, when the client has ENABLEd UTF8=ACCEPT the server emits
      * mailbox names and other strings as UTF-8 octets (not Modified UTF-7).
-     * Set this once per composer, from the session's enabled-capabilities set.
+     * Set this once per composer, from {@code ImapSession#utf8Enabled()}.
      */
-    public ImapResponseComposerImpl setUtf8Accept(boolean utf8Accept) {
-        this.utf8Accept = utf8Accept;
+    public ImapResponseComposerImpl setUtf8Accepted(boolean utf8Accepted) {
+        this.utf8Accepted = utf8Accepted;
         return this;
     }
 
@@ -290,7 +290,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     public ImapResponseComposer quote(String message) throws IOException {
         space();
         buffer.write(BYTE_DQUOTE);
-        if (utf8Accept) {
+        if (utf8Accepted) {
             for (byte b : message.getBytes(StandardCharsets.UTF_8)) {
                 if (b == BYTE_BACK_SLASH || b == BYTE_DQUOTE) {
                     buffer.write(BYTE_BACK_SLASH);
