@@ -176,13 +176,14 @@ public class SMIMECheckSignature extends GenericMailet {
             // These errors are logged but they don't cause the message to change its state. The message
             // is considered as not signed and the process will go on.
         } catch (CMSException | SMIMEException e) {
-            LOGGER.error("Error during the analysis of the signed message", e);
+            // Signatures are remote sender controlled thus we do not consider a malformed one to be a server error.
+            LOGGER.warn("Error during the analysis of the signed message", e);
             signers = null;
         } catch (IOException e) {
-            LOGGER.error("IO error during the analysis of the signed message", e);
+            LOGGER.warn("IO error during the analysis of the signed message", e);
             signers = null;
         } catch (Exception e) {
-            LOGGER.error("Generic error occured during the analysis of the message", e);
+            LOGGER.warn("Generic error occured during the analysis of the message", e);
             signers = null;
         }
         
