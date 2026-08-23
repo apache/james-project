@@ -51,6 +51,21 @@ The last character of the value may be a unit.
 Supported units are `B` for bytes, `K` for kibibyte (1,024 bytes), `M` for mebibyte (1,024 kibibytes), and `G` for gibibyte (1,024 mebibytes).
 If no unit is given, the value is interpreted as kibibytes.
 
+| `errorMessages`
+| Overrides the human readable texts of some SMTP error responses, which allows administrators to translate or
+reword the messages their users are exposed to. Return codes and DSN statuses are never customizable as remote
+servers do rely on them. All entries are optional, and default to the values shown below:
+
+....
+<errorMessages>
+    <!-- Returned as `552 5.3.4 <text>` when a mail exceeds maxmessagesize -->
+    <oversizedMail>Message size exceeds fixed maximum message size</oversizedMail>
+    <!-- Returned as `550 5.1.1 <text> <recipient>` when a recipient does not exist: the rejected
+         recipient is always appended to the text. -->
+    <unknownUser>Unknown user:</unknownUser>
+</errorMessages>
+....
+
 | `maxLineLength`
 | Sets the maximum SMTP command or SASL continuation line length in bytes.
 It is an optional integer that defaults to 8,192 and must be between 1,000 and 1,048,576.
@@ -249,6 +264,10 @@ It is an optional integer which defaults to 0.
 The last character of the value may be a unit.
 Supported units are `B` for bytes, `K` for kibibyte (1,024 bytes), `M` for mebibyte (1,024 kibibytes), and `G` for gibibyte (1,024 mebibytes).
 If no unit is given, the value is interpreted as kibibytes.
+
+| `errorMessages`
+| Overrides the human readable texts of some error responses. It supports the same entries as the
+`errorMessages` element of `smtpserver`, documented above.
 
 | `lmtpGreeting`
 | Sets the greeting which the server sends when a client connects.

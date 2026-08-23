@@ -52,6 +52,7 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
+import org.apache.james.protocols.smtp.SMTPErrorMessages;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler;
@@ -168,6 +169,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
      * 0, means no limit.
      */
     private long maxMessageSize = 0;
+
+    /**
+     * The administrator supplied texts of the SMTP error responses.
+     */
+    private SMTPErrorMessages errorMessages = SMTPErrorMessages.DEFAULT;
     private int maxLineLength = AbstractChannelPipelineFactory.MAX_LINE_LENGTH;
 
     /**
@@ -247,6 +253,8 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
                 LOGGER.info("No maximum message size is enforced for this server.");
             }
 
+            errorMessages = SMTPErrorMessages.parse(configuration);
+
             maxLineLength = configuration.getInt("maxLineLength", AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
             if (maxLineLength < MIN_LINE_LENGTH || maxLineLength > MAX_LINE_LENGTH) {
                 throw new ConfigurationException(String.format("maxLineLength must be between %d and %d", MIN_LINE_LENGTH, MAX_LINE_LENGTH));
@@ -294,6 +302,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         @Override
         public long getMaxMessageSize() {
             return SMTPServer.this.maxMessageSize;
+        }
+
+        @Override
+        public SMTPErrorMessages errorMessages() {
+            return SMTPServer.this.errorMessages;
         }
 
         @Override

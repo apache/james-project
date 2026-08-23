@@ -394,7 +394,39 @@ public class SMTPServerTest {
         smtpProtocol.sendShortMessageData(stringBuilder.toString());
 
         // Then
-        assertThat(smtpProtocol.getReplyString()).isEqualTo("552 Quota exceeded\r\n");
+        assertThat(smtpProtocol.getReplyString()).isEqualTo("552 5.3.4 Message size exceeds fixed maximum message size\r\n");
+
+        // Finally
+        smtpProtocol.quit();
+        smtpProtocol.disconnect();
+    }
+
+    @Test
+    public void messageExceedingMessageSizeShouldBeRespondedWithConfiguredMessage() throws Exception {
+        // Given
+        smtpConfiguration.setOversizedMailMessage("Votre message est trop volumineux");
+        init(smtpConfiguration);
+        int maxSize = 1024;
+        testSystem.smtpServer.setMaximalMessageSize(maxSize);
+
+        //When
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.setSender("mail@localhost");
+        smtpProtocol.addRecipient("mail@localhost");
+        // Create a 1K+ message
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Subject: test\r\n\r\n");
+        String repeatedString = "This is the repeated body...\r\n";
+        int repeatCount = (maxSize / repeatedString.length()) + 1;
+        stringBuilder.append(repeatedString.repeat(repeatCount));
+        stringBuilder.append("\r\n\r\n.\r\n");
+        smtpProtocol.sendShortMessageData(stringBuilder.toString());
+
+        // Then
+        assertThat(smtpProtocol.getReplyString()).isEqualTo("552 5.3.4 Votre message est trop volumineux\r\n");
 
         // Finally
         smtpProtocol.quit();
@@ -1678,6 +1710,23 @@ public class SMTPServerTest {
         assertThat(smtpProtocol.getReplyCode())
             .as("expected error")
             .isEqualTo(503);
+    }
+
+    @Test
+    public void announcedMessageSizeLimitExceededShouldBeRespondedWithConfiguredMessage() throws Exception {
+        smtpConfiguration.setMaxMessageSize(1); // set message limit to 1kb
+        smtpConfiguration.setOversizedMailMessage("Votre message est trop volumineux");
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo localhost");
+
+        smtpProtocol.sendCommand("MAIL FROM:<mail@localhost> SIZE=1025", null);
+        assertThat(smtpProtocol.getReplyString())
+            .isEqualTo("552 5.3.4 Votre message est trop volumineux\r\n");
     }
 
     @Test
