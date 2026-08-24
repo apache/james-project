@@ -3,7 +3,6 @@
 
 :server-name: Distributed James Server
 :backend-database-extend-sample: Apache Cassandra 4 as main database: 3 nodes, each node has 8 OVH vCores CPU and 30 GB memory limit (OVH b2-30 instance).
-:provision_file_url: https://github.com/apache/james-project/tree/master/docs/modules/servers/pages/distributed/benchmark/provision.sh
 :benchmark_prepare_extend: servers:distributed/benchmark/benchmark_prepare.adoc
 :james-imap-base-performance-picture: james-imap-base-performance-distributed.png
 
