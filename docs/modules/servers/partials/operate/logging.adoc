@@ -5,7 +5,7 @@ If you encounter some suspicious logs:
 
 * If you have any doubt about the log being caused by a bug in James
 source code, please reach us via the bug tracker, the user mailing list or our Gitter channel (see our
-http://james.apache.org/#second[community page])
+xref:james-site::index.adoc[community page])
 * They can be due to insufficient performance from tier applications (eg
 {backend-name} timeouts). In such case we advise you to conduct a close
 review of performances at the tier level.

@@ -46,7 +46,7 @@ Go to `http://localhost` in your browser.
 
 === Build with the nix enviroment
 
-Enter the link:https://james.apache.org/contribute.html[james experimental
+Enter the link:https://james.apache.org/james-site/latest/contributing.html#_experimental_nix_support[james experimental
 development shell] with `nix develop`
 
 . Build the Antora content locally

@@ -174,6 +174,6 @@ link:https://github.com/apache/james-project/blob/3.7.x/server/apps/distributed-
 If some metrics seem abnormally slow despite in depth database
 performance tuning, feedback is appreciated as well on the bug tracker,
 the user mailing list or our Gitter channel (see our
-http://james.apache.org/#second[community page]) . Any additional
+xref:james-site::index.adoc[community page]) . Any additional
 details categorizing the slowness are appreciated as well (details of
 the slow requests for instance).

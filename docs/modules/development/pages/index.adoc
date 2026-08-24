@@ -3,7 +3,7 @@
 
 This page aggregates common knowledge for contributing to Apache james servers.
 
-link:https://james.apache.org/contribute.html[Contribution guidelines] apply.
+xref:james-site::contributing.adoc[Contribution guidelines] apply.
 
 xref:logging.adoc[This page] explains how *logging* should be done.
 
