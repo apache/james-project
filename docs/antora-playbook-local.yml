@@ -23,6 +23,11 @@ content:
       # A value for a git repo located in the docs folder would be:
       # start_path: ./
       start_path: ./docs
+    # The community section lives in the james-site repository: needed to
+    # resolve the `james-site::` cross-component xrefs.
+    - url: https://github.com/apache/james-site.git
+      branches: master
+      start_path: docs
 ui:
   bundle:
     url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/master/raw/build/ui-bundle.zip?job=bundle-stable
