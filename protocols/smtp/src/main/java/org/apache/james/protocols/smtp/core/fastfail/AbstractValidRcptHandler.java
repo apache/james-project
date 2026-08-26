@@ -60,7 +60,7 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
             return HookResult.builder()
                 .hookReturnCode(HookReturnCode.deny())
                 .smtpReturnCode(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE)
-                .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.asString())
+                .smtpDescription(unknownUserDescription(session, rcpt))
                 .build();
         } catch (Exception e) {
             LOGGER.error("Encounter an error upon RCPT validation ({}), deny-soft", rcpt.asString(), e);
@@ -90,8 +90,13 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
         return HookResult.builder()
             .hookReturnCode(HookReturnCode.deny())
             .smtpReturnCode(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE)
-            .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.asString())
+            .smtpDescription(unknownUserDescription(session, rcpt))
             .build();
+    }
+
+    private static String unknownUserDescription(SMTPSession session, MailAddress rcpt) {
+        return DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.ADDRESS_MAILBOX)
+            + " " + session.getConfiguration().errorMessages().unknownUserMessage(rcpt);
     }
 
     /**

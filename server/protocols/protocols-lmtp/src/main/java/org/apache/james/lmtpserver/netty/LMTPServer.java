@@ -35,6 +35,7 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
+import org.apache.james.protocols.smtp.SMTPErrorMessages;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.netty.SMTPChannelInboundHandler;
@@ -54,6 +55,11 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
      * 0, means no limit.
      */
     private long maxMessageSize = 0;
+
+    /**
+     * The administrator supplied texts of the error responses.
+     */
+    private SMTPErrorMessages errorMessages = SMTPErrorMessages.DEFAULT;
     private final LMTPConfigurationImpl lmtpConfig = new LMTPConfigurationImpl();
     private final LMTPMetricsImpl lmtpMetrics;
     private final ChannelGroup lmtpChannelGroup;
@@ -88,6 +94,8 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
                 LOGGER.info("No maximum message size is enforced for this server.");
             }
 
+            errorMessages = SMTPErrorMessages.parse(configuration);
+
             // get the lmtpGreeting
             lmtpGreeting = configuration.getString("lmtpGreeting", null);
 
@@ -117,6 +125,11 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
         @Override
         public long getMaxMessageSize() {
             return LMTPServer.this.maxMessageSize;
+        }
+
+        @Override
+        public SMTPErrorMessages errorMessages() {
+            return LMTPServer.this.errorMessages;
         }
 
         public String getSMTPGreeting() {

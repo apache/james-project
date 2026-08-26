@@ -183,6 +183,21 @@ size, in kbytes, of any message that will be transmitted by this SMTP server.  I
 a per user, limit.  If the value is zero then there is no limit.  If the tag isn't specified, the service will
 default to an unlimited message size. Must be a positive integer, optionally with a unit: B, K, M, G.
 
+| errorMessages
+| Overrides the human readable texts of some SMTP error responses, which allows administrators to translate or
+reword the messages their users are exposed to. Return codes and DSN statuses are never customizable as remote
+servers do rely on them. All entries are optional, and default to the values shown below:
+
+....
+<errorMessages>
+    <!-- Returned as `552 5.3.4 <text>` when a mail exceeds maxmessagesize -->
+    <oversizedMail>Message size exceeds fixed maximum message size</oversizedMail>
+    <!-- Returned as `550 5.1.1 <text> <recipient>` when a recipient does not exist: the rejected
+         recipient is always appended to the text. -->
+    <unknownUser>Unknown user:</unknownUser>
+</errorMessages>
+....
+
 | heloEhloEnforcement
 | This sets whether to enforce the use of HELO/EHLO salutation before a
 MAIL command is accepted. If unspecified, the value defaults to true.
@@ -285,6 +300,9 @@ The configuration is the same of for SMTP.
 By default, it is deactivated. You can activate it alongside SMTP and bind for example on port 24.
 
 The default LMTP server stores directly emails in user mailboxes, without further treatment.
+
+Just like for SMTP, the `errorMessages` element can be used to customize the human readable texts of some LMTP
+error responses (see above).
 
 However we do ship an alternative handler chain allowing to execute the mailet container, thus achieving a behaviour similar
 to the default SMTP protocol. Here is how to achieve this:
