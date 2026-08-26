@@ -253,6 +253,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         testIMAPClient.moveFirstMessage(MAILBOX_NAME);
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsInMailbox(homerCredential, otherMailboxId.serialize())).hasSize(1));
+        awaitSearchUpToDate();
 
         testIMAPClient.delete(MAILBOX_NAME);
 
@@ -689,6 +690,8 @@ public abstract class DeletedMessageVaultIntegrationTest {
             .select(TestIMAPClient.INBOX);
 
         testIMAPClient.moveFirstMessage(MAILBOX_NAME);
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsInMailbox(homerCredential, otherMailboxId.serialize())).hasSize(1));
+        awaitSearchUpToDate();
 
         testIMAPClient.delete(MAILBOX_NAME);
 
