@@ -54,6 +54,15 @@
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <verifyIdentity>true</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
+        <!-- Optional. Overrides the human readable texts of some error responses, typically in order to
+             translate them. Return codes and DSN statuses are not customizable.
+             The rejected recipient is always appended to the unknownUser text.
+
+        <errorMessages>
+            <oversizedMail>Message size exceeds fixed maximum message size</oversizedMail>
+            <unknownUser>Unknown user:</unknownUser>
+        </errorMessages>
+        -->
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
         <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
         <handlerchain coreHandlersPackage="org.apache.james.smtpserver.NoAuthCmdHandlerLoader">

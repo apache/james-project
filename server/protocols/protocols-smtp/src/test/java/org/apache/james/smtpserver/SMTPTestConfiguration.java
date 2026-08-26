@@ -29,6 +29,8 @@ import org.apache.james.smtpserver.fastfail.ValidSenderDomainHandler;
 public class SMTPTestConfiguration extends BaseHierarchicalConfiguration {
 
     private int maxMessageSizeKB = 0;
+    private String oversizedMailMessage = null;
+    private String unknownUserMessage = null;
     private Integer maxLineLength;
     private String authorizedAddresses = "127.0.0.0/8";
     private String authorizingMode = "false";
@@ -53,6 +55,14 @@ public class SMTPTestConfiguration extends BaseHierarchicalConfiguration {
 
     public void setMaxMessageSize(int kilobytes) {
         maxMessageSizeKB = kilobytes;
+    }
+
+    public void setOversizedMailMessage(String oversizedMailMessage) {
+        this.oversizedMailMessage = oversizedMailMessage;
+    }
+
+    public void setUnknownUserMessage(String unknownUserMessage) {
+        this.unknownUserMessage = unknownUserMessage;
     }
 
     public void setMaxLineLength(int maxLineLength) {
@@ -133,6 +143,12 @@ public class SMTPTestConfiguration extends BaseHierarchicalConfiguration {
         addProperty("connectiontimeout", 360000);
         addProperty("authorizedAddresses", authorizedAddresses);
         addProperty("maxmessagesize", maxMessageSizeKB);
+        if (oversizedMailMessage != null) {
+            addProperty("errorMessages.oversizedMail", oversizedMailMessage);
+        }
+        if (unknownUserMessage != null) {
+            addProperty("errorMessages.unknownUser", unknownUserMessage);
+        }
         if (maxLineLength != null) {
             addProperty("maxLineLength", maxLineLength);
         }

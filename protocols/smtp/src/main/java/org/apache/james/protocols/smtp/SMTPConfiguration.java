@@ -62,6 +62,17 @@ public interface SMTPConfiguration extends ProtocolConfiguration {
     long getMaxMessageSize();
 
     /**
+     * Returns the human readable texts returned to the client upon rejection of a command.
+     *
+     * This allows administrators to customize (translate...) the messages their users are exposed to.
+     *
+     * @return the customizable parts of the SMTP error responses
+     */
+    default SMTPErrorMessages errorMessages() {
+        return SMTPErrorMessages.DEFAULT;
+    }
+
+    /**
      * Returns whether relaying is allowed for the IP address passed.
      *
      * @param remoteIP the remote IP address in String form

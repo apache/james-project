@@ -35,6 +35,15 @@
         <!--  This sets the maximum allowed message size (in kilobytes) for this -->
         <!--  LMTP service. If unspecified, the value defaults to 0, which means no limit. -->
         <maxmessagesize>0</maxmessagesize>
+        <!-- Optional. Overrides the human readable texts of some error responses, typically in order to
+             translate them. Return codes and DSN statuses are not customizable.
+             The rejected recipient is always appended to the unknownUser text.
+
+        <errorMessages>
+            <oversizedMail>Message size exceeds fixed maximum message size</oversizedMail>
+            <unknownUser>Unknown user:</unknownUser>
+        </errorMessages>
+        -->
         <handlerchain>
             <handler class="org.apache.james.lmtpserver.CoreCmdHandlerLoader"/>
         </handlerchain>
