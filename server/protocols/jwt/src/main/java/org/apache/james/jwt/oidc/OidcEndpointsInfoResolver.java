@@ -78,6 +78,10 @@ public class OidcEndpointsInfoResolver implements TokenInfoResolver {
                 UserinfoResponse userInfo = tokenInfos.getT1();
                 TokenIntrospectionResponse introspectInfo = tokenInfos.getT2();
 
+                if (!introspectInfo.active()) {
+                    return Mono.error(new TokenIntrospectionException("Invalid OIDC token: the token is not active"));
+                }
+
                 Username sub = Username.of(userInfo.claimByPropertyName(oidcClaim)
                     .orElseThrow(() -> new UserInfoCheckException("Invalid OIDC token: userinfo needs to include " + oidcClaim + " claim")));
 
