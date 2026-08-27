@@ -57,13 +57,21 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
         .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
         .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Syntactically incorrect value for SIZE parameter")
         .build();
-    private static final HookResult QUOTA_EXCEEDED = HookResult.builder()
-        .hookReturnCode(HookReturnCode.deny())
-        .smtpReturnCode(SMTPRetCode.QUOTA_EXCEEDED)
-        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SYSTEM_MSG_TOO_BIG) + " Message size exceeds fixed maximum message size")
-        .build();
     public static final int SINGLE_CHARACTER_LINE = 3;
     public static final int DOT_BYTE = 46;
+
+    private static HookResult quotaExceeded(SMTPSession session) {
+        return HookResult.builder()
+            .hookReturnCode(HookReturnCode.deny())
+            .smtpReturnCode(SMTPRetCode.QUOTA_EXCEEDED)
+            .smtpDescription(quotaExceededDescription(session))
+            .build();
+    }
+
+    private static String quotaExceededDescription(SMTPSession session) {
+        return DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SYSTEM_MSG_TOO_BIG)
+            + " " + session.getConfiguration().errorMessages().oversizedMailMessage();
+    }
 
     @Override
     public HookResult doMailParameter(SMTPSession session, String paramName,
@@ -123,7 +131,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
                 size,
                 maxMessageSize);
 
-            return QUOTA_EXCEEDED;
+            return quotaExceeded(session);
         } else {
             // put the message size in the message state so it can be used
             // later to restrict messages for user quotas, etc.
@@ -141,7 +149,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
         if (failed) {
             if (isDataTerminated(line)) {
                 next.onLine(session, line);
-                return new SMTPResponse(SMTPRetCode.QUOTA_EXCEEDED, "Quota exceeded");
+                return new SMTPResponse(SMTPRetCode.QUOTA_EXCEEDED, quotaExceededDescription(session));
             } else {
                 return null;
             }
@@ -181,7 +189,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
             LOGGER.info("Rejected message from {} from {} exceeding system maximum message size of {}",
                 session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender()).asPrettyString(),
                 session.getRemoteAddress().getAddress().getHostAddress(), session.getConfiguration().getMaxMessageSize());
-            return QUOTA_EXCEEDED;
+            return quotaExceeded(session);
         } else {
             return HookResult.DECLINED;
         }

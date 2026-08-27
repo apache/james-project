@@ -34,6 +34,9 @@ import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.protocols.smtp.SMTPConfiguration;
+import org.apache.james.protocols.smtp.SMTPConfigurationImpl;
+import org.apache.james.protocols.smtp.SMTPErrorMessages;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -89,11 +92,25 @@ class ValidRcptHandlerTest {
     }
 
     private SMTPSession setupMockedSMTPSession(boolean relayingAllowed) {
+        return setupMockedSMTPSession(relayingAllowed, SMTPErrorMessages.DEFAULT);
+    }
+
+    private SMTPSession setupMockedSMTPSession(boolean relayingAllowed, SMTPErrorMessages errorMessages) {
         return new BaseFakeSMTPSession() {
 
             @Override
             public boolean isRelayingAllowed() {
                 return relayingAllowed;
+            }
+
+            @Override
+            public SMTPConfiguration getConfiguration() {
+                return new SMTPConfigurationImpl() {
+                    @Override
+                    public SMTPErrorMessages errorMessages() {
+                        return errorMessages;
+                    }
+                };
             }
             
             private final HashMap<AttachmentKey<?>, Object> sessionState = new HashMap<>();
@@ -140,6 +157,23 @@ class ValidRcptHandlerTest {
         HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, invalidUserEmail).getResult();
 
         assertThat(rCode).isEqualTo(HookReturnCode.deny());
+    }
+
+    @Test
+    void doRcptShouldRejectNotExistingLocalUsersWithDefaultMessage() {
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+
+        assertThat(handler.doRcpt(session, MAYBE_SENDER, invalidUserEmail).getSmtpDescription())
+            .isEqualTo("5.1.1 Unknown user: " + invalidUserEmail.asString());
+    }
+
+    @Test
+    void doRcptShouldRejectNotExistingLocalUsersWithConfiguredMessage() {
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED,
+            new SMTPErrorMessages(Optional.empty(), Optional.of("The recipient does not exist.")));
+
+        assertThat(handler.doRcpt(session, MAYBE_SENDER, invalidUserEmail).getSmtpDescription())
+            .isEqualTo("5.1.1 The recipient does not exist. " + invalidUserEmail.asString());
     }
 
     @Test

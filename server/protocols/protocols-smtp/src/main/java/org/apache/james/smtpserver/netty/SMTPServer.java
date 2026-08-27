@@ -53,6 +53,7 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
+import org.apache.james.protocols.smtp.SMTPErrorMessages;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.smtpserver.CoreCmdHandlerLoader;
@@ -197,6 +198,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     private long maxMessageSize = 0;
 
     /**
+     * The administrator supplied texts of the SMTP error responses.
+     */
+    private SMTPErrorMessages errorMessages = SMTPErrorMessages.DEFAULT;
+
+    /**
      * The configuration data to be passed to the handler
      */
     private final SMTPConfiguration theConfigData = new SMTPHandlerConfigurationDataImpl();
@@ -260,6 +266,8 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
                 LOGGER.info("No maximum message size is enforced for this server.");
             }
 
+            errorMessages = SMTPErrorMessages.parse(configuration);
+
             heloEhloEnforcement = configuration.getBoolean("heloEhloEnforcement", true);
 
             // get the smtpGreeting
@@ -302,6 +310,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         @Override
         public long getMaxMessageSize() {
             return SMTPServer.this.maxMessageSize;
+        }
+
+        @Override
+        public SMTPErrorMessages errorMessages() {
+            return SMTPServer.this.errorMessages;
         }
 
         @Override
