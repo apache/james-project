@@ -255,6 +255,32 @@ public abstract class OidcAuthenticationContract {
 
     @Tag(CategoryTags.BASIC_FEATURE)
     @Test
+    void shouldRejectRevokedToken() {
+        // A revoked token: userinfo still answers, but introspection reports the token as inactive (RFC 7662)
+        mockUserInfo(BOB().asString());
+        mockJsonResponse(INTROSPECT_TOKEN_URI_PATH, """
+            {
+              "exp": %d,
+              "scope": "openid email profile",
+              "client_id": "james",
+              "active": false,
+              "aud": "%s",
+              "sub": "james-user",
+              "sid": "%s",
+              "iss": "https://sso.example.com"
+            }""".formatted(TOKEN_EXPIRATION_TIME, primaryAudience(), SID), SC_OK);
+
+        given()
+            .headers(getHeadersWith(authHeader))
+            .body(ECHO_REQUEST_OBJECT())
+        .when()
+            .post()
+        .then()
+            .statusCode(SC_UNAUTHORIZED);
+    }
+
+    @Tag(CategoryTags.BASIC_FEATURE)
+    @Test
     void shouldRejectBadAudience() {
         mockUserInfo(BOB().asString());
         mockIntrospection("bad");
