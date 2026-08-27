@@ -139,6 +139,9 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
 
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
+        if (session.allowUseOtherIdentity()) {
+            return HookResult.DECLINED;
+        }
         ExtendedSMTPSession nSession = (ExtendedSMTPSession) session;
         boolean shouldCheck = nSession.senderVerificationConfiguration().mode() == SMTPConfiguration.SenderVerificationMode.STRICT ||
             (nSession.senderVerificationConfiguration().mode() == SMTPConfiguration.SenderVerificationMode.RELAXED && session.getUsername() != null);
