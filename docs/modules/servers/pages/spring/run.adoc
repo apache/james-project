@@ -37,8 +37,12 @@ bin/     start scripts, and the james-cli client
 conf/    the configuration files, and conf/lib for the extra JARs
 lib/     the James JARs
 log/     the log files
-var/     the mail repositories, the Sieve scripts, the Lucene index, the ActiveMQ store and the H2 database
+sieve/   the Sieve scripts of your users, created on first use
+var/     the mail repositories, the Lucene index, the ActiveMQ store and the H2 database
 ....
+
+The xref:spring/operate/folders.adoc[folder layout page] details what lives where, and which of those folders need
+watching.
 
 The `conf` folder ships every configuration file with sane defaults, which you need to review before running in
 production. Read xref:spring/configure/index.adoc[the configuration section]. At the very least:

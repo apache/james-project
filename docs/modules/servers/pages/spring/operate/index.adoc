@@ -15,6 +15,9 @@ these topics.
 
 Read more about xref:{xref-base}/operate/logging.adoc[Logging].
 
+The xref:{xref-base}/operate/folders.adoc[folder layout] page details what the {server-name} writes on the file
+system, and which of those folders need watching.
+
 *Administration of this application happens entirely over JMX*, as it does not ship the WebAdmin REST API. The
 xref:{xref-base}/operate/jmx.adoc[JMX page] lists the exposed MBeans, and the
 xref:{xref-base}/operate/cli.adoc[Command line interface] wraps the most common operations. Both are documented as

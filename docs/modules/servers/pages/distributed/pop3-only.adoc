@@ -1,0 +1,165 @@
+= Distributed James Server &mdash; POP3 only variant
+:navtitle: POP3 only variant
+
+:server-name: Distributed POP3 James server
+:xref-base: distributed
+:pages-path: distributed
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/distributed-pop3-app/sample-configuration
+
+Alongside the xref:distributed/index.adoc[Distributed James server], the project ships a variant of it, packaged as
+link:https://github.com/apache/james-project/tree/master/server/apps/distributed-pop3-app[distributed-pop3-app] and
+published as the `apache/james:distributed-pop3-latest` docker image.
+
+It is the very same application, minus IMAP: it exposes *SMTP*, *LMTP* and *POP3*. Dropping IMAP is what allows it
+to be deployed *across several availability zones, or several data centers*, which the Distributed James server
+cannot do.
+
+== Motivation: running across availability zones
+
+IMAP mandates that every message of a mailbox receives a *monotonically increasing UID*, and every change a
+monotonically increasing MODSEQ. Cassandra, being an eventually consistent store, cannot deliver such a counter
+with its regular write path: the Distributed James server therefore allocates UIDs and MODSEQs with
+link:https://www.datastax.com/blog/2013/07/lightweight-transactions-cassandra-20[lightweight transactions], whose
+default execution profile reads at `SERIAL` consistency.
+
+A `SERIAL` read is a Paxos round involving a majority of the replicas *of the whole cluster*. Stretch a cluster
+over two availability zones, and every single message appended to a mailbox pays a cross-zone round trip - several
+of them, actually, as a lightweight transaction that loses its race is retried. Downgrading the profile to
+`LOCAL_SERIAL` gives back the latency but breaks the very guarantee that was being bought: two zones can then
+allocate the same UID concurrently, which means losing emails. This is why
+xref:distributed/architecture/consistency-model.adoc#_about_multi_data_center_setups[multi data-center setups are
+discouraged] on the Distributed James server.
+
+POP3 has no such requirement. It identifies messages by their `MessageId`, which James generates as a *TimeUUID*,
+locally, without any coordination. Removing IMAP thus removes the need for a monotonic counter, and with it the
+last lightweight transaction of the message write path. Cassandra can then be operated with `LOCAL_QUORUM` reads
+and writes, each James instance talking to the replicas of its own zone, and the cluster spanning as many zones or
+data centers as your availability target requires.
+
+== What changes compared to the Distributed server
+
+Everything of the xref:distributed/architecture/index.adoc[Distributed James server] is retained - Cassandra,
+OpenSearch, RabbitMQ, the BlobStore and its object storage backends, the mailet container, the distributed task
+manager, the WebAdmin API - with the following substitutions:
+
+* The Cassandra *UID and MODSEQ providers are replaced by random generators* (`RandomUidProvider` and
+`RandomModSeqProvider`, drawing from a `SecureRandom`). No lightweight transaction is involved in appending a
+message any more.
+* *Mailbox ACLs are dropped*: the ACL mapper is bound to a no-op implementation. Mailbox sharing is unsupported,
+and the lightweight transactions the ACL mapper performs are gone as well.
+* Thread resolution falls back to a naive algorithm, as the regular one relies on the mailbox metadata that is no
+longer maintained.
+* A dedicated `pop3metadata` Cassandra table holds, per mailbox, the identifier and the size of every message. It
+is populated by a mailbox listener, so that the `STAT`, `LIST` and `UIDL` commands - which POP3 clients issue at
+every single connection - are answered by *one partition read* rather than by a scan of the mailbox.
+
+== Supported features
+
+The following protocols are supported:
+
+* *SMTP* and *LMTP*
+* *POP3*
+* The xref:distributed/operate/webadmin.adoc[WebAdmin] REST administration API, and the
+xref:distributed/operate/cli.adoc[command line interface] over JMX
+
+*IMAP is not available*: its Guice module is simply not installed. *JMAP is not supported* either: although its
+modules are wired in, no *jmap.properties* ships with the application, which leaves the JMAP server disabled.
+Enabling it would require follow-up developments, as several components - the search among them - critically
+depend on UIDs being meaningful.
+
+[WARNING]
+====
+The UIDs and MODSEQs this application writes are random, hence meaningless. Anything ordering or ranging over
+them - IMAP first and foremost - will misbehave on that data. Do not point an IMAP server at a store written by
+this variant, and do not run this variant against a store written by the regular Distributed server.
+====
+
+Mail processing, recipient rewriting, Sieve filtering upon local delivery, quotas, the Deleted Messages Vault and
+the mail repositories all behave as they do on the Distributed James server, and are configured with the very same
+files. A
+link:https://github.com/apache/james-project/tree/master/server/apps/distributed-pop3-app/sample-configuration[sample
+configuration directory] is provided.
+
+== Operate
+
+The `pop3metadata` projection is maintained asynchronously by a mailbox listener, and can therefore diverge from
+the mailbox itself - a listener failure, a message written while a node was down. A WebAdmin task recomputes it:
+
+....
+curl -XPOST http://ip:port/mailboxes?task=fixPop3Inconsistencies
+....
+
+It is exposed alongside the other xref:distributed/operate/webadmin.adoc[mailbox tasks], and its progress is
+followed through the task manager, like any other James task.
+
+Everything else - xref:distributed/operate/guide.adoc[the operation guide],
+xref:distributed/operate/logging.adoc[logging], xref:distributed/operate/metrics.adoc[metrics],
+xref:distributed/operate/security.adoc[the security checklist] - applies unchanged.
+
+== Run with Docker
+
+The application is published as `apache/james:distributed-pop3-latest`, and needs the same third party
+dependencies as the Distributed James server: Cassandra {cassandra-version}, RabbitMQ {rabbitmq-version} and an S3
+compatible object storage.
+
+[subs=attributes+]
+----
+$ docker network create --driver bridge james
+$ docker run -d --network james -p 9042:9042 --name=cassandra cassandra:{cassandra-version}
+$ docker run -d --network james -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:{rabbitmq-version}-management
+$ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' \
+    --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' \
+    --name=s3 ghcr.io/scality/cloudserver:{cloudserver-version}
+----
+
+For security reasons you are required to generate your own keystore, and to mount it into the container:
+
+[source,bash]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore keystore
+$ docker run --network james -v $PWD/keystore:/root/conf/keystore apache/james:distributed-pop3-latest
+----
+
+For a quick start without creating a keystore (e.g. for development), pass the `--generate-keystore` command
+argument and James will generate one with its default settings:
+
+[source,bash]
+----
+$ docker run --network james apache/james:distributed-pop3-latest --generate-keystore
+----
+
+A
+link:https://github.com/apache/james-project/blob/master/server/apps/distributed-pop3-app/docker-compose.yml[docker-compose]
+file starting the application together with all of its dependencies is provided.
+
+The image can also be built locally with a regular `mvn clean install -DskipTests`, then imported:
+
+[source,bash]
+----
+$ docker image load -i server/apps/distributed-pop3-app/target/jib-image.tar
+----
+
+Extra JVM flags are passed with
+link:https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags[JAVA_TOOL_OPTIONS], and a domain
+can be created upon start via an environment variable:
+
+[source,bash]
+----
+$ docker run --network james --environment DOMAIN=domain.tld \
+    -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:distributed-pop3-latest
+----
+
+link:https://glowroot.org/[Glowroot APM] is packaged within the image. Disabled by default, its java agent can be
+enabled:
+
+[source,bash]
+----
+$ docker run --network james -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:distributed-pop3-latest
+----
+
+The xref:distributed/operate/cli.adoc[CLI] is available within the container:
+
+[source,bash]
+----
+$ docker exec CONTAINER-ID james-cli ListDomains
+----

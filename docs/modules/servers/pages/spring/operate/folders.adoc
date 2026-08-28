@@ -1,0 +1,16 @@
+= Spring James Server &mdash; Folder layout
+:navtitle: Folder layout
+
+:xref-base: spring
+:pages-path: spring
+:server-name: Spring James server
+:backend-name: the relational database
+:spring-layout:
+:spam-repositories:
+:lucene-in-var:
+:sieve-file-repository:
+:no-webadmin:
+
+include::partial$spring/deprecated.adoc[]
+
+include::partial$operate/folders.adoc[]

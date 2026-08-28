@@ -6,6 +6,8 @@
 :server-tag: JPA
 :no-opensearch:
 
+:folder-layout:
+
 include::partial$jpa/deprecated.adoc[]
 
 include::partial$operate/index.adoc[]

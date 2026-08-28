@@ -75,9 +75,11 @@ link:https://github.com/apache/james-project/tree/master/server/apps/jpa-app/sam
 
 A few points deserve attention:
 
-* *Sieve scripts are not migrated*. The Spring application stores them as files under `var/sieve`, while the JPA
-application stores them in the database. Users need to re-upload their scripts.
-* *The Lucene index is not migrated*: it does not live at the same place. Rebuild it with the
+* *Sieve scripts are not migrated*. The Spring application stores them as files, in a `sieve/` folder of its
+installation directory - see xref:spring/operate/folders.adoc[the folder layout] - while the JPA application
+stores them in the database. Users need to re-upload their scripts.
+* *The Lucene index is not migrated*: it does not live at the same place - `var/store/lucene` here, the working
+directory itself on the JPA application. Rebuild it with the
 xref:jpa/operate/webadmin.adoc#_reindexing_all_mails[reIndexing WebAdmin task] once the JPA server is up.
 * *The mail queue is not migrated*. Let the Spring instance finish processing its spool before stopping it.
 * The `db` and `dbfile` mail repository protocols, backed by the legacy `JDBCMailRepository` and `sqlResources.xml`,

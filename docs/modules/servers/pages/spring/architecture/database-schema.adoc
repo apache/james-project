@@ -1,0 +1,16 @@
+= Spring James Server &mdash; Database schema
+:navtitle: Database schema
+
+:xref-base: spring
+:pages-path: spring
+:server-name: Spring James server
+:persistence-unit-name: James
+:persistence-xml-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources/META-INF/persistence.xml
+:no-droplist:
+:no-webadmin:
+:sieve-file-repository:
+:file-mail-repository:
+
+include::partial$spring/deprecated.adoc[]
+
+include::partial$architecture/database-schema.adoc[]

@@ -1,0 +1,139 @@
+Knowing what the {server-name} writes, and where, is needed to size a volume, to back the server up, and to tell
+apart the data that can be thrown away from the data that cannot.
+
+ifndef::spring-layout[]
+Every folder below is relative to the *working directory* - the folder James is started from, or the one given by
+the `working.directory` system property.
+
+....
+<working directory>
+├── conf/                     configuration files
+└── var/                      the data James reads and writes
+    ├── mail/                 mail repositories
+    └── store/                the embedded storage dependencies
+....
+endif::[]
+ifdef::spring-layout[]
+Unpacking the distribution archive gives the following layout, which the rest of this page calls the *installation
+directory*:
+
+....
+<installation directory>
+├── bin/                      start scripts, and the james-cli client
+├── conf/                     configuration files, and conf/lib for the extra JARs
+├── lib/                      the James JARs
+├── log/                      the log files
+├── sieve/                    the Sieve scripts of your users
+└── var/                      the data James reads and writes
+    ├── mail/                 mail repositories
+    └── store/                the embedded storage dependencies
+....
+
+[IMPORTANT]
+====
+The start scripts run James *from the `bin` folder*, and the application resolves its own root one level above -
+`JamesServerApplicationContext` is built on a resource loader rooted at `../`. This is why the paths of the
+{server-name} configuration are written the way they are, and it bites in two different ways:
+
+* paths going through the James file system, written `file://var/mail/error/`, are resolved against the
+installation directory. Copy such a path as is;
+* paths handed over to a third party library - the `database.url` of
+xref:{xref-base}/configure/database.adoc[james-database.properties], the Lucene directory of
+xref:{xref-base}/configure/indexer.adoc[indexer.xml] - are resolved by that library against the *process* working
+directory, which is `bin`. They are therefore written `../var/store/...`, and *lose their leading `../` when
+carried over to any other James application*, which run from the installation directory itself.
+====
+endif::[]
+
+WARNING: `var/mail` does *not* contain the mails of your users. Those live in the mailbox, that is to say in
+{backend-name}. `var/mail` only holds the mails that were set aside during processing.
+
+== var/mail: the mail repositories
+
+Every folder under `var/mail` is a xref:{xref-base}/configure/mailrepositorystore.adoc[mail repository], that is
+to say a place where the xref:{xref-base}/configure/mailetcontainer.adoc[mailet container] parks a mail it could
+not deliver. Which ones exist depends entirely on your *mailetcontainer.xml*; the shipped configuration declares:
+
+* `error/` - a mail that threw an exception during processing;
+* `address-error/` - a mail addressed to a local user that does not exist;
+* `relay-denied/` - a mail an unauthenticated sender tried to relay;
+* `relay-limit-exceeded/` - a mail that looped, as detected by the `RelayLimit` matcher;
+ifdef::rrt-error-repository[]
+* `rrt-error/` - a mail that hit a loop in the xref:{xref-base}/configure/recipientrewritetable.adoc[recipient
+rewriting rules].
+endif::[]
+ifdef::spam-repositories[]
+* `spam/` - a mail flagged by the anti-spam handlers;
+* `over-quota-error/` - a mail that could not be delivered because the recipient was over quota.
+endif::[]
+
+Inside such a folder, each mail is stored as *two* files sharing the same name: a `.FileObjectStore` file holding
+the envelope and the mail attributes, and a `.FileStreamStore` file holding the MIME message itself. Never delete
+one without the other.
+
+*These folders grow without bound.* Nothing prunes them: a mail parked there stays there until an operator deals
+with it. They are the first place to look when the disk fills up.
+
+ifndef::no-webadmin[]
+Rather than reading those files by hand, list and reprocess their content over
+xref:{xref-base}/operate/webadmin.adoc#_reprocessing_mails_from_a_mail_repository[WebAdmin].
+endif::[]
+ifdef::no-webadmin[]
+The {server-name} ships no WebAdmin API, and its CLI exposes no mail repository command: these folders can only be
+audited by hand. This is one of the strongest arguments for moving to the xref:jpa/index.adoc[JPA James server].
+endif::[]
+
+== var/store: the embedded dependencies
+
+`var/store` holds the state of the storage dependencies the {server-name} embeds and runs in its own process:
+
+* `var/store/h2db.mv.db` and its companion files - the embedded
+link:https://h2database.com[H2] database, when you kept the default
+xref:{xref-base}/configure/database.adoc[james-database.properties]. *This is where the mailboxes, the mails, the
+users, the domains and the rewriting rules actually are.* Point James at another database and this file disappears,
+your data being wherever that database keeps it.
+* `var/store/activemq/brokers/KahaDB/` - the persistent store of the embedded ActiveMQ broker backing the
+xref:{xref-base}/architecture/index.adoc[mail queue]. It holds the mails that are spooled but not yet processed,
+and is expected to stay small on a healthy server: a KahaDB that keeps growing means the mailet container is not
+keeping up with the incoming traffic.
+* `var/store/activemq/blob-transfer/` - the bodies of the queued mails that were too large to be carried in the
+JMS message itself, with one folder per queue (`spool`, `outgoing`).
+ifdef::lucene-in-var[]
+* `var/store/lucene/` - the xref:{xref-base}/configure/indexer.adoc[Lucene] full text index. It is a *derived*
+projection: losing it costs a re-indexing, not your emails.
+endif::[]
+
+ifdef::lucene-at-root[]
+== The Lucene index
+
+The xref:{xref-base}/architecture/index.adoc[Lucene] full text index is *not* written under `var`: its segment
+files - `segments_N`, `_0.cfs`, `write.lock`... - are created directly in the working directory. This is
+surprising, and worth knowing before you mistake them for junk and delete them.
+
+The index is a derived projection: losing it costs a
+xref:{xref-base}/operate/cli.adoc#_re_indexing[re-indexing], not your emails.
+endif::[]
+
+ifdef::sieve-file-repository[]
+== sieve/
+
+The {server-name} stores the Sieve scripts of its users on the file system rather than in the database
+(`SieveFileRepository`), in a `sieve/` folder of the installation directory - not under `var`. The folder is
+created on first use. It holds one sub-folder per user, with their `.sieve` scripts, plus `.quota` files carrying
+the xref:{xref-base}/configure/sieve.adoc[Sieve quotas].
+
+*Back it up along with your database*: it is the one piece of user data that does not live in it, and the reason
+Sieve scripts are the only thing a xref:spring/index.adoc#_moving_to_the_jpa_james_server[move to the JPA
+application] does not carry over on its own.
+endif::[]
+
+== The system temporary directory
+
+James also writes to the system temporary directory - `/tmp` on Linux, overridable with the `java.io.tmpdir`
+system property. Incoming messages larger than the `inMemorySizeLimit` of the
+xref:{xref-base}/configure/imap.adoc[IMAP] and xref:{xref-base}/configure/smtp.adoc[SMTP] servers are streamed to
+a temporary file rather than held in the heap, and the mailbox does the same when appending a large message.
+
+These files are removed shortly after use, so the folder should stay small. Size it nonetheless for the largest
+message you accept, times the number of connections that may be uploading at the same time: a temporary directory
+that cannot be written to fails the delivery.
