@@ -1,0 +1,269 @@
+= JPA James Server &mdash; SMTP only variant
+:navtitle: SMTP only variant
+
+:server-name: JPA SMTP James server
+:xref-base: jpa
+:pages-path: jpa
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/jpa-smtp-app/sample-configuration
+
+include::partial$jpa/deprecated.adoc[]
+
+Alongside the xref:jpa/index.adoc[JPA James server], the project ships a stripped down variant of it, packaged as
+link:https://github.com/apache/james-project/tree/master/server/apps/jpa-smtp-app[jpa-smtp-app] and published as the
+`apache/james:jpa-smtp-latest` docker image.
+
+It is the very same application, minus the mailbox: it speaks *SMTP only*.
+
+== Motivation
+
+This application is a *demonstrator*: it shows that a James server is an assembly of independent components, and
+that an operator can keep only the ones matching his use case. Here, everything related to storing and reading
+emails on behalf of users - the mailbox, its index, and the IMAP, POP3 and JMAP protocols exposing it - is simply
+left out of the Guice injector.
+
+What remains is a *lightweight mail processing* server: it accepts emails over SMTP, runs them through the
+xref:jpa/configure/mailetcontainer.adoc[mailet container], and either relays them to their destination or stores
+them in a mail repository. This makes it a reasonable base for:
+
+* a *mail gateway* or outgoing relay, applying your business rules - DKIM signing, anti-spam, address rewriting,
+rate limiting - before handing emails over to a tier server;
+* a *mail processing appliance*, dropping the result into mail repositories that another system consumes;
+* getting started with the mailet container without deploying any storage dependency: the default
+link:https://h2database.com[H2] database requires no set up at all.
+
+Being a demonstrator, it is *not* a full featured mail server: it cannot deliver an email locally, as it has
+nowhere to deliver it to.
+
+== Architecture
+
+The application is a single node deployment, storing its data in a relational database through JPA, exactly like
+the xref:jpa/architecture/index.adoc[JPA James server].
+
+image::james_smtp_only_architecture.png[Internal architecture of the SMTP only James server]
+
+The following components are wired:
+
+* *SMTP* is the only mail protocol. `LegacyEncryptionModule` and the protocol handler chain are available, thus
+so are the xref:jpa/configure/smtp-hooks.adoc[packaged SMTP hooks] and
+xref:jpa/configure/ssl.adoc[SSL & TLS] set up.
+* The *mailet container* performs mail processing, with the default processors described below. The DKIM mailets
+are bundled with the application, hence `DKIMSign` and `DKIMVerify` can be used without deploying any extension.
+* The *mail queue* is an embedded ActiveMQ broker, persisting on the local file system.
+* The *database* holds the domains, the users, the recipient rewriting rules and, if you use the `jpa` mail
+repository protocol, the mails stored during processing. Users can alternatively be read from a
+xref:jpa/configure/usersrepository.adoc[LDAP].
+* The *mail repositories* store emails that could not be processed, and can be reviewed and reprocessed over
+WebAdmin.
+* The *WebAdmin* API exposes the routes of the components that are present: domains, users, recipient rewriting,
+mail repositories, mail queues, healthchecks, task management, and sending an email over WebAdmin. The mailbox,
+quota and reindexing routes are absent, as the corresponding components are.
+* The *task manager* is in memory: the history of the tasks is lost upon restart.
+
+The following are *not* part of this application: the mailbox and all of its ecosystem (search index, quotas,
+event bus, listeners, Sieve), the IMAP, POP3, LMTP, ManageSieve and JMAP protocols, and the DropLists.
+
+NOTE: Unlike every other Guice application, the SMTP only variant does not install the JMX server module. The
+xref:jpa/operate/cli.adoc[command line interface], which relies on JMX, is therefore unusable here even though a
+`james-cli` script and a `jmx.properties` file are packaged: administrate this server over
+xref:jpa/operate/webadmin.adoc[WebAdmin].
+
+=== Default mail processing
+
+The default
+link:https://github.com/apache/james-project/blob/master/server/apps/jpa-smtp-app/src/main/resources/defaultMailetContainer.xml[mailet container configuration]
+is that of a relay:
+
+* the `root` processor drops looping emails (`RelayLimit=30`) and hands the rest over to `transport`;
+* the `transport` processor removes the `bcc` header, applies the
+xref:jpa/configure/recipientrewritetable.adoc[recipient rewriting rules], and relays emails of *authenticated*
+senders with `RemoteDelivery`;
+* everything else lands in the `relay-denied` processor and is bounced;
+* delivery failures are turned into DSN bounces by the `bounces` processor.
+
+There is no `local-delivery` step: `LocalDelivery` would require a mailbox. Override
+xref:jpa/configure/mailetcontainer.adoc[mailetcontainer.xml] to implement your own processing logic, relying on
+the packaged xref:jpa/configure/mailets.adoc[mailets] and xref:jpa/configure/matchers.adoc[matchers].
+
+== Run with Java
+
+=== Requirements
+
+* Java {java-version} SDK
+* Maven 3 for building the artifacts
+* A relational database. By default the embedded H2 database is used and requires no set up.
+
+=== Building
+
+A usual compilation with maven produces two artifacts in the `server/apps/jpa-smtp-app/target` directory:
+
+* james-server-jpa-smtp-app.jar
+* james-server-jpa-smtp-app.lib
+
+....
+mvn clean install -DskipTests
+....
+
+=== Running
+
+James requires its configuration to be in a subfolder of the working directory called *conf*. A
+link:https://github.com/apache/james-project/tree/master/server/apps/jpa-smtp-app/sample-configuration[sample directory]
+is provided with some default values you need to adapt.
+
+Generate a keystore:
+
+[source,bash]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+----
+
+Then run the jar. The OpenJPA java agent is required, as it performs the runtime enhancement of the JPA entities:
+
+[source,bash]
+----
+$ java -javaagent:james-server-jpa-smtp-app.lib/openjpa-4.1.1.jar \
+  -Dworking.directory=. \
+  -Djdk.tls.ephemeralDHKeySize=2048 \
+  -Dlogback.configurationFile=conf/logback.xml \
+  -jar james-server-jpa-smtp-app.jar
+----
+
+Note that binding ports below 1024 requires administrative rights.
+
+To run on top of another database, add its JDBC driver to the classpath and start the main class explicitly:
+
+[source,bash]
+----
+$ java \
+   -javaagent:james-server-jpa-smtp-app.lib/openjpa-4.1.1.jar \
+   -Dworking.directory=. \
+   -Djdk.tls.ephemeralDHKeySize=2048 \
+   -Dlogback.configurationFile=conf/logback.xml \
+   -cp "james-server-jpa-smtp-app.jar:james-server-jpa-smtp-app.lib/*:jdbc-driver.jar" \
+   org.apache.james.JPAJamesServerMain
+----
+
+== Run with Docker
+
+[source,bash]
+----
+$ docker run apache/james:jpa-smtp-latest
+----
+
+The image can also be built locally, then imported:
+
+[source,bash]
+----
+$ docker image load -i server/apps/jpa-smtp-app/target/jib-image.tar
+----
+
+For security reasons you are required to generate your own keystore, and to mount it into the container:
+
+[source,bash]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore keystore
+$ docker run -v $PWD/keystore:/root/conf/keystore apache/james:jpa-smtp-latest
+----
+
+For a quick start without creating a keystore (e.g. for development), pass the `--generate-keystore` command
+argument and James will generate one with its default settings:
+
+[source,bash]
+----
+$ docker run --network james apache/james:jpa-smtp-latest --generate-keystore
+----
+
+A domain can be created upon start via an environment variable, and extra JVM flags can be passed with
+link:https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags[JAVA_TOOL_OPTIONS]:
+
+[source,bash]
+----
+$ docker run --environment DOMAIN=domain.tld -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:jpa-smtp-latest
+----
+
+link:https://glowroot.org/[Glowroot APM] is packaged within the image. Disabled by default, its java agent can be
+enabled:
+
+[source,bash]
+----
+$ docker run -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:jpa-smtp-latest
+----
+
+=== Running via docker-compose on top of MariaDB
+
+A link:https://github.com/apache/james-project/blob/master/server/apps/jpa-smtp-app/docker-compose.yml[docker-compose]
+file demonstrates the application on top of MariaDB. The driver JAR is mounted at
+`/root/libs/james-jdbc-driver.jar` to be added to the classpath, along with the matching `james-database.properties`:
+
+[source,bash]
+----
+# 1. Download the driver:
+$ wget https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.7.2/mariadb-java-client-2.7.2.jar
+
+# 2. Generate the keystore with the default password `james72laBalle`:
+$ keytool -genkey -alias james -keyalg RSA -keystore keystore
+
+# 3. Start MariaDB
+$ docker-compose up -d mariadb
+
+# 4. Start James
+$ docker-compose up james
+----
+
+== Configuration files
+
+The SMTP only variant reads the same configuration files as the JPA James server, restricted to the components it
+ships. Consult the
+link:https://github.com/apache/james-project/tree/master/server/apps/jpa-smtp-app/sample-configuration[sample configuration]
+in GIT, and the following pages for their content:
+
+.Configuration of the SMTP only variant
+|===
+| File | Documentation
+
+| *smtpserver.xml*
+| xref:jpa/configure/smtp.adoc[SMTP configuration], the
+xref:jpa/configure/smtp-hooks.adoc[packaged SMTP hooks], and the
+xref:jpa/configure/server.adoc[common server options]. See also
+xref:jpa/configure/ssl.adoc[SSL & TLS] and xref:jpa/configure/oidc.adoc[OIDC].
+
+| *james-database.properties*
+| xref:jpa/configure/database.adoc[Database connection, pooling and JDBC drivers]
+
+| *domainlist.xml*
+| xref:jpa/configure/domainlist.adoc[Domain storage]
+
+| *usersrepository.xml*
+| xref:jpa/configure/usersrepository.adoc[User storage, including LDAP]
+
+| *recipientrewritetable.xml*
+| xref:jpa/configure/recipientrewritetable.adoc[Recipient rewriting]
+
+| *mailetcontainer.xml*
+| xref:jpa/configure/mailetcontainer.adoc[Mail processing], with the packaged
+xref:jpa/configure/mailets.adoc[mailets] and xref:jpa/configure/matchers.adoc[matchers]
+
+| *mailrepositorystore.xml*
+| xref:jpa/configure/mailrepositorystore.adoc[Mail repositories]
+
+| *dnsservice.xml*
+| xref:jpa/configure/dns.adoc[DNS resolution]
+
+| *webadmin.properties*
+| xref:jpa/configure/webadmin.adoc[WebAdmin API]
+
+| *healthcheck.properties*
+| xref:jpa/configure/healthcheck.adoc[Periodical healthchecks]
+
+| *extensions.properties*
+| xref:jpa/configure/extensions.adoc[Loading your own extensions]
+
+| *jvm.properties*
+| xref:jpa/configure/jvm.adoc[Additional system properties]
+
+| *logback.xml*
+| xref:jpa/operate/logging.adoc[Logging]
+|===
+
+The files driving components this variant does not ship - *imapserver.xml*, *pop3server.xml*, *lmtpserver.xml*,
+*managesieveserver.xml*, *listeners.xml* and *droplists.properties* - are not read. As detailed above,
+*jmx.properties* is packaged but has no effect either.

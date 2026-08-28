@@ -199,4 +199,5 @@
 **** xref:jpa/customization/mailbox-listeners.adoc[]
 **** xref:jpa/customization/smtp-hooks.adoc[]
 **** xref:jpa/customization/webadmin-routes.adoc[]
+*** xref:jpa/smtp-only.adoc[]
 ** xref:test.adoc[]
