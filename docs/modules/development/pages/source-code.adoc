@@ -1,0 +1,96 @@
+= How the James code base is organised
+:navtitle: Code base organisation
+
+Apache James is not a single application but a *set of components* that get assembled into one. The servers
+documented in xref:servers:index.adoc[the servers section] are precisely such assemblies: the same mailbox, the
+same protocol implementations and the same mailet container, wired onto different storage backends. This page maps
+the repository so that you know where to look, and where a change belongs.
+
+== The three kinds of module
+
+Every module of the repository falls into one of three categories, and the dependency rules between them are what
+keeps the project assemblable:
+
+API::
+Interfaces and value objects, with no implementation detail and next to no dependency. `mailet/api`,
+`mailbox/api`, `protocols/api`, `metrics/metrics-api`, `event-bus/api` are the ones you will meet most often. An
+API module must stay implementable by a backend that does not exist yet.
+
+Library::
+Reusable code that depends only on API modules and on third party jars, never on another library. `mailet/base`
+and `core` are examples. A library is justified only when several functions share it.
+
+Function::
+Everything else - an implementation of an API, a protocol, a storage backend. Functions should depend on APIs and
+libraries, and as little as possible on each other: it is code reuse that is expected between them, not direct
+reuse of a jar.
+
+The practical consequence is that a new storage backend is written by implementing the API modules, without
+touching anything else, and is then wired into an application by a Guice module.
+
+== The main modules
+
+`core`::
+The domain objects shared by everything: `Username`, `Domain`, `MailAddress`, `MaybeSender`, and the `Mail`
+implementation itself.
+
+`mailet`::
+The link:https://james.apache.org/mailet/api/[Mailet API] - `Mailet`, `Matcher`, `MailetConfig` - in
+`mailet/api`, the `GenericMailet` toolkit in `mailet/base`, and the packaged mailets and matchers in
+`mailet/standard`, `mailet/crypto` (S/MIME), `mailet/icalendar` and `mailet/amqp`. `mailet/mailetdocs-maven-plugin`
+extracts the javadoc of those classes into the reference lists you can read in the
+xref:servers:distributed/configure/mailets.adoc[configuration pages].
+
+`mailbox`::
+The storage of the emails. `mailbox/api` defines `MailboxManager`, `MessageManager` and `SubscriptionManager`;
+`mailbox/store` holds the backend agnostic logic built on top of a set of mappers; and one module per backend
+implements those mappers - `mailbox/cassandra`, `mailbox/postgres`, `mailbox/jpa`, `mailbox/memory`. Search is
+pluggable the same way: `mailbox/opensearch`, `mailbox/lucene` and `mailbox/scanning-search`.
+
+`protocols`::
+The protocol implementations, kept independent of the mailbox: `protocols/smtp`, `protocols/imap`,
+`protocols/pop3`, `protocols/lmtp`, `protocols/managesieve`, the SASL mechanisms in `protocols/sasl`, and the
+Netty plumbing they share in `protocols/netty`.
+
+`server`::
+The server itself. `server/data` holds the users, domains, rewriting rules and mail repositories, again with one
+module per backend; `server/mailet` the mailet container; `server/queue` the mail queue implementations;
+`server/protocols` the glue binding the protocol implementations to the mailbox, and the WebAdmin routes;
+`server/container` the Guice and Spring wiring; and `server/apps` the assemblies that make up the shipped
+applications.
+
+`backends-common`::
+The low level clients of the storage dependencies - Cassandra, Postgres, OpenSearch, RabbitMQ, Redis, Pulsar -
+along with the test resources that start them in a container.
+
+`event-bus`, `event-sourcing`, `json`, `metrics`, `mdn`::
+Cross cutting infrastructure: event distribution, event sourced aggregates, JSON serialisation, metric collection,
+message disposition notifications.
+
+`mpt`::
+The Mail Protocols Tester, a scripted protocol testing framework used to check the IMAP and SMTP implementations
+against recorded sessions. See xref:deployment-tests.adoc[running deployment tests].
+
+`examples`::
+Working examples of every extension mechanism - custom mailets, matchers, SMTP hooks, mailbox listeners, WebAdmin
+routes - each one a small maven project you can copy. The
+xref:servers:distributed/customization/index.adoc[customization section] walks through them.
+
+== Standards compliance
+
+James implements published standards, most of them IETF RFCs, and treats them as its requirements document: what
+each server implements is listed on its *implemented standards* page -
+xref:servers:distributed/architecture/implemented-standards.adoc[Distributed],
+xref:servers:postgres/architecture/implemented-standards.adoc[Postgres],
+xref:servers:jpa/architecture/implemented-standards.adoc[JPA],
+xref:servers:spring/architecture/implemented-standards.adoc[Spring].
+
+This occasionally conflicts with what other implementations actually do. The project's position is that adhering
+to the published standard is what makes interoperability achievable without access to undocumented behaviour, and
+therefore:
+
+* a deviation from a standard, when it is needed and can be worked around safely, is *disabled by default*,
+prominently documented as a violation, and enabled by an explicit configuration option - so that using it is a
+conscious decision of the operator;
+* a behaviour that no standard James claims to support covers - a de-facto convention, a draft RFC - may be
+implemented, provided it is documented well enough that operators know what to expect.
