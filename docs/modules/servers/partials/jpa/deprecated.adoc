@@ -1,0 +1,10 @@
+[WARNING.deprecation-banner]
+====
+*The JPA James server is deprecated.*
+It is kept for backward compatibility only, receives no new features, and may be removed in a future release. It
+is a single node application, relies on the barely maintained blocking OpenJPA stack, and lacks major James
+features (JMAP, distributed search, Deleted Messages Vault...).
+
+New deployments should use the xref:postgres/index.adoc[Postgres James server] instead: it targets the same SQL
+based, small to medium deployments, with a reactive and actively maintained implementation.
+====

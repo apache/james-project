@@ -1,0 +1,30 @@
+= JPA James Server &mdash; WebAdmin REST administration API
+:navtitle: WebAdmin REST administration API
+
+:server-name: JPA James server
+:xref-base: jpa
+:backend-name: database
+:no-jmap:
+:no-vault:
+:no-blobstore:
+:no-dlp:
+:no-vacation:
+:no-delegation:
+:no-messages-route:
+:no-tasks-cleanup:
+:no-rabbitmq:
+:no-opensearch:
+:no-backend-healthcheck:
+:admin-mail-queues-extend: servers:jpa/operate/webadmin/admin-mail-queues-extend.adoc
+:admin-messages-extend: servers:jpa/operate/webadmin/admin-messages-extend.adoc
+:admin-mailboxes-extend: servers:jpa/operate/webadmin/admin-mailboxes-extend.adoc
+
+include::partial$jpa/deprecated.adoc[]
+
+NOTE: Only the routes actually bound by the JPA application are documented here. Compared to the
+xref:distributed/index.adoc[Distributed] and xref:postgres/index.adoc[Postgres] servers, the JPA James server
+exposes neither the JMAP related routes (identities, fast view projections, filtering rules, uploads), nor the
+Deleted Messages Vault, the blob garbage collection, the mailbox export/restore, the DLP configuration, the
+vacation settings, the user delegation, the `/messages` routes nor the task cleanup route.
+
+include::partial$operate/webadmin.adoc[]

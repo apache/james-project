@@ -76,6 +76,7 @@ Please note that a `rspamd.properties` file is needed. Read also
 xref:{pages-path}/configure/spam.adoc[this page] for extra configuration required to support this feature.
 
 
+ifndef::no-quota-mailing[]
 === QuotaThresholdCrossingListener
 
 Sends emails to users exceeding 80% and 99% of their quota to warn them (for instance).
@@ -162,4 +163,4 @@ To mitigate this issue you might reach your administrator in order to increase y
 ....
 
 This MailboxListener is supported.
-
+endif::[]

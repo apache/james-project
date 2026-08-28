@@ -69,14 +69,19 @@ explanations.
 
 Supported health checks include:
 
+ifndef::no-backend-healthcheck[]
 * *{backend-name} backend*: {backend-name} storage.
+endif::[]
+ifndef::no-opensearch[]
 * *OpenSearch Backend*: OpenSearch storage.
+endif::[]
 * *EventDeadLettersHealthCheck*
 * *Guice application lifecycle*
 * *JPA Backend*: JPA storage.
 * *MailReceptionCheck* We rely on a configured user, send an email to him and
 assert that the email is well received, and can be read within the given configured
 period. Unhealthy means that the email could not be received before reacing the timeout.
+ifndef::no-jmap[]
 * *MessageFastViewProjection* Health check of the component storing JMAP properties
 which are fast to retrieve. Those properties are computed in advance
 from messages and persisted in order to archive a better performance.
@@ -86,7 +91,10 @@ time-window. We piggyback the projection update on missed JMAP read in
 order to decrease the outdated time window for a given entry. The health
 is determined by the ratio of missed projection reads. (lower than 10%
 causes `degraded`)
+endif::[]
+ifndef::no-rabbitmq[]
 * *RabbitMQ backend*: RabbitMQ messaging.
+endif::[]
 
 Response codes:
 
@@ -357,6 +365,7 @@ tasks with the given status are returned.
 
 Example of date format: `2023-04-15T07:23:27.541254+07:00` and `2023-04-15T07%3A23%3A27.541254%2B07%3A00` once URL encoded.
 
+ifndef::no-tasks-cleanup[]
 === Cleaning up old tasks
 
 ....
@@ -365,6 +374,7 @@ curl -XDELETE http://ip:port/tasks?olderThan=30day
 
 Will start a task which will cleanup old tasks still referenced in the TaskManager.
 
+endif::[]
 === Endpoints returning a task
 
 Many endpoints do generate a task.
@@ -709,6 +719,7 @@ Response codes:
 * 400: The user is invalid
 * 404: The user is unknown
 
+ifndef::no-delegation[]
 === Add a delegated user of a base user
 
 ....
@@ -769,6 +780,7 @@ Response codes:
 
 Note: Delegation is only available on top of {backend-name} products and not implemented yet on top of JPA backends.
 
+endif::[]
 === Change a username
 
 ....
@@ -873,6 +885,7 @@ Valid status includes:
 - `FAILED`: Error encountered while executing this step. Check the logs.
 - `ABORTED`: Won't be executed because of previous step failures.
 
+ifndef::no-jmap[]
 === Retrieving the user identities
 
 ....
@@ -1004,6 +1017,8 @@ Response codes:
 Resource name ``username'' represents a valid user
 Resource name ``identityId'' represents an existing user identity
 
+endif::[]
+ifndef::no-vacation[]
 == Administrating vacation settings
 
 === Get vacation settings
@@ -1062,6 +1077,7 @@ Response codes:
 * 204: The vacation settings were successfully disabled
 * 404: The user name is unknown
 
+endif::[]
 == Administrating mailboxes
 
 === All mailboxes
@@ -1086,6 +1102,7 @@ The kind of task scheduled depends on the action parameter. See below
 for details.
 
 
+ifndef::no-jmap[]
 ==== Recomputing Global JMAP fast message view projection
 
 Message fast view projection stores message properties expected to be
@@ -1231,6 +1248,7 @@ Response codes:
 * 201: Success. Corresponding task id is returned.
 * 400: Error in the request. Details can be found in the reported error.
 
+endif::[]
 ==== ReIndexing action
 
 Be also aware of the limits of this API:
@@ -1488,6 +1506,7 @@ during the reIndexing might be ignored.
 
 include::{admin-mailboxes-extend}[]
 
+ifndef::no-messages-route[]
 == Administrating Messages
 
 === ReIndexing a single mail by messageId
@@ -1524,9 +1543,11 @@ be altered.
 
 === Deleting old messages of all users
 
+ifndef::no-vault[]
 *Note:*
 Consider enabling the xref:{xref-base}/configure/vault.adoc[Deleted Messages Vault]
 if you use this feature.
+endif::[]
 
 Old messages tend to pile up in user INBOXes. An admin might want to delete
 these on behalf of the users, e.g. all messages older than 30 days:
@@ -1647,6 +1668,7 @@ The response is a map of task id per user:
 
 link:#_running_a_filtering_rule_on_a_mailbox[More details about details returned by running a filtering rule on a mailbox].
 
+endif::[]
 == Administrating user mailboxes
 
 === Creating a mailbox
@@ -1734,6 +1756,7 @@ Response codes:
 * 204: The user do not have mailboxes anymore
 * 404: The user name does not exist. Note that this check can be bypassed by specifying the `force` query parameter.
 
+ifndef::no-blobstore[]
 === Exporting user mailboxes
 
 ....
@@ -1788,6 +1811,7 @@ Note: The account must be empty for the restore to succeed. If the user already 
 If you wish to really force the restoration on a non-empty user, you can add the `?force=true` query parameter.
 It will delete existing data of the user before proceeding with the restoration.
 
+endif::[]
 === ReIndexing a user mails
 
 ....
@@ -1939,6 +1963,7 @@ the following `additionalInformation`:
 }
 ....
 
+ifndef::no-jmap[]
 === Running a filtering rule on a mailbox
 
 ....
@@ -2016,6 +2041,7 @@ the following `additionalInformation`:
 Note: you can configure the maximum number of actions applied per mailbox by setting the JVM property `james.rules.triage.max.actions.per.mailbox`. The default value is 25000.
 This limit may help avoid the tombstone threshold issue on Cassandra backends when too many messages are moved or deleted at once.
 
+endif::[]
 === Subscribing a user to all of its mailboxes
 
 ....
@@ -2047,6 +2073,7 @@ The scheduled task will have the following type `SubscribeAllTask` and the follo
 }
 ....
 
+ifndef::no-jmap[]
 === Recomputing User JMAP fast message view projection
 
 This action is only available for backends supporting JMAP protocol.
@@ -2107,6 +2134,7 @@ Response codes:
 * 400: Error in the request. Details can be found in the reported error.
 * 404: User not found.
 
+endif::[]
 == Administrating quotas
 
 === Administrating quotas by users
@@ -3069,6 +3097,7 @@ Response codes:
 
 * 204: Operation succeeded
 
+ifndef::no-jmap[]
 == Administrating Jmap Uploads
 
 === Cleaning upload repository
@@ -3102,6 +3131,8 @@ the following `additionalInformation`:
 }
 ....
 
+endif::[]
+ifndef::no-blobstore[]
 == Running blob garbage collection
 
 When deduplication is enabled one needs to explicitly run a garbage collection in order to delete no longer referenced
@@ -3145,6 +3176,7 @@ Where:
 filter in later runs.
 - *gcedBlobCount* is the count of blobs that were garbage collected.
 
+endif::[]
 == Administrating Recipient rewriting
 
 === Address group
@@ -4420,6 +4452,7 @@ Response codes:
 * 400: Invalid request
 * 404: The mail queue does not exist
 
+ifndef::no-rabbitmq[]
 === RabbitMQ republishing a mail queue from {backend-name}
 
 ....
@@ -4455,6 +4488,7 @@ The response body contains the id of the republishing task.
 
 include::{admin-mail-queues-extend}[]
 
+endif::[]
 == Sending email over webAdmin
 
 ....
@@ -4666,6 +4700,7 @@ Response codes:
 * 400: Invalid group name, insertion id or action argument
 * 404: No event with this insertionId
 
+ifndef::no-vault[]
 == Deleted Messages Vault
 
 The `Deleted Message Vault plugin' allows you to keep users deleted
@@ -5058,6 +5093,8 @@ The scheduled task will have the following type
 while: - user: delete deleted messages from this user - deleteMessageId:
 messageId of deleted messages will be delete
 
+endif::[]
+ifndef::no-dlp[]
 == Administrating DLP Configuration
 
 DLP (stands for Data Leak Prevention) is supported by James. A DLP
@@ -5204,6 +5241,7 @@ This is an example of returned body.
 }
 ....
 
+endif::[]
 == Server administration
 
 === Reloading server certificates
@@ -5236,7 +5274,9 @@ connections, including:
 
  - IMAP protocol
  - SMTP protocol
+ifndef::no-jmap[]
  - JMAP websocket and event source sub protocols
+endif::[]
 
 James keeps track of active channels and would iterate through them, destroying corresponding channels.
 

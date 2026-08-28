@@ -30,5 +30,10 @@ to get some examples and hints.
 </mailrepositorystore>
 ----
 
+ifndef::no-blobstore[]
 Only the *{mail-repository-class}* is available by default for the {server-name}. Mails metadata are stored in
 {mail-repository-protocol} while the headers and bodies are stored within the xref:{pages-path}/architecture/index.adoc#_blobstore[BlobStore].
+endif::[]
+ifdef::no-blobstore[]
+Only the *{mail-repository-class}* is available by default for the {server-name}.
+endif::[]

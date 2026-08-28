@@ -84,14 +84,18 @@ Here are the available metrics :
  - Number of per queue number of enqueued mails
  - Number of sent emails
  - Number of delivered emails
+ifndef::no-jmap[]
  - Diverse Response time percentiles, counts and rates for JMAP
+endif::[]
  - Diverse Response time percentiles, counts and rates for IMAP
  - Diverse Response time percentiles, counts and rates for SMTP
  - Diverse Response time percentiles, counts and rates for WebAdmin
  - Diverse Response time percentiles, counts and rates for each Mail Queue
  - Per mailet and per matcher Response time percentiles
  - Diverse Response time percentiles, counts and rates for DNS
+ifndef::no-tika[]
  - Tika HTTP client statistics
+endif::[]
  - SpamAssassin TCP client statistics
  - Mailbox listeners statistics time percentiles
  - Mailbox listeners statistics requests rate
@@ -102,18 +106,22 @@ Here are the available metrics :
 
 Here are the various relevant Grafana boards for the {server-name}:
 
+ifndef::no-blobstore[]
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_BlobStore.json[BlobStore] :
 Rates and percentiles for the BlobStore component
+endif::[]
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_DNS_Dashboard.json[DNS] :
 Latencies and query counts for DNS resolution.
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_IMAP_Board.json[IMAP] :
 Latencies for the IMAP protocol
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_IMAP_CountBoard.json[IMAP counts] :
 Request counts for the IMAP protocol
+ifndef::no-jmap[]
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_JMAP_Board.json[JMAP] :
 Latencies for the JMAP protocol
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_JMAP_CountBoard.json[JMAP counts] :
 Request counts for the JMAP protocol
+endif::[]
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_JVM.json[JVM] :
 JVM statistics (heap, gcs, etc...)
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_MAILET.json[Mailets] :
@@ -128,9 +136,11 @@ SMTP latencies reports
 Request count for the SMTP protocol
 
 === Dashboard samples
+ifndef::no-jmap[]
 Latencies for the JMAP protocol +
 
 image::JMAP_board.png[JMAP]
+endif::[]
 
 Latencies for the IMAP protocol +
 
@@ -140,9 +150,11 @@ JVM Statistics +
 
 image::JVM_board.png[JVM]
 
+ifndef::no-blobstore[]
 BlobStore Statistics +
 
 image::BlobStore.png[BlobStore]
+endif::[]
 
 webAdmin Statistics +
 

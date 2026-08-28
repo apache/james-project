@@ -1,0 +1,12 @@
+= JPA James Server &mdash; Security checklist
+:navtitle: Security checklist
+
+:xref-base: jpa
+:backend-name: database
+:no-jmap:
+
+:no-jmap:
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$operate/security.adoc[]

@@ -1,0 +1,38 @@
+= JPA James Server &mdash; Configuration
+:navtitle: Configuration
+
+:no-batchsizes:
+
+include::partial$jpa/deprecated.adoc[]
+
+This section presents how to configure the JPA James server.
+
+The JPA James server relies on separated files for configuring various components. Some files follow a *xml*
+format and some others follow a *property* format. Some files can be omitted, in which case the functionality can
+be disabled, or rely on reasonable defaults.
+
+The following configuration files are exposed:
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/jpa-app/sample-configuration
+:xref-base: jpa/configure
+:server-name: JPA James server
+:no-jmap:
+:no-vault:
+
+include::partial$configure/forProtocolsPartial.adoc[]
+
+== For storage dependencies
+
+** xref:{xref-base}/database.adoc[*james-database.properties*] tells James which relational database to use, and
+how to connect to it. This file is required. link:{sample-configuration-prefix-url}/james-database.properties[example]
+
+Unlike the other James applications, the JPA James server needs no other storage dependency: full text search is
+backed by an embedded Lucene index and the mail queue by an embedded ActiveMQ broker, both living on the local
+file system. As a consequence *blobstore.properties*, *opensearch.properties*, *rabbitmq.properties*,
+*redis.properties*, *tika.properties* and *search.properties* are not supported.
+
+include::partial$configure/forCoreComponentsPartial.adoc[]
+
+include::partial$configure/forExtensionsPartial.adoc[]
+
+include::partial$configure/systemPropertiesPartial.adoc[]

@@ -1,0 +1,10 @@
+= JPA James Mail Server &mdash; Extending behaviour
+:navtitle: Extending behaviour
+
+:pages-path: jpa
+:xref-base: jpa
+:no-jmap:
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$customization/index.adoc[]

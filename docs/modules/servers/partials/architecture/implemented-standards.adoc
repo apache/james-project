@@ -76,11 +76,20 @@ The following IMAP specifications are implemented:
  - link:https://www.rfc-editor.org/rfc/rfc8514.html[RFC-8514] IMAP SAVEDATE Extension
  - link:https://www.rfc-editor.org/rfc/rfc8514.html[RFC-9394] IMAP PARTIAL Extension for Paged SEARCH and FETCH
 
+ifndef::no-acl[]
 Partially implemented specifications:
 
  - link:https://datatracker.ietf.org/doc/html/rfc4314.html[RFC-4314] IMAP ACL
    - ACLs can be created and managed but mailbox not belonging to one account cannot, as of today, be accessed in IMAP.
+endif::[]
+ifdef::no-acl[]
+The following specification is *not* implemented:
 
+ - link:https://datatracker.ietf.org/doc/html/rfc4314.html[RFC-4314] IMAP ACL
+   - The {server-name} does not persist mailbox ACLs, and does not support mailbox sharing.
+endif::[]
+
+ifndef::no-jmap[]
 == JMAP
 
  - link:https://datatracker.ietf.org/doc/html/rfc8620[RFC-8620] Json Metadata Application Protocol (JMAP)
@@ -101,6 +110,7 @@ Some methods / types are not yet implemented, some implementations are naive, an
 Users are invited to read these limitations before using actively the JMAP RFC-8621 implementation, and should ensure their
 client applications only uses supported operations.
 
+endif::[]
 == POP3
 
  - link:https://www.ietf.org/rfc/rfc1939.txt[RFC-1939] Post Office Protocol - Version 3

@@ -1,0 +1,9 @@
+= Custom SMTP hooks
+:navtitle: Custom SMTP hooks
+
+:pages-path: jpa
+:xref-base: jpa
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$customization/smtp-hooks.adoc[]

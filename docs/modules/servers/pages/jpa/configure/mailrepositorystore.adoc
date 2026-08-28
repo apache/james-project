@@ -1,0 +1,21 @@
+= JPA James Server &mdash; mailrepositorystore.xml
+:navtitle: mailrepositorystore.xml
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/jpa-app/sample-configuration
+:pages-path: jpa
+:xref-base: jpa
+:server-name: JPA James server
+:backend-name: the database
+:mailet-repository-path-prefix: file
+:mail-repository-protocol: file
+:mail-repository-class: org.apache.james.mailrepository.file.FileMailRepository
+:no-blobstore:
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$configure/mailrepositorystore.adoc[]
+
+NOTE: In addition to the protocols declared in `mailrepositorystore.xml`, the JPA application always registers the
+`jpa` protocol, backed by `org.apache.james.mailrepository.jpa.JPAMailRepository`, which stores the mails within the
+relational database rather than on the local file system.
+

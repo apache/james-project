@@ -21,4 +21,6 @@ We did put together a xref:{xref-base}/operate/guide.adoc[detailed guide] for
 
 We also included a guide for xref:{xref-base}/operate/migrating.adoc[migrating existing data] into the {server-tag} server.
 
+ifndef::no-opensearch[]
 Additional functional visualisations can be set up using OpenSearch dashboards as documented in link:https://github.com/apache/james-project/tree/master/examples/opensearch-dahsboard[this example].
+endif::[]

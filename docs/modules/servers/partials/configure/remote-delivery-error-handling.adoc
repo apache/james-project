@@ -1,3 +1,4 @@
+ifndef::no-rabbitmq[]
 The advanced server mailQueue implemented by combining RabbitMQ for messaging and {mailet-repository-path-prefix} for administrative operation
 does not support delays.
 
@@ -11,6 +12,11 @@ However, for operators willing to inter-operate with a limited set of well-ident
 limitation can be reconsidered. The main concern then become error handling for remote mail server failures. The following
 document will present a well tested strategy for Remote Delivery error handling leveraging standards Mail Processing components
 and mechanisms.
+endif::[]
+ifdef::no-rabbitmq[]
+Error handling upon remote mail server failures is a recurring operational concern. The following document presents a
+well tested strategy for Remote Delivery error handling, leveraging standard Mail Processing components and mechanisms.
+endif::[]
 
 == Expectations
 

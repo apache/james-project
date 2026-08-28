@@ -1,0 +1,61 @@
+= JPA James Mail Server
+:navtitle: JPA James Application
+
+include::partial$jpa/deprecated.adoc[]
+
+The JPA James server is a *single node* mail server, storing all of its data within a relational database.
+It is packaged as the link:https://github.com/apache/james-project/tree/master/server/apps/jpa-app[jpa-app]
+application.
+
+Data access is done through JDBC, and mapped with the link:https://openjpa.apache.org/[Apache OpenJPA]
+implementation of the Java Persistence Architecture, in order to avoid vendor specific SQL. James thus runs on
+top of most relational databases: H2 (the default, embedded), MariaDB, MySQL, PostgreSQL... provided the
+corresponding JDBC driver is supplied.
+
+Emails, mailboxes, users, domains, rewriting rules and Sieve scripts are all stored in that single database. No
+other third party software is required: full text search relies on an embedded
+link:https://lucene.apache.org/[Lucene] index and the mail queue on an embedded ActiveMQ broker, both living on
+the local file system.
+
+== Supported features
+
+The following protocols are supported:
+
+* *SMTP* and *LMTP*
+* *IMAP*
+* *POP3*
+* *ManageSieve*
+* The xref:jpa/operate/webadmin.adoc[WebAdmin] REST administration API
+
+The *JMAP* protocol is *not* available in this application: use the
+xref:postgres/index.adoc[Postgres James server] or the xref:distributed/index.adoc[Distributed James server] if
+you need it.
+
+The following components are not available either: the Deleted Messages Vault, the BlobStore and its object
+storage backends, OpenSearch based search, and the RabbitMQ based distributed mail queue and event bus. The event
+dead letter is kept in memory, and is thus lost upon restart.
+
+Mailbox sharing is not supported either: the JPA mailbox does not persist ACLs, hence
+link:https://datatracker.ietf.org/doc/html/rfc4314.html[RFC-4314] IMAP ACL is not implemented.
+
+== Deprecation and alternatives
+
+This application is deprecated. Beyond the missing features listed above, it is bound to a single node - the
+Lucene index, the ActiveMQ mail queue and the file mail repositories are local to the instance - which prevents
+both horizontal scaling and high availability. The underlying OpenJPA stack is fully blocking, and barely
+maintained upstream.
+
+The xref:postgres/index.adoc[Postgres James server] supersedes it: it also targets small to medium SQL based
+deployments, but relies on the reactive `r2dbc` driver, is actively maintained, and supports the full James
+feature set. Read xref:postgres/objectives.adoc[its objectives] for further details, and
+xref:jpa/operate/migrating.adoc[the migration guide] to move your data over.
+
+== Read further
+
+In this section of the documentation, we will introduce you to:
+
+* xref:jpa/architecture/index.adoc[Architecture of the JPA James server]
+* xref:jpa/run/index.adoc[Run the JPA James server]
+* xref:jpa/configure/index.adoc[Configure the JPA James server]
+* xref:jpa/operate/index.adoc[Operate the JPA James server]
+* xref:jpa/customization/index.adoc[Extend the JPA James server]

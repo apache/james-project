@@ -1,0 +1,79 @@
+= JPA James Server &mdash; Performance checklist
+:navtitle: Performance checklist
+
+:xref-base: jpa
+
+include::partial$jpa/deprecated.adoc[]
+
+This guide aims to help operators of the JPA James server refine their configuration and set up to achieve better
+performance.
+
+CAUTION: The JPA James server is a single node application: it cannot be scaled horizontally, and its throughput
+is ultimately bound by the one of a single JVM and of a single database. If the recommendations below are not
+enough, consider migrating to the xref:postgres/index.adoc[Postgres James server].
+
+== Database setup
+
+* Do not run production workloads on the default embedded *H2* database: it is meant for tests and evaluation.
+Use a real database server - MariaDB, MySQL, PostgreSQL - as documented in
+xref:{xref-base}/configure/database.adoc[james-database.properties].
+* Run the database on commodity hardware with attached SSD. HDD disks are to be banned for such workloads.
+* Size the JDBC connection pool according to your traffic and to the maximum connection count of your database.
+Within `james-database.properties`:
+
+....
+datasource.maxTotal=32
+datasource.minIdle=4
+datasource.testOnBorrow=true
+datasource.validationQuery=select 1
+datasource.validationQueryTimeoutSec=2
+....
+
+* Keep an eye on the growth of the message tables: message content is stored within the database itself.
+
+== Local storage
+
+The Lucene index, the ActiveMQ mail queue and the file mail repositories all live on the local file system, and
+are latency sensitive. Place the James working directory on a local SSD, and monitor its free space.
+
+== James configuration
+
+=== IMAP / SMTP
+
+We recommend against resolving client connection DNS names. This behaviour can be disabled via a system property
+within xref:{xref-base}/configure/jvm.adoc[jvm.properties]:
+
+....
+james.protocols.mdc.hostname=false
+....
+
+Concurrent IMAP request count is a critical setting. In
+xref:{xref-base}/configure/imap.adoc[imapserver.xml]:
+
+....
+<concurrentRequests>200</concurrentRequests>
+<maxQueueSize>4096</maxQueueSize>
+....
+
+Other recommendations include avoiding unnecessary work upon IMAP IDLE, and not starting dedicated BOSS threads:
+
+....
+<ignoreIDLEUponProcessing>false</ignoreIDLEUponProcessing>
+<bossWorkerCount>0</bossWorkerCount>
+....
+
+=== Mail processing
+
+* Remove unneeded listeners and mailets.
+* Reduce duplication of Matchers within
+xref:{xref-base}/configure/mailetcontainer.adoc[mailetcontainer.xml].
+* Monitor the size of the `file://var/mail/error/` mail repository.
+
+=== Other generic recommendations
+
+* Limit usage of the `DEBUG` log level. `INFO` should be more than decent in most cases.
+* While GC tuning is a science in itself, we had good results with G1GC and a low pause time:
+
+....
+-Xlog:gc*:file=/root/gc.log -XX:MaxGCPauseMillis=20 -XX:ParallelGCThreads=2
+....

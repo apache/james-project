@@ -11,7 +11,9 @@ include::partial$AtMost.adoc[]
 
 include::partial$AtMostPriority.adoc[]
 
+ifndef::no-dlp[]
 include::partial$DLP.adoc[]
+endif::[]
 
 include::partial$FetchedFrom.adoc[]
 
@@ -93,7 +95,9 @@ include::partial$SenderIsNull.adoc[]
 
 include::partial$SenderIsRegex.adoc[]
 
+ifndef::no-jmap[]
 include::partial$SentByJmap.adoc[]
+endif::[]
 
 include::partial$SentByMailet.adoc[]
 
@@ -159,7 +163,9 @@ Here is the syntax to adopt in *mailetcontainer.xml*:
     <matcher name="relay-allowed" match="org.apache.james.mailetcontainer.impl.matchers.Or">
         <matcher match="SMTPAuthSuccessful"/>
         <matcher match="SentByMailet"/>
+ifndef::no-jmap[]
         <matcher match="org.apache.james.jmap.mailet.SentByJmap"/>
+endif::[]
         <matcher match="RemoteAddrInNetwork=127.0.0.1, 10.2.*, 193.50.151.*"/>
     </matcher>
 

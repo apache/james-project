@@ -1,0 +1,17 @@
+= JPA James Server &mdash; Run
+:navtitle: Run
+
+include::partial$jpa/deprecated.adoc[]
+
+This section presents guidance to all current deployment types of the JPA James server.
+
+== Run with Java
+
+Build your own Apache James JPA artifacts and start xref:jpa/run/run-java.adoc[running it directly on a Java
+Virtual Machine].
+
+== Run with Docker
+
+An `apache/james:jpa-latest` image is published, and a docker-compose demonstrating a MariaDB set up is provided.
+
+You can start xref:jpa/run/run-docker.adoc[running James with a few simple Docker commands].

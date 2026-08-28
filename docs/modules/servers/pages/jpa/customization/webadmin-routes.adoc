@@ -1,0 +1,9 @@
+= Custom WebAdmin routes
+:navtitle: Custom WebAdmin routes
+
+:pages-path: jpa
+:xref-base: jpa
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$customization/webadmin-routes.adoc[]

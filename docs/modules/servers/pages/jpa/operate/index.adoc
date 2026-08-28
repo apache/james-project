@@ -1,0 +1,11 @@
+= JPA James Server &mdash; Operate the JPA server
+:navtitle: Operate the JPA server
+
+:xref-base: jpa
+:server-name: JPA James server
+:server-tag: JPA
+:no-opensearch:
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$operate/index.adoc[]
