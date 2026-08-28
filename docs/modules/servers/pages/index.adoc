@@ -18,6 +18,9 @@ The available James Servers are:
  * <<jpa,James JPA Mail Server>> (deprecated)
  * <<test,James Test Server>>
 
+Whichever one you pick, once it is up and running you will likely need to bring your existing emails into it:
+xref:migrating.adoc[migrating existing data] is documented once for all the servers.
+
 If you are just checking out James for the first time, then we highly recommend
 investigating the servers in this order:
 
@@ -66,3 +69,11 @@ future release. Use the <<postgres,Postgres Server>> instead.
 == James Test Server
 
 The xref:test.adoc[*Test Server*] is, as the name suggests, for testing purposes.
+
+
+[#migrating]
+== Migrating to a James Server
+
+Adopting a James Server, or moving from one variant to another, means copying the mailboxes of your users over.
+That procedure relies on IMAP and impersonation, and is therefore identical for every server presented above. It
+is documented in xref:migrating.adoc[Migrating existing data].
