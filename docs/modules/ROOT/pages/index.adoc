@@ -1,4 +1,5 @@
-= Welcome
+= Apache James Server
+:navtitle: Apache James Server
 
 Welcome to the Apache James Reference Documentation! These documents are for version {page-version} of James.
 
