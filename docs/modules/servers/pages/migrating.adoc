@@ -1,0 +1,70 @@
+= Migrating existing data into a James server
+:navtitle: Migrating existing data
+
+This page presents how operators can migrate their users mailboxes and mails into a James server, in order to
+adopt it. The procedure is the same whatever James server you chose, hence this page is common to all of them.
+
+We assume you have a well configured running James server at hand -
+xref:distributed/configure/index.adoc[Distributed], xref:postgres/configure/index.adoc[Postgres] or
+xref:jpa/configure/index.adoc[JPA] - and that the existing mails are hosted on a tier mail server, which can be
+accessed via IMAP and supports impersonation.
+
+== Creating the domains and the users
+
+First, you want to create the domains handled by your server, as well as the users you will be hosting. This
+operation can be performed via WebAdmin or the CLI.
+
+Using WebAdmin:
+
+* Creating domains: read this section for the
+xref:distributed/operate/webadmin.adoc#_create_a_domain[Distributed],
+xref:postgres/operate/webadmin.adoc#_create_a_domain[Postgres] or
+xref:jpa/operate/webadmin.adoc#_create_a_domain[JPA] server.
+* Creating users: read this section for the
+xref:distributed/operate/webadmin.adoc#_create_a_user[Distributed],
+xref:postgres/operate/webadmin.adoc#_create_a_user[Postgres] or
+xref:jpa/operate/webadmin.adoc#_create_a_user[JPA] server.
+
+Using the CLI:
+
+* Managing domains: read this section for the
+xref:distributed/operate/cli.adoc#_manage_domains[Distributed],
+xref:postgres/operate/cli.adoc#_manage_domains[Postgres] or
+xref:jpa/operate/cli.adoc#_manage_domains[JPA] server.
+* Managing users: read this section for the
+xref:distributed/operate/cli.adoc#_managing_users[Distributed],
+xref:postgres/operate/cli.adoc#_managing_users[Postgres] or
+xref:jpa/operate/cli.adoc#_managing_users[JPA] server.
+
+== Allowing impersonation
+
+Second, you want to allow an administrator account of your James server to have write access on other user
+mailboxes. This is set up with the *administratorId* configuration option of the *usersrepository.xml*
+configuration file, documented for the
+xref:distributed/configure/usersrepository.adoc[Distributed],
+xref:postgres/configure/usersrepository.adoc[Postgres] and
+xref:jpa/configure/usersrepository.adoc[JPA] servers.
+
+== Copying the emails
+
+Then, it is time to run the https://github.com/imapsync/imapsync[imapsync] script to copy the emails from the
+previous mail server into your James server. Here is an example migrating a single user, relying on impersonation:
+
+....
+imapsync --host1 previous.server.domain.tld \
+    --user1 user@domain.tld --authuser1 adminOldServer@domain.tld \
+    --proxyauth1 --password1  passwordOfTheOldAdmin \
+    --host2 james.domain.tld \
+    --user2 use1@domain.tld  \
+    --authuser2 adminNewServer@domain.tld --proxyauth2 \
+    --password2  passwordOfTheNewAdmin
+....
+
+== Migrating from one James server to another
+
+The very same procedure applies when moving from a James server to another one: both ends speak IMAP and support
+impersonation. This is the recommended path to leave the deprecated xref:jpa/index.adoc[JPA James server] for the
+xref:postgres/index.adoc[Postgres James server], which targets the same SQL based deployments.
+
+Note that this copies the mailboxes and their content only. Domains, users, recipient rewriting rules and
+configuration files are to be recreated on the target server, as described above.

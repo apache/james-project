@@ -48,7 +48,7 @@ maintained upstream.
 The xref:postgres/index.adoc[Postgres James server] supersedes it: it also targets small to medium SQL based
 deployments, but relies on the reactive `r2dbc` driver, is actively maintained, and supports the full James
 feature set. Read xref:postgres/objectives.adoc[its objectives] for further details, and
-xref:jpa/operate/migrating.adoc[the migration guide] to move your data over.
+xref:migrating.adoc[the migration guide] to move your data over.
 
 == Read further
 

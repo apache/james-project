@@ -1,6 +1,0 @@
-= Distributed James Server &mdash; Migrating existing data
-:navtitle: Migrating existing data
-
-:xref-base: distributed
-:server-name: Distributed James Server
-include::partial$operate/migrating.adoc[]
