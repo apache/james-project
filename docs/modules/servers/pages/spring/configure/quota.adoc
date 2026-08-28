@@ -1,0 +1,114 @@
+= Spring James Server &mdash; quota.xml
+:navtitle: quota.xml
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+
+include::partial$spring/deprecated.adoc[]
+
+Quotas are limitations on a group of mailboxes, called a *quota root*. They can limit the *size* or the *message
+count* of that group. Read link:https://tools.ietf.org/html/rfc2087[RFC-2087] for full details.
+
+This configuration file is specific to the {server-name}: the Guice applications wire their quota components
+themselves and always have quotas enabled. Here, *quotas are disabled by default*, and each of the components
+below has to be selected explicitly.
+
+Consult this link:{sample-configuration-prefix-url}/quota.xml[example] to get some examples and hints.
+
+== Components
+
+The quota subsystem is made of five components, each configured by a `provider` element:
+
+.quota.xml content
+|===
+| Element | Accepted values | explanation
+
+| quotaRootResolver.provider
+| `default`
+| Finds to which QUOTA ROOT a mailbox belongs. `default` groups the mailboxes per user, and is the only accepted
+value.
+
+| currentQuotaManager.provider
+| `none`, `inmemory`, `jpa`
+| Holds the counters: how many messages, and which size, does a quota root currently hold. Use `none` when the
+quota manager is `fake`, `jpa` to persist the counters in the database, `inmemory` to keep them in the heap - in
+which case they need to be recomputed after each restart.
+
+| maxQuotaManager.provider
+| `fake`, `inmemory`, `jpa`
+| Holds the limits. `fake` always answers UNLIMITED and throws upon modification. `jpa` persists per user, per
+domain and global limits in the database, and is the one to use. `inmemory` keeps them in the heap.
+
+| quotaManager.provider
+| `fake`, `store`
+| Assembles the current quota manager and the max quota manager. `fake` returns only UNKNOWN / UNLIMITED quotas,
+`store` performs the actual computation.
+
+| updates.provider
+| `fake`, `event`
+| Governs how the counters are updated. `event` plugs a listener on the event bus, updating the counters upon
+`APPEND`, `COPY` and `EXPUNGE`. `fake` does not update anything.
+|===
+
+Any other value makes the server fail to start.
+
+WARNING: The comments of the shipped `quota.xml` are partly out of date. They mention a `fixed` value for
+`maxQuotaManager`, which is *not* implemented and makes the server fail to start, and they name the global limits
+`defaultMaxMessage` / `defaultMaxStorage`, whereas the elements actually read are `globalMaxMessage` /
+`globalMaxStorage`.
+
+== Enabling quotas
+
+The shipped configuration wires the `fake` implementations everywhere, so quotas are inactive. A working set up
+persisting everything in the relational database is:
+
+[source,xml]
+----
+<quota>
+    <quotaRootResolver>
+        <provider>default</provider>
+    </quotaRootResolver>
+    <currentQuotaManager>
+        <provider>jpa</provider>
+    </currentQuotaManager>
+    <maxQuotaManager>
+        <provider>jpa</provider>
+        <globalMaxMessage>100000</globalMaxMessage>
+        <globalMaxStorage>5368709120</globalMaxStorage>
+    </maxQuotaManager>
+    <quotaManager>
+        <provider>store</provider>
+    </quotaManager>
+    <updates>
+        <provider>event</provider>
+    </updates>
+</quota>
+----
+
+== Setting limits
+
+The `maxQuotaManager` element accepts global limits, applying to every quota root, and per quota root overrides.
+Sizes are expressed in bytes:
+
+[source,xml]
+----
+<maxQuotaManager>
+    <provider>jpa</provider>
+    <globalMaxMessage>100000</globalMaxMessage>
+    <globalMaxStorage>5368709120</globalMaxStorage>
+    <maxMessage>
+        <quotaRoot>#private&amp;btellier@apache.org</quotaRoot>
+        <value>200000</value>
+    </maxMessage>
+    <maxStorage>
+        <quotaRoot>#private&amp;btellier@apache.org</quotaRoot>
+        <value>10737418240</value>
+    </maxStorage>
+</maxQuotaManager>
+----
+
+Those values are applied to the max quota manager on every start up. Beware when combining them with the
+xref:{xref-base}/operate/cli.adoc#_manage_quotas[CLI quota commands]: the configuration file wins over what the CLI
+recorded the previous time.

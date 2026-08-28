@@ -1,7 +1,7 @@
 = Apache James Mail Servers
 :navtitle: Servers
 
-James offers five types of ready-made Mail Servers. The servers are intended 
+James offers six types of ready-made Mail Servers. The servers are intended 
 for those with different needs, ranging from Operators
 who are interested in setting up a server for the first time, to experienced teams of 
 Developers
@@ -16,6 +16,7 @@ The available James Servers are:
  * <<distributed,James Distributed Mail Server>>
  * <<postgres,James Postgres Mail Server>>
  * <<jpa,James JPA Mail Server>> (deprecated)
+ * <<spring,James Spring Mail Server>> (deprecated)
  * <<test,James Test Server>>
 
 Whichever one you pick, once it is up and running you will likely need to bring your existing emails into it:
@@ -62,6 +63,18 @@ relational database, accessed through JPA.
 
 *It is deprecated*: it is not actively maintained anymore, lacks major James features, and may be removed in a
 future release. Use the <<postgres,Postgres Server>> instead.
+
+
+
+[#spring]
+== James Spring Mail Server
+
+The xref:spring/index.adoc[*Spring Server*] is the historical packaging of James: a single node server, wired with
+the Spring framework rather than with Guice, storing its data in a relational database accessed through JPA.
+
+*It is deprecated*: it is not actively maintained anymore, offers neither JMAP nor the WebAdmin administration API,
+and only a subset of the James components can be wired into it. Moving to the <<jpa,JPA Server>> requires no data
+migration, and the <<postgres,Postgres Server>> is the recommended target for a new deployment.
 
 
 

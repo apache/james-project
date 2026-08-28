@@ -1,0 +1,17 @@
+= Spring James Server &mdash; Sieve & ManageSieve
+:navtitle: Sieve & ManageSieve
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+:backend-name: the database
+:mailet-repository-path-prefix: file
+
+include::partial$spring/deprecated.adoc[]
+
+include::partial$configure/sieve.adoc[]
+
+NOTE: The {server-name} stores Sieve scripts on the local file system, under `var/sieve`, using
+`org.apache.james.sieverepository.file.SieveFileRepository`. This is configured in `sieverepository.xml`, and this
+implementation is the only one wired into the Spring application.

@@ -1,0 +1,88 @@
+= Spring James Server &mdash; Administer over JMX
+:navtitle: Administer over JMX
+
+:xref-base: spring
+:server-name: Spring James server
+
+include::partial$spring/deprecated.adoc[]
+
+JMX is the *only* administration interface of the {server-name}: it ships no WebAdmin REST API. The
+xref:{xref-base}/operate/cli.adoc[command line interface] is a client of that same JMX endpoint.
+
+WARNING: JMX poses several security concerns and has been leveraged to conduct arbitrary code execution - see
+`CVE-2017-12628`, `CVE-2023-26269` and `CVE-2023-51518` on xref:{xref-base}/operate/security.adoc[the security
+page]. Keep it bound to `127.0.0.1`, which is the shipped default, set up authentication, and run James in
+isolation. Because the {server-name} cannot be administered without it, turning JMX off is not an option here.
+
+== Connecting
+
+The endpoint is configured in xref:{xref-base}/configure/jmx.adoc[jmx.properties], and defaults to
+`127.0.0.1:9999`. Any JMX client can connect to:
+
+....
+service:jmx:rmi:///jndi/rmi://localhost:9999/jmxrmi
+....
+
+Authentication is read from `conf/jmxremote.password` and `conf/jmxremote.access`, which ship with a default
+`james-admin` / `changeme` pair holding `readwrite` permission. *Change that password.* Unlike the Guice
+applications, this one never generates credentials for you.
+
+With `jconsole`, select the *MBeans* tab and open the `org.apache.james` node to browse the attributes and invoke
+the operations.
+
+== Exposed MBeans
+
+The Spring context registers the following management beans under the `org.apache.james` domain:
+
+|===
+| Object name | What it manages
+
+| `type=component,name=domainlist`
+| The handled domains: list, add, remove, contains.
+
+| `type=component,name=usersrepository`
+| The users: list, add, remove, change password, test existence.
+
+| `type=component,name=recipientrewritetable`
+| The address, domain, regex and error mappings.
+
+| `type=component,name=mailboxmanagerbean`
+| The user mailboxes: list, create, delete, delete all the mailboxes of a user, import an EML file.
+
+| `type=component,name=quotamanagerbean`
+| The quota roots and their limits. Only meaningful once quotas have been enabled in
+xref:{xref-base}/configure/quota.adoc[quota.xml].
+
+| `type=component,name=reindexerbean`
+| Re-indexing of a mailbox, or of the whole server. A no-op when `indexer.xml` selects the `lazyIndex` provider.
+
+| `type=component,name=sievemanagerbean`
+| The Sieve scripts and their quotas.
+
+| `type=component,name=mailboxcopier`
+| Copies the content of one mailbox manager into another one. Experimental.
+
+| `type=component,name=dnsservice`
+| The DNS resolution statistics.
+
+| `type=component,name=fetchmail`
+| The xref:{xref-base}/configure/fetchmail.adoc[Fetchmail] scheduler.
+
+| `type=component,component=mailetcontainer,name=mailspooler`
+| The mail spooler: thread count, and the count of mails currently being processed.
+|===
+
+Note what is *not* there: no mail repository management, no task manager, no health checks, no DropList, no event
+dead letter. Those operations only exist through WebAdmin, and are therefore out of reach on this application.
+
+The mailet container additionally exposes per processor, per mailet and per matcher beans when
+`enableJmx="true"` is set on a processor in
+xref:{xref-base}/configure/mailetcontainer.adoc[mailetcontainer.xml], which is a convenient way of observing where
+the mails go.
+
+== Changing the log level at runtime
+
+Log4j 2 registers its own MBeans, which allow changing a logger level without restarting. They are unregistered on
+start up by default; set the `james.jmx.unregister.log4j.mbeans` system property to `false` in `conf/setenv.sh` to
+keep them. Editing `conf/log4j2.xml` is the supported way, and is picked up within 30 seconds, see
+xref:{xref-base}/operate/logging.adoc[logging].

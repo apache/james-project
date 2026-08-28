@@ -1,0 +1,10 @@
+= Spring James Server &mdash; Implemented standards
+:navtitle: Implemented standards
+
+:server-name: Spring James server
+:no-jmap:
+:no-acl:
+
+include::partial$spring/deprecated.adoc[]
+
+include::partial$architecture/implemented-standards.adoc[]

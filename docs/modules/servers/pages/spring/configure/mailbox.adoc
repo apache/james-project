@@ -1,0 +1,42 @@
+= Spring James Server &mdash; mailbox.xml
+:navtitle: mailbox.xml
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+
+include::partial$spring/deprecated.adoc[]
+
+This configuration file is specific to the {server-name}: the Guice applications hard-wire their mailbox
+implementation instead. It selects which mailbox manager, subscription manager and mapper factory the Spring
+context registers.
+
+Consult this link:{sample-configuration-prefix-url}/mailbox.xml[example] to get some examples and hints.
+
+[source,xml]
+----
+<mailbox>
+   <provider>jpa</provider>
+</mailbox>
+----
+
+.mailbox.xml content
+|===
+| Element | explanation
+
+| provider
+| The mailbox implementation to use. Defaults to `jpa`.
+|===
+
+Two providers are wired into the Spring context:
+
+* *jpa*: mailboxes, message metadata, headers and bodies are stored in the relational database configured in
+xref:{xref-base}/configure/database.adoc[james-database.properties]. This is the only provider suitable for a real
+deployment.
+* *memory*: everything is kept in the JVM heap, and lost upon restart. It is only useful for tests.
+
+Any other value makes the server fail to start with `Mailboxmanager provider ... not supported!`.
+
+NOTE: Older versions of this documentation mentioned a `maildir` provider. It has been removed from James and is
+no longer selectable.

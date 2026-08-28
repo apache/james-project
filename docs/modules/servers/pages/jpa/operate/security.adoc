@@ -5,8 +5,6 @@
 :backend-name: database
 :no-jmap:
 
-:no-jmap:
-
 include::partial$jpa/deprecated.adoc[]
 
 include::partial$operate/security.adoc[]

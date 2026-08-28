@@ -53,14 +53,26 @@ forced to store users in James be sure to choose `PBKDF2` as a hashing algorithm
 are supported via the `verifyFailureDelay` property. Note that IMAP / SMTP connections are closed after 3 authentication
 failures.
 
+ifndef::no-webadmin[]
  - 5. Ensure that xref:{xref-base}/configure/webadmin.adoc[WebAdmin] is not exposed unencrypted to the outer world. Doing so trivially
 exposes yourself. You can either disable it, activate JWT security, or restrict it to listen only on localhost.
+endif::[]
+ifdef::no-webadmin[]
+ - 5. The only administrative interface of the {server-name} is JMX. Ensure it is not exposed to the outer world: keep
+it bound to `localhost` and set up authentication, as documented in xref:{xref-base}/configure/jmx.adoc[jmx.properties].
+endif::[]
 
 ifndef::no-jmap[]
  - 6. Set up `HTTPS` for http based protocols, namely *JMAP* and *WebAdmin*. We recommend the use of a reverse proxy like Nginx.
 endif::[]
 ifdef::no-jmap[]
+ifndef::no-webadmin[]
  - 6. Set up `HTTPS` for *WebAdmin*. We recommend the use of a reverse proxy like Nginx.
+endif::[]
+ifdef::no-webadmin[]
+ - 6. Terminate `SSL`/`TLS` for every protocol you expose - SMTP, IMAP, POP3 and ManageSieve - either directly within
+James or behind a reverse proxy. See xref:{xref-base}/configure/ssl.adoc[SSL & TLS].
+endif::[]
 endif::[]
 
  - 7. Set up link:https://james.apache.org/howTo/spf.html[SPF] and link:https://james.apache.org/howTo/dkim.html[DKIM]
@@ -85,12 +97,23 @@ using `auth.plainAuthEnabled=false`.
 
  - 2. Verify link:https://james.apache.org/howTo/spf.html[SPF] and xref:{xref-base}/configure/mailets.adoc#_dkimverify[DKIM] for your incoming emails.
 
+ifndef::no-webadmin[]
  - 3. Set up reasonable xref:{xref-base}/operate/webadmin.adoc#_administrating_quotas[storage quota] for your users.
+endif::[]
+ifdef::no-webadmin[]
+ - 3. Set up reasonable xref:{xref-base}/operate/cli.adoc#_manage_quotas[storage quota] for your users.
+endif::[]
 
+ifndef::no-spam[]
  - 4. We recommend setting up anti-spam and anti-virus solutions. James comes with some xref:{xref-base}/configure/spam.adoc[Rspamd and SpamAssassin]
 integration, and some xref:{xref-base}/configure/mailets.adoc#_clamavscan[ClamAV] tooling exists.
 Rspamd supports anti-phishing modules.
 Filtering with third party systems upstream is also possible.
+endif::[]
+ifdef::no-spam[]
+ - 4. We recommend setting up anti-spam and anti-virus solutions. Filtering with third party systems upstream of the
+{server-name} is the simplest option.
+endif::[]
 
  - 5. In order to limit your attack surface, disable protocols you or your users do not use. This includes the JMAP protocol,
 POP3, ManagedSieve, etc... Be conservative on what you expose.

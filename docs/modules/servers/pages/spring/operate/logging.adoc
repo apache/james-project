@@ -1,0 +1,106 @@
+= Spring James Server &mdash; Logging
+:navtitle: Logging
+
+:xref-base: spring
+:server-name: Spring James server
+:backend-name: database
+
+include::partial$spring/deprecated.adoc[]
+
+We recommend to closely monitoring *ERROR* and *WARNING* logs. Those logs should be considered not normal.
+
+If you encounter some suspicious logs:
+
+* If you have any doubt about the log being caused by a bug in James source code, please reach us via the bug
+tracker, the user mailing list or our Gitter channel (see our xref:james-site::index.adoc[community page])
+* They can be due to insufficient performance from tier applications (eg {backend-name} timeouts). In such case we
+advise you to conduct a close review of performances at the tier level.
+
+When reporting ERROR or WARNING logs, consider adding the full logs, and related data (eg the raw content of a mail
+triggering an issue) to the bug report in order to ease resolution.
+
+== Logging configuration
+
+Unlike the Guice applications, which rely on link:http://logback.qos.ch/[logback], the {server-name} logs through
+link:https://logging.apache.org/log4j/2.x/[Log4j 2], configured in `conf/log4j2.xml`. That file is scanned every 30
+seconds, so a level change is picked up without restarting the server.
+
+Every logger writes to the console and to a rolling file in the `log` folder. The shipped configuration declares,
+amongst others:
+
+|===
+| Logger | File
+
+| `org.apache.james`
+| `log/james.log`
+
+| `org.springframework`
+| `log/springframework.log`
+
+| `openjpa` and `org.apache.openjpa`
+| `log/openjpa.log`
+
+| `org.apache.james.transport` and `org.apache.james.protocols`
+| `log/james_transport-protocols.log`
+
+| `org.apache.james.imapserver`
+| `log/james_imapserver.log`
+
+| `org.apache.james.smtpserver`
+| `log/james_smtpserver.log`
+
+| `org.apache.james.lmtpserver`
+| `log/james_lmtpserver.log`
+
+| `org.apache.james.pop3server`
+| `log/james_pop3server.log`
+
+| `org.apache.james.mailetcontainer`
+| `log/james_mailetcontainer.log`
+
+| `org.apache.james.mailrepositorystore`
+| `log/james_mailrepositorystore.log`
+
+| `org.apache.james.usersrepository`
+| `log/james_usersrepository.log`
+
+| `org.apache.james.domainlist`
+| `log/james_domainlist.log`
+
+| `org.apache.james.fetchmail`
+| `log/james_fetchmail.log`
+
+| `org.apache.james.dnsservice`
+| `log/james_dnsservice.log`
+|===
+
+The `logDir` property at the top of the file governs where those files are written, and defaults to
+`${sys:app.home:-..}/log`.
+
+== Raising the log level of a protocol
+
+Protocol level troubleshooting is best done by raising the level of the corresponding logger. For instance, to
+follow the whole SMTP dialogue:
+
+[source,xml]
+----
+<Logger name="org.apache.james.smtpserver" level="debug" additivity="false">
+    <AppenderRef ref="Console" level="info"/>
+    <AppenderRef ref="SMTPSERVER" level="debug"/>
+</Logger>
+----
+
+The session identifier is logged along each line, which lets you follow a whole transaction even under
+concurrency. Responses in the `4xx` and `5xx` ranges are logged at `INFO`, the rest at `DEBUG`. The same applies to
+`org.apache.james.imapserver` and `org.apache.james.pop3server`.
+
+Beware that debug level protocol logs contain the content of the emails being processed, and, on unencrypted
+channels, the credentials sent by your users.
+
+== Structured logging
+
+Log4j 2 can output JSON with its `JsonTemplateLayout`, in place of the shipped `PatternLayout`. The corresponding
+JAR - `log4j-layout-template-json` - is not part of the distribution, and has to be dropped in `conf/lib` first.
+
+The protocol layer populates the logging MDC with the session context - remote IP, protocol, session identifier,
+and the authenticated user once known - so it is worth including the MDC in whichever layout you settle on.

@@ -1,0 +1,20 @@
+= Spring James Server &mdash; Command Line Interface
+:navtitle: Command Line Interface
+
+:xref-base: spring
+:server-name: Spring James server
+:no-droplist:
+:no-jar-cli:
+
+include::partial$spring/deprecated.adoc[]
+
+The command line client of the {server-name} is `bin/james-cli.sh` - `bin/james-cli.bat` on Windows - and is
+generated alongside the start scripts. It is a JMX client: the server has to be running, and
+xref:{xref-base}/operate/jmx.adoc[its JMX endpoint] reachable.
+
+....
+$ cd bin
+$ ./james-cli.sh -h 127.0.0.1 -p 9999 -username james-admin -password changeme COMMAND
+....
+
+include::partial$operate/cli.adoc[]

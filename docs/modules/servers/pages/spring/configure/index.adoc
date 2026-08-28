@@ -1,0 +1,109 @@
+= Spring James Server &mdash; Configuration
+:navtitle: Configuration
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:xref-base: spring/configure
+:server-name: Spring James server
+
+include::partial$spring/deprecated.adoc[]
+
+This section presents how to configure the {server-name}.
+
+Unlike the Guice applications, every configuration file is *shipped within the archive*, in the `conf` folder, with
+a default value. Editing them in place is the way to configure the server; the defaults are templates and are not
+suitable for a production deployment as such. Files can be removed, in which case the corresponding functionality
+is disabled or falls back on reasonable defaults.
+
+The following configuration files are exposed:
+
+== For protocols
+
+By omitting these files, the underlying protocols will be disabled.
+
+** xref:{xref-base}/imap.adoc[*imapserver.xml*] allows configuration for the IMAP protocol link:{sample-configuration-prefix-url}/imapserver.xml[example]
+** xref:{xref-base}/jmx.adoc[*jmx.properties*] allows configuration of JMX, which backs both administration and the Command Line Interface link:{sample-configuration-prefix-url}/jmx.properties[example]
+** xref:{xref-base}/smtp.adoc#_lmtp_configuration[*lmtpserver.xml*] allows configuring the LMTP protocol link:{sample-configuration-prefix-url}/lmtpserver.xml[example]
+** *managesieveserver.xml* allows configuration for ManagedSieve (unsupported) link:{sample-configuration-prefix-url}/managesieveserver.xml[example]
+** xref:{xref-base}/pop3.adoc[*pop3server.xml*] allows configuration for the POP3 protocol (experimental) link:{sample-configuration-prefix-url}/pop3server.xml[example]
+** xref:{xref-base}/smtp.adoc[*smtpserver.xml*] allows configuration for the SMTP protocol link:{sample-configuration-prefix-url}/smtpserver.xml[example]
+*** xref:{xref-base}/smtp-hooks.adoc[This page] list SMTP hooks that can be used out of the box with the {server-name}.
+** xref:{xref-base}/ssl.adoc[This page] details SSL & TLS configuration.
+** xref:{xref-base}/sieve.adoc[This page] details Sieve setup and how to enable ManageSieve.
+
+There is no `jmap.properties` nor `webadmin.properties`: neither the JMAP protocol nor the WebAdmin REST API are
+part of this application.
+
+== For storage dependencies
+
+** xref:{xref-base}/database.adoc[*james-database.properties*] tells James which relational database to use, and
+how to connect to it. This file is required. link:{sample-configuration-prefix-url}/james-database.properties[example]
+** *META-INF/persistence.xml* declares the JPA persistence unit - the entities to map and the OpenJPA settings. It
+should not need editing. link:{sample-configuration-prefix-url}/META-INF/persistence.xml[example]
+** xref:{xref-base}/mailbox.adoc[*mailbox.xml*] selects the mailbox implementation link:{sample-configuration-prefix-url}/mailbox.xml[example]
+** xref:{xref-base}/indexer.adoc[*indexer.xml*] selects the search index implementation link:{sample-configuration-prefix-url}/indexer.xml[example]
+
+The {server-name} needs no other storage dependency: full text search is backed by an embedded Lucene index and
+the mail queue by an embedded ActiveMQ broker, both living on the local file system. As a consequence
+*blobstore.properties*, *opensearch.properties*, *rabbitmq.properties*, *redis.properties*, *tika.properties* and
+*search.properties* are not supported.
+
+== For core components
+
+** xref:{xref-base}/dns.adoc[*dnsservice.xml*] allows to configure DNS resolution link:{sample-configuration-prefix-url}/dnsservice.xml[example]
+** xref:{xref-base}/domainlist.adoc[*domainlist.xml*] allows to configure Domain storage link:{sample-configuration-prefix-url}/domainlist.xml[example]
+** xref:{xref-base}/mailetcontainer.adoc[*mailetcontainer.xml*] allows configuring mail processing link:{sample-configuration-prefix-url}/mailetcontainer.xml[example]
+*** xref:{xref-base}/mailets.adoc[This page] lists mailets that can be used out of the box with the {server-name}.
+*** xref:{xref-base}/matchers.adoc[This page] lists matchers that can be used out of the box with the {server-name}.
+** xref:{xref-base}/mailrepositorystore.adoc[*mailrepositorystore.xml*] enables registration of allowed MailRepository protocols and links them to MailRepository implementations link:{sample-configuration-prefix-url}/mailrepositorystore.xml[example]
+*** *sqlResources.xml* holds the SQL statements used by the `db` and `dbfile` mail repositories link:{sample-configuration-prefix-url}/sqlResources.xml[example]
+** xref:{xref-base}/recipientrewritetable.adoc[*recipientrewritetable.xml*] enables advanced configuration for the Recipient Rewrite Table component link:{sample-configuration-prefix-url}/recipientrewritetable.xml[example]
+** xref:{xref-base}/usersrepository.adoc[*usersrepository.xml*] allows configuration of user storage link:{sample-configuration-prefix-url}/usersrepository.xml[example]
+** xref:{xref-base}/quota.adoc[*quota.xml*] selects and enables the quota components link:{sample-configuration-prefix-url}/quota.xml[example]
+** *sieverepository.xml* declares where Sieve scripts are stored. Only
+`org.apache.james.sieverepository.file.SieveFileRepository` is wired in. link:{sample-configuration-prefix-url}/sieverepository.xml[example]
+
+*healthcheck.properties* is not supported: healthchecks are surfaced by WebAdmin, which this application does not
+ship. *batchsizes.properties* is Cassandra specific and not supported either.
+
+== For extensions
+
+** xref:{xref-base}/fetchmail.adoc[*fetchmail.xml*] configures the Fetchmail component, which fetches mails from
+external POP3 / IMAP accounts. This component is specific to this application. link:{sample-configuration-prefix-url}/fetchmail.xml[example]
+** xref:{xref-base}/dsn.adoc[This page] specifies how to support SMTP Delivery Submission Notification (link:https://tools.ietf.org/html/rfc3461[RFC-3461])
+** xref:{xref-base}/mta-sts.adoc[This page] documents how to configure MTA-STS (RFC-8461)
+
+*extensions.properties* and *listeners.xml* are Guice only files and are not read by this application. Extra JARs
+are loaded by dropping them in `conf/lib`, which `bin/setenv.sh` prepends to the classpath. There is no
+`jvm.properties` either: extra system properties are declared in `conf/setenv.sh`, which the start scripts
+source.
+
+== Logging
+
+Logging relies on link:https://logging.apache.org/log4j/2.x/[Log4j 2] and is configured in *log4j2.xml*, rather
+than on logback as in the Guice applications. See xref:spring/operate/logging.adoc[logging].
+
+== System properties
+
+Some tuning can be done via system properties. The start scripts generated in `bin` already set a few of them;
+additional ones can be declared in `conf/setenv.sh`, which both scripts source. This includes:
+
+.System properties
+|===
+| Property name | explanation
+
+| james.message.memory.threshold
+| (Optional). String (size, integer + size units, example: `12 KIB`, supported units are bytes KIB MIB GIB TIB). Defaults to 100KIB.
+This governs the threshold MimeMessageInputStreamSource relies on for storing MimeMessage content on disk.
+Below, data is stored in memory. Above data is stored on disk.
+
+| james.message.usememorycopy
+| Optional. Boolean. The start scripts set it to `false`, which is the recommended value.
+Should MimeMessageWrapper use a copy of the message in memory? Or should bigger message exceeding
+james.message.memory.threshold be copied to temporary files?
+
+| openjpa.Multithreaded
+| Boolean. Set to `true` by the start scripts. Required for the JDBC connection pool to behave correctly.
+
+| james.jmx.unregister.log4j.mbeans
+| Optional. Boolean. Defaults to `true`. Unregisters the Log4j MBeans on start up.
+|===

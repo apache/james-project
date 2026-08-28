@@ -1,0 +1,13 @@
+= Spring James Server &mdash; Security
+:navtitle: Security
+
+:xref-base: spring
+:server-name: Spring James server
+:backend-name: database
+:no-jmap:
+:no-webadmin:
+:no-spam:
+
+include::partial$spring/deprecated.adoc[]
+
+include::partial$operate/security.adoc[]

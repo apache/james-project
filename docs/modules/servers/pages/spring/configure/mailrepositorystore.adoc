@@ -1,0 +1,74 @@
+= Spring James Server &mdash; mailrepositorystore.xml
+:navtitle: mailrepositorystore.xml
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+:mailet-repository-path-prefix: file
+
+include::partial$spring/deprecated.adoc[]
+
+A `mail repository` allows storage of a mail as part of its processing.
+
+A mail repository is identified by its *url*, constituted of a *protocol* and a *path*. For instance in the url
+`file://var/mail/error/`, `file` is the protocol and `var/mail/error` the path.
+
+The *mailrepositorystore.xml* file registers the available protocols, and binds them to an actual MailRepository
+implementation. The class is resolved from the classpath and instantiated by Spring, so your own implementations
+can be added by dropping their JAR in `conf/lib`, which `bin/setenv.sh` prepends to the classpath.
+
+== Configuration
+
+Consult this link:{sample-configuration-prefix-url}/mailrepositorystore.xml[example]
+to get some examples and hints.
+
+[source,xml]
+----
+<mailrepositorystore>
+    <mailrepositories>
+        <mailrepository class="org.apache.james.mailrepository.file.FileMailRepository">
+            <protocols>
+                <protocol>file</protocol>
+            </protocols>
+            <config FIFO="false" CACHEKEYS="true"/>
+        </mailrepository>
+    </mailrepositories>
+</mailrepositorystore>
+----
+
+`file` is the default protocol of the {server-name}, and
+*org.apache.james.mailrepository.file.FileMailRepository* is the only implementation shipped with it. It stores
+each mail as a file under the given path, relative to the James working directory. Its `config` element supports:
+
+.FileMailRepository config attributes
+|===
+| Attribute | explanation
+
+| FIFO
+| Boolean, defaults to `false`. Should the mails be listed in the order they were added?
+
+| CACHEKEYS
+| Boolean, defaults to `true`. Keeps the repository keys in memory, which speeds up listing at the price of heap
+usage.
+|===
+
+WARNING: The shipped `mailrepositorystore.xml` also declares a `db` and a `dbfile` protocol, both bound to
+`org.apache.james.mailrepository.jdbc.JDBCMailRepository`. *That class has been removed from James and those two
+declarations are dead*: routing a mail to a `db://` or `dbfile://` repository fails at runtime. Remove them from
+your configuration, and use `file://` repositories instead.
+
+== sqlResources.xml
+
+`sqlResources.xml` holds the SQL statements of the components that issue raw JDBC queries rather than going
+through JPA. Its `org.apache.james.mailrepository.jdbc.JDBCMailRepository` section is vestigial, for the reason
+stated above. Its `GreyList` and `NetworkWhiteList` sections are still used by the corresponding
+xref:{xref-base}/configure/smtp-hooks.adoc[SMTP handlers], which take the path of this file as a `sqlFile`
+parameter.
+
+== Operating mail repositories
+
+The {server-name} ships no WebAdmin API, and the CLI exposes no mail repository command. There is consequently *no
+supported way of listing, exporting or reprocessing the content of a mail repository* on this application: the
+`var/mail` folders have to be audited by hand. This is one of the strongest reasons to move to the
+xref:jpa/index.adoc[JPA James server].

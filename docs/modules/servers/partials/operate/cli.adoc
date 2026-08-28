@@ -1,3 +1,4 @@
+ifndef::no-jar-cli[]
 The {server-name} is packed with a command line client.
 
 To run this command line client simply execute:
@@ -6,6 +7,7 @@ To run this command line client simply execute:
 java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 COMMAND
 ....
 
+endif::[]
 The following document will explain you which are the available options
 for *COMMAND*.
 
@@ -288,6 +290,7 @@ level. Note: syntax is similar to what was exposed previously.
 {cli} GetGlobalMaxStorageQuota
 ....
 
+ifndef::no-droplist[]
 === Manage DropList
 
 The DropList, also known as the mail blacklist, is a collection of
@@ -331,6 +334,7 @@ Testing a denied entity existence (should returns `allowed` or `blocked`)
 {cli} DropListQuery domain owner.com evil@devil.com
 ....
 
+endif::[]
 == Re-indexing
 
 James allow you to index your emails in a search engine, for making
@@ -348,7 +352,7 @@ To re-index all mails of all mailboxes of all users, type:
 And for a specific mailbox:
 
 ....
-{cli} Reindex #private user@domain.tld INBOX
+{cli} ReindexMailbox #private user@domain.tld INBOX
 ....
 
 == Sieve scripts quota

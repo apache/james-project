@@ -1,0 +1,46 @@
+= Spring James Server &mdash; indexer.xml
+:navtitle: indexer.xml
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+
+include::partial$spring/deprecated.adoc[]
+
+This configuration file is specific to the {server-name}. It selects the search index backing IMAP `SEARCH` and,
+along with it, the re-indexing implementation exposed to the xref:{xref-base}/operate/cli.adoc[CLI].
+
+Consult this link:{sample-configuration-prefix-url}/indexer.xml[example] to get some examples and hints.
+
+[source,xml]
+----
+<indexer>
+  <provider>luceneIndex</provider>
+</indexer>
+----
+
+.indexer.xml content
+|===
+| Element | explanation
+
+| provider
+| The search index implementation to use. Defaults to `lazyIndex`. The shipped configuration sets `luceneIndex`.
+|===
+
+Two providers are wired into the Spring context:
+
+* *luceneIndex*: emails are indexed in an embedded link:https://lucene.apache.org/[Lucene] index living on the
+local file system, under `var/store/lucene`. Text extraction relies on an in-JVM Jsoup based text extractor: no
+Tika server can be plugged in. Suffix matching is enabled. This is the provider you want.
+* *lazyIndex*: no index is maintained. Searches are answered by scanning the mailbox content through the mailbox
+mapper, which does not scale, and the re-indexing commands throw.
+
+Any other value makes the server fail to start with `Indexer provider ... not supported!`.
+
+NOTE: Older versions of this documentation mentioned an `elasticsearch` provider. The corresponding Spring context
+is no longer part of James, and selecting it makes the server fail to start. OpenSearch based indexing is only
+available on the xref:distributed/index.adoc[Distributed] and xref:postgres/index.adoc[Postgres] servers.
+
+The Lucene index is local to the instance. If it is lost or gets out of sync, rebuild it with the
+xref:{xref-base}/operate/cli.adoc#_re_indexing[`ReindexAll` CLI command].
