@@ -19,6 +19,9 @@ The available James Servers are:
  * <<spring,James Spring Mail Server>> (deprecated)
  * <<test,James Test Server>>
 
+The <<feature-matrix,feature matrix>> below compares them side by side: protocols, administration APIs, storage
+dependencies and available components.
+
 Whichever one you pick, once it is up and running you will likely need to bring your existing emails into it:
 xref:migrating.adoc[migrating existing data] is documented once for all the servers.
 
@@ -76,6 +79,291 @@ the Spring framework rather than with Guice, storing its data in a relational da
 and only a subset of the James components can be wired into it. Moving to the <<jpa,JPA Server>> requires no data
 migration, and the <<postgres,Postgres Server>> is the recommended target for a new deployment.
 
+
+
+[#feature-matrix]
+== Feature matrix
+
+James components are assembled in various ways, called *packaging*. The packaging you pick determines the
+protocols the mail server speaks, the components you can wire into it, and the storage dependencies you will have
+to operate. The table below compares the applications the project ships.
+
+[.feature-matrix]
+--
+[cols="16,14,14,14,14,14,14", options="header"]
+|===
+|
+| xref:distributed/index.adoc[Distributed]
+| xref:postgres/index.adoc[Postgres]
+| xref:test.adoc[Memory]
+| xref:jpa/index.adoc[JPA]
+| xref:jpa/smtp-only.adoc[JPA SMTP]
+| xref:spring/index.adoc[Spring]
+
+7+| Packaging
+
+| Application
+| link:https://github.com/apache/james-project/tree/master/server/apps/distributed-app[`distributed-app`]
+| link:https://github.com/apache/james-project/tree/master/server/apps/postgres-app[`postgres-app`]
+| link:https://github.com/apache/james-project/tree/master/server/apps/memory-app[`memory-app`]
+| link:https://github.com/apache/james-project/tree/master/server/apps/jpa-app[`jpa-app`]
+| link:https://github.com/apache/james-project/tree/master/server/apps/jpa-smtp-app[`jpa-smtp-app`]
+| link:https://github.com/apache/james-project/tree/master/server/apps/spring-app[`spring-app`]
+
+| IoC container
+| Guice
+| Guice
+| Guice
+| Guice
+| Guice
+| Spring
+
+| Docker tag
+| `distributed-latest`
+| `postgres-latest`
+| `memory-latest`
+| `jpa-latest`
+| `jpa-smtp-latest`
+| None
+
+| Deployment
+| Multi-node
+| Single or multi
+| Single node
+| Single node
+| Single node
+| Single node
+
+| Status
+| Supported
+| Supported
+| Testing
+| Deprecated
+| Deprecated
+| Do not deploy
+
+7+| Protocols
+
+| SMTP
+| Yes
+| Yes
+| Yes
+| Yes
+| Yes
+| Yes
+
+| LMTP
+| Yes
+| Yes
+| Yes
+| Yes
+| No
+| Yes
+
+| IMAP
+| Yes
+| Yes
+| Yes
+| Yes
+| No
+| Yes
+
+| POP3
+| Yes
+| Yes
+| Yes
+| Yes
+| No
+| Yes
+
+| JMAP
+| Yes
+| Yes
+| Yes
+| No
+| No
+| No
+
+| ManageSieve
+| Yes
+| Yes
+| Yes
+| Yes
+| No
+| Yes
+
+| Mailbox sharing
+| Yes
+| Yes
+| Yes
+| No
+| &mdash;
+| No
+
+7+| Administration
+
+| WebAdmin API
+| Yes
+| Yes
+| Yes
+| Yes
+| Yes
+| No
+
+| CLI
+| Yes
+| Yes
+| Yes
+| Yes
+| No
+| Yes
+
+| Metrics
+| Yes
+| Yes
+| Yes
+| Yes
+| Yes
+| No
+
+| Extensions
+| `extensions-jars`
+| `extensions-jars`
+| `extensions-jars`
+| `extensions-jars`
+| `extensions-jars`
+| `conf/lib`
+
+7+| Storage
+
+| Mailbox
+| Cassandra
+| Postgres
+| Memory
+| JPA
+| &mdash;
+| JPA or memory
+
+| Search index
+| OpenSearch
+| OpenSearch
+| Scanning
+| Lucene
+| &mdash;
+| Lucene
+
+| Server data
+| Cassandra
+| Postgres
+| Memory
+| JPA
+| JPA
+| JPA or file
+
+| Mail queue
+| RabbitMQ or Pulsar
+| ActiveMQ or RabbitMQ
+| Memory
+| ActiveMQ
+| ActiveMQ
+| ActiveMQ
+
+| Mail repository
+| `cassandra://`
+| `postgres://`
+| `file://`
+| `file://`
+| `file://`
+| `file://`
+
+| BlobStore
+| Cassandra or S3
+| Postgres or S3
+| Memory
+| No
+| No
+| No
+
+| Event bus
+| RabbitMQ
+| Memory or RabbitMQ
+| Memory
+| Memory
+| &mdash;
+| Memory
+
+| Task manager
+| Distributed
+| Memory or distributed
+| Memory
+| Memory
+| Memory
+| None
+
+7+| Components
+
+| Deleted Messages Vault
+| Yes
+| Yes
+| Yes
+| No
+| No
+| No
+
+| DropLists
+| Yes
+| Yes
+| Yes
+| Yes
+| No
+| No
+
+| Sieve filtering
+| Yes
+| Yes
+| Yes
+| Yes
+| No
+| Yes
+
+| Re-indexing
+| Yes
+| Yes
+| &mdash;
+| Yes
+| &mdash;
+| Yes
+
+| Fetchmail
+| No
+| No
+| No
+| No
+| No
+| Yes
+|===
+--
+
+A few precisions on the table above:
+
+* Docker tags are to be prefixed with `apache/james:`, for instance `apache/james:distributed-latest`.
+* The command line interface is a *JMX* client on every application exposing it. The Spring application, which
+ships no WebAdmin API, can only be administered that way.
+* Prometheus metrics are exposed by the WebAdmin API, hence their availability follows it.
+* On the Postgres server, the mail queue, the event bus and the task manager become distributed as soon as
+*rabbitmq.properties* is supplied, and stay local otherwise.
+* OpenSearch is the default search implementation of the Distributed and Postgres servers. Scanning search, which
+requires no search engine but performs poorly, can be selected in *search.properties*.
+* All of these applications run on *Java 21* and are built from the very same code base: they differ by the set of
+components wired into them, not by their behaviour. The configuration files of a given component are thus the
+same everywhere it is available.
+
+The <<demo,Demo Server>> does not appear in this table: it is not a distinct application, but the JPA image
+shipped with a domain and a user already created, so that it can be started with no set up at all.
+
+Note that building your own combination of components is possible - this is precisely what Guice buys you - but
+leads to an untested and unsupported server. Read xref:distributed/extending.adoc[extending the Distributed
+server] if you wish to go down that path.
 
 
 [#test]
