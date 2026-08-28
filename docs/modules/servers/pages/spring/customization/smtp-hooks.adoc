@@ -1,0 +1,10 @@
+= Spring James Server &mdash; Custom SMTP hooks
+:navtitle: Custom SMTP hooks
+
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+
+include::partial$spring/deprecated.adoc[]
+
+include::partial$customization/smtp-hooks.adoc[]

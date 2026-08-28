@@ -1,0 +1,11 @@
+= Spring James Server &mdash; Custom mail processing
+:navtitle: Custom mail processing
+
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+:no-extensions-jars:
+
+include::partial$spring/deprecated.adoc[]
+
+include::partial$customization/mail-processing.adoc[]

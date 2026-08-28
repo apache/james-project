@@ -1,0 +1,13 @@
+= Spring James Server &mdash; dnsservice.xml
+:navtitle: dnsservice.xml
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+:backend-name: the database
+:mailet-repository-path-prefix: file
+
+include::partial$spring/deprecated.adoc[]
+
+include::partial$configure/dns.adoc[]

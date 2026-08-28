@@ -151,6 +151,13 @@ Then, we will write the *mailetcontainer.xml* file expressing the logic we want:
 </mailetcontainer>
 ....
 
+ifndef::no-extensions-jars[]
 Finally, we will start a James server using that. We will rely on docker default image for simplicity.
 We need to be using the *mailetcontainer.xml* configuration that we had been writing and position
 the jar in the *extensions-jars* folder (specific to guice).
+endif::[]
+ifdef::no-extensions-jars[]
+Finally, we will start a James server using that. We need to be using the *mailetcontainer.xml* configuration that
+we had been writing, and to position the jar in the *conf/lib* folder, which the `bin/setenv.sh` script prepends to
+the classpath of the {server-name}.
+endif::[]

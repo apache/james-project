@@ -1,0 +1,29 @@
+= Spring James Server &mdash; Operate the Spring server
+:navtitle: Operate the Spring server
+
+:xref-base: spring
+:server-name: Spring James server
+:server-tag: Spring
+
+include::partial$spring/deprecated.adoc[]
+
+The following pages detail how to operate the {server-name}.
+
+Once you have a {server-name} up and running you then need to ensure it operates correctly and has a decent
+performance. You may also need to perform some operation maintenance or recover from incidents. This section covers
+these topics.
+
+Read more about xref:{xref-base}/operate/logging.adoc[Logging].
+
+*Administration of this application happens entirely over JMX*, as it does not ship the WebAdmin REST API. The
+xref:{xref-base}/operate/jmx.adoc[JMX page] lists the exposed MBeans, and the
+xref:{xref-base}/operate/cli.adoc[Command line interface] wraps the most common operations. Both are documented as
+discouraged for a reason: JMX has a track record of vulnerabilities, and must never be exposed outside of the
+loopback interface. Read xref:{xref-base}/operate/security.adoc[the security page].
+
+There is no metric endpoint, and no Grafana board: the Dropwizard metric registry is instantiated but not
+published anywhere. Latency and throughput observations have to be derived from the logs.
+
+We also included a guide for xref:migrating.adoc[migrating existing data] into the {server-tag} server. Read
+xref:spring/index.adoc#_moving_to_the_jpa_james_server[this section] to move away from it, towards the JPA
+application.

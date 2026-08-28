@@ -31,9 +31,16 @@ For this simply add the `DSN hooks` in the handler chain in `smtpserver.xml` :
 
 == Enabling DSN generation as part of mail processing
 
+ifndef::no-rd-error-handling[]
 For the below conditions to be matched we assume you follow
 xref:{pages-path}/configure/remote-delivery-error-handling.adoc[RemoteDelivery error handling for MXs], which is a
 requirement for detailed RemoteDelivery error and delay handling on top of the {server-name}.
+endif::[]
+ifdef::no-rd-error-handling[]
+For the below conditions to be matched we assume RemoteDelivery is set up to categorise its failures with the
+`IsRemoteDeliveryPermanentError` and `IsRemoteDeliveryTemporaryError` matchers, which is a requirement for detailed
+RemoteDelivery error and delay handling on top of the {server-name}.
+endif::[]
 
 Here is a sample xref:{pages-path}/configure/mailetcontainer.adoc[mailetcontainer.xml] achieving the following DSN generation:
 

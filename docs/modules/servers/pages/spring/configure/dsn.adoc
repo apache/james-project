@@ -1,0 +1,15 @@
+= Spring James Server &mdash; Delivery Submission Notifications
+:navtitle: ESMTP DSN support
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+:backend-name: the database
+:mailet-repository-path-prefix: file
+
+:no-rd-error-handling:
+
+include::partial$spring/deprecated.adoc[]
+
+include::partial$configure/dsn.adoc[]

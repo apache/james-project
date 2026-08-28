@@ -1,0 +1,310 @@
+= Spring James Server &mdash; fetchmail.xml
+:navtitle: fetchmail.xml
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+
+include::partial$spring/deprecated.adoc[]
+
+Fetchmail is *specific to the {server-name}*: no Guice application wires it.
+
+It acts as a gateway between an external message store - an IMAP or POP3 server - and James. Mail is fetched from
+the external message store and injected into the James input spool, where it goes through regular
+xref:{xref-base}/configure/mailetcontainer.adoc[mail processing], just as if it had been delivered over SMTP.
+
+Fetchmail is useful when delivery via standard SMTP is not an option, as a means of consolidating mail delivered to
+several external accounts into a single James account, or to apply the mail processing capabilities of James to
+mail stored in an external message store.
+
+Consult this link:{sample-configuration-prefix-url}/fetchmail.xml[example] to get some examples and hints.
+
+== How Fetchmail works
+
+Mail is delivered by periodically running *fetch tasks* that read messages from an external message store and
+inject them into the James input spool. Fetch tasks run concurrently.
+
+A set of *filters* applies to each fetch task. Each filter can reject a message matching its criteria. Rejected
+messages are not injected into the spool; they are either marked as seen or deleted. When a filter is configured to
+accept a matching message, the message is marked with a Mail Attribute, which the matcher/mailet chain can then
+detect for further processing.
+
+Each fetch task is associated with a single host server. *Accounts* are defined on the fetch task, one per mailbox
+to fetch from. Accounts run consecutively, which avoids conflicting fetch tasks operating concurrently on the same
+mailboxes.
+
+Optionally, a fetch task can be configured with an `alllocal` account, which generates an account entry for each
+user defined in the James user repository. This removes the need to manually add or remove account entries each
+time a James user is added or removed. It requires the external server to support virtual mailboxes sharing the
+same password for all users of a domain.
+
+Accounts can be configured either to deliver all the mail of an account to a specified recipient - the usual case,
+when a mailbox is guaranteed to hold mail for a single recipient - or to deduce the intended recipient from the
+mail headers, which is needed when a mailbox holds mail for several users.
+
+== Configuration
+
+Configuration is held in `fetchmail.xml`, under a single `fetchmail` element.
+
+.`fetchmail` element
+|===
+| Name | explanation
+
+| `enabled` (attribute)
+| Boolean. If `true`, the fetch tasks are run periodically. Defaults to `false`.
+
+| `threads`
+| The size of the thread pool used to run the fetch tasks.
+
+| `jmxName`
+| The name under which the Fetchmail scheduler is exposed over JMX.
+
+| `fetch`
+| Zero or more fetch tasks, see below.
+|===
+
+=== The `fetch` element
+
+A fetch task is identified by its `name` attribute, which must be unique. It accepts the following child elements:
+
+.`fetch` element
+|===
+| Element | explanation
+
+| `accounts`
+| Required. Declares the accounts to fetch from, see below.
+
+| `host`
+| Required. The DNS name or IP address of the external server.
+
+| `interval`
+| Required. The period between two invocations of the fetch task, in milliseconds. If the previous invocation is
+still running when the period expires, the new invocation is skipped.
+
+| `javaMailProviderName`
+| Required. The JavaMail protocol provider to use, typically `pop3` or `imap`.
+
+| `javaMailFolderName`
+| Required. The case-sensitive name of the root folder to fetch from. Always `INBOX` for POP3 servers.
+
+| `javaMailProperties`
+| Optional. A list of `<property name="..." value="..."/>` elements passed to the JavaMail session. Relying on the
+provider defaults is rarely appropriate: the default connection and I/O timeouts are infinite.
+
+| `fetchall`
+| Required. Boolean. If `true`, all the mail is fetched. If `false`, only the mail the server did not mark as seen.
+
+| `recursesubfolders`
+| Required. Boolean. Should sub-folders of the root folder be fetched as well?
+
+| `defaultdomain`
+| Optional. The domain appended to a `From:` header that has a valid local part but no domain part. Defaults to the
+canonical host name of the James server.
+
+| `fetched`
+| Required. What happens to mail successfully injected into the spool.
+
+| `remoteReceivedHeader`
+| Optional. The zero-based index of the `Received` header used to compute the remote address and host name of the
+sending MTA. Typically `1`. When omitted, or set to `-1`, the remote address is `127.0.0.1` and the remote host
+name `localhost`.
+
+| `maxmessagesize`
+| Optional. The maximum permitted message size, and what happens beyond it.
+
+| `undeliverable`
+| Required. What happens to mail that cannot be delivered.
+
+| `recipientnotfound`
+| Required. What happens to mail for which a sole intended recipient cannot be determined.
+
+| `blacklist`
+| Required. A tab, comma or space delimited list of recipient addresses whose mail is rejected.
+
+| `userundefined`
+| Required. What happens to mail whose recipient is not a James user.
+
+| `remoterecipient`
+| Required. What happens to mail whose recipient domain is not handled by James.
+|===
+
+=== Filter attributes
+
+The `fetched`, `maxmessagesize`, `undeliverable`, `recipientnotfound`, `blacklist`, `userundefined` and
+`remoterecipient` elements share the same set of attributes:
+
+.Filter attributes
+|===
+| Attribute | explanation
+
+| `reject`
+| Boolean. If `true`, the matching mail is not injected into the spool. If `false`, it is injected with a dedicated
+Mail Attribute added, which the matcher/mailet chain can detect - for instance
+`org.apache.james.fetchmail.isBlacklistedRecipient` or `org.apache.james.fetchmail.isUserUndefined`.
+
+| `leaveonserver`
+| Boolean. If `true`, the mail is left on the server. If `false`, it is marked for deletion.
+
+| `markseen`
+| Boolean. If `true`, the mail left on the server is marked as seen.
+
+| `defer` (`recipientnotfound` only)
+| Boolean. If `true`, processing is deferred to the next run of the fetch task, giving the other accounts a chance
+to determine the recipient first.
+
+| `limit` (`maxmessagesize` only)
+| Integer. The maximum message size in kilobytes. `0` means no limit.
+
+| `index` (`remoteReceivedHeader` only)
+| Integer. The index of the `Received` header to read.
+|===
+
+WARNING: The POP3 protocol only mandates support for the `DELETED` flag. On most POP3 servers `markseen="true"`
+therefore has no effect, and `fetchall` is inoperative. The only reliable way of not fetching the same mail over
+and over is to delete it from the server with `leaveonserver="false"`.
+
+=== The `accounts` element
+
+`accounts` holds any number of `account` elements, and at most one `alllocal` element.
+
+.`account` attributes
+|===
+| Attribute | explanation
+
+| `user`
+| The user used to connect to the external server.
+
+| `password`
+| The password used to connect to the external server.
+
+| `recipient`
+| The recipient the messages are delivered to when the intended recipient cannot be determined, or is to be ignored.
+
+| `ignorercpt-header`
+| Boolean. If `true`, mail is always delivered to `recipient`. If `false`, the intended recipient is deduced from
+the mail headers.
+
+| `customrcpt-header`
+| Optional. The name of a header holding the recipient, for instance `X-Envelope-To`.
+|===
+
+.`alllocal` attributes
+|===
+| Attribute | explanation
+
+| `userprefix` / `usersuffix`
+| Strings surrounding the James user name to build the user passed to the external server.
+
+| `password`
+| The password used to connect to the external server. All the accounts have to share it.
+
+| `recipientprefix` / `recipientsuffix`
+| Strings surrounding the James user name to build the local recipient.
+
+| `ignorercpt-header`
+| Boolean, with the same meaning as for `account`.
+|===
+
+== Examples
+
+=== One account, one user
+
+When all the mail of an account belongs to a single user, ignore the recipient found in the headers:
+
+[source,xml]
+----
+<accounts>
+    <account user="user1@external.domain.com" password="password1"
+             recipient="user1@localhost" ignorercpt-header="true"/>
+    <account user="user2@external.domain.com" password="password2"
+             recipient="user2@localhost" ignorercpt-header="true"/>
+</accounts>
+----
+
+=== One account, many users
+
+When an account holds mail for many users, deduce the recipient from the headers, and tell James what to do when
+it cannot:
+
+[source,xml]
+----
+<accounts>
+    <account user="global@external.domain.com" password="password"
+             recipient="fetchmail@localhost" ignorercpt-header="false"/>
+</accounts>
+<recipientnotfound defer="false" reject="false" leaveonserver="false" markseen="false"/>
+----
+
+=== Dynamic accounts
+
+When the external server supports virtual mailboxes, `alllocal` keeps the accounts in sync with the James user
+repository. The block below delivers `userX@external.domain.com` to `userX@localhost` for every James user:
+
+[source,xml]
+----
+<accounts>
+    <alllocal userprefix="" usersuffix="@external.domain.com" password="mypassword"
+              recipientprefix="" recipientsuffix="@localhost" ignorercpt-header="true"/>
+</accounts>
+----
+
+Both can be combined, `alllocal` guaranteeing delivery for all the local users and a global `account` processing
+the rest. In that case use `<recipientnotfound defer="true" .../>` so that newly arrived mail for local users is
+left to the next run of the dynamic accounts.
+
+=== Fetching Gmail over POP3
+
+Do not forget to enable POP3 in your Gmail account first.
+
+[source,xml]
+----
+<fetchmail enabled="true">
+    <fetch name="gmail.com">
+        <accounts>
+            <account user="YOUR_USER@gmail.com" password="YOUR_PASSWORD"
+                     recipient="YOUR_EMAIL_ADDRESS_IN_JAMES" ignorercpt-header="true"/>
+        </accounts>
+        <host>pop.gmail.com</host>
+        <interval>600000</interval>
+        <javaMailProviderName>pop3</javaMailProviderName>
+        <javaMailFolderName>INBOX</javaMailFolderName>
+        <javaMailProperties>
+            <property name="mail.pop3.ssl.enable" value="true"/>
+        </javaMailProperties>
+        <fetchall>false</fetchall>
+        <recursesubfolders>false</recursesubfolders>
+        <defaultdomain>localhost</defaultdomain>
+        <fetched leaveonserver="true" markseen="true"/>
+        <remotereceivedheader index="1" reject="true" leaveonserver="true" markseen="false"/>
+        <maxmessagesize limit="0" reject="false" leaveonserver="true" markseen="false"/>
+        <undeliverable leaveonserver="true" markseen="false"/>
+        <recipientnotfound defer="true" reject="true" leaveonserver="true" markseen="false"/>
+        <blacklist reject="true" leaveonserver="true" markseen="false">wibble@localhost</blacklist>
+        <userundefined reject="true" leaveonserver="true" markseen="false"/>
+        <remoterecipient reject="true" leaveonserver="true" markseen="false"/>
+    </fetch>
+</fetchmail>
+----
+
+Fetching over IMAP4 is the same, with `imap` as the provider name, `imap.gmail.com` as the host and
+`mail.imap.ssl.enable` as the JavaMail property.
+
+== Detecting fetched mail in the mailet container
+
+All the mail injected by Fetchmail carries the `org.apache.james.fetchmail.taskName` Mail Attribute, whose value is
+the name of the fetch task. Use the xref:{xref-base}/configure/matchers.adoc#_hasmailattribute[HasMailAttribute]
+matcher to detect all the mail injected by Fetchmail, and
+xref:{xref-base}/configure/matchers.adoc#_hasmailattributewithvalue[HasMailAttributeWithValue] to detect the mail
+of a given fetch task.
+
+== Caveats
+
+* All the virtual accounts and the global account of an `alllocal` block must share the same password.
+* When using dynamic accounts, an account is generated and a fetch attempted for every James user, even when no
+such mailbox exists on the server. This is inefficient, but not fatal.
+* When combining `alllocal` with a global account, the user name of the global account must *not* be a James user.
+Otherwise a dynamic account is generated for it and fetches all the mail before the global account has an
+opportunity to run.
+* Fetchmail is scheduled and monitored over xref:{xref-base}/operate/jmx.adoc[JMX], under the
+`org.apache.james:type=component,name=fetchmail` MBean.

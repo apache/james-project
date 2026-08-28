@@ -1,0 +1,116 @@
+= Spring James Server &mdash; james-database.properties
+:navtitle: james-database.properties
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+
+include::partial$spring/deprecated.adoc[]
+
+This file is required. It tells James which relational database to use, and how to connect to it.
+
+Consult this link:{sample-configuration-prefix-url}/james-database.properties[example]
+to get some examples and hints.
+
+James accesses the database through JDBC, and maps its entities with the
+link:https://openjpa.apache.org/[Apache OpenJPA] implementation of the Java Persistence Architecture, in order to
+avoid vendor specific SQL. The entities themselves are declared in `conf/META-INF/persistence.xml`.
+
+The database instance needs to be reachable from the James server. The account being used requires the usual
+`SELECT`, `INSERT`, `UPDATE` and `DELETE` privileges, as well as table creation privileges: the schema is created
+upon the first start.
+
+== Connection settings
+
+.james-database.properties content
+|===
+| Property name | explanation
+
+| database.driverClassName
+| The class name of the JDBC driver to be used. The driver needs to be on the classpath, see
+<<_using_alternative_jdbc_drivers>>.
+
+| database.url
+| The JDBC connection URL for your database.
+
+| database.username
+| The user of the database account to be used by this connection.
+
+| database.password
+| The password of the database account to be used by this connection.
+
+| datasource.testOnBorrow
+| Optional. Boolean, defaults to `false`. Validates the connection before handing it out of the pool.
+
+| datasource.validationQuery
+| Optional. The query used for the above validation. It is database specific, `select 1` being a frequent value.
+
+| datasource.validationQueryTimeoutSec
+| Optional. Integer, defaults to `-1` (no timeout). Timeout of the validation query, in seconds.
+|===
+
+The default configuration relies on the embedded link:https://h2database.com[H2] database, which requires no
+additional set up but is only suited for tests and small deployments:
+
+....
+database.driverClassName=org.h2.Driver
+database.url=jdbc:h2:file:../var/store/h2db;DB_CLOSE_DELAY=-1
+database.username=app
+database.password=app
+....
+
+NOTE: Unlike the xref:jpa/configure/database.adoc[JPA James server], the {server-name} reads *only* the properties
+listed above. The generic `datasource.*` and `openjpa.*` pass-through, as well as the `attachmentStorage.enabled`
+property, are Guice specific and have no effect here. Attachments are consequently not extracted nor stored.
+
+== Connection pooling
+
+The JPA datasource and connection pooling is delegated to
+link:https://commons.apache.org/proper/commons-dbcp/[commons-dbcp]. Its settings are *fixed by the Spring context*
+and cannot be configured from `james-database.properties`. The notable ones are:
+
+* a maximum of 21 active connections. This value is deliberately higher than the default count of spooler threads:
+a spooler thread normally requires one connection to process a mail, but OpenJPA may need an extra one on top of
+that. If the pool is smaller than the spooler thread count the server can dead-lock, see
+link:https://issues.apache.org/jira/browse/JAMES-1317[JAMES-1317]. Raise the spooler thread count in
+xref:{xref-base}/configure/mailetcontainer.adoc[mailetcontainer.xml] with care.
+* a 30 seconds maximum wait for a connection, so that a mail fails to be processed rather than the server freezing.
+* abandoned connection removal after 300 seconds, with logging.
+
+Connection pooling requires the `openjpa.Multithreaded` system property to be set to `true`, which the start
+scripts do.
+
+[#_using_alternative_jdbc_drivers]
+== Using alternative JDBC drivers
+
+Only the H2 driver is shipped by default. Using another database requires adding its JDBC driver JAR to the
+`conf/lib` folder, which `bin/setenv.sh` prepends to the classpath. Then restart James.
+
+Here is a PostgreSQL example. Create the database first, as PostgreSQL does not create it on the fly:
+
+....
+psql --username postgres --command "CREATE DATABASE james"
+....
+
+Download the matching link:https://jdbc.postgresql.org/download/[PostgreSQL JDBC driver] into `conf/lib`, and
+point `james-database.properties` at it:
+
+....
+database.driverClassName=org.postgresql.Driver
+database.url=jdbc:postgresql://postgres-host/james
+database.username=postgres
+database.password=postgres
+....
+
+When using PostgreSQL, add `standard_conforming_strings=off` to your PostgreSQL configuration, otherwise queries
+relying on `LIKE ... ESCAPE` fail with `Invalid escape string`.
+
+The same procedure applies to MariaDB and MySQL:
+
+....
+database.driverClassName=org.mariadb.jdbc.Driver
+database.url=jdbc:mariadb://mariadb/james
+database.username=james
+database.password=james
+....

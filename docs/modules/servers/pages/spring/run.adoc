@@ -1,0 +1,114 @@
+= Spring James Server &mdash; Run
+:navtitle: Run
+
+:server-name: Spring James server
+
+include::partial$spring/deprecated.adoc[]
+
+The {server-name} is distributed as a binary archive to be run on a Java Virtual Machine. *No Docker image is
+published for it.*
+
+== Requirements
+
+* A Java {java-version} JRE. `JAVA_HOME` needs to point at the JRE home directory.
+* A relational database. By default the embedded H2 database is used, and requires no set up. See
+xref:spring/configure/database.adoc[james-database.properties] for using another one.
+* On Linux/Unix, `root` privileges - or the corresponding capabilities - are needed to bind the IANA registered
+ports of SMTP (25), POP3 (110) and IMAP (143). On Windows, Administrator privileges are needed.
+* The server launches with `-Xms128m -Xmx512m`. Adjust it depending on your load.
+
+== Building the artifact
+
+The archive is built from
+link:https://github.com/apache/james-project[the James git repository], with a Java {java-version} SDK and Maven 3:
+
+....
+mvn clean install -DskipTests
+....
+
+This produces `server/apps/spring-app/target/james-server-spring-app.zip` and its `tar.gz` counterpart.
+
+== Deploying
+
+Unpack the archive in your installation directory. You obtain the following layout:
+
+....
+bin/     start scripts, and the james-cli client
+conf/    the configuration files, and conf/lib for the extra JARs
+lib/     the James JARs
+log/     the log files
+var/     the mail repositories, the Sieve scripts, the Lucene index, the ActiveMQ store and the H2 database
+....
+
+The `conf` folder ships every configuration file with sane defaults, which you need to review before running in
+production. Read xref:spring/configure/index.adoc[the configuration section]. At the very least:
+
+* Set the postmaster address in `conf/mailetcontainer.xml`.
+* Change the JMX credentials in `conf/jmxremote.password`, which ships with a default `james-admin` / `changeme`
+pair.
+* Generate a keystore if you intend to run SSL or STARTTLS:
+
+....
+$ keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore conf/keystore
+....
+
+== Running
+
+The archive ships two ways of starting the server, both in the `bin` folder:
+
+* `run.sh` / `run.bat` runs James in the foreground.
+* `james` is a link:https://wrapper.tanukisoftware.com/[Java Service Wrapper] daemon script, supporting
+`start`, `stop`, `restart`, `status` and `console`. On Linux it requires `libc6`.
+
+....
+$ cd bin
+$ ./james start
+....
+
+Additional JVM options and classpath entries are set in `conf/setenv.sh`, which is sourced by both scripts.
+`conf/lib/*` is always prepended to the classpath: this is where JDBC drivers and your own extensions belong.
+
+Logs are written to the `log` folder, `log/james.log` being the main one. See
+xref:spring/operate/logging.adoc[logging].
+
+== Creating domains and users
+
+A fresh server holds no domain and no user. Both are created with the packaged
+xref:spring/operate/cli.adoc[command line interface], which talks JMX:
+
+....
+$ cd bin
+$ ./james-cli.sh -h 127.0.0.1 -p 9999 -username james-admin -password changeme adddomain mydomain.tld
+$ ./james-cli.sh -h 127.0.0.1 -p 9999 -username james-admin -password changeme adduser myuser@mydomain.tld mypassword
+....
+
+Virtual hosting is enabled by default, so the user name is the full email address.
+
+== Testing your installation
+
+Send an email over SMTP:
+
+....
+$ telnet 127.0.0.1 25
+220 mydomain.tld SMTP Server (JAMES SMTP Server) ready
+ehlo test
+250-mydomain.tld Hello test (localhost [127.0.0.1])
+250-PIPELINING
+250-ENHANCEDSTATUSCODES
+250 8BITMIME
+mail from:<myuser@mydomain.tld>
+250 2.1.0 Sender <myuser@mydomain.tld> OK
+rcpt to:<myuser@mydomain.tld>
+250 2.1.5 Recipient <myuser@mydomain.tld> OK
+data
+354 Ok Send data ending with <CRLF>.<CRLF>
+subject: test
+
+this is a test
+.
+250 2.6.0 Message received
+quit
+....
+
+Then retrieve it over IMAP (port 143) or POP3 (port 110), and check `log/james.log` along the way. Actions taken by
+James on incoming mail are driven by `conf/mailetcontainer.xml`.

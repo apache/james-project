@@ -1,0 +1,20 @@
+= Spring James Server &mdash; jmx.properties
+:navtitle: jmx.properties
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+:backend-name: the database
+:mailet-repository-path-prefix: file
+
+:no-guice-jmx:
+
+include::partial$spring/deprecated.adoc[]
+
+include::partial$configure/jmx.adoc[]
+
+NOTE: Unlike the Guice applications, the {server-name} always starts its JMX server: there is no `jmx.enabled`
+switch, and credentials are never generated. `conf/jmxremote.password` ships with a default `james-admin` /
+`changeme` pair *that you must change*, and `conf/jmxremote.access` grants it `readwrite`. Both files are read
+relatively to the `conf` folder.

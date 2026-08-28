@@ -118,15 +118,24 @@ It is an optional boolean that defaults to `true`.
 | Optional comma-separated list of SASL mechanism factory class names.
 When present, this list replaces the default mechanisms.
 Built-in factories can be named by their simple class name; extension factories must use their fully qualified class name.
+ifndef::no-kerberos[]
 See xref:{pages-path}/configure/kerberos.adoc[Kerberos GSSAPI authentication] for an extension example.
+endif::[]
 
 | `auth.requireSSL`
+ifndef::no-kerberos[]
 | Configures whether the authentication mechanisms `PLAIN`, `LOGIN`, and optional `GSSAPI` require a secure connection (TLS or STARTTLS).
+endif::[]
+ifdef::no-kerberos[]
+| Configures whether the authentication mechanisms `PLAIN` and `LOGIN` require a secure connection (TLS or STARTTLS).
+endif::[]
 It has no effect on other authentication mechanisms.
 For `PLAIN` and `LOGIN`, it has no effect if `plainAuthEnabled` is `false`.
 The value is optional.
 For `PLAIN` and `LOGIN`, if not configured, it uses the value of `plainAuthDisallowed` (which defaults to `true`) as fallback.
+ifndef::no-kerberos[]
 For `GSSAPI`, if not configured, it defaults to `true`.
+endif::[]
 
 | `auth.adminUsers`
 | Configures admin users that are authorized to impersonate any IMAP user.
@@ -137,9 +146,11 @@ It is an optional element containing `adminUser` elements.
 | Configures authentication via OIDC.
 The configuration is described in more detail xref:{pages-path}/configure/oidc.adoc[here].
 
+ifndef::no-kerberos[]
 | `auth.gssapi`
 | Configures optional Kerberos authentication through the `GSSAPI` SASL mechanism.
 The configuration is described in more detail xref:{pages-path}/configure/kerberos.adoc[here].
+endif::[]
 
 |===
 
@@ -210,6 +221,7 @@ Sample configuration:
 
 Note that commands are delayed prior to their execution and thus are not subject to the setting `concurrentRequests` until they are executed.
 
+ifndef::no-imap-extensions[]
 == Extending IMAP
 
 IMAP decoders, processors and encoders can be customized.
@@ -242,6 +254,7 @@ This element can be used multiple times.
 Using this enables configuring custom IMAP extensions without touching the code responsible for loading the configuration.
 
 |===
+endif::[]
 
 == Auto-Configuration for Mail User Agents
 

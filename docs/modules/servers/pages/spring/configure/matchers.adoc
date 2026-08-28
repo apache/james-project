@@ -1,0 +1,16 @@
+= Spring James Server &mdash; Matchers
+:navtitle: Packaged Matchers
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/spring-app/src/main/resources
+:pages-path: spring
+:xref-base: spring
+:server-name: Spring James server
+:backend-name: the database
+:mailet-repository-path-prefix: file
+
+:no-jmap:
+:no-dlp:
+
+include::partial$spring/deprecated.adoc[]
+
+include::partial$configure/matchers.adoc[]

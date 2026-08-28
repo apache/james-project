@@ -1,0 +1,13 @@
+[WARNING.deprecation-banner-red]
+====
+*The Spring James server is deprecated and should not be deployed anymore.*
+It receives no new features, only a subset of the James components can be wired into it, and it is bound to the
+legacy, fully blocking Spring stack. It ships neither JMAP nor the WebAdmin administration API: it can only be
+administered through JMX.
+
+*Moving to the xref:jpa/index.adoc[JPA James server] is strongly advised, and requires no data migration*: both
+applications persist their data with the very same JPA entities, in the same relational database. Point the JPA
+application at the database and the `var` folder your Spring instance was using, and your domains, users,
+rewriting rules, mailboxes and emails are there. Read xref:spring/index.adoc#_moving_to_the_jpa_james_server[the
+migration section] for the few details that need attention.
+====
