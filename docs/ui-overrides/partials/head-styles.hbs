@@ -28,4 +28,54 @@
         background-color: #cf1124;
         color: #fff;
       }
+      /* Server comparison table, see the `feature-matrix` role. The columns of the deprecated
+         applications are tinted with the very same colors as their deprecation banners: yellow
+         for the JPA ones, red for Spring. */
+      .doc .feature-matrix .content {
+        overflow-x: auto;
+      }
+      .doc .feature-matrix table {
+        font-size: 0.72rem;
+        table-layout: fixed;
+      }
+      .doc .feature-matrix table th,
+      .doc .feature-matrix table td {
+        padding: 0.3rem 0.35rem;
+        line-height: 1.35;
+        word-wrap: anywhere;
+      }
+      .doc .feature-matrix table code {
+        font-size: 0.95em;
+        padding: 0;
+        background: none;
+      }
+      .doc .feature-matrix table td[colspan] {
+        background: #f0f0f0;
+        font-weight: 600;
+      }
+      .doc .feature-matrix table th:nth-child(5),
+      .doc .feature-matrix table th:nth-child(6),
+      .doc .feature-matrix table td:nth-child(5),
+      .doc .feature-matrix table td:nth-child(6) {
+        background: #fff8db;
+        color: #4a3b00;
+      }
+      .doc .feature-matrix table th:nth-child(5),
+      .doc .feature-matrix table th:nth-child(6) {
+        background: #fceec4;
+        border-bottom: 3px solid #f0b429;
+      }
+      .doc .feature-matrix table th:nth-child(7),
+      .doc .feature-matrix table td:nth-child(7) {
+        background: #ffeeee;
+        color: #610316;
+      }
+      .doc .feature-matrix table th:nth-child(7) {
+        background: #ffd9d9;
+        border-bottom: 3px solid #cf1124;
+      }
+      .doc .feature-matrix table td[colspan]:nth-child(1) {
+        background: #f0f0f0;
+        color: inherit;
+      }
     </style>
