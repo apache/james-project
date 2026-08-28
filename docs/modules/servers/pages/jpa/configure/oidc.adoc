@@ -1,0 +1,15 @@
+= JPA James Server &mdash; OIDC Configuration
+:navtitle: OIDC Configuration
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/jpa-app/sample-configuration
+:pages-path: jpa
+:xref-base: jpa
+:server-name: JPA James server
+:backend-name: the database
+:mailet-repository-path-prefix: file
+
+:no-jmap:
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$configure/oidc.adoc[]

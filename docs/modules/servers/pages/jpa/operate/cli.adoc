@@ -1,0 +1,9 @@
+= JPA James Server &mdash; Command Line Interface
+:navtitle: Command Line Interface
+
+:xref-base: jpa
+:server-name: JPA James server
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$operate/cli.adoc[]

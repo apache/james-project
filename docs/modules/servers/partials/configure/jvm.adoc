@@ -65,6 +65,7 @@ james.protocols.mdc.hostname=false
 
 Optional. Boolean. Defaults to true.
 
+ifndef::no-blobstore[]
 == Change the encoding type used for the blobId
 
 By default, the blobId is encoded in base64 url. The property `james.blob.id.hash.encoding` allows to change the encoding type.
@@ -102,6 +103,8 @@ james.s3.sdk.checksum.backward.compatibility=false
 ----
 To disable S3 checksum backward compatibility.
 
+endif::[]
+ifndef::no-jmap[]
 == JMAP Quota draft compatibility
 
 Some JMAP clients depend on the JMAP Quota draft specifications. The property `james.jmap.quota.draft.compatibility` allows
@@ -147,6 +150,8 @@ Ex in `jvm.properties`:
 james.jmap.mdc.original.ip.header=x-real-ip
 ----
 
+endif::[]
+ifndef::no-blobstore[]
 == Enable S3 metrics
 
 James supports extracting some S3 client-level metrics e.g. number of connections being used, time to acquire an S3 connection, total time to finish a S3 request...
@@ -162,6 +167,7 @@ james.s3.metrics.enabled=false
 ----
 To disable the S3 metrics.
 
+endif::[]
 == Reactor Stream Prefetch
 
 Prefetch to use in Reactor to stream convertions (S3 => InputStream). Default to 1.
@@ -202,6 +208,7 @@ james.relaxed.mailbox.name.validation=true
 ----
 To relax validat ing `\*` and `%` characters in the mailbox name. Be careful as `%` and `*` are ambiguous for the LIST / LSUB commands that interpret those as wildcard thus returning all mailboxes matching the pattern.
 
+ifndef::no-blobstore[]
 == Customizing blob deduplication settings
 
 ----
@@ -212,6 +219,8 @@ james.deduplicating.blobstore.thread.switch.threshold=32768
 james.deduplicating.blobstore.file.threshold=10240
 ----
 
+endif::[]
+ifndef::no-rabbitmq[]
 == Configuring Distributed Task Manager
 
 Turning Distributed Task Manager single active consumer off allows for all
@@ -231,6 +240,8 @@ Defaults to `1`.
 james.task.rabbitmq.qos=4
 ----
 
+endif::[]
+ifndef::no-acl[]
 == Allow users to have rights for shares of different domain
 
 Typically, preventing users to obtain rights for shares of another domain is a useful security layer.
@@ -244,6 +255,7 @@ Ex in `jvm.properties`
 james.rights.crossdomain.allow=false
 ----
 
+endif::[]
 == Drop IMAP Recent handling
 
 This allows for dropping the legacy IMAP flag support, considering all emails as recent. This has no impact on modern

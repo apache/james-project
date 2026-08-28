@@ -1,0 +1,45 @@
+= JPA James Server &mdash; Operator guide
+:navtitle: Operator guide
+
+:xref-base: jpa
+:pages-path: jpa
+:mailet-repository-path-prefix: file
+:backend-name: database
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/jpa-app/sample-configuration
+:server-name: JPA James server
+:no-opensearch:
+:no-rabbitmq:
+:no-vault:
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$operate/guide.adoc[]
+
+== Search index
+
+The JPA James server indexes emails within an embedded Lucene index, stored on the local file system, next to the
+working directory. It is neither replicated nor shared: a lost or corrupted index needs to be rebuilt.
+
+Failures upon indexing are reported in the `ERROR` logs, and the corresponding events are stored in the *in
+memory* event dead letter - which means they do not survive a restart. When events were lost, the WebAdmin
+reIndexing tasks are the way to recover:
+
+* xref:{xref-base}/operate/webadmin.adoc#_reindexing_all_mails[reIndex all mails],
+* or xref:{xref-base}/operate/webadmin.adoc#_reindexing_a_mailbox_mails[reIndex mails from a mailbox].
+
+When checking the result of a reIndexing task, you might have failed reprocessed mails. You can still use the
+task ID to
+xref:{xref-base}/operate/webadmin.adoc#_fixing_previously_failed_reindexing[reprocess previously failed reIndexing mails].
+
+_Note_: keep in mind that reindexing can be a very long operation depending on the volume of mails you have stored.
+
+== Database maintenance
+
+All the structured data, including message content, lives in the relational database. We recommend:
+
+* Setting up a *backup* policy for that database: it holds all of your users emails.
+* Monitoring the disk usage of the database, of the Lucene index, of the ActiveMQ broker and of the file mail
+repositories.
+* Keeping statistics up to date, and monitoring slow queries, as advised by your database vendor.
+
+Read the xref:{xref-base}/operate/performanceChecklist.adoc[performance checklist] for further tuning advices.

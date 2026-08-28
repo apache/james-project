@@ -1,0 +1,10 @@
+= JPA James Server &mdash; Implemented standards
+:navtitle: Implemented standards
+
+:server-name: JPA James server
+:no-jmap:
+:no-acl:
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$architecture/implemented-standards.adoc[]

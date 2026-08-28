@@ -15,8 +15,10 @@ to do so might result in *information disclosure*.
  - *Phishing*: Crafted emails that tricks the user into doing unintended actions.
  - *Viruses*: An attacker sends an attachment that contains an exploit that could run if a user opens it.
  - *Denial of service*: A small request may result in a very large response and require considerable work on the server...
+ifndef::no-jmap[]
  - *Denial of service*: A malicious JMAP client may use the JMAP push subscription to attempt to flood a third party
 server with requests, creating a denial-of-service attack and masking the attacker’s true identity.
+endif::[]
  - *Dictionary Harvest Attacks*: An attacker can rely on SMTP command reply code to know if a user exists or not. This
  can be used to obtain the list of local users and later use those address as targets for other attacks.
 
@@ -54,7 +56,12 @@ failures.
  - 5. Ensure that xref:{xref-base}/configure/webadmin.adoc[WebAdmin] is not exposed unencrypted to the outer world. Doing so trivially
 exposes yourself. You can either disable it, activate JWT security, or restrict it to listen only on localhost.
 
+ifndef::no-jmap[]
  - 6. Set up `HTTPS` for http based protocols, namely *JMAP* and *WebAdmin*. We recommend the use of a reverse proxy like Nginx.
+endif::[]
+ifdef::no-jmap[]
+ - 6. Set up `HTTPS` for *WebAdmin*. We recommend the use of a reverse proxy like Nginx.
+endif::[]
 
  - 7. Set up link:https://james.apache.org/howTo/spf.html[SPF] and link:https://james.apache.org/howTo/dkim.html[DKIM]
 for your outgoing emails to be trusted.
@@ -64,9 +71,11 @@ for your outgoing emails to be trusted.
 or xref:{xref-base}/configure/jmx.adoc[disabling JMX]. JMX is needed to use the existing CLI application but webadmin do offer similar
 features. Set the `jmx.remote.x.mlet.allow.getMBeansFromURL` to `false` to disable JMX remote code execution feature.
 
+ifndef::no-jmap[]
  - 9. If JMAP is enabled, be sure that JMAP PUSH cannot be used for server side request forgery. This can be
 xref:{xref-base}/configure/jmap.adoc[configured] using the `webpush.prevent.server.side.request.forgery=true` property,
 forbidding push to private addresses.
+endif::[]
 
 === Best practice: Should
 

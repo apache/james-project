@@ -1,0 +1,13 @@
+= JPA James Server &mdash; jmx.properties
+:navtitle: jmx.properties
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/jpa-app/sample-configuration
+:pages-path: jpa
+:xref-base: jpa
+:server-name: JPA James server
+:backend-name: the database
+:mailet-repository-path-prefix: file
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$configure/jmx.adoc[]

@@ -1,0 +1,112 @@
+This file is required. It tells James which relational database to use, and how to connect to it.
+
+Consult this link:{sample-configuration-prefix-url}/james-database.properties[example]
+to get some examples and hints.
+
+James accesses the database through JDBC, and maps its entities with the
+link:https://openjpa.apache.org/[Apache OpenJPA] implementation of the Java Persistence Architecture, in order to
+avoid vendor specific SQL.
+
+The database instance needs to be reachable from the James server. The account being used requires the usual
+`SELECT`, `INSERT`, `UPDATE` and `DELETE` privileges, as well as table creation privileges: the schema is created
+upon the first start.
+
+== Connection settings
+
+.james-database.properties content
+|===
+| Property name | explanation
+
+| database.driverClassName
+| The class name of the JDBC driver to be used. The driver needs to be on the classpath, see
+<<_using_alternative_jdbc_drivers>>.
+
+| database.url
+| The JDBC connection URL for your database.
+
+| database.username
+| The user of the database account to be used by this connection.
+
+| database.password
+| The password of the database account to be used by this connection.
+
+| attachmentStorage.enabled
+| Optional. Boolean, defaults to `false`. Enables storing attachments in the database.
+*WARNING*: this storage is not designed for large binary content (no more than 1 GB of data).
+|===
+
+The default configuration relies on the embedded link:https://h2database.com[H2] database, which requires no
+additional set up but is only suited for tests and small deployments:
+
+....
+database.driverClassName=org.h2.Driver
+database.url=jdbc:h2:file:../var/store/h2db;DB_CLOSE_DELAY=-1
+database.username=app
+database.password=app
+....
+
+== Connection pooling
+
+The JPA datasource and connection pooling is delegated to
+link:https://commons.apache.org/proper/commons-dbcp/configuration.html[commons-dbcp2]. All the properties prefixed
+with `datasource.` are passed to DBCP2, through the `openjpa.ConnectionProperties` OpenJPA property. Amongst others:
+
+* `datasource.testOnBorrow`
+* `datasource.validationQuery` (this one is database specific)
+* `datasource.validationQueryTimeoutSec`
+* `datasource.initialSize`
+* `datasource.minIdle`
+* `datasource.maxTotal`
+
+....
+# Validate the data source before using it
+datasource.testOnBorrow=true
+datasource.validationQueryTimeoutSec=2
+datasource.validationQuery=select 1
+# The maximum number of active connections, or negative for no limit.
+datasource.maxTotal=8
+....
+
+Note that connection pooling requires the `openjpa.Multithreaded` property to be set to `true`, which is the default.
+
+== OpenJPA tuning
+
+All the properties prefixed with `openjpa.` are passed to the OpenJPA library as configuration. See the
+link:https://openjpa.apache.org/builds/3.2.2/apache-openjpa/docs/ref_guide_conf_openjpa.html[OpenJPA reference guide]
+for a complete list.
+
+[#_using_alternative_jdbc_drivers]
+== Using alternative JDBC drivers
+
+Only the H2 driver is shipped by default. Using another database requires adding its JDBC driver to the classpath.
+
+With the ZIP package, add the driver JAR to the classpath, and start the main class explicitly:
+
+....
+java \
+   -javaagent:james-server-jpa-app.lib/openjpa-4.1.1.jar \
+   -Dworking.directory=. \
+   -Djdk.tls.ephemeralDHKeySize=2048 \
+   -Dlogback.configurationFile=conf/logback.xml \
+   -cp "james-server-jpa-app.jar:james-server-jpa-app.lib/*:jdbc-driver.jar" \
+   org.apache.james.JPAJamesServerMain
+....
+
+With docker, mount the driver JAR at `/root/libs/james-jdbc-driver.jar`:
+
+....
+docker run -v $PWD/mariadb-java-client-2.7.2.jar:/root/libs/james-jdbc-driver.jar apache/james:jpa-latest
+....
+
+Here is a MariaDB example, see this
+link:{sample-configuration-prefix-url}/james-database-mariadb.properties[sample file]:
+
+....
+database.driverClassName=org.mariadb.jdbc.Driver
+database.url=jdbc:mariadb://mariadb/test
+database.username=test
+database.password=test
+....
+
+When using PostgreSQL, add `standard_conforming_strings=off` to your PostgreSQL configuration, otherwise queries
+relying on `LIKE ... ESCAPE` fail with `Invalid escape string`.

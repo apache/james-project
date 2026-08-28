@@ -124,6 +124,7 @@ xref:{xref-base}/operate/webadmin.adoc#_redeliver_group_events[redeliver group e
 or even just
 xref:{xref-base}/operate/webadmin.adoc#_redeliver_a_single_event[redeliver a single event].
 
+ifndef::no-opensearch[]
 == OpenSearch Indexing
 
 A projection of messages is maintained in OpenSearch via a listener
@@ -194,8 +195,10 @@ restart
 _Note_: keep in mind that reindexing can be a very long operation
 depending on the volume of mails you have stored.
 
+endif::[]
 == Mail Queue
 
+ifndef::no-rabbitmq[]
 === Fine tune configuration for RabbitMQ
 
 In order to adapt mail queue settings to the actual traffic load, an
@@ -208,6 +211,7 @@ thus is expensive. Size recurring metric reporting thus introduces
 performance issues. As such, we advise setting
 `mailqueue.size.metricsEnabled=false`.
 
+endif::[]
 === Managing email queues
 
 Managing an email queue is an easy task if you follow this procedure:
@@ -223,6 +227,7 @@ trash emails in the email queue you have this procedure to follow:
 * All mails from the given mail queue will be deleted with
 xref:{xref-base}/operate/webadmin.adoc#_clearing_a_mail_queue[Clearing a mail queue].
 
+ifndef::no-vault[]
 == Deleted Message Vault
 
 We recommend the administrator to
@@ -268,3 +273,5 @@ You can delete all deleted messages older than the configured
 xref:{xref-base}/operate/webadmin.adoc#_deleted_messages_vault[Purge Deleted Messages].
 We recommend calling this API in CRON job on 1st day each
 month.
+
+endif::[]

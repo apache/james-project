@@ -1,7 +1,7 @@
 = Apache James Mail Servers
 :navtitle: Servers
 
-James offers four types of ready-made Mail Servers. The servers are intended 
+James offers five types of ready-made Mail Servers. The servers are intended 
 for those with different needs, ranging from Operators
 who are interested in setting up a server for the first time, to experienced teams of 
 Developers
@@ -15,6 +15,7 @@ The available James Servers are:
  * <<demo,James Demo Mail Server>>
  * <<distributed,James Distributed Mail Server>>
  * <<postgres,James Postgres Mail Server>>
+ * <<jpa,James JPA Mail Server>> (deprecated)
  * <<test,James Test Server>>
 
 If you are just checking out James for the first time, then we highly recommend
@@ -47,6 +48,17 @@ and is intended for experts only.
 
 The xref:postgres/index.adoc[*Distributed with Postgres Server*] is a one
 variant of the distributed server with Postgres as the database.
+
+
+
+[#jpa]
+== James JPA Mail Server
+
+The xref:jpa/index.adoc[*JPA Server*] is a single node server storing all its data within a
+relational database, accessed through JPA.
+
+*It is deprecated*: it is not actively maintained anymore, lacks major James features, and may be removed in a
+future release. Use the <<postgres,Postgres Server>> instead.
 
 
 

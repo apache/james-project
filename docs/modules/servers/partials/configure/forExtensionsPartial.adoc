@@ -2,9 +2,11 @@
 
 By omitting these files, no extra behaviour is added.
 
-** xref:{xref-base}/vault.adoc[*deletedMessageVault.properties*] allows to configure the DeletedMessageVault link:{sample-configuration-prefix-url}/sample-configuration/deletedMessageVault.properties[example]
-** xref:{xref-base}/listeners.adoc[*listeners.xml*] enables configuration of Mailbox Listeners link:{sample-configuration-prefix-url}/sample-configuration/listeners.xml[example]
-** xref:{xref-base}/extensions.adoc[*extensions.properties*] allows to extend James behaviour by loading your extensions in it link:{sample-configuration-prefix-url}/sample-configuration/extensions.properties[example]
+ifndef::no-vault[]
+** xref:{xref-base}/vault.adoc[*deletedMessageVault.properties*] allows to configure the DeletedMessageVault link:{sample-configuration-prefix-url}/deletedMessageVault.properties[example]
+endif::[]
+** xref:{xref-base}/listeners.adoc[*listeners.xml*] enables configuration of Mailbox Listeners link:{sample-configuration-prefix-url}/listeners.xml[example]
+** xref:{xref-base}/extensions.adoc[*extensions.properties*] allows to extend James behaviour by loading your extensions in it link:{sample-configuration-prefix-url}/extensions.properties[example]
 ** xref:{xref-base}/jvm.adoc[*jvm.properties*] lets you specify additional system properties without cluttering your command line
 ** xref:{xref-base}/spam.adoc[This page] documents Anti-Spam setup with SpamAssassin, Rspamd.
 ** xref:{xref-base}/remote-delivery-error-handling.adoc[This page] proposes a simple strategy for RemoteDelivery error handling.

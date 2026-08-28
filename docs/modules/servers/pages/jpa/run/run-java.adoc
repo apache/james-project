@@ -1,0 +1,66 @@
+= JPA James Server &mdash; Run with Java
+:navtitle: Run with Java
+
+include::partial$jpa/deprecated.adoc[]
+
+== Building
+
+=== Requirements
+
+* Java {java-version} SDK
+* Maven 3
+
+=== Building the artifacts
+
+An usual compilation using maven will produce two artifacts into the `server/apps/jpa-app/target` directory:
+
+* james-server-jpa-app.jar
+* james-server-jpa-app.lib
+
+You can for example run in the base of
+link:https://github.com/apache/james-project[this git repository]:
+
+....
+mvn clean install -DskipTests
+....
+
+== Running
+
+=== Requirements
+
+* Java {java-version} SDK
+* A relational database. By default the embedded H2 database is used, and requires no set up. See
+xref:jpa/configure/database.adoc[james-database.properties] for using another one.
+
+=== James launch
+
+To run james, you have to create a directory containing the required configuration files.
+
+James requires the configuration to be in a subfolder of the working directory that is called *conf*. A
+link:https://github.com/apache/james-project/tree/master/server/apps/jpa-app/sample-configuration[sample directory]
+is provided with some default values you may need to replace. You will need to update its content to match your
+needs.
+
+You also need to generate a keystore with the following command:
+
+[source,bash]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+----
+
+Once everything is set up, you just have to run the jar. Note that the OpenJPA java agent needs to be supplied,
+as it performs the runtime enhancement of the JPA entities:
+
+[source,bash]
+----
+$ java -javaagent:james-server-jpa-app.lib/openjpa-4.1.1.jar \
+  -Dworking.directory=. \
+  -Djdk.tls.ephemeralDHKeySize=2048 \
+  -Dlogback.configurationFile=conf/logback.xml \
+  -jar james-server-jpa-app.jar
+----
+
+Note that binding ports below 1024 requires administrative rights.
+
+Read xref:jpa/configure/database.adoc#_using_alternative_jdbc_drivers[this section] in order to run on top of a
+database other than H2.

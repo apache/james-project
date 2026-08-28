@@ -1,0 +1,14 @@
+= JPA James Server &mdash; webadmin.properties
+:navtitle: webadmin.properties
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/jpa-app/sample-configuration
+:pages-path: jpa
+:xref-base: jpa
+:server-name: JPA James server
+
+include::partial$jpa/deprecated.adoc[]
+
+NOTE: The JPA James server is packaged without the JWT module: the `jwt.enable` and `jwt.publickeypem.url`
+options documented below have no effect. Authentication of the WebAdmin API relies on static passwords only.
+
+include::partial$configure/webadmin.adoc[]

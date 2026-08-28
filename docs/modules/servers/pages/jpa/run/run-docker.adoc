@@ -1,0 +1,93 @@
+= JPA James Server &mdash; Run with docker
+:navtitle: Run with docker
+
+include::partial$jpa/deprecated.adoc[]
+
+== Running a single container
+
+Requirement: docker installed.
+
+[source,bash]
+----
+$ docker run apache/james:jpa-latest
+----
+
+The image can also be built locally, then imported:
+
+[source,bash]
+----
+$ docker image load -i server/apps/jpa-app/target/jib-image.tar
+----
+
+Use the
+link:https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags[JAVA_TOOL_OPTIONS environment option]
+to pass extra JVM flags. For instance:
+
+[source,bash]
+----
+$ docker run -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:jpa-latest
+----
+
+For security reasons you are required to generate your own keystore, that you can mount into the container via a
+volume:
+
+[source,bash]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore keystore
+$ docker run -v $PWD/keystore:/root/conf/keystore apache/james:jpa-latest
+----
+
+In order to quickly start James without manually creating a keystore (e.g. for development), just pass the
+`--generate-keystore` command argument: James will auto-generate a keystore file with the default settings.
+
+[source,bash]
+----
+$ docker run --network james apache/james:jpa-latest --generate-keystore
+----
+
+A domain can be created upon James start via an environment variable:
+
+[source,bash]
+----
+$ docker run --environment DOMAIN=domain.tld apache/james:jpa-latest
+----
+
+The xref:jpa/operate/cli.adoc[CLI] can easily be used:
+
+[source,bash]
+----
+$ docker exec CONTAINER-ID james-cli ListDomains
+----
+
+link:https://glowroot.org/[Glowroot APM] is packaged as part of the docker distribution to easily enable valuable
+performance insights. Disabled by default, its java agent can easily be enabled:
+
+[source,bash]
+----
+$ docker run -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:jpa-latest
+----
+
+== Running via docker-compose
+
+We do ship a
+link:https://github.com/apache/james-project/blob/master/server/apps/jpa-app/docker-compose.yml[docker-compose]
+file demonstrating the JPA application usage on top of MariaDB. In order to run it:
+
+[source,bash]
+----
+# 1. Download the driver:
+$ wget https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.7.2/mariadb-java-client-2.7.2.jar
+
+# 2. Generate the keystore with the default password `james72laBalle`:
+$ keytool -genkey -alias james -keyalg RSA -keystore keystore
+
+# 3. Start MariaDB
+$ docker-compose up -d mariadb
+
+# 4. Start James
+$ docker-compose up james
+----
+
+The driver JAR is mounted at `/root/libs/james-jdbc-driver.jar` in order to be added to the classpath, and the
+matching `james-database.properties` is mounted within the `conf` folder. Read
+xref:jpa/configure/database.adoc#_using_alternative_jdbc_drivers[this section] for further details.

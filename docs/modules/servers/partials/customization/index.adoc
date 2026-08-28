@@ -1,6 +1,11 @@
 == Available extension mechanisms
 
+ifndef::no-jmap[]
 image::customization/james-hexagons-extensions.png[Extension mechanisms for the James Server]
+endif::[]
+ifdef::no-jmap[]
+image::customization/james-hexagons-extensions-jpa.png[Extension mechanisms for the James Server]
+endif::[]
 
 The James Server exposes several interfaces allowing the user to write custom extensions in
 order to extend the James Server behavior.

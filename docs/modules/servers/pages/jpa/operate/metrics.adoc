@@ -1,0 +1,15 @@
+= JPA James Server &mdash; Metrics
+:navtitle: Metrics
+
+:other-metrics: JDBC connection pool metrics
+:xref-base: jpa
+:server-name: JPA James server
+
+:no-jmap:
+:no-tika:
+:no-blobstore:
+
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$operate/metrics.adoc[]

@@ -25,17 +25,27 @@ include::partial$DSNBounce.adoc[]
 
 include::partial$Expires.adoc[]
 
+ifndef::no-jmap[]
 include::partial$ExtractMDNOriginalJMAPMessageId.adoc[]
+endif::[]
 
 include::partial$Forward.adoc[]
 
+ifndef::no-icalendar[]
 include::partial$ICalendarParser.adoc[]
+endif::[]
 
+ifndef::no-icalendar[]
 include::partial$ICALToHeader.adoc[]
+endif::[]
 
+ifndef::no-icalendar[]
 include::partial$ICALToJsonAttribute.adoc[]
+endif::[]
 
+ifndef::no-icalendar[]
 include::partial$ICSSanitizer.adoc[]
+endif::[]
 
 include::partial$LocalDelivery.adoc[]
 
@@ -103,7 +113,9 @@ include::partial$StripAttachment.adoc[]
 
 include::partial$SplitMail.adoc[]
 
+ifndef::no-jmap[]
 include::partial$TextCalendarBodyToAttachment.adoc[]
+endif::[]
 
 include::partial$ToProcessor.adoc[]
 
@@ -111,7 +123,9 @@ include::partial$ToRepository.adoc[]
 
 include::partial$ToSenderDomainRepository.adoc[]
 
+ifndef::no-vacation[]
 include::partial$VacationMailet.adoc[]
+endif::[]
 
 include::partial$WithPriority.adoc[]
 

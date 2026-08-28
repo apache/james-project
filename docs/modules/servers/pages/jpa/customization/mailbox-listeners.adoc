@@ -1,0 +1,9 @@
+= Custom Mailbox Listeners
+:navtitle: Custom Mailbox Listeners
+
+:pages-path: jpa
+:xref-base: jpa
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$customization/mailbox-listeners.adoc[]

@@ -1,6 +1,8 @@
 
 James supports OIDC via both `XOAUTH2` and `OAUTHBEARER` for Managesieve, IMAP, and SMTP.
+ifndef::no-jmap[]
 JMAP RFC-8621 also supports OIDC bearer authentication via `OidcAuthenticationStrategy`.
+endif::[]
 OIDC is not supported for POP3 and LMTP.
 We provide an link:https://github.com/apache/james-project/tree/master/examples/oidc[example] of an OIDC setup.
 It uses Keycloak as identity provider, but usage of other providers is possible.
