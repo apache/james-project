@@ -6,6 +6,11 @@ these topics.
 
 Read more about xref:{xref-base}/operate/logging.adoc[Logging].
 
+ifdef::folder-layout[]
+The xref:{xref-base}/operate/folders.adoc[folder layout] page details what the {server-name} writes on the file
+system, and which of those folders need watching.
+endif::[]
+
 The xref:{xref-base}/operate/webadmin.adoc[WebAdmin Restfull administration API] is the
 recommended way to operate the {server-name}. It allows managing and interacting with most
 server components.

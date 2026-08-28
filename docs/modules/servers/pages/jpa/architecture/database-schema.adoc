@@ -1,0 +1,12 @@
+= JPA James Server &mdash; Database schema
+:navtitle: Database schema
+
+:xref-base: jpa
+:pages-path: jpa
+:server-name: JPA James server
+:persistence-unit-name: Global
+:persistence-xml-url: https://github.com/apache/james-project/blob/master/server/apps/jpa-app/src/main/resources/META-INF/persistence.xml
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$architecture/database-schema.adoc[]

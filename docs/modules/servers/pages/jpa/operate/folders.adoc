@@ -1,0 +1,13 @@
+= JPA James Server &mdash; Folder layout
+:navtitle: Folder layout
+
+:xref-base: jpa
+:pages-path: jpa
+:server-name: JPA James server
+:backend-name: the relational database
+:rrt-error-repository:
+:lucene-at-root:
+
+include::partial$jpa/deprecated.adoc[]
+
+include::partial$operate/folders.adoc[]
