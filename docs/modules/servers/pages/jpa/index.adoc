@@ -59,3 +59,4 @@ In this section of the documentation, we will introduce you to:
 * xref:jpa/configure/index.adoc[Configure the JPA James server]
 * xref:jpa/operate/index.adoc[Operate the JPA James server]
 * xref:jpa/customization/index.adoc[Extend the JPA James server]
+* xref:jpa/smtp-only.adoc[The SMTP only variant of the JPA James server]
