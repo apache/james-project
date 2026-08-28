@@ -5,6 +5,12 @@ This page aggregates common knowledge for contributing to Apache james servers.
 
 xref:james-site::contributing.adoc[Contribution guidelines] apply.
 
+xref:source-code.adoc[This page] maps the code base: how the modules are organised, and where a change belongs.
+
+xref:build-from-source.adoc[This page] explains how to *build James from source*, and how to set up an IDE for it.
+
 xref:logging.adoc[This page] explains how *logging* should be done.
+
+xref:deployment-tests.adoc[This page] explains how to run the *deployment tests*.
 
 Help of kind contributors is more than welcome to write guides explaining newcomers your hard-learned lessons!

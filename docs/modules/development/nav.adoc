@@ -1,2 +1,5 @@
 * xref:index.adoc[]
+** xref:source-code.adoc[]
+** xref:build-from-source.adoc[]
 ** xref:logging.adoc[]
+** xref:deployment-tests.adoc[]

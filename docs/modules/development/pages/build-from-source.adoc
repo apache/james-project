@@ -1,0 +1,159 @@
+= Building Apache James from source
+:navtitle: Building from source
+
+Running James does not require building it: every application is published as a
+link:https://hub.docker.com/r/apache/james[docker image] and as an archive on the
+link:https://james.apache.org/download.cgi[download page]. You need to build only to work on James itself, to try
+out an unreleased change, or to ship your own assembly of its components.
+
+== Getting the sources
+
+The whole project - the servers, the mailbox, the protocol implementations, the mailets - lives in a single git
+repository:
+
+[source,bash]
+----
+$ git clone https://github.com/apache/james-project.git
+$ cd james-project
+----
+
+The `master` branch is the development branch: it builds, its tests pass, but it is not a release. Released
+versions are tagged.
+
+== Requirements
+
+* A *JDK {java-version}*. James is compiled with `--release {java-version}` and will not build on an older one.
+* *Maven 3.8.1* or later. Older versions are rejected by the build itself, through the maven enforcer plugin.
+
+The build is memory hungry - it compiles Java and Scala, and runs a large test suite. Give Maven some room:
+
+[source,bash]
+----
+$ export MAVEN_OPTS="-Xmx2g"
+----
+
+== Building
+
+From the root of the repository:
+
+[source,bash]
+----
+$ mvn clean install -DskipTests
+----
+
+This compiles every module and installs the artifacts in your local repository. The usual Maven lifecycle applies:
+`clean` wipes the `target` folders, `compile` builds the classes, `test` runs the unit tests, `install` produces
+and installs the packaged artifacts.
+
+*Skipping the tests is not optional in practice*: a full run takes hours, as a large part of the suite starts
+Cassandra, OpenSearch, RabbitMQ and S3 containers through
+link:https://www.testcontainers.org/[Testcontainers], and therefore needs a working docker daemon. Run the tests of
+the module you are working on instead:
+
+[source,bash]
+----
+$ mvn test -pl mailbox/store
+----
+
+=== Where the applications land
+
+Each application produces, in its own `target` folder, a jar and a `.lib` folder holding its dependencies:
+
+* `server/apps/distributed-app/target` - xref:servers:distributed/index.adoc[Distributed server]
+* `server/apps/postgres-app/target` - xref:servers:postgres/index.adoc[Postgres server]
+* `server/apps/jpa-app/target` - xref:servers:jpa/index.adoc[JPA server]
+* `server/apps/memory-app/target` - xref:servers:test.adoc[Memory server]
+* `server/apps/spring-app/target` - xref:servers:spring/index.adoc[Spring server], packaged as a zip holding the
+whole `bin`/`conf`/`lib`/`var` layout
+
+Each server's *Run with Java* page - xref:servers:distributed/run/run-java.adoc[Distributed],
+xref:servers:postgres/run/run-java.adoc[Postgres], xref:servers:jpa/run/run-java.adoc[JPA],
+xref:servers:spring/run.adoc[Spring] - documents how to start what you just built.
+
+=== Building the docker images
+
+The Guice applications are containerised with
+link:https://github.com/GoogleContainerTools/jib[jib], which needs no docker daemon to build the image. The build
+writes a `jib-image.tar` next to the jar, which you then load:
+
+[source,bash]
+----
+$ docker image load -i server/apps/distributed-app/target/jib-image.tar
+----
+
+=== Running the CLI from the sources
+
+The xref:servers:distributed/operate/cli.adoc[command line interface] can be run without packaging it, from
+`server/apps/cli`:
+
+[source,bash]
+----
+$ mvn exec:java -Dexec.args="-h localhost -p 9999 listdomains"
+----
+
+== Working on James in an IDE
+
+James is a Java *and Scala* project - JMAP in particular is written in Scala. Any IDE you use has to support both;
+this is the reason the project no longer documents an Eclipse set up.
+
+=== IntelliJ IDEA
+
+Open the root `pom.xml` as a project and let the Maven importer run. Three plugins are worth installing:
+
+* *Scala*, without which a good part of JMAP will not resolve;
+* *CheckStyle-IDEA*, to catch style violations before the build does. Declare the `checkstyle.xml` file sitting at
+the root of the repository under *Settings > Tools > Checkstyle*, then scan a file, a module or the project from
+the CheckStyle panel;
+* *AsciiDoc*, to preview the documentation you are reading.
+
+=== Import layout
+
+Checkstyle enforces the order of the imports, and getting it wrong is the most common reason for a build to fail
+on a otherwise correct change. Configure your IDE to produce it - in IntelliJ IDEA, under
+*Settings > Editor > Code Style > Java > Imports* and *> Scala > Imports*.
+
+For Java:
+
+....
+import static all other imports
+
+import java.*
+
+import javax.*
+
+import jakarta.*
+
+import org.*
+
+import com.*
+
+import all other imports
+....
+
+For Scala:
+
+....
+base package imports
+
+java
+
+all other imports
+
+scala
+....
+
+=== The OpenJPA agent
+
+The JPA based applications need the OpenJPA java agent, which performs the runtime enhancement of the entity
+classes. Running `mvn package` does that enhancement at build time; if you start a JPA application from your IDE
+instead, add the agent to the VM options of your run configuration:
+
+....
+-javaagent:$HOME/.m2/repository/org/apache/openjpa/openjpa/4.1.1/openjpa-4.1.1.jar
+....
+
+== Contributing your change back
+
+xref:james-site::contributing.adoc[The contribution guidelines] describe how to get a change reviewed and merged.
+The xref:logging.adoc[logging conventions] and the
+xref:servers:distributed/customization/index.adoc[extension mechanisms] are worth reading before writing code.
