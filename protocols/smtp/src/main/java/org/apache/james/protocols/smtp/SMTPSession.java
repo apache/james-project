@@ -44,6 +44,20 @@ public interface SMTPSession extends ProtocolSession {
     /** HELO or EHLO */
     AttachmentKey<String> CURRENT_HELO_MODE = AttachmentKey.of("CURRENT_HELO_MODE", String.class);
     AttachmentKey<String> CURRENT_HELO_NAME = AttachmentKey.of("CURRENT_HELO_NAME", String.class);
+    /** Set when the authenticated account was granted the right to use identities other than its own */
+    AttachmentKey<Boolean> ALLOW_USE_OTHER_IDENTITY = AttachmentKey.of("ALLOW_USE_OTHER_IDENTITY", Boolean.class);
+
+    /**
+     * Whether this session is allowed to use MAIL FROM / From identities other than the one it authenticated with.
+     *
+     * Set upon authentication for accounts explicitly granted that right, this bypasses the identity checks
+     * performed by the sender identity verification hook (see the <code>verifyIdentity</code> setting).
+     *
+     * @return true if identity verification is to be bypassed for this session
+     */
+    default boolean allowUseOtherIdentity() {
+        return getAttachment(ALLOW_USE_OTHER_IDENTITY, State.Connection).orElse(false);
+    }
 
     /**
      * Returns the service wide configuration

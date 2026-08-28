@@ -184,6 +184,11 @@
               <li><code>true</code>: act as <code>strict</code></li>
               <li><code>false</code>: act as <code>disabled</code></li>
           </ul>
+
+          Note that individual accounts declared on the <code>ConfigurationAuthHook</code> handler can be granted
+          <code>allowUseOtherIdentity</code> (defaults to <code>false</code>), which bypasses these checks for the
+          sessions they authenticate. This allows application accounts to send on behalf of end users
+          (calendar invitations, notifications...) without turning identity verification off for everybody else.
       </dd>
       <dt><strong>handler.maxmessagesize</strong></dt>
       <dd>This is an optional tag with a non-negative integer body.  It specifies the maximum 

@@ -88,6 +88,9 @@ public abstract class AbstractSenderAuthIdentifyVerificationHook implements Mail
     
     @Override
     public HookResult doMail(SMTPSession session, MaybeSender sender) {
+        if (session.allowUseOtherIdentity()) {
+            return HookResult.DECLINED;
+        }
         return doCheck(session, sender);
     }
 
@@ -97,6 +100,9 @@ public abstract class AbstractSenderAuthIdentifyVerificationHook implements Mail
      */
     @Override
     public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+        if (session.allowUseOtherIdentity()) {
+            return HookResult.DECLINED;
+        }
         return doCheck(session, sender);
     }
 

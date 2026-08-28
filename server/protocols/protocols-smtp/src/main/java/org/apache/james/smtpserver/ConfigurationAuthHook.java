@@ -30,6 +30,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
 import org.apache.james.jwt.OidcSASLConfiguration;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -38,11 +39,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.Multimap;
 
 /**
  * Declarative authentication.
+ *
+ * <p>Each {@code account} supports an optional {@code allowUseOtherIdentity} flag (defaults to {@code false}).
+ * When set, the authenticated session bypasses the {@code verifyIdentity} checks and may thus use any
+ * MAIL FROM / From identity. This is intended for application accounts sending on behalf of end users
+ * (calendar invitations, notifications...), and should be granted only to accounts whose credentials are
+ * under the operator control.</p>
  *
  * @deprecated Prefer implementing a SASL mechanism factory. Existing handler-chain registrations
  * are adapted by the SMTP AUTH handler during migration.
@@ -51,7 +56,13 @@ import com.google.common.collect.Multimap;
 public class ConfigurationAuthHook implements AuthHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationAuthHook.class);
 
-    private Multimap<Username, String> accounts = ImmutableListMultimap.of();
+    private record Account(Username username, List<String> passwords, boolean allowUseOtherIdentity) {
+        boolean matches(Username username, String password) {
+            return this.username.equals(username) && passwords.stream().anyMatch(password::equals);
+        }
+    }
+
+    private List<Account> accounts = ImmutableList.of();
 
     @Inject
     public ConfigurationAuthHook() {
@@ -62,40 +73,44 @@ public class ConfigurationAuthHook implements AuthHook {
     public void init(Configuration config) throws ConfigurationException {
         HierarchicalConfiguration<ImmutableNode> hierarchicalConfiguration = (HierarchicalConfiguration<ImmutableNode>) config;
 
-        ImmutableListMultimap.Builder<Username, String> builder = ImmutableListMultimap.builder();
-
-        for (HierarchicalConfiguration<ImmutableNode> accountNode : hierarchicalConfiguration.configurationAt("accounts")
-            .configurationsAt("account")) {
-            String username = accountNode.getString("username");
-            if (username != null) {
-                List<String> passwords = accountNode.getList(String.class, "passwords.password");
-                passwords.forEach(pw -> builder.put(Username.of(username), pw));
-            }
-        }
-        this.accounts = builder.build();
-
-        LOGGER.info("SMTP authentication enabled from configuration for users: {}", accounts.keySet()
+        this.accounts = hierarchicalConfiguration.configurationAt("accounts")
+            .configurationsAt("account")
             .stream()
-            .map(Username::asString)
+            .flatMap(accountNode -> parseAccount(accountNode).stream())
+            .collect(ImmutableList.toImmutableList());
+
+        LOGGER.info("SMTP authentication enabled from configuration for users: {}", accounts.stream()
+            .map(account -> account.username().asString())
             .collect(ImmutableList.toImmutableList()));
+    }
+
+    private Optional<Account> parseAccount(HierarchicalConfiguration<ImmutableNode> accountNode) {
+        return Optional.ofNullable(accountNode.getString("username"))
+            .map(username -> new Account(Username.of(username),
+                accountNode.getList(String.class, "passwords.password", ImmutableList.of()),
+                accountNode.getBoolean("allowUseOtherIdentity", false)));
     }
 
     @Override
     public HookResult doAuth(SMTPSession session, Username username, String password) {
-        Optional<Username> loggedInUser = Optional.ofNullable(accounts.get(username))
-            .filter(allowedsPass -> allowedsPass.stream().anyMatch(password::equals))
-            .map(any -> username);
+        return accounts.stream()
+            .filter(account -> account.matches(username, password))
+            .findFirst()
+            .map(account -> authenticate(session, account))
+            .orElse(HookResult.DECLINED);
+    }
 
-        if (loggedInUser.isPresent()) {
-            session.setUsername(loggedInUser.get());
-            session.setRelayingAllowed(true);
-
-            return HookResult.builder()
-                .hookReturnCode(HookReturnCode.ok())
-                .smtpDescription("Authentication Successful")
-                .build();
+    private HookResult authenticate(SMTPSession session, Account account) {
+        session.setUsername(account.username());
+        session.setRelayingAllowed(true);
+        if (account.allowUseOtherIdentity()) {
+            session.setAttachment(SMTPSession.ALLOW_USE_OTHER_IDENTITY, true, ProtocolSession.State.Connection);
         }
-        return HookResult.DECLINED;
+
+        return HookResult.builder()
+            .hookReturnCode(HookReturnCode.ok())
+            .smtpDescription("Authentication Successful")
+            .build();
     }
 
     @Override
