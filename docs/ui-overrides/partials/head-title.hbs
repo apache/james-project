@@ -1,0 +1,3 @@
+{{!-- The home page of the component is titled after the site itself. Avoid the
+      "Apache James Server :: Apache James Server" the stock template would produce. --}}
+    <title>{{#if (eq (detag (or page.title defaultPageTitle)) site.title)}}{{{site.title}}}{{else}}{{{detag (or page.title defaultPageTitle)}}}{{#with site.title}} :: {{this}}{{/with}}{{/if}}</title>
