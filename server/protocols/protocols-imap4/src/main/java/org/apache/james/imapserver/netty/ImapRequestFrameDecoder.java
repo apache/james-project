@@ -74,7 +74,6 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     public static final int UNAUTHENTICATE_LITERAL_MAX_SIZE = Optional.ofNullable(System.getProperty("james.imap.unauthenticated.literal.max.size"))
         .map(Integer::parseInt)
         .orElse(8192);
-    private static final String SHOULD_BUFFER = "should_buffer";
 
     private final ImapDecoder decoder;
     private final int inMemorySizeLimit;
@@ -130,16 +129,24 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
         Map<String, Object> attachment = ctx.channel().attr(FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).get();
 
-        Pair<ImapRequestLineReader, Integer> readerAndSize = obtainReader(ctx, in, attachment, readerIndex);
-        if (readerAndSize == null) {
+        ParseAttempt attempt = obtainReader(ctx, in, attachment, readerIndex);
+        if (attempt == null) {
             return;
         }
 
-        parseImapMessage(ctx, in, attachment, readerAndSize, readerIndex)
+        parseImapMessage(ctx, in, attachment, attempt, readerIndex)
             .ifPresent(out::add);
     }
 
-    private Optional<ImapMessage> parseImapMessage(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, Pair<ImapRequestLineReader, Integer> readerAndSize, int readerIndex) throws DecodingException {
+    /**
+     * One parse round: {@code reader} reads from {@code buffer}, whose first {@code pendingSize}
+     * bytes come from {@link #pending} and whose tail is a view of Netty's cumulation.
+     * {@code buffer} is null when the reader is backed by a file rather than by memory.
+     */
+    private record ParseAttempt(ImapRequestLineReader reader, int size, ByteBuf buffer, int pendingSize) {
+    }
+
+    private Optional<ImapMessage> parseImapMessage(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, ParseAttempt attempt, int readerIndex) throws DecodingException {
         ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
 
         // check if the session was removed before to prevent a harmless NPE. See JAMES-1312
@@ -147,19 +154,20 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         if (session != null && session.getState() != ImapSessionState.LOGOUT) {
             try {
 
-                ImapMessage message = decoder.decode(readerAndSize.getLeft(), session);
+                ImapMessage message = decoder.decode(attempt.reader(), session);
 
                 // if size is != -1 the case was a literal. if thats the case we
                 // should not consume the line
                 // See JAMES-1199
-                if (readerAndSize.getRight() == -1) {
+                if (attempt.size() == -1) {
                     try {
-                        readerAndSize.getLeft().consumeLine();
+                        attempt.reader().consumeLine();
                     } catch (DecodingException | NettyImapRequestLineReader.NotEnoughDataException e) {
                         // Silent
                     }
                 }
 
+                commitConsumedBytes(in, attempt);
                 enableFraming(ctx);
 
                 attachment.clear();
@@ -170,8 +178,6 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             } catch (NettyImapRequestLineReader.NotEnoughDataException e) {
                 // this exception was thrown because we don't have enough data yet
                 requestMoreData(ctx, in, attachment, e.getNeededSize(), readerIndex);
-            } finally {
-                attachment.remove(SHOULD_BUFFER);
             }
         } else {
             // The session was null so may be the case because the channel was already closed but there were still bytes in the buffer.
@@ -183,88 +189,81 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         return Optional.empty();
     }
 
+    /**
+     * The command may not have used everything it was offered: the tail can already be the next
+     * pipelined command. Advance Netty's cumulation past what was actually consumed only, so the
+     * remainder is decoded as a command of its own instead of being dropped (see #3144).
+     */
+    private void commitConsumedBytes(ByteBuf in, ParseAttempt attempt) {
+        if (in != null && attempt.buffer() != null) {
+            in.skipBytes(Math.max(0, attempt.buffer().readerIndex() - attempt.pendingSize()));
+        }
+    }
+
     private void requestMoreData(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, int neededData, int readerIndex) {
-        Boolean shouldBuffer = Optional.ofNullable(attachment.get(SHOULD_BUFFER)).map(Boolean.class::cast).orElse(true);
-        if (shouldBuffer) {
-            // store the needed data size for later usage
+        // Everything we could offer was not enough, so the rest has to come from the network:
+        // keep all of `in` and retry the whole parse once more bytes arrive.
+        in.readerIndex(readerIndex);
+        byte[] bytes = new byte[in.readableBytes()];
+        in.readBytes(bytes);
+        pending.add(bytes);
 
-            int i = in.readerIndex();
-            in.readerIndex(readerIndex);
-
-            byte[] bytes = new byte[in.readableBytes()];
-            in.readBytes(bytes);
-            pending.add(bytes);
-            in.readerIndex(i);
-
-            attachment.put(NEEDED_DATA, neededData - bytes.length);
-        } else {
+        // NEEDED_DATA keeps its historical meaning: how many bytes must still arrive from the
+        // network, beyond everything now held in `pending`. The reader that threw counted from
+        // the start of `pending`, so rebase to that delta - uploadToAFile()'s completion check
+        // relies on it. UNKNOWN_SIZE is a sentinel, not a count: pass it through untouched.
+        if (neededData == NettyImapRequestLineReader.NotEnoughDataException.UNKNOWN_SIZE) {
             attachment.put(NEEDED_DATA, neededData);
+        } else {
+            attachment.put(NEEDED_DATA, neededData - pending.stream().mapToInt(b -> b.length).sum());
         }
 
         // SwitchableDelimiterBasedFrameDecoder added further to JAMES-1436.
         disableFraming(ctx);
     }
 
-    private Pair<ImapRequestLineReader, Integer> obtainReader(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, int readerIndex) throws IOException {
-        boolean retry = false;
-        ImapRequestLineReader reader;
+    private ParseAttempt obtainReader(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, int readerIndex) throws IOException {
         // check if we failed before and if we already know how much data we
         // need to sucess next run
-        int size = -1;
         final Object rawSize = attachment.get(NEEDED_DATA);
-        if (rawSize != null) {
-            retry = true;
-            size = (Integer) rawSize;
-            // now see if the buffer hold enough data to process.
-            if (size != NettyImapRequestLineReader.NotEnoughDataException.UNKNOWN_SIZE) {
+        boolean retry = rawSize != null;
+        int size = retry ? (Integer) rawSize : NettyImapRequestLineReader.NotEnoughDataException.UNKNOWN_SIZE;
 
-                // check if we have a inMemorySize limit and if so if the
-                // expected size will fit into it
-                if (inMemorySizeLimit > 0 && inMemorySizeLimit < size) {
-                    ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-                    int literalSizeLimit = literalSizeLimit(session);
-                    if (literalSizeLimit > 0 && size > literalSizeLimit) {
-                        throw new IOException("Attempt to write a too big chunk into a file. " + size + " and limit " + literalSizeLimit);
-                    }
+        // check if we have a inMemorySize limit and if so if the expected size will fit into it
+        if (size != NettyImapRequestLineReader.NotEnoughDataException.UNKNOWN_SIZE
+            && inMemorySizeLimit > 0 && inMemorySizeLimit < size) {
 
-                    // ok seems like it will not fit in the memory limit so we
-                    // need to store it in a temporary file
-                    uploadToAFile(ctx, in, attachment, size, readerIndex);
-                    return null;
-
-                } else {
-                    int readableBytes = in.readableBytes();
-                    byte[] bytes = new byte[readableBytes];
-                    in.readBytes(bytes);
-                    pending.add(bytes);
-
-                    int totalSize = pending.stream().mapToInt(m -> m.length).sum();
-                    if (totalSize >= size) {
-
-                        ByteBuf byteBufs = Unpooled.wrappedBuffer(pending.toArray(byte[][]::new));
-                        ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-                        attachment.put(SHOULD_BUFFER, false);
-                        reader = new NettyImapRequestLineReader(ctx.channel(), byteBufs, retry, readerIndex, literalSizeLimit(session), maxFrameLength);
-                    } else {
-                        return null;
-                    }
-                }
-
-            } else {
-                if (pending.isEmpty()) {
-                    ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-                    reader = new NettyImapRequestLineReader(ctx.channel(), in, retry, readerIndex, literalSizeLimit(session), maxFrameLength);
-                } else {
-                    ByteBuf byteBufs = Unpooled.wrappedBuffer(pending.toArray(byte[][]::new));
-                    ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-                    reader = new NettyImapRequestLineReader(ctx.channel(), byteBufs, retry, readerIndex, literalSizeLimit(session), maxFrameLength);
-                }
-            }
-        } else {
             ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-            reader = new NettyImapRequestLineReader(ctx.channel(), in, retry, readerIndex, literalSizeLimit(session), maxFrameLength);
+            int literalSizeLimit = literalSizeLimit(session);
+            if (literalSizeLimit > 0 && size > literalSizeLimit) {
+                throw new IOException("Attempt to write a too big chunk into a file. " + size + " and limit " + literalSizeLimit);
+            }
+
+            // ok seems like it will not fit in the memory limit so we
+            // need to store it in a temporary file
+            uploadToAFile(ctx, in, attachment, size, readerIndex);
+            return null;
         }
-        return Pair.of(reader, size);
+
+        int pendingSize = pending.stream().mapToInt(bytes -> bytes.length).sum();
+        ByteBuf buffer = pendingFollowedBy(in);
+        ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+        ImapRequestLineReader reader = new NettyImapRequestLineReader(ctx.channel(), buffer, retry, 0, literalSizeLimit(session), maxFrameLength);
+        return new ParseAttempt(reader, size, buffer, pendingSize);
+    }
+
+    /**
+     * What we kept from earlier rounds, followed by a *view* of what Netty holds now. Reading it
+     * leaves `in` untouched, so a parse that fails costs nothing and a parse that succeeds can
+     * hand back whatever it did not use - see {@link #commitConsumedBytes(ByteBuf, ParseAttempt)}.
+     */
+    private ByteBuf pendingFollowedBy(ByteBuf in) {
+        ByteBuf[] parts = new ByteBuf[pending.size() + 1];
+        for (int i = 0; i < pending.size(); i++) {
+            parts[i] = Unpooled.wrappedBuffer(pending.get(i));
+        }
+        parts[pending.size()] = in.slice(in.readerIndex(), in.readableBytes());
+        return Unpooled.wrappedBuffer(parts);
     }
 
     private void uploadToAFile(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, int size, int readerIndex) throws IOException {
@@ -294,7 +293,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                         // Not doing this causes IDLEd IMAP connections to clear IMAP append literal while they are processed.
                         Object removed = attachment.remove(SUBSCRIPTION);
                         try {
-                            parseImapMessage(ctx, null, attachment, Pair.of(reader, size), readerIndex)
+                            parseImapMessage(ctx, null, attachment, new ParseAttempt(reader, size, null, 0), readerIndex)
                                 .ifPresent(ctx::fireChannelRead);
                         } catch (Exception e) {
                             if (removed instanceof Disposable) {
