@@ -29,6 +29,7 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -557,6 +558,30 @@ class IMAPServerTest {
                 msg + "\r\nA005 NOOP").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII)).contains("APPEND completed.");
+        }
+
+        @Test
+        void secondPipelinedAppendAfterLiteralShouldNotBeLost() throws Exception {
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            String msg1 = "From: " + USER.asString() + "\r\nSubject: msg1\r\n\r\nbody1\r\n";
+            String msg2 = "From: " + USER.asString() + "\r\nSubject: msg2\r\n\r\nbody2\r\n";
+            String cmd1 = "A004 APPEND INBOX {" + msg1.getBytes(StandardCharsets.UTF_8).length + "+}\r\n" + msg1 + "\r\n";
+            String cmd2 = "A005 APPEND INBOX {" + msg2.getBytes(StandardCharsets.UTF_8).length + "+}\r\n" + msg2 + "\r\n";
+
+            // Both APPENDs pipelined in a single write, as a client does when it doesn't want a
+            // round trip between two uploads (e.g. copying a just-sent message into Sent while also
+            // syncing a Draft).
+            clientConnection.write(ByteBuffer.wrap((cmd1 + cmd2).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(readStringUntil(clientConnection, s -> s.contains("A004 OK")))
+                .anyMatch(s -> s.contains("APPEND completed"));
+
+            // Without the fix, this never arrives at all - bound the wait rather than block forever.
+            assertTimeoutPreemptively(Duration.ofSeconds(5), () ->
+                assertThat(readStringUntil(clientConnection, s -> s.contains("A005 OK")))
+                    .anyMatch(s -> s.contains("APPEND completed")));
         }
 
         @Test
