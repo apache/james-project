@@ -69,13 +69,15 @@ public class EventDispatcher {
     private final ListenerExecutor listenerExecutor;
     private final EventDeadLetters deadLetters;
     private final RabbitMQConfiguration configuration;
+    private final GroupRegistrationHandler groupRegistrationHandler;
 
     private final DispatchingFailureGroup dispatchingFailureGroup;
 
     EventDispatcher(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer, Sender sender,
                     LocalListenerRegistry localListenerRegistry,
                     ListenerExecutor listenerExecutor,
-                    EventDeadLetters deadLetters, RabbitMQConfiguration configuration) {
+                    EventDeadLetters deadLetters, RabbitMQConfiguration configuration,
+                    GroupRegistrationHandler groupRegistrationHandler) {
         this.namingStrategy = namingStrategy;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
@@ -89,6 +91,7 @@ public class EventDispatcher {
         this.listenerExecutor = listenerExecutor;
         this.deadLetters = deadLetters;
         this.configuration = configuration;
+        this.groupRegistrationHandler = groupRegistrationHandler;
         this.dispatchingFailureGroup = new DispatchingFailureGroup(namingStrategy.getEventBusName());
     }
 
@@ -188,6 +191,9 @@ public class EventDispatcher {
     }
 
     private Mono<Void> remoteGroupsDispatch(byte[] serializedEvent, Event event) {
+        if (shouldSkipGroupsDispatch()) {
+            return Mono.empty();
+        }
         return remoteDispatchWithAcks(serializedEvent)
             .doOnError(ex -> LOGGER.error(
                 "cannot dispatch event of type '{}' belonging '{}' with id '{}' to remote groups, store it into dead letter",
@@ -200,6 +206,9 @@ public class EventDispatcher {
     }
 
     private Mono<Void> remoteGroupsDispatch(byte[] serializedEvent, List<Event> events) {
+        if (shouldSkipGroupsDispatch()) {
+            return Mono.empty();
+        }
         return remoteDispatchWithAcks(serializedEvent)
             .onErrorResume(ex -> Flux.fromIterable(events)
                 .map(event -> {
@@ -212,6 +221,11 @@ public class EventDispatcher {
                     return deadLetters.store(dispatchingFailureGroup, event);
                 })
                 .then(propagateErrorIfNeeded(ex)));
+    }
+
+    private boolean shouldSkipGroupsDispatch() {
+        return !configuration.eventBusPublishOnNoGroups()
+            && groupRegistrationHandler.registeredGroups().isEmpty();
     }
 
     private Mono<Void> propagateErrorIfNeeded(Throwable throwable) {
