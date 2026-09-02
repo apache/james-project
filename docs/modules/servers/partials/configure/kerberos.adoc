@@ -73,6 +73,9 @@ The `auth.gssapi` properties are:
 | `keyTab`
 | Absolute path or `file:` URI of a readable keytab containing the acceptor principal.
 
+| `realmMapping`
+| Optional. Maps Kerberos realms onto mail domains, see <<_identity_mapping>>. Absent, the mail domain is the Kerberos realm.
+
 |===
 
 GSSAPI uses the top-level `auth.requireSSL` transport policy and defaults to requiring TLS when that property is absent.
@@ -80,14 +83,51 @@ SMTP also applies `auth.announce` and `auth.requireSSL` when advertising authent
 Kerberos tokens can exceed SMTP's default 8,192-byte line limit; set `maxLineLength` to a measured operational value when needed.
 The value applies globally to SMTP input and must remain bounded.
 
-== Identity And Security
+== Identity Mapping
 
-The authenticated Kerberos principal is mapped to a James username, including its realm.
-Because James usernames are case-insensitive while Kerberos principals are case-sensitive, James accepts only canonical client principals:
-the identity must contain only ASCII characters, principal components must be lower case, and the realm must be upper case, for example `alice@EXAMPLE.COM`.
-Noncanonical variants such as `Alice@EXAMPLE.COM` and `alice@example.com` are rejected so that distinct Kerberos principals cannot map to the same James identity.
-The resulting James username is lower case; provision that username and domain when the protocol needs a local account, notably for IMAP mailbox access.
-When a client requests a different SASL authorization identity, James applies its normal authorization rules.
+Because James usernames are case-insensitive while Kerberos principals are case-sensitive, James accepts only canonical
+client principals: the identity must contain only ASCII characters, principal components must be lower case, and the
+realm must be upper case, for example `alice@EXAMPLE.COM`.
+Noncanonical variants such as `Alice@EXAMPLE.COM` and `alice@example.com` are rejected so that distinct Kerberos
+principals cannot map to the same James identity.
+
+By default the James username is the Kerberos principal itself, so the mail domain is the Kerberos realm:
+`alice@EXAMPLE.COM` authenticates as `alice@example.com`, and `example.com` has to be one of the James domains.
+
+Deployments whose Kerberos realm is not their mail domain declare the correspondence explicitly:
+
+[source,xml]
+....
+<gssapi>
+    <serviceName>imap</serviceName>
+    <serverName>mail.example.com</serverName>
+    <principal>imap/mail.example.com@CORP.EXAMPLE.COM</principal>
+    <keyTab>/run/secrets/james/imap.keytab</keyTab>
+    <realmMapping>
+        <realm name="CORP.EXAMPLE.COM" domain="example.com"/>
+        <realm name="SUB.EXAMPLE.COM" domain="sub.example.com"/>
+    </realmMapping>
+</gssapi>
+....
+
+`alice@CORP.EXAMPLE.COM` then authenticates as `alice@example.com`.
+Realm names are written as Kerberos spells them, in upper case, and the mapping is exhaustive: a principal whose realm
+is not listed has no James identity and is rejected.
+Two realms may not share a mail domain, as that would let the principals of one realm authenticate as those of the
+other.
+
+Only the realm is rewritten: the principal name components become the local part of the James username as they are.
+A deployment whose Kerberos account names differ from its mail local parts provisions James accounts named after the
+Kerberos names and declares the mail addresses as aliases, as it would for any other login.
+
+The resulting James username is lower case; provision that username and domain when the protocol needs a local
+account, notably for IMAP mailbox access.
+
+When a client requests a SASL authorization identity, a canonically spelled Kerberos principal goes through the realm
+mapping as well, and any other value is read as a James username.
+James then applies its normal authorization rules to the result.
+
+== Security
 
 The implementation accepts only the SASL `auth` quality of protection.
 It does not negotiate a SASL integrity or confidentiality layer; use TLS to protect protocol traffic.

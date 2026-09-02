@@ -249,6 +249,30 @@ class GssapiSaslMechanismTest {
         verify(loginContextFactory, never()).login(any());
     }
 
+    @Test
+    void factoryShouldResolveIdentitiesThroughTheConfiguredRealmMapping() throws Exception {
+        Path keyTab = Files.createFile(temporaryDirectory.resolve("imap.keytab"));
+        KerberosLoginContextFactory loginContextFactory = mock(KerberosLoginContextFactory.class);
+        loginContext(loginContextFactory);
+        SaslServer saslServer = mock(SaslServer.class);
+        AtomicReference<CallbackHandler> callbackHandler = new AtomicReference<>();
+        when(saslServer.evaluateResponse(any())).thenAnswer(invocation -> {
+            authorize(callbackHandler.get(), "alice@CORP.EXAMPLE.COM", "alice@CORP.EXAMPLE.COM");
+            return null;
+        });
+        when(saslServer.isComplete()).thenReturn(true);
+        when(saslServer.getNegotiatedProperty(Sasl.QOP)).thenReturn("auth");
+        GssapiSaslMechanismFactory testee = new GssapiSaslMechanismFactory(mock(KeyTabPrincipalVerifier.class), loginContextFactory,
+            capturingFactory(saslServer, callbackHandler));
+        BaseHierarchicalConfiguration configuration = configuration(keyTab);
+        configuration.addProperty("auth.gssapi.realmMapping.realm(-1)[@name]", "CORP.EXAMPLE.COM");
+        configuration.addProperty("auth.gssapi.realmMapping.realm[@domain]", "example.com");
+
+        try (SaslExchange exchange = testee.create(configuration).start(request(Optional.of(INITIAL_TOKEN)), authenticating())) {
+            assertThat(exchange.firstStep()).isEqualTo(new SaslStep.Success(IDENTITY, Optional.empty()));
+        }
+    }
+
     private TestExchange completedExchange(byte[] output, String qop, SaslAuthenticator authenticator) throws Exception {
         KerberosLoginContextFactory loginContextFactory = mock(KerberosLoginContextFactory.class);
         KerberosLoginContext loginContext = loginContext(loginContextFactory);
@@ -311,7 +335,8 @@ class GssapiSaslMechanismTest {
                                           KerberosLoginContextFactory loginContextFactory,
                                           GssapiSaslServerFactory saslServerFactory) {
         GssapiSaslConfiguration configuration = new GssapiSaslConfiguration(
-            "imap", "mail.example.com", "imap/mail.example.com@EXAMPLE.COM", Path.of("imap.keytab"), requireSSL);
+            "imap", "mail.example.com", "imap/mail.example.com@EXAMPLE.COM", Path.of("imap.keytab"), requireSSL,
+            RealmMapping.REALM_AS_DOMAIN);
         return new GssapiSaslMechanism(configuration, loginContextFactory, saslServerFactory);
     }
 

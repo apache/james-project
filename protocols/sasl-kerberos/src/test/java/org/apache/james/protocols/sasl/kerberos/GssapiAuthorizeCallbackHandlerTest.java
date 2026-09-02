@@ -22,6 +22,7 @@ package org.apache.james.protocols.sasl.kerberos;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -30,6 +31,7 @@ import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.AuthorizeCallback;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.sasl.SaslAuthenticationResult;
 import org.apache.james.protocols.api.sasl.SaslAuthenticator;
@@ -50,7 +52,7 @@ class GssapiAuthorizeCallbackHandlerTest {
     @Test
     void shouldAuthorizeCanonicalSelfIdentity() throws Exception {
         AtomicReference<SaslIdentity> identity = new AtomicReference<>();
-        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(authorizing(identity));
+        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(authorizing(identity), RealmMapping.REALM_AS_DOMAIN);
         AuthorizeCallback callback = new AuthorizeCallback("alice@EXAMPLE.COM", "alice@EXAMPLE.COM");
 
         testee.handle(new AuthorizeCallback[] {callback});
@@ -64,7 +66,7 @@ class GssapiAuthorizeCallbackHandlerTest {
     @Test
     void shouldRejectNonCanonicalPrincipalComponentCase() throws Exception {
         AtomicReference<SaslIdentity> identity = new AtomicReference<>();
-        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(authorizing(identity));
+        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(authorizing(identity), RealmMapping.REALM_AS_DOMAIN);
         AuthorizeCallback callback = new AuthorizeCallback("Alice@EXAMPLE.COM", "Alice@EXAMPLE.COM");
 
         testee.handle(new AuthorizeCallback[] {callback});
@@ -79,7 +81,7 @@ class GssapiAuthorizeCallbackHandlerTest {
     @Test
     void shouldRejectNonCanonicalRealmCase() throws Exception {
         AtomicReference<SaslIdentity> identity = new AtomicReference<>();
-        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(authorizing(identity));
+        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(authorizing(identity), RealmMapping.REALM_AS_DOMAIN);
         AuthorizeCallback callback = new AuthorizeCallback("alice@example.com", "alice@example.com");
 
         testee.handle(new AuthorizeCallback[] {callback});
@@ -95,7 +97,7 @@ class GssapiAuthorizeCallbackHandlerTest {
     @MethodSource("normalizationCollisions")
     void shouldRejectAuthenticationIdentityNormalizationCollisions(String authenticationId, String collidingCanonicalIdentity) throws Exception {
         AtomicReference<SaslIdentity> identity = new AtomicReference<>();
-        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(authorizing(identity));
+        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(authorizing(identity), RealmMapping.REALM_AS_DOMAIN);
         AuthorizeCallback callback = new AuthorizeCallback(authenticationId, authenticationId);
 
         assertThat(Username.of(authenticationId)).isEqualTo(Username.of(collidingCanonicalIdentity));
@@ -110,10 +112,55 @@ class GssapiAuthorizeCallbackHandlerTest {
     }
 
     @Test
+    void shouldAuthorizeThroughTheConfiguredRealmMapping() throws Exception {
+        AtomicReference<SaslIdentity> identity = new AtomicReference<>();
+        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(authorizing(identity),
+            new RealmMapping(Map.of("CORP.EXAMPLE.COM", Domain.of("example.com"))));
+        AuthorizeCallback callback = new AuthorizeCallback("alice@CORP.EXAMPLE.COM", "alice@CORP.EXAMPLE.COM");
+
+        testee.handle(new AuthorizeCallback[] {callback});
+
+        assertThat(identity.get()).isEqualTo(new SaslIdentity(Username.of("alice@example.com"), Username.of("alice@example.com")));
+        assertThat(callback.isAuthorized()).isTrue();
+        assertThat(callback.getAuthorizedID()).isEqualTo("alice@example.com");
+    }
+
+    @Test
+    void shouldRejectPrincipalOfAnUnmappedRealm() throws Exception {
+        AtomicReference<SaslIdentity> identity = new AtomicReference<>();
+        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(authorizing(identity),
+            new RealmMapping(Map.of("CORP.EXAMPLE.COM", Domain.of("example.com"))));
+        AuthorizeCallback callback = new AuthorizeCallback("alice@EXAMPLE.COM", "alice@EXAMPLE.COM");
+
+        testee.handle(new AuthorizeCallback[] {callback});
+
+        assertThat(identity.get()).isNull();
+        assertThat(callback.isAuthorized()).isFalse();
+        assertThat(testee.result()).hasValueSatisfying(result -> assertThat(result)
+            .isInstanceOfSatisfying(SaslAuthenticationResult.Failure.class,
+                actual -> assertThat(actual.failure().type()).isEqualTo(SaslFailure.Type.AUTHENTICATION_FAILED)));
+    }
+
+    @Test
+    void shouldRejectMalformedAuthorizationIdentity() throws Exception {
+        AtomicReference<SaslIdentity> identity = new AtomicReference<>();
+        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(authorizing(identity), RealmMapping.REALM_AS_DOMAIN);
+        AuthorizeCallback callback = new AuthorizeCallback("alice@EXAMPLE.COM", "bob@exa mple.com");
+
+        testee.handle(new AuthorizeCallback[] {callback});
+
+        assertThat(identity.get()).isNull();
+        assertThat(callback.isAuthorized()).isFalse();
+        assertThat(testee.result()).hasValueSatisfying(result -> assertThat(result)
+            .isInstanceOfSatisfying(SaslAuthenticationResult.Failure.class,
+                actual -> assertThat(actual.failure().type()).isEqualTo(SaslFailure.Type.MALFORMED)));
+    }
+
+    @Test
     void shouldPreserveTypedAuthorizationFailure() throws Exception {
         SaslFailure failure = SaslFailure.delegationForbidden(
             Username.of("alice@example.com"), Username.of("bob@example.com"), "Delegation is forbidden.");
-        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(failing(failure));
+        GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(failing(failure), RealmMapping.REALM_AS_DOMAIN);
         AuthorizeCallback callback = new AuthorizeCallback("alice@EXAMPLE.COM", "bob@example.com");
 
         testee.handle(new AuthorizeCallback[] {callback});
@@ -125,7 +172,7 @@ class GssapiAuthorizeCallbackHandlerTest {
     @Test
     void shouldRejectMalformedIdentity() throws Exception {
         GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(failing(
-            SaslFailure.authenticationFailed(Optional.empty(), Optional.empty(), "unused")));
+            SaslFailure.authenticationFailed(Optional.empty(), Optional.empty(), "unused")), RealmMapping.REALM_AS_DOMAIN);
         AuthorizeCallback callback = new AuthorizeCallback("", "");
 
         testee.handle(new AuthorizeCallback[] {callback});
@@ -139,7 +186,7 @@ class GssapiAuthorizeCallbackHandlerTest {
     @Test
     void shouldRejectUnexpectedCallback() {
         GssapiAuthorizeCallbackHandler testee = new GssapiAuthorizeCallbackHandler(failing(
-            SaslFailure.authenticationFailed(Optional.empty(), Optional.empty(), "unused")));
+            SaslFailure.authenticationFailed(Optional.empty(), Optional.empty(), "unused")), RealmMapping.REALM_AS_DOMAIN);
 
         assertThatThrownBy(() -> testee.handle(new NameCallback[] {new NameCallback("name")}))
             .isInstanceOf(UnsupportedCallbackException.class);

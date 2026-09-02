@@ -20,13 +20,11 @@
 package org.apache.james.protocols.sasl.kerberos;
 
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Optional;
 
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.sasl.AuthorizeCallback;
 
 import org.apache.james.core.Username;
@@ -36,35 +34,28 @@ import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
 
 class GssapiAuthorizeCallbackHandler implements CallbackHandler {
-    private static Username canonicalAuthenticationId(String authenticationId) {
-        if (authenticationId == null || authenticationId.chars().anyMatch(character -> character > 0x7F)) {
-            throw new IllegalArgumentException("GSSAPI authentication identity must contain only ASCII characters");
+    private static class UnresolvableIdentity extends RuntimeException {
+        private final SaslFailure failure;
+
+        UnresolvableIdentity(SaslFailure failure) {
+            super(failure.reason(), null, false, false);
+            this.failure = failure;
         }
 
-        KerberosPrincipal principal = new KerberosPrincipal(authenticationId);
-        String realm = principal.getRealm();
-        String principalName = principal.getName();
-        String principalComponents = principalName.substring(0, principalName.length() - realm.length() - 1);
-        String canonicalPrincipal = principalComponents.toLowerCase(Locale.ROOT) + "@" + realm.toUpperCase(Locale.ROOT);
-
-        // James usernames are case-insensitive, so accept one Kerberos spelling to prevent case-distinct principals from collapsing.
-        if (!authenticationId.equals(canonicalPrincipal)) {
-            throw new IllegalArgumentException("GSSAPI authentication identity is not canonical");
+        SaslFailure failure() {
+            return failure;
         }
-
-        Username username = Username.of(canonicalPrincipal);
-        // Case folding is intentional; reject any additional normalization that could collapse distinct Kerberos principals.
-        if (!username.asString().equals(canonicalPrincipal.toLowerCase(Locale.US))) {
-            throw new IllegalArgumentException("GSSAPI authentication identity cannot be mapped without normalization");
-        }
-        return username;
     }
 
+    private static final SaslFailure MALFORMED = SaslFailure.malformed("Malformed GSSAPI identity.");
+
     private final SaslAuthenticator authenticator;
+    private final RealmMapping realmMapping;
     private Optional<SaslAuthenticationResult> result;
 
-    GssapiAuthorizeCallbackHandler(SaslAuthenticator authenticator) {
+    GssapiAuthorizeCallbackHandler(SaslAuthenticator authenticator, RealmMapping realmMapping) {
         this.authenticator = authenticator;
+        this.realmMapping = realmMapping;
         this.result = Optional.empty();
     }
 
@@ -83,24 +74,66 @@ class GssapiAuthorizeCallbackHandler implements CallbackHandler {
     }
 
     private void authorize(AuthorizeCallback callback) {
+        SaslIdentity identity;
         try {
-            Username authenticationId = canonicalAuthenticationId(callback.getAuthenticationID());
-            Username authorizationId = Optional.ofNullable(callback.getAuthorizationID())
+            Username authenticationId = resolve(canonicalPrincipal(callback.getAuthenticationID()));
+            identity = new SaslIdentity(authenticationId, Optional.ofNullable(callback.getAuthorizationID())
                 .filter(value -> !value.isEmpty())
-                .map(Username::of)
-                .orElse(authenticationId);
-
-            result = Optional.of(authenticator.authorize(new SaslIdentity(authenticationId, authorizationId)));
-            switch (result.orElseThrow()) {
-                case SaslAuthenticationResult.Success success -> {
-                    callback.setAuthorized(true);
-                    callback.setAuthorizedID(success.identity().authorizationId().asString());
-                }
-                case SaslAuthenticationResult.Failure ignored -> callback.setAuthorized(false);
-            }
-        } catch (IllegalArgumentException e) {
-            result = Optional.of(new SaslAuthenticationResult.Failure(SaslFailure.malformed("Malformed GSSAPI identity.")));
+                .map(this::authorizationId)
+                .orElse(authenticationId));
+        } catch (UnresolvableIdentity e) {
+            result = Optional.of(new SaslAuthenticationResult.Failure(e.failure()));
             callback.setAuthorized(false);
+            return;
         }
+
+        result = Optional.of(authenticator.authorize(identity));
+        switch (result.orElseThrow()) {
+            case SaslAuthenticationResult.Success success -> {
+                callback.setAuthorized(true);
+                callback.setAuthorizedID(success.identity().authorizationId().asString());
+            }
+            case SaslAuthenticationResult.Failure ignored -> callback.setAuthorized(false);
+        }
+    }
+
+    /**
+     * GSSAPI implementations echo the client principal when the client requests no specific authorization identity, so
+     * a canonically spelled Kerberos principal goes through the realm mapping like the authentication identity. Anything
+     * else is the James username the client asks to act as, and the authenticator applies the usual delegation rules.
+     */
+    private Username authorizationId(String authorizationId) {
+        Optional<CanonicalKerberosPrincipal> principal = principal(authorizationId);
+        if (principal.isPresent()) {
+            return resolve(principal.get());
+        }
+        try {
+            return Username.of(authorizationId);
+        } catch (IllegalArgumentException e) {
+            throw new UnresolvableIdentity(MALFORMED);
+        }
+    }
+
+    private CanonicalKerberosPrincipal canonicalPrincipal(String authenticationId) {
+        return principal(authenticationId).orElseThrow(() -> new UnresolvableIdentity(MALFORMED));
+    }
+
+    private Optional<CanonicalKerberosPrincipal> principal(String value) {
+        try {
+            return Optional.of(CanonicalKerberosPrincipal.parse(value));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Username resolve(CanonicalKerberosPrincipal principal) {
+        Optional<Username> username;
+        try {
+            username = realmMapping.resolve(principal);
+        } catch (IllegalArgumentException e) {
+            throw new UnresolvableIdentity(MALFORMED);
+        }
+        return username.orElseThrow(() -> new UnresolvableIdentity(SaslFailure.authenticationFailed(
+            Optional.empty(), Optional.empty(), "GSSAPI principal is not mapped to a James identity.")));
     }
 }

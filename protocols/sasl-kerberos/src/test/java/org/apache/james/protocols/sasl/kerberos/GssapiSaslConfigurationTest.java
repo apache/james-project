@@ -52,7 +52,7 @@ class GssapiSaslConfigurationTest {
         GssapiSaslConfiguration configuration = GssapiSaslConfiguration.from(configuration(keyTab.toString()));
 
         assertThat(configuration).isEqualTo(new GssapiSaslConfiguration(
-            SERVICE_NAME, SERVER_NAME, PRINCIPAL, keyTab.toAbsolutePath(), true));
+            SERVICE_NAME, SERVER_NAME, PRINCIPAL, keyTab.toAbsolutePath(), true, RealmMapping.REALM_AS_DOMAIN));
     }
 
     @Test

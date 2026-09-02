@@ -33,7 +33,8 @@ public record GssapiSaslConfiguration(String serviceName,
                                       String serverName,
                                       String principal,
                                       Path keyTab,
-                                      boolean requireSSL) {
+                                      boolean requireSSL,
+                                      RealmMapping realmMapping) {
     private static final String CONFIGURATION_PATH = "auth.gssapi";
     private static final boolean REQUIRE_SSL_DEFAULT = true;
 
@@ -50,7 +51,7 @@ public record GssapiSaslConfiguration(String serviceName,
         validatePrincipal(serviceName, serverName, principal);
 
         return new GssapiSaslConfiguration(serviceName, serverName, principal, keyTab,
-            serverConfiguration.getBoolean("auth.requireSSL", REQUIRE_SSL_DEFAULT));
+            serverConfiguration.getBoolean("auth.requireSSL", REQUIRE_SSL_DEFAULT), RealmMapping.from(configuration));
     }
 
     private static String required(HierarchicalConfiguration<ImmutableNode> configuration, String property) throws ConfigurationException {
