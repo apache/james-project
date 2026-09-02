@@ -42,22 +42,18 @@ public class PasswordFilter implements AuthenticationFilter {
 
     private static final String GET_METHOD = "GET";
     private static final String HEAD_METHOD = "HEAD";
-    private static final String DELETE_METHOD = "DELETE";
 
     private final Optional<List<String>> passwords;
     private final Optional<List<String>> readOnlyPasswords;
-    private final Optional<List<String>> noDeletePasswords;
 
     /**
      * @param passwordString optional comma-separated list of full-access passwords
      * @param readOnlyPasswordString optional comma-separated list of read-only passwords
-     * @param noDeletePasswordString optional comma-separated list of no-delete passwords
      */
     @Inject
-    public PasswordFilter(Optional<String> passwordString, Optional<String> readOnlyPasswordString, Optional<String> noDeletePasswordString) {
+    public PasswordFilter(Optional<String> passwordString, Optional<String> readOnlyPasswordString) {
         this.passwords = splitOptionalPasswords(passwordString);
         this.readOnlyPasswords = splitOptionalPasswords(readOnlyPasswordString);
-        this.noDeletePasswords = splitOptionalPasswords(noDeletePasswordString);
     }
 
     private Optional<List<String>> splitOptionalPasswords(Optional<String> optionalPasswordString) {
@@ -73,7 +69,6 @@ public class PasswordFilter implements AuthenticationFilter {
 
     private enum AccessLevel {
         FULL,
-        NO_DELETE,
         READ_ONLY,
         NONE
     }
@@ -81,9 +76,6 @@ public class PasswordFilter implements AuthenticationFilter {
     private AccessLevel getAccessLevel(String password) {
         if (passwords.isPresent() && passwords.get().contains(password)) {
             return AccessLevel.FULL;
-        }
-        if (noDeletePasswords.isPresent() && noDeletePasswords.get().contains(password)) {
-            return AccessLevel.NO_DELETE;
         }
         if (readOnlyPasswords.isPresent() && readOnlyPasswords.get().contains(password)) {
             return AccessLevel.READ_ONLY;
@@ -95,8 +87,6 @@ public class PasswordFilter implements AuthenticationFilter {
         switch (accessLevel) {
             case FULL:
                 return true;
-            case NO_DELETE:
-                return !httpMethod.equals(DELETE_METHOD);
             case READ_ONLY:
                 return httpMethod.equals(GET_METHOD) || httpMethod.equals(HEAD_METHOD);
             case NONE:

@@ -230,43 +230,6 @@ class WebAdminConfigurationTest {
     }
 
     @Test
-    void builderShouldAcceptNoDeletePassword() {
-        String password = "nodelete123";
-        assertThat(
-            WebAdminConfiguration.builder()
-                .enabled()
-                .port(PORT)
-                .noDeletePassword(password)
-                .build())
-            .extracting(WebAdminConfiguration::getNoDeletePassword)
-            .isEqualTo(Optional.of(password));
-    }
-
-    @Test
-    void builderShouldAcceptNoDeletePasswordAsOptional() {
-        Optional<String> password = Optional.of("nodelete456");
-        assertThat(
-            WebAdminConfiguration.builder()
-                .enabled()
-                .port(PORT)
-                .noDeletePassword(password)
-                .build())
-            .extracting(WebAdminConfiguration::getNoDeletePassword)
-            .isEqualTo(password);
-    }
-
-    @Test
-    void builderShouldReturnEmptyNoDeletePasswordByDefault() {
-        assertThat(
-            WebAdminConfiguration.builder()
-                .enabled()
-                .port(PORT)
-                .build())
-            .extracting(WebAdminConfiguration::getNoDeletePassword)
-            .isEqualTo(Optional.empty());
-    }
-
-    @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(WebAdminConfiguration.class).verify();
     }

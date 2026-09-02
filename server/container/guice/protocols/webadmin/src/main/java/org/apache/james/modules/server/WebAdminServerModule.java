@@ -172,7 +172,6 @@ public class WebAdminServerModule extends AbstractModule {
                 .minThreadCount(Optional.ofNullable(configurationFile.getInteger("minThreadCount", null)))
                 .password(password(configurationFile, webAdminEnabled, passwordGenerationDefault))
                 .readOnlyPassword(Optional.ofNullable(configurationFile.getString("password.readonly", null)))
-                .noDeletePassword(Optional.ofNullable(configurationFile.getString("password.nodelete", null)))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");
@@ -241,8 +240,7 @@ public class WebAdminServerModule extends AbstractModule {
             }
             if (isPasswordPresent(webAdminConfiguration)) {
                 return new PasswordFilter(webAdminConfiguration.getPassword(),
-                    webAdminConfiguration.getReadOnlyPassword(),
-                    webAdminConfiguration.getNoDeletePassword());
+                    webAdminConfiguration.getReadOnlyPassword());
             }
             return new NoAuthenticationFilter();
         } catch (FileNotFoundException e) {
@@ -252,7 +250,6 @@ public class WebAdminServerModule extends AbstractModule {
 
     private boolean isPasswordPresent(WebAdminConfiguration webAdminConfiguration) {
         return webAdminConfiguration.getPassword().isPresent()
-            || webAdminConfiguration.getNoDeletePassword().isPresent()
             || webAdminConfiguration.getReadOnlyPassword().isPresent();
     }
 

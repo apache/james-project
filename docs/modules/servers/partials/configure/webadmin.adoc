@@ -106,29 +106,15 @@ DELETE /users
 PUT /mailboxes
 ....
 
-| password.nodelete
-| Configures passwords that allow all operations except DELETE.
-These passwords can read and create/modify data but cannot delete.
-Multiple passwords can be configured as a comma-separated list.
+Note that this is the only reduced privilege level WebAdmin offers: read-only, or full administrative access.
+Any password configured through `password` grants the full WebAdmin surface, which includes resetting the
+credentials of arbitrary users, rerouting their mail and deleting their data.
 
-....
-password.nodelete=ccc,ddd
-....
-
-Requests with these passwords will be allowed for:
-
-....
-GET /domains
-POST /users
-PUT /mailboxes
-....
-+
-But denied for:
-+
-....
-DELETE /domains
-DELETE /users
-....
+WebAdmin has no notion of administrator identity, and models several destructive operations as `POST` task
+actions rather than as `DELETE` requests, so no HTTP verb based scheme can express a meaningful partial
+privilege. Deployments needing per-operation, per-domain or per-administrator delegation should place an
+authenticating reverse proxy in front of WebAdmin, which can tie an authenticated identity to the set of
+routes - query parameters included - it is allowed to call.
 
 | jwt.enable
 | Allow JSON Web Token as an authentication mechanism (default: false)

@@ -40,7 +40,7 @@ class PasswordFilterTest {
 
     @BeforeEach
     void setUp() {
-        testee = new PasswordFilter(Optional.of("abc,def"), Optional.of("readonly1,readonly2"), Optional.of("nodelete1,nodelete2"));
+        testee = new PasswordFilter(Optional.of("abc,def"), Optional.of("readonly1,readonly2"));
     }
 
     @Test
@@ -173,45 +173,6 @@ class PasswordFilterTest {
     }
 
     @Test
-    void handleShouldAcceptValidNoDeletePasswordOnGet() throws Exception {
-        Request request = mock(Request.class);
-        when(request.requestMethod()).thenReturn("GET");
-        when(request.headers("Password")).thenReturn("nodelete1");
-
-        testee.handle(request, mock(Response.class));
-    }
-
-    @Test
-    void handleShouldAcceptValidNoDeletePasswordOnPost() throws Exception {
-        Request request = mock(Request.class);
-        when(request.requestMethod()).thenReturn("POST");
-        when(request.headers("Password")).thenReturn("nodelete1");
-
-        testee.handle(request, mock(Response.class));
-    }
-
-    @Test
-    void handleShouldRejectNoDeletePasswordOnDelete() {
-        Request request = mock(Request.class);
-        when(request.requestMethod()).thenReturn("DELETE");
-        when(request.headers("Password")).thenReturn("nodelete1");
-
-        assertThatThrownBy(() -> testee.handle(request, mock(Response.class)))
-            .isInstanceOf(HaltException.class)
-            .extracting(e -> HaltException.class.cast(e).statusCode())
-            .isEqualTo(403);
-    }
-
-    @Test
-    void handleShouldAcceptValidNoDeletePasswordOnPut() throws Exception {
-        Request request = mock(Request.class);
-        when(request.requestMethod()).thenReturn("PUT");
-        when(request.headers("Password")).thenReturn("nodelete2");
-
-        testee.handle(request, mock(Response.class));
-    }
-
-    @Test
     void handleShouldAcceptFullPasswordOnDelete() throws Exception {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("DELETE");
@@ -231,7 +192,7 @@ class PasswordFilterTest {
 
     @Test
     void handleShouldRejectWhenNoConfiguredPasswords() {
-        PasswordFilter filterWithNulls = new PasswordFilter(Optional.empty(), Optional.empty(), Optional.empty());
+        PasswordFilter filterWithNulls = new PasswordFilter(Optional.empty(), Optional.empty());
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
         when(request.headers("Password")).thenReturn("anypassword");
