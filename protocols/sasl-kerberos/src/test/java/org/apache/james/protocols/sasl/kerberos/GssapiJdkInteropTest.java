@@ -23,12 +23,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.sasl.SaslAuthenticationResult;
 import org.apache.james.protocols.api.sasl.SaslAuthenticator;
 import org.apache.james.protocols.api.sasl.SaslExchange;
+import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
 import org.apache.james.protocols.api.sasl.SaslInitialRequest;
 import org.apache.james.protocols.api.sasl.SaslMechanism;
@@ -48,10 +51,7 @@ class GssapiJdkInteropTest {
     void shouldInteroperateWithJdkGssapiClient() throws Exception {
         try (KerberosTestFixture kerberos = new KerberosTestFixture(temporaryDirectory)) {
             KerberosTestFixture.Service service = kerberos.provisionService("imap", SERVER_NAME);
-            GssapiSaslConfiguration configuration = new GssapiSaslConfiguration(
-                service.serviceName(), service.serverName(), service.principal(), service.keyTab(), true);
-            SaslMechanism mechanism = new GssapiSaslMechanism(
-                configuration, new KerberosLoginContextFactory(), new JdkSaslServerFactory());
+            SaslMechanism mechanism = mechanism(service, RealmMapping.REALM_AS_DOMAIN);
 
             try (GssapiTestClient client = kerberos.client(service);
                     SaslExchange exchange = mechanism.start(
@@ -67,6 +67,54 @@ class GssapiJdkInteropTest {
                 assertThat(client.isComplete()).isTrue();
             }
         }
+    }
+
+    @Test
+    @ResourceLock(KerberosTestFixture.KRB5_CONFIGURATION_RESOURCE)
+    void shouldMapTheRealmOntoTheConfiguredDomain() throws Exception {
+        try (KerberosTestFixture kerberos = new KerberosTestFixture(temporaryDirectory)) {
+            KerberosTestFixture.Service service = kerberos.provisionService("imap", SERVER_NAME);
+            SaslMechanism mechanism = mechanism(service, new RealmMapping(
+                Map.of(KerberosTestFixture.REALM, Domain.of("example.com"))));
+
+            try (GssapiTestClient client = kerberos.client(service);
+                    SaslExchange exchange = mechanism.start(
+                        new SaslInitialRequest("GSSAPI", Optional.of(client.initialResponse())),
+                        allowingSelfAuthorization())) {
+                SaslStep result = completeExchange(exchange, client);
+
+                assertThat(result).isInstanceOfSatisfying(SaslStep.Success.class, success -> {
+                    assertThat(success.identity().authenticationId()).isEqualTo(Username.of("alice@example.com"));
+                    assertThat(success.identity().authorizationId()).isEqualTo(Username.of("alice@example.com"));
+                });
+            }
+        }
+    }
+
+    @Test
+    @ResourceLock(KerberosTestFixture.KRB5_CONFIGURATION_RESOURCE)
+    void shouldRejectPrincipalsOfAnUnmappedRealm() throws Exception {
+        try (KerberosTestFixture kerberos = new KerberosTestFixture(temporaryDirectory)) {
+            KerberosTestFixture.Service service = kerberos.provisionService("imap", SERVER_NAME);
+            SaslMechanism mechanism = mechanism(service, new RealmMapping(
+                Map.of("OTHER.TEST", Domain.of("example.com"))));
+
+            try (GssapiTestClient client = kerberos.client(service);
+                    SaslExchange exchange = mechanism.start(
+                        new SaslInitialRequest("GSSAPI", Optional.of(client.initialResponse())),
+                        allowingSelfAuthorization())) {
+                SaslStep result = completeExchange(exchange, client);
+
+                assertThat(result).isInstanceOfSatisfying(SaslStep.Failure.class,
+                    failure -> assertThat(failure.failure().type()).isEqualTo(SaslFailure.Type.AUTHENTICATION_FAILED));
+            }
+        }
+    }
+
+    private SaslMechanism mechanism(KerberosTestFixture.Service service, RealmMapping realmMapping) {
+        GssapiSaslConfiguration configuration = new GssapiSaslConfiguration(
+            service.serviceName(), service.serverName(), service.principal(), service.keyTab(), true, realmMapping);
+        return new GssapiSaslMechanism(configuration, new KerberosLoginContextFactory(), new JdkSaslServerFactory());
     }
 
     private SaslStep completeExchange(SaslExchange exchange, GssapiTestClient client) throws Exception {

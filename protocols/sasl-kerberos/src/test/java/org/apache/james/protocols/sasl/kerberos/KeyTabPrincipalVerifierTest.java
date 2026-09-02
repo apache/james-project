@@ -41,7 +41,8 @@ class KeyTabPrincipalVerifierTest {
         try (KerberosTestFixture kerberos = new KerberosTestFixture(temporaryDirectory)) {
             KerberosTestFixture.Service service = kerberos.provisionService("imap", SERVER_NAME);
             GssapiSaslConfiguration configuration = new GssapiSaslConfiguration(
-                service.serviceName(), service.serverName(), service.principal(), service.keyTab(), true);
+                service.serviceName(), service.serverName(), service.principal(), service.keyTab(), true,
+                RealmMapping.REALM_AS_DOMAIN);
 
             assertThatCode(() -> new KeyTabPrincipalVerifier().verify(configuration))
                 .doesNotThrowAnyException();
@@ -54,7 +55,8 @@ class KeyTabPrincipalVerifierTest {
         try (KerberosTestFixture kerberos = new KerberosTestFixture(temporaryDirectory)) {
             KerberosTestFixture.Service service = kerberos.provisionService("smtp", SERVER_NAME);
             GssapiSaslConfiguration configuration = new GssapiSaslConfiguration(
-                "imap", SERVER_NAME, "imap/" + SERVER_NAME + "@" + KerberosTestFixture.REALM, service.keyTab(), true);
+                "imap", SERVER_NAME, "imap/" + SERVER_NAME + "@" + KerberosTestFixture.REALM, service.keyTab(), true,
+                RealmMapping.REALM_AS_DOMAIN);
 
             assertThatThrownBy(() -> new KeyTabPrincipalVerifier().verify(configuration))
                 .isInstanceOf(ConfigurationException.class)

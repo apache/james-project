@@ -63,7 +63,7 @@ class GssapiSaslExchange implements SaslExchange {
         this.configuration = configuration;
         this.loginContextFactory = loginContextFactory;
         this.saslServerFactory = saslServerFactory;
-        this.callbackHandler = new GssapiAuthorizeCallbackHandler(authenticator);
+        this.callbackHandler = new GssapiAuthorizeCallbackHandler(authenticator, configuration.realmMapping());
         this.state = State.NEW;
     }
 
