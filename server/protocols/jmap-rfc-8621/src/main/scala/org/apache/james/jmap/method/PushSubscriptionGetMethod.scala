@@ -28,12 +28,13 @@ import org.apache.james.jmap.api.pushsubscription.PushSubscriptionHelpers.isInTh
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Ids, Invocation, JmapRfc8621Configuration, PushSubscriptionDTO, PushSubscriptionGetRequest, PushSubscriptionGetResponse, SessionTranslator, UnparsedPushSubscriptionId}
+import org.apache.james.jmap.core.{ErrorCode, Ids, Invocation, JmapRfc8621Configuration, PushSubscriptionDTO, PushSubscriptionGetRequest, PushSubscriptionGetResponse, SessionTranslator, UnparsedPushSubscriptionId}
 import org.apache.james.jmap.json.PushSubscriptionSerializer
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.lifecycle.api.Startable
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
+import org.reactivestreams.Publisher
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -57,6 +58,16 @@ class PushSubscriptionGetMethod @Inject()(pushSubscriptionSerializer: PushSubscr
                                           val clock: Clock) extends MethodWithoutAccountId[PushSubscriptionGetRequest] with Startable {
   override val methodName: Invocation.MethodName = MethodName("PushSubscription/get")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE)
+
+  override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] =
+    if (configuration.webPushEnabled) {
+      super.process(capabilities, invocation, mailboxSession)
+    } else {
+      SMono.just(InvocationWithContext(Invocation.error(
+        errorCode = ErrorCode.UnknownMethod,
+        description = "PushSubscription is disabled on this server: set `webpush.enabled` in jmap.properties to enable it",
+        methodCallId = invocation.invocation.methodCallId), invocation.processingContext))
+    }
 
   override def getRequest(invocation: Invocation): Either[Exception, PushSubscriptionGetRequest] =
     pushSubscriptionSerializer.deserializePushSubscriptionGetRequest(invocation.arguments.value).asEitherRequest

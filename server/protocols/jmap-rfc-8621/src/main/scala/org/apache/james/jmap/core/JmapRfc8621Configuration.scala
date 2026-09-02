@@ -42,6 +42,7 @@ object JmapConfigProperties {
   val URL_PREFIX_PROPERTY: String = "url.prefix"
   val WEBSOCKET_URL_PREFIX_PROPERTY: String = "websocket.url.prefix"
   val WEBSOCKET_PING_INTERVAL_PROPERTY: String = "websocket.ping.interval"
+  val WEB_PUSH_ENABLED_PROPERTY: String = "webpush.enabled"
   val WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY: String = "webpush.maxTimeoutSeconds"
   val WEB_PUSH_MAX_CONNECTIONS_PROPERTY: String = "webpush.maxConnections"
   val WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY: String = "webpush.prevent.server.side.request.forgery"
@@ -104,6 +105,7 @@ object JmapRfc8621Configuration {
       maxObjectsInSet = Option(configuration.getLong(JMAP_SET_MAX_SIZE_PROPERTY, null))
         .map(value => MaxObjectsInSet(UnsignedInt.liftOrThrow(value)))
         .getOrElse(JMAP_MAX_OBJECT_IN_SET),
+      webPushEnabled = configuration.getBoolean(WEB_PUSH_ENABLED_PROPERTY, true),
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
       maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala,
       preventServerSideRequestForgery = Optional.ofNullable(configuration.getBoolean(WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY, null)).orElse(true),
@@ -127,6 +129,7 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
                                     jmapEmailGetFullMaxSize: JmapEmailGetFullMaxSize = JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT,
                                     maxObjectsInGet: MaxObjectsInGet = JMAP_MAX_OBJECT_IN_GET,
                                     maxObjectsInSet: MaxObjectsInSet = JMAP_MAX_OBJECT_IN_SET,
+                                    webPushEnabled: Boolean = true,
                                     maxTimeoutSeconds: Option[Int] = None,
                                     maxConnections: Option[Int] = None,
                                     authenticationStrategies: Option[java.util.List[String]] = None,
