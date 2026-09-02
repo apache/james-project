@@ -313,6 +313,7 @@ public class RabbitMQConfiguration {
     private static final String EVENT_BUS_NOTIFICATION_QUEUE_AUTO_DELETE = "notification.queue.autoDelete";
     private static final String EVENT_BUS_PUBLISH_CONFIRM_ENABLED = "event.bus.publish.confirm.enabled";
     private static final String EVENT_BUS_PROPAGATE_DISPATCH_ERROR = "event.bus.propagate.dispatch.error";
+    private static final String EVENT_BUS_PUBLISH_ON_NO_GROUPS = "eventbus.publishOnNoGroups";
     private static final String TASK_QUEUE_CONSUMER_TIMEOUT = "task.queue.consumer.timeout";
     private static final String VHOST = "vhost";
 
@@ -415,6 +416,7 @@ public class RabbitMQConfiguration {
         private Optional<Boolean> eventBusNotificationDurabilityEnabled;
         private Optional<Boolean> eventBusNotificationQueueAutoDelete;
         private Optional<Boolean> eventBusPropagateDispatchError;
+        private Optional<Boolean> eventBusPublishOnNoGroups;
         private Optional<String> vhost;
         private Optional<Duration> taskQueueConsumerTimeout;
 
@@ -443,6 +445,7 @@ public class RabbitMQConfiguration {
             this.vhost = Optional.empty();
             this.taskQueueConsumerTimeout = Optional.empty();
             this.eventBusPropagateDispatchError = Optional.empty();
+            this.eventBusPublishOnNoGroups = Optional.empty();
         }
 
         public Builder maxRetries(int maxRetries) {
@@ -535,6 +538,11 @@ public class RabbitMQConfiguration {
             return this;
         }
 
+        public Builder eventBusPublishOnNoGroups(Boolean eventBusPublishOnNoGroups) {
+            this.eventBusPublishOnNoGroups = Optional.ofNullable(eventBusPublishOnNoGroups);
+            return this;
+        }
+
         public Builder eventBusPropagateDispatchError(Boolean eventBusPropagateDispatchError) {
             this.eventBusPropagateDispatchError = Optional.ofNullable(eventBusPropagateDispatchError);
             return this;
@@ -598,7 +606,8 @@ public class RabbitMQConfiguration {
                     eventBusNotificationQueueAutoDelete.orElse(Constants.AUTO_DELETE),
                     vhost,
                     taskQueueConsumerTimeout.orElse(DEFAULT_TASK_QUEUE_CONSUMER_TIMEOUT),
-                    eventBusPropagateDispatchError.orElse(true));
+                    eventBusPropagateDispatchError.orElse(true),
+                    eventBusPublishOnNoGroups.orElse(true));
         }
 
         private List<Host> hostsDefaultingToUri() {
@@ -675,6 +684,7 @@ public class RabbitMQConfiguration {
             .eventBusNotificationQueueAutoDelete(configuration.getBoolean(EVENT_BUS_NOTIFICATION_QUEUE_AUTO_DELETE, null))
             .eventBusPublishConfirmEnabled(configuration.getBoolean(EVENT_BUS_PUBLISH_CONFIRM_ENABLED, null))
             .eventBusPropagateDispatchError(configuration.getBoolean(EVENT_BUS_PROPAGATE_DISPATCH_ERROR, null))
+            .eventBusPublishOnNoGroups(configuration.getBoolean(EVENT_BUS_PUBLISH_ON_NO_GROUPS, null))
             .vhost(vhost)
             .taskQueueConsumerTimeout(taskQueueConsumerTimeout)
             .build();
@@ -752,6 +762,7 @@ public class RabbitMQConfiguration {
     private final Optional<String> vhost;
     private final Duration taskQueueConsumerTimeout;
     private final boolean eventBusPropagateDispatchError;
+    private final boolean eventBusPublishOnNoGroups;
 
     private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelayInMs,
                                   int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs,
@@ -759,7 +770,8 @@ public class RabbitMQConfiguration {
                                   boolean useQuorumQueues, Optional<Integer> quorumQueueDeliveryLimit, int quorumQueueReplicationFactor, List<Host> hosts, Optional<Long> queueTTL,
                                   boolean eventBusPublishConfirmEnabled, boolean eventBusNotificationDurabilityEnabled,
                                   boolean eventBusNotificationQueueAutoDelete,
-                                  Optional<String> vhost, Duration taskQueueConsumerTimeout, boolean eventBusPropagateDispatchError) {
+                                  Optional<String> vhost, Duration taskQueueConsumerTimeout, boolean eventBusPropagateDispatchError,
+                                  boolean eventBusPublishOnNoGroups) {
         this.uri = uri;
         this.managementUri = managementUri;
         this.managementCredentials = managementCredentials;
@@ -784,6 +796,7 @@ public class RabbitMQConfiguration {
         this.vhost = vhost;
         this.taskQueueConsumerTimeout = taskQueueConsumerTimeout;
         this.eventBusPropagateDispatchError = eventBusPropagateDispatchError;
+        this.eventBusPublishOnNoGroups = eventBusPublishOnNoGroups;
     }
 
     public URI getUri() {
@@ -904,6 +917,10 @@ public class RabbitMQConfiguration {
         return quorumQueueReplicationFactor;
     }
 
+    public boolean eventBusPublishOnNoGroups() {
+        return eventBusPublishOnNoGroups;
+    }
+
     public boolean eventBusPropagateDispatchError() {
         return eventBusPropagateDispatchError;
     }
@@ -936,7 +953,8 @@ public class RabbitMQConfiguration {
                 && Objects.equals(this.eventBusNotificationQueueAutoDelete, that.eventBusNotificationQueueAutoDelete)
                 && Objects.equals(this.vhost, that.vhost)
                 && Objects.equals(this.taskQueueConsumerTimeout, that.taskQueueConsumerTimeout)
-                && Objects.equals(this.eventBusPropagateDispatchError, that.eventBusPropagateDispatchError);
+                && Objects.equals(this.eventBusPropagateDispatchError, that.eventBusPropagateDispatchError)
+                && Objects.equals(this.eventBusPublishOnNoGroups, that.eventBusPublishOnNoGroups);
         }
         return false;
     }
@@ -945,6 +963,7 @@ public class RabbitMQConfiguration {
     public final int hashCode() {
         return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs, quorumQueueReplicationFactor, quorumQueueDeliveryLimit, useQuorumQueues, hosts,
             channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement,
-            sslConfiguration, queueTTL, eventBusPublishConfirmEnabled, eventBusNotificationDurabilityEnabled, eventBusNotificationQueueAutoDelete, vhost, taskQueueConsumerTimeout, eventBusPropagateDispatchError);
+            sslConfiguration, queueTTL, eventBusPublishConfirmEnabled, eventBusNotificationDurabilityEnabled, eventBusNotificationQueueAutoDelete, vhost, taskQueueConsumerTimeout, eventBusPropagateDispatchError,
+            eventBusPublishOnNoGroups);
     }
 }

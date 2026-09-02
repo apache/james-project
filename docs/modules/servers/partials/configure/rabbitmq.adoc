@@ -117,6 +117,10 @@ collected once it has stayed unused for the TTL, which also cleans up the queues
 | Whether to propagate errors back to the callers when eventbus fails to dispatch group events to RabbitMQ (then store the failed events in the event dead letters).
 Optional boolean, defaults to true.
 
+| eventbus.publishOnNoGroups
+| Whether to publish group events to RabbitMQ even when this node has no group listener registered. Optional boolean,
+defaults to true.
+
 | vhost
 | Optional string. This parameter is only a workaround to support invalid URIs containing character like '_'.
 You still need to specify the vhost in the uri parameter.

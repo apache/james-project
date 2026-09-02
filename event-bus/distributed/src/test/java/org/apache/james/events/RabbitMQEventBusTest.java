@@ -53,6 +53,8 @@ import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -432,6 +434,79 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                     .getBody();
 
                 return eventSerializer.asEvent(new String(eventInBytes, StandardCharsets.UTF_8)).event();
+            }
+        }
+
+    }
+
+    @Nested
+    class PublishOnNoGroupsTest {
+        private String probeQueueName;
+        private RabbitMQEventBus optimizedEventBus;
+
+        @BeforeEach
+        void setUp() throws Exception {
+            probeQueueName = "test-publishOnNoGroups-" + UUID.randomUUID();
+            Sender sender = rabbitMQExtension.getSender();
+            sender.declareQueue(QueueSpecification.queue(probeQueueName)
+                    .durable(!DURABLE)
+                    .exclusive(!EXCLUSIVE)
+                    .autoDelete(!AUTO_DELETE)
+                    .arguments(NO_ARGUMENTS))
+                .block();
+            // Group dispatches are the ones published with the empty routing key
+            sender.bind(BindingSpecification.binding()
+                    .exchange(TEST_NAMING_STRATEGY.exchange())
+                    .queue(probeQueueName)
+                    .routingKey(EMPTY_ROUTING_KEY))
+                .block();
+
+            optimizedEventBus = new RabbitMQEventBus(TEST_NAMING_STRATEGY, sender, rabbitMQExtension.getReceiverProvider(),
+                eventSerializer, routingKeyConverter, memoryEventDeadLetters, new RecordingMetricFactory(),
+                rabbitMQExtension.getRabbitChannelPool(), EventBusId.random(),
+                new RabbitMQEventBus.Configurations(rabbitMQExtension.getRabbitMQ().getConfigurationBuilder()
+                    .eventBusPublishOnNoGroups(false)
+                    .build(), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION));
+            optimizedEventBus.start();
+        }
+
+        @AfterEach
+        void tearDown() {
+            optimizedEventBus.stop();
+            rabbitMQExtension.getSender().delete(QueueSpecification.queue(probeQueueName)).block();
+        }
+
+        @Test
+        void dispatchShouldNotPublishToGroupsWhenNoGroupIsRegistered() {
+            optimizedEventBus.dispatch(EVENT, NO_KEYS).block();
+
+            assertThat(dequeueEventWithin(Duration.ofSeconds(2))).isEmpty();
+        }
+
+        @Test
+        void dispatchShouldPublishToGroupsWhenAGroupIsRegistered() {
+            optimizedEventBus.register(newListener(), GROUP_A);
+
+            optimizedEventBus.dispatch(EVENT, NO_KEYS).block();
+
+            assertThat(dequeueEventWithin(Duration.ofSeconds(10))).contains(EVENT);
+        }
+
+        @Test
+        void dispatchShouldPublishToGroupsWithoutRegistrationWhenOptionIsEnabled() {
+            // eventBus runs with the default configuration: `eventbus.publishOnNoGroups` is true
+            eventBus.dispatch(EVENT, NO_KEYS).block();
+
+            assertThat(dequeueEventWithin(Duration.ofSeconds(10))).contains(EVENT);
+        }
+
+        private Optional<Event> dequeueEventWithin(Duration timeout) {
+            try (Receiver receiver = rabbitMQExtension.getReceiverProvider().createReceiver()) {
+                return Optional.ofNullable(receiver.consumeAutoAck(probeQueueName)
+                        .next()
+                        .timeout(timeout, Mono.empty())
+                        .block())
+                    .map(delivery -> eventSerializer.asEvent(new String(delivery.getBody(), StandardCharsets.UTF_8)).event());
             }
         }
     }

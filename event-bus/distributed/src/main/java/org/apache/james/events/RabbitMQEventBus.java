@@ -116,7 +116,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
             keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, listenerExecutor, configurations, metricFactory);
             groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, eventDeadLetters, listenerExecutor, configurations);
-            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configurations.rabbitMQConfiguration());
+            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configurations.rabbitMQConfiguration(), groupRegistrationHandler);
 
             eventDispatcher.start();
             keyRegistrationHandler.start();
@@ -137,7 +137,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
             keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, listenerExecutor, configurations, metricFactory);
             groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, eventDeadLetters, listenerExecutor, configurations);
-            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configurations.rabbitMQConfiguration());
+            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configurations.rabbitMQConfiguration(), groupRegistrationHandler);
 
             keyRegistrationHandler.declareQueue();
 
