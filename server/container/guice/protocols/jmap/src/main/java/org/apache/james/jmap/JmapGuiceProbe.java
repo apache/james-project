@@ -22,12 +22,14 @@ package org.apache.james.jmap;
 import static org.apache.james.jmap.utils.AccountIdUtil.toVacationAccountId;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.jmap.api.change.EmailChange;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
@@ -73,6 +75,10 @@ public class JmapGuiceProbe implements GuiceProbe {
 
     public Port getJmapPort() {
         return jmapServer.getPort();
+    }
+
+    public Collection<Group> listRegisteredGroups() {
+        return eventBus.listRegisteredGroups();
     }
 
     public void addEventListener(EventListener.GroupEventListener listener) {

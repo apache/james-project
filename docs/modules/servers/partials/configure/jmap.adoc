@@ -104,6 +104,12 @@ then `apiUrl, downloadUrl, uploadUrl, eventSourceUrl, webSocketUrl` in response 
 If the HTTP request to Jmap session endpoint has the `X-JMAP-WEBSOCKET-PREFIX` header with the value `ws://new-domain/prefix`,
 then `capabilities."urn:ietf:params:jmap:websocket".url` in response will be "ws://new-domain/prefix/jmap/ws".
 
+| webpush.enabled
+| Optional boolean. Defaults to true. Whether WebPush is enableded. When set to false the push listener is not
+registered at all - no group registration is created on the JMAP event bus - and `PushSubscription/get` and
+`PushSubscription/set` answer an `unknownMethod` JMAP error. Note that this does not affect JMAP push over
+WebSocket nor EventSource, which do not rely on push subscriptions.
+
 | webpush.prevent.server.side.request.forgery
 | Optional boolean. Prevent server side request forgery by preventing calls to the private network ranges. Defaults to true, can be disabled for testing.
 

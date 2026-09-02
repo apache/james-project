@@ -23,12 +23,13 @@ import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, PushSubscriptionSetRequest, PushSubscriptionSetResponse, SessionTranslator}
+import org.apache.james.jmap.core.{ErrorCode, Invocation, JmapRfc8621Configuration, PushSubscriptionSetRequest, PushSubscriptionSetResponse, SessionTranslator}
 import org.apache.james.jmap.json.PushSubscriptionSerializer
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.lifecycle.api.Startable
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
+import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
 class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCreatePerformer,
@@ -41,6 +42,16 @@ class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCr
                                           val sessionTranslator: SessionTranslator) extends MethodWithoutAccountId[PushSubscriptionSetRequest] with Startable {
   override val methodName: Invocation.MethodName = MethodName("PushSubscription/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE)
+
+  override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] =
+    if (configuration.webPushEnabled) {
+      super.process(capabilities, invocation, mailboxSession)
+    } else {
+      SMono.just(InvocationWithContext(Invocation.error(
+        errorCode = ErrorCode.UnknownMethod,
+        description = "PushSubscription is disabled on this server: set `webpush.enabled` in jmap.properties to enable it",
+        methodCallId = invocation.invocation.methodCallId), invocation.processingContext))
+    }
 
   override def getRequest(invocation: Invocation): Either[Exception, PushSubscriptionSetRequest] =
     pushSubscriptionSerializer.deserializePushSubscriptionSetRequest(invocation.arguments.value).asEitherRequest

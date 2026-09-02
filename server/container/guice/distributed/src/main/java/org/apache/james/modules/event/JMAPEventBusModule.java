@@ -40,6 +40,7 @@ import org.apache.james.events.RoutingKeyConverter;
 import org.apache.james.jmap.InjectionKeys;
 import org.apache.james.jmap.change.Factory;
 import org.apache.james.jmap.change.JmapEventSerializer;
+import org.apache.james.jmap.core.JmapRfc8621Configuration;
 import org.apache.james.jmap.pushsubscription.PushListener;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -59,12 +60,15 @@ public class JMAPEventBusModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    InitializationOperation workQueue(@Named(InjectionKeys.JMAP) RabbitMQEventBus instance, PushListener pushListener) {
+    InitializationOperation workQueue(@Named(InjectionKeys.JMAP) RabbitMQEventBus instance, PushListener pushListener,
+                                      JmapRfc8621Configuration jmapConfiguration) {
         return InitilizationOperationBuilder
             .forClass(RabbitMQEventBus.class)
             .init(() -> {
                 instance.start();
-                instance.register(pushListener);
+                if (jmapConfiguration.webPushEnabled()) {
+                    instance.register(pushListener);
+                }
             });
     }
 

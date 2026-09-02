@@ -20,46 +20,28 @@
 package org.apache.james.jmap.rfc8621.memory;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.ClockExtension;
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.jmap.JmapGuiceProbe;
-import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
-import org.apache.james.jmap.pushsubscription.PushListenerGroup;
-import org.apache.james.jmap.rfc8621.contract.PushServerExtension;
-import org.apache.james.jmap.rfc8621.contract.PushSubscriptionProbeModule;
-import org.apache.james.jmap.rfc8621.contract.WebPushContract;
+import org.apache.james.jmap.core.JmapRfc8621Configuration;
+import org.apache.james.jmap.rfc8621.contract.WebPushDisabledContract;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MemoryWebPushTest implements WebPushContract {
-
+public class MemoryWebPushDisabledTest implements WebPushDisabledContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
         MemoryJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .usersRepository(DEFAULT)
+            .enableJMAP()
             .build())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule())
-            .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))
-        .extension(new ClockExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+            .overrideWith(binder -> binder.bind(JmapRfc8621Configuration.class).toInstance(WebPushDisabledContract.configuration()))
+            .overrideWith(new TestJMAPServerModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
         .build();
-
-    @RegisterExtension
-    static PushServerExtension pushServerExtension = new PushServerExtension();
-
-    @Test
-    void pushListenerShouldBeRegisteredWhenWebPushIsEnabled(GuiceJamesServer server) {
-        assertThat(server.getProbe(JmapGuiceProbe.class).listRegisteredGroups())
-            .contains(new PushListenerGroup());
-    }
 }

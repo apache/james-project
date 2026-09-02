@@ -20,18 +20,39 @@
 package org.apache.james.modules.protocols;
 
 import org.apache.james.events.EventBus;
-import org.apache.james.events.EventListener;
 import org.apache.james.jmap.InjectionKeys;
+import org.apache.james.jmap.core.JmapRfc8621Configuration;
 import org.apache.james.jmap.pushsubscription.PushListener;
+import org.apache.james.modules.mailbox.ListenersConfiguration;
+import org.apache.james.modules.mailbox.MailboxListenersLoaderImpl;
+import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Names;
 
 public class JmapEventBusModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(EventBus.class).annotatedWith(Names.named(InjectionKeys.JMAP)).to(EventBus.class);
-        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class).addBinding().to(PushListener.class);
+    }
+
+    /**
+     * Registered here rather than within the {@link org.apache.james.events.EventListener.ReactiveGroupEventListener}
+     * multibinder as WebPush can be turned off, in which case no registration - thus no group, and no queue for
+     * distributed event buses - should be created at all.
+     */
+    @ProvidesIntoSet
+    InitializationOperation registerPushListener(EventBus eventBus, PushListener pushListener,
+                                                 JmapRfc8621Configuration jmapConfiguration,
+                                                 ListenersConfiguration listenersConfiguration) {
+        return InitilizationOperationBuilder
+            .forClass(MailboxListenersLoaderImpl.class)
+            .init(() -> {
+                if (jmapConfiguration.webPushEnabled() && listenersConfiguration.isGroupListenerConsumptionEnabled()) {
+                    eventBus.register(pushListener);
+                }
+            });
     }
 }
