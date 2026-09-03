@@ -153,7 +153,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         // Also check if the session was logged out if so there is not need to try to decode it. See JAMES-1341
         if (session != null && session.getState() != ImapSessionState.LOGOUT) {
             try {
-                readerAndSize.getLeft().setUtf8Accept(session.utf8Enabled());
+                attempt.reader().setUtf8Accept(session.utf8Enabled());
 
                 ImapMessage message = decoder.decode(attempt.reader(), session);
 
