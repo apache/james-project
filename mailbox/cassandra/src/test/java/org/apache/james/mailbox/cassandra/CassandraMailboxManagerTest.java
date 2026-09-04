@@ -41,6 +41,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreCacheCallback;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.BlobTables;
@@ -835,7 +836,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 mock(BlobStore.class),
                 mock(BlobStoreDAO.class),
                 new PlainBlobId.Factory(),
-                CassandraConfiguration.DEFAULT_CONFIGURATION);
+                CassandraConfiguration.DEFAULT_CONFIGURATION,
+                BlobStoreCacheCallback.NOOP);
         }
 
         private CassandraThreadDAO threadDAO(CassandraCluster cassandraCluster) {

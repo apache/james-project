@@ -27,6 +27,7 @@ import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreCacheCallback;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
@@ -97,6 +98,7 @@ public class GuiceUtils {
             binder -> binder.bind(ModSeqProvider.class).to(CassandraModSeqProvider.class),
             binder -> binder.bind(ACLMapper.class).to(CassandraACLMapper.class),
             binder -> binder.bind(BlobId.Factory.class).toInstance(new PlainBlobId.Factory()),
+            binder -> binder.bind(BlobStoreCacheCallback.class).toInstance(BlobStoreCacheCallback.NOOP),
             binder -> binder.bind(BlobStore.class).toProvider(() -> CassandraBlobStoreFactory.forTesting(session, new RecordingMetricFactory()).passthrough()),
             binder -> binder.bind(BlobStoreDAO.class).toProvider(() -> {
                 PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();

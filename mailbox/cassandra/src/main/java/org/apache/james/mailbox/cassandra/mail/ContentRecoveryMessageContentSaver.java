@@ -19,69 +19,80 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import java.nio.charset.StandardCharsets;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 
-import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration.BlobRecoveryMode;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobIdEntropy;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreCacheCallback;
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataName;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataValue;
+import org.apache.james.blob.api.BlobStoreDAO.BytesBlob;
 
-import com.google.common.base.Preconditions;
+import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 /**
- * Delegates the content write, then materializes the recovery information as a sidecar blob:
- * the body blob id, stored under the header blob id prefixed by {@link BlobStoreDAO#RECOVERY_BLOB_PREFIX}.
+ * Carries the recovery information within the header blob itself, rather than in a companion object.
  *
- * The sidecar write is either awaited ({@link BlobRecoveryMode#SYNCHRONOUS}) or performed on the side
- * ({@link BlobRecoveryMode#ASYNCHRONOUS}).
+ * <p>The body is written first, then the headers are written under a randomly generated blob id carrying
+ * the body blob id as metadata. Recovering a message therefore only requires walking the header blobs of
+ * the bucket: the {@value #HEADER_BLOB_ID_SUFFIX} suffix tells them apart, and the
+ * {@code body-blob-id} metadata points at their body.</p>
+ *
+ * <p>The header blob id is random rather than content addressed, so that a header and its recovery
+ * information stay paired. Headers are consequently not deduplicated, which they hardly ever were.</p>
+ *
+ * <p>Headers go through the {@link BlobStoreDAO} rather than the {@link BlobStore} because only the
+ * former exposes metadata. That DAO is the decorated one, so compression and encryption still apply; the
+ * caching a {@code SIZE_BASED} save would have performed is restored by {@link BlobStoreCacheCallback}.</p>
  */
 public class ContentRecoveryMessageContentSaver implements MessageContentSaver {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ContentRecoveryMessageContentSaver.class);
+    public static final String HEADER_BLOB_ID_SUFFIX = "_hdr";
+    public static final BlobMetadataName BODY_BLOB_ID = new BlobMetadataName("body-blob-id");
+    private static final BaseEncoding BLOB_ID_ENCODING = BaseEncoding.base64Url().omitPadding();
 
-    private final MessageContentSaver delegate;
     private final BlobStore blobStore;
     private final BlobStoreDAO blobStoreDAO;
     private final BlobId.Factory blobIdFactory;
-    private final BlobRecoveryMode recoveryMode;
+    private final BlobStoreCacheCallback cacheCallback;
 
     public ContentRecoveryMessageContentSaver(BlobStore blobStore, BlobStoreDAO blobStoreDAO,
-                                              BlobId.Factory blobIdFactory, BlobRecoveryMode recoveryMode) {
-        Preconditions.checkArgument(recoveryMode != BlobRecoveryMode.NONE,
-            "%s does not handle %s: rely on the delegate alone instead", ContentRecoveryMessageContentSaver.class.getSimpleName(), BlobRecoveryMode.NONE);
-        this.delegate = new DefaultMessageContentSaver(blobStore);
+                                              BlobId.Factory blobIdFactory, BlobStoreCacheCallback cacheCallback) {
         this.blobStore = blobStore;
         this.blobStoreDAO = blobStoreDAO;
         this.blobIdFactory = blobIdFactory;
-        this.recoveryMode = recoveryMode;
+        this.cacheCallback = cacheCallback;
     }
 
     @Override
     public Mono<Tuple2<BlobId, BlobId>> saveContent(byte[] headerBytes, ByteSource bodyByteSource) {
-        return delegate.saveContent(headerBytes, bodyByteSource)
-            .flatMap(pair -> saveRecovery(pair.getT1(), pair.getT2()).thenReturn(pair));
+        return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyByteSource, LOW_COST))
+            .flatMap(bodyId -> saveHeaders(headerBytes, bodyId)
+                .map(headerId -> Tuples.of(headerId, bodyId)));
     }
 
-    private Mono<Void> saveRecovery(BlobId headerId, BlobId bodyId) {
-        return switch (recoveryMode) {
-            case NONE -> Mono.empty();
-            case SYNCHRONOUS -> writeRecoveryBlob(headerId, bodyId);
-            case ASYNCHRONOUS -> Mono.fromRunnable(() ->
-                writeRecoveryBlob(headerId, bodyId)
-                    .subscribeOn(Schedulers.parallel())
-                    .subscribe(ignored -> { }, e -> LOGGER.error("Failed to save recovery blob for header={} body={}", headerId.asString(), bodyId.asString(), e)));
-        };
+    private Mono<BlobId> saveHeaders(byte[] headerBytes, BlobId bodyId) {
+        BlobId headerId = generateHeaderBlobId();
+        BlobMetadata metadata = BlobMetadata.empty()
+            .withMetadata(BODY_BLOB_ID, new BlobMetadataValue(bodyId.asString()));
+
+        return Mono.from(blobStoreDAO.save(blobStore.getDefaultBucketName(), headerId, BytesBlob.of(headerBytes, metadata)))
+            .then(Mono.from(cacheCallback.cacheIfNeeded(headerId, headerBytes)))
+            .thenReturn(headerId);
     }
 
-    private Mono<Void> writeRecoveryBlob(BlobId headerId, BlobId bodyId) {
-        BlobId recoveryBlobId = blobIdFactory.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + headerId.asString());
-        BlobStoreDAO.BytesBlob content = BlobStoreDAO.BytesBlob.of(bodyId.asString().getBytes(StandardCharsets.UTF_8));
-        return Mono.from(blobStoreDAO.save(blobStore.getDefaultBucketName(), recoveryBlobId, content));
+    /**
+     * Leaves the family and generation prefixes to the configured {@link BlobId.Factory}, so that the
+     * header blob stays generation aware and is garbage collected like any other blob.
+     */
+    private BlobId generateHeaderBlobId() {
+        return blobIdFactory.of(BLOB_ID_ENCODING.encode(BlobIdEntropy.randomBytes()) + HEADER_BLOB_ID_SUFFIX);
     }
 }

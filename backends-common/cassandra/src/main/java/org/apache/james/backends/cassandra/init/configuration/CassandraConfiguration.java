@@ -40,14 +40,13 @@ public class CassandraConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraConfiguration.class);
 
     public enum BlobRecoveryMode {
-        NONE, SYNCHRONOUS, ASYNCHRONOUS;
+        NONE, ENABLED;
 
         public static BlobRecoveryMode parse(String value) {
             return switch (value.toLowerCase()) {
                 case "none" -> NONE;
-                case "synchronous" -> SYNCHRONOUS;
-                case "asynchronous" -> ASYNCHRONOUS;
-                default -> throw new IllegalArgumentException("Unknown blob recovery mode: '" + value + "'. Expected none, synchronous or asynchronous");
+                case "enabled" -> ENABLED;
+                default -> throw new IllegalArgumentException("Unknown blob recovery mode: '" + value + "'. Expected none or enabled");
             };
         }
     }
