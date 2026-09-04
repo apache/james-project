@@ -30,7 +30,7 @@ import com.google.common.io.BaseEncoding;
  *
  * <p>Truncated ids are left unpadded: they exist to be short, and padding them back up would give away
  * part of what {@link BlobIdEntropy} saved. Ids at full entropy keep the padding of their encoding, so
- * that ids of existing deployments are left untouched.</p>
+ * that a deployment pinned there keeps spelling ids the way releases up to 3.9.x did.</p>
  */
 public class BlobIdEncoding {
     public static final String ENCODING_PROPERTY = "james.blob.id.hash.encoding";
@@ -58,7 +58,7 @@ public class BlobIdEncoding {
 
     @VisibleForTesting
     BlobIdEncoding(BaseEncoding encoding) {
-        if (BlobIdEntropy.entropyBits() == BlobIdEntropy.DEFAULT_ENTROPY_BITS) {
+        if (BlobIdEntropy.entropyBits() == BlobIdEntropy.MAX_ENTROPY_BITS) {
             this.encoding = encoding;
         } else {
             this.encoding = encoding.omitPadding();

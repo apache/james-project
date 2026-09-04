@@ -29,15 +29,17 @@ import com.google.common.base.Preconditions;
 /**
  * How many bits of entropy a blob id carries, as set by the {@code james.blobid.entropy} system property.
  *
- * <p>Defaults to {@value #DEFAULT_ENTROPY_BITS} bits, the full SHA-256 output, so that ids of existing
- * deployments are left untouched. {@code 128} is the sensible alternative: the birthday bound puts a
- * collision at {@code n^2/2^129}, ie. 1.5e-19 for ten billion blobs, and truncating a cryptographic hash
- * to its leading bits is standard practice (NIST SP 800-107, FIPS 180-4).</p>
+ * <p>Defaults to {@value #DEFAULT_ENTROPY_BITS} bits: the birthday bound puts a collision at
+ * {@code n^2/2^129}, ie. 1.5e-19 for ten billion blobs, and truncating a cryptographic hash to its
+ * leading bits is standard practice (NIST SP 800-107, FIPS 180-4). {@value #MAX_ENTROPY_BITS}, the full
+ * SHA-256 output, spells ids out the way releases up to 3.9.x did.</p>
  */
 public class BlobIdEntropy {
     public static final String ENTROPY_BITS_PROPERTY = "james.blobid.entropy";
-    public static final int DEFAULT_ENTROPY_BITS = 256;
+    public static final int DEFAULT_ENTROPY_BITS = 128;
     private static final int MIN_ENTROPY_BITS = 128;
+    /** The full SHA-256 output: the longest an id can usefully get. */
+    static final int MAX_ENTROPY_BITS = 256;
     private static final int BITS_PER_BYTE = 8;
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -57,8 +59,8 @@ public class BlobIdEntropy {
             int bits = Integer.parseInt(value);
             Preconditions.checkArgument(bits % BITS_PER_BYTE == 0,
                 "'%s' must be a multiple of %s, got %s", ENTROPY_BITS_PROPERTY, BITS_PER_BYTE, bits);
-            Preconditions.checkArgument(bits >= MIN_ENTROPY_BITS && bits <= DEFAULT_ENTROPY_BITS,
-                "'%s' must be within [%s, %s], got %s", ENTROPY_BITS_PROPERTY, MIN_ENTROPY_BITS, DEFAULT_ENTROPY_BITS, bits);
+            Preconditions.checkArgument(bits >= MIN_ENTROPY_BITS && bits <= MAX_ENTROPY_BITS,
+                "'%s' must be within [%s, %s], got %s", ENTROPY_BITS_PROPERTY, MIN_ENTROPY_BITS, MAX_ENTROPY_BITS, bits);
             return bits;
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid '" + ENTROPY_BITS_PROPERTY + "' value: '" + value + "'. Expected a bit count, eg. 128 or 256", e);

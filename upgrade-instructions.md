@@ -22,6 +22,24 @@ Change list:
  - [JAMES-4210 SMTP AuthHook deprecation](#james-4210-smtp-authhook-deprecation)
  - [JAMES-4210 POP3 USER/PASS requires TLS by default](#james-4210-pop3-userpass-requires-tls-by-default)
  - [JAMES-4210 ManageSieve SASL adoption](#james-4210-managesieve-sasl-adoption)
+ - [JAMES-4225 Blob ids default to 128 bits of entropy](#james-4225-blob-ids-default-to-128-bits-of-entropy)
+
+### JAMES-4225 Blob ids default to 128 bits of entropy
+
+Date: 05/09/2026
+
+Concerned products: all products using a blob store
+
+Blob ids now carry 128 bits of entropy instead of the full 256 bits of a SHA-256, which shortens a body
+blob id from 50 to 28 characters in the object key and in every metadata store column referencing it.
+
+Existing blobs stay readable. However, content stored under the previous spelling will not deduplicate
+against its shorter counterpart until it is rewritten. To keep the previous behaviour, add to
+`jvm.properties`:
+
+```
+james.blobid.entropy=256
+```
 
 ### JAMES-4210 POP3 USER/PASS requires TLS by default
 

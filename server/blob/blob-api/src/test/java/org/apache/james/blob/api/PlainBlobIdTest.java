@@ -31,7 +31,8 @@ import com.google.common.io.BaseEncoding;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class PlainBlobIdTest {
-    private static final BaseEncoding ENCODING = BaseEncoding.base64Url();
+    // Mirrors how the factory spells ids at the default, truncated, entropy: base64url, unpadded.
+    private static final BaseEncoding ENCODING = BaseEncoding.base64Url().omitPadding();
 
 
     private static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();

@@ -43,6 +43,7 @@ public interface DeduplicationBlobStoreContract {
     }
 
     String SHORT_STRING = "toto";
+    String SHORT_STRING_BLOB_ID = "MfemXjFVhqwZi9eYtmKc5A";
 
     BlobStore testee();
 
@@ -58,7 +59,7 @@ public interface DeduplicationBlobStoreContract {
 
         BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_STRING, storagePolicy)).block();
 
-        assertThat(blobId).isEqualTo(blobIdFactory().parse("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
+        assertThat(blobId).isEqualTo(blobIdFactory().parse(SHORT_STRING_BLOB_ID));
     }
 
     @ParameterizedTest
@@ -69,7 +70,7 @@ public interface DeduplicationBlobStoreContract {
 
         BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy)).block();
 
-        assertThat(blobId).isEqualTo(blobIdFactory().parse("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
+        assertThat(blobId).isEqualTo(blobIdFactory().parse(SHORT_STRING_BLOB_ID));
     }
 
     @ParameterizedTest
@@ -82,6 +83,6 @@ public interface DeduplicationBlobStoreContract {
         // This fix is ok because it will only affect deduplication, after this change the same content might be assigned a different blobid
         // and thus might be duplicated in the store. No data can be lost since no api allows for externally deterministic blob id construction
         // before this change.
-        assertThat(blobId).isEqualTo(blobIdFactory().of("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
+        assertThat(blobId).isEqualTo(blobIdFactory().of(SHORT_STRING_BLOB_ID));
     }
 }
