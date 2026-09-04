@@ -34,6 +34,7 @@ import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobReferenceSource;
+import org.apache.james.blob.api.BlobStoreCacheCallback;
 import org.apache.james.events.EventListener;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
@@ -142,6 +143,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Names;
 
 public class CassandraMailboxModule extends AbstractModule {
@@ -163,6 +165,9 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(CassandraMailboxPathV3DAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxRecentsDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMessageDAOV3.class).in(Scopes.SINGLETON);
+        // Overridden by CachedBlobStore when the blob store cache is enabled.
+        OptionalBinder.newOptionalBinder(binder(), BlobStoreCacheCallback.class)
+            .setDefault().toInstance(BlobStoreCacheCallback.NOOP);
         bind(CassandraMessageIdDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMessageIdToImapUidDAO.class).in(Scopes.SINGLETON);
         bind(CassandraUserMailboxRightsDAO.class).in(Scopes.SINGLETON);
