@@ -103,6 +103,21 @@ james.s3.sdk.checksum.backward.compatibility=false
 ----
 To disable S3 checksum backward compatibility.
 
+== Unordered S3 listings
+
+Ceph RADOS Gateway supports an `allow-unordered` extension on bucket listings: instead of merging the entries of
+every bucket shard in order, the gateway returns them as they come, which is significantly cheaper on sharded
+buckets. James never relies on the ordering of blob listings, thus this is a safe trade for RADOS backed
+deployments. Other S3 implementations might reject the extra parameter, hence it is disabled by default.
+
+Optional. Boolean. Defaults to false.
+
+Ex in `jvm.properties`
+----
+james.s3.rados.allow.unorder=true
+----
+To let RADOS answer bucket listings in an unordered fashion.
+
 endif::[]
 ifndef::no-jmap[]
 == JMAP Quota draft compatibility

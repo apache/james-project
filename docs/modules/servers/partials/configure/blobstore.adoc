@@ -203,6 +203,19 @@ To enable blob hierarchy compatible with MinIO add in `jvm.properties`:
 james.s3.minio.compatibility.mode=true
 ----
 
+==== Unordered listing for Ceph RADOS Gateway
+
+Ceph RADOS Gateway supports an `allow-unordered` extension on bucket listings: instead of merging the entries of
+every bucket shard in order, the gateway returns them as they come, which is significantly cheaper on sharded
+buckets. James never relies on the ordering of blob listings, thus this is a safe trade for RADOS backed
+deployments. Other S3 implementations might reject the extra parameter, hence it is disabled by default.
+
+To let RADOS answer bucket listings in an unordered fashion add in `jvm.properties`:
+
+----
+james.s3.rados.allow.unorder=true
+----
+
 
 == Blob Export
 

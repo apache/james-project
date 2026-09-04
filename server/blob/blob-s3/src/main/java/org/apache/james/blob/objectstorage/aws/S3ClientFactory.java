@@ -77,6 +77,7 @@ public class S3ClientFactory implements Startable, Closeable {
     public static final String S3_METRICS_ENABLED_DEFAULT_VALUE = "true";
     public static final String S3_METRICS_PREFIX = System.getProperty("james.s3.metrics.prefix", DEFAULT_S3_METRICS_PREFIX);
     public static final boolean S3_CHECKSUM_BACKWARD_COMPATIBILITY_ENABLED = Boolean.parseBoolean(System.getProperty("james.s3.sdk.checksum.backward.compatibility", "true"));
+    public static final boolean S3_RADOS_ALLOW_UNORDER = Boolean.parseBoolean(System.getProperty("james.s3.rados.allow.unorder", "false"));
 
     private final S3AsyncClient s3Client;
 
@@ -106,6 +107,9 @@ public class S3ClientFactory implements Startable, Closeable {
                 boolean s3MetricsEnabled = Boolean.parseBoolean(System.getProperty(S3_METRICS_ENABLED_PROPERTY_KEY, S3_METRICS_ENABLED_DEFAULT_VALUE));
                 if (s3MetricsEnabled) {
                     builder.addMetricPublisher(jamesS3MetricPublisherProvider.get());
+                }
+                if (S3_RADOS_ALLOW_UNORDER) {
+                    builder.addExecutionInterceptor(new UnorderedListingInterceptor());
                 }
             });
 
