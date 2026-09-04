@@ -26,7 +26,7 @@ import jakarta.inject.{Inject, Named}
 import org.apache.commons.io.IOUtils
 import org.apache.james.blob.api.BlobStore.BlobIdProvider
 import org.apache.james.blob.api.BlobStoreDAO.{ByteSourceBlob, BytesBlob, InputStreamBlob}
-import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
+import org.apache.james.blob.api.{BlobId, BlobIdEntropy, BlobStore, BlobStoreDAO, BucketName}
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore.THREAD_SWITCH_THRESHOLD
 import org.reactivestreams.Publisher
 import reactor.core.publisher.{Flux, Mono}
@@ -68,6 +68,9 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   private val HASH_BLOB_ID_ENCODING_TYPE_PROPERTY = "james.blob.id.hash.encoding"
   private val HASH_BLOB_ID_ENCODING_DEFAULT = BaseEncoding.base64Url
   private val baseEncoding = Option(System.getProperty(HASH_BLOB_ID_ENCODING_TYPE_PROPERTY)).map(DeDuplicationBlobStore.baseEncodingFrom).getOrElse(HASH_BLOB_ID_ENCODING_DEFAULT)
+  // Truncated ids exist to be short: padding them back up would give away part of what was saved.
+  // Left untouched at full entropy so that ids of existing deployments are preserved.
+  private val blobIdEncoding = if (BlobIdEntropy.entropyBits() == BlobIdEntropy.DEFAULT_ENTROPY_BITS) baseEncoding else baseEncoding.omitPadding()
 
   override def save(bucketName: BucketName, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     save(bucketName, data, withBlobIdFromArray, storagePolicy)
@@ -142,8 +145,8 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   }
 
   private def base64(hashCode: HashCode) = {
-    val bytes = hashCode.asBytes
-    baseEncoding.encode(bytes)
+    val bytes = BlobIdEntropy.truncate(hashCode.asBytes)
+    blobIdEncoding.encode(bytes)
   }
 
   override def save(bucketName: BucketName,
