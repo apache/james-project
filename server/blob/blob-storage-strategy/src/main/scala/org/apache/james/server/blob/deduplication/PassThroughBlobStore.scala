@@ -20,7 +20,6 @@
 package org.apache.james.server.blob.deduplication
 
 import java.io.InputStream
-import java.util.UUID
 
 import com.google.common.base.Preconditions
 import com.google.common.io.ByteSource
@@ -88,11 +87,11 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   }
 
   private def withBlobId: BlobIdProvider[InputStream] = data =>
-    SMono.just(Tuples.of(blobIdFactory.of(UUID.randomUUID.toString), data))
+    SMono.just(Tuples.of(blobIdFactory.random(), data))
   private def withBlobIdByteArray: BlobIdProvider[Array[Byte]] = data =>
-    SMono.just(Tuples.of(blobIdFactory.of(UUID.randomUUID.toString), data))
+    SMono.just(Tuples.of(blobIdFactory.random(), data))
   private def withBlobIdByteSource: BlobIdProvider[ByteSource] = data =>
-    SMono.just(Tuples.of(blobIdFactory.of(UUID.randomUUID.toString), data))
+    SMono.just(Tuples.of(blobIdFactory.random(), data))
 
   override def readBytes(bucketName: BucketName, blobId: BlobId): Publisher[Array[Byte]] = {
     Preconditions.checkNotNull(bucketName)

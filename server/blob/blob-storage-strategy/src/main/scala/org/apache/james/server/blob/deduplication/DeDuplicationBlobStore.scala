@@ -20,13 +20,13 @@
 package org.apache.james.server.blob.deduplication
 
 import com.google.common.base.Preconditions
-import com.google.common.hash.{HashCode, Hashing, HashingInputStream}
-import com.google.common.io.{BaseEncoding, ByteSource, FileBackedOutputStream}
+import com.google.common.hash.{Hashing, HashingInputStream}
+import com.google.common.io.{ByteSource, FileBackedOutputStream}
 import jakarta.inject.{Inject, Named}
 import org.apache.commons.io.IOUtils
 import org.apache.james.blob.api.BlobStore.BlobIdProvider
 import org.apache.james.blob.api.BlobStoreDAO.{ByteSourceBlob, BytesBlob, InputStreamBlob}
-import org.apache.james.blob.api.{BlobId, BlobIdEntropy, BlobStore, BlobStoreDAO, BucketName}
+import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore.THREAD_SWITCH_THRESHOLD
 import org.reactivestreams.Publisher
 import reactor.core.publisher.{Flux, Mono}
@@ -43,34 +43,12 @@ object DeDuplicationBlobStore {
   val FILE_THRESHOLD = Integer.parseInt(System.getProperty("james.deduplicating.blobstore.file.threshold", "10240"))
   val THREAD_SWITCH_THRESHOLD = Integer.parseInt(System.getProperty("james.deduplicating.blobstore.thread.switch.threshold", "32768"));
 
-  private def baseEncodingFrom(encodingType: String): BaseEncoding = encodingType match {
-    case "base16" =>
-      BaseEncoding.base16
-    case "hex" =>
-      BaseEncoding.base16
-    case "base64" =>
-      BaseEncoding.base64
-    case "base64Url" =>
-      BaseEncoding.base64Url
-    case "base32" =>
-      BaseEncoding.base32
-    case "base32Hex" =>
-      BaseEncoding.base32Hex
-    case _ =>
-      throw new IllegalArgumentException("Unknown encoding type: " + encodingType)
-  }
 }
 
 class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
                                        @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) defaultBucketName: BucketName,
                                        blobIdFactory: BlobId.Factory) extends BlobStore {
 
-  private val HASH_BLOB_ID_ENCODING_TYPE_PROPERTY = "james.blob.id.hash.encoding"
-  private val HASH_BLOB_ID_ENCODING_DEFAULT = BaseEncoding.base64Url
-  private val baseEncoding = Option(System.getProperty(HASH_BLOB_ID_ENCODING_TYPE_PROPERTY)).map(DeDuplicationBlobStore.baseEncodingFrom).getOrElse(HASH_BLOB_ID_ENCODING_DEFAULT)
-  // Truncated ids exist to be short: padding them back up would give away part of what was saved.
-  // Left untouched at full entropy so that ids of existing deployments are preserved.
-  private val blobIdEncoding = if (BlobIdEntropy.entropyBits() == BlobIdEntropy.DEFAULT_ENTROPY_BITS) baseEncoding else baseEncoding.omitPadding()
 
   override def save(bucketName: BucketName, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     save(bucketName, data, withBlobIdFromArray, storagePolicy)
@@ -111,7 +89,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
       (fileBackedOutputStream: FileBackedOutputStream) =>
         SMono.fromCallable(() => {
           IOUtils.copy(hashingInputStream, fileBackedOutputStream)
-          (blobIdFactory.of(base64(hashingInputStream.hash)), fileBackedOutputStream.asByteSource.openStream())
+          (blobIdFactory.ofHash(hashingInputStream.hash.asBytes), fileBackedOutputStream.asByteSource.openStream())
         }).asJava()
 
     Mono.using[(BlobId, InputStream),FileBackedOutputStream](
@@ -126,27 +104,19 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   private def withBlobIdFromByteSource: BlobIdProvider[ByteSource] =
     data => Mono.fromCallable(() => data.hash(Hashing.sha256()))
       .subscribeOn(Schedulers.boundedElastic())
-      .map(base64)
-      .map(blobIdFactory.of)
+      .map(hash => blobIdFactory.ofHash(hash.asBytes))
       .map(blobId => Tuples.of(blobId, data))
 
   private def withBlobIdFromArray: BlobIdProvider[Array[Byte]] = data => {
     if (data.length < THREAD_SWITCH_THRESHOLD) {
-      val code = Hashing.sha256.hashBytes(data)
-      val blobId = blobIdFactory.of(base64(code))
+      val blobId = blobIdFactory.ofHash(Hashing.sha256.hashBytes(data).asBytes)
       Mono.just(Tuples.of(blobId, data))
     } else {
       SMono.fromCallable(() => {
-        val code = Hashing.sha256.hashBytes(data)
-        val blobId = blobIdFactory.of(base64(code))
+        val blobId = blobIdFactory.ofHash(Hashing.sha256.hashBytes(data).asBytes)
         Tuples.of(blobId, data)
       })
     }
-  }
-
-  private def base64(hashCode: HashCode) = {
-    val bytes = BlobIdEntropy.truncate(hashCode.asBytes)
-    blobIdEncoding.encode(bytes)
   }
 
   override def save(bucketName: BucketName,

@@ -29,6 +29,7 @@ import java.util.Objects;
 import jakarta.inject.Inject;
 
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobIdEncoding;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -71,6 +72,11 @@ public class MinIOGenerationAwareBlobId implements BlobId, GenerationAware {
             } catch (NumberFormatException e) {
                 return delegate.parse(id.substring(separatorIndex2 + 1));
             }
+        }
+
+        @Override
+        public BlobIdEncoding encoding() {
+            return delegate.encoding();
         }
 
         private static String injectFoldersInBlobId(String blobIdPart) {
@@ -118,6 +124,11 @@ public class MinIOGenerationAwareBlobId implements BlobId, GenerationAware {
             return delegate.asString();
         }
         return family + "/" + generation + "/" + delegate.asString();
+    }
+
+    @Override
+    public MinIOGenerationAwareBlobId withSuffix(String suffix) {
+        return new MinIOGenerationAwareBlobId(generation, family, delegate.withSuffix(suffix));
     }
 
     @Override
