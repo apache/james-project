@@ -78,6 +78,7 @@ public class S3BlobStoreConfiguration {
             private boolean ssecEnabled;
             private Optional<S3SSECConfiguration> ssecConfiguration = Optional.empty();
             private Optional<BucketName> fallbackBucketName;
+            private boolean ifNoneMatchEnabled;
 
             public ReadyToBuild(AwsS3AuthConfiguration specificAuthConfiguration, Region region) {
                 this.specificAuthConfiguration = specificAuthConfiguration;
@@ -91,6 +92,7 @@ public class S3BlobStoreConfiguration {
                 this.inMemoryReadLimit = Optional.empty();
                 this.uploadRetrySpec = Optional.empty();
                 this.fallbackBucketName = Optional.empty();
+                this.ifNoneMatchEnabled = false;
             }
 
             public ReadyToBuild defaultBucketName(Optional<BucketName> defaultBucketName) {
@@ -162,11 +164,16 @@ public class S3BlobStoreConfiguration {
                 return this;
             }
 
+            public ReadyToBuild ifNoneMatchEnabled(boolean ifNoneMatchEnabled) {
+                this.ifNoneMatchEnabled = ifNoneMatchEnabled;
+                return this;
+            }
+
             public S3BlobStoreConfiguration build() {
                 return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region,
                     specificAuthConfiguration, httpConcurrency.orElse(DEFAULT_HTTP_CONCURRENCY),
                     inMemoryReadLimit, readTimeout, writeTimeout, connectionTimeout, uploadRetrySpec.orElse(DEFAULT_UPLOAD_RETRY_SPEC),
-                    ssecEnabled, ssecConfiguration, fallbackBucketName);
+                    ssecEnabled, ssecConfiguration, fallbackBucketName, ifNoneMatchEnabled);
             }
         }
 
@@ -187,6 +194,7 @@ public class S3BlobStoreConfiguration {
     private final boolean ssecEnabled;
     private final Optional<S3SSECConfiguration> ssecConfiguration;
     private final Optional<BucketName> fallbackNamespace;
+    private final boolean ifNoneMatchEnabled;
 
     private final Optional<Duration> readTimeout;
     private final Optional<Duration> writeTimeout;
@@ -205,7 +213,8 @@ public class S3BlobStoreConfiguration {
                              Retry uploadRetrySpec,
                              boolean ssecEnabled,
                              Optional<S3SSECConfiguration> ssecConfiguration,
-                             Optional<BucketName> fallbackNamespace) {
+                             Optional<BucketName> fallbackNamespace,
+                             boolean ifNoneMatchEnabled) {
         this.bucketPrefix = bucketPrefix;
         this.namespace = namespace;
         this.region = region;
@@ -219,6 +228,7 @@ public class S3BlobStoreConfiguration {
         this.ssecEnabled = ssecEnabled;
         this.ssecConfiguration = ssecConfiguration;
         this.fallbackNamespace = fallbackNamespace;
+        this.ifNoneMatchEnabled = ifNoneMatchEnabled;
     }
 
     public Optional<Long> getInMemoryReadLimit() {
@@ -273,6 +283,10 @@ public class S3BlobStoreConfiguration {
         return fallbackNamespace;
     }
 
+    public boolean ifNoneMatchEnabled() {
+        return ifNoneMatchEnabled;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof S3BlobStoreConfiguration that) {
@@ -288,7 +302,8 @@ public class S3BlobStoreConfiguration {
                 && Objects.equals(this.specificAuthConfiguration, that.specificAuthConfiguration)
                 && Objects.equals(this.ssecEnabled, that.ssecEnabled)
                 && Objects.equals(this.ssecConfiguration, that.ssecConfiguration)
-                && Objects.equals(this.fallbackNamespace, that.fallbackNamespace);
+                && Objects.equals(this.fallbackNamespace, that.fallbackNamespace)
+                && Objects.equals(this.ifNoneMatchEnabled, that.ifNoneMatchEnabled);
         }
         return false;
     }
@@ -297,7 +312,7 @@ public class S3BlobStoreConfiguration {
     public final int hashCode() {
         return Objects.hash(namespace, bucketPrefix, httpConcurrency, specificAuthConfiguration,
             readTimeout, writeTimeout, connectionTimeout, uploadRetrySpec, ssecConfiguration, region,
-            inMemoryReadLimit, ssecEnabled, fallbackNamespace);
+            inMemoryReadLimit, ssecEnabled, fallbackNamespace, ifNoneMatchEnabled);
     }
 
     @Override
@@ -316,6 +331,7 @@ public class S3BlobStoreConfiguration {
             .add("ssecEnabled", ssecEnabled)
             .add("ssecConfiguration", ssecConfiguration)
             .add("fallbackNamespace", fallbackNamespace)
+            .add("ifNoneMatchEnabled", ifNoneMatchEnabled)
             .toString();
     }
 }

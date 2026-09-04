@@ -52,6 +52,7 @@ public class S3BlobStoreConfigurationReader {
     private static final String OBJECTSTORAGE_S3_UPLOAD_RETRY_BACKOFF_DURATION_MILLIS = "objectstorage.s3.upload.retry.backoffDurationMillis";
     private static final String OBJECTSTORAGE_S3_ENCRYPTION_SSEC_ENABLE_PROPERTY = "encryption.s3.sse.c.enable";
     private static final String OBJECTSTORAGE_NAMESPACE_READ_FALLBACK = "objectstorage.namespace.read.fallback";
+    private static final String OBJECTSTORAGE_S3_IF_NONE_MATCH_ENABLE = "objectstorage.s3.ifNoneMatch.enable";
 
     public static S3BlobStoreConfiguration from(Configuration configuration) throws ConfigurationException {
         Optional<Integer> httpConcurrency = Optional.ofNullable(configuration.getInteger(OBJECTSTORAGE_S3_HTTP_CONCURRENCY, null));
@@ -81,6 +82,8 @@ public class S3BlobStoreConfigurationReader {
 
         Optional<String> fallbackNamespace = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_NAMESPACE_READ_FALLBACK, null));
 
+        boolean ifNoneMatchEnabled = configuration.getBoolean(OBJECTSTORAGE_S3_IF_NONE_MATCH_ENABLE, false);
+
         S3BlobStoreConfiguration.Builder.ReadyToBuild configBuilder = S3BlobStoreConfiguration.builder()
             .authConfiguration(AwsS3ConfigurationReader.from(configuration))
             .region(region)
@@ -92,7 +95,8 @@ public class S3BlobStoreConfigurationReader {
             .writeTimeout(writeTimeout)
             .connectionTimeout(connectionTimeout)
             .uploadRetrySpec(uploadRetrySpec)
-            .fallbackBucketName(fallbackNamespace.map(BucketName::of));
+            .fallbackBucketName(fallbackNamespace.map(BucketName::of))
+            .ifNoneMatchEnabled(ifNoneMatchEnabled);
 
         if (ssecEnabled) {
             configBuilder.ssecEnabled().ssecConfiguration(configuration);

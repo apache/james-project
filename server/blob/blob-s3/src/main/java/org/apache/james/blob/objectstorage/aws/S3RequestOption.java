@@ -25,8 +25,12 @@ import org.apache.james.blob.objectstorage.aws.sse.S3SSECustomerKeyFactory;
 
 import com.google.common.base.Preconditions;
 
-public record S3RequestOption(SSEC ssec) {
+public record S3RequestOption(SSEC ssec, boolean ifNoneMatch) {
     public static S3RequestOption DEFAULT = new S3RequestOption(S3RequestOption.SSEC.DISABLED);
+
+    public S3RequestOption(SSEC ssec) {
+        this(ssec, false);
+    }
 
     public record SSEC(boolean enable, java.util.Optional<S3SSECustomerKeyFactory> sseCustomerKeyFactory) {
         static S3RequestOption.SSEC DISABLED = new S3RequestOption.SSEC(false, Optional.empty());

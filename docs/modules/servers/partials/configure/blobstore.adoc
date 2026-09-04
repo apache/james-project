@@ -147,6 +147,20 @@ Only takes effect when the "objectstorage.s3.upload.retry.maxAttempts" property 
 This property determines the duration (in milliseconds) to wait between retry attempts for failed upload operations.
 This delay is known as backoff. The jitter factor is 0.5
 
+| objectstorage.s3.ifNoneMatch.enable
+| optional: Boolean. Defaults to false. When enabled, James adds the `If-None-Match: *` header to every object upload,
+turning writes into conditional writes: the object is only written if it does not exist yet. A `412 Precondition failed`
+answer is then treated as a success as the object is already stored.
+
+This saves the bandwidth and the storage cost of re-uploading blobs James already stored, and, combined with a bucket
+policy denying `s3:DeleteObject` and requiring `s3:if-none-match` on PUT operations, prevents existing objects from ever
+being rewritten - safeties similar to versioning, without its costs.
+
+Only enable this against an object storage implementation supporting conditional writes (AWS S3 and MinIO do). This only
+brings benefits with the `deduplication` storage strategy: blob ids are then content addressed, thus a blob that is
+already stored necessarily holds the very same content. The `passthrough` strategy generates a distinct blob id per
+write, thus no write is ever skipped.
+
 |===
 
 ==== Buckets Configuration
