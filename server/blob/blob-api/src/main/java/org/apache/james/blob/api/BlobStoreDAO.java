@@ -54,8 +54,6 @@ import reactor.core.publisher.Flux;
  * <p>See {@code docs/modules/servers/partials/architecture/blobstore.adoc} for more details.</p>
  */
 public interface BlobStoreDAO {
-    String RECOVERY_BLOB_PREFIX = "recovery/";
-
     record BlobMetadataName(String name) {
         private static final CharMatcher CHAR_MATCHER = CharMatcher.inRange('a', 'z')
             .or(CharMatcher.inRange('A', 'Z'))
@@ -295,7 +293,8 @@ public interface BlobStoreDAO {
     Publisher<BlobId> listBlobs(BucketName bucketName);
 
     /**
-     * Lists the blobs of a bucket whose id starts with the given prefix (eg. {@link #RECOVERY_BLOB_PREFIX}).
+     * Lists the blobs of a bucket whose id starts with the given prefix (eg. {@code 1_690_} to restrict the
+     * listing to a single generation of a generation aware blob id).
      *
      * <p>The default implementation filters the full listing. Connectors able to push the prefix down to
      * their backend (eg. S3 {@code ListObjectsV2}) should override this for efficiency.</p>

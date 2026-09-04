@@ -55,6 +55,7 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreCacheCallback;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Attachments;
@@ -110,11 +111,11 @@ public class CassandraMessageDAOV3 {
     @Inject
     public CassandraMessageDAOV3(CqlSession session, CassandraTypesProvider typesProvider, BlobStore blobStore,
                                  BlobStoreDAO blobStoreDAO, BlobId.Factory blobIdFactory,
-                                 CassandraConfiguration cassandraConfiguration) {
+                                 CassandraConfiguration cassandraConfiguration, BlobStoreCacheCallback cacheCallback) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
-        this.messageContentSaver = messageContentSaver(blobStore, blobStoreDAO, blobIdFactory, cassandraConfiguration);
+        this.messageContentSaver = messageContentSaver(blobStore, blobStoreDAO, blobIdFactory, cassandraConfiguration, cacheCallback);
 
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
@@ -131,11 +132,11 @@ public class CassandraMessageDAOV3 {
     }
 
     private static MessageContentSaver messageContentSaver(BlobStore blobStore, BlobStoreDAO blobStoreDAO,
-                                                          BlobId.Factory blobIdFactory, CassandraConfiguration configuration) {
+                                                          BlobId.Factory blobIdFactory, CassandraConfiguration configuration,
+                                                          BlobStoreCacheCallback cacheCallback) {
         return switch (configuration.getBlobRecoveryMode()) {
             case NONE -> new DefaultMessageContentSaver(blobStore);
-            case SYNCHRONOUS, ASYNCHRONOUS -> new ContentRecoveryMessageContentSaver(blobStore, blobStoreDAO,
-                blobIdFactory, configuration.getBlobRecoveryMode());
+            case ENABLED -> new ContentRecoveryMessageContentSaver(blobStore, blobStoreDAO, blobIdFactory, cacheCallback);
         };
     }
 
