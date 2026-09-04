@@ -117,6 +117,7 @@ public class CassandraMessageIdDAO {
     private final BlobId.Factory blobIdFactory;
     private final PreparedStatement delete;
     private final PreparedStatement insert;
+    private final PreparedStatement updateDenormalizedFields;
     private final PreparedStatement select;
     private final PreparedStatement selectAll;
     private final PreparedStatement selectAllUids;
@@ -144,6 +145,7 @@ public class CassandraMessageIdDAO {
         this.delete = prepareDelete(session);
         this.insert = prepareInsert(session);
         this.update = prepareUpdate(session);
+        this.updateDenormalizedFields = prepareUpdateDenormalizedFields(session);
         this.select = prepareSelect(session);
         this.selectAll = prepareSelectAll(session);
         this.selectAllUids = prepareSelectAllUids(session);
@@ -186,6 +188,17 @@ public class CassandraMessageIdDAO {
                 setColumn(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS)),
                 setColumn(HEADER_CONTENT, bindMarker(HEADER_CONTENT)),
                 append(USER_FLAGS, bindMarker(USER_FLAGS)))
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isEqualTo(bindMarker(IMAP_UID)))
+            .build());
+    }
+
+    private PreparedStatement prepareUpdateDenormalizedFields(CqlSession session) {
+        return session.prepare(update(TABLE_NAME)
+            .set(setColumn(INTERNAL_DATE, bindMarker(INTERNAL_DATE)),
+                setColumn(BODY_START_OCTET, bindMarker(BODY_START_OCTET)),
+                setColumn(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS)),
+                setColumn(HEADER_CONTENT, bindMarker(HEADER_CONTENT)))
             .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
                 column(IMAP_UID).isEqualTo(bindMarker(IMAP_UID)))
             .build());
@@ -367,6 +380,17 @@ public class CassandraMessageIdDAO {
             .setString(HEADER_CONTENT, metadata.getHeaderContent().get().asString())
             .setExecutionProfile(writeProfile)
             .build());
+    }
+
+    public Mono<Void> updateDenormalizedFields(CassandraId mailboxId, MessageUid uid, Date internalDate,
+                                               int bodyStartOctet, long size, BlobId headerContent) {
+        return cassandraAsyncExecutor.executeVoid(updateDenormalizedFields.bind()
+            .setUuid(MAILBOX_ID, mailboxId.asUuid())
+            .setLong(IMAP_UID, uid.asLong())
+            .setInstant(INTERNAL_DATE, internalDate.toInstant())
+            .setInt(BODY_START_OCTET, bodyStartOctet)
+            .setLong(FULL_CONTENT_OCTETS, size)
+            .setString(HEADER_CONTENT, headerContent.asString()));
     }
 
     public Mono<Void> updateMetadata(ComposedMessageId composedMessageId, UpdatedFlags updatedFlags) {

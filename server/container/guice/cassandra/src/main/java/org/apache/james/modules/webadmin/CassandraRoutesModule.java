@@ -25,6 +25,7 @@ import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaTransition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.mailbox.cassandra.mail.migration.MessageDenormalizationMigration;
 import org.apache.james.mailbox.cassandra.quota.migration.CassandraCurrentQuotaManagerMigration;
 import org.apache.james.mailbox.cassandra.quota.migration.CassandraPerUserMaxQuotaManagerMigration;
 import org.apache.james.sieve.cassandra.migration.SieveQuotaMigration;
@@ -42,6 +43,7 @@ public class CassandraRoutesModule extends AbstractModule {
     private static final SchemaTransition FROM_V12_TO_V13 = SchemaTransition.to(new SchemaVersion(13));
     private static final SchemaTransition FROM_V13_TO_V14 = SchemaTransition.to(new SchemaVersion(14));
     private static final SchemaTransition FROM_V14_TO_V15 = SchemaTransition.to(new SchemaVersion(15));
+    private static final SchemaTransition FROM_V15_TO_V16 = SchemaTransition.to(new SchemaVersion(16));
 
     @Override
     protected void configure() {
@@ -60,6 +62,7 @@ public class CassandraRoutesModule extends AbstractModule {
         allMigrationClazzBinder.addBinding(FROM_V12_TO_V13).to(CassandraCurrentQuotaManagerMigration.class);
         allMigrationClazzBinder.addBinding(FROM_V13_TO_V14).to(CassandraPerUserMaxQuotaManagerMigration.class);
         allMigrationClazzBinder.addBinding(FROM_V14_TO_V15).to(SieveQuotaMigration.class);
+        allMigrationClazzBinder.addBinding(FROM_V15_TO_V16).to(MessageDenormalizationMigration.class);
 
         bind(SchemaVersion.class)
             .annotatedWith(Names.named(CassandraMigrationService.LATEST_VERSION))
