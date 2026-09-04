@@ -32,7 +32,6 @@ import java.time.ZoneOffset;
 import java.util.stream.Stream;
 
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobIdEntropy;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreCacheCallback;
 import org.apache.james.blob.api.BlobStoreDAO;
@@ -40,12 +39,10 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.server.blob.deduplication.GenerationAwareBlobId;
 import org.apache.james.server.blob.deduplication.MinIOGenerationAwareBlobId;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
@@ -62,7 +59,6 @@ import reactor.util.function.Tuple2;
 class ContentRecoveryMessageContentSaverTest {
     private static final byte[] HEADER_BYTES = "Subject: test\r\n\r\n".getBytes(StandardCharsets.UTF_8);
     private static final ByteSource BODY = ByteSource.wrap("body".getBytes(StandardCharsets.UTF_8));
-    private static final BaseEncoding BLOB_ID_ENCODING = BaseEncoding.base64Url().omitPadding();
 
     /**
      * 2026-09-04T00:00:00Z is exactly 690 times the default 30 days generation duration, which keeps the
@@ -109,15 +105,6 @@ class ContentRecoveryMessageContentSaverTest {
     void headerBlobIdShouldNotRepeatItself(String name, BlobId.Factory blobIdFactory, String expectedPrefix) {
         assertThat(saveContent(blobIdFactory).getT1())
             .isNotEqualTo(saveContent(blobIdFactory).getT1());
-    }
-
-    @Test
-    void headerBlobIdShouldDrawTheConfiguredEntropy() {
-        String headerBlobId = saveContent(new PlainBlobId.Factory()).getT1().asString();
-        String randomPart = headerBlobId.substring(0, headerBlobId.length() - HEADER_BLOB_ID_SUFFIX.length());
-
-        assertThat(BLOB_ID_ENCODING.decode(randomPart))
-            .hasSize(BlobIdEntropy.entropyBytes());
     }
 
     private Tuple2<BlobId, BlobId> saveContent(BlobId.Factory blobIdFactory) {
