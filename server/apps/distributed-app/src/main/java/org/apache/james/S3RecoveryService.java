@@ -20,11 +20,10 @@
 package org.apache.james;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
-import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
-import static org.apache.james.blob.api.BlobStoreDAO.RECOVERY_BLOB_PREFIX;
+import static org.apache.james.mailbox.cassandra.mail.ContentRecoveryMessageContentSaver.BODY_BLOB_ID;
+import static org.apache.james.mailbox.cassandra.mail.ContentRecoveryMessageContentSaver.HEADER_BLOB_ID_SUFFIX;
 
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -61,17 +60,22 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Walks the blob store looking for {@code recovery/} sidecars (written by
- * {@code CassandraMessageDAOV3} when {@code mailbox.blob.recovery.mode} is enabled) and restores the
- * associated messages into a {@code Restored-messages} mailbox of each local {@code Delivered-To} recipient.
+ * Walks the header blobs of the blob store (written by {@code CassandraMessageDAOV3} when
+ * {@code mailbox.blob.recovery.mode} is enabled) and restores the associated messages into a
+ * {@code Restored-messages} mailbox of each local {@code Delivered-To} recipient.
  *
- * <p>Reads go through the configured {@link BlobStore}, so AES decryption and decompression are applied
+ * <p>Header blobs are told apart by their {@code _hdr} suffix and carry the id of their body blob as
+ * metadata. A blob matching the suffix without that metadata is simply skipped, so an unlucky collision
+ * costs nothing.</p>
+ *
+ * <p>Reads go through the decorated {@link BlobStoreDAO}, so AES decryption and decompression are applied
  * transparently, exactly as the write path did.</p>
  */
 public class S3RecoveryService {
-    public record Report(long processed, long restored, long skippedByDate, long skippedNoLocalUser, long failed) {
+    public record Report(long processed, long restored, long skippedByDate, long skippedNoLocalUser,
+                         long skippedNoRecoveryInfo, long failed) {
         public static Report empty() {
-            return new Report(0, 0, 0, 0, 0);
+            return new Report(0, 0, 0, 0, 0, 0);
         }
 
         Report merge(Report other) {
@@ -79,6 +83,7 @@ public class S3RecoveryService {
                 restored + other.restored,
                 skippedByDate + other.skippedByDate,
                 skippedNoLocalUser + other.skippedNoLocalUser,
+                skippedNoRecoveryInfo + other.skippedNoRecoveryInfo,
                 failed + other.failed);
         }
     }
@@ -89,10 +94,11 @@ public class S3RecoveryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(S3RecoveryService.class);
     private static final String RESTORE_MAILBOX = "Restored-messages";
     private static final String DELIVERED_TO = "Delivered-To";
-    private static final Report RESTORED = new Report(1, 1, 0, 0, 0);
-    private static final Report SKIPPED_BY_DATE = new Report(1, 0, 1, 0, 0);
-    private static final Report SKIPPED_NO_LOCAL_USER = new Report(1, 0, 0, 1, 0);
-    private static final Report FAILED = new Report(1, 0, 0, 0, 1);
+    private static final Report RESTORED = new Report(1, 1, 0, 0, 0, 0);
+    private static final Report SKIPPED_BY_DATE = new Report(1, 0, 1, 0, 0, 0);
+    private static final Report SKIPPED_NO_LOCAL_USER = new Report(1, 0, 0, 1, 0, 0);
+    private static final Report SKIPPED_NO_RECOVERY_INFO = new Report(1, 0, 0, 0, 1, 0);
+    private static final Report FAILED = new Report(1, 0, 0, 0, 0, 1);
 
     private final BlobStore blobStore;
     private final BlobStoreDAO blobStoreDAO;
@@ -116,39 +122,43 @@ public class S3RecoveryService {
 
     public Mono<Report> run() {
         BucketName bucket = blobStore.getDefaultBucketName();
-        String prefix = RECOVERY_BLOB_PREFIX + configuration.headerBlobPrefix();
+        String prefix = configuration.headerBlobPrefix();
         LOGGER.info("Starting S3 recovery on bucket {} (prefix: {}, restore after: {}, concurrency: {})",
             bucket.asString(), prefix, configuration.restoreAfter(), configuration.concurrency());
         return Flux.from(blobStoreDAO.listBlobs(bucket, prefix))
-            .map(BlobId::asString)
-            .flatMap(recoveryKey -> restoreOne(bucket, recoveryKey), configuration.concurrency())
+            .filter(blobId -> blobId.asString().endsWith(HEADER_BLOB_ID_SUFFIX))
+            .flatMap(headerBlobId -> restoreOne(bucket, headerBlobId), configuration.concurrency())
             .reduce(Report.empty(), Report::merge)
             .doOnNext(report -> LOGGER.info("S3 recovery finished: {}", report));
     }
 
-    private Mono<Report> restoreOne(BucketName bucket, String recoveryKey) {
-        String headerKey = recoveryKey.substring(RECOVERY_BLOB_PREFIX.length());
-        BlobId headerBlobId = blobIdFactory.parse(headerKey);
-        BlobId recoveryBlobId = blobIdFactory.parse(recoveryKey);
-
-        return Mono.from(blobStoreDAO.readBytes(bucket, recoveryBlobId))
-            .map(sidecar -> blobIdFactory.parse(new String(sidecar.payload(), StandardCharsets.UTF_8).trim()))
-            .flatMap(bodyBlobId -> recover(bucket, headerBlobId, bodyBlobId))
-            .flatMap(this::restore)
+    private Mono<Report> restoreOne(BucketName bucket, BlobId headerBlobId) {
+        return Mono.from(blobStoreDAO.readBytes(bucket, headerBlobId))
+            .flatMap(headerBlob -> bodyBlobId(headerBlob)
+                .map(bodyBlobId -> recover(bucket, headerBlob.payload(), bodyBlobId)
+                    .flatMap(this::restore))
+                .orElseGet(() -> {
+                    LOGGER.debug("Skipping {}: no recovery information", headerBlobId.asString());
+                    return Mono.just(SKIPPED_NO_RECOVERY_INFO);
+                }))
             .onErrorResume(error -> {
-                LOGGER.error("Failed to recover message from {}", recoveryKey, error);
+                LOGGER.error("Failed to recover message from {}", headerBlobId.asString(), error);
                 return Mono.just(FAILED);
             });
     }
 
-    private Mono<RecoveredMessage> recover(BucketName bucket, BlobId headerBlobId, BlobId bodyBlobId) {
-        return Mono.from(blobStore.readBytes(bucket, headerBlobId, SIZE_BASED))
-            .flatMap(headerBytes -> {
-                MessageHeaders headers = parseHeaders(headerBytes);
-                return Mono.from(blobStore.readBytes(bucket, bodyBlobId, LOW_COST))
-                    .map(bodyBytes -> new RecoveredMessage(headers.recipients(), headers.date(),
-                        new HeaderAndBodyByteContent(headerBytes, bodyBytes)));
-            });
+    private Optional<BlobId> bodyBlobId(BlobStoreDAO.BytesBlob headerBlob) {
+        return headerBlob.metadata()
+            .get(BODY_BLOB_ID)
+            .map(BlobStoreDAO.BlobMetadataValue::value)
+            .map(blobIdFactory::parse);
+    }
+
+    private Mono<RecoveredMessage> recover(BucketName bucket, byte[] headerBytes, BlobId bodyBlobId) {
+        MessageHeaders headers = parseHeaders(headerBytes);
+        return Mono.from(blobStore.readBytes(bucket, bodyBlobId, LOW_COST))
+            .map(bodyBytes -> new RecoveredMessage(headers.recipients(), headers.date(),
+                new HeaderAndBodyByteContent(headerBytes, bodyBytes)));
     }
 
     private Mono<Report> restore(RecoveredMessage message) {

@@ -45,14 +45,50 @@ class RecoveryConfigurationTest {
     }
 
     @Test
-    void parseShouldDefaultHeaderBlobPrefixToEmpty() {
+    void headerBlobPrefixShouldBeEmptyWhenNoFamily() {
         assertThat(RecoveryConfiguration.parse(new String[] {}).headerBlobPrefix()).isEmpty();
     }
 
     @Test
-    void parseShouldReadHeaderBlobPrefixArgument() {
-        assertThat(RecoveryConfiguration.parse(new String[] {"--header-blob-prefix=1_42_"}).headerBlobPrefix())
-            .isEqualTo("1_42_");
+    void headerBlobPrefixShouldOnlyCarryFamilyWhenNoGeneration() {
+        assertThat(RecoveryConfiguration.parse(new String[] {"--family=1"}).headerBlobPrefix())
+            .isEqualTo("1_");
+    }
+
+    @Test
+    void headerBlobPrefixShouldCarryFamilyAndGeneration() {
+        assertThat(RecoveryConfiguration.parse(new String[] {"--family=1", "--generation=690"}).headerBlobPrefix())
+            .isEqualTo("1_690_");
+    }
+
+    @Test
+    void headerBlobPrefixShouldUseSlashWhenMinioSeparator() {
+        assertThat(RecoveryConfiguration.parse(new String[] {"--family=1", "--generation=690", "--minio-separator"}).headerBlobPrefix())
+            .isEqualTo("1/690/");
+    }
+
+    @Test
+    void parseShouldRejectGenerationWithoutFamily() {
+        assertThatThrownBy(() -> RecoveryConfiguration.parse(new String[] {"--generation=690"}))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void parseShouldRejectNonNumericFamily() {
+        assertThatThrownBy(() -> RecoveryConfiguration.parse(new String[] {"--family=one"}))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void parseShouldRejectNonPositiveFamily() {
+        assertThatThrownBy(() -> RecoveryConfiguration.parse(new String[] {"--family=0"}))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void parseShouldRejectNonNumericGeneration() {
+        assertThatThrownBy(() -> RecoveryConfiguration.parse(new String[] {"--family=1", "--generation=latest"}))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
