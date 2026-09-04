@@ -141,7 +141,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         } catch (UnknownHostException e) {
             LOGGER.warn("Unable to retrieve hostname.", e);
         } catch (DomainListException e) {
-            LOGGER.error("An error occured while creating the default domain", e);
+            LOGGER.error("An error occurred while creating the default domain", e);
         }
     }
 
