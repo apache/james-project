@@ -170,7 +170,7 @@ public class KeyStoreHolder {
             // A certification path is not found, so null is returned.
             return null;
         } catch (InvalidAlgorithmParameterException e) {
-            // If this exception is thrown an error has occured during
+            // If this exception is thrown an error has occurred during
             // certification path search. 
             throw new MessagingException("Error during the certification path search.", e);
         }

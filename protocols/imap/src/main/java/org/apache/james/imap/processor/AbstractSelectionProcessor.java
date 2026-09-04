@@ -163,7 +163,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
                 // Now do the QRESYNC processing if necessary
                 //
-                // If the mailbox does not store the mod-sequence in a permanent way its needed to not process the QRESYNC paramters
+                // If the mailbox does not store the mod-sequence in a permanent way its needed to not process the QRESYNC parameters
                 // The same is true if none are given ;)
                 if (!lastKnownUidValidity.isUnknown()) {
                     if (lastKnownUidValidity.correspondsTo(metaData.getUidValidity())) {
