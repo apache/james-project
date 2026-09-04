@@ -27,7 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.BlobIdEncoding;
 import org.apache.james.util.DurationParser;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -129,11 +129,6 @@ public class GenerationAwareBlobId implements BlobId, GenerationAware {
 
         @Override
         public GenerationAwareBlobId parse(String id) {
-            // Recovery sidecar keys (eg. recovery/1_2_blobId) do not follow the family_generation_blobId
-            // layout: keep them as a plain, non-generation-aware blob id preserving the original string.
-            if (id.startsWith(BlobStoreDAO.RECOVERY_BLOB_PREFIX)) {
-                return decorateWithoutGeneration(id);
-            }
             int separatorIndex1 = id.indexOf('_');
             if (separatorIndex1 == -1 || separatorIndex1 == id.length() - 1) {
                 return decorateWithoutGeneration(id);
@@ -147,6 +142,11 @@ public class GenerationAwareBlobId implements BlobId, GenerationAware {
             BlobId wrapped = delegate.parse(id.substring(separatorIndex2 + 1));
 
             return new GenerationAwareBlobId(generation, family, wrapped);
+        }
+
+        @Override
+        public BlobIdEncoding encoding() {
+            return delegate.encoding();
         }
 
         private GenerationAwareBlobId decorateWithoutGeneration(String id) {
@@ -186,6 +186,11 @@ public class GenerationAwareBlobId implements BlobId, GenerationAware {
             return delegate.asString();
         }
         return family + "_" + generation + "_" + delegate.asString();
+    }
+
+    @Override
+    public GenerationAwareBlobId withSuffix(String suffix) {
+        return new GenerationAwareBlobId(generation, family, delegate.withSuffix(suffix));
     }
 
     @Override

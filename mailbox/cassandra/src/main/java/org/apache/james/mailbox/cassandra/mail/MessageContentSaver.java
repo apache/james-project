@@ -17,27 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.api;
+package org.apache.james.mailbox.cassandra.mail;
 
-public interface BlobId {
+import org.apache.james.blob.api.BlobId;
 
-    interface Factory {
-        BlobId of(String id);
+import com.google.common.io.ByteSource;
 
-        BlobId parse(String id);
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
-        BlobIdEncoding encoding();
-
-        default BlobId random() {
-            return of(encoding().encode(BlobIdEntropy.randomBytes()));
-        }
-
-        default BlobId ofHash(byte[] hash) {
-            return of(encoding().encode(BlobIdEntropy.truncate(hash)));
-        }
-    }
-
-    String asString();
-
-    BlobId withSuffix(String suffix);
+/**
+ * Saves the content of a message: its headers and its body.
+ *
+ * Implementations decide which recovery policy, if any, is applied alongside the content write.
+ */
+public interface MessageContentSaver {
+    /**
+     * @return the blob id of the headers (T1) and the blob id of the body (T2).
+     */
+    Mono<Tuple2<BlobId, BlobId>> saveContent(byte[] headerBytes, ByteSource bodyByteSource);
 }

@@ -20,7 +20,6 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.apache.james.mailbox.store.mail.model.MailboxMessage.EMPTY_SAVE_DATE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -38,9 +37,9 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreCacheCallback;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
@@ -136,7 +135,8 @@ class CassandraMessageDAOV3Test {
             blobStore,
             blobStoreDAO,
             blobIdFactory,
-            configuration);
+            configuration,
+            BlobStoreCacheCallback.NOOP);
     }
 
     @Test
@@ -172,47 +172,78 @@ class CassandraMessageDAOV3Test {
     }
 
     @Test
-    void saveShouldNotWriteRecoveryBlobByDefault() throws Exception {
+    void saveShouldNotCarryRecoveryInformationByDefault() throws Exception {
         message = createMessage(messageId, threadId, CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
 
         Tuple2<BlobId, BlobId> blobIds = testee.save(message).block();
 
-        BlobId recoveryBlobId = blobIdFactory.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
-        assertThatThrownBy(() -> Mono.from(blobStoreDAO.readBytes(BucketName.DEFAULT, recoveryBlobId)).block())
-            .isInstanceOf(ObjectNotFoundException.class);
+        assertThat(Mono.from(blobStoreDAO.readBytes(BucketName.DEFAULT, blobIds.getT1())).block()
+                .metadata().get(ContentRecoveryMessageContentSaver.BODY_BLOB_ID))
+            .isEmpty();
     }
 
     @Test
-    void saveShouldWriteRecoveryBlobWhenSynchronousMode(CassandraCluster cassandra) throws Exception {
-        CassandraConfiguration conf = CassandraConfiguration.builder()
-            .blobRecoveryMode(CassandraConfiguration.BlobRecoveryMode.SYNCHRONOUS)
-            .build();
-        CassandraMessageDAOV3 testeeWithRecovery = buildTestee(cassandra, conf);
+    void saveShouldNotSuffixHeaderBlobIdByDefault() throws Exception {
+        message = createMessage(messageId, threadId, CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
+
+        Tuple2<BlobId, BlobId> blobIds = testee.save(message).block();
+
+        assertThat(blobIds.getT1().asString())
+            .doesNotEndWith(ContentRecoveryMessageContentSaver.HEADER_BLOB_ID_SUFFIX);
+    }
+
+    @Test
+    void saveShouldCarryBodyBlobIdAsHeaderMetadataWhenRecoveryEnabled(CassandraCluster cassandra) throws Exception {
+        CassandraMessageDAOV3 testeeWithRecovery = buildTestee(cassandra, recoveryEnabled());
         message = createMessage(messageId, threadId, CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
 
         Tuple2<BlobId, BlobId> blobIds = testeeWithRecovery.save(message).block();
 
-        BlobId recoveryBlobId = blobIdFactory.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
-        byte[] recoveryContent = Mono.from(blobStoreDAO.readBytes(BucketName.DEFAULT, recoveryBlobId)).block().payload();
-        assertThat(new String(recoveryContent, StandardCharsets.UTF_8)).isEqualTo(blobIds.getT2().asString());
+        assertThat(Mono.from(blobStoreDAO.readBytes(BucketName.DEFAULT, blobIds.getT1())).block()
+                .metadata().get(ContentRecoveryMessageContentSaver.BODY_BLOB_ID))
+            .contains(new BlobStoreDAO.BlobMetadataValue(blobIds.getT2().asString()));
     }
 
     @Test
-    void saveShouldWriteRecoveryBlobWhenAsynchronousMode(CassandraCluster cassandra) throws Exception {
-        CassandraConfiguration conf = CassandraConfiguration.builder()
-            .blobRecoveryMode(CassandraConfiguration.BlobRecoveryMode.ASYNCHRONOUS)
-            .build();
-        CassandraMessageDAOV3 testeeWithRecovery = buildTestee(cassandra, conf);
+    void saveShouldSuffixHeaderBlobIdWhenRecoveryEnabled(CassandraCluster cassandra) throws Exception {
+        CassandraMessageDAOV3 testeeWithRecovery = buildTestee(cassandra, recoveryEnabled());
         message = createMessage(messageId, threadId, CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
 
         Tuple2<BlobId, BlobId> blobIds = testeeWithRecovery.save(message).block();
 
-        BlobId recoveryBlobId = blobIdFactory.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
-        // Asynchronous: give the parallel scheduler a moment to complete
-        assertThat(Mono.from(blobStoreDAO.readBytes(BucketName.DEFAULT, recoveryBlobId))
-                .retryWhen(reactor.util.retry.Retry.fixedDelay(10, java.time.Duration.ofMillis(100)))
-                .block().payload())
-            .isEqualTo(blobIds.getT2().asString().getBytes(StandardCharsets.UTF_8));
+        assertThat(blobIds.getT1().asString())
+            .endsWith(ContentRecoveryMessageContentSaver.HEADER_BLOB_ID_SUFFIX);
+    }
+
+    @Test
+    void headerBlobIdShouldBeRandomWhenRecoveryEnabled(CassandraCluster cassandra) throws Exception {
+        CassandraMessageDAOV3 testeeWithRecovery = buildTestee(cassandra, recoveryEnabled());
+        message = createMessage(messageId, threadId, CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
+        Tuple2<BlobId, BlobId> blobIds = testeeWithRecovery.save(message).block();
+
+        message = createMessage(messageId2, threadId, CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
+        Tuple2<BlobId, BlobId> otherBlobIds = testeeWithRecovery.save(message).block();
+
+        assertThat(blobIds.getT1()).isNotEqualTo(otherBlobIds.getT1());
+    }
+
+    @Test
+    void saveShouldStoreRetrievableMessageWhenRecoveryEnabled(CassandraCluster cassandra) throws Exception {
+        CassandraMessageDAOV3 testeeWithRecovery = buildTestee(cassandra, recoveryEnabled());
+        message = createMessage(messageId, threadId, CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
+
+        testeeWithRecovery.save(message).block();
+
+        MessageRepresentation representation =
+            toMessage(testeeWithRecovery.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.FULL));
+        assertThat(IOUtils.toString(representation.getContent().getInputStream(), StandardCharsets.UTF_8))
+            .isEqualTo(CONTENT);
+    }
+
+    private CassandraConfiguration recoveryEnabled() {
+        return CassandraConfiguration.builder()
+            .blobRecoveryMode(CassandraConfiguration.BlobRecoveryMode.ENABLED)
+            .build();
     }
 
     @Test

@@ -19,57 +19,25 @@
 
 package org.apache.james.blob.api;
 
-import java.util.Objects;
+import org.reactivestreams.Publisher;
 
-public class TestBlobId implements BlobId {
-    private static final BlobIdEncoding ENCODING = BlobIdEncoding.fromSystemProperties();
+import reactor.core.publisher.Mono;
 
+/**
+ * Populates the blob store cache for a blob that was written through {@link BlobStoreDAO} rather than
+ * through {@link BlobStore}.
+ *
+ * <p>Callers needing the metadata of a blob have to go through {@link BlobStoreDAO}, which sits below the
+ * caching decorator and thus knows nothing of {@link BlobStore.StoragePolicy}. This callback gives them
+ * back the caching that a {@code SIZE_BASED} save would have performed.</p>
+ *
+ * <p>The caller vouches for the blob being worth caching: stored in the default bucket, and semantically
+ * what a non-{@code LOW_COST} storage policy expresses. Implementations remain free to decline, typically
+ * on payload size.</p>
+ */
+@FunctionalInterface
+public interface BlobStoreCacheCallback {
+    BlobStoreCacheCallback NOOP = (blobId, bytes) -> Mono.empty();
 
-    public static class Factory implements BlobId.Factory {
-        @Override
-        public BlobId of(String id) {
-            return new TestBlobId(id);
-        }
-
-        @Override
-        public BlobId parse(String id) {
-            return of(id);
-        }
-
-        @Override
-        public BlobIdEncoding encoding() {
-            return ENCODING;
-        }
-    }
-
-    private final String rawValue;
-
-    public TestBlobId(String rawValue) {
-        this.rawValue = rawValue;
-    }
-
-    @Override
-    public String asString() {
-        return rawValue;
-    }
-
-    @Override
-    public TestBlobId withSuffix(String suffix) {
-        return new TestBlobId(rawValue + suffix);
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof TestBlobId) {
-            TestBlobId that = (TestBlobId) o;
-
-            return Objects.equals(this.rawValue, that.rawValue);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(rawValue);
-    }
+    Publisher<Void> cacheIfNeeded(BlobId blobId, byte[] bytes);
 }

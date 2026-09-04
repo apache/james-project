@@ -17,59 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.api;
+package org.apache.james.mailbox.cassandra.mail;
 
-import java.util.Objects;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 
-public class TestBlobId implements BlobId {
-    private static final BlobIdEncoding ENCODING = BlobIdEncoding.fromSystemProperties();
+import jakarta.inject.Inject;
 
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStore;
 
-    public static class Factory implements BlobId.Factory {
-        @Override
-        public BlobId of(String id) {
-            return new TestBlobId(id);
-        }
+import com.google.common.io.ByteSource;
 
-        @Override
-        public BlobId parse(String id) {
-            return of(id);
-        }
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
-        @Override
-        public BlobIdEncoding encoding() {
-            return ENCODING;
-        }
-    }
+/**
+ * Writes the headers and the body as two distinct blobs, without any recovery information.
+ */
+public class DefaultMessageContentSaver implements MessageContentSaver {
+    private final BlobStore blobStore;
 
-    private final String rawValue;
-
-    public TestBlobId(String rawValue) {
-        this.rawValue = rawValue;
+    @Inject
+    public DefaultMessageContentSaver(BlobStore blobStore) {
+        this.blobStore = blobStore;
     }
 
     @Override
-    public String asString() {
-        return rawValue;
-    }
+    public Mono<Tuple2<BlobId, BlobId>> saveContent(byte[] headerBytes, ByteSource bodyByteSource) {
+        Mono<BlobId> headerFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), headerBytes, SIZE_BASED));
+        Mono<BlobId> bodyFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyByteSource, LOW_COST));
 
-    @Override
-    public TestBlobId withSuffix(String suffix) {
-        return new TestBlobId(rawValue + suffix);
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof TestBlobId) {
-            TestBlobId that = (TestBlobId) o;
-
-            return Objects.equals(this.rawValue, that.rawValue);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(rawValue);
+        return headerFuture.zipWith(bodyFuture);
     }
 }

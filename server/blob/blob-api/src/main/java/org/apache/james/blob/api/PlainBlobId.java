@@ -24,6 +24,15 @@ import com.google.common.base.Strings;
 
 public record PlainBlobId(String id) implements BlobId {
     public static class Factory implements BlobId.Factory {
+        private final BlobIdEncoding encoding;
+
+        public Factory() {
+            this(BlobIdEncoding.fromSystemProperties());
+        }
+
+        public Factory(BlobIdEncoding encoding) {
+            this.encoding = encoding;
+        }
 
         @Override
         public PlainBlobId of(String id) {
@@ -35,10 +44,20 @@ public record PlainBlobId(String id) implements BlobId {
         public PlainBlobId parse(String id) {
             return of(id);
         }
+
+        @Override
+        public BlobIdEncoding encoding() {
+            return encoding;
+        }
     }
 
     @Override
     public String asString() {
         return id;
+    }
+
+    @Override
+    public PlainBlobId withSuffix(String suffix) {
+        return new PlainBlobId(id + suffix);
     }
 }

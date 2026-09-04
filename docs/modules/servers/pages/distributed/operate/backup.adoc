@@ -119,28 +119,38 @@ same API. Consult your provider's documentation for the exact tooling.
 == Message content recovery from S3
 
 Even with versioning, you may face the worst case: *the Cassandra metadata is lost but the object store
-survives*. Because blobs alone do not tell which user a message belonged to, James can optionally write,
-next to each stored message, a small `recovery/<headerBlobId>` *sidecar* blob holding the matching
-`bodyBlobId`. The blob garbage collection is aware of these sidecars and never deletes a live one.
+survives*. Because blobs alone do not tell which user a message belonged to, James can optionally record
+the id of a message body as *metadata of its header blob*, and suffix header blob ids with `_hdr` so that
+they can be told apart when walking the store. No extra object is written, and the blob garbage collection
+needs no special handling.
 
-Recording of the sidecars is controlled in `cassandra.properties`:
+Recording of the recovery information is controlled in `cassandra.properties`:
 
 [source,properties]
 ----
-# none (default), synchronous or asynchronous
-mailbox.blob.recovery.mode=synchronous
+# none (default) or enabled
+mailbox.blob.recovery.mode=enabled
 ----
 
-* `synchronous` &mdash; the sidecar is written as part of message storage; a failure fails the delivery.
-* `asynchronous` &mdash; the sidecar is written in the background; failures are only logged.
-* `none` &mdash; no sidecar is written, and content recovery is not possible.
+* `enabled` &mdash; the body blob id is written along with the header blob, as part of message storage;
+a failure fails the delivery.
+* `none` &mdash; nothing is recorded, and content recovery is not possible.
+
+==== What enabling it costs
+
+`enabled` is not free. James can no longer write the two blobs of a message in parallel: the body has to
+be stored first, so that its blob id can be attached to the header blob as metadata. **Saving a mail
+becomes a sequential body-then-header operation**, and write latency grows by one full object round trip
+on every append path &mdash; LMTP delivery, IMAP APPEND, JMAP import. Size that against your delivery
+latency budget before turning it on.
 
 When recovery is needed, run the dedicated `org.apache.james.S3RecoveryMain` entrypoint. It reuses the
 regular mailbox, DAO and blob store modules and the existing `blobstore.properties` (so AES encryption
 and compression are applied transparently), but starts neither the protocol servers nor RabbitMQ. It
-walks the object store, reads each `recovery/` sidecar, rebuilds the message from its header and body
-blobs, reads the `Delivered-To` recipients, and appends the message into a `Restored-messages` mailbox
-of each local recipient.
+walks the header blobs of the object store, reads the body blob id from their metadata, rebuilds each
+message from its header and body blobs, reads the `Delivered-To` recipients, and appends the message into
+a `Restored-messages` mailbox of each local recipient. A blob whose id ends in `_hdr` but that carries no
+recovery metadata is simply skipped and counted apart.
 
 Run it by overriding the container entrypoint main class (Cassandra and S3 must be reachable):
 
@@ -163,19 +173,25 @@ restricts recovery to messages whose `Date` header is strictly after the given i
 ... org.apache.james.S3RecoveryMain --restore-after=2026-01-01T00:00:00Z
 ----
 
-An optional `--header-blob-prefix=<prefix>` argument (also settable via the
-`RECOVERY_HEADER_BLOB_PREFIX` environment variable or the `recovery.header.blob.prefix` system
-property) narrows the walk to the recovery sidecars whose header blob id starts with the given prefix,
-pushing the filter down to S3's `ListObjectsV2`. Header blob ids are generation-aware
-(`family_generation_...`), so a clever admin can pass e.g. `1_42_` to iterate solely the latest
-generation instead of scanning the whole bucket:
+The optional `--family=<int>` and `--generation=<long>` arguments (also settable via the
+`RECOVERY_FAMILY` and `RECOVERY_GENERATION` environment variables, or the `recovery.family` and
+`recovery.generation` system properties) narrow the walk to a single generation of the generation-aware
+blob ids (`family_generation_...`), pushing the filter down to S3's `ListObjectsV2` rather than filtering
+a full listing. Both default to walking the whole bucket.
+
+Because the generation is the *second* component of a blob id, there is no listing prefix for a generation
+on its own: `--generation` requires `--family`.
 
 [source,bash]
 ----
-... org.apache.james.S3RecoveryMain --header-blob-prefix=1_42_
+... org.apache.james.S3RecoveryMain --family=1 --generation=42
 ----
 
-The dominant cost of a recovery run is not the listing but the per-message work: three blob reads plus
+Deployments configured with the MinIO blob id strategy separate the family and generation with `/` rather
+than `_`. Declare it with `--minio-separator` (or `RECOVERY_MINIO_SEPARATOR`, or
+`recovery.minio.separator`), which turns the prefix above into `1/42/`.
+
+The dominant cost of a recovery run is not the listing but the per-message work: two blob reads plus
 a full re-store of each message through the mailbox. The `--concurrency=<n>` argument (default `8`, also
 settable via the `RECOVERY_CONCURRENCY` environment variable or the `recovery.concurrency` system
 property) controls how many messages are restored in parallel and is therefore the main lever on
@@ -190,16 +206,16 @@ back off if they become the bottleneck:
 === Scaling recovery: shard by generation
 
 For very large recoveries, a single process is limited by its own concurrency and offers no easy resume
-point. Because `--header-blob-prefix` scopes a run to a slice of the key space, you can *shard* the
-recovery across several independent processes &mdash; typically one per blob generation
-(`family_generation_`) &mdash; and run them in parallel, each with its own concurrency:
+point. Because `--family` and `--generation` scope a run to a slice of the key space, you can *shard* the
+recovery across several independent processes &mdash; typically one per blob generation &mdash; and run
+them in parallel, each with its own concurrency:
 
 [source,bash]
 ----
 # On different hosts / containers, in parallel
-... org.apache.james.S3RecoveryMain --header-blob-prefix=1_40_ --concurrency=16
-... org.apache.james.S3RecoveryMain --header-blob-prefix=1_41_ --concurrency=16
-... org.apache.james.S3RecoveryMain --header-blob-prefix=1_42_ --concurrency=16
+... org.apache.james.S3RecoveryMain --family=1 --generation=40 --concurrency=16
+... org.apache.james.S3RecoveryMain --family=1 --generation=41 --concurrency=16
+... org.apache.james.S3RecoveryMain --family=1 --generation=42 --concurrency=16
 ----
 
 The shards are disjoint (a given header blob belongs to exactly one generation), so they never restore
@@ -208,7 +224,7 @@ can be re-run on its own without redoing the others.
 
 Notes:
 
-* Restored messages are re-stored (and get a fresh `recovery/` sidecar), so re-running the recovery
+* Restored messages are re-stored, and thus get a fresh header blob of their own, so re-running the recovery
 restores them again. Restore into an empty deployment, or clean up between runs.
 * The search index is not populated during recovery. Run a
 xref:distributed/operate/cli.adoc#_re_indexing[re-indexing] afterwards if search is needed.
