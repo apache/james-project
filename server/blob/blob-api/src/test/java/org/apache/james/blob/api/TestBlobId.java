@@ -22,6 +22,8 @@ package org.apache.james.blob.api;
 import java.util.Objects;
 
 public class TestBlobId implements BlobId {
+    private static final BlobIdEncoding ENCODING = BlobIdEncoding.fromSystemProperties();
+
 
     public static class Factory implements BlobId.Factory {
         @Override
@@ -32,6 +34,11 @@ public class TestBlobId implements BlobId {
         @Override
         public BlobId parse(String id) {
             return of(id);
+        }
+
+        @Override
+        public BlobIdEncoding encoding() {
+            return ENCODING;
         }
     }
 
@@ -44,6 +51,11 @@ public class TestBlobId implements BlobId {
     @Override
     public String asString() {
         return rawValue;
+    }
+
+    @Override
+    public TestBlobId withSuffix(String suffix) {
+        return new TestBlobId(rawValue + suffix);
     }
 
     @Override

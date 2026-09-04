@@ -22,7 +22,6 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobIdEntropy;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreCacheCallback;
 import org.apache.james.blob.api.BlobStoreDAO;
@@ -31,7 +30,6 @@ import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataName;
 import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataValue;
 import org.apache.james.blob.api.BlobStoreDAO.BytesBlob;
 
-import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
@@ -56,7 +54,6 @@ import reactor.util.function.Tuples;
 public class ContentRecoveryMessageContentSaver implements MessageContentSaver {
     public static final String HEADER_BLOB_ID_SUFFIX = "_hdr";
     public static final BlobMetadataName BODY_BLOB_ID = new BlobMetadataName("body-blob-id");
-    private static final BaseEncoding BLOB_ID_ENCODING = BaseEncoding.base64Url().omitPadding();
 
     private final BlobStore blobStore;
     private final BlobStoreDAO blobStoreDAO;
@@ -93,6 +90,6 @@ public class ContentRecoveryMessageContentSaver implements MessageContentSaver {
      * header blob stays generation aware and is garbage collected like any other blob.
      */
     private BlobId generateHeaderBlobId() {
-        return blobIdFactory.of(BLOB_ID_ENCODING.encode(BlobIdEntropy.randomBytes()) + HEADER_BLOB_ID_SUFFIX);
+        return blobIdFactory.random().withSuffix(HEADER_BLOB_ID_SUFFIX);
     }
 }

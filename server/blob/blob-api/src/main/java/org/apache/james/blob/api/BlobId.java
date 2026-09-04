@@ -25,7 +25,19 @@ public interface BlobId {
         BlobId of(String id);
 
         BlobId parse(String id);
+
+        BlobIdEncoding encoding();
+
+        default BlobId random() {
+            return of(encoding().encode(BlobIdEntropy.randomBytes()));
+        }
+
+        default BlobId ofHash(byte[] hash) {
+            return of(encoding().encode(BlobIdEntropy.truncate(hash)));
+        }
     }
 
     String asString();
+
+    BlobId withSuffix(String suffix);
 }

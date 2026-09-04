@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobIdEncoding;
 import org.apache.james.util.DurationParser;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -143,6 +144,11 @@ public class GenerationAwareBlobId implements BlobId, GenerationAware {
             return new GenerationAwareBlobId(generation, family, wrapped);
         }
 
+        @Override
+        public BlobIdEncoding encoding() {
+            return delegate.encoding();
+        }
+
         private GenerationAwareBlobId decorateWithoutGeneration(String id) {
             return new GenerationAwareBlobId(NO_GENERATION, NO_FAMILY, delegate.parse(id));
         }
@@ -180,6 +186,11 @@ public class GenerationAwareBlobId implements BlobId, GenerationAware {
             return delegate.asString();
         }
         return family + "_" + generation + "_" + delegate.asString();
+    }
+
+    @Override
+    public GenerationAwareBlobId withSuffix(String suffix) {
+        return new GenerationAwareBlobId(generation, family, delegate.withSuffix(suffix));
     }
 
     @Override

@@ -37,6 +37,10 @@ class MailRepositoryBlobIdFactory(
   override def of(id: String): BlobId =
     blobIdFactory.of(url.getPath.subPath(id).asString())
 
+  // Random and content addressed ids go through `of`, hence through the url prefix, on their own.
+  override def encoding(): BlobIdEncoding =
+    blobIdFactory.encoding()
+
 }
 
 class BlobMailRepositoryFactory(blobStoreDao: BlobStoreDAO,
