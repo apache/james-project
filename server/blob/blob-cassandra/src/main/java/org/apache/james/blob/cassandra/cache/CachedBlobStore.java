@@ -33,6 +33,7 @@ import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreCacheCallback;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
@@ -47,7 +48,7 @@ import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
 
-public class CachedBlobStore implements BlobStore {
+public class CachedBlobStore implements BlobStore, BlobStoreCacheCallback {
 
     private static class ReadAheadInputStream {
 
@@ -359,6 +360,14 @@ public class CachedBlobStore implements BlobStore {
 
     private Mono<Void> saveInCache(BlobId blobId, byte[] bytes) {
         return Mono.from(cache.cache(blobId, bytes));
+    }
+
+    @Override
+    public Publisher<Void> cacheIfNeeded(BlobId blobId, byte[] bytes) {
+        if (isAbleToCache(bytes)) {
+            return saveInCache(blobId, bytes);
+        }
+        return Mono.empty();
     }
 
     private boolean isAbleToCache(BucketName bucketName, byte[] bytes, StoragePolicy storagePolicy) {

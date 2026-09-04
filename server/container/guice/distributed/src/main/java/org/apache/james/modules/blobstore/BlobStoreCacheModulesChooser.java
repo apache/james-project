@@ -29,6 +29,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreCacheCallback;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.cassandra.cache.BlobStoreCache;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
@@ -48,6 +49,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Names;
 
 public class BlobStoreCacheModulesChooser {
@@ -67,6 +69,12 @@ public class BlobStoreCacheModulesChooser {
         protected void configure() {
             bind(CassandraBlobStoreCache.class).in(Scopes.SINGLETON);
             bind(BlobStoreCache.class).to(CassandraBlobStoreCache.class);
+            bind(CachedBlobStore.class).in(Scopes.SINGLETON);
+
+            // Lets writes performed through the BlobStoreDAO, which knows nothing of StoragePolicy,
+            // still populate the cache.
+            OptionalBinder.newOptionalBinder(binder(), BlobStoreCacheCallback.class)
+                .setBinding().to(CachedBlobStore.class);
 
             Multibinder.newSetBinder(binder(), CassandraDataDefinition.class, Names.named(InjectionNames.CACHE))
                 .addBinding()

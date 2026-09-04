@@ -31,6 +31,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
+import org.apache.james.blob.api.BlobStoreCacheCallback;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
@@ -170,7 +171,8 @@ public class MetaDataFixInconsistenciesServiceTest {
                 .passthrough(),
             Mockito.mock(BlobStoreDAO.class),
             new PlainBlobId.Factory(),
-            CassandraConfiguration.DEFAULT_CONFIGURATION);
+            CassandraConfiguration.DEFAULT_CONFIGURATION,
+            BlobStoreCacheCallback.NOOP);
         testee = new MetaDataFixInconsistenciesService(imapUidDAO, pop3MetadataStore, cassandraMessageDAOV3);
     }
 
