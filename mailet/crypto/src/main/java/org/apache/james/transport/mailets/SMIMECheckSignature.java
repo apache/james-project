@@ -183,7 +183,7 @@ public class SMIMECheckSignature extends GenericMailet {
             LOGGER.warn("IO error during the analysis of the signed message", e);
             signers = null;
         } catch (Exception e) {
-            LOGGER.warn("Generic error occured during the analysis of the message", e);
+            LOGGER.warn("Generic error occurred during the analysis of the message", e);
             signers = null;
         }
         

@@ -93,7 +93,7 @@ public class HasException extends GenericMatcher {
     
     @Override
     public String getMatcherInfo() {
-        return "Specified Exception Has Occured Matcher";
+        return "Specified Exception Has Occurred Matcher";
     }
     
     @SuppressWarnings("unchecked")
