@@ -41,6 +41,16 @@ class BlobIdEntropyTest {
     }
 
     @Test
+    void parseShouldAcceptTheFullHashLength() {
+        assertThat(BlobIdEntropy.parse("256")).isEqualTo(BlobIdEntropy.MAX_ENTROPY_BITS);
+    }
+
+    @Test
+    void defaultShouldBeTruncated() {
+        assertThat(BlobIdEntropy.DEFAULT_ENTROPY_BITS).isEqualTo(128);
+    }
+
+    @Test
     void parseShouldRejectNonNumericValue() {
         assertThatThrownBy(() -> BlobIdEntropy.parse("many"))
             .isInstanceOf(IllegalArgumentException.class);
