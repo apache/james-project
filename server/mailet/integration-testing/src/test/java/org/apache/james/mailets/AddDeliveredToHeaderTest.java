@@ -43,6 +43,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
 class AddDeliveredToHeaderTest {
+    private static final String RECIPIENT2_UTF8 = "rené@" + DEFAULT_DOMAIN;
+    private static final String RECIPIENT2 = "rene@" + DEFAULT_DOMAIN;
+
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
     @RegisterExtension
@@ -58,6 +61,7 @@ class AddDeliveredToHeaderTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(RECIPIENT2, PASSWORD);
         dataProbe.addUser(FROM, PASSWORD);
     }
 
@@ -78,5 +82,33 @@ class AddDeliveredToHeaderTest {
             .awaitMessage(awaitAtMostOneMinute);
         assertThat(testIMAPClient.readFirstMessageHeaders())
             .contains(AddDeliveredToHeader.DELIVERED_TO + ": " + RECIPIENT);
+    }
+
+    @Test
+    void receivedMessagesShouldContainDeliveredToHeadersI8N() throws Exception {
+        jamesServer.getProbe(DataProbeImpl.class).addUserAliasMapping("rené", DEFAULT_DOMAIN, RECIPIENT2);
+        String message = "FROM: " + RECIPIENT2_UTF8 + "\r\n" +
+            "subject: testé\r\n" +
+            "Content-Type: text/plain; charset=UTF-8\r\n" +
+            "Content-Encoding: 8bit\r\n" +
+            "\r\n" +
+            "contenté\r\n";
+
+        // A non-ASCII recipient requires the SMTPUTF8 extension (RFC 6531): the transaction
+        // needs to be opened with EHLO and MAIL FROM ... SMTPUTF8, otherwise RCPT is rejected
+        // with 553 5.6.7.
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessageWithHeadersSmtpUtf8(FROM, RECIPIENT2_UTF8, message);
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT2, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        assertThat(testIMAPClient.readFirstMessage())
+            .contains(RECIPIENT2_UTF8)
+            .contains("testé")
+            .contains("contenté");
     }
 }

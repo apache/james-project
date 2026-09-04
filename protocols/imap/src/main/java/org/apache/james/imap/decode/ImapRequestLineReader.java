@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.decode;
 
-import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -291,6 +291,7 @@ public abstract class ImapRequestLineReader {
 
     protected char nextChar; // unknown
     protected boolean nextSeen = false;
+    private boolean utf8Accept = false;
     private final StringBuilder stringBuilder = new StringBuilder();
 
     /**
@@ -489,7 +490,24 @@ public abstract class ImapRequestLineReader {
      * 
      */
     public String mailbox() throws DecodingException {
-       return ModifiedUtf7.decodeModifiedUTF7(mailboxUTF7());
+        if (utf8Accept) {
+            String mailbox = astring(UTF_8);
+            if (mailbox.equalsIgnoreCase(ImapConstants.INBOX_NAME)) {
+                return ImapConstants.INBOX_NAME;
+            }
+            return mailbox;
+        }
+        return ModifiedUtf7.decodeModifiedUTF7(mailboxUTF7());
+    }
+
+    /**
+     * When set, {@link #mailbox()} treats the astring as UTF-8 and does not
+     * run Modified UTF-7 decoding. Callers should set this from
+     * {@code ImapSession#utf8Enabled()} once the session state is known.
+     */
+    public ImapRequestLineReader setUtf8Accept(boolean utf8Accept) {
+        this.utf8Accept = utf8Accept;
+        return this;
     }
 
     /**
@@ -501,7 +519,8 @@ public abstract class ImapRequestLineReader {
      * variants of ;; INBOX (e.g. "iNbOx") MUST be interpreted as INBOX ;; not
      * as an astring.
      * 
-     * Be aware that mailbox names are encoded via a modified UTF7. For more information RFC3501
+     * Be aware that mailbox names are encoded via a modified UTF7 in unextended
+     * IMAP. For more information see RFC3501. RFC9755 changes this.
      */
     public String mailboxUTF7() throws DecodingException {
         String mailbox = astring();
@@ -612,11 +631,15 @@ public abstract class ImapRequestLineReader {
      * this method.
      * 
      * @param charset
-     *            , or null for <code>US-ASCII</code>
+     *            , or null for <code>UTF-8</code>
      */
     public String consumeLiteral(Charset charset) throws DecodingException {
         if (charset == null) {
-            return consumeLiteral(US_ASCII);
+            // RFC 9051/6855: literals carry UTF-8 octets once UTF8=ACCEPT is
+            // enabled. Accept them unconditionally, as consumeQuoted() does:
+            // UTF-8 is a superset of US-ASCII, so unextended sessions are
+            // unaffected except that 8-bit octets are no longer rejected.
+            return consumeLiteral(UTF_8);
         } else {
             try {
                 ImmutablePair<Integer, Literal> literal = consumeLiteral(false);
@@ -733,7 +756,7 @@ public abstract class ImapRequestLineReader {
      */
     protected String consumeQuoted(Charset charset) throws DecodingException {
         if (charset == null) {
-            return consumeQuoted(US_ASCII);
+            return consumeQuoted(UTF_8);
         } else {
             // The 1st character must be '"'
             consumeChar('"');

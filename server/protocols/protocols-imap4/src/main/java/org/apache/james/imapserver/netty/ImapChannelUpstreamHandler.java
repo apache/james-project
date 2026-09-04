@@ -431,7 +431,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         }
 
         ChannelImapResponseWriter writer = new ChannelImapResponseWriter(ctx.channel(), session);
-        ImapResponseComposerImpl response = new ImapResponseComposerImpl(writer);
+        ImapResponseComposerImpl response = new ImapResponseComposerImpl(writer)
+            .setUtf8Accepted(session.utf8Enabled());
         writer.setFlushCallback(response::flush);
         ImapMessage message = (ImapMessage) msg;
 

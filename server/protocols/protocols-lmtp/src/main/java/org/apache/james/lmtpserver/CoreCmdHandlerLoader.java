@@ -35,6 +35,7 @@ import org.apache.james.protocols.smtp.core.ReceivedDataLineFilter;
 import org.apache.james.protocols.smtp.core.RsetCmdHandler;
 import org.apache.james.protocols.smtp.core.VrfyCmdHandler;
 import org.apache.james.protocols.smtp.core.esmtp.MailSizeEsmtpExtension;
+import org.apache.james.protocols.smtp.core.esmtp.SMTPUTF8Extension;
 import org.apache.james.protocols.smtp.core.esmtp.StartTlsCmdHandler;
 import org.apache.james.protocols.smtp.core.log.HookResultLogger;
 import org.apache.james.smtpserver.AuthRequiredToRelayRcptHook;
@@ -62,6 +63,7 @@ public class CoreCmdHandlerLoader implements HandlersPackage {
             RsetCmdHandler.class.getName(),
             VrfyCmdHandler.class.getName(),
             MailSizeEsmtpExtension.class.getName(),
+            SMTPUTF8Extension.class.getName(),
             StartTlsCmdHandler.class.getName(),
             AuthRequiredToRelayRcptHook.class.getName(),
             PostmasterAbuseRcptHook.class.getName(),

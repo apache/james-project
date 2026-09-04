@@ -19,6 +19,8 @@
 
 package org.apache.james.core;
 
+import java.net.IDN;
+import java.text.Normalizer;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -172,7 +174,16 @@ public class MailAddress implements java.io.Serializable {
      * @throws AddressException if the parse failed
      */
     public MailAddress(String address) throws AddressException {
+        // RFC 6532 §3.1 recommends NFC normalisation. Canonically-equivalent
+        // Unicode strings (for example U+00E9 vs U+0065 U+0301 — both render
+        // as "é") then produce equal MailAddress objects with equal hashCode
+        // values, which dedup, alias resolution and routing-table lookups
+        // rely on. NFC is a no-op for pure ASCII, and this runs for every
+        // address James parses, so ASCII skips the normaliser outright.
         address = address.trim();
+        if (!Domain.isAscii(address)) {
+            address = Normalizer.normalize(address, Normalizer.Form.NFC);
+        }
         int pos = 0;
 
         // Test if mail address has source routing information (RFC-821) and get rid of it!!
@@ -397,6 +408,24 @@ public class MailAddress implements java.io.Serializable {
         return localPart + "@" + domain.asString();
     }
 
+    /**
+     * Whether this address is pure US-ASCII, i.e. it can be carried without
+     * RFC 6531 (SMTPUTF8) and reported with the RFC 3798 {@code rfc822}
+     * addr-type rather than the RFC 6533 {@code utf-8} one.
+     */
+    public boolean isAscii() {
+        return isAscii(localPart) && isAscii(domain.asString());
+    }
+
+    /**
+     * Whether {@code s} is pure US-ASCII. Shared by the callers that hold an
+     * address as a raw string rather than as a {@link MailAddress} -- the SMTP
+     * command handlers and the remote-delivery SMTPUTF8 strategy.
+     */
+    public static boolean isAscii(String s) {
+        return Domain.isAscii(s);
+    }
+
     @Override
     public String toString() {
         return localPart + "@" + Optional.ofNullable(domain)
@@ -418,7 +447,7 @@ public class MailAddress implements java.io.Serializable {
         try {
             return Optional.of(new InternetAddress(toString()));
         } catch (AddressException ae) {
-            LOGGER.warn("A valid address '{}' as per James criterial fails to parse as a jakarta.mail InternetAdrress", asString());
+            LOGGER.warn("A valid address '{}' as per James criteria fails to parse as a jakarta.mail InternetAdrress", asString());
             return Optional.empty();
         }
     }
@@ -513,6 +542,24 @@ public class MailAddress implements java.io.Serializable {
                             "characters exception <CR>, <LF>, quote (\"), or backslash (\\) at position " +
                             (pos + 1) + " in '" + address + "'");
                 }
+                // Same surrogate-pair check as in parseUnquotedLocalPart:
+                // unpaired or mis-ordered surrogates would produce
+                // ill-formed UTF-8 on output.
+                if (Character.isLowSurrogate(q)) {
+                    throw new AddressException("Unpaired UTF-16 low surrogate in quoted local-part at position " +
+                            (pos + 1) + " in '" + address + "'");
+                }
+                if (Character.isHighSurrogate(q)) {
+                    if (pos + 1 >= address.length()
+                            || !Character.isLowSurrogate(address.charAt(pos + 1))) {
+                        throw new AddressException("Unpaired UTF-16 high surrogate in quoted local-part at position " +
+                                (pos + 1) + " in '" + address + "'");
+                    }
+                    lpSB.append(q);
+                    lpSB.append(address.charAt(pos + 1));
+                    pos += 2;
+                    continue;
+                }
                 lpSB.append(q);
                 pos++;
             }
@@ -549,17 +596,39 @@ public class MailAddress implements java.io.Serializable {
                 //End of local-part
                 break;
             } else {
-                //<c> ::= any one of the 128 ASCII characters, but not any
-                //    <special> or <SP>
+                //<c> ::= any printable ASCII character, or any non-ASCII
+                //    unicode codepoint, but not <special> or <SP>
                 //<special> ::= "<" | ">" | "(" | ")" | "[" | "]" | "\" | "."
                 //    | "," | ";" | ":" | "@"  """ | the control
-                //    characters (ASCII codes 0 through 31 inclusive and
-                //    127)
+                //    characters (ASCII codes 0 through 31 inclusive,
+                //    127, and the C1 controls 128 through 159)
                 //<SP> ::= the space character (ASCII code 32)
                 char c = address.charAt(pos);
-                if (c <= 31 || c >= 127 || c == ' ') {
+                if (c <= 31 || c == 127 || c == ' ' || (c >= 0x80 && c <= 0x9F)) {
                     throw new AddressException("Invalid character in local-part (user account) at position " +
                             (pos + 1) + " in '" + address + "'", address, pos + 1);
+                }
+                // Java strings are UTF-16, so a supplementary-plane
+                // codepoint (emoji, CJK extension, etc.) appears here as a
+                // high-surrogate followed by a low-surrogate. We must keep
+                // them paired so the address can serialise as well-formed
+                // UTF-8 (RFC 6532 §3.1) — a lone or mis-ordered surrogate
+                // would produce ill-formed UTF-8 octets on output.
+                if (Character.isLowSurrogate(c)) {
+                    throw new AddressException("Unpaired UTF-16 low surrogate in local-part at position " +
+                            (pos + 1) + " in '" + address + "'", address, pos + 1);
+                }
+                if (Character.isHighSurrogate(c)) {
+                    if (pos + 1 >= address.length()
+                            || !Character.isLowSurrogate(address.charAt(pos + 1))) {
+                        throw new AddressException("Unpaired UTF-16 high surrogate in local-part at position " +
+                                (pos + 1) + " in '" + address + "'", address, pos + 1);
+                    }
+                    lpSB.append(c);
+                    lpSB.append(address.charAt(pos + 1));
+                    pos += 2;
+                    lastCharDot = false;
+                    continue;
                 }
                 int i = 0;
                 while (i < SPECIAL.length) {
@@ -688,6 +757,7 @@ public class MailAddress implements java.io.Serializable {
         // in practice though, we should relax this as domain names can start
         // with digits as well as letters.  So only check that doesn't start
         // or end with hyphen.
+        boolean unicode = false;
         while (true) {
             if (pos >= address.length()) {
                 break;
@@ -700,6 +770,11 @@ public class MailAddress implements java.io.Serializable {
                 resultSB.append(ch);
                 pos++;
                 continue;
+            } else if (ch >= 0x0080) {
+                resultSB.append(ch);
+                pos++;
+                unicode = true;
+                continue;
             }
             if (ch == '.') {
                 break;
@@ -707,6 +782,19 @@ public class MailAddress implements java.io.Serializable {
             throw new AddressException("Invalid character at " + pos + " in '" + address + "'", address, pos);
         }
         String result = resultSB.toString();
+        if (unicode) {
+            try {
+                result = IDN.toASCII(result, IDN.ALLOW_UNASSIGNED);
+            } catch (IllegalArgumentException e) {
+                throw new AddressException("Domain invalid according to IDNA", address);
+            }
+        }
+        if (result.startsWith("xn--") || result.contains(".xn--")) {
+            result = IDN.toUnicode(result);
+            if (result.startsWith("xn--") || result.contains(".xn--")) {
+                throw new AddressException("Domain invalid according to IDNA", address);
+            }
+        }
         if (result.startsWith("-") || result.endsWith("-")) {
             throw new AddressException("Domain name cannot begin or end with a hyphen \"-\" at position " +
                     (pos + 1) + " in '" + address + "'", address, pos + 1);

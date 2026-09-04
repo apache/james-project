@@ -39,8 +39,8 @@ import org.apache.mailet.base.RFC2822Headers;
  * </pre>
  */
 public class MailHeaders extends InternetHeaders implements Serializable, Cloneable {
-
     private static final long serialVersionUID = 238748126601L;
+    private static final boolean ALLOWUTF_8 = true;
     private boolean modified = false;
     private long size = -1;
 
@@ -67,7 +67,7 @@ public class MailHeaders extends InternetHeaders implements Serializable, Clonea
      */
     public MailHeaders(InputStream in) throws MessagingException {
         super();
-        load(in);
+        load(in, ALLOWUTF_8);
     }
 
     /**
