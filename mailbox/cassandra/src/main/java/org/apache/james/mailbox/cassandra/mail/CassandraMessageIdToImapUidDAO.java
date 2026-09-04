@@ -45,6 +45,7 @@ import static org.apache.james.mailbox.cassandra.table.Flag.USER_FLAGS;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.THREAD_ID;
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;
 import java.util.Date;
@@ -87,6 +88,7 @@ import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class CassandraMessageIdToImapUidDAO {
     private static final String MOD_SEQ_CONDITION = "modSeqCondition";
@@ -98,6 +100,7 @@ public class CassandraMessageIdToImapUidDAO {
     private final PreparedStatement delete;
     private final PreparedStatement insert;
     private final PreparedStatement update;
+    private final PreparedStatement updateDenormalizedFields;
     private final PreparedStatement selectAll;
     private final PreparedStatement select;
     private final PreparedStatement listStatement;
@@ -116,6 +119,7 @@ public class CassandraMessageIdToImapUidDAO {
         this.cassandraConfiguration = cassandraConfiguration;
         this.delete = prepareDelete();
         this.insert = prepareInsert();
+        this.updateDenormalizedFields = prepareUpdateDenormalizedFields();
         this.update = prepareUpdate();
         this.selectAll = prepareSelectAll();
         this.select = prepareSelect();
@@ -176,6 +180,18 @@ public class CassandraMessageIdToImapUidDAO {
                     column(IMAP_UID).isEqualTo(bindMarker(IMAP_UID)))
                 .build());
         }
+    }
+
+    private PreparedStatement prepareUpdateDenormalizedFields() {
+        return session.prepare(QueryBuilder.update(TABLE_NAME)
+            .set(setColumn(INTERNAL_DATE, bindMarker(INTERNAL_DATE)),
+                setColumn(BODY_START_OCTET, bindMarker(BODY_START_OCTET)),
+                setColumn(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS)),
+                setColumn(HEADER_CONTENT, bindMarker(HEADER_CONTENT)))
+            .where(column(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID)),
+                column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isEqualTo(bindMarker(IMAP_UID)))
+            .build());
     }
 
     private PreparedStatement prepareUpdate() {
@@ -261,6 +277,18 @@ public class CassandraMessageIdToImapUidDAO {
             .build());
     }
 
+    public Mono<Void> updateDenormalizedFields(CassandraMessageId messageId, CassandraId mailboxId, MessageUid uid,
+                                               Date internalDate, int bodyStartOctet, long size, BlobId headerContent) {
+        return cassandraAsyncExecutor.executeVoid(updateDenormalizedFields.bind()
+            .setUuid(MESSAGE_ID, messageId.get())
+            .setUuid(MAILBOX_ID, mailboxId.asUuid())
+            .setLong(IMAP_UID, uid.asLong())
+            .setInstant(INTERNAL_DATE, internalDate.toInstant())
+            .setInt(BODY_START_OCTET, bodyStartOctet)
+            .setLong(FULL_CONTENT_OCTETS, size)
+            .setString(HEADER_CONTENT, headerContent.asString()));
+    }
+
     public Mono<Boolean> updateMetadata(ComposedMessageId id, UpdatedFlags updatedFlags, ModSeq previousModeq) {
         if (cassandraConfiguration.isMessageWriteStrongConsistency()) {
             return cassandraAsyncExecutor.executeReturnApplied(updateBoundStatement(id, updatedFlags, previousModeq));
@@ -335,7 +363,8 @@ public class CassandraMessageIdToImapUidDAO {
 
     public Flux<CassandraMessageMetadata> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId, JamesExecutionProfiles.ConsistencyChoice readConsistencyChoice) {
         return cassandraAsyncExecutor.executeRows(setExecutionProfileIfNeeded(selectStatement(messageId, mailboxId), readConsistencyChoice))
-            .map(this::toComposedMessageIdWithMetadata);
+            .map(this::toComposedMessageIdWithMetadata)
+            .handle(publishIfPresent());
     }
 
     @VisibleForTesting
@@ -346,12 +375,22 @@ public class CassandraMessageIdToImapUidDAO {
     public Flux<CassandraMessageMetadata> retrieveAllMessages() {
         return cassandraAsyncExecutor.executeRows(listStatement.bind()
                 .setTimeout(Duration.ofDays(1)))
-            .map(this::toComposedMessageIdWithMetadata);
+            .map(this::toComposedMessageIdWithMetadata)
+            .handle(publishIfPresent());
     }
 
-    private CassandraMessageMetadata toComposedMessageIdWithMetadata(Row row) {
+    private Optional<CassandraMessageMetadata> toComposedMessageIdWithMetadata(Row row) {
         final CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID));
-        return CassandraMessageMetadata.builder()
+        if (row.get(MOD_SEQ, Long.class) == null) {
+            // Out of order updates with concurrent deletes can result in the row being partially deleted
+            // We filter out such records, and cleanup them.
+            // TODO Test INTERNAL_DATE instead once schema version 16 is enforced: unlike MOD_SEQ it also catches rows resurrected by a flag update.
+            delete(messageId, CassandraId.of(row.getUuid(MAILBOX_ID)))
+                .subscribeOn(Schedulers.parallel())
+                .subscribe();
+            return Optional.empty();
+        }
+        return Optional.of(CassandraMessageMetadata.builder()
             .ids(ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(
                     CassandraId.of(row.getUuid(MAILBOX_ID)),
@@ -369,7 +408,7 @@ public class CassandraMessageIdToImapUidDAO {
             .size(row.get(FULL_CONTENT_OCTETS, Long.class))
             .headerContent(Optional.ofNullable(row.getString(HEADER_CONTENT))
                 .map(blobIdFactory::parse))
-            .build();
+            .build());
     }
 
     private ThreadId getThreadIdFromRow(Row row, MessageId messageId) {
