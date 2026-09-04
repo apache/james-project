@@ -48,6 +48,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSource;
@@ -76,6 +77,7 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 @Singleton
@@ -113,6 +115,9 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     private static final Duration FIRST_BACK_OFF = Duration.ofMillis(100);
     private static final boolean LAZY = false;
     private static final int MAX_RETRIES = 5;
+    private static final String ANY_ETAG = "*";
+    private static final int PRECONDITION_FAILED_STATUS_CODE = 412;
+    private static final String PRECONDITION_FAILED_ERROR_CODE = "PreconditionFailed";
 
     private final BucketNameResolver bucketNameResolver;
     private final S3AsyncClient client;
@@ -272,6 +277,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
         return buildPutObjectRequestBuilder(resolvedBucketName, data.length, blobId, blobMetadata)
             .flatMap(putObjectRequest -> Mono.fromFuture(() ->
                     client.putObject(putObjectRequest.build(), AsyncRequestBody.fromBytes(data)))
+                .onErrorResume(this::isAlreadyStored, e -> Mono.empty())
                 .retryWhen(createBucketOnRetry(resolvedBucketName))
                 .publishOn(Schedulers.parallel()))
             .then();
@@ -316,8 +322,9 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
 
         return buildPutObjectRequestBuilder(resolvedBucketName, contentLength, blobId, metadata)
             .flatMap(putObjectRequest -> Mono.fromFuture(() -> client.putObject(putObjectRequest.build(),
-                AsyncRequestBody.fromPublisher(chunkStream(chunkSize, stream)
-                    .subscribeOn(Schedulers.boundedElastic())))));
+                    AsyncRequestBody.fromPublisher(chunkStream(chunkSize, stream)
+                        .subscribeOn(Schedulers.boundedElastic()))))
+                .onErrorResume(this::isAlreadyStored, e -> Mono.empty()));
     }
 
     private Mono<PutObjectRequest.Builder> buildPutObjectRequestBuilder(BucketName bucketName, long contentLength, BlobId blobId, BlobMetadata blobMetadata) {
@@ -326,6 +333,10 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .key(blobId.asString())
             .contentLength(contentLength)
             .metadata(asS3Metadata(blobMetadata));
+
+        if (s3RequestOption.ifNoneMatch()) {
+            baseBuilder.ifNoneMatch(ANY_ETAG);
+        }
 
         if (s3RequestOption.ssec().enable()) {
             return Mono.from(s3RequestOption.ssec().sseCustomerKeyFactory().get().generate(bucketName, blobId))
@@ -336,6 +347,29 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
         }
 
         return Mono.just(baseBuilder);
+    }
+
+    /**
+     * `If-None-Match: *` is the only precondition this DAO ever sets, and it only sets it upon upload when conditional
+     * writes are enabled. A `412 PreconditionFailed` answer to such an upload thus means one thing only: the object is
+     * already stored. As blob ids are content addressed it already holds the very same content, hence the write is a
+     * no-op rather than a failure.
+     *
+     * Both the flag and the error code are part of the check: absent the `If-None-Match` header no precondition can
+     * have failed, and a `412` would then denote something we do not understand, which must be reported.
+     */
+    private boolean isAlreadyStored(Throwable throwable) {
+        return s3RequestOption.ifNoneMatch()
+            && Throwables.getCausalChain(throwable)
+                .stream()
+                .anyMatch(S3BlobStoreDAO::isPreconditionFailed);
+    }
+
+    private static boolean isPreconditionFailed(Throwable throwable) {
+        return throwable instanceof S3Exception s3Exception
+            && s3Exception.statusCode() == PRECONDITION_FAILED_STATUS_CODE
+            && s3Exception.awsErrorDetails() != null
+            && PRECONDITION_FAILED_ERROR_CODE.equals(s3Exception.awsErrorDetails().errorCode());
     }
 
     private Map<String, String> asS3Metadata(BlobMetadata metadata) {
