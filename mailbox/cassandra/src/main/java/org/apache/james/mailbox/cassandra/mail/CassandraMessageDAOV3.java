@@ -41,7 +41,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.T
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -68,8 +67,6 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -92,13 +89,12 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 
 public class CassandraMessageDAOV3 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageDAOV3.class);
     private static final byte[] EMPTY_BYTE_ARRAY = {};
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final BlobStore blobStore;
-    private final BlobStoreDAO blobStoreDAO;
     private final BlobId.Factory blobIdFactory;
+    private final MessageContentSaver messageContentSaver;
     private final PreparedStatement insert;
     private final PreparedStatement delete;
     private final PreparedStatement select;
@@ -117,8 +113,8 @@ public class CassandraMessageDAOV3 {
                                  CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.blobStore = blobStore;
-        this.blobStoreDAO = blobStoreDAO;
         this.blobIdFactory = blobIdFactory;
+        this.messageContentSaver = messageContentSaver(blobStore, blobStoreDAO, blobIdFactory, cassandraConfiguration);
 
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
@@ -132,6 +128,15 @@ public class CassandraMessageDAOV3 {
         this.readProfile = ProfileLocator.READ.locateProfile(session, "MESSAGEV3");
         this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "MESSAGEV3");
         this.optimisticConsistencyLevelProfile = JamesExecutionProfiles.getOptimisticConsistencyLevelProfile(session);
+    }
+
+    private static MessageContentSaver messageContentSaver(BlobStore blobStore, BlobStoreDAO blobStoreDAO,
+                                                          BlobId.Factory blobIdFactory, CassandraConfiguration configuration) {
+        return switch (configuration.getBlobRecoveryMode()) {
+            case NONE -> new DefaultMessageContentSaver(blobStore);
+            case SYNCHRONOUS, ASYNCHRONOUS -> new ContentRecoveryMessageContentSaver(blobStore, blobStoreDAO,
+                blobIdFactory, configuration.getBlobRecoveryMode());
+        };
     }
 
     private PreparedStatement prepareSelect(CqlSession session) {
@@ -210,29 +215,8 @@ public class CassandraMessageDAOV3 {
                     }
                 };
 
-                Mono<BlobId> headerFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), headerContent, SIZE_BASED));
-                Mono<BlobId> bodyFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyByteSource, LOW_COST));
-
-                return headerFuture.zipWith(bodyFuture)
-                    .flatMap(pair -> saveRecovery(pair.getT1(), pair.getT2()).thenReturn(pair));
+                return messageContentSaver.saveContent(headerContent, bodyByteSource);
             });
-    }
-
-    private Mono<Void> saveRecovery(BlobId headerId, BlobId bodyId) {
-        return switch (configuration.getBlobRecoveryMode()) {
-            case NONE -> Mono.empty();
-            case SYNCHRONOUS -> writeRecoveryBlob(headerId, bodyId);
-            case ASYNCHRONOUS -> Mono.fromRunnable(() ->
-                writeRecoveryBlob(headerId, bodyId)
-                    .subscribeOn(Schedulers.parallel())
-                    .subscribe(ignored -> { }, e -> LOGGER.error("Failed to save recovery blob for header={} body={}", headerId.asString(), bodyId.asString(), e)));
-        };
-    }
-
-    private Mono<Void> writeRecoveryBlob(BlobId headerId, BlobId bodyId) {
-        BlobId recoveryBlobId = blobIdFactory.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + headerId.asString());
-        BlobStoreDAO.BytesBlob content = BlobStoreDAO.BytesBlob.of(bodyId.asString().getBytes(StandardCharsets.UTF_8));
-        return Mono.from(blobStoreDAO.save(blobStore.getDefaultBucketName(), recoveryBlobId, content));
     }
 
     private BoundStatement boundWriteStatement(MailboxMessage message, Tuple2<BlobId, BlobId> pair) {
