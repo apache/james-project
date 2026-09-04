@@ -27,7 +27,6 @@ public interface CassandraMessageV3Table {
     CqlIdentifier INTERNAL_DATE = CqlIdentifier.fromCql("internalDate");
     CqlIdentifier BODY_START_OCTET = CqlIdentifier.fromCql("bodyStartOctet");
     CqlIdentifier FULL_CONTENT_OCTETS = CqlIdentifier.fromCql("fullContentOctets");
-    CqlIdentifier BODY_OCTECTS = CqlIdentifier.fromCql("bodyOctets");
     CqlIdentifier BODY_CONTENT = CqlIdentifier.fromCql("bodyContent");
     CqlIdentifier HEADER_CONTENT = CqlIdentifier.fromCql("headerContent");
     CqlIdentifier ATTACHMENTS = CqlIdentifier.fromCql("attachments");

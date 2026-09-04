@@ -100,7 +100,6 @@ public interface CassandraMessageDataDefinition {
             .withPartitionKey(CassandraMessageIds.MESSAGE_ID, TIMEUUID)
             .withColumn(CassandraMessageV3Table.INTERNAL_DATE, TIMESTAMP)
             .withColumn(CassandraMessageV3Table.BODY_START_OCTET, INT)
-            .withColumn(CassandraMessageV3Table.BODY_OCTECTS, BIGINT)
             .withColumn(CassandraMessageV3Table.FULL_CONTENT_OCTETS, BIGINT)
             .withColumn(CassandraMessageV3Table.BODY_CONTENT, TEXT)
             .withColumn(CassandraMessageV3Table.HEADER_CONTENT, TEXT)

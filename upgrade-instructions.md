@@ -23,6 +23,7 @@ Change list:
  - [JAMES-4210 POP3 USER/PASS requires TLS by default](#james-4210-pop3-userpass-requires-tls-by-default)
  - [JAMES-4210 ManageSieve SASL adoption](#james-4210-managesieve-sasl-adoption)
  - [JAMES-4225 Blob ids default to 128 bits of entropy](#james-4225-blob-ids-default-to-128-bits-of-entropy)
+ - [Dropping the bodyOctets column of the Cassandra messagev3 table](#dropping-the-bodyoctets-column-of-the-cassandra-messagev3-table)
 
 ### JAMES-4225 Blob ids default to 128 bits of entropy
 
@@ -39,6 +40,22 @@ against its shorter counterpart until it is rewritten. To keep the previous beha
 
 ```
 james.blobid.entropy=256
+```
+
+### Dropping the bodyOctets column of the Cassandra messagev3 table
+
+Date: 05/09/2026
+
+Concerned products: James products using Cassandra as mailbox storage
+
+The `messagev3.bodyOctets` column was written upon every message save but never read back: the body size
+is derived from `fullContentOctets` and `bodyStartOctet`. James no longer writes it.
+
+New messages stop paying for the column right away. Reclaiming the space taken by existing rows requires
+dropping the column manually, after upgrading all james servers:
+
+```sql
+ALTER TABLE james_keyspace.messagev3 DROP bodyOctets;
 ```
 
 ### JAMES-4210 POP3 USER/PASS requires TLS by default
