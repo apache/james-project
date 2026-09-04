@@ -32,7 +32,6 @@ import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.ATTACHMENTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_CONTENT;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_OCTECTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_START_OCTET;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.FULL_CONTENT_OCTETS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.HEADER_CONTENT;
@@ -158,7 +157,6 @@ public class CassandraMessageDAOV3 {
             .set(setColumn(INTERNAL_DATE, bindMarker(INTERNAL_DATE)),
                 setColumn(BODY_START_OCTET, bindMarker(BODY_START_OCTET)),
                 setColumn(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS)),
-                setColumn(BODY_OCTECTS, bindMarker(BODY_OCTECTS)),
                 setColumn(BODY_CONTENT, bindMarker(BODY_CONTENT)),
                 setColumn(HEADER_CONTENT, bindMarker(HEADER_CONTENT)),
                 prepend(ATTACHMENTS, bindMarker(ATTACHMENTS)))
@@ -184,7 +182,6 @@ public class CassandraMessageDAOV3 {
             .setInstant(INTERNAL_DATE, message.getInternalDate().toInstant())
             .setInt(BODY_START_OCTET, message.getBodyStartOctet())
             .setLong(FULL_CONTENT_OCTETS, message.getSize())
-            .setLong(BODY_OCTECTS, message.getSize() - message.getBodyStartOctet())
             .setString(BODY_CONTENT, message.getBodyId().asString())
             .setString(HEADER_CONTENT, message.getHeaderId().asString());
 
@@ -227,7 +224,6 @@ public class CassandraMessageDAOV3 {
             .setInstant(INTERNAL_DATE, message.getInternalDate().toInstant())
             .setInt(BODY_START_OCTET, (int) (message.getHeaderOctets()))
             .setLong(FULL_CONTENT_OCTETS, message.getFullContentOctets())
-            .setLong(BODY_OCTECTS, message.getBodyOctets())
             .setString(BODY_CONTENT, pair.getT2().asString())
             .setString(HEADER_CONTENT, pair.getT1().asString())
             .setExecutionProfile(writeProfile);
