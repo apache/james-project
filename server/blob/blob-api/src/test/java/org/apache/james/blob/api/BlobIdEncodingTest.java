@@ -63,7 +63,13 @@ class BlobIdEncodingTest {
     @Test
     void shouldDefaultToBase64Url() {
         assertThat(BlobIdEncoding.fromSystemProperties().encode(PAYLOAD))
-            .isEqualTo(BaseEncoding.base64Url().encode(PAYLOAD));
+            .isEqualTo(BaseEncoding.base64Url().omitPadding().encode(PAYLOAD));
+    }
+
+    @Test
+    void shouldOmitPaddingAtTruncatedEntropy() {
+        assertThat(BlobIdEncoding.fromSystemProperties().encode(PAYLOAD))
+            .doesNotEndWith("=");
     }
 
     @Test
