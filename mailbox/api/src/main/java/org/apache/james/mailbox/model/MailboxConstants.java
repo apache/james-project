@@ -34,7 +34,7 @@ public class MailboxConstants {
     /** The namespace used for store user inboxes */
     public static final String USER_NAMESPACE = NAMESPACE_PREFIX_CHAR + "private";
 
-    /** The delimiter used to seperated parent/child folders */
+    /** The delimiter used to separated parent/child folders */
     public static char FOLDER_DELIMITER = Optional.ofNullable(System.getProperty("james.mailbox.folder.delimiter"))
             .map(MailboxFolderDelimiter::parse).orElse(MailboxFolderDelimiter.DOT).value;
 
