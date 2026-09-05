@@ -89,7 +89,25 @@ public class Preview {
 
     public static final Preview EMPTY = Preview.from("");
 
-    private static final int MAX_LENGTH = 256;
+    public static final String MAX_LENGTH_PROPERTY = "james.jmap.preview.length";
+    public static final int DEFAULT_MAX_LENGTH = 256;
+
+    /**
+     * How many characters of the text body a preview keeps.
+     *
+     * <p>Previews are the heaviest per message projection James stores, so shortening them is a
+     * straightforward way to trade list rendering for storage. Lowering it only affects previews computed
+     * afterwards: the ones already stored keep their length until they are recomputed.</p>
+     */
+    private static final int MAX_LENGTH = maxLength();
+
+    @VisibleForTesting
+    static int maxLength() {
+        int maxLength = Integer.getInteger(MAX_LENGTH_PROPERTY, DEFAULT_MAX_LENGTH);
+        Preconditions.checkArgument(maxLength > 0,
+            "'%s' must be strictly positive, got %s", MAX_LENGTH_PROPERTY, maxLength);
+        return maxLength;
+    }
 
     public static Preview from(String value) {
         return new Preview(value);

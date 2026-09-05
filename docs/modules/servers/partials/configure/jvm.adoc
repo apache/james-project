@@ -78,6 +78,27 @@ james.blob.id.hash.encoding=base16
 
 Optional. String. Defaults to base64Url.
 
+== Change the length of JMAP previews
+
+A JMAP preview keeps the first 256 characters of the text body of a message, so that clients can render a
+message list without fetching bodies. The property `james.jmap.preview.length` changes that, in
+characters.
+
+Ex in `jvm.properties`
+----
+james.jmap.preview.length=128
+----
+
+Optional. Strictly positive integer. Defaults to 256.
+
+Previews are the heaviest per message projection James stores in Cassandra, ahead of any single mailbox
+metadata column, so halving them is the shortest path to a smaller `messageFastViewProjection` table.
+Weigh it against how many characters your JMAP clients actually display: most message lists show two
+lines at most.
+
+Lowering it only affects previews computed afterwards. Those already stored keep their length until the
+message is reindexed, so the space comes back progressively rather than at once.
+
 == Improve listing support for MinIO
 
 Due to blobs being stored in folder, adding `/` in blobs name emulates folder and avoids blobs to be all stored in a
