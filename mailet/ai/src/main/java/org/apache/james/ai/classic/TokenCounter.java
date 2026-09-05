@@ -24,7 +24,7 @@ import java.io.Reader;
 import java.util.Map;
 
 /**
- * Counts tokens occuring in stream.
+ * Counts tokens occurring in stream.
  * Totals are added to map.
  */
 public class TokenCounter extends Tokenizer {

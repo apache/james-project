@@ -39,7 +39,7 @@ public interface ImapResponseComposer {
 
     /**
      * Writes an untagged NO response. Indicates that a warning. The command may
-     * still complete sucessfully.
+     * still complete successfully.
      * 
      * @param displayMessage
      *            message for display, not null
