@@ -51,7 +51,7 @@ public class HeaderBodyElement extends MimeBodyElement {
     protected long calculateSize(List<Header> headers) {
         if (headers.isEmpty()) {
             // even if the headers are empty we need to include the headers body
-            // seperator
+            // separator
             // See IMAP-294
             return ImapConstants.LINE_END.length();
         }
