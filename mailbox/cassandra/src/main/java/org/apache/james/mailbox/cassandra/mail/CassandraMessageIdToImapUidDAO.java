@@ -40,7 +40,6 @@ import static org.apache.james.mailbox.cassandra.table.Flag.DRAFT;
 import static org.apache.james.mailbox.cassandra.table.Flag.FLAGGED;
 import static org.apache.james.mailbox.cassandra.table.Flag.RECENT;
 import static org.apache.james.mailbox.cassandra.table.Flag.SEEN;
-import static org.apache.james.mailbox.cassandra.table.Flag.USER;
 import static org.apache.james.mailbox.cassandra.table.Flag.USER_FLAGS;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.TABLE_NAME;
@@ -149,7 +148,6 @@ public class CassandraMessageIdToImapUidDAO {
             .value(FLAGGED, bindMarker(FLAGGED))
             .value(RECENT, bindMarker(RECENT))
             .value(SEEN, bindMarker(SEEN))
-            .value(USER, bindMarker(USER))
             .value(USER_FLAGS, bindMarker(USER_FLAGS))
             .value(INTERNAL_DATE, bindMarker(INTERNAL_DATE))
             .value(SAVE_DATE, bindMarker(SAVE_DATE))
@@ -168,7 +166,6 @@ public class CassandraMessageIdToImapUidDAO {
                     setColumn(FLAGGED, bindMarker(FLAGGED)),
                     setColumn(RECENT, bindMarker(RECENT)),
                     setColumn(SEEN, bindMarker(SEEN)),
-                    setColumn(USER, bindMarker(USER)),
                     setColumn(INTERNAL_DATE, bindMarker(INTERNAL_DATE)),
                     setColumn(SAVE_DATE, bindMarker(SAVE_DATE)),
                     setColumn(BODY_START_OCTET, bindMarker(BODY_START_OCTET)),
@@ -202,8 +199,7 @@ public class CassandraMessageIdToImapUidDAO {
                 setColumn(DRAFT, bindMarker(DRAFT)),
                 setColumn(FLAGGED, bindMarker(FLAGGED)),
                 setColumn(RECENT, bindMarker(RECENT)),
-                setColumn(SEEN, bindMarker(SEEN)),
-                setColumn(USER, bindMarker(USER)))
+                setColumn(SEEN, bindMarker(SEEN)))
             .append(USER_FLAGS, bindMarker(ADDED_USERS_FLAGS))
             .remove(USER_FLAGS, bindMarker(REMOVED_USERS_FLAGS))
             .where(column(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID)),
@@ -267,7 +263,6 @@ public class CassandraMessageIdToImapUidDAO {
             .setBoolean(FLAGGED, flags.contains(Flag.FLAGGED))
             .setBoolean(RECENT, flags.contains(Flag.RECENT))
             .setBoolean(SEEN, flags.contains(Flag.SEEN))
-            .setBoolean(USER, flags.contains(Flag.USER))
             .setInstant(INTERNAL_DATE, metadata.getInternalDate().get().toInstant())
             .setInstant(SAVE_DATE, metadata.getSaveDate().map(Date::toInstant).orElse(null))
             .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
@@ -333,11 +328,6 @@ public class CassandraMessageIdToImapUidDAO {
             statementBuilder.setBoolean(SEEN, updatedFlags.isModifiedToSet(Flag.SEEN));
         } else {
             statementBuilder.unset(SEEN);
-        }
-        if (updatedFlags.isChanged(Flag.USER)) {
-            statementBuilder.setBoolean(USER, updatedFlags.isModifiedToSet(Flag.USER));
-        } else {
-            statementBuilder.unset(USER);
         }
         Sets.SetView<String> removedFlags = Sets.difference(
             ImmutableSet.copyOf(updatedFlags.getOldFlags().getUserFlags()),
@@ -460,7 +450,6 @@ public class CassandraMessageIdToImapUidDAO {
             .setBoolean(FLAGGED, flags.contains(Flag.FLAGGED))
             .setBoolean(RECENT, flags.contains(Flag.RECENT))
             .setBoolean(SEEN, flags.contains(Flag.SEEN))
-            .setBoolean(USER, flags.contains(Flag.USER))
             .setInstant(INTERNAL_DATE, null)
             .setInt(BODY_START_OCTET, 0)
             .setLong(FULL_CONTENT_OCTETS, 0)
