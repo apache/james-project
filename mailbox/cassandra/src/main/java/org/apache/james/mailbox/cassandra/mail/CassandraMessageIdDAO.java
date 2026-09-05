@@ -42,7 +42,6 @@ import static org.apache.james.mailbox.cassandra.table.Flag.DRAFT;
 import static org.apache.james.mailbox.cassandra.table.Flag.FLAGGED;
 import static org.apache.james.mailbox.cassandra.table.Flag.RECENT;
 import static org.apache.james.mailbox.cassandra.table.Flag.SEEN;
-import static org.apache.james.mailbox.cassandra.table.Flag.USER;
 import static org.apache.james.mailbox.cassandra.table.Flag.USER_FLAGS;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
@@ -181,7 +180,6 @@ public class CassandraMessageIdDAO {
                 setColumn(FLAGGED, bindMarker(FLAGGED)),
                 setColumn(RECENT, bindMarker(RECENT)),
                 setColumn(SEEN, bindMarker(SEEN)),
-                setColumn(USER, bindMarker(USER)),
                 setColumn(INTERNAL_DATE, bindMarker(INTERNAL_DATE)),
                 setColumn(SAVE_DATE, bindMarker(SAVE_DATE)),
                 setColumn(BODY_START_OCTET, bindMarker(BODY_START_OCTET)),
@@ -213,7 +211,6 @@ public class CassandraMessageIdDAO {
                 setColumn(FLAGGED, bindMarker(FLAGGED)),
                 setColumn(RECENT, bindMarker(RECENT)),
                 setColumn(SEEN, bindMarker(SEEN)),
-                setColumn(USER, bindMarker(USER)),
                 append(USER_FLAGS, bindMarker(ADDED_USERS_FLAGS)),
                 remove(USER_FLAGS, bindMarker(REMOVED_USERS_FLAGS)))
             .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
@@ -310,7 +307,6 @@ public class CassandraMessageIdDAO {
                     RECENT,
                     SEEN,
                     FLAGGED,
-                    USER,
                     USER_FLAGS,
                     MOD_SEQ)
                 .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
@@ -372,7 +368,6 @@ public class CassandraMessageIdDAO {
             .setBoolean(FLAGGED, flags.contains(Flag.FLAGGED))
             .setBoolean(RECENT, flags.contains(Flag.RECENT))
             .setBoolean(SEEN, flags.contains(Flag.SEEN))
-            .setBoolean(USER, flags.contains(Flag.USER))
             .setInstant(INTERNAL_DATE, metadata.getInternalDate().get().toInstant())
             .setInstant(SAVE_DATE, metadata.getSaveDate().map(Date::toInstant).orElse(null))
             .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
@@ -432,11 +427,6 @@ public class CassandraMessageIdDAO {
             statementBuilder.setBoolean(SEEN, updatedFlags.isModifiedToSet(Flag.SEEN));
         } else {
             statementBuilder.unset(SEEN);
-        }
-        if (updatedFlags.isChanged(Flag.USER)) {
-            statementBuilder.setBoolean(USER, updatedFlags.isModifiedToSet(Flag.USER));
-        } else {
-            statementBuilder.unset(USER);
         }
         Sets.SetView<String> removedFlags = Sets.difference(
             ImmutableSet.copyOf(updatedFlags.getOldFlags().getUserFlags()),
@@ -671,7 +661,6 @@ public class CassandraMessageIdDAO {
             .setBoolean(FLAGGED, flags.contains(Flag.FLAGGED))
             .setBoolean(RECENT, flags.contains(Flag.RECENT))
             .setBoolean(SEEN, flags.contains(Flag.SEEN))
-            .setBoolean(USER, flags.contains(Flag.USER))
             .setInstant(INTERNAL_DATE, null)
             .setInt(BODY_START_OCTET, 0)
             .setLong(FULL_CONTENT_OCTETS, 0)

@@ -23,8 +23,33 @@ Change list:
  - [JAMES-4210 POP3 USER/PASS requires TLS by default](#james-4210-pop3-userpass-requires-tls-by-default)
  - [JAMES-4210 ManageSieve SASL adoption](#james-4210-managesieve-sasl-adoption)
  - [JAMES-4225 Blob ids default to 128 bits of entropy](#james-4225-blob-ids-default-to-128-bits-of-entropy)
- - [Dropping the bodyOctets column of the Cassandra messagev3 table](#dropping-the-bodyoctets-column-of-the-cassandra-messagev3-table)
+ - [Dropping unneeded Cassandra schema columns](#dropping-unneeded-cassandra-schema-columns)
  - [Cassandra schema version 16: mandatory message denormalization migration](#cassandra-schema-version-16-mandatory-message-denormalization-migration)
+
+### Dropping unneeded Cassandra schema columns
+
+Date: 05/09/2026
+
+Concerned products: James products using Cassandra as mailbox storage
+
+Three columns held no information and are no longer written:
+
+- `messagev3.bodyOctets`, never read back, the body size being derived from `fullContentOctets` and
+`bodyStartOctet`.
+- `messageIdTable.flagUser` and `imapUidTable.flagUser`, persisting the JavaMail `Flags.Flag.USER`. That
+flag is IMAP `PERMANENTFLAGS` syntax, `\*`, a property of a mailbox rather than of a message, that no
+protocol lets a client set on one: the column only ever held `false`.
+
+New messages stop paying for them right away. Reclaiming the space taken by existing rows requires
+dropping the columns manually, once the new version runs on every node:
+
+```sql
+ALTER TABLE james_keyspace.messagev3 DROP bodyOctets;
+ALTER TABLE james_keyspace.messageIdTable DROP flagUser;
+ALTER TABLE james_keyspace.imapUidTable DROP flagUser;
+```
+
+Disk space comes back progressively, as SSTables get compacted.
 
 ### Cassandra schema version 16: mandatory message denormalization migration
 
@@ -60,22 +85,6 @@ against its shorter counterpart until it is rewritten. To keep the previous beha
 
 ```
 james.blobid.entropy=256
-```
-
-### Dropping the bodyOctets column of the Cassandra messagev3 table
-
-Date: 05/09/2026
-
-Concerned products: James products using Cassandra as mailbox storage
-
-The `messagev3.bodyOctets` column was written upon every message save but never read back: the body size
-is derived from `fullContentOctets` and `bodyStartOctet`. James no longer writes it.
-
-New messages stop paying for the column right away. Reclaiming the space taken by existing rows requires
-dropping the column manually, after upgrading all james servers:
-
-```sql
-ALTER TABLE james_keyspace.messagev3 DROP bodyOctets;
 ```
 
 ### JAMES-4210 POP3 USER/PASS requires TLS by default

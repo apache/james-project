@@ -30,7 +30,6 @@ public interface Flag {
     CqlIdentifier RECENT = CqlIdentifier.fromCql("flagRecent");
     CqlIdentifier SEEN = CqlIdentifier.fromCql("flagSeen");
     CqlIdentifier FLAGGED = CqlIdentifier.fromCql("flagFlagged");
-    CqlIdentifier USER = CqlIdentifier.fromCql("flagUser");
     CqlIdentifier USER_FLAGS = CqlIdentifier.fromCql("userFlags");
 
     CqlIdentifier[] ALL_LOWERCASE = {
@@ -39,8 +38,7 @@ public interface Flag {
         DRAFT,
         RECENT,
         SEEN,
-        FLAGGED,
-        USER
+        FLAGGED
     };
 
     ImmutableMap<CqlIdentifier, Flags.Flag> JAVAX_MAIL_FLAG = ImmutableMap.<CqlIdentifier, Flags.Flag>builder()
@@ -50,6 +48,5 @@ public interface Flag {
         .put(RECENT, Flags.Flag.RECENT)
         .put(SEEN, Flags.Flag.SEEN)
         .put(FLAGGED, Flags.Flag.FLAGGED)
-        .put(USER, Flags.Flag.USER)
         .build();
 }

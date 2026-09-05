@@ -604,7 +604,7 @@ class CassandraMessageIdToImapUidDAOTest {
     }
 
     @Test
-    void updateShouldUpdateUserFlag() {
+    void updateShouldNotPersistUserFlag() {
         CassandraMessageId messageId = CassandraMessageId.Factory.of(Uuids.timeBased());
         CassandraId mailboxId = CassandraId.timeBased();
         MessageUid messageUid = MessageUid.of(1);
@@ -624,9 +624,11 @@ class CassandraMessageIdToImapUidDAOTest {
             .build())
             .block();
 
+        // \* is IMAP PERMANENTFLAGS syntax, a mailbox capability rather than a flag of a message: no
+        // protocol lets a client set it on one, so it is not stored.
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flags.Flag.USER))
+                .flags(new Flags())
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
@@ -635,7 +637,7 @@ class CassandraMessageIdToImapUidDAOTest {
             .messageId(messageId)
             .modSeq(ModSeq.of(2))
             .oldFlags(new Flags())
-            .newFlags(expectedComposedMessageId.getFlags())
+            .newFlags(new Flags(Flags.Flag.USER))
             .build();
 
         testee.updateMetadata(expectedComposedMessageId.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
