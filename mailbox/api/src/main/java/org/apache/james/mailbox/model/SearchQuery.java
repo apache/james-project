@@ -1824,7 +1824,7 @@ public class SearchQuery {
     }
 
     /**
-     * Existance search.
+     * Existence search.
      */
     public static class ExistsOperator implements HeaderOperator {
 
