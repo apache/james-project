@@ -116,8 +116,24 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     private static final boolean LAZY = false;
     private static final int MAX_RETRIES = 5;
     private static final String ANY_ETAG = "*";
+    private static final int CONDITIONAL_REQUEST_CONFLICT_STATUS_CODE = 409;
+    private static final String CONDITIONAL_REQUEST_CONFLICT_ERROR_CODE = "ConditionalRequestConflict";
     private static final int PRECONDITION_FAILED_STATUS_CODE = 412;
     private static final String PRECONDITION_FAILED_ERROR_CODE = "PreconditionFailed";
+
+    private static boolean isConditionalRequestConflictResponse(Throwable throwable) {
+        return throwable instanceof S3Exception s3Exception
+            && s3Exception.statusCode() == CONDITIONAL_REQUEST_CONFLICT_STATUS_CODE
+            && s3Exception.awsErrorDetails() != null
+            && CONDITIONAL_REQUEST_CONFLICT_ERROR_CODE.equals(s3Exception.awsErrorDetails().errorCode());
+    }
+
+    private static boolean isPreconditionFailed(Throwable throwable) {
+        return throwable instanceof S3Exception s3Exception
+            && s3Exception.statusCode() == PRECONDITION_FAILED_STATUS_CODE
+            && s3Exception.awsErrorDetails() != null
+            && PRECONDITION_FAILED_ERROR_CODE.equals(s3Exception.awsErrorDetails().errorCode());
+    }
 
     private final BucketNameResolver bucketNameResolver;
     private final S3AsyncClient client;
@@ -365,11 +381,11 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
                 .anyMatch(S3BlobStoreDAO::isPreconditionFailed);
     }
 
-    private static boolean isPreconditionFailed(Throwable throwable) {
-        return throwable instanceof S3Exception s3Exception
-            && s3Exception.statusCode() == PRECONDITION_FAILED_STATUS_CODE
-            && s3Exception.awsErrorDetails() != null
-            && PRECONDITION_FAILED_ERROR_CODE.equals(s3Exception.awsErrorDetails().errorCode());
+    private boolean isConditionalRequestConflict(Throwable throwable) {
+        return s3RequestOption.ifNoneMatch()
+            && Throwables.getCausalChain(throwable)
+                .stream()
+                .anyMatch(S3BlobStoreDAO::isConditionalRequestConflictResponse);
     }
 
     private Map<String, String> asS3Metadata(BlobMetadata metadata) {
@@ -403,6 +419,10 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
                     return Mono.fromFuture(client.createBucket(builder -> builder.bucket(bucketName.asString())))
                         .onErrorResume(BucketAlreadyOwnedByYouException.class, e -> Mono.empty())
                         .then();
+                } else if (isConditionalRequestConflict(retrySignal.failure())) {
+                    // Completing this hook lets retryWhen retry, as AWS recommends for PutObject 409 responses:
+                    // https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+                    return Mono.empty();
                 } else {
                     return Mono.error(retrySignal.failure());
                 }
