@@ -32,6 +32,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.google.common.io.BaseEncoding;
+
 import reactor.core.publisher.Mono;
 
 public interface DeduplicationBlobStoreContract {
@@ -43,7 +45,10 @@ public interface DeduplicationBlobStoreContract {
     }
 
     String SHORT_STRING = "toto";
-    String SHORT_STRING_BLOB_ID = "MfemXjFVhqwZi9eYtmKc5A";
+    /** The SHA-256 of {@link #SHORT_STRING}, which every content addressed store spells its id from. */
+    byte[] SHORT_STRING_HASH = BaseEncoding.base64Url().decode("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY=");
+    /** That hash, truncated and spelled at the entropy the tests run with: "MfemXjFVhqwZi9eYtmKc5A" at the default 128 bits. */
+    String SHORT_STRING_BLOB_ID = new BlobIdEncoding(BaseEncoding.base64Url()).encode(BlobIdEntropy.truncate(SHORT_STRING_HASH));
 
     BlobStore testee();
 

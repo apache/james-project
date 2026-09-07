@@ -125,7 +125,7 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
         BlobId blobId = Mono.from(store.save(defaultBucketName, "toto", storagePolicy)).block();
         String blobIdString = blobId.asString();
 
-        // Then: BlobId string and parsed BlobId should match expectations
+        // Then: BlobId string and parsed BlobId should match expectations, at the default 128 bits of entropy
         assertThat(blobIdString).isEqualTo("1/628/M/f/emXjFVhqwZi9eYtmKc5A");
         assertThat(blobId).isEqualTo(blobIdFactory().parse(blobIdString));
     }
