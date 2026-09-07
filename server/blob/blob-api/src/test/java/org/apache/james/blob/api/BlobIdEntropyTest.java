@@ -22,7 +22,10 @@ package org.apache.james.blob.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.io.BaseEncoding;
 
 class BlobIdEntropyTest {
     @Test
@@ -64,7 +67,7 @@ class BlobIdEntropyTest {
 
     @Test
     void parseShouldRejectValueBelowTheSafetyFloor() {
-        assertThatThrownBy(() -> BlobIdEntropy.parse("96"))
+        assertThatThrownBy(() -> BlobIdEntropy.parse("88"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -104,5 +107,41 @@ class BlobIdEntropyTest {
         byte[] hash = new byte[] {1, 2, 3};
 
         assertThat(BlobIdEntropy.truncate(hash)).isEqualTo(hash);
+    }
+
+    @Nested
+    class NinetySixBits {
+        static final int ENTROPY_BYTES = 96 / 8;
+        // How the factory spells a truncated id: base64url, unpadded.
+        static final BaseEncoding ENCODING = BaseEncoding.base64Url().omitPadding();
+
+        @Test
+        void parseShouldAcceptTheSafetyFloor() {
+            assertThat(BlobIdEntropy.parse("96")).isEqualTo(BlobIdEntropy.MIN_ENTROPY_BITS);
+        }
+
+        @Test
+        void randomBytesShouldDrawTwelveBytes() {
+            assertThat(BlobIdEntropy.randomBytes(ENTROPY_BYTES)).hasSize(ENTROPY_BYTES);
+        }
+
+        @Test
+        void truncateShouldKeepTheTwelveLeadingBytesOfASha256() {
+            byte[] hash = new byte[32];
+            for (int i = 0; i < hash.length; i++) {
+                hash[i] = (byte) i;
+            }
+
+            assertThat(BlobIdEntropy.truncate(hash, ENTROPY_BYTES))
+                .isEqualTo(new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+        }
+
+        @Test
+        void idsShouldSpellOutSixteenCharacters() {
+            byte[] hash = new byte[32];
+
+            assertThat(ENCODING.encode(BlobIdEntropy.truncate(hash, ENTROPY_BYTES)))
+                .hasSize(16);
+        }
     }
 }

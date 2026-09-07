@@ -37,7 +37,8 @@ import com.google.common.base.Preconditions;
 public class BlobIdEntropy {
     public static final String ENTROPY_BITS_PROPERTY = "james.blobid.entropy";
     public static final int DEFAULT_ENTROPY_BITS = 128;
-    private static final int MIN_ENTROPY_BITS = 128;
+    @VisibleForTesting
+    static final int MIN_ENTROPY_BITS = 96;
     /** The full SHA-256 output: the longest an id can usefully get. */
     static final int MAX_ENTROPY_BITS = 256;
     private static final int BITS_PER_BYTE = 8;
@@ -76,15 +77,25 @@ public class BlobIdEntropy {
     }
 
     public static byte[] randomBytes() {
-        byte[] bytes = new byte[entropyBytes()];
+        return randomBytes(entropyBytes());
+    }
+
+    @VisibleForTesting
+    static byte[] randomBytes(int entropyBytes) {
+        byte[] bytes = new byte[entropyBytes];
         SECURE_RANDOM.nextBytes(bytes);
         return bytes;
     }
 
     public static byte[] truncate(byte[] hash) {
-        if (hash.length <= entropyBytes()) {
+        return truncate(hash, entropyBytes());
+    }
+
+    @VisibleForTesting
+    static byte[] truncate(byte[] hash, int entropyBytes) {
+        if (hash.length <= entropyBytes) {
             return hash;
         }
-        return Arrays.copyOf(hash, entropyBytes());
+        return Arrays.copyOf(hash, entropyBytes);
     }
 }
