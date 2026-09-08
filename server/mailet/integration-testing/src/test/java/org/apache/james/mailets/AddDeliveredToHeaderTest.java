@@ -85,7 +85,7 @@ class AddDeliveredToHeaderTest {
     }
 
     @Test
-    void receivedMessagesShouldContainDeliveredToHeadersI8N() throws Exception {
+    void receivedMessagesShouldContainDeliveredToHeadersI18N() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class).addUserAliasMapping("rené", DEFAULT_DOMAIN, RECIPIENT2);
         String message = "FROM: " + RECIPIENT2_UTF8 + "\r\n" +
             "subject: testé\r\n" +
