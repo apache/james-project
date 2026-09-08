@@ -34,7 +34,7 @@ class DomainTest {
     @Test
     void testPlainDomain() {
         Domain d1 = Domain.of("example.com");
-        assertThat(d1.name().equals(d1.asString()));
+        assertThat(d1.name().equals(d1.asString())).isTrue();
         Domain d2 = Domain.of("Example.com");
         assertThat(d2.name()).isNotEqualTo(d2.asString());
         assertThat(d1.asString()).isEqualTo(d2.asString());
