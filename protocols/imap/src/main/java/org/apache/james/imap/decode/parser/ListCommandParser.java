@@ -29,6 +29,8 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.display.MalformedUtf7Exception;
+import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.StatusDataItems;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -76,11 +78,26 @@ public class ListCommandParser extends AbstractUidCommandParser {
         char next = request.nextWordChar();
         switch (next) {
         case '"':
-            return request.consumeQuoted();
+            return assertDecodable(request.consumeQuoted());
         case '{':
-            return request.consumeLiteral(null);
+            return assertDecodable(request.consumeLiteral(null));
         default:
-            return request.consumeWord(ListCharValidator.INSTANCE);
+            return assertDecodable(request.consumeWord(ListCharValidator.INSTANCE));
+        }
+    }
+
+    /**
+     * The mailbox pattern is carried around modified UTF-7 encoded and is only decoded upon processing.
+     *
+     * Validate it here so that a malformed pattern is answered a BAD response rather than blowing up
+     * later on, outside of any decoding error handling.
+     */
+    private String assertDecodable(String mailboxPattern) throws DecodingException {
+        try {
+            ModifiedUtf7.decodeModifiedUTF7(mailboxPattern);
+            return mailboxPattern;
+        } catch (MalformedUtf7Exception e) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid mailbox pattern: not a valid modified UTF-7 value", e);
         }
     }
 

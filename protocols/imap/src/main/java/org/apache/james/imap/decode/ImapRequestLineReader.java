@@ -43,6 +43,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.display.MalformedUtf7Exception;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.PartialRange;
@@ -489,7 +490,12 @@ public abstract class ImapRequestLineReader {
      * 
      */
     public String mailbox() throws DecodingException {
-       return ModifiedUtf7.decodeModifiedUTF7(mailboxUTF7());
+        String mailboxUTF7 = mailboxUTF7();
+        try {
+            return ModifiedUtf7.decodeModifiedUTF7(mailboxUTF7);
+        } catch (MalformedUtf7Exception e) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid mailbox name: not a valid modified UTF-7 value", e);
+        }
     }
 
     /**

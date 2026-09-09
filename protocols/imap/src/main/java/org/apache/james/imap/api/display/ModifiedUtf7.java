@@ -19,7 +19,9 @@
 package org.apache.james.imap.api.display;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.CodingErrorAction;
 
 import com.beetstra.jutf7.CharsetProvider;
 import com.google.common.base.CharMatcher;
@@ -37,12 +39,23 @@ public class ModifiedUtf7 {
      * 
      * @param input utf7-encoded value
      * @return decoded value
+     * @throws MalformedUtf7Exception when the input holds an invalid modified UTF-7 sequence
      */
     public static String decodeModifiedUTF7(String input) {
         if (UNENCODED_CHAR_MATCHER.matchesAllOf(input)) {
             return input;
         }
-        return X_MODIFIED_UTF_7_CHARSET.decode(ByteBuffer.wrap(input.getBytes())).toString();
+        try {
+            // Charset::decode would report an unterminated shift sequence as a java.lang.Error, which
+            // callers can hardly handle: decode by hand in order to turn it into a regular exception.
+            return X_MODIFIED_UTF_7_CHARSET.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPLACE)
+                .onUnmappableCharacter(CodingErrorAction.REPLACE)
+                .decode(ByteBuffer.wrap(input.getBytes()))
+                .toString();
+        } catch (CharacterCodingException e) {
+            throw new MalformedUtf7Exception(input, e);
+        }
     }
 
     /**

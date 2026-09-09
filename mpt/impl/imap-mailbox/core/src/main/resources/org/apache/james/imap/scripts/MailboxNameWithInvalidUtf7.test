@@ -1,0 +1,74 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# A mailbox name holding a badly encoded modified UTF-7 sequence must be
+# rejected with a BAD response, and must not tear down the connection.
+C: A1 CREATE &
+S: A1 BAD CREATE failed. Illegal arguments.
+
+# An unterminated shift sequence: the trailing '-' is missing
+C: A2 CREATE "&AOE"
+S: A2 BAD CREATE failed. Illegal arguments.
+
+# Non BASE64 content within a shift sequence
+C: A3 CREATE "&x-"
+S: A3 BAD CREATE failed. Illegal arguments.
+
+# Other commands taking a mailbox name are rejected the very same way
+C: A4 SELECT &
+S: A4 BAD SELECT failed. Illegal arguments.
+
+C: A5 DELETE "&AOE"
+S: A5 BAD DELETE failed. Illegal arguments.
+
+C: A6 STATUS & (MESSAGES)
+S: A6 BAD STATUS failed. Illegal arguments.
+
+C: A7 RENAME & other
+S: A7 BAD RENAME failed. Illegal arguments.
+
+C: A8 SUBSCRIBE &
+S: A8 BAD SUBSCRIBE failed. Illegal arguments.
+
+# LIST and LSUB carry their pattern modified UTF-7 encoded up to the processor
+C: A9 LIST "&" ""
+S: A9 BAD LIST failed. Illegal arguments.
+
+C: A10 LIST "" "&AOE"
+S: A10 BAD LIST failed. Illegal arguments.
+
+C: A11 LSUB "" "&AOE"
+S: A11 BAD LSUB failed. Illegal arguments.
+
+# '&-' is the modified UTF-7 encoding of a single '&': a valid reference name that
+# decodes to a value that is not valid modified UTF-7 itself
+C: A12 LIST "&-" ""
+S: \* LIST \(\\Noselect\) \"\.\" \"\"
+S: A12 OK LIST completed.
+
+# Valid modified UTF-7 keeps being accepted: &AOE- decodes to 'a' with an acute accent
+C: A13 CREATE "&AOE-"
+S: A13 OK \[MAILBOXID \(.+\)\] CREATE completed.
+
+C: A14 LIST "" "&AOE-"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"&AOE-\"
+S: A14 OK LIST completed.
+
+# The connection survived every single one of those errors
+C: A15 CREATE anothermailbox
+S: A15 OK \[MAILBOXID \(.+\)\] CREATE completed.
