@@ -42,6 +42,9 @@ class EhloCmdHandlerTest {
         // Pure alphanumeric (single label, no dot)
         "localhost",
         "mailserver",
+        // Devices announcing themselves with their MAC address
+        "A2:9B:D4:8A:AA:47",
+        "a29bd48aaa47",
         // IPv4
         "192.168.1.1",
         "10.0.0.1",
@@ -67,6 +70,9 @@ class EhloCmdHandlerTest {
         // Invalid characters
         "exam ple.com",
         "example.com!",
+        // Separators only
+        ":",
+        ":::::",
     })
     void isValidShouldReject(String argument) {
         assertThat(handler.isValid(argument)).isFalse();
