@@ -376,6 +376,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             LOGGER.info("Connection closed for {} and user {}", address.getAddress().getHostAddress(), retrieveUsername(imapSession));
 
             Optional.ofNullable(imapSession).ifPresent(ImapSession::cancelOngoingProcessing);
+            discardPendingRequests(ctx);
             Optional.ofNullable(imapSession)
                 .map(ImapSession::logout)
                 .orElse(Mono.empty())
@@ -579,10 +580,15 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     disposableAttribute.set(null);
                     response.flush();
                     ctx.fireChannelReadComplete();
-                    if (signal.isOnComplete() || signal.isOnError()) {
-                        if (waitingMessage != null && signal.isOnComplete()) {
+                    if (waitingMessage != null) {
+                        if (signal.isOnComplete()) {
                             ctx.channel().eventLoop().execute(
                                 () -> channelRead(ctx, waitingMessage, true));
+                        } else {
+                            // The pipeline stops on the failed command: this one and the ones
+                            // behind it are never going to run, release what they hold.
+                            closeQuietly(waitingMessage);
+                            discardPendingRequests(ctx);
                         }
                     }
                 }))
