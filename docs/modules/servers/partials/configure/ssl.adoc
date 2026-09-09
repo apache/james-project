@@ -248,6 +248,46 @@ When you enable TLS, you may also configure the server to require a client certi
 </tls>
 ....
 
+== Native TLS (tcnative)
+
+Offloads TLS to BoringSSL via Netty's tcnative, which is faster than the JDK implementation.
+
+Enable it in `jvm.properties`:
+
+....
+james.tcnative.enabled=true
+....
+
+It only applies to implicit TLS with PEM files: setups using a keystore, a truststore or `clientAuth`
+transparently fall back to the JDK implementation.
+
+It relies on a native library that must match your platform (OS and architecture); it is shipped and
+known to work in the official Docker images.
+
+The protocols and ciphersuites below have been qualified against a range of email clients:
+
+[source,xml]
+....
+<tls socketTLS="true" startTLS="false">
+  <privateKey>file://secrets/imap/tls.key</privateKey>
+  <certificates>file://secrets/imap/tls.crt</certificates>
+  <supportedProtocols>
+    <protocol>TLSv1.2</protocol>
+    <protocol>TLSv1.3</protocol>
+  </supportedProtocols>
+  <supportedCipherSuites>
+    <cipherSuite>TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384</cipherSuite>
+    <cipherSuite>TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256</cipherSuite>
+    <cipherSuite>TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256</cipherSuite>
+    <cipherSuite>TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA</cipherSuite>
+    <cipherSuite>TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA</cipherSuite>
+    <cipherSuite>TLS_AES_256_GCM_SHA384</cipherSuite>
+    <cipherSuite>TLS_AES_128_GCM_SHA256</cipherSuite>
+    <cipherSuite>TLS_CHACHA20_POLY1305_SHA256</cipherSuite>
+  </supportedCipherSuites>
+</tls>
+....
+
 == Certificates by Well-Known Root CA (Preferred)
 
 In order for MUAs and other email servers to trust the certificates by your email server out of the box, they need to be issued (at least transitively) by a trusted root CA.
