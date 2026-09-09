@@ -65,6 +65,7 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
         .or(CharMatcher.inRange('A', 'Z'))
         .or(CharMatcher.inRange('0', '9'));
     private static final CharMatcher LABEL_CHAR_MATCHER = ALPHANUMERIC_MATCHER.or(CharMatcher.is('-'));
+    private static final CharMatcher OPAQUE_IDENTIFIER_MATCHER = ALPHANUMERIC_MATCHER.or(CharMatcher.is(':'));
     private static final Splitter LABEL_SPLITTER = Splitter.on('.');
     private static final int MAX_HOSTNAME_LENGTH = 253;
     private static final int MAX_LABEL_LENGTH = 63;
@@ -119,7 +120,7 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
             // We keep Guava as a fast path and fall back to our own RFC 5321 validator.
             || InternetDomainName.isValid(hostname)
             || emClientCompatibility(hostname)
-            || isAlphanumeric(hostname)
+            || isOpaqueIdentifier(hostname)
             || isRfc5321Hostname(hostname);
     }
 
@@ -144,9 +145,11 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
         return LABEL_CHAR_MATCHER.matchesAllOf(label);
     }
 
-    // CF JAMES-4046 https://issues.apache.org/jira/projects/JAMES/issues/JAMES-4066
-    private boolean isAlphanumeric(String hostname) {
-        return !hostname.isEmpty() && ALPHANUMERIC_MATCHER.matchesAllOf(hostname);
+    // Some clients uses hostname (CF JAMES-4066) or MAC address, neither of which is a domain nor an
+    // address-literal.
+    private boolean isOpaqueIdentifier(String hostname) {
+        return ALPHANUMERIC_MATCHER.matchesAnyOf(hostname)
+            && OPAQUE_IDENTIFIER_MATCHER.matchesAllOf(hostname);
     }
 
     // CF JAMES-4040 IPv6v4-full https://datatracker.ietf.org/doc/html/rfc5321
