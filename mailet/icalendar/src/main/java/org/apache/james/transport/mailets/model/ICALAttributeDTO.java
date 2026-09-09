@@ -33,7 +33,6 @@ import com.google.common.base.Preconditions;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.Uid;
 
 public class ICALAttributeDTO {
@@ -66,14 +65,14 @@ public class ICALAttributeDTO {
         }
 
         private Optional<String> optionalOf(Property property) {
-            return Optional.ofNullable(property).map(Property::getValue);
+            return Optional.ofNullable(property).flatMap(this::safeValue);
         }
 
-        private Optional<String> safeValue(DtStamp dtStamp) {
+        private Optional<String> safeValue(Property property) {
             try {
-                return Optional.ofNullable(dtStamp.getValue());
+                return Optional.ofNullable(property.getValue());
             } catch (Exception e) {
-                LOGGER.warn("Ignoring non RFC-5545 compliant DTSTAMP value", e);
+                LOGGER.warn("Ignoring non RFC-5545 compliant {} value", property.getName(), e);
                 return Optional.empty();
             }
         }

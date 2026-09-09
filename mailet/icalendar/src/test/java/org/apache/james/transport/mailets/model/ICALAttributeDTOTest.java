@@ -125,6 +125,47 @@ class ICALAttributeDTOTest {
     }
 
     @Test
+    void dtoShouldIgnoreDtStampWithInvalidTzId() throws Exception {
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_with_invalid_dtstamp_tzid.ics");
+        Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
+
+        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
+        ICALAttributeDTO ical = ICALAttributeDTO.builder()
+            .from(calendar, ics)
+            .sender(sender)
+            .recipient(recipient)
+            .replyTo(sender);
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(ical.getDtstamp()).isEmpty();
+            softly.assertThat(ical.getMethod()).contains("REQUEST");
+            softly.assertThat(ical.getSequence()).isEqualTo("0");
+        });
+    }
+
+    @Test
+    void dtoShouldIgnoreRecurrenceIdWithInvalidTzId() throws Exception {
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_with_invalid_recurrence_id_tzid.ics");
+        Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
+
+        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
+        ICALAttributeDTO ical = ICALAttributeDTO.builder()
+            .from(calendar, ics)
+            .sender(sender)
+            .recipient(recipient)
+            .replyTo(sender);
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(ical.getRecurrenceId()).isEmpty();
+            softly.assertThat(ical.getDtstamp()).contains("20170106T115036Z");
+            softly.assertThat(ical.getMethod()).contains("REQUEST");
+            softly.assertThat(ical.getSequence()).isEqualTo("0");
+        });
+    }
+
+    @Test
     void buildShouldSetDefaultValueWhenCalendarWithoutSequence() throws Exception {
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_sequence.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
