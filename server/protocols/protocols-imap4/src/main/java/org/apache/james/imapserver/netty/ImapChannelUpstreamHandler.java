@@ -166,6 +166,26 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         private final ConcurrentLinkedQueue<Object> throttled = new ConcurrentLinkedQueue<>();
     }
 
+    private static void discardPendingRequests(ChannelHandlerContext ctx) {
+        Optional.ofNullable(ctx.channel().attr(LINEARIZER_ATTRIBUTE_KEY).get())
+            .ifPresent(linearizer -> {
+                Object queued;
+                while ((queued = linearizer.throttled.poll()) != null) {
+                    closeQuietly(queued);
+                }
+            });
+    }
+
+    private static void closeQuietly(Object message) {
+        if (message instanceof Closeable) {
+            try {
+                ((Closeable) message).close();
+            } catch (IOException e) {
+                LOGGER.info("Failed to release the resources of a discarded IMAP request", e);
+            }
+        }
+    }
+
     public static ImapChannelUpstreamHandlerBuilder builder() {
         return new ImapChannelUpstreamHandlerBuilder();
     }
@@ -277,6 +297,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
             closeSaslExchange(imapSession);
             Optional.ofNullable(imapSession).ifPresent(ImapSession::cancelOngoingProcessing);
+            discardPendingRequests(ctx);
             Optional.ofNullable(imapSession)
                 .map(ImapSession::logout)
                 .orElse(Mono.empty())
@@ -473,10 +494,15 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     disposableAttribute.set(null);
                     response.flush();
                     ctx.fireChannelReadComplete();
-                    if (signal.isOnComplete() || signal.isOnError()) {
-                        if (waitingMessage != null && signal.isOnComplete()) {
+                    if (waitingMessage != null) {
+                        if (signal.isOnComplete()) {
                             ctx.channel().eventLoop().execute(
                                 () -> channelRead(ctx, waitingMessage));
+                        } else {
+                            // The pipeline stops on the failed command: this one and the ones
+                            // behind it are never going to run, release what they hold.
+                            closeQuietly(waitingMessage);
+                            discardPendingRequests(ctx);
                         }
                     }
                 }))

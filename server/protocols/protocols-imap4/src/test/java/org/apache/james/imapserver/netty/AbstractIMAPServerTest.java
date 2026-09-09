@@ -102,6 +102,7 @@ abstract class AbstractIMAPServerTest {
 
     protected InMemoryIntegrationResources memoryIntegrationResources;
     protected FakeAuthenticator authenticator;
+    protected RecordingMetricFactory metricFactory;
 
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
@@ -126,7 +127,7 @@ abstract class AbstractIMAPServerTest {
                                         Optional<ImmutableList<SaslMechanism>> saslMechanisms) throws Exception {
         memoryIntegrationResources = inMemoryIntegrationResources;
 
-        RecordingMetricFactory metricFactory = new RecordingMetricFactory();
+        metricFactory = new RecordingMetricFactory();
         Set<ConnectionCheck> connectionChecks = defaultConnectionChecks();
         mailboxManager = spy(memoryIntegrationResources.getMailboxManager());
         StoreSubscriptionManager subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory(),

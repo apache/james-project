@@ -21,6 +21,7 @@ package org.apache.james.imapserver.netty;
 
 import static reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -293,8 +294,16 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                         // Not doing this causes IDLEd IMAP connections to clear IMAP append literal while they are processed.
                         Object removed = attachment.remove(SUBSCRIPTION);
                         try {
-                            parseImapMessage(ctx, null, attachment, new ParseAttempt(reader, size, null, 0), readerIndex)
-                                .ifPresent(ctx::fireChannelRead);
+                            Optional<ImapMessage> message = parseImapMessage(ctx, null, attachment,
+                                new ParseAttempt(reader, size, null, 0), readerIndex);
+                            // The temp file is only handed over when the decoded command can release it
+                            // (APPEND, REPLACE). A BAD response, or a session that went away while the
+                            // literal was being buffered, leaves nobody to do it.
+                            boolean isNotClosable = message.filter(Closeable.class::isInstance).isEmpty();
+                            if (isNotClosable) {
+                                fileChunkConsumer.discard();
+                            }
+                            message.ifPresent(ctx::fireChannelRead);
                         } catch (Exception e) {
                             if (removed instanceof Disposable) {
                                 ((Disposable) removed).dispose();
