@@ -139,6 +139,13 @@ accepts any recipient having a mapping, `anyMappingValid` requires at least one 
 `allMappingsValid` requires all of them to. Only applies when `send.validate.rcpt` is enabled. Mirrors the
 `smtpserver.xml` `ValidRcptHandler` option of the same name.
 
+| send.extra.validations
+| Optional, defaults to empty. Coma separated list of `EmailSubmissionSetValidation` implementations to run
+against every mail submitted through `EmailSubmission/set`, before it reaches the queue. Each entry is a fully
+qualified class name (the `org.apache.james.jmap.method` package can be omitted), instantiated through Guice, and
+returning a SetError turns the creation into a `notCreated` entry. Validations run until the first rejection, in
+an unspecified order.
+
 | disabled.capabilities
 | Optional, defaults to empty. Coma separated list of JMAP capabilities to reject.
 This allows to prevent users from using some specific JMAP extensions.

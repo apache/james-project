@@ -56,6 +56,7 @@ object JmapConfigProperties {
   val JMAP_GET_MAX_SIZE_PROPERTY: String = "get.max.size"
   val JMAP_SET_MAX_SIZE_PROPERTY: String = "set.max.size"
   val SEND_VALIDATE_RCPT_PROPERTY: String = "send.validate.rcpt"
+  val SEND_EXTRA_VALIDATIONS_PROPERTY: String = "send.extra.validations"
 }
 
 object JmapRfc8621Configuration {
@@ -109,6 +110,8 @@ object JmapRfc8621Configuration {
         .getOrElse(JMAP_MAX_OBJECT_IN_SET),
       validateRecipientsOnSend = configuration.getBoolean(SEND_VALIDATE_RCPT_PROPERTY, false),
       recipientValidationPolicy = RecipientValidator.Policy.from(configuration.subset(SEND_VALIDATE_RCPT_PROPERTY)),
+      extraEmailSubmissionValidations = Optional.ofNullable(configuration.getList(classOf[String], SEND_EXTRA_VALIDATIONS_PROPERTY, null))
+        .orElse(ImmutableList.of()),
       webPushEnabled = configuration.getBoolean(WEB_PUSH_ENABLED_PROPERTY, true),
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
       maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala,
@@ -135,6 +138,7 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
                                     maxObjectsInSet: MaxObjectsInSet = JMAP_MAX_OBJECT_IN_SET,
                                     validateRecipientsOnSend: Boolean = false,
                                     recipientValidationPolicy: RecipientValidator.Policy = RecipientValidator.Policy.DEFAULT,
+                                    extraEmailSubmissionValidations: java.util.List[String] = ImmutableList.of(),
                                     webPushEnabled: Boolean = true,
                                     maxTimeoutSeconds: Option[Int] = None,
                                     maxConnections: Option[Int] = None,
@@ -153,4 +157,7 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
 
   def withAuthenticationStrategies(list: Optional[java.util.List[String]]): JmapRfc8621Configuration =
     this.copy(authenticationStrategies = list.toScala)
+
+  def withExtraEmailSubmissionValidations(list: java.util.List[String]): JmapRfc8621Configuration =
+    this.copy(extraEmailSubmissionValidations = list)
 }
