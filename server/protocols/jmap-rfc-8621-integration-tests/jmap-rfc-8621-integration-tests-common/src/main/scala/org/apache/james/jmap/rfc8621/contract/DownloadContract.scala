@@ -366,6 +366,49 @@ trait DownloadContract {
   }
 
   @Test
+  def emptyContentTypeShouldFallBackToTheBlobContentType(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(bobUsername)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .queryParam("type", "")
+    .when
+      .get(s"/download/$bobAccountId/${messageId.serialize()}_3")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("text/plain")
+  }
+
+  @Test
+  def emptyNameShouldBeDiscarded(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(bobUsername)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val contentDisposition = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .queryParam("name", "")
+    .when
+      .get(s"/download/$bobAccountId/${messageId.serialize()}_3")
+    .`then`
+      .statusCode(SC_OK)
+      .extract()
+      .header("Content-Disposition")
+
+    assertThat(contentDisposition).isNullOrEmpty()
+  }
+
+  @Test
   def downloadPartShouldDiscardNameWhenNotSuppliedByTheClient(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)

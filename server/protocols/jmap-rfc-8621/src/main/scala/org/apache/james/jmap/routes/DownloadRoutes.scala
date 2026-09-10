@@ -438,6 +438,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
       .toList
       .flatMap(_.asScala)
       .headOption
+      .filter(_.nonEmpty)
 
   private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): SMono[Unit] =
     if (httpServerResponse.hasSentHeaders) {
