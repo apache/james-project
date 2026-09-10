@@ -128,6 +128,7 @@ import com.google.inject.name.Named;
 public class RFC8621MethodsModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(RFC8621MethodsModule.class);
     private static PackageName IMPLICIT_AUTHENTICATION_STRATEGY_FQDN_PREFIX = PackageName.of("org.apache.james.jmap.http");
+    private static PackageName IMPLICIT_EMAIL_SUBMISSION_SET_VALIDATION_FQDN_PREFIX = PackageName.of("org.apache.james.jmap.method");
     private static List<String> DEFAULT_AUTHENTICATION_STRATEGIES = ImmutableList.of(
         BasicAuthenticationStrategy.class.getSimpleName(),
         JWTAuthenticationStrategy.class.getSimpleName());
@@ -248,11 +249,22 @@ public class RFC8621MethodsModule extends AbstractModule {
     @Provides
     @Singleton
     public Set<EmailSubmissionSetValidation> provideEmailSubmissionSetValidations(JmapRfc8621Configuration configuration,
-                                                                                 Provider<RecipientValidator> recipientValidator) {
-        if (!configuration.validateRecipientsOnSend()) {
-            return ImmutableSet.of();
+                                                                                 Provider<RecipientValidator> recipientValidator,
+                                                                                 GuiceLoader guiceLoader) {
+        ImmutableSet.Builder<EmailSubmissionSetValidation> validations = ImmutableSet.builder();
+
+        if (configuration.validateRecipientsOnSend()) {
+            validations.add(new ValidRcptEmailSubmissionSetValidation(recipientValidator.get(), configuration.recipientValidationPolicy()));
         }
-        return ImmutableSet.of(new ValidRcptEmailSubmissionSetValidation(recipientValidator.get(), configuration.recipientValidationPolicy()));
+
+        configuration.extraEmailSubmissionValidations()
+            .stream()
+            .map(ClassName::new)
+            .map(Throwing.function(guiceLoader.<EmailSubmissionSetValidation>withNamingSheme(
+                new NamingScheme.OptionalPackagePrefix(IMPLICIT_EMAIL_SUBMISSION_SET_VALIDATION_FQDN_PREFIX))::instantiate))
+            .forEach(validations::add);
+
+        return validations.build();
     }
 
     @Provides
