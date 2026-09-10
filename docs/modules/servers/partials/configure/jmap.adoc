@@ -121,6 +121,24 @@ systems with filters already defined would result in those filters to be not rea
 | delay.sends.enabled
 | Optional boolean. Defaults to false. Whether to support or not the delay send with JMAP protocol.
 
+| send.validate.rcpt
+| Optional boolean. Defaults to false. Whether `EmailSubmission/set` rejects recipients James knows it cannot
+deliver to, the JMAP counterpart of the SMTP `ValidRcptHandler`. Only recipients of local domains are checked:
+they need either a local mailbox or a RecipientRewriteTable entry. When enabled the client is told synchronously
+with an `invalidRecipients` SetError rather than through an asynchronous bounce. Note that, the JMAP data model
+having no room for a partial rejection, a single invalid recipient fails the whole submission. Also note that
+this turns `EmailSubmission/set` into an oracle telling which local addresses exist.
+
+| send.validate.rcpt.enableRecipientRewriteTable
+| Optional boolean. Defaults to true. Whether recipients without a local mailbox can be validated through the
+RecipientRewriteTable. Only applies when `send.validate.rcpt` is enabled.
+
+| send.validate.rcpt.recipientRewriteTableCheck
+| Optional. Defaults to `mappingExists`. How strict the RecipientRewriteTable validation is: `mappingExists`
+accepts any recipient having a mapping, `anyMappingValid` requires at least one target to have a local mailbox,
+`allMappingsValid` requires all of them to. Only applies when `send.validate.rcpt` is enabled. Mirrors the
+`smtpserver.xml` `ValidRcptHandler` option of the same name.
+
 | disabled.capabilities
 | Optional, defaults to empty. Coma separated list of JMAP capabilities to reject.
 This allows to prevent users from using some specific JMAP extensions.

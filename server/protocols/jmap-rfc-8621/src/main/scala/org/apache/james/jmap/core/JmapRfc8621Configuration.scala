@@ -29,6 +29,7 @@ import org.apache.commons.configuration2.Configuration
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.JmapRfc8621Configuration.{JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT, JMAP_MAX_OBJECT_IN_GET, JMAP_MAX_OBJECT_IN_SET, JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT, MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT, UPLOAD_LIMIT_DEFAULT}
 import org.apache.james.jmap.pushsubscription.PushClientConfiguration
+import org.apache.james.rrt.api.RecipientValidator
 import org.apache.james.util.{DurationParser, Size}
 
 import scala.concurrent.duration.Duration
@@ -54,6 +55,7 @@ object JmapConfigProperties {
   val JMAP_EMAIL_GET_FULL_MAX_SIZE_PROPERTY: String = "email.get.full.max.size"
   val JMAP_GET_MAX_SIZE_PROPERTY: String = "get.max.size"
   val JMAP_SET_MAX_SIZE_PROPERTY: String = "set.max.size"
+  val SEND_VALIDATE_RCPT_PROPERTY: String = "send.validate.rcpt"
 }
 
 object JmapRfc8621Configuration {
@@ -105,6 +107,8 @@ object JmapRfc8621Configuration {
       maxObjectsInSet = Option(configuration.getLong(JMAP_SET_MAX_SIZE_PROPERTY, null))
         .map(value => MaxObjectsInSet(UnsignedInt.liftOrThrow(value)))
         .getOrElse(JMAP_MAX_OBJECT_IN_SET),
+      validateRecipientsOnSend = configuration.getBoolean(SEND_VALIDATE_RCPT_PROPERTY, false),
+      recipientValidationPolicy = RecipientValidator.Policy.from(configuration.subset(SEND_VALIDATE_RCPT_PROPERTY)),
       webPushEnabled = configuration.getBoolean(WEB_PUSH_ENABLED_PROPERTY, true),
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
       maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala,
@@ -129,6 +133,8 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
                                     jmapEmailGetFullMaxSize: JmapEmailGetFullMaxSize = JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT,
                                     maxObjectsInGet: MaxObjectsInGet = JMAP_MAX_OBJECT_IN_GET,
                                     maxObjectsInSet: MaxObjectsInSet = JMAP_MAX_OBJECT_IN_SET,
+                                    validateRecipientsOnSend: Boolean = false,
+                                    recipientValidationPolicy: RecipientValidator.Policy = RecipientValidator.Policy.DEFAULT,
                                     webPushEnabled: Boolean = true,
                                     maxTimeoutSeconds: Option[Int] = None,
                                     maxConnections: Option[Int] = None,
