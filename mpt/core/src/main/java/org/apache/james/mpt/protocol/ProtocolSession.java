@@ -297,7 +297,7 @@ public class ProtocolSession implements ProtocolInteractor {
          * 
          * @param expectedPattern
          *            A Perl regular expression pattern used to test the line
-         *            recieved.
+         *            received.
          * @param location
          *            A descriptive value to use in error messages.
          */
@@ -312,7 +312,7 @@ public class ProtocolSession implements ProtocolInteractor {
          *            The number of session for a multi-session test
          * @param expectedPattern
          *            A Perl regular expression pattern used to test the line
-         *            recieved.
+         *            received.
          * @param location
          *            A descriptive value to use in error messages.
          */
@@ -391,7 +391,7 @@ public class ProtocolSession implements ProtocolInteractor {
     }
 
     /**
-     * Represents a set of lines which must be recieved from the server, in a
+     * Represents a set of lines which must be received from the server, in a
      * non-specified order.
      */
     private class ServerUnorderedBlockResponse extends ServerResponse {
