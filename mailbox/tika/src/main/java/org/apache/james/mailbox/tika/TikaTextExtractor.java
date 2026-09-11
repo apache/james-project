@@ -53,6 +53,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class TikaTextExtractor implements TextExtractor {
     private static final ContentType.MediaType TEXT = ContentType.MediaType.of("text");
@@ -101,6 +102,7 @@ public class TikaTextExtractor implements TextExtractor {
 
     private Mono<ContentAndMetadata> convert(Mono<InputStream> maybeInputStream) {
         return maybeInputStream
+                .publishOn(Schedulers.parallel())
                 .map(Throwing.function(inputStream -> objectMapper.readValue(inputStream, ContentAndMetadata.class)))
                 .switchIfEmpty(Mono.just(ContentAndMetadata.empty()));
     }
