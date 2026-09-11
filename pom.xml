@@ -647,8 +647,8 @@
         <netty.version>4.1.126.Final</netty.version>
         <cucumber.version>7.23.0</cucumber.version>
 
-        <jackson.version>2.19.1</jackson.version>
-        <jackson.databind.version>2.19.1</jackson.databind.version>
+        <jackson.version>2.22.1</jackson.version>
+        <jackson.databind.version>2.22.2</jackson.databind.version>
         <feign.version>13.6</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
         <jjwt.version>0.12.6</jjwt.version>
