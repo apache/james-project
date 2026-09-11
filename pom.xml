@@ -684,7 +684,7 @@
         <lettuce.core.version>6.8.2.RELEASE</lettuce.core.version>
         <io.micrometer.core.version>1.15.1</io.micrometer.core.version>
         <io.micrometer.tracing.version>1.5.1</io.micrometer.tracing.version>
-        <bouncycastle.version>1.82</bouncycastle.version>
+        <bouncycastle.version>1.85</bouncycastle.version>
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.16</scala.version>
         <doclint>none</doclint>
@@ -2871,7 +2871,7 @@
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk18on</artifactId>
-                <version>${bouncycastle.version}</version>
+                <version>1.85.2</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.angus</groupId>
