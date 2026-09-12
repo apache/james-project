@@ -1044,7 +1044,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void getFilenameShouldReturnRandomFilenameWhenExceptionOccured() throws Exception {
+    void getFilenameShouldReturnRandomFilenameWhenExceptionOccurred() throws Exception {
         BodyPart bodyPart = mock(BodyPart.class);
         when(bodyPart.getFileName())
             .thenThrow(new MessagingException());
