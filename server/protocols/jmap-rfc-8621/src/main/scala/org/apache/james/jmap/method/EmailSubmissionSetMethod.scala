@@ -81,6 +81,9 @@ object EmailSubmissionSetMethod {
                              messageId: MessageId) extends CreationResult
   case class CreationFailure(emailSubmissionCreationId: EmailSubmissionCreationId, exception: Throwable) extends CreationResult {
     def asSetError: SetError = exception match {
+      case e: EmailSubmissionSetValidationException =>
+        LOGGER.info("EmailSubmission/set rejected by a validation: {}", e.setError.description.description)
+        e.setError
       case e: EmailSubmissionCreationParseException =>
         LOGGER.info("Failed to parse EMailSubmission/set create", e)
         e.setError
@@ -157,6 +160,7 @@ object EmailSubmissionSetMethod {
 }
 
 case class EmailSubmissionCreationParseException(setError: SetError) extends Exception
+case class EmailSubmissionSetValidationException(setError: SetError) extends Exception
 case class NoRecipientException() extends Exception
 case class ForbiddenFromException(from: String) extends Exception
 case class ForbiddenMailFromException(from: List[String]) extends Exception
@@ -177,9 +181,12 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
                                          canSendFrom: CanSendFrom,
                                          emailSetMethod: EmailSetMethod,
                                          clock: Clock,
+                                         javaValidations: java.util.Set[EmailSubmissionSetValidation],
                                          val metricFactory: MetricFactory,
                                          val sessionSupplier: SessionSupplier,
                                          val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with Startable {
+  private val validations: Seq[EmailSubmissionSetValidation] = javaValidations.asScala.toSeq
+
   override val methodName: MethodName = MethodName("EmailSubmission/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
   var queue: MailQueue = _
@@ -292,12 +299,30 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         mailImpl.setMessageNoCopy(message)
         mailImpl
       }
+      _ <- applyValidations(mail)
       _ <- enqueue(mail, delay, mailboxSession)
         .`then`(SMono.just(submissionId))
       sendAt = UTCDate(ZonedDateTime.now(clock).plus(delay))
     } yield {
       EmailSubmissionCreationResponse(submissionId, sendAt) -> request.emailId
     }
+
+  /**
+   * Runs the pluggable validations against the mail about to be spooled. The first rejection wins,
+   * subsequent validations are not evaluated. As the mail holds the message content, it needs
+   * disposing whenever it does not reach the queue.
+   */
+  private def applyValidations(mail: Mail): SMono[Mail] =
+    SFlux.fromIterable(validations)
+      .concatMap(_.validate(mail))
+      .filter(_.isDefined)
+      .map(_.get)
+      .next()
+      .flatMap[Mail](setError => SMono.error(EmailSubmissionSetValidationException(setError)))
+      .switchIfEmpty(SMono.just(mail))
+      .onErrorResume(e => SMono.fromCallable(() => LifecycleUtil.dispose(mail))
+        .subscribeOn(Schedulers.boundedElastic())
+        .`then`(SMono.error(e)))
 
   private def enqueue(mail: Mail, delay: Duration, mailboxSession: MailboxSession): SMono[Unit] =
     (delay match {
