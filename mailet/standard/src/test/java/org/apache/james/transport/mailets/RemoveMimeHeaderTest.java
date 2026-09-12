@@ -217,7 +217,7 @@ class RemoveMimeHeaderTest {
     }
 
     @Test
-    void serviceShouldThrowWhenExceptionOccured() throws MessagingException {
+    void serviceShouldThrowWhenExceptionOccurred() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", "")
