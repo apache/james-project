@@ -34,7 +34,7 @@ import com.google.common.base.Preconditions;
 
 public class S3MinioDocker {
 
-    public static final DockerImageName DOCKER_IMAGE_NAME = DockerImageName.parse("minio/minio")
+    public static final DockerImageName DOCKER_IMAGE_NAME = DockerImageName.parse("chibenwa/minio")
         .withTag("RELEASE.2025-06-13T11-33-47Z");
 
     public static final int MINIO_PORT = 9000;
