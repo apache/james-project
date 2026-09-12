@@ -112,7 +112,7 @@ class LogMessageTest {
     }
 
     @Test
-    void serviceShouldLogWhenExceptionOccured() throws Exception {
+    void serviceShouldLogWhenExceptionOccurred() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)
