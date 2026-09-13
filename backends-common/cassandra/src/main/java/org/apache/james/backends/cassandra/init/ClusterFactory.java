@@ -23,12 +23,18 @@ import java.net.InetSocketAddress;
 
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.CqlSessionBuilder;
+import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.google.common.base.Preconditions;
 
 public class ClusterFactory {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClusterFactory.class);
+    private static final boolean TCNATIVE_ENABLED = Boolean.parseBoolean(System.getProperty("james.cassandra.tcnative.enabled", "false"));
 
     public static CqlSession create(ClusterConfiguration configuration, KeyspaceConfiguration keyspaceConfiguration) {
         Preconditions.checkState(configuration.getUsername().isPresent() == configuration.getPassword().isPresent(), "If you specify username, you must specify password");
@@ -44,6 +50,7 @@ public class ClusterFactory {
                 sessionBuilder.withAuthCredentials(username, password)));
 
         sessionBuilder.withLocalDatacenter(configuration.getLocalDC().orElse("datacenter1"));
+        configureTcNative(sessionBuilder);
 
         createKeyspace(keyspaceConfiguration, sessionBuilder);
 
@@ -73,6 +80,7 @@ public class ClusterFactory {
                 sessionBuilder.withAuthCredentials(username, password)));
 
         sessionBuilder.withLocalDatacenter(configuration.getLocalDC().orElse("datacenter1"));
+        configureTcNative(sessionBuilder);
 
         CqlSession session = sessionBuilder.build();
 
@@ -82,6 +90,20 @@ public class ClusterFactory {
         } catch (Exception e) {
             session.close();
             throw e;
+        }
+    }
+
+    private static void configureTcNative(CqlSessionBuilder sessionBuilder) {
+        if (!TCNATIVE_ENABLED) {
+            return;
+        }
+        try (DriverConfigLoader configLoader = DriverConfigLoader.fromDefaults(ClusterFactory.class.getClassLoader())) {
+            DriverExecutionProfile profile = configLoader.getInitialConfig().getDefaultProfile();
+            if (TcNativeSslEngineFactory.supports(profile)) {
+                sessionBuilder.withSslEngineFactory(new TcNativeSslEngineFactory(profile));
+            } else {
+                LOGGER.warn("james.cassandra.tcnative.enabled ignored: requires advanced.ssl-engine-factory.class = DefaultSslEngineFactory without keystore-reload-interval");
+            }
         }
     }
 
