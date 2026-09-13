@@ -644,11 +644,11 @@
         <junit.platform.version>1.13.1</junit.platform.version>
         <junit.vintage.version>5.13.1</junit.vintage.version>
         <concurrent.version>1.3.4</concurrent.version>
-        <netty.version>4.1.126.Final</netty.version>
+        <netty.version>4.1.132.Final</netty.version>
         <cucumber.version>7.23.0</cucumber.version>
 
-        <jackson.version>2.19.1</jackson.version>
-        <jackson.databind.version>2.19.1</jackson.databind.version>
+        <jackson.version>2.22.1</jackson.version>
+        <jackson.databind.version>2.22.2</jackson.databind.version>
         <feign.version>13.6</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
         <jjwt.version>0.12.6</jjwt.version>
@@ -674,11 +674,11 @@
         <guice.version>7.0.0</guice.version>
         <logback.version>1.5.18</logback.version>
         <tink.version>1.17.0</tink.version>
-        <lettuce.core.version>6.7.1.RELEASE</lettuce.core.version>
+        <lettuce.core.version>6.8.2.RELEASE</lettuce.core.version>
         <io.micrometer.core.version>1.15.1</io.micrometer.core.version>
         <io.micrometer.tracing.version>1.5.1</io.micrometer.tracing.version>
 
-        <bouncycastle.version>1.82</bouncycastle.version>
+        <bouncycastle.version>1.85</bouncycastle.version>
 
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.16</scala.version>
@@ -2188,7 +2188,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
-                <version>${jackson.version}</version>
+                <version>2.22</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -2318,7 +2318,7 @@
             <dependency>
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
-                <version>5.25.0</version>
+                <version>5.33.1</version>
             </dependency>
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
@@ -2571,7 +2571,7 @@
             <dependency>
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-bom</artifactId>
-                <version>2024.0.10</version>
+                <version>2024.0.17</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -2693,7 +2693,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-configuration2</artifactId>
-                <version>2.12.0</version>
+                <version>2.15.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-logging</groupId>
@@ -2714,7 +2714,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
-                <version>1.13.1</version>
+                <version>1.15.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.derby</groupId>
@@ -2877,7 +2877,7 @@
             <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
-                <version>1.20.1</version>
+                <version>1.23.2</version>
             </dependency>
             <dependency>
                 <groupId>org.julienrf</groupId>
@@ -3057,7 +3057,7 @@
             <dependency>
                 <groupId>org.zoomba-lang</groupId>
                 <artifactId>spark-core</artifactId>
-                <version>3.0.2</version>
+                <version>3.0.5</version>
             </dependency>
             <dependency>
                 <groupId>pl.pragmatists</groupId>
