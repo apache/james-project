@@ -17,32 +17,45 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.smtpserver.smtputf8;
+package org.apache.james.protocols.smtp.core.esmtp;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPSession;
-import org.apache.james.protocols.smtp.core.esmtp.EhloExtension;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
-import org.apache.mailet.Experimental;
 
-import com.google.common.collect.ImmutableList;
+/**
+ * RFC 6531 SMTPUTF8 extension.
+ *
+ * Advertises the {@code SMTPUTF8} EHLO keyword and parses the {@code SMTPUTF8}
+ * parameter on {@code MAIL FROM}. The parameter takes no value; its presence
+ * on a transaction authorises the use of UTF-8 in the envelope addresses.
+ *
+ * Gating of UTF-8 addresses themselves lives in {@code MailCmdHandler} /
+ * {@code RcptCmdHandler}, which reject non-ASCII addresses with 553 5.6.7
+ * when {@link SMTPSession#SMTPUTF8_REQUESTED} is not set.
+ */
+public class SMTPUTF8Extension implements MailParametersHook, EhloExtension {
 
-@Experimental
-public class SmtpUtf8MailHook implements MailParametersHook, EhloExtension {
+    private static final String[] MAIL_PARAMS = { "SMTPUTF8" };
+    private static final List<String> FEATURES = Collections.singletonList("SMTPUTF8");
+
     @Override
     public HookResult doMailParameter(SMTPSession session, String paramName, String paramValue) {
-        return HookResult.DECLINED;
+        session.setAttachment(SMTPSession.SMTPUTF8_REQUESTED, Boolean.TRUE, State.Transaction);
+        return null;
     }
 
     @Override
     public String[] getMailParamNames() {
-        return new String[]{"SMTPUTF8"};
+        return MAIL_PARAMS;
     }
 
     @Override
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
-        return ImmutableList.of("SMTPUTF8");
+        return FEATURES;
     }
 }

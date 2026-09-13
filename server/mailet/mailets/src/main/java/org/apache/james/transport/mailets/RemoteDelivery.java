@@ -152,6 +152,21 @@ import com.google.common.collect.ImmutableMap;
  * or use the <i>mail.smtps.ssl.checkserveridentity</i> and <i>mail.smtp.ssl.checkserveridentity</i> javax properties for fine control.<br/>
  * Read <a href="https://eclipse-ee4j.github.io/angus-mail/docs/api/org.eclipse.angus.mail/org/eclipse/angus/mail/smtp/package-summary.html"><code>org.eclipse.angus.mail.smtp</code></a>
  * for full information.
+ * <br/>
+ * <b>SMTPUTF8 (RFC 6531):</b> when the first MX we reach advertises
+ * SMTPUTF8 and the envelope contains any non-ASCII character, the
+ * extension is asserted on MAIL FROM and UTF-8 addresses flow through
+ * unchanged. When the MX lacks SMTPUTF8 and only the domain parts are
+ * non-ASCII, those domains are converted to their ACE (A-label, xn--)
+ * form for the envelope commands; the message headers themselves are
+ * still allowed to carry UTF-8 (Subject, display names, etc.). This can
+ * produce a transaction where RCPT TO carries punycode but the mail
+ * headers carry UTF-8 — that mismatch is a fair compromise that
+ * optimises handling on the receiver side: a receiver that cannot speak
+ * SMTPUTF8 still accepts the envelope it understands, and a receiver
+ * that can read UTF-8 headers (most do) gets them intact. When a local
+ * part is non-ASCII and the MX lacks SMTPUTF8 the transaction fails
+ * permanently — no lossless downgrade exists.
  */
 public class RemoteDelivery extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDelivery.class);

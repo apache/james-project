@@ -138,6 +138,22 @@ public class SMTPMessageSender extends ExternalResource implements Closeable, Af
         return this;
     }
 
+    /**
+     * Opens the transaction with EHLO and asserts the SMTPUTF8 extension (RFC 6531), which is
+     * required whenever the envelope carries non-ASCII addresses.
+     */
+    public SMTPMessageSender sendMessageWithHeadersSmtpUtf8(String from, String recipient, String message) throws IOException {
+        return sendMessageWithHeadersSmtpUtf8(from, ImmutableList.of(recipient), message);
+    }
+
+    public SMTPMessageSender sendMessageWithHeadersSmtpUtf8(String from, List<String> recipients, String message) throws IOException {
+        doEhlo();
+        doSetSenderSmtpUtf8(from);
+        recipients.forEach(Throwing.consumer(this::doAddRcpt).sneakyThrow());
+        doData(message);
+        return this;
+    }
+
     public SMTPMessageSender sendMessageNoSender(String from, String recipient) throws IOException {
         doHelo();
         doSetSender("");
@@ -183,6 +199,20 @@ public class SMTPMessageSender extends ExternalResource implements Closeable, Af
         boolean success = smtpClient.setSender(from);
         if (!success) {
             throw new SMTPSendingException(SmtpSendingStep.Sender, smtpClient.getReplyString());
+        }
+    }
+
+    private void doSetSenderSmtpUtf8(String from) throws IOException {
+        int code = smtpClient.mail("<" + from + "> SMTPUTF8");
+        if (code != 250) {
+            throw new SMTPSendingException(SmtpSendingStep.Sender, smtpClient.getReplyString());
+        }
+    }
+
+    private void doEhlo() throws IOException {
+        int code = smtpClient.ehlo(senderDomain);
+        if (code != 250) {
+            throw new SMTPSendingException(SmtpSendingStep.Helo, smtpClient.getReplyString());
         }
     }
 

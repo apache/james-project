@@ -72,7 +72,7 @@ class SmtpRequireTlsMessageHookTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(client.getReplyCode()).isEqualTo(250);
-            softly.assertThat(client.getReplyString()).contains("250 REQUIRETLS");
+            softly.assertThat(client.getReplyString()).contains("250-REQUIRETLS");
         });
     }
 

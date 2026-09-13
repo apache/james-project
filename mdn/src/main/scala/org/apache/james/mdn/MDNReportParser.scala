@@ -111,13 +111,17 @@ class MDNReportParser(val input: ParserInput) extends Parser {
   private def uaName: Rule0 = rule { zeroOrMore(textNoSemi) }
 
   /*    text-no-semi = %d1-9 /        ; "text" characters excluding NUL, CR,
-                             %d11 / %d12 / %d14-58 / %d60-127      ; LF, or semi-colon    */
+                             %d11 / %d12 / %d14-58 / %d60-127      ; LF, or semi-colon
+
+        RFC 6533 3.2 widens "text" to UTF-8, so anything above US-ASCII is
+        accepted too (parboiled matches UTF-16 code units; surrogate pairs are
+        each in that range).    */
   private def textNoSemi: Rule0 = rule {
     CharPredicate(1.toChar to 9.toChar) |
       ch(11) |
       ch(12) |
       CharPredicate(14.toChar to 58.toChar) |
-      CharPredicate(60.toChar to 127.toChar)
+      CharPredicate.from(c => c >= 60.toChar && c != EOI)
   }
 
   //    ua-product = *([FWS] text)
@@ -126,12 +130,15 @@ class MDNReportParser(val input: ParserInput) extends Parser {
   /*   text            =   %d1-9 /            ; Characters excluding CR
                                  %d11 /             ;  and LF
                                  %d12 /
-                                 %d14-127   */
+                                 %d14-127
+
+       RFC 6533 3.2 widens this to UTF-8 for the global-disposition-notification
+       form, hence everything above US-ASCII is accepted as well.   */
   private def text = rule {
     CharPredicate(1.toChar to 9.toChar) |
       ch(11) |
       ch(12) |
-      CharPredicate(14.toChar to 127.toChar)
+      CharPredicate.from(c => c >= 14.toChar && c != EOI)
   }
 
   /*    OWS = [CFWS]

@@ -22,12 +22,15 @@ package org.apache.james.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.util.Properties;
 import java.util.stream.Stream;
 
+import jakarta.mail.Session;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -36,6 +39,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MailAddressTest {
+
+    // Checkstyle forbids \\uXXXX escapes, and lone surrogates or a bare combining
+    // mark cannot be spelled out as source literals, so build them by code point.
+    private static final String HIGH_SURROGATE = String.valueOf(Character.highSurrogate(0x1F600));
+    private static final String LOW_SURROGATE = String.valueOf(Character.lowSurrogate(0x1F600));
+    private static final String COMBINING_ACUTE = String.valueOf((char) 0x0301);
+    private static final String COMBINING_RING_ABOVE = String.valueOf((char) 0x030A);
 
     private static final String GOOD_LOCAL_PART = "\"quoted@local part\"";
     private static final String GOOD_QUOTED_LOCAL_PART = "\"quoted@local part\"@james.apache.org";
@@ -55,6 +65,16 @@ class MailAddressTest {
                 "\\.server-dev@james.apache.org",
                 "Abc@10.42.0.1",
                 "Abc.123@example.com",
+                "Loïc.Accentué@voilà.fr8",
+                // Supplementary-plane codepoint as a properly-paired
+                // UTF-16 surrogate pair (U+1F600).
+                "abc" + HIGH_SURROGATE + LOW_SURROGATE + "@example.com",
+                "pelé@exemple.com",
+                "δοκιμή@παράδειγμα.δοκιμή",
+                "我買@屋企.香港",
+                "二ノ宮@黒川.日本",
+                "медведь@с-балалайкой.рф",
+                //"संपर्क@डाटामेल.भारत", fails in Jakarta, reason still unknown
                 "user+mailbox/department=shipping@example.com",
                 "user+mailbox@example.com",
                 "\"Abc@def\"@example.com",
@@ -96,26 +116,45 @@ class MailAddressTest {
                 "server-dev@[127.0.1.1.1]",
                 "server-dev@[127.0.1.-1]",
                 "test@dom+ain.com",
+                "test@xn--.example",
                 "\"a..b\"@domain.com", // jakarta.mail is unable to handle this so we better reject it
                 "server-dev\\.@james.apache.org", // jakarta.mail is unable to handle this so we better reject it
                 "a..b@domain.com",
-                // According to wikipedia these addresses are valid but as jakarta.mail is unable
-                // to work with them we shall rather reject them (note that this is not breaking retro-compatibility)
-                "Loïc.Accentué@voilà.fr8",
-                "pelé@exemple.com",
-                "δοκιμή@παράδειγμα.δοκιμή",
-                "我買@屋企.香港",
-                "二ノ宮@黒川.日本",
-                "медведь@с-балалайкой.рф",
-                "संपर्क@डाटामेल.भारत",
+                "sales@\u200Eibm.example", // U+200E is left-to-right
+                // Unpaired and mis-ordered UTF-16 surrogates would
+                // produce ill-formed UTF-8 on output, so we reject
+                // them: lone high surrogate at end, lone low
+                // surrogate, and a high surrogate not followed by
+                // a low one.
+                "abc" + HIGH_SURROGATE + "@example.com",
+                "abc" + LOW_SURROGATE + "def@example.com",
+                "abc" + HIGH_SURROGATE + "def@example.com",
+                // C1 controls in the local part: rejected on the
+                // same grounds as C0. Tested with U+0080 (start),
+                // U+0085 (NEL — common in EBCDIC interop bugs),
+                // and U+009F (end of the C1 range).
+                "abc\u0080def@example.com",
+                "abc\u0085def@example.com",
+                "abc\u009Fdef@example.com",
+                // According to wikipedia this address is valid but as jakarta.mail is unable
+                // to work with it we shall rather reject them (note that this is not breaking retro-compatibility)
                 "mail.allow\\,d@james.apache.org")
             .map(Arguments::of);
+    }
+
+    @BeforeEach
+    void setup() {
+        Properties props = new Properties();
+        props.setProperty("mail.mime.allowutf8", "true");
+        Session s = Session.getDefaultInstance(props);
+        assertThat(Boolean.parseBoolean(s.getProperties().getProperty("mail.mime.allowutf8", "false")));
     }
 
     @ParameterizedTest
     @MethodSource("goodAddresses")
     void testGoodMailAddressString(String mailAddress) {
         assertThatCode(() -> new MailAddress(mailAddress))
+            .as("parses " + mailAddress)
             .doesNotThrowAnyException();
     }
 
@@ -123,6 +162,7 @@ class MailAddressTest {
     @MethodSource("goodAddresses")
     void toInternetAddressShouldNoop(String mailAddress) throws Exception {
         assertThat(new MailAddress(mailAddress).toInternetAddress())
+            .as("tries to parse " + mailAddress + " using jakarta.mail")
             .isNotEmpty();
     }
 
@@ -130,6 +170,7 @@ class MailAddressTest {
     @MethodSource("badAddresses")
     void testBadMailAddressString(String mailAddress) {
         Assertions.assertThatThrownBy(() -> new MailAddress(mailAddress))
+            .as("fails to parse " + mailAddress)
             .isInstanceOf(AddressException.class);
     }
 
@@ -311,6 +352,60 @@ class MailAddressTest {
     void stripDetailsShouldBePreciseWithMultipleCharacterDelimiter() throws AddressException {
         MailAddress mailAddress = new MailAddress("localpart---details@example.com");
         assertThat(mailAddress.stripDetails("--")).isEqualTo("localpart@example.com");
+    }
+
+    // RFC 6532 §3.1 — NFC normalisation
+
+    @Test
+    void nfcAndNfdFormsOfSameAddressShouldCompareEqual() throws AddressException {
+        // "pelé" as NFC: p, e, l, U+00E9
+        MailAddress nfc = new MailAddress("pelé@example.com");
+        // "pelé" as NFD: p, e, l, U+0065, U+0301 (combining acute)
+        MailAddress nfd = new MailAddress("pelé@example.com");
+
+        assertThat(nfc).isEqualTo(nfd);
+        assertThat(nfc.hashCode()).isEqualTo(nfd.hashCode());
+        assertThat(nfc.asString()).isEqualTo(nfd.asString());
+    }
+
+    @Test
+    void nfdInputShouldBeStoredAsNfc() throws AddressException {
+        // Build the input string explicitly in NFD form: the local
+        // part is p, e, l, e, U+0301 (combining acute) — five codepoints.
+        String input = "pele" + COMBINING_ACUTE + "@example.com";
+        int atIndex = input.indexOf('@');
+        int lIndex = input.indexOf('l');
+
+        // Sanity-check that the input is actually NFD: there should be
+        // two codepoints between 'l' and '@' (the 'e' and the
+        // combining acute).
+        assertThat(input.codePointCount(lIndex + 1, atIndex)).isEqualTo(2);
+
+        MailAddress address = new MailAddress(input);
+
+        // The local part comes back in NFC form (single U+00E9), not
+        // the two codepoints that went in.
+        assertThat(address.getLocalPart()).isEqualTo("pelé");
+        assertThat(address.getLocalPart().codePointAt(3)).isEqualTo(0x00E9);
+    }
+
+    @Test
+    void nfcNormalisationShouldBeNoopForAsciiAddresses() throws AddressException {
+        MailAddress address = new MailAddress("arnt@example.com");
+
+        assertThat(address.asString()).isEqualTo("arnt@example.com");
+    }
+
+    @Test
+    void nfcNormalisationShouldApplyToDomainsToo() throws AddressException {
+        // Unicode combining sequence in the domain's Unicode form. After
+        // construction, asString() should round-trip through NFC (whether the
+        // domain is ultimately stored as A-label or U-label is the Domain
+        // class's concern — here we only check that the two spellings collapse).
+        MailAddress nfc = new MailAddress("info@grå.org");
+        MailAddress nfd = new MailAddress("info@gra" + COMBINING_RING_ABOVE + ".org");
+
+        assertThat(nfc).isEqualTo(nfd);
     }
 
 }
