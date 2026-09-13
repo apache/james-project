@@ -93,7 +93,7 @@ public class CassandraReIndexerImplTest {
         MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(INBOX, systemSession);
 
-        byte[] bigBody = (Strings.repeat("header: value\r\n", 10000) + "\r\nbody").getBytes(StandardCharsets.UTF_8);
+        byte[] bigBody = ("header: value\r\n\r\n" + Strings.repeat("0123456789 body value\r\n", 6500)).getBytes(StandardCharsets.UTF_8);
 
         int threadCount = 10;
         int operationCount = 100;

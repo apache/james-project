@@ -320,7 +320,10 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         ComposedMessageId composedMessageId = messageManager.appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo(recipient)
-                    .setSubject(Strings.repeat("0123456789", 5000))
+                    // 35.000 bytes: over the 32.766 bytes Lucene limit for a raw indexed term, thus exercising
+                    // subject truncation, while the resulting encoded header stays below the 65.536 bytes
+                    // header length limit MIME4J enforces.
+                    .setSubject(Strings.repeat("0123456789", 3500))
                     .setBody("0123456789", StandardCharsets.UTF_8)),
             session).getId();
 

@@ -75,8 +75,8 @@ import ch.qos.logback.core.read.ListAppender;
 
 @SuppressWarnings("checkstyle:membername")
 abstract class AbstractIMAPServerTest {
-    protected static final String _129K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(13107);
-    protected static final String _65K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(6553);
+    protected static final String _129K_MESSAGE = "header: value\r\n\r\n" + "012345678\r\n".repeat(13107);
+    protected static final String _65K_MESSAGE = "header: value\r\n\r\n" + "012345678\r\n".repeat(6553);
     protected static final Username USER = Username.of("user@domain.org");
     protected static final Username USER2 = Username.of("bobo@domain.org");
     protected static final Username USER3 = Username.of("user3@domain.org");
