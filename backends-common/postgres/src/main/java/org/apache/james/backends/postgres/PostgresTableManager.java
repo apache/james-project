@@ -20,6 +20,7 @@
 package org.apache.james.backends.postgres;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import jakarta.inject.Inject;
 
@@ -28,12 +29,14 @@ import org.apache.james.lifecycle.api.Startable;
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import io.r2dbc.spi.Connection;
+import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -42,14 +45,21 @@ public class PostgresTableManager implements Startable {
     public static final int INITIALIZATION_PRIORITY = 1;
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresTableManager.class);
     private final PostgresExecutor postgresExecutor;
+    private final Supplier<Publisher<? extends Connection>> extensionConnectionSupplier;
     private final PostgresDataDefinition module;
     private final RowLevelSecurity rowLevelSecurity;
 
+    /**
+     * @param connectionFactory the non pooled factory the pool of {@code postgresExecutor} is backed by. The hstore
+     *                          extension is created with it, see {@link #initializePostgresExtension()}.
+     */
     @Inject
     public PostgresTableManager(PostgresExecutor postgresExecutor,
+                                ConnectionFactory connectionFactory,
                                 PostgresDataDefinition module,
                                 PostgresConfiguration postgresConfiguration) {
         this.postgresExecutor = postgresExecutor;
+        this.extensionConnectionSupplier = connectionFactory::create;
         this.module = module;
         this.rowLevelSecurity = postgresConfiguration.getRowLevelSecurity();
     }
@@ -57,6 +67,7 @@ public class PostgresTableManager implements Startable {
     @VisibleForTesting
     public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresDataDefinition module, RowLevelSecurity rowLevelSecurity) {
         this.postgresExecutor = postgresExecutor;
+        this.extensionConnectionSupplier = () -> postgresExecutor.connectionFactory().getConnection();
         this.module = module;
         this.rowLevelSecurity = rowLevelSecurity;
     }
@@ -69,13 +80,12 @@ public class PostgresTableManager implements Startable {
     }
 
     public Mono<Void> initializePostgresExtension() {
-        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(),
-            connection -> Mono.just(connection)
-                .flatMapMany(pgConnection -> pgConnection.createStatement("CREATE EXTENSION IF NOT EXISTS hstore")
+        return Mono.usingWhen(extensionConnectionSupplier.get(), // Not pooled: r2dbc only registers the hstore codec on connections opened after the extension exists
+            connection -> Flux.from(connection.createStatement("CREATE EXTENSION IF NOT EXISTS hstore")
                     .execute())
                 .flatMap(Result::getRowsUpdated)
                 .then(),
-            connection -> postgresExecutor.connectionFactory().closeConnection(connection));
+            Connection::close);
     }
 
     public Mono<Void> initializeTables() {
