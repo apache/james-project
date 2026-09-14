@@ -70,7 +70,11 @@ class ExportServiceTest {
         "Content-Type: text/plain; charset=UTF-8\r\n" +
         "\r\n" +
         "testmail";
-    private static final String TWELVE_MEGABYTES_STRING = Strings.repeat("0123456789\r\n", 1024 * 1024);
+    private static final String TWELVE_MEGABYTES_STRING = "MIME-Version: 1.0\r\n" +
+        "Subject: test\r\n" +
+        "Content-Type: text/plain; charset=UTF-8\r\n" +
+        "\r\n" +
+        Strings.repeat("0123456789\r\n", 1024 * 1024);
     private static final String FILE_PREFIX = "mailbox-backup-";
     private static final BlobId.Factory FACTORY = new PlainBlobId.Factory();
 
