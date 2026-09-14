@@ -125,19 +125,6 @@ following command, and drop `--generate-keystore` option:
 $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 ----
 
-=== Instrumentation
-You can use link:https://glowroot.org/[Glowroot] to instrumentalize James. It is packaged as part of the docker distribution to easily enable valuable performances insights.
-Disabled by default, its java agent can easily be enabled:
-
-    --env "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" -p "4000:4000"
-
-By default, the Glowroot UI is accessible from every machines in the network as defined in the _destination/admin.json_.
-Which you could configure before building the image, if you want to restrict its accessibility to localhost for example.
-See the https://github.com/glowroot/glowroot/wiki/Agent-Installation-(with-Embedded-Collector)#user-content-optional-post-installation-steps[Glowroot post installation steps]  for more details.
-
-Or by mapping the 4000 port to the IP of the desired network interface, for example `-p 127.0.0.1:4000:4000`.
-
-
 === Handling attachment indexing
 
 You can handle attachment text extraction before indexing in OpenSearch. This makes attachments searchable. To enable this:

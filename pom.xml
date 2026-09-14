@@ -3173,11 +3173,6 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>com.googlecode.maven-download-plugin</groupId>
-                    <artifactId>download-maven-plugin</artifactId>
-                    <version>1.13.0</version>
-                </plugin>
-                <plugin>
                     <groupId>com.gradle</groupId>
                     <artifactId>develocity-maven-extension</artifactId>
                     <configuration>

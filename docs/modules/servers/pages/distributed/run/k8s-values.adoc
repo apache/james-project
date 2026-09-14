@@ -94,9 +94,6 @@ allocation when starting James
 |jamesResources.requests.memory |3Gi |Request of memory allowed to James
 pod
 
-|glowroot.enabled |true |Enabling or disabling Glowroot usage with
-James. It’s better to disable it for prod environments
-
 |ingress.enabled |false |Enabling or disabling Ingress. We are
 using it to expose JMAP and attach our SSL certificates for
 SMTP/IMAP/JMAP. Default is false

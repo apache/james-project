@@ -128,14 +128,6 @@
                                     }
                                 }
                             }
-                        },
-                        "glowroot": {
-                            "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "type": "boolean"
-                                }
-                            }
                         }
                     },
                     "required": [
@@ -157,8 +149,7 @@
                         "jamesHELOMessage",
                         "cassandraReplicationFactor",
                         "jvmOpts",
-                        "jamesResources",
-                        "glowroot"
+                        "jamesResources"
                     ],
                     "additionalProperties": false
                 },

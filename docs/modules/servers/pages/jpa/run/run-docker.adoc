@@ -59,14 +59,6 @@ The xref:jpa/operate/cli.adoc[CLI] can easily be used:
 $ docker exec CONTAINER-ID james-cli ListDomains
 ----
 
-link:https://glowroot.org/[Glowroot APM] is packaged as part of the docker distribution to easily enable valuable
-performance insights. Disabled by default, its java agent can easily be enabled:
-
-[source,bash]
-----
-$ docker run -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:jpa-latest
-----
-
 == Running via docker-compose
 
 We do ship a

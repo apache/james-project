@@ -203,47 +203,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>com.googlecode.maven-download-plugin</groupId>
-                <artifactId>download-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>install-glowroot</id>
-                        <goals>
-                            <goal>wget</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                            <url>https://github.com/glowroot/glowroot/releases/download/v0.14.0/glowroot-0.14.0-dist.zip</url>
-                            <unpack>true</unpack>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
-                            <md5>16073f10204751cd71d3b4ea93be2649</md5>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-glowroot-resources</id>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                            <outputDirectory>${basedir}/target/glowroot</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/main/glowroot</directory>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
@@ -284,8 +243,6 @@
                             <!-- SMTP + STARTTLS -->
                             <port>587</port>
                             <!-- SMTPS -->
-                            <port>4000</port>
-                            <!-- GLOWROOT, if activated -->
                             <port>8000</port>
                             <!-- WEBADMIN -->
                         </ports>
@@ -305,8 +262,6 @@
                             <volume>/root/var</volume>
                             <!-- Data for H2 database -->
                             <volume>/var/store</volume>
-                            <volume>/root/glowroot/plugins</volume>
-                            <volume>/root/glowroot/data</volume>
                             <volume>/root/extensions-jars</volume>
                         </volumes>
                         <extraClasspath>/root/libs/james-jdbc-driver.jar</extraClasspath>
@@ -324,10 +279,6 @@
                             <path>
                                 <from>src/main/scripts</from>
                                 <into>/usr/bin</into>
-                            </path>
-                            <path>
-                                <from>target/glowroot</from>
-                                <into>/root</into>
                             </path>
                             <path>
                                 <from>src/main/extensions-jars</from>

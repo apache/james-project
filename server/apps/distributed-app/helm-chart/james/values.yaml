@@ -30,8 +30,6 @@ james:
     cassandraReplicationFactor: 3
     jamesHELOMessage: "change-me"
     jvmOpts: "-Xms3g -Xmx3g"
-    glowroot:
-      enabled: false
     jamesResources:
       limits:
         cpu: "2000m"
