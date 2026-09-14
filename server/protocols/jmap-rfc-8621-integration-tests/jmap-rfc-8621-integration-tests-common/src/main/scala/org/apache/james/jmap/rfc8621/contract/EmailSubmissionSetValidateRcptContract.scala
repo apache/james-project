@@ -20,16 +20,21 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.JmapRfc8621Configuration
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.EmailSubmissionSetValidateRcptContract.TestContext
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxPath
@@ -39,6 +44,10 @@ import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 
 object EmailSubmissionSetValidateRcptContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username)
+
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+
   val configuration: JmapRfc8621Configuration = JmapRfc8621Configuration(
     urlPrefixString = "http://127.0.0.1",
     websocketPrefixString = "ws://127.0.0.1",
@@ -49,25 +58,37 @@ object EmailSubmissionSetValidateRcptContract {
  * `EmailSubmission/set` behaviour when `send.validate.rcpt` is turned on.
  */
 trait EmailSubmissionSetValidateRcptContract {
+  private def bob: Username = EmailSubmissionSetValidateRcptContract.currentContext.get().bobUsername
+  private def bobAccountId: String = EmailSubmissionSetValidateRcptContract.currentContext.get().bobAccountId
+  private def andre: Username = EmailSubmissionSetValidateRcptContract.currentContext.get().andreUsername
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    EmailSubmissionSetValidateRcptContract.currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = Hashing.sha256().hashString(bob.asString, StandardCharsets.UTF_8).toString,
+      andreUsername = andre))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString, ANDRE_PASSWORD)
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS))
+      .createMailbox(MailboxPath.forUser(bob, DefaultMailboxes.DRAFTS))
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
   @Test
   def setShouldAcceptRecipientHavingALocalMailbox(server: GuiceJamesServer): Unit =
-    assertThatJson(submit(server, ANDRE.asString))
+    assertThatJson(submit(server, andre.asString))
       .inPath("methodResponses[0][1].created")
       .isObject
       .containsKey("k1490")
@@ -82,9 +103,9 @@ trait EmailSubmissionSetValidateRcptContract {
   @Test
   def setShouldAcceptRecipientResolvedByRecipientRewriteTable(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DataProbeImpl])
-      .addAddressMapping("alias", DOMAIN.asString, ANDRE.asString)
+      .addAddressMapping(s"alias-${andre.getLocalPart}", DOMAIN.asString, andre.asString)
 
-    assertThatJson(submit(server, s"alias@${DOMAIN.asString}"))
+    assertThatJson(submit(server, s"alias-${andre.getLocalPart}@${DOMAIN.asString}"))
       .inPath("methodResponses[0][1].created")
       .isObject
       .containsKey("k1490")
@@ -104,7 +125,7 @@ trait EmailSubmissionSetValidateRcptContract {
 
   @Test
   def setShouldRejectTheWholeSubmissionWhenASingleRecipientIsInvalid(server: GuiceJamesServer): Unit =
-    assertThatJson(submit(server, ANDRE.asString, s"unknown@${DOMAIN.asString}"))
+    assertThatJson(submit(server, andre.asString, s"unknown@${DOMAIN.asString}"))
       .inPath("methodResponses[0][1].notCreated")
       .isEqualTo(s"""{
                     |  "k1490": {
@@ -118,14 +139,14 @@ trait EmailSubmissionSetValidateRcptContract {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString)
-      .setFrom(BOB.asString)
+      .setSender(bob.asString)
+      .setFrom(bob.asString)
       .setTo(recipients: _*)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS), AppendCommand.builder().build(message))
+      .appendMessage(bob.asString, MailboxPath.forUser(bob, DefaultMailboxes.DRAFTS), AppendCommand.builder().build(message))
       .getMessageId
 
     val rcptTo = recipients.map(recipient => s"""{"email": "$recipient"}""").mkString(", ")
@@ -134,12 +155,12 @@ trait EmailSubmissionSetValidateRcptContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
-         |             "mailFrom": {"email": "${BOB.asString}"},
+         |             "mailFrom": {"email": "${bob.asString}"},
          |             "rcptTo": [$rcptTo]
          |           }
          |         }
