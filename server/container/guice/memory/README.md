@@ -39,12 +39,6 @@ to pass extra JVM flags. For instance:
 docker run -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:memory-latest
 ```
 
-[Glowroot APM](https://glowroot.org/) is packaged as part of the docker distribution to easily enable valuable performances insights.
-Disabled by default, its java agent can easily be enabled:
-
-```
-docker run -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:memory-latest
-```
 The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
 
 ```
