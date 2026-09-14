@@ -43,6 +43,6 @@ public class MemoryEmailSubmissionSetValidateRcptTest implements EmailSubmission
             .overrideWith(binder -> binder.bind(JmapRfc8621Configuration.class)
                 .toInstance(EmailSubmissionSetValidateRcptContract.configuration()))
             .overrideWith(new TestJMAPServerModule()))
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
