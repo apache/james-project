@@ -136,7 +136,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 echo 'Deploying'
-                sh 'mvn -B -e deploy -Pdeploy -DskipTests -T1C ${MVN_LOCAL_REPO_OPT}'
+                sh 'mvn -B -e deploy -Pdeploy -DskipTests -DdeployAtEnd=true -T1C ${MVN_LOCAL_REPO_OPT}'
             }
         }
    }
