@@ -54,6 +54,15 @@ Falls back to default read consistency level if the blob is missing. Defaults to
 
 |===
 
+== Native TLS (tcnative)
+
+Set `james.cassandra.tcnative.enabled=true` in *jvm.properties* to encrypt Cassandra client connections with BoringSSL
+(Netty tcnative) instead of the JDK. This requires `netty-tcnative-boringssl-static` on the classpath.
+
+It only applies when *cassandra-driver.conf* uses `advanced.ssl-engine-factory.class = DefaultSslEngineFactory` without
+`keystore-reload-interval`. The truststore, keystore, hostname validation and cipher suite options stay the same.
+Otherwise, a warning is logged and the JDK implementation is kept.
+
 == Cassandra Mailbox Configuration
 
 *cassandra.properties* file furthermore expose some options to tune the Cassandra Mailbox behaviour.
