@@ -35,7 +35,7 @@ public interface CassandraBlobCacheDataDefinition {
         .table(TABLE_NAME)
         .options(options -> options
             .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
-            .withCompression("LZ4Compressor", 8, 1.0))
+            .withLZ4Compression(8))
         .comment("Write through cache for small blobs stored in a slower blob store implementation.")
         .statement(statement ->  types -> statement
             .withPartitionKey(ID, DataTypes.TEXT)
