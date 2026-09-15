@@ -80,13 +80,8 @@ public class DomainMappingsRoutes implements Routes {
     public HaltException addDomainMapping(Request request, Response response) throws RecipientRewriteTableException {
         MappingSource mappingSource = mappingSourceFrom(request);
         Domain destinationDomain = extractDomain(request.body());
-        addAliasDomainMapping(mappingSource, destinationDomain);
-        return halt(HttpStatus.NO_CONTENT_204);
-    }
-
-    private void addAliasDomainMapping(MappingSource source, Domain destinationDomain) throws RecipientRewriteTableException {
         try {
-            recipientRewriteTable.addDomainAliasMapping(source, destinationDomain);
+            recipientRewriteTable.addDomainMapping(mappingSource, destinationDomain);
         } catch (SourceDomainIsNotInDomainListException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
@@ -94,6 +89,7 @@ public class DomainMappingsRoutes implements Routes {
                 .message(e.getMessage())
                 .haltError();
         }
+        return halt(HttpStatus.NO_CONTENT_204);
     }
 
     public HaltException removeDomainMapping(Request request, Response response) throws RecipientRewriteTableException {
