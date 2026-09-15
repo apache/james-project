@@ -174,6 +174,30 @@ class DomainMappingsRoutesTest {
         }
 
         @Test
+        void getDomainMappingsShouldReturnCreatedMappings() throws RecipientRewriteTableException {
+            String source = "from.com";
+            String target = "to.com";
+
+            with()
+                .body(target)
+                .put(source);
+
+            Map<String, List<String>> map =
+                when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                .extract()
+                    .body()
+                    .jsonPath()
+                    .getMap(".");
+
+            assertThat(map)
+                .containsOnly(entry(source, ImmutableList.of(target)));
+        }
+
+        @Test
         void getDomainMappingsEmptyMappingsAreFilteredOut() throws RecipientRewriteTableException {
             MappingSource nonEmptyMapping = MappingSource.fromDomain(Domain.of("abc.com"));
             MappingSource emptyMapping = MappingSource.fromDomain(Domain.of("def.com"));
@@ -205,12 +229,14 @@ class DomainMappingsRoutesTest {
         void getDomainMappingsShouldFilterNonDomainMappings() throws RecipientRewriteTableException {
             MappingSource mappingSource = MappingSource.fromDomain(Domain.of("abc.com"));
             String address = "addr@domain.com";
+            Domain domain = Domain.of("domain.com");
 
             recipientRewriteTable.addAddressMapping(mappingSource, address);
             recipientRewriteTable.addForwardMapping(mappingSource, address);
             recipientRewriteTable.addErrorMapping(mappingSource, address);
             recipientRewriteTable.addGroupMapping(mappingSource, address);
             recipientRewriteTable.addRegexMapping(mappingSource, address);
+            recipientRewriteTable.addDomainAliasMapping(mappingSource, domain);
 
             when()
                 .get()
