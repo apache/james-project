@@ -22,6 +22,7 @@ package org.apache.james.imap.encode.base;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -67,6 +68,8 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     private final FastByteArrayOutputStream buffer;
 
     private boolean skipNextSpace;
+
+    private boolean utf8Accepted = false;
 
     // Text chunks and literals gathered to be emitted as a single SequencedLiteral (one flush, no copy). Null until a literal is buffered.
     private List<Literal> pendingLiteralParts;
@@ -260,7 +263,21 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     
     @Override
     public ImapResponseComposer mailbox(String mailboxName) throws IOException {
-        quote(ModifiedUtf7.encodeModifiedUTF7(mailboxName));
+        if (utf8Accepted) {
+            quote(mailboxName);
+        } else {
+            quote(ModifiedUtf7.encodeModifiedUTF7(mailboxName));
+        }
+        return this;
+    }
+
+    /**
+     * Per RFC 9755, when the client has ENABLEd UTF8=ACCEPT the server emits
+     * mailbox names and other strings as UTF-8 octets (not Modified UTF-7).
+     * Set this once per composer, from {@code ImapSession#utf8Enabled()}.
+     */
+    public ImapResponseComposerImpl setUtf8Accepted(boolean utf8Accepted) {
+        this.utf8Accepted = utf8Accepted;
         return this;
     }
 
@@ -272,19 +289,27 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     @Override
     public ImapResponseComposer quote(String message) throws IOException {
         space();
-        final int length = message.length();
-       
         buffer.write(BYTE_DQUOTE);
-        for (int i = 0; i < length; i++) {
-            char character = message.charAt(i);
-            if (character == ImapConstants.BACK_SLASH || character == DQUOTE) {
-                buffer.write(BYTE_BACK_SLASH);
+        if (utf8Accepted) {
+            for (byte b : message.getBytes(StandardCharsets.UTF_8)) {
+                if (b == BYTE_BACK_SLASH || b == BYTE_DQUOTE) {
+                    buffer.write(BYTE_BACK_SLASH);
+                }
+                buffer.write(b);
             }
-            // 7-bit ASCII only
-            if (character >= 128) {
-                buffer.write(BYTE_QUESTION);
-            } else {
-                buffer.write((byte) character);
+        } else {
+            final int length = message.length();
+            for (int i = 0; i < length; i++) {
+                char character = message.charAt(i);
+                if (character == ImapConstants.BACK_SLASH || character == DQUOTE) {
+                    buffer.write(BYTE_BACK_SLASH);
+                }
+                // 7-bit ASCII only
+                if (character >= 128) {
+                    buffer.write(BYTE_QUESTION);
+                } else {
+                    buffer.write((byte) character);
+                }
             }
         }
         buffer.write(BYTE_DQUOTE);

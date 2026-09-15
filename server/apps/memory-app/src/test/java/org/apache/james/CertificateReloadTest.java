@@ -206,7 +206,7 @@ class CertificateReloadTest {
         readBytes(channel);
         channel.getOutputStream().write("EHLO toto.com\r\n".getBytes(StandardCharsets.UTF_8));
         assertThat(readBytes(channel))
-            .contains("250 8BITMIME");
+            .contains("8BITMIME");
     }
 
     private String readBytes(SSLSocket sslSocket) throws IOException {

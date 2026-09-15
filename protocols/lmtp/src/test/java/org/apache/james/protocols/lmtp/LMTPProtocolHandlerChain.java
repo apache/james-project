@@ -42,6 +42,7 @@ import org.apache.james.protocols.smtp.core.RsetCmdHandler;
 import org.apache.james.protocols.smtp.core.UnknownCmdHandler;
 import org.apache.james.protocols.smtp.core.VrfyCmdHandler;
 import org.apache.james.protocols.smtp.core.esmtp.MailSizeEsmtpExtension;
+import org.apache.james.protocols.smtp.core.esmtp.SMTPUTF8Extension;
 import org.apache.james.protocols.smtp.core.esmtp.StartTlsCmdHandler;
 
 /**
@@ -68,6 +69,7 @@ public class LMTPProtocolHandlerChain extends SMTPProtocolHandlerChain {
         defaultHandlers.add(new VrfyCmdHandler());
         defaultHandlers.add(new DataCmdHandler(new RecordingMetricFactory()));
         defaultHandlers.add(new MailSizeEsmtpExtension());
+        defaultHandlers.add(new SMTPUTF8Extension());
         defaultHandlers.add(new WelcomeMessageHandler());
         defaultHandlers.add(new ReceivedDataLineFilter());
         defaultHandlers.add(new DataLineMessageHookHandler());
