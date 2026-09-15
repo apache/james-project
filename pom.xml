@@ -684,7 +684,7 @@
         <lettuce.core.version>6.8.2.RELEASE</lettuce.core.version>
         <io.micrometer.core.version>1.15.1</io.micrometer.core.version>
         <io.micrometer.tracing.version>1.5.1</io.micrometer.tracing.version>
-        <bouncycastle.version>1.82</bouncycastle.version>
+        <bouncycastle.version>1.85</bouncycastle.version>
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.16</scala.version>
         <doclint>none</doclint>
@@ -2342,7 +2342,7 @@
             <dependency>
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
-                <version>5.33.1</version>
+                <version>5.35.0</version>
             </dependency>
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
@@ -2871,7 +2871,7 @@
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk18on</artifactId>
-                <version>${bouncycastle.version}</version>
+                <version>1.85.2</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.angus</groupId>
@@ -2896,7 +2896,7 @@
             <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
-                <version>1.23.1</version>
+                <version>1.23.2</version>
             </dependency>
             <dependency>
                 <groupId>org.julienrf</groupId>
@@ -3076,7 +3076,7 @@
             <dependency>
                 <groupId>org.zoomba-lang</groupId>
                 <artifactId>spark-core</artifactId>
-                <version>3.0.4</version>
+                <version>3.0.5</version>
             </dependency>
             <dependency>
                 <groupId>pl.pragmatists</groupId>
