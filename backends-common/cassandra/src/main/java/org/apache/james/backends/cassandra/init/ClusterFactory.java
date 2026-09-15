@@ -114,6 +114,6 @@ public class ClusterFactory {
     }
 
     private static void ensureContactable(CqlSession session) {
-        session.execute("SELECT dateof(now()) FROM system.local ;");
+        session.execute("SELECT toTimestamp(now()) FROM system.local;");
     }
 }
