@@ -137,7 +137,7 @@ public class DockerCassandra {
 
     @SuppressWarnings("resource")
     public DockerCassandra() {
-        this("cassandra_5_0_4-" + buildSpecificImageDiscriminator(),
+        this("cassandra_5_0_9-" + buildSpecificImageDiscriminator(),
             getFixedBuildId().isEmpty(),
             AdditionalDockerFileStep.IDENTITY);
     }
