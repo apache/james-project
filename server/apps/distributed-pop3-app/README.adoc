@@ -64,13 +64,6 @@ to pass extra JVM flags. For instance:
 docker run --network james -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:distributed-pop3-latest
 ----
 
-[Glowroot APM](https://glowroot.org/) is packaged as part of the docker distribution to easily enable valuable performances insights.
-Disabled by default, its java agent can easily be enabled:
-
-[source]
-----
-docker run --network james -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:distributed-pop3-latest
-----
 The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
 
 
