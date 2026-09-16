@@ -639,7 +639,7 @@
         <spring.version>6.2.8</spring.version>
         <activmq-artemis.version>2.56.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.5</apache-jspf-resolver.version>
-        <angus-mail.version>2.0.3</angus-mail.version><!-- Align with EE10 Mail 2.1: https://eclipse-ee4j.github.io/angus-mail/ -->
+        <angus-mail.version>2.0.5</angus-mail.version>
         <angus-activation.version>2.0.2</angus-activation.version><!-- Align with EE10 Activation 2.1: https://eclipse-ee4j.github.io/angus-activation/ -->
         <slf4j.version>2.0.17</slf4j.version>
         <circe.version>0.14.14</circe.version>
