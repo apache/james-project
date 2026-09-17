@@ -19,7 +19,12 @@
 
 package org.apache.james.blob.cassandra;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -32,8 +37,15 @@ import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
+import org.apache.james.util.io.ZeroedInputStream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingInputStream;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraBlobStoreTest implements CassandraBlobStoreContract, DeduplicationBlobStoreContract {
     @RegisterExtension
@@ -80,5 +92,25 @@ public class CassandraBlobStoreTest implements CassandraBlobStoreContract, Dedup
     @Override
     public CassandraDefaultBucketDAO defaultBucketDAO() {
         return defaultBucketDAO;
+    }
+
+    @Test
+    void blobStoreShouldSupport100MBBlob() throws IOException {
+        ZeroedInputStream data = new ZeroedInputStream(100_000_000);
+        HashingInputStream writeHash = new HashingInputStream(Hashing.sha256(), data);
+        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), writeHash, LOW_COST)).block();
+
+        InputStream bytes = testee().read(testee().getDefaultBucketName(), blobId);
+        HashingInputStream readHash = new HashingInputStream(Hashing.sha256(), bytes);
+        consumeStream(readHash);
+
+        assertThat(readHash.hash().toString()).isEqualTo(writeHash.hash().toString());
+    }
+
+    private void consumeStream(InputStream tmpMsgIn) throws IOException {
+        byte[] discard = new byte[4096];
+        while (tmpMsgIn.read(discard) != -1) {
+            // consume the rest of the stream
+        }
     }
 }
