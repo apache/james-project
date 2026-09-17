@@ -43,7 +43,6 @@ import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRe
 import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.purgeVault;
 import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.restoreMessagesForUserWithQuery;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Durations.FIVE_SECONDS;
 import static org.awaitility.Durations.TWO_MINUTES;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -80,6 +79,7 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.integration.probe.DeletedMessageVaultProbe;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
+import org.awaitility.core.ConditionTimeoutException;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -133,6 +133,11 @@ public abstract class DeletedMessageVaultIntegrationTest {
     private static final String PASSWORD = "password";
     private static final String BOB_PASSWORD = "bobPassword";
     private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(TWO_MINUTES);
+    private static final ConditionFactory VAULT_GRACE_PERIOD = Awaitility.with()
+        .pollDelay(Duration.ZERO)
+        .pollInterval(Duration.ofMillis(500))
+        .await()
+        .atMost(Duration.ofSeconds(5));
     private static final String SUBJECT = "This mail will be restored from the vault!!";
     private static final String MAILBOX_NAME = "toBeDeleted";
     private static final String OWNER_ONLY_MAILBOX_NAME = "ownerOnly";
@@ -154,6 +159,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
     private MailboxId otherMailboxId;
     private MailboxId ownerOnlyMailboxId;
     private MailboxProbeImpl mailboxProbe;
+    private GuiceJamesServer jmapServer;
 
     private UserCredential homerCredential;
     private UserCredential bartCredential;
@@ -161,6 +167,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
     @BeforeEach
     void setup(GuiceJamesServer jmapServer) throws Throwable {
+        this.jmapServer = jmapServer;
         mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
 
@@ -341,7 +348,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         restoreMessagesForUserWithQuery(webAdminApi, HOMER, query);
 
 
-        Thread.sleep(FIVE_SECONDS.toMillis());
+        Thread.sleep(Duration.ofSeconds(2).toMillis());
 
         // No additional had been restored for Bart as the vault is empty
         assertThat(listMessageIdsForAccount(homerCredential).size())
@@ -1206,12 +1213,13 @@ public abstract class DeletedMessageVaultIntegrationTest {
     }
 
     private void homerDeletesMessages(List<String> idsToDestroy) {
+        int vaultSizeBefore = listMessagesOfHomerFromVault(jmapServer).size();
         deleteMessages(homerCredential, idsToDestroy);
         // Grace period for the vault
         try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            VAULT_GRACE_PERIOD.until(() -> listMessagesOfHomerFromVault(jmapServer).size() >= vaultSizeBefore + idsToDestroy.size());
+        } catch (ConditionTimeoutException e) {
+            // Grace period elapsed, callers assert the expected vault content
         }
     }
 
