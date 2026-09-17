@@ -32,9 +32,26 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.webadmin.integration.probe.DeletedMessageVaultProbeModule;
+import org.junit.jupiter.api.extension.ConditionEvaluationResult;
+import org.junit.jupiter.api.extension.ExecutionCondition;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+// The full contract is covered by PostgresDeletedMessageVaultIntegrationTest: only check the vault works with the RabbitMQ event bus
+@ExtendWith(RabbitMQPostgresDeletedMessageVaultIntegrationTest.BasicTestOnly.class)
 class RabbitMQPostgresDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegrationTest {
+    static class BasicTestOnly implements ExecutionCondition {
+        private static final String BASIC_TEST = "vaultEndpointShouldRestoreJmapDeletedEmail";
+
+        @Override
+        public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+            return context.getTestMethod()
+                .filter(method -> !method.getName().equals(BASIC_TEST))
+                .map(method -> ConditionEvaluationResult.disabled("Covered by PostgresDeletedMessageVaultIntegrationTest"))
+                .orElse(ConditionEvaluationResult.enabled("Basic vault test"));
+        }
+    }
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
