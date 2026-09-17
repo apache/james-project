@@ -32,15 +32,21 @@ import reactor.core.publisher.Mono;
 
 public class ObjectStorageHealthCheck implements HealthCheck {
 
-    private static final Integer HEALTH_CHECK_TIMEOUT = 10;
+    private static final Duration HEALTH_CHECK_TIMEOUT = Duration.ofSeconds(10);
 
     private static final ComponentName COMPONENT_NAME = new ComponentName("ObjectStorage");
 
     private final BlobStoreDAO blobStoreDAO;
+    private final Duration timeout;
 
     @Inject
     public ObjectStorageHealthCheck(BlobStoreDAO blobStoreDAO) {
+        this(blobStoreDAO, HEALTH_CHECK_TIMEOUT);
+    }
+
+    public ObjectStorageHealthCheck(BlobStoreDAO blobStoreDAO, Duration timeout) {
         this.blobStoreDAO = blobStoreDAO;
+        this.timeout = timeout;
     }
 
     @Override
@@ -51,7 +57,7 @@ public class ObjectStorageHealthCheck implements HealthCheck {
     @Override
     public Mono<Result> check() {
         return Flux.from(blobStoreDAO.listBuckets())
-            .timeout(Duration.ofSeconds(HEALTH_CHECK_TIMEOUT))
+            .timeout(timeout)
             .next()
             .thenReturn(Result.healthy(COMPONENT_NAME))
             .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking ObjectSotrage", e)));

@@ -21,6 +21,8 @@ package org.apache.james.blob.objectstorage.aws;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
+
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.ObjectStorageHealthCheck;
 import org.apache.james.blob.api.TestBlobId;
@@ -52,7 +54,7 @@ public class S3HealthCheckTest {
 
         S3ClientFactory s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
         BlobStoreDAO s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory(), S3RequestOption.DEFAULT);
-        s3HealthCheck = new ObjectStorageHealthCheck(s3BlobStoreDAO);
+        s3HealthCheck = new ObjectStorageHealthCheck(s3BlobStoreDAO, Duration.ofSeconds(2));
     }
 
     @AfterEach
