@@ -22,10 +22,15 @@ package org.apache.james.vault.blob;
 import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
+import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_GENERATOR;
+import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_WITH_SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
 import static org.apache.james.vault.DeletedMessageFixture.NOW;
 import static org.apache.james.vault.DeletedMessageFixture.OLD_DELETED_MESSAGE;
+import static org.apache.james.vault.DeletedMessageFixture.PASSWORD;
+import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
 import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
+import static org.apache.james.vault.DeletedMessageFixture.USERNAME_2;
 import static org.apache.james.vault.blob.BlobStoreDeletedMessageVault.APPEND_METRIC_NAME;
 import static org.apache.james.vault.blob.BlobStoreDeletedMessageVault.DELETE_EXPIRED_MESSAGES_METRIC_NAME;
 import static org.apache.james.vault.blob.BlobStoreDeletedMessageVault.DELETE_METRIC_NAME;
@@ -33,27 +38,34 @@ import static org.apache.james.vault.blob.BlobStoreDeletedMessageVault.LOAD_MIME
 import static org.apache.james.vault.blob.BlobStoreDeletedMessageVault.SEARCH_METRIC_NAME;
 import static org.apache.james.vault.search.Query.ALL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
+import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.apache.james.server.blob.deduplication.BlobStoreFactory;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.utils.UpdatableTickingClock;
-import org.apache.james.vault.DeletedMessageVault;
+import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageVaultContract;
 import org.apache.james.vault.DeletedMessageVaultSearchContract;
 import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
+import org.apache.james.vault.search.CriterionFactory;
+import org.apache.james.vault.search.Query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
 
 class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, DeletedMessageVaultSearchContract.AllContracts {
     private BlobStoreDeletedMessageVault messageVault;
@@ -61,21 +73,24 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
     private RecordingMetricFactory metricFactory;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         clock = new UpdatableTickingClock(NOW.toInstant());
         metricFactory = new RecordingMetricFactory();
         MemoryBlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
+
+        DomainList domainList = mock(DomainList.class);
+        Mockito.when(domainList.containsDomain(any())).thenReturn(true);
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
+        usersRepository.addUser(USERNAME, PASSWORD);
+        usersRepository.addUser(USERNAME_2, PASSWORD);
+
         messageVault = new BlobStoreDeletedMessageVault(metricFactory, new MemoryDeletedMessageMetadataVault(),
-            BlobStoreFactory.builder()
-                .blobStoreDAO(blobStoreDAO)
-                .blobIdFactory(new PlainBlobId.Factory())
-                .defaultBucketName()
-                .passthrough(),
-            blobStoreDAO, new BucketNameGenerator(clock), clock, VaultConfiguration.ENABLED_DEFAULT);
+            blobStoreDAO, new BucketNameGenerator(clock), clock,
+            VaultConfiguration.ENABLED_DEFAULT, usersRepository);
     }
 
     @Override
-    public DeletedMessageVault getVault() {
+    public BlobStoreDeletedMessageVault getVault() {
         return messageVault;
     }
 
@@ -87,9 +102,9 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
     @Test
     void retentionQualifiedBucketsShouldReturnOnlyBucketsFullyBeforeBeginningOfRetentionPeriod() {
         clock.setInstant(Instant.parse("2007-12-03T10:15:30.00Z"));
-        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         clock.setInstant(Instant.parse("2008-01-03T10:15:30.00Z"));
-        Mono.from(getVault().append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
         ZonedDateTime beginningOfRetention = ZonedDateTime.parse("2008-01-30T10:15:30.00Z");
         assertThat(messageVault.retentionQualifiedBuckets(beginningOfRetention).toStream())
@@ -99,9 +114,9 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
     @Test
     void retentionQualifiedBucketsShouldReturnAllWhenAllBucketMonthAreBeforeBeginningOfRetention() {
         clock.setInstant(Instant.parse("2007-12-03T10:15:30.00Z"));
-        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         clock.setInstant(Instant.parse("2008-01-30T10:15:30.00Z"));
-        Mono.from(getVault().append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(messageVault.retentionQualifiedBuckets(ZonedDateTime.parse("2008-02-01T10:15:30.00Z")).toStream())
             .containsOnly(
@@ -162,5 +177,68 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
 
         assertThat(metricFactory.executionTimesFor(DELETE_EXPIRED_MESSAGES_METRIC_NAME))
             .hasSize(1);
+    }
+
+    @Test
+    public void loadMimeMessageShouldReturnOldMessage() {
+        Mono.from(getVault().appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        assertThat(Mono.from(getVault().loadMimeMessage(USERNAME, MESSAGE_ID)).blockOptional())
+            .isNotEmpty()
+            .satisfies(maybeContent -> assertThat(maybeContent.get()).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
+    }
+
+    @Test
+    public void loadMimeMessageShouldReturnEmptyWhenOldMessageDeleted() {
+        Mono.from(getVault().appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        Mono.from(getVault().delete(USERNAME, MESSAGE_ID)).block();
+
+        assertThat(Mono.from(getVault().loadMimeMessage(USERNAME, MESSAGE_ID)).blockOptional())
+            .isEmpty();
+    }
+
+    @Test
+    public void searchAllShouldReturnOldMessage() {
+        Mono.from(getVault().appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
+            .containsOnly(DELETED_MESSAGE);
+    }
+
+    @Test
+    public void searchAllShouldReturnOldAndNewMessages() {
+        Mono.from(getVault().appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
+            .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
+    }
+
+    @Test
+    public void searchAllShouldSupportLimitQueryWithOldAndNewMessages() {
+        Mono.from(getVault().appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        DeletedMessage deletedMessage3 = DELETED_MESSAGE_GENERATOR.apply(InMemoryMessageId.of(33).getRawId());
+        Mono.from(getVault().append(deletedMessage3, new ByteArrayInputStream(CONTENT))).block();
+
+        assertThat(Flux.from(getVault().search(USERNAME, Query.of(1, List.of()))).collectList().block())
+            .hasSize(1);
+        assertThat(Flux.from(getVault().search(USERNAME, Query.of(3, List.of()))).collectList().block())
+            .containsExactlyInAnyOrder(DELETED_MESSAGE, DELETED_MESSAGE_2, deletedMessage3);
+        assertThat(Flux.from(getVault().search(USERNAME, Query.of(4, List.of()))).collectList().block())
+            .containsExactlyInAnyOrder(DELETED_MESSAGE, DELETED_MESSAGE_2, deletedMessage3);
+    }
+
+    @Test
+    public void searchShouldReturnMatchingOldMessages() {
+        Mono.from(getVault().appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(DELETED_MESSAGE_WITH_SUBJECT, new ByteArrayInputStream(CONTENT))).block();
+
+        assertThat(
+            Flux.from(getVault().search(USERNAME,
+                    Query.of(CriterionFactory.subject().containsIgnoreCase(SUBJECT))))
+                .collectList().block())
+            .containsOnly(DELETED_MESSAGE_WITH_SUBJECT);
     }
 }
