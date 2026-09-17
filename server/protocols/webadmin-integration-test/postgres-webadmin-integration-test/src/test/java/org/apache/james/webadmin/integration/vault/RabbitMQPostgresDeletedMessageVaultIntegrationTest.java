@@ -52,6 +52,7 @@ class RabbitMQPostgresDeletedMessageVaultIntegrationTest extends DeletedMessageV
                 .orElse(ConditionEvaluationResult.enabled("Basic vault test"));
         }
     }
+
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
