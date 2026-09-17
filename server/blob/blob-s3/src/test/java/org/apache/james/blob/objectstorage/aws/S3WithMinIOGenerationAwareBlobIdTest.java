@@ -40,7 +40,9 @@ import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.apache.james.server.blob.deduplication.GenerationAwareBlobId;
 import org.apache.james.server.blob.deduplication.MinIOGenerationAwareBlobId;
 import org.apache.james.utils.UpdatableTickingClock;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -60,9 +62,30 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
     static S3MinioExtension minoExtension = new S3MinioExtension();
 
     private static BlobStore testee;
+    private static S3BlobStoreConfiguration s3Configuration;
     private static S3ClientFactory s3ClientFactory;
-    private S3BlobStoreDAO s3BlobStoreDAO;
+    private static S3BlobStoreDAO s3BlobStoreDAO;
     private BlobId.Factory blobIdFactory;
+
+    @BeforeAll
+    static void setUpClass() {
+        AwsS3AuthConfiguration awsS3AuthConfiguration = minoExtension.minioDocker().getAwsS3AuthConfiguration();
+
+        s3Configuration = S3BlobStoreConfiguration.builder()
+            .authConfiguration(awsS3AuthConfiguration)
+            .region(DockerAwsS3Container.REGION)
+            .uploadRetrySpec(Optional.of(Retry.backoff(3, java.time.Duration.ofSeconds(1))
+                .filter(UPLOAD_RETRY_EXCEPTION_PREDICATE)))
+            .build();
+
+        s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
+        s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new PlainBlobId.Factory(), S3RequestOption.DEFAULT);
+    }
+
+    @AfterAll
+    static void tearDownClass() {
+        s3ClientFactory.close();
+    }
 
     @BeforeEach
     void beforeEach() throws Exception {
@@ -76,7 +99,6 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
     @AfterEach
     void tearDown() {
         s3BlobStoreDAO.deleteAllBuckets().block();
-        s3ClientFactory.close();
     }
 
     @Override
@@ -95,20 +117,8 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
     }
 
     public BlobStore createBlobStore(BlobId.Factory blobIdFactory) {
-        AwsS3AuthConfiguration awsS3AuthConfiguration = minoExtension.minioDocker().getAwsS3AuthConfiguration();
-
-        S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfiguration.builder()
-            .authConfiguration(awsS3AuthConfiguration)
-            .region(DockerAwsS3Container.REGION)
-            .uploadRetrySpec(Optional.of(Retry.backoff(3, java.time.Duration.ofSeconds(1))
-                .filter(UPLOAD_RETRY_EXCEPTION_PREDICATE)))
-            .build();
-
-        s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
-        s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, blobIdFactory, S3RequestOption.DEFAULT);
-
         return BlobStoreFactory.builder()
-            .blobStoreDAO(s3BlobStoreDAO)
+            .blobStoreDAO(new S3BlobStoreDAO(s3ClientFactory, s3Configuration, blobIdFactory, S3RequestOption.DEFAULT))
             .blobIdFactory(blobIdFactory)
             .defaultBucketName()
             .deduplication();

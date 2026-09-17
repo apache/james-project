@@ -28,26 +28,19 @@ import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
 class S3PrefixAndNamespaceTest implements BlobStoreContract, DeduplicationBlobStoreContract {
-    private BlobStore testee;
-    private S3BlobStoreDAO s3BlobStoreDAO;
+    private static BlobStore testee;
+    private static S3BlobStoreDAO s3BlobStoreDAO;
+    private static S3ClientFactory s3ClientFactory;
 
-    private S3ClientFactory s3ClientFactory;
-    private DockerAwsS3Container dockerAwsS3;
-
-    @BeforeEach
-    void setUpClass(DockerAwsS3Container dockerAwsS3) {
-        this.dockerAwsS3 = dockerAwsS3;
-        this.testee = createBlobStore();
-    }
-
-    @Override
-    public BlobStore createBlobStore() {
+    @BeforeAll
+    static void setUpClass(DockerAwsS3Container dockerAwsS3) {
         AwsS3AuthConfiguration authConfiguration = AwsS3AuthConfiguration.builder()
                 .endpoint(dockerAwsS3.getEndpoint())
                 .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
@@ -61,13 +54,20 @@ class S3PrefixAndNamespaceTest implements BlobStoreContract, DeduplicationBlobSt
                 .bucketPrefix("prefix")
                 .build();
 
-        PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
-        s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, blobIdFactory, S3RequestOption.DEFAULT);
+        s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new PlainBlobId.Factory(), S3RequestOption.DEFAULT);
+        testee = createBlobStore(s3BlobStoreDAO);
+    }
 
+    @Override
+    public BlobStore createBlobStore() {
+        return createBlobStore(s3BlobStoreDAO);
+    }
+
+    private static BlobStore createBlobStore(S3BlobStoreDAO s3BlobStoreDAO) {
         return BlobStoreFactory.builder()
                 .blobStoreDAO(s3BlobStoreDAO)
-                .blobIdFactory(blobIdFactory)
+                .blobIdFactory(new PlainBlobId.Factory())
                 .bucket(BucketName.of("namespace"))
                 .deduplication();
     }
@@ -75,6 +75,10 @@ class S3PrefixAndNamespaceTest implements BlobStoreContract, DeduplicationBlobSt
     @AfterEach
     void tearDown() {
         s3BlobStoreDAO.deleteAllBuckets().block();
+    }
+
+    @AfterAll
+    static void tearDownClass() {
         s3ClientFactory.close();
     }
 
