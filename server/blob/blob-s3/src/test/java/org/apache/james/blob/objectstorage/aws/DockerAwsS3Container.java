@@ -45,7 +45,7 @@ public class DockerAwsS3Container {
             .withEnv("S3BACKEND", "mem")
             .withEnv("SCALITY_ACCESS_KEY_ID", ACCESS_KEY_ID)
             .withEnv("SCALITY_SECRET_ACCESS_KEY", SECRET_ACCESS_KEY)
-            .withEnv("LOG_LEVEL", "trace")
+            // .withEnv("LOG_LEVEL", "trace")
             .withEnv("REMOTE_MANAGEMENT_DISABLE", "1")
             .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-s3-test-" + UUID.randomUUID()))
             .waitingFor(Wait.forLogMessage(".*\"message\":\"server started\".*\\n", ONE_TIME));
