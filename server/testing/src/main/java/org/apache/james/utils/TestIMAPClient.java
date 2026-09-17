@@ -50,28 +50,66 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     private static final int MESSAGE_NUMBER_MATCHING_GROUP = 1;
     public static final String INBOX = "INBOX";
 
-    public static class Utf8IMAPSClient extends AuthenticatingIMAPClient {
+    /**
+     * commons-net announces and consumes IMAP literals in octets, but subtracts the
+     * {@link String#length()} of the lines it has decoded to know when a literal is over. Its
+     * streams therefore have to stay octet transparent - one char per octet, which is what its
+     * own ISO-8859-1 default gives. Decoding the socket as UTF-8 makes every multi-byte
+     * character count for one octet less than the server announced, so the client keeps reading
+     * past the literal, swallows the tagged reply as if it were message content and then blocks
+     * forever waiting for a completion line that has already gone by.
+     *
+     * UTF-8 is handled at {@link TestIMAPClient}'s own boundary instead: see
+     * {@link TestIMAPClient#asOctets(String)} and {@link TestIMAPClient#asText(String)}.
+     */
+    public static class OctetIMAPClient extends AuthenticatingIMAPClient {
         @Override
         protected void _connectAction_() throws IOException {
             super._connectAction_();
-            _reader = new CRLFLineReader(new InputStreamReader(_input_, StandardCharsets.UTF_8));
-            __writer = new BufferedWriter(new OutputStreamWriter(_output_, StandardCharsets.UTF_8));
+            _reader = new CRLFLineReader(new InputStreamReader(_input_, StandardCharsets.ISO_8859_1));
+            __writer = new BufferedWriter(new OutputStreamWriter(_output_, StandardCharsets.ISO_8859_1));
         }
+    }
+
+    /**
+     * Turns text into the octets to put on the wire: one char per UTF-8 octet, as
+     * {@link OctetIMAPClient} expects.
+     */
+    private static String asOctets(String text) {
+        return new String(text.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
+    }
+
+    /**
+     * Reverse of {@link #asOctets(String)}: reads back the octets commons-net collected as UTF-8
+     * text.
+     */
+    private static String asText(String octets) {
+        return new String(octets.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
     }
 
     private final IMAPClient imapClient;
 
     @VisibleForTesting
-    TestIMAPClient(Utf8IMAPSClient imapClient) {
+    TestIMAPClient(OctetIMAPClient imapClient) {
         this.imapClient = imapClient;
     }
 
     public TestIMAPClient() {
-        this(new Utf8IMAPSClient());
+        this(new OctetIMAPClient());
     }
 
     public TestIMAPClient(IMAPClient imapClient) {
         this.imapClient = imapClient;
+    }
+
+    private String replyString() {
+        return asText(imapClient.getReplyString());
+    }
+
+    private List<String> replyStrings() {
+        return Stream.of(imapClient.getReplyStrings())
+            .map(TestIMAPClient::asText)
+            .collect(ImmutableList.toImmutableList());
     }
 
     public TestIMAPClient connect(String host, int port) throws IOException {
@@ -81,7 +119,7 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
 
     public String capability() throws IOException {
         imapClient.capability();
-        return imapClient.getReplyString();
+        return replyString();
     }
 
     public TestIMAPClient disconnect() throws IOException {
@@ -90,7 +128,7 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     }
 
     public TestIMAPClient login(String user, String password) throws IOException {
-        final boolean login = imapClient.login(user, password);
+        final boolean login = imapClient.login(asOctets(user), asOctets(password));
         if (!login) {
             throw new IOException("Login failed");
         }
@@ -107,9 +145,9 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     }
 
     public TestIMAPClient rawLogin(String user, String password) throws IOException {
-        imapClient.sendCommand("LOGIN " + user + " " + password);
+        imapClient.sendCommand(asOctets("LOGIN " + user + " " + password));
 
-        if (imapClient.getReplyString().contains("NO LOGIN failed.")) {
+        if (replyString().contains("NO LOGIN failed.")) {
             throw new IOException("Login failed");
         }
         return this;
@@ -117,7 +155,7 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
 
     public List<String> list() throws IOException {
         imapClient.list("", "*");
-        return ImmutableList.copyOf(imapClient.getReplyStrings());
+        return replyStrings();
     }
 
     public TestIMAPClient login(Username user, String password) throws IOException {
@@ -125,13 +163,13 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     }
 
     public TestIMAPClient select(String mailbox) throws IOException {
-        imapClient.select(mailbox);
+        imapClient.select(asOctets(mailbox));
         return this;
     }
 
     public TestIMAPClient create(String mailbox) throws IOException {
-        if (!imapClient.create(mailbox)) {
-            throw new RuntimeException(imapClient.getReplyString());
+        if (!imapClient.create(asOctets(mailbox))) {
+            throw new RuntimeException(replyString());
         }
         return this;
     }
@@ -139,20 +177,20 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     public TestIMAPClient append(String mailboxName, String message) throws IOException {
         String noFlags = null;
         String noDateTime = null;
-        if (!imapClient.append(mailboxName, noFlags, noDateTime, message)) {
-            throw new RuntimeException(imapClient.getReplyString());
+        if (!imapClient.append(asOctets(mailboxName), noFlags, noDateTime, asOctets(message))) {
+            throw new RuntimeException(replyString());
         }
         return this;
     }
 
     public TestIMAPClient delete(String mailbox) throws IOException {
-        imapClient.delete(mailbox);
+        imapClient.delete(asOctets(mailbox));
         return this;
     }
 
     public boolean hasAMessage() throws IOException {
         imapClient.fetch("1", "UID");
-        return imapClient.getReplyString()
+        return replyString()
             .contains("OK FETCH completed");
     }
 
@@ -172,7 +210,7 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     private long countFetchedEntries() {
         return Splitter.on("\n")
             .trimResults()
-            .splitToStream(imapClient.getReplyString())
+            .splitToStream(replyString())
             .filter(s -> s.startsWith("*"))
             .count();
     }
@@ -184,8 +222,7 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
 
     public boolean hasAMessageWithFlags(String flags) throws IOException {
         imapClient.fetch("1:1", "ALL");
-        String replyString = imapClient.getReplyString();
-        return isCompletedWithFlags(flags, replyString);
+        return isCompletedWithFlags(flags, replyString());
     }
 
     @VisibleForTesting
@@ -197,12 +234,12 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     }
 
     public boolean userGetNotifiedForNewMessagesWhenSelectingMailbox(int numOfNewMessage) {
-        return imapClient.getReplyString().contains("OK [UNSEEN " + numOfNewMessage + "]");
+        return replyString().contains("OK [UNSEEN " + numOfNewMessage + "]");
     }
 
     public boolean userDoesNotReceiveMessage() throws IOException {
         imapClient.fetch("1:1", "ALL");
-        return imapClient.getReplyString()
+        return replyString()
              .contains("BAD FETCH failed. Invalid messageset");
     }
 
@@ -216,27 +253,26 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
 
     public String setFlagsForAllMessagesInMailbox(String flag) throws IOException {
         imapClient.store("1:*", "+FLAGS", flag);
-        return imapClient.getReplyString();
+        return replyString();
     }
 
     public String copyAllMessagesInMailboxTo(String mailboxName) throws IOException {
-        imapClient.copy("1:*", mailboxName);
-        return imapClient.getReplyString();
+        imapClient.copy("1:*", asOctets(mailboxName));
+        return replyString();
     }
 
     public String readFirstMessageInMailbox(String parameters) throws IOException {
         imapClient.fetch("1:1", parameters);
-        return imapClient.getReplyString();
+        return replyString();
     }
 
     public boolean userGetNotifiedForNewMessages(int numberOfMessages) throws IOException {
         imapClient.noop();
 
-        String replyString = imapClient.getReplyString();
         List<String> parts = Splitter.on('\n')
             .trimResults()
             .omitEmptyStrings()
-            .splitToList(replyString);
+            .splitToList(replyString());
         return parts.size() == 3
             && parts.get(2).contains("OK NOOP completed.")
             && parts.contains("* " + numberOfMessages + " EXISTS")
@@ -246,11 +282,10 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     public boolean userGetNotifiedForDeletion(int msn) throws IOException {
         imapClient.noop();
 
-        String replyString = imapClient.getReplyString();
         List<String> parts = Splitter.on('\n')
             .trimResults()
             .omitEmptyStrings()
-            .splitToList(replyString);
+            .splitToList(replyString());
 
         return parts.size() == 2
             && parts.get(1).contains("OK NOOP completed.")
@@ -279,11 +314,11 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     }
 
     public void copyFirstMessage(String destMailbox) throws IOException {
-        imapClient.copy("1", destMailbox);
+        imapClient.copy("1", asOctets(destMailbox));
     }
 
     public void moveFirstMessage(String destMailbox) throws IOException {
-        imapClient.sendCommand("MOVE 1 " + destMailbox);
+        imapClient.sendCommand(asOctets("MOVE 1 " + destMailbox));
     }
 
     public void expunge() throws IOException {
@@ -291,18 +326,18 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     }
 
     public String getQuotaRoot(String mailbox) throws IOException {
-        imapClient.sendCommand("GETQUOTAROOT " + mailbox);
-        return imapClient.getReplyString();
+        imapClient.sendCommand(asOctets("GETQUOTAROOT " + mailbox));
+        return replyString();
     }
 
     public String sendCommand(String command) throws IOException {
-        imapClient.sendCommand(command);
-        return imapClient.getReplyString();
+        imapClient.sendCommand(asOctets(command));
+        return replyString();
     }
 
     public long getMessageCount(String mailboxName) throws IOException {
-        imapClient.examine(mailboxName);
-        return Stream.of(imapClient.getReplyStrings())
+        imapClient.examine(asOctets(mailboxName));
+        return replyStrings().stream()
             .map(EXAMINE_EXISTS::matcher)
             .filter(Matcher::matches)
             .map(m -> m.group(MESSAGE_NUMBER_MATCHING_GROUP))

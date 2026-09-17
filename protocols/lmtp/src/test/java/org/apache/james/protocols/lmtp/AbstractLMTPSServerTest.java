@@ -19,6 +19,8 @@
 package org.apache.james.protocols.lmtp;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +34,14 @@ import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 
 public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest {
+
+    /** See {@code AbstractSMTPSServerTest}: the raw exchanges need a TLS socket here. */
+    @Override
+    protected Socket createRawSocket(InetSocketAddress address) throws IOException {
+        return BogusSslContextFactory.getClientContext()
+            .getSocketFactory()
+            .createSocket(address.getAddress().getHostAddress(), address.getPort());
+    }
 
     @Override
     protected SMTPClient createClient() {

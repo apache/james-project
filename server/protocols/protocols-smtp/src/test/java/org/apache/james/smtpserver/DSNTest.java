@@ -71,7 +71,7 @@ class DSNTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
-            softly.assertThat(smtpProtocol.getReplyString()).contains("250 DSN");
+            softly.assertThat(smtpProtocol.getReplyString()).contains("250-DSN");
         });
     }
 

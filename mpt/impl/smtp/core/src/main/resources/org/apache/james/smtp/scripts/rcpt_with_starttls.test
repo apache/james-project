@@ -9,6 +9,7 @@ S: 250-AUTH=LOGIN PLAIN
 S: 250-PIPELINING
 S: 250-ENHANCEDSTATUSCODES
 S: 250-8BITMIME
+S: 250-SMTPUTF8
 S: 250 STARTTLS
 S: 250 2.1.0 Sender <matthieu@yopmail.com> OK
 S: 250 2.1.5 Recipient <starttls@mydomain.tld> OK
