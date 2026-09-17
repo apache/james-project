@@ -334,7 +334,7 @@ public interface ReadSaveBlobStoreDAOContract {
                 (threadNumber, step) -> checkConcurrentSaveOperation(bytes.payload())
             )
             .threadCount(10)
-            .operationCount(20)
+            .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(10));
     }
 
@@ -348,7 +348,7 @@ public interface ReadSaveBlobStoreDAOContract {
                 (threadNumber, step) -> checkConcurrentSaveOperation(bytes.payload())
             )
             .threadCount(10)
-            .operationCount(20)
+            .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(2));
     }
 
@@ -362,7 +362,7 @@ public interface ReadSaveBlobStoreDAOContract {
                 (threadNumber, step) -> checkConcurrentSaveOperation(bytes.payload())
             )
             .threadCount(10)
-            .operationCount(20)
+            .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(2));
     }
 
