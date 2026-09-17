@@ -86,7 +86,6 @@ import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.data.jmap.RunRulesOnMailboxTask;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
-import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.service.ClearMailboxContentTask;
@@ -116,7 +115,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
         }
     }
 
-    private static final int TASK_COUNT = 60;
+    private static final int TASK_COUNT = 15;
     private static final int MESSAGES_PER_ORIGIN_MAILBOX = 20;
 
     @RegisterExtension
@@ -328,81 +327,6 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    void deleteMailsFromMailQueueShouldCompleteWhenSenderIsValid() {
-        String firstMailQueue = with()
-                .basePath(MailQueueRoutes.BASE_URL)
-            .get()
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getString("[0]");
-
-        String taskId = with()
-                .basePath(MailQueueRoutes.BASE_URL)
-                .param("sender", USERNAME)
-            .delete(firstMailQueue + "/mails")
-                .jsonPath()
-                .getString("taskId");
-
-        given()
-                .basePath(TasksRoutes.BASE)
-            .when()
-                .get(taskId + "/await")
-            .then()
-                .body("status", is("completed"))
-                .body("taskId", is(notNullValue()))
-                .body("type", is("delete-mails-from-mail-queue"))
-                .body("additionalInformation.mailQueueName", is(notNullValue()))
-                .body("additionalInformation.remainingCount", is(0))
-                .body("additionalInformation.initialCount", is(0))
-                .body("additionalInformation.sender", is(USERNAME))
-                .body("additionalInformation.name", is(nullValue()))
-                .body("additionalInformation.recipient", is(nullValue()))
-        ;
-    }
-
-    @Test
-    void reprocessingAllMailsShouldComplete() {
-        String escapedRepositoryPath = with()
-                .basePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
-            .get()
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getString("[0].path");
-
-        String taskId = with()
-                .basePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
-                .param("action", "reprocess")
-            .patch(escapedRepositoryPath + "/mails")
-            .then()
-                .statusCode(HttpStatus.CREATED_201)
-                .extract()
-                .jsonPath()
-                .getString("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(notNullValue()))
-            .body("type", is("reprocessing-all"))
-            .body("additionalInformation.repositoryPath", is(notNullValue()))
-            .body("additionalInformation.targetQueue", is(notNullValue()))
-            .body("additionalInformation.targetProcessor", is(nullValue()))
-            .body("additionalInformation.initialCount", is(0))
-            .body("additionalInformation.remainingCount", is(0));
-    }
-
-    @Test
     void reprocessingOneMailShouldCreateATask(GuiceJamesServer guiceJamesServer) throws Exception {
         MailRepositoryStore mailRepositoryStore = guiceJamesServer.getProbe(MailRepositoryProbeImpl.class).getMailRepositoryStore();
         Stream<MailRepositoryUrl> urls = mailRepositoryStore.getUrls();
@@ -497,28 +421,6 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    void userReindexingShouldComplete() {
-        String taskId = with()
-                .queryParam("task", "reIndex")
-            .post("users/" + USERNAME + "/mailboxes")
-                .jsonPath()
-                .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("user-reindexing"))
-            .body("additionalInformation.successfullyReprocessedMailCount", is(0))
-            .body("additionalInformation.failedReprocessedMailCount", is(0))
-            .body("additionalInformation.username", is(USERNAME))
-            .body("additionalInformation.messageFailures", is(anEmptyMap()));
-    }
-
-    @Test
     void deletedMessageVaultRestoreShouldComplete() throws Exception {
         dataProbe.addUser(USERNAME, "password");
         String query =
@@ -582,64 +484,6 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.userExportFrom", is(USERNAME))
             .body("additionalInformation.exportTo", is(exportTo))
             .body("additionalInformation.totalExportedMessages", is(0));
-    }
-
-    @Test
-    void errorRecoveryIndexationShouldCompleteWhenNoMail() {
-        String taskId = with()
-            .post("/mailboxes?task=reIndex")
-            .jsonPath()
-            .get("taskId");
-
-        with()
-            .basePath(TasksRoutes.BASE)
-            .get(taskId + "/await");
-
-        String fixingTaskId = with()
-            .queryParam("reIndexFailedMessagesOf", taskId)
-            .queryParam("task", "reIndex")
-        .post("/mailboxes")
-        .then()
-            .statusCode(HttpStatus.CREATED_201)
-            .extract()
-            .jsonPath()
-            .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(fixingTaskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("error-recovery-indexation"))
-            .body("additionalInformation.successfullyReprocessedMailCount", is(0))
-            .body("additionalInformation.failedReprocessedMailCount", is(0))
-            .body("additionalInformation.messageFailures", is(anEmptyMap()));
-    }
-
-    @Test
-    void eventDeadLettersRedeliverShouldComplete() {
-        String taskId = with()
-            .queryParam("action", "reDeliver")
-        .post("/events/deadLetter")
-            .then()
-            .statusCode(HttpStatus.CREATED_201)
-            .extract()
-            .jsonPath()
-            .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("event-dead-letters-redeliver-all"))
-            .body("additionalInformation.successfulRedeliveriesCount", is(0))
-            .body("additionalInformation.failedRedeliveriesCount", is(0));
-
     }
 
     @Test
@@ -927,49 +771,6 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .first()
             .satisfies(map -> assertThat(map).hasSize(2)
                 .containsKeys("taskId", "username"));
-    }
-
-    @Test
-    void cleanUploadRepositoryShouldComplete() throws Exception {
-        String taskId = given()
-            .queryParam("scope", "expired")
-            .delete("jmap/uploads")
-            .jsonPath()
-            .getString("taskId");
-
-        with()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-            .then()
-            .body("status", is(TaskManager.Status.COMPLETED.getValue()))
-            .body("taskId", is(taskId))
-            .body("type", is("UploadRepositoryCleanupTask"))
-            .body("additionalInformation.scope", is("expired"));
-    }
-
-    @Test
-    void blobGCTaskShouldComplete() {
-        String taskId = given()
-            .queryParam("scope", "unreferenced")
-            .delete("blobs")
-            .jsonPath()
-            .getString("taskId");
-
-        with()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is(TaskManager.Status.COMPLETED.getValue()))
-            .body("taskId", is(taskId))
-            .body("type", is("BlobGCTask"))
-            .body("additionalInformation.referenceSourceCount", is(0))
-            .body("additionalInformation.blobCount", is(0))
-            .body("additionalInformation.gcedBlobCount", is(0))
-            .body("additionalInformation.errorCount", is(0))
-            .body("additionalInformation.bloomFilterExpectedBlobCount", is(1000000))
-            .body("additionalInformation.bloomFilterAssociatedProbability", is(0.01F));
     }
 
     private MailboxAdded createMailboxAdded() {

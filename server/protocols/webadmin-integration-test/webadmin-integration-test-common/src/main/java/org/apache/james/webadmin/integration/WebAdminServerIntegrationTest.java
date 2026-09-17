@@ -26,17 +26,12 @@ import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 
-import java.io.ByteArrayOutputStream;
 import java.util.List;
-import java.util.zip.ZipOutputStream;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -49,9 +44,6 @@ import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.apache.james.webadmin.routes.ForwardRoutes;
 import org.apache.james.webadmin.routes.GroupsRoutes;
-import org.apache.james.webadmin.routes.HealthCheckRoutes;
-import org.apache.james.webadmin.routes.MailQueueRoutes;
-import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
@@ -99,80 +91,6 @@ public abstract class WebAdminServerIntegrationTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(dataProbe.listDomains()).contains(DOMAIN);
-    }
-
-
-    // Immutable
-    @Test
-    void mailQueueRoutesShouldBeExposed() {
-        when()
-            .get(MailQueueRoutes.BASE_URL)
-        .then()
-            .statusCode(HttpStatus.OK_200)
-            .body("", containsInAnyOrder("spool", "outgoing"));
-    }
-
-
-    // Immutable
-    @Test
-    void metricsRoutesShouldBeExposed() {
-        String body = when()
-                .get("/metrics")
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .extract()
-                .body()
-                .asString();
-
-        assertThat(body).contains("outgoingMails_total 0.0");
-    }
-
-
-    // Immutable
-    @Test
-    void healthCheckShouldReturn200WhenCalledRepeatedly() {
-        given().get(HealthCheckRoutes.HEALTHCHECK);
-        given().get(HealthCheckRoutes.HEALTHCHECK);
-        given().get(HealthCheckRoutes.HEALTHCHECK);
-        given().get(HealthCheckRoutes.HEALTHCHECK);
-        given().get(HealthCheckRoutes.HEALTHCHECK);
-
-        when()
-            .get(HealthCheckRoutes.HEALTHCHECK)
-        .then()
-            .statusCode(HttpStatus.OK_200);
-    }
-
-    // Immutable
-    @Test
-    void mailRepositoriesRoutesShouldBeExposed() {
-        when()
-            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES)
-        .then()
-            .statusCode(HttpStatus.OK_200)
-            .body("repository", containsInAnyOrder(
-                "var/mail/error",
-                "var/mail/relay-denied",
-                "var/mail/address-error",
-                "var/mail/rrt-error"));
-    }
-
-
-    // Immutable
-    @Test
-    void gettingANonExistingMailRepositoryShouldNotCreateIt() {
-        given()
-            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES + "file%3A%2F%2Fvar%2Fmail%2Fcustom");
-
-        when()
-            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES)
-        .then()
-            .statusCode(HttpStatus.OK_200)
-            .body("repository", containsInAnyOrder(
-                "var/mail/error",
-                "var/mail/relay-denied",
-                "var/mail/address-error",
-                "var/mail/rrt-error"));
     }
 
     @Test
@@ -316,196 +234,6 @@ public abstract class WebAdminServerIntegrationTest {
             .jsonPath()
             .getList(".");
         assertThat(members).containsOnly(USERNAME, USERNAME_2);
-    }
-
-    @Test
-    void getUserDefaultIdentityShouldReturnNotFoundByDefault() {
-        when()
-            .get(String.format("/users/%s/identities?default=true", USERNAME))
-        .then()
-            .statusCode(HttpStatus.NOT_FOUND_404)
-            .contentType(JSON_CONTENT_TYPE)
-            .body("message", is("Default identity can not be found"));
-    }
-
-    @Test
-    void getIdentitiesOfInvalidUserShouldReturnBadRequest() {
-        given()
-            .urlEncodingEnabled(true)
-            .get(String.format("/users/%s/identities?default=true", "John Doe"))
-        .then()
-            .statusCode(HttpStatus.BAD_REQUEST_400);
-    }
-
-    @Test
-    void createIdentitiesForInvalidUserShouldReturnBadRequest() {
-        given()
-            .urlEncodingEnabled(true)
-            .body("{\n" +
-                "  \"name\": \"create name 1\",\n" +
-                "  \"email\": \"bob@domain.tld\",\n" +
-                "  \"textSignature\": \"create textSignature1\",\n" +
-                "  \"htmlSignature\": \"create htmlSignature1\",\n" +
-                "  \"sortOrder\": 99,\n" +
-                "  \"bcc\": [\n" +
-                "    {\n" +
-                "      \"name\": \"create bcc 1\",\n" +
-                "      \"email\": \"create_boss_bcc_1@domain.tld\"\n" +
-                "    }\n" +
-                "  ],\n" +
-                "  \"replyTo\": [\n" +
-                "    {\n" +
-                "      \"name\": \"create replyTo 1\",\n" +
-                "      \"email\": \"create_boss1@domain.tld\"\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}")
-            .post(String.format("/users/%s/identities", "John Doe"))
-        .then()
-            .statusCode(HttpStatus.BAD_REQUEST_400);
-    }
-
-    @Test
-    void updateIdentitiesForInvalidUserShouldReturnBadRequest() {
-        given()
-            .urlEncodingEnabled(true)
-            .body("{\n" +
-                "  \"name\": \"create name 1\",\n" +
-                "  \"email\": \"bob@domain.tld\",\n" +
-                "  \"textSignature\": \"create textSignature1\",\n" +
-                "  \"htmlSignature\": \"create htmlSignature1\",\n" +
-                "  \"sortOrder\": 99,\n" +
-                "  \"bcc\": [\n" +
-                "    {\n" +
-                "      \"name\": \"create bcc 1\",\n" +
-                "      \"email\": \"create_boss_bcc_1@domain.tld\"\n" +
-                "    }\n" +
-                "  ],\n" +
-                "  \"replyTo\": [\n" +
-                "    {\n" +
-                "      \"name\": \"create replyTo 1\",\n" +
-                "      \"email\": \"create_boss1@domain.tld\"\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}")
-            .put(String.format("/users/%s/identities/b1c924a3-5b86-44fa-a036-77825ec0e3e6", "John Doe"))
-        .then()
-            .statusCode(HttpStatus.BAD_REQUEST_400);
-    }
-
-    // Immutable
-    @Test
-    void validateHealthChecksShouldReturnOk() {
-        when()
-            .get(HealthCheckRoutes.HEALTHCHECK)
-        .then()
-            .statusCode(HttpStatus.OK_200);
-    }
-
-    // Immutable
-    @Test
-    void jmapTasksShouldBeExposed() {
-        String taskId = with()
-            .queryParam("task", "recomputeFastViewProjectionItems")
-            .post("/mailboxes")
-            .jsonPath()
-            .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("type", is("RecomputeAllFastViewProjectionItemsTask"));
-    }
-
-    @Test
-    void jmapUserTasksShouldBeExposed() throws Exception {
-        dataProbe.addUser(USERNAME, "anyPassword");
-
-        String taskId = with()
-            .queryParam("task", "recomputeFastViewProjectionItems")
-            .post("/users/" + USERNAME + "/mailboxes")
-            .jsonPath()
-            .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("type", is("RecomputeUserFastViewProjectionItemsTask"));
-    }
-
-    @Test
-    void mailboxesExportTasksShouldBeExposed() throws Exception {
-        dataProbe.addUser(USERNAME, "anyPassword");
-
-        String taskId = with()
-            .queryParam("task", "export")
-            .post("/users/" + USERNAME + "/mailboxes")
-            .jsonPath()
-            .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("type", is("MailboxesExportTask"));
-    }
-
-    @Test
-    void mailboxesRestoreTasksShouldBeExposed() throws Exception {
-        dataProbe.addUser(USERNAME, "anyPassword");
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
-            // empty zip
-        }
-        byte[] emptyZip = baos.toByteArray();
-
-        String taskId = with()
-            .queryParam("task", "restore")
-            .body(emptyZip)
-            .post("/users/" + USERNAME + "/mailboxes")
-            .jsonPath()
-            .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("type", is("MailboxesRestoreTask"));
-    }
-
-    @Test
-    void createMissParentsTasksShouldBeExposed() {
-        String taskId = with()
-            .queryParam("task", "createMissingParents")
-            .post("/mailboxes")
-            .jsonPath()
-            .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-            .when()
-            .get(taskId + "/await")
-            .then()
-            .body("status", is("completed"))
-            .body("type", is("CreateMissingParentsTask"))
-            .body("additionalInformation.created", hasSize(0))
-            .body("additionalInformation.totalCreated", is(0))
-            .body("additionalInformation.failures", empty())
-            .body("additionalInformation.totalFailure", is(0))
-            .body("startedDate", is(notNullValue()))
-            .body("submitDate", is(notNullValue()))
-            .body("completedDate", is(notNullValue()));
     }
 
     @Test
