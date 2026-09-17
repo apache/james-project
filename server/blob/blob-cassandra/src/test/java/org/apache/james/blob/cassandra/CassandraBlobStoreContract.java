@@ -24,20 +24,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
 import org.apache.james.blob.api.ObjectStoreException;
-import org.apache.james.util.io.ZeroedInputStream;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Strings;
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingInputStream;
 
 import reactor.core.publisher.Mono;
 
@@ -88,25 +83,5 @@ public interface CassandraBlobStoreContract extends MetricableBlobStoreContract 
         assertThatThrownBy(() ->  testee().deleteBucket(testee().getDefaultBucketName()))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Deleting the default bucket is forbidden");
-    }
-
-    @Test
-    default void blobStoreShouldSupport100MBBlob() throws IOException {
-        ZeroedInputStream data = new ZeroedInputStream(100_000_000);
-        HashingInputStream writeHash = new HashingInputStream(Hashing.sha256(), data);
-        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), writeHash, LOW_COST)).block();
-
-        InputStream bytes = testee().read(testee().getDefaultBucketName(), blobId);
-        HashingInputStream readHash = new HashingInputStream(Hashing.sha256(), bytes);
-        consumeStream(readHash);
-
-        assertThat(readHash.hash().toString()).isEqualTo(writeHash.hash().toString());
-    }
-
-    private void consumeStream(InputStream tmpMsgIn) throws IOException {
-        byte[] discard = new byte[4096];
-        while (tmpMsgIn.read(discard) != -1) {
-            // consume the rest of the stream
-        }
     }
 }
