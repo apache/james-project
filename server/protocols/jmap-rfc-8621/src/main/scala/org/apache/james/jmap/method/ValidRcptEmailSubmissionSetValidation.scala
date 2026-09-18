@@ -59,6 +59,7 @@ class ValidRcptEmailSubmissionSetValidation(recipientValidator: RecipientValidat
         case Seq() => None
         case invalidRecipients => Some(SetError.invalidRecipients(
           SetErrorDescription(s"Invalid recipients: ${invalidRecipients.map(_.asString()).mkString(", ")}"),
+          invalidRecipients.map(_.asString()).toList,
           Some(Properties("envelope.rcptTo"))))
       }
 

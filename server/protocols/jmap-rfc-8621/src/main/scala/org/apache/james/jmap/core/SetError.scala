@@ -75,8 +75,9 @@ object SetError {
     SetError(SetError.tooLargeValue, description, None)
   }
 
-  def invalidRecipients(description: SetErrorDescription, properties: Option[Properties] = None): SetError =
-    SetError(SetError.invalidRecipientsValue, description, properties)
+  def invalidRecipients(description: SetErrorDescription, invalidRecipients: List[String], properties: Option[Properties] = None): SetError =
+    SetError(SetError.invalidRecipientsValue, description, properties, Some(invalidRecipients))
 }
 
-case class SetError(`type`: SetErrorType, description: SetErrorDescription, properties: Option[Properties])
+case class SetError(`type`: SetErrorType, description: SetErrorDescription, properties: Option[Properties],
+                    invalidRecipients: Option[List[String]] = None)
