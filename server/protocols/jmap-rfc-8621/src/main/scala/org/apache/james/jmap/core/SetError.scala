@@ -39,6 +39,7 @@ object SetError {
   val mdnAlreadySentValue: SetErrorType = "mdnAlreadySent"
   val forbiddenFromValue: SetErrorType = "forbiddenFrom"
   val tooLargeValue: SetErrorType = "tooLarge"
+  val invalidRecipientsValue: SetErrorType = "invalidRecipients"
 
   def invalidArguments(description: SetErrorDescription, properties: Option[Properties] = None): SetError =
     SetError(invalidArgumentValue, description, properties)
@@ -73,6 +74,10 @@ object SetError {
   def tooLarge(description: SetErrorDescription): SetError = {
     SetError(SetError.tooLargeValue, description, None)
   }
+
+  def invalidRecipients(description: SetErrorDescription, invalidRecipients: List[String], properties: Option[Properties] = None): SetError =
+    SetError(SetError.invalidRecipientsValue, description, properties, Some(invalidRecipients))
 }
 
-case class SetError(`type`: SetErrorType, description: SetErrorDescription, properties: Option[Properties])
+case class SetError(`type`: SetErrorType, description: SetErrorDescription, properties: Option[Properties],
+                    invalidRecipients: Option[List[String]] = None)
