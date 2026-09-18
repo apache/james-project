@@ -119,7 +119,8 @@ trait EmailSubmissionSetValidateRcptContract {
                     |  "k1490": {
                     |    "type": "invalidRecipients",
                     |    "description": "Invalid recipients: unknown@${DOMAIN.asString}",
-                    |    "properties": ["envelope.rcptTo"]
+                    |    "properties": ["envelope.rcptTo"],
+                    |    "invalidRecipients": ["unknown@${DOMAIN.asString}"]
                     |  }
                     |}""".stripMargin)
 
@@ -131,7 +132,8 @@ trait EmailSubmissionSetValidateRcptContract {
                     |  "k1490": {
                     |    "type": "invalidRecipients",
                     |    "description": "Invalid recipients: unknown@${DOMAIN.asString}",
-                    |    "properties": ["envelope.rcptTo"]
+                    |    "properties": ["envelope.rcptTo"],
+                    |    "invalidRecipients": ["unknown@${DOMAIN.asString}"]
                     |  }
                     |}""".stripMargin)
 
