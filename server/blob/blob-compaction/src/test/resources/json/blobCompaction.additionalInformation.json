@@ -1,0 +1,13 @@
+{
+  "type": "BlobCompactionTask",
+  "timestamp": "2020-01-01T00:00:00Z",
+  "bucketName": "default",
+  "generation": 2,
+  "family": 1,
+  "packedBlobs": 10,
+  "packedBytes": 1024,
+  "chunksWritten": 1,
+  "deadPurged": 2,
+  "mergedChunks": 2,
+  "freedBytes": 512
+}
