@@ -35,6 +35,9 @@ import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStoreCacheCallback;
+import org.apache.james.blob.compaction.BlobIdRepairer;
+import org.apache.james.blob.compaction.BlobIdUpdater;
+import org.apache.james.blob.compaction.BlobReferenceMappingSource;
 import org.apache.james.events.EventListener;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
@@ -76,6 +79,9 @@ import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
+import org.apache.james.mailbox.cassandra.mail.CassandraBlobIdRepairer;
+import org.apache.james.mailbox.cassandra.mail.CassandraBlobIdUpdater;
+import org.apache.james.mailbox.cassandra.mail.CassandraBlobReferenceMappingSource;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -266,6 +272,10 @@ public class CassandraMailboxModule extends AbstractModule {
             .addBinding().to(AttachmentBlobReferenceSource.class);
         Multibinder.newSetBinder(binder(), BlobReferenceSource.class)
             .addBinding().to(MessageBlobReferenceSource.class);
+
+        bind(BlobIdUpdater.class).to(CassandraBlobIdUpdater.class).in(Scopes.SINGLETON);
+        bind(BlobIdRepairer.class).to(CassandraBlobIdRepairer.class).in(Scopes.SINGLETON);
+        bind(BlobReferenceMappingSource.class).to(CassandraBlobReferenceMappingSource.class).in(Scopes.SINGLETON);
 
         Multibinder<UsernameChangeTaskStep> usernameChangeTaskStepMultibinder = Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class);
         usernameChangeTaskStepMultibinder.addBinding().to(MailboxUsernameChangeTaskStep.class);

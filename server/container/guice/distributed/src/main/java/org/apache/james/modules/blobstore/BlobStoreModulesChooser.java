@@ -31,6 +31,8 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.ObjectStorageHealthCheck;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
+import org.apache.james.blob.compaction.BlobIdRepairer;
+import org.apache.james.blob.compaction.ChunkedBlobStoreDAO;
 import org.apache.james.blob.file.FileBlobStoreDAO;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
@@ -57,6 +59,8 @@ import org.apache.james.server.core.MissingArgumentException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -68,8 +72,9 @@ import com.google.inject.name.Names;
 import modules.BlobPostgresModule;
 
 public class BlobStoreModulesChooser {
-    private static final String RAW = "raw";
-    private static final String ENCRYPTION = "encryption";
+    public static final String RAW = "raw";
+    public static final String ENCRYPTION = "encryption";
+    public static final String PLAIN_CHAIN = "plain-chain";
 
     static class CassandraBlobStoreDAODeclarationModule extends AbstractModule {
         @Override
@@ -133,6 +138,7 @@ public class BlobStoreModulesChooser {
     static class NoCompressionModule extends AbstractModule {
         @Provides
         @Singleton
+        @Named(PLAIN_CHAIN)
         BlobStoreDAO blobStoreDAO(@Named(ENCRYPTION) BlobStoreDAO encryption) {
             return encryption;
         }
@@ -147,6 +153,7 @@ public class BlobStoreModulesChooser {
 
         @Provides
         @Singleton
+        @Named(PLAIN_CHAIN)
         BlobStoreDAO blobStoreDAO(@Named(ENCRYPTION) BlobStoreDAO encryption, MetricFactory metricFactory) {
             return new ZstdBlobStoreDAO(encryption, compressionConfiguration, metricFactory);
         }
@@ -154,6 +161,19 @@ public class BlobStoreModulesChooser {
         @Provides
         CompressionConfiguration compressionConfiguration() {
             return compressionConfiguration;
+        }
+    }
+
+    static class ChunkedBlobStoreModule extends AbstractModule {
+        @Provides
+        @Singleton
+        BlobStoreDAO blobStoreDAO(@Named(PLAIN_CHAIN) BlobStoreDAO plainChain,
+                                  @Named(RAW) BlobStoreDAO raw,
+                                  Injector injector) {
+            Optional<BlobIdRepairer> blobIdRepairer = Optional.ofNullable(
+                injector.getExistingBinding(Key.get(BlobIdRepairer.class)))
+                .map(binding -> binding.getProvider().get());
+            return new ChunkedBlobStoreDAO(plainChain, raw, blobIdRepairer);
         }
     }
 
@@ -191,6 +211,8 @@ public class BlobStoreModulesChooser {
             .add(chooseBlobStoreDAOModule(choosingConfiguration.getImplementation()))
             .add(chooseEncryptionModule(choosingConfiguration.getCryptoConfig()))
             .add(chooseCompressionModule(choosingConfiguration.getCompressionConfiguration()))
+            .add(new ChunkedBlobStoreModule())
+            .add(new BlobCompactionModule())
             .addAll(chooseStoragePolicyModule(choosingConfiguration.storageStrategy()))
             .add(new StoragePolicyConfigurationSanityEnforcementModule())
             .add(binder -> binder.bind(BlobStoreConfiguration.class).toInstance(choosingConfiguration))
