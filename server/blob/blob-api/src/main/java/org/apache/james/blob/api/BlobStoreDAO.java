@@ -39,6 +39,7 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.FileBackedOutputStream;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * James virtual blob store abstraction.
@@ -302,5 +303,53 @@ public interface BlobStoreDAO {
     default Publisher<BlobId> listBlobs(BucketName bucketName, String prefix) {
         return Flux.from(listBlobs(bucketName))
             .filter(blobId -> blobId.asString().startsWith(prefix));
+    }
+
+    record RangeByteSlice(byte[] data, long totalObjectSize) {
+        public static RangeByteSlice of(byte[] data, long totalObjectSize) {
+            return new RangeByteSlice(data, totalObjectSize);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            RangeByteSlice that = (RangeByteSlice) o;
+            return totalObjectSize == that.totalObjectSize && Arrays.equals(data, that.data);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Objects.hash(totalObjectSize);
+            result = 31 * result + Arrays.hashCode(data);
+            return result;
+        }
+    }
+
+    default Mono<RangeByteSlice> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+        return Mono.from(readBytes(bucketName, blobId))
+            .map(bytesBlob -> {
+                byte[] allBytes = bytesBlob.payload();
+                long totalSize = allBytes.length;
+                if (start < 0) {
+                    int suffixLength = (int) Math.min(totalSize, -start);
+                    int from = (int) (totalSize - suffixLength);
+                    byte[] slice = Arrays.copyOfRange(allBytes, from, (int) totalSize);
+                    return RangeByteSlice.of(slice, totalSize);
+                }
+                if (start >= totalSize) {
+                    return RangeByteSlice.of(new byte[0], totalSize);
+                }
+                long boundedEnd = Math.min(end, totalSize - 1);
+                if (boundedEnd < start) {
+                    return RangeByteSlice.of(new byte[0], totalSize);
+                }
+                byte[] slice = Arrays.copyOfRange(allBytes, (int) start, (int) boundedEnd + 1);
+                return RangeByteSlice.of(slice, totalSize);
+            });
     }
 }
