@@ -16,14 +16,19 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.blob.compaction;
+
+import java.util.Collection;
+import java.util.Set;
 
 import org.apache.james.blob.api.BlobId;
 import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Flux;
+
+@FunctionalInterface
 public interface BlobReferenceMappingSource {
     record BlobIdMessageIdMapping(BlobId blobId, String messageId) {
         public BlobIdMessageIdMapping {
@@ -33,4 +38,13 @@ public interface BlobReferenceMappingSource {
     }
 
     Publisher<BlobIdMessageIdMapping> listBlobIdMessageIdMappings();
+
+    default Publisher<BlobIdMessageIdMapping> loadReferencesFor(Collection<BlobId> blobIds) {
+        if (blobIds.isEmpty()) {
+            return Flux.empty();
+        }
+        Set<BlobId> targetBlobIds = Set.copyOf(blobIds);
+        return Flux.from(listBlobIdMessageIdMappings())
+            .filter(mapping -> targetBlobIds.contains(mapping.blobId()));
+    }
 }

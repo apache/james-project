@@ -91,6 +91,18 @@ class BlobCompactionAlgorithmTest {
                 msgIds.forEach(msgId -> list.add(new BlobIdMessageIdMapping(blobId, msgId))));
             return Flux.fromIterable(list);
         }
+
+        @Override
+        public Publisher<BlobIdMessageIdMapping> loadReferencesFor(Collection<BlobId> blobIds) {
+            List<BlobIdMessageIdMapping> list = new ArrayList<>();
+            for (BlobId blobId : blobIds) {
+                Set<String> msgIds = mappings.get(blobId);
+                if (msgIds != null) {
+                    msgIds.forEach(msgId -> list.add(new BlobIdMessageIdMapping(blobId, msgId)));
+                }
+            }
+            return Flux.fromIterable(list);
+        }
     }
 
     private MemoryBlobStoreDAO rawStore;

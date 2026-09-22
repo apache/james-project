@@ -25,7 +25,9 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.H
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.TABLE_NAME;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.inject.Inject;
 
@@ -38,6 +40,8 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
+
+import reactor.core.publisher.Flux;
 
 public class CassandraBlobReferenceMappingSource implements BlobReferenceMappingSource {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
@@ -70,5 +74,15 @@ public class CassandraBlobReferenceMappingSource implements BlobReferenceMapping
                 }
                 return mappings;
             });
+    }
+
+    @Override
+    public Publisher<BlobIdMessageIdMapping> loadReferencesFor(Collection<BlobId> blobIds) {
+        if (blobIds.isEmpty()) {
+            return Flux.empty();
+        }
+        Set<BlobId> targetBlobIds = Set.copyOf(blobIds);
+        return Flux.from(listBlobIdMessageIdMappings())
+            .filter(mapping -> targetBlobIds.contains(mapping.blobId()));
     }
 }

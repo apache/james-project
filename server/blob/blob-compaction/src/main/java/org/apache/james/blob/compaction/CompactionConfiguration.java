@@ -30,6 +30,7 @@ public class CompactionConfiguration {
     public static final double DEFAULT_PURGE_DEAD_RATIO = 0.1;               // 10%
     public static final double DEFAULT_MERGE_DEAD_RATIO = 0.5;               // 50%
     public static final double DEFAULT_GAIN_THRESHOLD = 0.1;                 // 10%
+    public static final int DEFAULT_WINDOW_BATCH_SIZE = 1000;
 
     public static final CompactionConfiguration DEFAULT = builder().build();
 
@@ -39,6 +40,7 @@ public class CompactionConfiguration {
         private double purgeDeadRatio = DEFAULT_PURGE_DEAD_RATIO;
         private double mergeDeadRatio = DEFAULT_MERGE_DEAD_RATIO;
         private double gainThreshold = DEFAULT_GAIN_THRESHOLD;
+        private int windowBatchSize = DEFAULT_WINDOW_BATCH_SIZE;
 
         public Builder chunkTargetSize(long chunkTargetSize) {
             Preconditions.checkArgument(chunkTargetSize > 0, "'chunkTargetSize' must be strictly positive");
@@ -73,8 +75,14 @@ public class CompactionConfiguration {
             return this;
         }
 
+        public Builder windowBatchSize(int windowBatchSize) {
+            Preconditions.checkArgument(windowBatchSize > 0, "'windowBatchSize' must be strictly positive");
+            this.windowBatchSize = windowBatchSize;
+            return this;
+        }
+
         public CompactionConfiguration build() {
-            return new CompactionConfiguration(chunkTargetSize, maxPackableSize, purgeDeadRatio, mergeDeadRatio, gainThreshold);
+            return new CompactionConfiguration(chunkTargetSize, maxPackableSize, purgeDeadRatio, mergeDeadRatio, gainThreshold, windowBatchSize);
         }
     }
 
@@ -87,13 +95,19 @@ public class CompactionConfiguration {
     private final double purgeDeadRatio;
     private final double mergeDeadRatio;
     private final double gainThreshold;
+    private final int windowBatchSize;
 
     public CompactionConfiguration(long chunkTargetSize, long maxPackableSize, double purgeDeadRatio, double mergeDeadRatio, double gainThreshold) {
+        this(chunkTargetSize, maxPackableSize, purgeDeadRatio, mergeDeadRatio, gainThreshold, DEFAULT_WINDOW_BATCH_SIZE);
+    }
+
+    public CompactionConfiguration(long chunkTargetSize, long maxPackableSize, double purgeDeadRatio, double mergeDeadRatio, double gainThreshold, int windowBatchSize) {
         this.chunkTargetSize = chunkTargetSize;
         this.maxPackableSize = maxPackableSize;
         this.purgeDeadRatio = purgeDeadRatio;
         this.mergeDeadRatio = mergeDeadRatio;
         this.gainThreshold = gainThreshold;
+        this.windowBatchSize = windowBatchSize;
     }
 
     public long chunkTargetSize() {
@@ -116,6 +130,10 @@ public class CompactionConfiguration {
         return gainThreshold;
     }
 
+    public int windowBatchSize() {
+        return windowBatchSize;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -126,14 +144,15 @@ public class CompactionConfiguration {
                 && maxPackableSize == that.maxPackableSize
                 && Double.compare(that.purgeDeadRatio, purgeDeadRatio) == 0
                 && Double.compare(that.mergeDeadRatio, mergeDeadRatio) == 0
-                && Double.compare(that.gainThreshold, gainThreshold) == 0;
+                && Double.compare(that.gainThreshold, gainThreshold) == 0
+                && windowBatchSize == that.windowBatchSize;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(chunkTargetSize, maxPackableSize, purgeDeadRatio, mergeDeadRatio, gainThreshold);
+        return Objects.hash(chunkTargetSize, maxPackableSize, purgeDeadRatio, mergeDeadRatio, gainThreshold, windowBatchSize);
     }
 
     @Override
@@ -144,6 +163,7 @@ public class CompactionConfiguration {
             .add("purgeDeadRatio", purgeDeadRatio)
             .add("mergeDeadRatio", mergeDeadRatio)
             .add("gainThreshold", gainThreshold)
+            .add("windowBatchSize", windowBatchSize)
             .toString();
     }
 }
