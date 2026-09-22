@@ -38,7 +38,9 @@ import jakarta.inject.Singleton;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.BlobStoreDAO.RangeByteSlice;
+import org.apache.james.blob.api.BlobStoreDAO.Blob;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataValue;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
@@ -249,7 +251,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Mono<RangeByteSlice> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+    public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
         String rangeHeader = formatRangeHeader(start, end);
 
@@ -259,11 +261,18 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .publishOn(Schedulers.parallel())
             .map(responseBytes -> {
                 long totalObjectSize = extractTotalObjectSize(responseBytes.response());
-                return RangeByteSlice.of(responseBytes.asByteArrayUnsafe(), totalObjectSize);
+                BlobMetadata metadata = asBlobMetadata(responseBytes.response().metadata())
+                    .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(String.valueOf(totalObjectSize)));
+                return (Blob) BytesBlob.of(responseBytes.asByteArrayUnsafe(), metadata);
             })
             .onErrorResume(this::isRangeNotSatisfiable, e ->
                 headObject(resolvedBucketName, blobId)
-                    .map(head -> RangeByteSlice.of(new byte[0], head.contentLength() != null ? head.contentLength() : 0L))
+                    .map(head -> {
+                        long totalSize = head.contentLength() != null ? head.contentLength() : 0L;
+                        BlobMetadata metadata = asBlobMetadata(head.metadata())
+                            .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(String.valueOf(totalSize)));
+                        return (Blob) BytesBlob.of(new byte[0], metadata);
+                    })
                     .onErrorMap(NoSuchBucketException.class, ex -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), ex))
                     .onErrorMap(NoSuchKeyException.class, ex -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), ex)))
             .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause);

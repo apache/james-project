@@ -24,6 +24,7 @@ import static org.apache.james.blob.objectstorage.aws.JamesS3MetricPublisher.DEF
 import static org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration.UPLOAD_RETRY_EXCEPTION_PREDICATE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
@@ -85,42 +86,42 @@ class S3BlobStoreDAORangeReadTest {
     }
 
     @Test
-    void readRangeFirstBytesShouldReturnFirstBytes() {
-        BlobStoreDAO.RangeByteSlice slice = testee.readRange(TEST_BUCKET_NAME, blobId, 0, 99).block();
+    void readRangeFirstBytesShouldReturnFirstBytes() throws IOException {
+        BlobStoreDAO.Blob slice = testee.readRange(TEST_BUCKET_NAME, blobId, 0, 99).block();
 
-        assertThat(slice.totalObjectSize()).isEqualTo(1000);
-        assertThat(slice.data()).isEqualTo(Arrays.copyOfRange(content, 0, 100));
+        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(1000);
+        assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(content, 0, 100));
     }
 
     @Test
-    void readRangeMidObjectShouldReturnMidBytes() {
-        BlobStoreDAO.RangeByteSlice slice = testee.readRange(TEST_BUCKET_NAME, blobId, 200, 399).block();
+    void readRangeMidObjectShouldReturnMidBytes() throws IOException {
+        BlobStoreDAO.Blob slice = testee.readRange(TEST_BUCKET_NAME, blobId, 200, 399).block();
 
-        assertThat(slice.totalObjectSize()).isEqualTo(1000);
-        assertThat(slice.data()).isEqualTo(Arrays.copyOfRange(content, 200, 400));
+        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(1000);
+        assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(content, 200, 400));
     }
 
     @Test
-    void readRangeLastBytesNegativeShouldReturnSuffix() {
-        BlobStoreDAO.RangeByteSlice slice = testee.readRange(TEST_BUCKET_NAME, blobId, -100, -1).block();
+    void readRangeLastBytesNegativeShouldReturnSuffix() throws IOException {
+        BlobStoreDAO.Blob slice = testee.readRange(TEST_BUCKET_NAME, blobId, -100, -1).block();
 
-        assertThat(slice.totalObjectSize()).isEqualTo(1000);
-        assertThat(slice.data()).isEqualTo(Arrays.copyOfRange(content, 900, 1000));
+        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(1000);
+        assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(content, 900, 1000));
     }
 
     @Test
-    void readRangeFullObjectShouldReturnAllBytes() {
-        BlobStoreDAO.RangeByteSlice slice = testee.readRange(TEST_BUCKET_NAME, blobId, 0, 999).block();
+    void readRangeFullObjectShouldReturnAllBytes() throws IOException {
+        BlobStoreDAO.Blob slice = testee.readRange(TEST_BUCKET_NAME, blobId, 0, 999).block();
 
-        assertThat(slice.totalObjectSize()).isEqualTo(1000);
-        assertThat(slice.data()).isEqualTo(content);
+        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(1000);
+        assertThat(slice.asBytes().payload()).isEqualTo(content);
     }
 
     @Test
-    void crossCheckAgainstFullReadShouldMatch() {
-        BlobStoreDAO.RangeByteSlice slice = testee.readRange(TEST_BUCKET_NAME, blobId, 150, 450).block();
+    void crossCheckAgainstFullReadShouldMatch() throws IOException {
+        BlobStoreDAO.Blob slice = testee.readRange(TEST_BUCKET_NAME, blobId, 150, 450).block();
         byte[] fullRead = Mono.from(testee.readBytes(TEST_BUCKET_NAME, blobId)).block().payload();
 
-        assertThat(slice.data()).isEqualTo(Arrays.copyOfRange(fullRead, 150, 451));
+        assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(fullRead, 150, 451));
     }
 }

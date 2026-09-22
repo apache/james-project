@@ -72,7 +72,7 @@ class ChunkedBlobStoreDAOTest {
         }
 
         @Override
-        public Mono<RangeByteSlice> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+        public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
             readRangeCallCount.incrementAndGet();
             return delegate.readRange(bucketName, blobId, start, end);
         }

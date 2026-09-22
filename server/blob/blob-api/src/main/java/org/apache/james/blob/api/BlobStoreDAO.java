@@ -305,51 +305,48 @@ public interface BlobStoreDAO {
             .filter(blobId -> blobId.asString().startsWith(prefix));
     }
 
-    record RangeByteSlice(byte[] data, long totalObjectSize) {
-        public static RangeByteSlice of(byte[] data, long totalObjectSize) {
-            return new RangeByteSlice(data, totalObjectSize);
-        }
+    BlobMetadataName TOTAL_OBJECT_SIZE = new BlobMetadataName("total-object-size");
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            RangeByteSlice that = (RangeByteSlice) o;
-            return totalObjectSize == that.totalObjectSize && Arrays.equals(data, that.data);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = Objects.hash(totalObjectSize);
-            result = 31 * result + Arrays.hashCode(data);
-            return result;
-        }
+    static long totalObjectSize(Blob blob) {
+        return blob.metadata().get(TOTAL_OBJECT_SIZE)
+            .map(val -> {
+                try {
+                    return Long.parseLong(val.value());
+                } catch (NumberFormatException e) {
+                    return 0L;
+                }
+            })
+            .orElseGet(() -> {
+                try {
+                    return (long) blob.asBytes().payload().length;
+                } catch (IOException e) {
+                    return 0L;
+                }
+            });
     }
 
-    default Mono<RangeByteSlice> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+    default Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
         return Mono.from(readBytes(bucketName, blobId))
             .map(bytesBlob -> {
                 byte[] allBytes = bytesBlob.payload();
                 long totalSize = allBytes.length;
+                BlobMetadata metadata = bytesBlob.metadata()
+                    .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(String.valueOf(totalSize)));
                 if (start < 0) {
                     int suffixLength = (int) Math.min(totalSize, -start);
                     int from = (int) (totalSize - suffixLength);
                     byte[] slice = Arrays.copyOfRange(allBytes, from, (int) totalSize);
-                    return RangeByteSlice.of(slice, totalSize);
+                    return (Blob) BytesBlob.of(slice, metadata);
                 }
                 if (start >= totalSize) {
-                    return RangeByteSlice.of(new byte[0], totalSize);
+                    return (Blob) BytesBlob.of(new byte[0], metadata);
                 }
                 long boundedEnd = Math.min(end, totalSize - 1);
                 if (boundedEnd < start) {
-                    return RangeByteSlice.of(new byte[0], totalSize);
+                    return (Blob) BytesBlob.of(new byte[0], metadata);
                 }
                 byte[] slice = Arrays.copyOfRange(allBytes, (int) start, (int) boundedEnd + 1);
-                return RangeByteSlice.of(slice, totalSize);
+                return (Blob) BytesBlob.of(slice, metadata);
             });
     }
 }

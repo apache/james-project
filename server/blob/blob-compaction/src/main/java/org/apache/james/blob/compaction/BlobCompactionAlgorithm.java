@@ -184,11 +184,13 @@ public class BlobCompactionAlgorithm {
                 .filter(blobId -> ChunkId.isChunkRef(blobId) && blobId.asString().indexOf('~') == -1)
                 .filter(blobId -> matchesGenerationAndFamily(blobId.asString(), request.generation(), request.family()))
                 .flatMap(chunkBlobId -> Mono.from(rawStore.readRange(request.bucketName(), chunkBlobId, -65536, -1))
-                    .map(tailSlice -> {
+                    .map(tailBlob -> {
                         try {
-                            ChunkFooter footer = ChunkFormat.readFooter(tailSlice.data(), tailSlice.totalObjectSize());
-                            return new ExistingChunk(chunkBlobId, tailSlice.totalObjectSize(), footer);
-                        } catch (ObjectStoreIOException e) {
+                            byte[] tailData = tailBlob.asBytes().payload();
+                            long totalSize = BlobStoreDAO.totalObjectSize(tailBlob);
+                            ChunkFooter footer = ChunkFormat.readFooter(tailData, totalSize);
+                            return new ExistingChunk(chunkBlobId, totalSize, footer);
+                        } catch (IOException e) {
                             LOGGER.warn("Failed reading footer for chunk object {}", chunkBlobId.asString(), e);
                             return null;
                         }
@@ -343,12 +345,13 @@ public class BlobCompactionAlgorithm {
         return Flux.fromIterable(analysis.liveSlots)
             .concatMap(liveSlot -> Mono.from(rawStore.readRange(request.bucketName(), analysis.chunk.chunkBlobId, liveSlot.offset, liveSlot.offset + liveSlot.limit - 1))
                 .publishOn(Schedulers.parallel())
-                .flatMap(slice -> {
+                .flatMap(sliceBlob -> {
                     try {
-                        byte[] decompressed = ChunkFormat.parseSlotBytes(slice.data(), liveSlot.offset);
+                        byte[] sliceData = sliceBlob.asBytes().payload();
+                        byte[] decompressed = ChunkFormat.parseSlotBytes(sliceData, liveSlot.offset);
                         return Mono.just(new LiveSlotWithContent(liveSlot, decompressed));
-                    } catch (ObjectStoreIOException e) {
-                        return Mono.error(e);
+                    } catch (IOException e) {
+                        return Mono.error(new ObjectStoreIOException("Failed parsing slot", e));
                     }
                 }))
             .collectList()
@@ -416,12 +419,13 @@ public class BlobCompactionAlgorithm {
         Mono<List<LiveSlotWithContent>> c1Live = Flux.fromIterable(pair.c1.liveSlots)
             .concatMap(slot -> Mono.from(rawStore.readRange(request.bucketName(), pair.c1.chunk.chunkBlobId, slot.offset, slot.offset + slot.limit - 1))
                 .publishOn(Schedulers.parallel())
-                .flatMap(slice -> {
+                .flatMap(sliceBlob -> {
                     try {
-                        byte[] decompressed = ChunkFormat.parseSlotBytes(slice.data(), slot.offset);
+                        byte[] sliceData = sliceBlob.asBytes().payload();
+                        byte[] decompressed = ChunkFormat.parseSlotBytes(sliceData, slot.offset);
                         return Mono.just(new LiveSlotWithContent(slot, decompressed));
-                    } catch (ObjectStoreIOException e) {
-                        return Mono.error(e);
+                    } catch (IOException e) {
+                        return Mono.error(new ObjectStoreIOException("Failed parsing slot", e));
                     }
                 }))
             .collectList();
@@ -429,12 +433,13 @@ public class BlobCompactionAlgorithm {
         Mono<List<LiveSlotWithContent>> c2Live = Flux.fromIterable(pair.c2.liveSlots)
             .concatMap(slot -> Mono.from(rawStore.readRange(request.bucketName(), pair.c2.chunk.chunkBlobId, slot.offset, slot.offset + slot.limit - 1))
                 .publishOn(Schedulers.parallel())
-                .flatMap(slice -> {
+                .flatMap(sliceBlob -> {
                     try {
-                        byte[] decompressed = ChunkFormat.parseSlotBytes(slice.data(), slot.offset);
+                        byte[] sliceData = sliceBlob.asBytes().payload();
+                        byte[] decompressed = ChunkFormat.parseSlotBytes(sliceData, slot.offset);
                         return Mono.just(new LiveSlotWithContent(slot, decompressed));
-                    } catch (ObjectStoreIOException e) {
-                        return Mono.error(e);
+                    } catch (IOException e) {
+                        return Mono.error(new ObjectStoreIOException("Failed parsing slot", e));
                     }
                 }))
             .collectList();

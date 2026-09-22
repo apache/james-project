@@ -20,6 +20,7 @@
 package org.apache.james.blob.compaction;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -118,23 +119,27 @@ public class ChunkedBlobStoreDAO implements BlobStoreDAO {
             BlobId chunkObjectBlobId = slotRef.chunkBlobId();
             return rawStore.readRange(bucketName, chunkObjectBlobId, offset, offset + limit - 1)
                 .publishOn(Schedulers.parallel())
-                .flatMap(rangeSlice -> {
-                    if (rangeSlice.data().length == 0 || offset >= rangeSlice.totalObjectSize()) {
-                        return Mono.error(new ObjectNotFoundException("Slot not found at offset " + offset + " in chunk " + chunkObjectBlobId.asString()));
-                    }
+                .flatMap(rangeBlob -> {
                     try {
-                        byte[] decompressed = ChunkFormat.parseSlotBytes(rangeSlice.data(), offset);
+                        byte[] rangeData = rangeBlob.asBytes().payload();
+                        long totalSize = BlobStoreDAO.totalObjectSize(rangeBlob);
+                        if (rangeData.length == 0 || offset >= totalSize) {
+                            return Mono.error(new ObjectNotFoundException("Slot not found at offset " + offset + " in chunk " + chunkObjectBlobId.asString()));
+                        }
+                        byte[] decompressed = ChunkFormat.parseSlotBytes(rangeData, offset);
                         return Mono.just(BytesBlob.of(decompressed));
-                    } catch (ObjectStoreIOException e) {
-                        return Mono.error(e);
+                    } catch (IOException e) {
+                        return Mono.error(new ObjectStoreIOException("Error reading slot for chunk " + chunkObjectBlobId.asString(), e));
                     }
                 });
         } else {
             BlobId chunkObjectBlobId = slotRef.chunkBlobId();
             return rawStore.readRange(bucketName, chunkObjectBlobId, -65536, -1)
-                .flatMap(tailSlice -> {
+                .flatMap(tailBlob -> {
                     try {
-                        ChunkFooter footer = ChunkFormat.readFooter(tailSlice.data(), tailSlice.totalObjectSize());
+                        byte[] tailData = tailBlob.asBytes().payload();
+                        long totalSize = BlobStoreDAO.totalObjectSize(tailBlob);
+                        ChunkFooter footer = ChunkFormat.readFooter(tailData, totalSize);
                         if (footer.slotCount() == 0) {
                             return Mono.just(BytesBlob.of(new byte[0]));
                         }
@@ -146,16 +151,17 @@ public class ChunkedBlobStoreDAO implements BlobStoreDAO {
                         long length = footer.slotLength(slotIndex);
                         return rawStore.readRange(bucketName, chunkObjectBlobId, start, start + length - 1)
                             .publishOn(Schedulers.parallel())
-                            .flatMap(slice -> {
+                            .flatMap(sliceBlob -> {
                                 try {
-                                    byte[] decompressed = ChunkFormat.parseSlotBytes(slice.data(), start);
+                                    byte[] sliceData = sliceBlob.asBytes().payload();
+                                    byte[] decompressed = ChunkFormat.parseSlotBytes(sliceData, start);
                                     return Mono.just(BytesBlob.of(decompressed));
-                                } catch (ObjectStoreIOException e) {
-                                    return Mono.error(e);
+                                } catch (IOException e) {
+                                    return Mono.error(new ObjectStoreIOException("Error reading slot at start " + start, e));
                                 }
                             });
-                    } catch (ObjectStoreIOException e) {
-                        return Mono.error(e);
+                    } catch (IOException e) {
+                        return Mono.error(new ObjectStoreIOException("Error reading chunk footer for " + chunkObjectBlobId.asString(), e));
                     }
                 });
         }
@@ -236,7 +242,7 @@ public class ChunkedBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Mono<RangeByteSlice> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+    public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
         if (ChunkId.isChunkRef(blobId)) {
             ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
             return rawStore.readRange(bucketName, chunkId.chunkBlobId(), start, end);

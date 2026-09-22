@@ -438,7 +438,7 @@ class BlobCompactionAlgorithmTest {
         }
 
         @Override
-        public Mono<RangeByteSlice> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+        public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
             byte[] allBytes = rawBlobs.get(blobId);
             if (allBytes == null) {
                 return Mono.error(new ObjectNotFoundException("Blob not found: " + blobId.asString()));
@@ -448,7 +448,7 @@ class BlobCompactionAlgorithmTest {
             int to;
             if (start < 0) {
                 int suffixLength = (int) Math.min(totalSize, -start);
-                from = (int) (totalSize - suffixLength);
+                from = (int) Math.max(0, totalSize - suffixLength);
                 to = (int) totalSize;
             } else {
                 from = (int) Math.min(totalSize, start);
@@ -456,7 +456,9 @@ class BlobCompactionAlgorithmTest {
             }
             byte[] slice = Arrays.copyOfRange(allBytes, from, to);
             maxRangedReadBytes.updateAndGet(curr -> Math.max(curr, slice.length));
-            return Mono.just(RangeByteSlice.of(slice, totalSize));
+            BlobMetadata metadata = BlobMetadata.empty()
+                .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(String.valueOf(totalSize)));
+            return Mono.just(BytesBlob.of(slice, metadata));
         }
 
         @Override
