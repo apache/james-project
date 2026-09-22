@@ -1,2 +1,24 @@
-*.ics eol=crlf
+# Auto detect text files
+* text=auto
+
+# Java, XML, Config — Unix LF
+*.java eol=lf
+*.xml eol=lf
+*.properties eol=lf
+*.conf eol=lf
+*.yaml eol=lf
+*.yml eol=lf
+*.md eol=lf
+*.txt eol=lf
+
+# Email и календари — RFC стандарт CRLF
 *.eml eol=crlf
+*.ics eol=crlf
+
+# Binary файлы
+*.jar binary
+*.class binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.zip binary
