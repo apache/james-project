@@ -356,8 +356,7 @@ public class AuthCmdHandler
             if (authTypes.isEmpty()) {
                 return Collections.emptyList();
             }
-            String joined = Joiner.on(AUTH_TYPES_DELIMITER).join(authTypes);
-            return ImmutableList.of("AUTH " + joined, "AUTH=" + joined);
+            return ImmutableList.of("AUTH " + Joiner.on(AUTH_TYPES_DELIMITER).join(authTypes));
         }
         return Collections.emptyList();
     }

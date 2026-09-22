@@ -162,7 +162,7 @@ INFO  16:42:22,977 | james.smtpserver | 167 Successfully spooled mail Mail129190
 
 DEBUG 17:23:42,297 | james.smtpserver | 262 org.apache.james.smtpserver.JamesWelcomeMessageHandler disconnect=false
 DEBUG 17:23:46,091 | james.smtpserver | 262 Lookup command handler for command: EHLO
-DEBUG 17:23:46,093 | james.smtpserver | 262 org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler: 250 [noname. Hello test (fileserver [192.168.0.254]), AUTH LOGIN PLAIN, AUTH=LOGIN PLAIN, PIPELINING, ENHANCEDSTATUSCODES, 8BITMIME]
+DEBUG 17:23:46,093 | james.smtpserver | 262 org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler: 250 [noname. Hello test (fileserver [192.168.0.254]), AUTH LOGIN PLAIN, PIPELINING, ENHANCEDSTATUSCODES, 8BITMIME]
 DEBUG 17:23:46,098 | james.smtpserver | 262 org.apache.james.protocols.smtp.core.SMTPCommandDispatcherLineHandler disconnect=false
 DEBUG 17:23:54,029 | james.smtpserver | 262 Lookup command handler for command: MAIL
 DEBUG 17:23:54,031 | james.smtpserver | 262 org.apache.james.smtpserver.JamesMailCmdHandler: 250 [2.1.0 Sender &lt;&gt; OK]
