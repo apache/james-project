@@ -587,4 +587,33 @@ class BlobCompactionAlgorithmTest {
         assertThat(readBlob2.metadata().get(new BlobStoreDAO.BlobMetadataName("custom-header")))
             .contains(new BlobStoreDAO.BlobMetadataValue("meta-value-2"));
     }
+
+    @Test
+    void initialCompactShouldUsePrefixPushdownToAvoidListingOtherFamiliesOrGenerations() {
+        BlobId targetBlob = new PlainBlobId("1_2_target");
+        BlobId otherGenBlob = new PlainBlobId("1_3_otherGen");
+        BlobId otherFamilyBlob = new PlainBlobId("2_2_otherFamily");
+
+        Mono.from(rawStore.save(TEST_BUCKET, targetBlob, BlobStoreDAO.BytesBlob.of("target"))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, otherGenBlob, BlobStoreDAO.BytesBlob.of("otherGen"))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, otherFamilyBlob, BlobStoreDAO.BytesBlob.of("otherFamily"))).block();
+
+        mappingSource.add(targetBlob, "msg-target");
+        mappingSource.add(otherGenBlob, "msg-otherGen");
+        mappingSource.add(otherFamilyBlob, "msg-otherFamily");
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder().chunkTargetSize(100_000).build())
+            .build();
+
+        CompactionResult result = testee.initialCompact(request).block();
+        assertThat(result.packedBlobs()).isEqualTo(1);
+
+        List<RecordingBlobIdUpdater.Replacement> replacements = recordingUpdater.getReplacements();
+        assertThat(replacements).hasSize(1);
+        assertThat(replacements.get(0).oldId()).isEqualTo(targetBlob);
+    }
 }

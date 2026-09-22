@@ -39,6 +39,7 @@ import org.apache.james.blob.compaction.BlobReferenceMappingSource.BlobIdMessage
 import org.apache.james.blob.compaction.ChunkFormat.BlobSlotContent;
 import org.apache.james.blob.compaction.ChunkFormat.ChunkWriteResult;
 import org.apache.james.blob.compaction.ChunkFormat.SlotRange;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,7 +150,11 @@ public class BlobCompactionAlgorithm {
                     return Mono.just(CompactionResult.NONE);
                 }
 
-                return Flux.from(rawStore.listBlobs(request.bucketName()))
+                Publisher<BlobId> candidatesListing = request.family()
+                    .map(family -> rawStore.listBlobs(request.bucketName(), family + "_" + request.generation() + "_"))
+                    .orElseGet(() -> rawStore.listBlobs(request.bucketName()));
+
+                return Flux.from(candidatesListing)
                     .filter(blobId -> matchesGenerationAndFamily(blobId.asString(), request.generation(), request.family()))
                     .filter(blobId -> !ChunkId.isChunkRef(blobId))
                     .filter(mapping::containsKey)
@@ -180,8 +185,12 @@ public class BlobCompactionAlgorithm {
     public Mono<CompactionResult> gcCompact(CompactionRequest request) {
         Preconditions.checkNotNull(request, "'request' must not be null");
 
+        Publisher<BlobId> chunkListing = request.family()
+            .map(family -> rawStore.listBlobs(request.bucketName(), family + "_" + request.generation() + "_chunk"))
+            .orElseGet(() -> rawStore.listBlobs(request.bucketName()));
+
         return loadReferenceMapping()
-            .flatMap(mapping -> Flux.from(rawStore.listBlobs(request.bucketName()))
+            .flatMap(mapping -> Flux.from(chunkListing)
                 .filter(blobId -> ChunkId.isChunkRef(blobId) && blobId.asString().indexOf('~') == -1)
                 .filter(blobId -> matchesGenerationAndFamily(blobId.asString(), request.generation(), request.family()))
                 .flatMap(chunkBlobId -> Mono.from(rawStore.readRange(request.bucketName(), chunkBlobId, -65536, -1))
