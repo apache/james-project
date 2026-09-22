@@ -1282,9 +1282,6 @@ public class SMTPServerTest {
         assertThat(capabilitieslist.contains("AUTH LOGIN PLAIN"))
             .as("anouncing auth required")
             .isTrue();
-        // is this required or just for compatibility?
-        // assertTrue("anouncing auth required",
-        // capabilitieslist.contains("AUTH=LOGIN PLAIN"));
 
         String userName = USER_LOCALHOST;
         String noexistUserName = "noexist_test_user_smtp";
@@ -1832,8 +1829,6 @@ public class SMTPServerTest {
         assertThat(capabilitieslist.contains("AUTH LOGIN PLAIN"))
             .as("anouncing auth required")
             .isTrue();
-        // is this required or just for compatibility? assertTrue("anouncing
-        // auth required", capabilitieslist.contains("AUTH=LOGIN PLAIN"));
 
         String userName = USER_LOCALHOST;
         String sender = USER_LOCALHOST;
