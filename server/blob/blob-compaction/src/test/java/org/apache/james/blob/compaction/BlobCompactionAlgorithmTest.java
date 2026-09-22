@@ -452,6 +452,132 @@ class BlobCompactionAlgorithmTest {
         assertThat(remainingBlobs).doesNotContain(succeedingBlob);
     }
 
+    @Test
+    void initialCompactShouldMaintainStoreCoherenceWhenReferenceUpdateFailsForSomeBlobs() {
+        BlobId blob1 = new PlainBlobId("1_2_blob1");
+        BlobId blob2Failing = new PlainBlobId("1_2_blob2_fail");
+        BlobId blob3 = new PlainBlobId("1_2_blob3");
+
+        byte[] payload1 = "Content of email 1".getBytes(StandardCharsets.UTF_8);
+        byte[] payload2 = "Content of email 2".getBytes(StandardCharsets.UTF_8);
+        byte[] payload3 = "Content of email 3".getBytes(StandardCharsets.UTF_8);
+
+        Mono.from(rawStore.save(TEST_BUCKET, blob1, BlobStoreDAO.BytesBlob.of(payload1))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, blob2Failing, BlobStoreDAO.BytesBlob.of(payload2))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, blob3, BlobStoreDAO.BytesBlob.of(payload3))).block();
+
+        mappingSource.add(blob1, "msg-1");
+        mappingSource.add(blob2Failing, "msg-2");
+        mappingSource.add(blob3, "msg-3");
+
+        Map<BlobId, BlobId> updatedReferences = new ConcurrentHashMap<>();
+        BlobIdUpdater partiallyFailingUpdater = (oldId, newId, messageIds) -> {
+            if (oldId.equals(blob2Failing)) {
+                return Mono.error(new RuntimeException("Simulated reference update failure"));
+            }
+            updatedReferences.put(oldId, newId);
+            return Mono.empty();
+        };
+
+        BlobCompactionAlgorithm algorithmWithFailingUpdater = new BlobCompactionAlgorithm(
+            rawStore, rawStore, mappingSource, partiallyFailingUpdater);
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .build();
+
+        CompactionResult result = algorithmWithFailingUpdater.initialCompact(request).block();
+
+        // Two succeeded, one failed
+        assertThat(result.packedBlobs()).isEqualTo(2);
+
+        // Coherence check 1: Failed candidate blob was NOT deleted from raw storage
+        byte[] readBlob2 = Mono.from(rawStore.readBytes(TEST_BUCKET, blob2Failing)).block().payload();
+        assertThat(readBlob2).isEqualTo(payload2);
+
+        // Coherence check 2: Successful candidate blobs had standalone blobs deleted
+        List<BlobId> remainingRawBlobs = Flux.from(rawStore.listBlobs(TEST_BUCKET)).collectList().block();
+        assertThat(remainingRawBlobs).contains(blob2Failing);
+        assertThat(remainingRawBlobs).doesNotContain(blob1, blob3);
+
+        // Coherence check 3: Successful candidate blobs can be read via their new chunk slot IDs
+        BlobId slotRef1 = updatedReferences.get(blob1);
+        BlobId slotRef3 = updatedReferences.get(blob3);
+        assertThat(slotRef1).isNotNull();
+        assertThat(slotRef3).isNotNull();
+
+        byte[] readSlot1 = readDecompressed(slotRef1);
+        byte[] readSlot3 = readDecompressed(slotRef3);
+        assertThat(readSlot1).isEqualTo(payload1);
+        assertThat(readSlot3).isEqualTo(payload3);
+
+        // Coherence check 4: Re-compacting once the failure is resolved allows the remaining blob to be compacted
+        BlobId anotherBlob = new PlainBlobId("1_2_blob4");
+        byte[] payload4 = "Content of email 4".getBytes(StandardCharsets.UTF_8);
+        Mono.from(rawStore.save(TEST_BUCKET, anotherBlob, BlobStoreDAO.BytesBlob.of(payload4))).block();
+        mappingSource.add(anotherBlob, "msg-4");
+
+        BlobIdUpdater recoveredUpdater = (oldId, newId, messageIds) -> {
+            updatedReferences.put(oldId, newId);
+            return Mono.empty();
+        };
+        BlobCompactionAlgorithm recoveredAlgorithm = new BlobCompactionAlgorithm(
+            rawStore, rawStore, mappingSource, recoveredUpdater);
+
+        CompactionResult secondResult = recoveredAlgorithm.initialCompact(request).block();
+        assertThat(secondResult.packedBlobs()).isEqualTo(2);
+
+        BlobId slotRef2 = updatedReferences.get(blob2Failing);
+        assertThat(slotRef2).isNotNull();
+        byte[] readSlot2 = readDecompressed(slotRef2);
+        assertThat(readSlot2).isEqualTo(payload2);
+    }
+
+    @Test
+    void gcCompactShouldMaintainStoreCoherenceWhenSlotReferenceUpdateFails() throws Exception {
+        byte[] payload1 = "Active live slot payload".getBytes(StandardCharsets.UTF_8);
+        byte[] payload2 = "Dead obsolete slot payload".getBytes(StandardCharsets.UTF_8);
+        ChunkWriteResult writeResult = ChunkFormat.writeChunk(List.of(
+            BlobSlotContent.of(payload1),
+            BlobSlotContent.of(payload2)));
+        ChunkId chunkId = ChunkId.ofChunk(FAMILY, TARGET_GENERATION);
+        Mono.from(rawStore.save(TEST_BUCKET, chunkId.chunkBlobId(), BlobStoreDAO.BytesBlob.of(writeResult.chunkBytes()))).block();
+
+        SlotRange range1 = writeResult.slotRanges().get(0);
+        ChunkId slot1 = ChunkId.slotRef(chunkId, range1.offset(), range1.limit());
+        // Only slot 1 is live in mappingSource; slot 2 is dead
+        mappingSource.add(slot1, "msg-live");
+
+        BlobIdUpdater failingUpdater = (oldId, newId, messageIds) ->
+            Mono.error(new RuntimeException("Simulated reference update failure during GC"));
+
+        BlobCompactionAlgorithm algorithm = new BlobCompactionAlgorithm(
+            rawStore, rawStore, mappingSource, failingUpdater);
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder()
+                .purgeDeadRatio(0.4)
+                .build())
+            .build();
+
+        // GC compaction fails during slot reference update
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> algorithm.gcCompact(request).block())
+            .isInstanceOf(RuntimeException.class);
+
+        // Coherence check 1: Original chunk was NOT deleted from raw storage
+        List<BlobId> remainingBlobs = Flux.from(rawStore.listBlobs(TEST_BUCKET)).collectList().block();
+        assertThat(remainingBlobs).contains(chunkId.chunkBlobId());
+
+        // Coherence check 2: Original live slot is still readable through ChunkedBlobStoreDAO and returns exact payload
+        byte[] readLiveSlot = readDecompressed(slot1);
+        assertThat(readLiveSlot).isEqualTo(payload1);
+    }
+
     static class RangedReadTrackingMemoryBlobStoreDAO extends MemoryBlobStoreDAO {
         private final AtomicLong maxRangedReadBytes = new AtomicLong(0);
         private final List<BlobId> wholeChunkReads = new CopyOnWriteArrayList<>();
