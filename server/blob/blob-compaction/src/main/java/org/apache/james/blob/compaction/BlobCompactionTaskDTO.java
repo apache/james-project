@@ -21,6 +21,7 @@ package org.apache.james.blob.compaction;
 
 import java.time.Clock;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.json.DTOModule;
@@ -62,6 +63,10 @@ public class BlobCompactionTaskDTO implements TaskDTO {
     }
 
     public static TaskDTOModule<BlobCompactionTask, BlobCompactionTaskDTO> module(BlobCompactionAlgorithm algorithm, Clock clock) {
+        return module(() -> algorithm, clock);
+    }
+
+    public static TaskDTOModule<BlobCompactionTask, BlobCompactionTaskDTO> module(Supplier<BlobCompactionAlgorithm> algorithmSupplier, Clock clock) {
         return DTOModule.forDomainObject(BlobCompactionTask.class)
             .convertToDTO(BlobCompactionTaskDTO.class)
             .toDomainObjectConverter(dto -> {
@@ -79,7 +84,7 @@ public class BlobCompactionTaskDTO implements TaskDTO {
 
                 dto.getFamily().ifPresent(requestBuilder::family);
 
-                return new BlobCompactionTask(algorithm, requestBuilder.build(), clock);
+                return new BlobCompactionTask(algorithmSupplier.get(), requestBuilder.build(), clock);
             })
             .toDTOConverter((domain, type) -> {
                 CompactionRequest req = domain.getRequest();

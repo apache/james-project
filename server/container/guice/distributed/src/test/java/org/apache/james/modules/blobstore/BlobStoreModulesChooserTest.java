@@ -179,4 +179,27 @@ class BlobStoreModulesChooserTest {
             Key.get(new TypeLiteral<Optional<BlobCompactionAlgorithm>>() {}));
         assertThat(algorithm).isEmpty();
     }
+
+    @Test
+    void optionalBlobCompactionAlgorithmShouldReturnEmptyInNonCassandraEnvironmentWithoutMappingDependencies() {
+        BlobStoreConfiguration config = BlobStoreConfiguration.builder()
+            .postgres()
+            .disableCache()
+            .passthrough()
+            .noCryptoConfig();
+
+        Injector injector = Guice.createInjector(
+            binder -> {
+                binder.bind(BlobStoreConfiguration.class).toInstance(config);
+                binder.bind(Clock.class).toInstance(Clock.systemUTC());
+                binder.bind(BlobStoreDAO.class).toProvider(() -> null);
+                binder.bind(BlobStoreDAO.class).annotatedWith(Names.named(BlobStoreModulesChooser.RAW)).toProvider(() -> null);
+            },
+            new BlobCompactionModule()
+        );
+
+        Optional<BlobCompactionAlgorithm> algorithm = injector.getInstance(
+            Key.get(new TypeLiteral<Optional<BlobCompactionAlgorithm>>() {}));
+        assertThat(algorithm).isEmpty();
+    }
 }

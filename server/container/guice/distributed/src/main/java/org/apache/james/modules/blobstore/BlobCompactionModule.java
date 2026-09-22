@@ -41,29 +41,21 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 public class BlobCompactionModule extends AbstractModule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BlobCompactionModule.class);
 
     @Provides
     @Singleton
     public CompactionConfiguration compactionConfiguration() {
         return CompactionConfiguration.DEFAULT;
     }
-
-    @Provides
-    @Singleton
-    public BlobCompactionAlgorithm blobCompactionAlgorithm(BlobStoreDAO blobStoreDAO,
-                                                          @Named(BlobStoreModulesChooser.RAW) BlobStoreDAO rawStore,
-                                                          BlobReferenceMappingSource mappingSource,
-                                                          BlobIdUpdater blobIdUpdater) {
-        return new BlobCompactionAlgorithm(blobStoreDAO, rawStore, mappingSource, blobIdUpdater);
-    }
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlobCompactionModule.class);
 
     @Provides
     @Singleton
@@ -79,25 +71,39 @@ public class BlobCompactionModule extends AbstractModule {
                 return Optional.empty();
             }
         }
-        if (injector.getExistingBinding(Key.get(BlobCompactionAlgorithm.class)) != null) {
-            return Optional.of(injector.getInstance(BlobCompactionAlgorithm.class));
+        if (injector.getExistingBinding(Key.get(BlobReferenceMappingSource.class)) != null
+            && injector.getExistingBinding(Key.get(BlobIdUpdater.class)) != null
+            && injector.getExistingBinding(Key.get(BlobStoreDAO.class)) != null
+            && injector.getExistingBinding(Key.get(BlobStoreDAO.class, Names.named(BlobStoreModulesChooser.RAW))) != null) {
+
+            BlobStoreDAO blobStoreDAO = injector.getInstance(BlobStoreDAO.class);
+            BlobStoreDAO rawStore = injector.getInstance(Key.get(BlobStoreDAO.class, Names.named(BlobStoreModulesChooser.RAW)));
+            BlobReferenceMappingSource mappingSource = injector.getInstance(BlobReferenceMappingSource.class);
+            BlobIdUpdater blobIdUpdater = injector.getInstance(BlobIdUpdater.class);
+            return Optional.of(new BlobCompactionAlgorithm(blobStoreDAO, rawStore, mappingSource, blobIdUpdater));
         }
         return Optional.empty();
     }
 
-    @ProvidesIntoSet
-    public TaskDTOModule<? extends Task, ? extends TaskDTO> blobCompactionTask(BlobCompactionAlgorithm algorithm, Clock clock) {
-        return BlobCompactionDTOModules.taskModule(algorithm, clock);
+    @Provides
+    @Singleton
+    public BlobCompactionAlgorithm blobCompactionAlgorithm(Optional<BlobCompactionAlgorithm> algorithm) {
+        return algorithm.orElseThrow(() -> new IllegalStateException("BlobCompactionAlgorithm is not available in the current environment"));
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<? extends Task, ? extends TaskDTO> initialBlobCompactionTask(BlobCompactionAlgorithm algorithm, Clock clock) {
-        return BlobCompactionDTOModules.initialCompactionTaskModule(algorithm, clock);
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> blobCompactionTask(Provider<BlobCompactionAlgorithm> algorithmProvider, Clock clock) {
+        return BlobCompactionDTOModules.taskModule(algorithmProvider::get, clock);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<? extends Task, ? extends TaskDTO> gcBlobCompactionTask(BlobCompactionAlgorithm algorithm, Clock clock) {
-        return BlobCompactionDTOModules.gcCompactionTaskModule(algorithm, clock);
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> initialBlobCompactionTask(Provider<BlobCompactionAlgorithm> algorithmProvider, Clock clock) {
+        return BlobCompactionDTOModules.initialCompactionTaskModule(algorithmProvider::get, clock);
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> gcBlobCompactionTask(Provider<BlobCompactionAlgorithm> algorithmProvider, Clock clock) {
+        return BlobCompactionDTOModules.gcCompactionTaskModule(algorithmProvider::get, clock);
     }
 
     @ProvidesIntoSet

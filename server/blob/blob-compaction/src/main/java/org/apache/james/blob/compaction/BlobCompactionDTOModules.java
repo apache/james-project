@@ -20,6 +20,7 @@
 package org.apache.james.blob.compaction;
 
 import java.time.Clock;
+import java.util.function.Supplier;
 
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -29,12 +30,24 @@ public class BlobCompactionDTOModules {
         return BlobCompactionTaskDTO.module(algorithm, clock);
     }
 
+    public static TaskDTOModule<BlobCompactionTask, BlobCompactionTaskDTO> taskModule(Supplier<BlobCompactionAlgorithm> algorithmSupplier, Clock clock) {
+        return BlobCompactionTaskDTO.module(algorithmSupplier, clock);
+    }
+
     public static TaskDTOModule<InitialBlobCompactionTask, InitialBlobCompactionTaskDTO> initialCompactionTaskModule(BlobCompactionAlgorithm algorithm, Clock clock) {
         return InitialBlobCompactionTaskDTO.module(algorithm, clock);
     }
 
+    public static TaskDTOModule<InitialBlobCompactionTask, InitialBlobCompactionTaskDTO> initialCompactionTaskModule(Supplier<BlobCompactionAlgorithm> algorithmSupplier, Clock clock) {
+        return InitialBlobCompactionTaskDTO.module(algorithmSupplier, clock);
+    }
+
     public static TaskDTOModule<GCBlobCompactionTask, GCBlobCompactionTaskDTO> gcCompactionTaskModule(BlobCompactionAlgorithm algorithm, Clock clock) {
         return GCBlobCompactionTaskDTO.module(algorithm, clock);
+    }
+
+    public static TaskDTOModule<GCBlobCompactionTask, GCBlobCompactionTaskDTO> gcCompactionTaskModule(Supplier<BlobCompactionAlgorithm> algorithmSupplier, Clock clock) {
+        return GCBlobCompactionTaskDTO.module(algorithmSupplier, clock);
     }
 
     public static AdditionalInformationDTOModule<BlobCompactionTask.AdditionalInformation, BlobCompactionTaskAdditionalInformationDTO> additionalInformationModule() {
