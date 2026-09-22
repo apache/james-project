@@ -168,6 +168,7 @@ public class BlobCompactionAlgorithm {
                     .filter(candidate -> candidate.payload.length < request.configuration().maxPackableSize());
 
                 return windowByCumulativeSize(packableCandidates, request.configuration().chunkTargetSize())
+                    .filter(batch -> batch.size() > 1)
                     .concatMap(batch -> persistChunkBatch(request, batch, mapping))
                     .reduce(CompactionResult.NONE, CompactionResult::combine);
             });
@@ -232,7 +233,7 @@ public class BlobCompactionAlgorithm {
     private Mono<CompactionResult> packAndPersistChunks(CompactionRequest request,
                                                        List<CandidateBlob> candidates,
                                                        Map<BlobId, Set<String>> mapping) {
-        if (candidates.isEmpty()) {
+        if (candidates.size() <= 1) {
             return Mono.just(CompactionResult.NONE);
         }
         return persistChunkBatch(request, candidates, mapping);
@@ -241,6 +242,10 @@ public class BlobCompactionAlgorithm {
     private Mono<CompactionResult> persistChunkBatch(CompactionRequest request,
                                                     List<CandidateBlob> batch,
                                                     Map<BlobId, Set<String>> mapping) {
+        if (batch.size() <= 1) {
+            LOGGER.debug("Skipping compaction for single candidate batch");
+            return Mono.just(CompactionResult.NONE);
+        }
         int family = request.family().orElseGet(() -> extractFamily(batch.get(0).blobId.asString()));
         ChunkId chunkId = ChunkId.ofChunk(family, request.generation());
 

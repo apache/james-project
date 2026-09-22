@@ -172,13 +172,17 @@ class BlobCompactionAlgorithmTest {
     @Test
     void initialCompactionPreservesDeduplication() {
         BlobId sharedBlobId = new PlainBlobId("1_2_shared");
+        BlobId otherBlobId = new PlainBlobId("1_2_other");
         byte[] sharedPayload = "Shared email attachment body".getBytes(StandardCharsets.UTF_8);
+        byte[] otherPayload = "Other email attachment body".getBytes(StandardCharsets.UTF_8);
 
         Mono.from(rawStore.save(TEST_BUCKET, sharedBlobId, BlobStoreDAO.BytesBlob.of(sharedPayload))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, otherBlobId, BlobStoreDAO.BytesBlob.of(otherPayload))).block();
 
         // Two messages reference the SAME blob
         mappingSource.add(sharedBlobId, "msg-A");
         mappingSource.add(sharedBlobId, "msg-B");
+        mappingSource.add(otherBlobId, "msg-C");
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -188,16 +192,19 @@ class BlobCompactionAlgorithmTest {
 
         CompactionResult result = testee.initialCompact(request).block();
 
-        assertThat(result.packedBlobs()).isEqualTo(1);
+        assertThat(result.packedBlobs()).isEqualTo(2);
         assertThat(result.chunksWritten()).isEqualTo(1);
 
-        // One replacement covering both messages
-        assertThat(recordingUpdater.getReplacements()).hasSize(1);
-        RecordingBlobIdUpdater.Replacement rep = recordingUpdater.getReplacements().get(0);
-        assertThat(rep.oldId()).isEqualTo(sharedBlobId);
-        assertThat(rep.messageIds()).containsExactlyInAnyOrder("msg-A", "msg-B");
+        // Replacements include one covering both messages for sharedBlobId
+        List<RecordingBlobIdUpdater.Replacement> reps = recordingUpdater.getReplacements();
+        assertThat(reps).hasSize(2);
+        RecordingBlobIdUpdater.Replacement sharedRep = reps.stream()
+            .filter(r -> r.oldId().equals(sharedBlobId))
+            .findFirst()
+            .orElseThrow();
+        assertThat(sharedRep.messageIds()).containsExactlyInAnyOrder("msg-A", "msg-B");
 
-        assertThat(readDecompressed(rep.newId())).isEqualTo(sharedPayload);
+        assertThat(readDecompressed(sharedRep.newId())).isEqualTo(sharedPayload);
     }
 
     @Test
@@ -590,15 +597,18 @@ class BlobCompactionAlgorithmTest {
 
     @Test
     void initialCompactShouldUsePrefixPushdownToAvoidListingOtherFamiliesOrGenerations() {
-        BlobId targetBlob = new PlainBlobId("1_2_target");
+        BlobId targetBlob1 = new PlainBlobId("1_2_target1");
+        BlobId targetBlob2 = new PlainBlobId("1_2_target2");
         BlobId otherGenBlob = new PlainBlobId("1_3_otherGen");
         BlobId otherFamilyBlob = new PlainBlobId("2_2_otherFamily");
 
-        Mono.from(rawStore.save(TEST_BUCKET, targetBlob, BlobStoreDAO.BytesBlob.of("target"))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, targetBlob1, BlobStoreDAO.BytesBlob.of("target1"))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, targetBlob2, BlobStoreDAO.BytesBlob.of("target2"))).block();
         Mono.from(rawStore.save(TEST_BUCKET, otherGenBlob, BlobStoreDAO.BytesBlob.of("otherGen"))).block();
         Mono.from(rawStore.save(TEST_BUCKET, otherFamilyBlob, BlobStoreDAO.BytesBlob.of("otherFamily"))).block();
 
-        mappingSource.add(targetBlob, "msg-target");
+        mappingSource.add(targetBlob1, "msg-target1");
+        mappingSource.add(targetBlob2, "msg-target2");
         mappingSource.add(otherGenBlob, "msg-otherGen");
         mappingSource.add(otherFamilyBlob, "msg-otherFamily");
 
@@ -610,11 +620,36 @@ class BlobCompactionAlgorithmTest {
             .build();
 
         CompactionResult result = testee.initialCompact(request).block();
-        assertThat(result.packedBlobs()).isEqualTo(1);
+        assertThat(result.packedBlobs()).isEqualTo(2);
 
         List<RecordingBlobIdUpdater.Replacement> replacements = recordingUpdater.getReplacements();
-        assertThat(replacements).hasSize(1);
-        assertThat(replacements.get(0).oldId()).isEqualTo(targetBlob);
+        assertThat(replacements).hasSize(2);
+        assertThat(replacements).extracting(r -> r.oldId().asString())
+            .containsExactlyInAnyOrder("1_2_target1", "1_2_target2");
+    }
+
+    @Test
+    void initialCompactShouldSkipPackingWhenCandidateCountIsOne() {
+        BlobId singleBlob = new PlainBlobId("1_2_single");
+        Mono.from(rawStore.save(TEST_BUCKET, singleBlob, BlobStoreDAO.BytesBlob.of("single-blob-payload"))).block();
+        mappingSource.add(singleBlob, "msg-single");
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder().chunkTargetSize(100_000).build())
+            .build();
+
+        CompactionResult result = testee.initialCompact(request).block();
+
+        assertThat(result.packedBlobs()).isEqualTo(0);
+        assertThat(result.chunksWritten()).isEqualTo(0);
+        assertThat(recordingUpdater.getReplacements()).isEmpty();
+
+        // Standalone blob remains untouched in raw storage
+        assertThat(Mono.from(rawStore.readBytes(TEST_BUCKET, singleBlob)).block().payload())
+            .isEqualTo("single-blob-payload".getBytes(StandardCharsets.UTF_8));
     }
 
     @Test
