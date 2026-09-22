@@ -23,107 +23,76 @@ import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.jms.ConnectionFactory;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQPrefetchPolicy;
-import org.apache.activemq.blob.BlobTransferPolicy;
-import org.apache.activemq.broker.BrokerPlugin;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.plugin.StatisticsBrokerPlugin;
-import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.config.Configuration;
+import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
+import org.apache.activemq.artemis.core.remoting.impl.invm.InVMAcceptorFactory;
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.james.filesystem.api.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Embedded Artemis broker replacing the legacy ActiveMQ embedded broker.
+ * Uses Apache ActiveMQ Artemis (Jakarta JMS) as the underlying message broker.
+ */
 public class EmbeddedActiveMQ {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedActiveMQ.class);
-    private static final String KAHADB_STORE_LOCATION = "file://var/store/activemq/brokers/KahaDB";
-    private static final String BLOB_TRANSFER_LOCATION = "file://var/store/activemq/blob-transfer";
-    private static final String BROCKERS_LOCATION = "file://var/store/activemq/brokers";
-    private static final String BROKER_ID = "broker";
+    private static final String DATA_DIRECTORY_RELATIVE = "var/store/artemis";
     private static final String BROKER_NAME = "james";
-    private static final String BROCKER_URI = "tcp://localhost:0";
-    private static final String STORE_USAGE_LIMIT_PROPERTY = "james.activemq.store.usage.limit.bytes";
-    private static final String TEMP_USAGE_LIMIT_PROPERTY = "james.activemq.temp.usage.limit.bytes";
-    private static final long DEFAULT_STORE_USAGE_LIMIT_BYTES = 10L * 1024 * 1024 * 1024; // 10 GB
-    private static final long DEFAULT_TEMP_USAGE_LIMIT_BYTES = 5L * 1024 * 1024 * 1024; // 5 GB
 
-    private final ActiveMQConnectionFactory activeMQConnectionFactory;
-    private final PersistenceAdapter persistenceAdapter;
-    private BrokerService brokerService;
+    private final ActiveMQConnectionFactory connectionFactory;
+    private final org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ embeddedServer;
 
     @Inject
-    private EmbeddedActiveMQ(FileSystem fileSystem, PersistenceAdapter persistenceAdapter, ActiveMQConfiguration configuration) {
-        this.persistenceAdapter = persistenceAdapter;
+    public EmbeddedActiveMQ(FileSystem fileSystem, ActiveMQConfiguration configuration) {
         try {
-            persistenceAdapter.setDirectory(fileSystem.getFile(KAHADB_STORE_LOCATION));
-            launchEmbeddedBroker(fileSystem, configuration);
+            String dataDirectory = fileSystem.getFile("file://" + DATA_DIRECTORY_RELATIVE).getAbsolutePath();
+            embeddedServer = createAndStartBroker(dataDirectory);
+            connectionFactory = createConnectionFactory();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to start embedded Artemis broker", e);
         }
-        activeMQConnectionFactory = createActiveMQConnectionFactory(createBlobTransferPolicy(fileSystem));
     }
 
     public ConnectionFactory getConnectionFactory() {
-        return activeMQConnectionFactory;
+        return connectionFactory;
     }
 
     @PreDestroy
     public void stop() throws Exception {
-        LOGGER.info("Stopping embedded ActiveMQ...");
-        brokerService.stop();
-        LOGGER.info("Stopped embedded ActiveMQ");
+        LOGGER.info("Stopping embedded Artemis broker...");
+        embeddedServer.stop();
+        connectionFactory.close();
+        LOGGER.info("Stopped embedded Artemis broker");
     }
 
-    private ActiveMQConnectionFactory createActiveMQConnectionFactory(BlobTransferPolicy blobTransferPolicy) {
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://james?create=false");
-        connectionFactory.setTrustAllPackages(false);
-        connectionFactory.setBlobTransferPolicy(blobTransferPolicy);
-        connectionFactory.setPrefetchPolicy(createActiveMQPrefetchPolicy());
-        return connectionFactory;
+    private org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ createAndStartBroker(String dataDirectory) throws Exception {
+        Configuration config = new ConfigurationImpl()
+            .setSecurityEnabled(false)
+            .setJMXManagementEnabled(false)
+            .setPersistenceEnabled(true)
+            .setJournalDirectory(dataDirectory + "/journal")
+            .setBindingsDirectory(dataDirectory + "/bindings")
+            .setLargeMessagesDirectory(dataDirectory + "/largemessages")
+            .setPagingDirectory(dataDirectory + "/paging")
+            .addAcceptorConfiguration(new TransportConfiguration(InVMAcceptorFactory.class.getName()))
+            .setName(BROKER_NAME);
+
+        org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ server = new org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ();
+        server.setConfiguration(config);
+        server.start();
+        LOGGER.info("Started embedded Artemis broker, data directory: {}", dataDirectory);
+        return server;
     }
 
-    private ActiveMQPrefetchPolicy createActiveMQPrefetchPolicy() {
-        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
-        prefetchPolicy.setQueuePrefetch(0);
-        prefetchPolicy.setTopicPrefetch(0);
-        return prefetchPolicy;
-    }
-
-    private BlobTransferPolicy createBlobTransferPolicy(FileSystem fileSystem) {
-        FileSystemBlobTransferPolicy blobTransferPolicy = new FileSystemBlobTransferPolicy();
-        blobTransferPolicy.setDefaultUploadUrl(BLOB_TRANSFER_LOCATION);
-        blobTransferPolicy.setFileSystem(fileSystem);
-        return blobTransferPolicy;
-    }
-
-    private void launchEmbeddedBroker(FileSystem fileSystem, ActiveMQConfiguration configuration) throws Exception {
-        brokerService = new BrokerService();
-        brokerService.setBrokerName(BROKER_NAME);
-        brokerService.setUseJmx(false);
-        brokerService.setPersistent(true);
-        brokerService.setDataDirectoryFile(fileSystem.getFile(BROCKERS_LOCATION));
-        brokerService.setUseShutdownHook(false);
-        brokerService.setSchedulerSupport(false);
-        brokerService.setAdjustUsageLimits(configuration.isAdjustUsageLimits());
-        long storeUsageLimitBytes = Long.getLong(STORE_USAGE_LIMIT_PROPERTY, DEFAULT_STORE_USAGE_LIMIT_BYTES);
-        long tempUsageLimitBytes = Long.getLong(TEMP_USAGE_LIMIT_PROPERTY, DEFAULT_TEMP_USAGE_LIMIT_BYTES);
-        brokerService.getSystemUsage().getStoreUsage().setLimit(storeUsageLimitBytes);
-        brokerService.getSystemUsage().getTempUsage().setLimit(tempUsageLimitBytes);
-        brokerService.setBrokerId(BROKER_ID);
-        String[] uris = {BROCKER_URI};
-        brokerService.setTransportConnectorURIs(uris);
-        ManagementContext managementContext = new ManagementContext();
-        managementContext.setCreateConnector(false);
-        brokerService.setManagementContext(managementContext);
-        brokerService.setPersistenceAdapter(persistenceAdapter);
-        BrokerPlugin[] brokerPlugins = {new StatisticsBrokerPlugin()};
-        brokerService.setPlugins(brokerPlugins);
-        brokerService.setEnableStatistics(true);
-        String[] transportConnectorsURIs = {BROCKER_URI};
-        brokerService.setTransportConnectorURIs(transportConnectorsURIs);
-        brokerService.start();
-        LOGGER.info("Started embedded ActiveMQ");
+    private ActiveMQConnectionFactory createConnectionFactory() {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+            "vm://0?broker-name=" + BROKER_NAME
+        );
+        factory.setConsumerWindowSize(0);
+        factory.setBlockOnAcknowledge(true);
+        return factory;
     }
 }

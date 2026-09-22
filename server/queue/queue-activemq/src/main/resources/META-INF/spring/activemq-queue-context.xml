@@ -20,7 +20,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
-    <!-- James Mail Queue Factory -->
+    <!-- James Mail Queue Factory (backed by embedded Artemis broker) -->
     <bean id="mailqueuefactory" class="org.apache.james.queue.activemq.ActiveMQMailQueueFactory">
         <constructor-arg index="0" ref="embeddedActiveMQ"/>
         <constructor-arg index="1" ref="rawMailQueueItemDecoratorFactory"/>
@@ -31,15 +31,17 @@
 
     <bean id="rawMailQueueItemDecoratorFactory" class="org.apache.james.queue.api.RawMailQueueItemDecoratorFactory"/>
 
+    <!--
+        Embedded Artemis broker replaces the legacy ActiveMQ BrokerService.
+        Constructor args: FileSystem, ActiveMQConfiguration
+        (PersistenceAdapter removed - Artemis uses its own journal)
+    -->
     <bean id="embeddedActiveMQ" class="org.apache.james.queue.activemq.EmbeddedActiveMQ">
         <constructor-arg index="0" ref="filesystem"/>
-        <constructor-arg index="1" ref="persistenceAdapter"/>
-        <constructor-arg index="2" ref="configuration"/>
+        <constructor-arg index="1" ref="activemqConfiguration"/>
     </bean>
-
-    <bean id="persistenceAdapter" class="org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter"/>
 
     <bean id="activeMQMetricCollector" class="org.apache.james.queue.activemq.metric.ActiveMQMetricCollectorNoop"/>
 
-    <bean id="configuration" class="org.apache.james.queue.activemq.ActiveMQConfiguration" factory-method="getDefault"/>
+    <bean id="activemqConfiguration" class="org.apache.james.queue.activemq.ActiveMQConfiguration" factory-method="getDefault"/>
 </beans>

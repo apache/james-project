@@ -19,11 +19,13 @@
 
 package org.apache.james.queue.jms;
 
-import org.apache.activemq.broker.BrokerPlugin;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.plugin.StatisticsBrokerPlugin;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.core.config.Configuration;
+import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
+import org.apache.activemq.artemis.core.remoting.impl.invm.InVMAcceptorFactory;
+import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.queue.api.MailQueueName;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -33,40 +35,46 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-import com.google.common.collect.ImmutableList;
-
-public class BrokerExtension  implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
+/**
+ * JUnit 5 extension providing an embedded Artemis broker for JMS queue tests.
+ * Replaces the legacy ActiveMQ BrokerService-based extension.
+ */
+public class BrokerExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
 
     public static final String STATISTICS = "Statistics";
 
-    public static MailQueueName generateRandomQueueName(BrokerService broker) {
+    /** Unique broker ID counter to avoid conflicts when multiple tests run. */
+    private static final AtomicInteger BROKER_COUNTER = new AtomicInteger(0);
+
+    /**
+     * Generate a random queue name and register it on the embedded broker.
+     * Priority support is handled by Artemis natively; no extra configuration needed.
+     */
+    public static MailQueueName generateRandomQueueName(EmbeddedActiveMQ broker) {
         String queueName = new RandomStringGenerator.Builder().withinRange('a', 'z').build().generate(10);
-        BrokerExtension.enablePrioritySupport(broker, queueName);
         return MailQueueName.of(queueName);
     }
 
-    private static void enablePrioritySupport(BrokerService aBroker, String queueName) {
-        PolicyMap pMap = new PolicyMap();
-        PolicyEntry entry = new PolicyEntry();
-        entry.setPrioritizedMessages(true);
-        entry.setQueue(queueName);
-        pMap.setPolicyEntries(ImmutableList.of(entry));
-        aBroker.setDestinationPolicy(pMap);
-    }
+    private final EmbeddedActiveMQ broker;
+    private final int brokerId;
 
-    private final BrokerService broker;
-
-    public BrokerExtension() throws Exception  {
-        broker = new BrokerService();
-        broker.setPersistent(false);
-        broker.setUseJmx(false);
+    public BrokerExtension() throws Exception {
+        brokerId = BROKER_COUNTER.incrementAndGet();
+        Configuration config = new ConfigurationImpl()
+            .setSecurityEnabled(false)
+            .setJMXManagementEnabled(false)
+            .setPersistenceEnabled(false)
+            .addAcceptorConfiguration(new TransportConfiguration(
+                InVMAcceptorFactory.class.getName(),
+                java.util.Collections.singletonMap("server-id", String.valueOf(brokerId))
+            ))
+            .setName("test-broker-" + brokerId);
+        broker = new EmbeddedActiveMQ();
+        broker.setConfiguration(config);
     }
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        if (context.getTags().contains(STATISTICS)) {
-            enableStatistics(broker);
-        }
         broker.start();
     }
 
@@ -75,14 +83,9 @@ public class BrokerExtension  implements ParameterResolver, BeforeAllCallback, A
         broker.stop();
     }
 
-    private void enableStatistics(BrokerService broker) {
-        broker.setPlugins(new BrokerPlugin[]{new StatisticsBrokerPlugin()});
-        broker.setEnableStatistics(true);
-    }
-
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == BrokerService.class);
+        return parameterContext.getParameter().getType() == EmbeddedActiveMQ.class;
     }
 
     @Override

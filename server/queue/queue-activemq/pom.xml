@@ -34,12 +34,6 @@
 
     <dependencies>
         <dependency>
-            <?SORTPOM IGNORE?>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-transport</artifactId>
-            <?SORTPOM RESUME?>
-        </dependency>
-        <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
         </dependency>
@@ -94,18 +88,16 @@
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
         </dependency>
+        <!-- Artemis Jakarta Client (JMS transport) -->
         <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-broker</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-kahadb-store</artifactId>
-            <version>${activemq.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
+            <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-jakarta-client</artifactId>
+        </dependency>
+        <!-- Artemis Jakarta Server (embedded broker replacing legacy ActiveMQ) -->
+        <dependency>
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-jakarta-server</artifactId>
+            <version>${activmq-artemis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.angus</groupId>

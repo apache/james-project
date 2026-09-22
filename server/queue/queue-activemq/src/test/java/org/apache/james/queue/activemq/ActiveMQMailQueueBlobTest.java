@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.queue.activemq;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,9 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.temporal.ChronoUnit;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQPrefetchPolicy;
-import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.metrics.api.GaugeRegistry;
@@ -52,35 +52,31 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Test for the Artemis-backed ActiveMQCacheableMailQueue.
+ * Blob functionality is not available with Artemis and is not tested here.
+ */
 @ExtendWith(BrokerExtension.class)
 @Tag(BrokerExtension.STATISTICS)
 public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract,
     MailQueueMetricContract {
 
     static final String BASE_DIR = "file://target/james-test";
-    static final boolean USE_BLOB = true;
 
     ActiveMQCacheableMailQueue mailQueue;
     MyFileSystem fileSystem;
 
     @BeforeEach
-    public void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
+    public void setUp(EmbeddedActiveMQ broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         fileSystem = new MyFileSystem();
-        ActiveMQConnectionFactory connectionFactory = createConnectionFactory();
-        connectionFactory.setTrustAllPackages(false);
-        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
-        prefetchPolicy.setQueuePrefetch(0);
-        connectionFactory.setPrefetchPolicy(prefetchPolicy);
-        FileSystemBlobTransferPolicy policy = new FileSystemBlobTransferPolicy();
-        policy.setFileSystem(fileSystem);
-        policy.setDefaultUploadUrl(BASE_DIR);
-        connectionFactory.setBlobTransferPolicy(policy);
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://0");
+        connectionFactory.setConsumerWindowSize(0);
 
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         MetricFactory metricFactory = metricTestSystem.getMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         MailQueueName queueName = BrokerExtension.generateRandomQueueName(broker);
-        mailQueue = new ActiveMQCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, USE_BLOB, metricFactory, gaugeRegistry);
+        mailQueue = new ActiveMQCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory, gaugeRegistry);
     }
 
     @AfterEach
@@ -162,17 +158,6 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
         long deliveryTimestamp = mailQueue.computeNextDeliveryTimestamp(ChronoUnit.FOREVER.getDuration());
 
         assertThat(deliveryTimestamp).isEqualTo(Long.MAX_VALUE);
-    }
-
-    protected ActiveMQConnectionFactory createConnectionFactory() {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
-
-        FileSystemBlobTransferPolicy policy = new FileSystemBlobTransferPolicy();
-        policy.setFileSystem(new MyFileSystem());
-        policy.setDefaultUploadUrl(BASE_DIR);
-        factory.setBlobTransferPolicy(policy);
-
-        return factory;
     }
 
     public static final class MyFileSystem implements FileSystem {

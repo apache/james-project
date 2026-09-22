@@ -157,6 +157,54 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     private static final Logger LOGGER = LoggerFactory.getLogger(JMSCacheableMailQueue.class);
 
     public static final String FORCE_DELIVERY = "FORCE_DELIVERY";
+    private static final String JAMES_MAIL_ATTR_PROP_PREFIX = "JAMES_ATTR_";
+
+    protected static String encodeAttributePropertyName(String attributeName) {
+        StringBuilder sb = new StringBuilder(JAMES_MAIL_ATTR_PROP_PREFIX);
+        for (int i = 0; i < attributeName.length(); i++) {
+            char c = attributeName.charAt(i);
+            if (Character.isJavaIdentifierPart(c)) {
+                sb.append(c);
+            } else {
+                sb.append(String.format("_%04x_", (int) c));
+            }
+        }
+        return sb.toString();
+    }
+
+    protected static String encodePerRecipientHeaderPropertyName(String recipientAddress) {
+        StringBuilder sb = new StringBuilder(JAMES_MAIL_PER_RECIPIENT_HEADERS).append('_');
+        for (int i = 0; i < recipientAddress.length(); i++) {
+            char c = recipientAddress.charAt(i);
+            if (Character.isJavaIdentifierPart(c)) {
+                sb.append(c);
+            } else {
+                sb.append(String.format("_%04x_", (int) c));
+            }
+        }
+        return sb.toString();
+    }
+
+    protected static String decodePerRecipientHeaderPropertyName(String propertyName) {
+        String encoded = propertyName.substring((JAMES_MAIL_PER_RECIPIENT_HEADERS + "_").length());
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        while (i < encoded.length()) {
+            if (encoded.charAt(i) == '_' && i + 5 < encoded.length() && encoded.charAt(i + 5) == '_') {
+                try {
+                    int charCode = Integer.parseInt(encoded.substring(i + 1, i + 5), 16);
+                    sb.append((char) charCode);
+                    i += 6;
+                    continue;
+                } catch (NumberFormatException e) {
+                    // Not encoded hex, fall through
+                }
+            }
+            sb.append(encoded.charAt(i));
+            i++;
+        }
+        return sb.toString();
+    }
 
     protected final MailQueueName queueName;
     protected final Connection connection;
@@ -362,7 +410,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
         mail.getPerRecipientSpecificHeaders().getHeadersByRecipient()
             .asMap()
-            .forEach((recipient, headers) -> props.put(JAMES_MAIL_PER_RECIPIENT_HEADERS + "-" + recipient.asString(),
+            .forEach((recipient, headers) -> props.put(encodePerRecipientHeaderPropertyName(recipient.asString()),
                 Joiner.on('\n')
                     .join(headers.stream()
                         .map(PerRecipientHeaders.Header::asString)
@@ -377,7 +425,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         String sender = mail.getMaybeSender().asString("");
 
         props.putAll(mail.attributes()
-            .flatMap(attribute -> attribute.getValue().toJson().map(JsonNode::toString).map(s -> Pair.of(attribute.getName().asString(), s)).stream())
+            .flatMap(attribute -> attribute.getValue().toJson().map(JsonNode::toString).map(s -> Pair.of(encodeAttributePropertyName(attribute.getName().asString()), s)).stream())
             .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)));
 
         ImmutableList<String> attributeNames = mail.attributeNames()
@@ -437,10 +485,16 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         PerRecipientHeaders perRecipientHeaders = new PerRecipientHeaders();
         ImmutableList.copyOf(properties.asIterator())
             .stream()
-            .filter(property -> property.startsWith(JAMES_MAIL_PER_RECIPIENT_HEADERS + "-"))
+            .filter(property -> property.startsWith(JAMES_MAIL_PER_RECIPIENT_HEADERS + "_") || property.startsWith(JAMES_MAIL_PER_RECIPIENT_HEADERS + "-"))
             .flatMap(property -> {
                 try {
-                    MailAddress address = new MailAddress(property.substring(JAMES_MAIL_PER_RECIPIENT_HEADERS.length() + 1));
+                    String recipientStr;
+                    if (property.startsWith(JAMES_MAIL_PER_RECIPIENT_HEADERS + "_")) {
+                        recipientStr = decodePerRecipientHeaderPropertyName(property);
+                    } else {
+                        recipientStr = property.substring(JAMES_MAIL_PER_RECIPIENT_HEADERS.length() + 1);
+                    }
+                    MailAddress address = new MailAddress(recipientStr);
                     String headers = message.getStringProperty(property);
                     return Splitter.on('\n').splitToStream(headers)
                         .map(PerRecipientHeaders.Header::fromString)
@@ -485,8 +539,22 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
     private Stream<Attribute> mailAttribute(Message message, String name) {
         // Now cast the property back to Serializable and set it as attribute.
-        // See JAMES-1241
-        Object attrValue = Throwing.function(message::getObjectProperty).apply(name);
+        // See JAMES-1241. Property name is encoded to ensure it is a valid JMS identifier.
+        Object attrValue = Throwing.function((String prop) -> {
+            try {
+                Object val = message.getObjectProperty(prop);
+                if (val != null) {
+                    return val;
+                }
+            } catch (Exception e) {
+                // Fall back to raw name if property name check failed
+            }
+            try {
+                return message.getObjectProperty(name);
+            } catch (Exception e) {
+                return null;
+            }
+        }).apply(encodeAttributePropertyName(name));
 
         if (attrValue instanceof String) {
             try {
