@@ -47,6 +47,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 
+import com.github.luben.zstd.Zstd;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -106,6 +108,17 @@ class BlobCompactionAlgorithmTest {
         testee = new BlobCompactionAlgorithm(rawStore, rawStore, mappingSource, recordingUpdater);
     }
 
+    private byte[] readDecompressed(BlobId blobId) {
+        BlobStoreDAO.BytesBlob blob = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, blobId)).block();
+        if (blob.metadata().contentEncoding().filter(BlobStoreDAO.ContentEncoding.ZSTD::equals).isPresent()) {
+            long origSize = blob.metadata().get(BlobSlot.CONTENT_ORIGINAL_SIZE)
+                .map(v -> Long.parseLong(v.value()))
+                .orElse((long) blob.payload().length);
+            return Zstd.decompress(blob.payload(), (int) origSize);
+        }
+        return blob.payload();
+    }
+
     @Test
     void initialCompactionShouldPackSmallBlobsAndSkipLargeBlobs() {
         BlobId small1 = new PlainBlobId("1_2_small1");
@@ -152,11 +165,8 @@ class BlobCompactionAlgorithmTest {
         assertThat(ChunkId.isChunkRef(newSlotRef1)).isTrue();
         assertThat(ChunkId.isChunkRef(newSlotRef2)).isTrue();
 
-        // Ranged read of new slot refs returns exact content
-        byte[] read1 = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, newSlotRef1)).block().payload();
-        byte[] read2 = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, newSlotRef2)).block().payload();
-        assertThat(read1).isEqualTo(payload1);
-        assertThat(read2).isEqualTo(payload2);
+        assertThat(readDecompressed(newSlotRef1)).isEqualTo(payload1);
+        assertThat(readDecompressed(newSlotRef2)).isEqualTo(payload2);
     }
 
     @Test
@@ -187,9 +197,7 @@ class BlobCompactionAlgorithmTest {
         assertThat(rep.oldId()).isEqualTo(sharedBlobId);
         assertThat(rep.messageIds()).containsExactlyInAnyOrder("msg-A", "msg-B");
 
-        // Content readable
-        byte[] read = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, rep.newId())).block().payload();
-        assertThat(read).isEqualTo(sharedPayload);
+        assertThat(readDecompressed(rep.newId())).isEqualTo(sharedPayload);
     }
 
     @Test
@@ -235,8 +243,7 @@ class BlobCompactionAlgorithmTest {
         // Surviving slots readable
         for (int i = 0; i < 8; i++) {
             BlobId newSlotRef = recordingUpdater.getReplacements().get(i).newId();
-            byte[] read = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, newSlotRef)).block().payload();
-            assertThat(read).isEqualTo(("Slot content " + i).getBytes(StandardCharsets.UTF_8));
+            assertThat(readDecompressed(newSlotRef)).isEqualTo(("Slot content " + i).getBytes(StandardCharsets.UTF_8));
         }
     }
 
@@ -320,8 +327,8 @@ class BlobCompactionAlgorithmTest {
         BlobId newSlot1 = recordingUpdater.getReplacements().get(0).newId();
         BlobId newSlot2 = recordingUpdater.getReplacements().get(1).newId();
 
-        assertThat(Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, newSlot1)).block().payload()).isEqualTo(payload1);
-        assertThat(Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, newSlot2)).block().payload()).isEqualTo(payload2);
+        assertThat(readDecompressed(newSlot1)).isEqualTo(payload1);
+        assertThat(readDecompressed(newSlot2)).isEqualTo(payload2);
     }
 
     @Test

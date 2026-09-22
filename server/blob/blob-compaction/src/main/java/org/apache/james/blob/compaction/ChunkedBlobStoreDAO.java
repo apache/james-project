@@ -126,8 +126,8 @@ public class ChunkedBlobStoreDAO implements BlobStoreDAO {
                         if (rangeData.length == 0 || offset >= totalSize) {
                             return Mono.error(new ObjectNotFoundException("Slot not found at offset " + offset + " in chunk " + chunkObjectBlobId.asString()));
                         }
-                        byte[] decompressed = ChunkFormat.parseSlotBytes(rangeData, offset);
-                        return Mono.just(BytesBlob.of(decompressed));
+                        BlobSlot slot = ChunkFormat.parseSlot(rangeData, offset);
+                        return Mono.just(slot.toBlob());
                     } catch (IOException e) {
                         return Mono.error(new ObjectStoreIOException("Error reading slot for chunk " + chunkObjectBlobId.asString(), e));
                     }
@@ -154,8 +154,8 @@ public class ChunkedBlobStoreDAO implements BlobStoreDAO {
                             .flatMap(sliceBlob -> {
                                 try {
                                     byte[] sliceData = sliceBlob.asBytes().payload();
-                                    byte[] decompressed = ChunkFormat.parseSlotBytes(sliceData, start);
-                                    return Mono.just(BytesBlob.of(decompressed));
+                                    BlobSlot slot = ChunkFormat.parseSlot(sliceData, start);
+                                    return Mono.just(slot.toBlob());
                                 } catch (IOException e) {
                                     return Mono.error(new ObjectStoreIOException("Error reading slot at start " + start, e));
                                 }

@@ -197,10 +197,11 @@ class ChunkFormatTest {
         ByteBuffer bb = ByteBuffer.wrap(chunkBytes);
         assertThat(bb.getLong(1)).isEqualTo(1L);
 
-        // Bytes 9..12: CRC32C of "Test"
+        // Bytes 9..12: CRC32C of compressed content
         int crc = bb.getInt(9);
+        byte[] compressed = com.github.luben.zstd.Zstd.compress(raw);
         java.util.zip.CRC32C crcCalculator = new java.util.zip.CRC32C();
-        crcCalculator.update(raw);
+        crcCalculator.update(compressed);
         assertThat(crc).isEqualTo((int) crcCalculator.getValue());
 
         // Followed by metadata

@@ -74,7 +74,7 @@ import modules.BlobPostgresModule;
 public class BlobStoreModulesChooser {
     public static final String RAW = "raw";
     public static final String ENCRYPTION = "encryption";
-    public static final String PLAIN_CHAIN = "plain-chain";
+    public static final String CHUNKED = "chunked";
 
     static class CassandraBlobStoreDAODeclarationModule extends AbstractModule {
         @Override
@@ -138,9 +138,8 @@ public class BlobStoreModulesChooser {
     static class NoCompressionModule extends AbstractModule {
         @Provides
         @Singleton
-        @Named(PLAIN_CHAIN)
-        BlobStoreDAO blobStoreDAO(@Named(ENCRYPTION) BlobStoreDAO encryption) {
-            return encryption;
+        BlobStoreDAO blobStoreDAO(@Named(CHUNKED) BlobStoreDAO chunked, MetricFactory metricFactory) {
+            return new ZstdBlobStoreDAO(chunked, CompressionConfiguration.builder().enabled(false).minRatio(0).build(), metricFactory);
         }
     }
 
@@ -153,9 +152,8 @@ public class BlobStoreModulesChooser {
 
         @Provides
         @Singleton
-        @Named(PLAIN_CHAIN)
-        BlobStoreDAO blobStoreDAO(@Named(ENCRYPTION) BlobStoreDAO encryption, MetricFactory metricFactory) {
-            return new ZstdBlobStoreDAO(encryption, compressionConfiguration, metricFactory);
+        BlobStoreDAO blobStoreDAO(@Named(CHUNKED) BlobStoreDAO chunked, MetricFactory metricFactory) {
+            return new ZstdBlobStoreDAO(chunked, compressionConfiguration, metricFactory);
         }
 
         @Provides
@@ -167,13 +165,14 @@ public class BlobStoreModulesChooser {
     static class ChunkedBlobStoreModule extends AbstractModule {
         @Provides
         @Singleton
-        BlobStoreDAO blobStoreDAO(@Named(PLAIN_CHAIN) BlobStoreDAO plainChain,
+        @Named(CHUNKED)
+        BlobStoreDAO blobStoreDAO(@Named(ENCRYPTION) BlobStoreDAO encryption,
                                   @Named(RAW) BlobStoreDAO raw,
                                   Injector injector) {
             Optional<BlobIdRepairer> blobIdRepairer = Optional.ofNullable(
                 injector.getExistingBinding(Key.get(BlobIdRepairer.class)))
                 .map(binding -> binding.getProvider().get());
-            return new ChunkedBlobStoreDAO(plainChain, raw, blobIdRepairer);
+            return new ChunkedBlobStoreDAO(encryption, raw, blobIdRepairer);
         }
     }
 
@@ -210,8 +209,8 @@ public class BlobStoreModulesChooser {
         return ImmutableList.<Module>builder()
             .add(chooseBlobStoreDAOModule(choosingConfiguration.getImplementation()))
             .add(chooseEncryptionModule(choosingConfiguration.getCryptoConfig()))
-            .add(chooseCompressionModule(choosingConfiguration.getCompressionConfiguration()))
             .add(new ChunkedBlobStoreModule())
+            .add(chooseCompressionModule(choosingConfiguration.getCompressionConfiguration()))
             .add(new BlobCompactionModule())
             .addAll(chooseStoragePolicyModule(choosingConfiguration.storageStrategy()))
             .add(new StoragePolicyConfigurationSanityEnforcementModule())

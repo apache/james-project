@@ -43,6 +43,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 
+import com.github.luben.zstd.Zstd;
+
 import reactor.core.publisher.Mono;
 
 class ChunkedBlobStoreDAOTest {
@@ -184,14 +186,21 @@ class ChunkedBlobStoreDAOTest {
 
         countingRawStore.resetCount();
 
-        byte[] readSlot1 = Mono.from(testee.readBytes(TEST_BUCKET, slot1)).block().payload();
-        assertThat(readSlot1).isEqualTo(content1);
+        // ChunkedBlobStoreDAO returns slot tagged with ContentEncoding.ZSTD
+        BlobStoreDAO.BytesBlob rawSlot1 = Mono.from(testee.readBytes(TEST_BUCKET, slot1)).block();
+        assertThat(rawSlot1.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
+        assertThat(rawSlot1.metadata().get(BlobSlot.CONTENT_ORIGINAL_SIZE))
+            .contains(new BlobStoreDAO.BlobMetadataValue(String.valueOf(content1.length)));
+        byte[] decompressed1 = Zstd.decompress(rawSlot1.payload(), content1.length);
+        assertThat(decompressed1).isEqualTo(content1);
         assertThat(countingRawStore.rangeCallCount()).isEqualTo(1); // EXACTLY ONE ranged read!
 
         countingRawStore.resetCount();
 
-        byte[] readSlot2 = Mono.from(testee.readBytes(TEST_BUCKET, slot2)).block().payload();
-        assertThat(readSlot2).isEqualTo(content2);
+        BlobStoreDAO.BytesBlob rawSlot2 = Mono.from(testee.readBytes(TEST_BUCKET, slot2)).block();
+        assertThat(rawSlot2.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
+        byte[] decompressed2 = Zstd.decompress(rawSlot2.payload(), content2.length);
+        assertThat(decompressed2).isEqualTo(content2);
         assertThat(countingRawStore.rangeCallCount()).isEqualTo(1); // EXACTLY ONE ranged read!
     }
 
@@ -206,9 +215,11 @@ class ChunkedBlobStoreDAOTest {
         ChunkId walkRef = ChunkId.slotRef(baseChunk, 1, 0); // limit == 0 triggers footer walk
 
         countingRawStore.resetCount();
-        byte[] readResult = Mono.from(testee.readBytes(TEST_BUCKET, walkRef)).block().payload();
+        BlobStoreDAO.BytesBlob readResult = Mono.from(testee.readBytes(TEST_BUCKET, walkRef)).block();
 
-        assertThat(readResult).isEqualTo(content);
+        assertThat(readResult.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
+        byte[] decompressed = Zstd.decompress(readResult.payload(), content.length);
+        assertThat(decompressed).isEqualTo(content);
         // Footer walk does 2 range reads: 1 for tail buffer (footer), 1 for slot data
         assertThat(countingRawStore.rangeCallCount()).isEqualTo(2);
     }
@@ -258,11 +269,18 @@ class ChunkedBlobStoreDAOTest {
 
         assertThat(slotRefForMessageA).isEqualTo(slotRefForMessageB);
 
-        byte[] readForA = Mono.from(testee.readBytes(TEST_BUCKET, slotRefForMessageA)).block().payload();
-        byte[] readForB = Mono.from(testee.readBytes(TEST_BUCKET, slotRefForMessageB)).block().payload();
+        BlobStoreDAO.BytesBlob readBlobA = Mono.from(testee.readBytes(TEST_BUCKET, slotRefForMessageA)).block();
+        BlobStoreDAO.BytesBlob readBlobB = Mono.from(testee.readBytes(TEST_BUCKET, slotRefForMessageB)).block();
 
-        assertThat(readForA).isEqualTo(sharedEmailBody);
-        assertThat(readForB).isEqualTo(sharedEmailBody);
+        assertThat(readBlobA.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
+        assertThat(readBlobB.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
+        assertThat(readBlobA.payload()).isEqualTo(readBlobB.payload());
+
+        byte[] decompressedA = Zstd.decompress(readBlobA.payload(), sharedEmailBody.length);
+        byte[] decompressedB = Zstd.decompress(readBlobB.payload(), sharedEmailBody.length);
+
+        assertThat(decompressedA).isEqualTo(sharedEmailBody);
+        assertThat(decompressedB).isEqualTo(sharedEmailBody);
     }
 
     @Test
@@ -314,9 +332,10 @@ class ChunkedBlobStoreDAOTest {
         };
 
         ChunkedBlobStoreDAO daoWithRepairer = new ChunkedBlobStoreDAO(plainChain, countingRawStore, Optional.of(repairer));
-
-        byte[] repairedRead = Mono.from(daoWithRepairer.readBytes(TEST_BUCKET, staleSlot)).block().payload();
-        assertThat(repairedRead).isEqualTo(content);
+        BlobStoreDAO.BytesBlob repairedSlot = Mono.from(daoWithRepairer.readBytes(TEST_BUCKET, staleSlot)).block();
+        assertThat(repairedSlot.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
+        byte[] decompressed = Zstd.decompress(repairedSlot.payload(), content.length);
+        assertThat(decompressed).isEqualTo(content);
     }
 
     @Test

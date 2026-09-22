@@ -66,16 +66,16 @@ public class ChunkFormat {
             byte[] raw = slot.rawContent();
             long originalSize = slot.originalSize();
 
-            CRC32C crc = new CRC32C();
-            crc.update(raw);
-            int crc32c = (int) crc.getValue();
-
             byte[] compressed;
             if (raw.length == 0) {
                 compressed = new byte[0];
             } else {
                 compressed = Zstd.compress(raw);
             }
+
+            CRC32C crc = new CRC32C();
+            crc.update(compressed);
+            int crc32c = (int) crc.getValue();
 
             String metadata = METADATA_ENCODING + METADATA_SIZE_PREFIX + originalSize + "\n";
             byte[] metadataBytes = metadata.getBytes(StandardCharsets.US_ASCII);
@@ -127,16 +127,16 @@ public class ChunkFormat {
             byte[] raw = slot.rawContent();
             long originalSize = slot.originalSize();
 
-            CRC32C crc = new CRC32C();
-            crc.update(raw);
-            int crc32c = (int) crc.getValue();
-
             byte[] compressed;
             if (raw.length == 0) {
                 compressed = new byte[0];
             } else {
                 compressed = Zstd.compress(raw);
             }
+
+            CRC32C crc = new CRC32C();
+            crc.update(compressed);
+            int crc32c = (int) crc.getValue();
 
             String metadata = METADATA_ENCODING + METADATA_SIZE_PREFIX + originalSize + "\n";
             byte[] metadataBytes = metadata.getBytes(StandardCharsets.US_ASCII);
@@ -277,7 +277,7 @@ public class ChunkFormat {
         return parseSlotBytes(slotBytes, contentStart);
     }
 
-    public static byte[] parseSlotBytes(byte[] slotBytes, long expectedContentStart) throws ObjectStoreIOException {
+    public static BlobSlot parseSlot(byte[] slotBytes, long expectedContentStart) throws ObjectStoreIOException {
         if (slotBytes.length < 8 + 4 + 2) { // 8B contentStart, 4B crc, at least 2 bytes metadata
             throw new ObjectStoreIOException("Slot byte array too short: " + slotBytes.length);
         }
@@ -332,6 +332,19 @@ public class ChunkFormat {
         System.arraycopy(slotBytes, contentOffset, compressedContent, 0, compressedLength);
 
         BlobSlot blobSlot = new BlobSlot(expectedContentStart, crc32c, originalSize, compressedContent);
-        return blobSlot.decompress();
+        blobSlot.verifyCrc();
+        return blobSlot;
+    }
+
+    public static byte[] parseSlotBytes(byte[] slotBytes, long expectedContentStart) throws ObjectStoreIOException {
+        BlobSlot blobSlot = parseSlot(slotBytes, expectedContentStart);
+        if (blobSlot.originalSize() == 0) {
+            return new byte[0];
+        }
+        try {
+            return Zstd.decompress(blobSlot.compressedContent(), (int) blobSlot.originalSize());
+        } catch (Exception e) {
+            throw new ObjectStoreIOException("Failed to decompress slot content at " + expectedContentStart, e);
+        }
     }
 }
