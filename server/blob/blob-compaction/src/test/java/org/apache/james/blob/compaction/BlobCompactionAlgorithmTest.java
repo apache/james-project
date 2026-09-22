@@ -616,4 +616,32 @@ class BlobCompactionAlgorithmTest {
         assertThat(replacements).hasSize(1);
         assertThat(replacements.get(0).oldId()).isEqualTo(targetBlob);
     }
+
+    @Test
+    void windowByCumulativeSizeShouldPartitionCandidatesWhenSizeExceedsTarget() {
+        BlobStoreDAO.BlobMetadata empty = BlobStoreDAO.BlobMetadata.empty();
+        List<BlobCompactionAlgorithm.CandidateBlob> candidates = List.of(
+            new BlobCompactionAlgorithm.CandidateBlob(new PlainBlobId("1_2_b1"), new byte[30], empty),
+            new BlobCompactionAlgorithm.CandidateBlob(new PlainBlobId("1_2_b2"), new byte[40], empty),
+            new BlobCompactionAlgorithm.CandidateBlob(new PlainBlobId("1_2_b3"), new byte[50], empty),
+            new BlobCompactionAlgorithm.CandidateBlob(new PlainBlobId("1_2_b4"), new byte[40], empty),
+            new BlobCompactionAlgorithm.CandidateBlob(new PlainBlobId("1_2_b5"), new byte[20], empty)
+        );
+
+        List<List<BlobCompactionAlgorithm.CandidateBlob>> batches = BlobCompactionAlgorithm
+            .windowByCumulativeSize(Flux.fromIterable(candidates), 80L)
+            .collectList()
+            .block();
+
+        assertThat(batches).hasSize(3);
+        // Batch 1: 30 + 40 = 70 bytes <= 80
+        assertThat(batches.get(0)).extracting(c -> c.blobId().asString())
+            .containsExactly("1_2_b1", "1_2_b2");
+        // Batch 2: 50 bytes <= 80
+        assertThat(batches.get(1)).extracting(c -> c.blobId().asString())
+            .containsExactly("1_2_b3");
+        // Batch 3: 40 + 20 = 60 bytes <= 80
+        assertThat(batches.get(2)).extracting(c -> c.blobId().asString())
+            .containsExactly("1_2_b4", "1_2_b5");
+    }
 }

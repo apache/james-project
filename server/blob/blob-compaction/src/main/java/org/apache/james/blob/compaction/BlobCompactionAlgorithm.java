@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
@@ -154,7 +155,7 @@ public class BlobCompactionAlgorithm {
                     .map(family -> rawStore.listBlobs(request.bucketName(), family + "_" + request.generation() + "_"))
                     .orElseGet(() -> rawStore.listBlobs(request.bucketName()));
 
-                return Flux.from(candidatesListing)
+                Flux<CandidateBlob> packableCandidates = Flux.from(candidatesListing)
                     .filter(blobId -> matchesGenerationAndFamily(blobId.asString(), request.generation(), request.family()))
                     .filter(blobId -> !ChunkId.isChunkRef(blobId))
                     .filter(mapping::containsKey)
@@ -164,13 +165,27 @@ public class BlobCompactionAlgorithm {
                             LOGGER.warn("Failed reading candidate blob {}", blobId.asString(), error);
                             return Mono.empty();
                         }), 16)
-                    .filter(candidate -> candidate.payload.length < request.configuration().maxPackableSize())
-                    .window(DEFAULT_CANDIDATE_BATCH_SIZE)
-                    .concatMap(windowFlux -> windowFlux
-                        .collectList()
-                        .flatMap(candidates -> packAndPersistChunks(request, candidates, mapping)))
+                    .filter(candidate -> candidate.payload.length < request.configuration().maxPackableSize());
+
+                return windowByCumulativeSize(packableCandidates, request.configuration().chunkTargetSize())
+                    .concatMap(batch -> persistChunkBatch(request, batch, mapping))
                     .reduce(CompactionResult.NONE, CompactionResult::combine);
             });
+    }
+
+    static Flux<List<CandidateBlob>> windowByCumulativeSize(Flux<CandidateBlob> candidates, long targetSize) {
+        return Flux.defer(() -> {
+            AtomicLong currentSize = new AtomicLong(0L);
+            return candidates.bufferUntil(candidate -> {
+                long payloadSize = candidate.payload().length;
+                if (currentSize.get() > 0 && currentSize.get() + payloadSize > targetSize) {
+                    currentSize.set(payloadSize);
+                    return true;
+                }
+                currentSize.addAndGet(payloadSize);
+                return false;
+            }, true);
+        });
     }
 
     /**
@@ -220,27 +235,7 @@ public class BlobCompactionAlgorithm {
         if (candidates.isEmpty()) {
             return Mono.just(CompactionResult.NONE);
         }
-
-        List<List<CandidateBlob>> batches = new ArrayList<>();
-        List<CandidateBlob> currentBatch = new ArrayList<>();
-        long currentBatchSize = 0;
-
-        for (CandidateBlob candidate : candidates) {
-            if (!currentBatch.isEmpty() && currentBatchSize + candidate.payload.length > request.configuration().chunkTargetSize()) {
-                batches.add(currentBatch);
-                currentBatch = new ArrayList<>();
-                currentBatchSize = 0;
-            }
-            currentBatch.add(candidate);
-            currentBatchSize += candidate.payload.length;
-        }
-        if (!currentBatch.isEmpty()) {
-            batches.add(currentBatch);
-        }
-
-        return Flux.fromIterable(batches)
-            .concatMap(batch -> persistChunkBatch(request, batch, mapping))
-            .reduce(CompactionResult.NONE, CompactionResult::combine);
+        return persistChunkBatch(request, candidates, mapping);
     }
 
     private Mono<CompactionResult> persistChunkBatch(CompactionRequest request,
@@ -609,7 +604,7 @@ public class BlobCompactionAlgorithm {
         return 1;
     }
 
-    private record CandidateBlob(BlobId blobId, byte[] payload, BlobMetadata metadata) {}
+    record CandidateBlob(BlobId blobId, byte[] payload, BlobMetadata metadata) {}
 
     private record ExistingChunk(BlobId chunkBlobId, long totalChunkSize, ChunkFooter footer) {}
 
