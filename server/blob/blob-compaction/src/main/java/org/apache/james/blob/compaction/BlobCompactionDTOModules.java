@@ -29,7 +29,23 @@ public class BlobCompactionDTOModules {
         return BlobCompactionTaskDTO.module(algorithm, clock);
     }
 
+    public static TaskDTOModule<InitialBlobCompactionTask, InitialBlobCompactionTaskDTO> initialCompactionTaskModule(BlobCompactionAlgorithm algorithm, Clock clock) {
+        return InitialBlobCompactionTaskDTO.module(algorithm, clock);
+    }
+
+    public static TaskDTOModule<GCBlobCompactionTask, GCBlobCompactionTaskDTO> gcCompactionTaskModule(BlobCompactionAlgorithm algorithm, Clock clock) {
+        return GCBlobCompactionTaskDTO.module(algorithm, clock);
+    }
+
     public static AdditionalInformationDTOModule<BlobCompactionTask.AdditionalInformation, BlobCompactionTaskAdditionalInformationDTO> additionalInformationModule() {
         return BlobCompactionTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    public static AdditionalInformationDTOModule<InitialBlobCompactionTask.AdditionalInformation, InitialBlobCompactionTaskAdditionalInformationDTO> initialAdditionalInformationModule() {
+        return InitialBlobCompactionTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    public static AdditionalInformationDTOModule<GCBlobCompactionTask.AdditionalInformation, GCBlobCompactionTaskAdditionalInformationDTO> gcAdditionalInformationModule() {
+        return GCBlobCompactionTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 }

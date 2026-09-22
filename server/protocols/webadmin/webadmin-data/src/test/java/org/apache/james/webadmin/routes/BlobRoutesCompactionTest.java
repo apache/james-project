@@ -79,10 +79,15 @@ class BlobRoutesCompactionTest {
         GenerationAwareBlobId.Factory generationAwareBlobIdFactory = new GenerationAwareBlobId.Factory(clock, BLOB_ID_FACTORY, GENERATION_AWARE_BLOB_ID_CONFIGURATION);
         BlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
         JsonTransformer jsonTransformer = new JsonTransformer();
-        TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(BlobCompactionDTOModules.additionalInformationModule()));
+        TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(
+            BlobCompactionDTOModules.additionalInformationModule(),
+            BlobCompactionDTOModules.initialAdditionalInformationModule(),
+            BlobCompactionDTOModules.gcAdditionalInformationModule()));
 
         compactionAlgorithm = mock(BlobCompactionAlgorithm.class);
         when(compactionAlgorithm.compact(any())).thenReturn(Mono.just(CompactionResult.NONE));
+        when(compactionAlgorithm.initialCompact(any())).thenReturn(Mono.just(CompactionResult.NONE));
+        when(compactionAlgorithm.gcCompact(any())).thenReturn(Mono.just(CompactionResult.NONE));
 
         BlobRoutes blobRoutes = new BlobRoutes(
             taskManager,
@@ -106,6 +111,30 @@ class BlobRoutesCompactionTest {
     void tearDown() {
         webAdminServer.destroy();
         taskManager.stop();
+    }
+
+    @Test
+    void deleteInitialCompactionShouldReturnTaskIdWhenValidParameters() {
+        given()
+            .queryParam("scope", "initial-compaction")
+            .queryParam("generation", "2")
+            .queryParam("family", "1")
+            .delete()
+        .then()
+            .statusCode(HttpStatus.CREATED_201)
+            .body("taskId", notNullValue());
+    }
+
+    @Test
+    void deleteGCCompactionShouldReturnTaskIdWhenValidParameters() {
+        given()
+            .queryParam("scope", "gc-compaction")
+            .queryParam("generation", "2")
+            .queryParam("family", "1")
+            .delete()
+        .then()
+            .statusCode(HttpStatus.CREATED_201)
+            .body("taskId", notNullValue());
     }
 
     @Test

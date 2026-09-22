@@ -34,6 +34,8 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.compaction.BlobCompactionAlgorithm;
 import org.apache.james.blob.compaction.BlobCompactionTask;
 import org.apache.james.blob.compaction.CompactionRequest;
+import org.apache.james.blob.compaction.GCBlobCompactionTask;
+import org.apache.james.blob.compaction.InitialBlobCompactionTask;
 import org.apache.james.server.blob.deduplication.BlobGCTask;
 import org.apache.james.server.blob.deduplication.GenerationAwareBlobId;
 import org.apache.james.task.Task;
@@ -112,13 +114,37 @@ public class BlobRoutes implements Routes {
         if ("unreferenced".equals(scope)) {
             return gcUnreferenced(request);
         }
+        if ("initial-compaction".equals(scope)) {
+            return initialCompact(request);
+        }
+        if ("gc-compaction".equals(scope) || "recompaction".equals(scope)) {
+            return gcCompact(request);
+        }
         if ("compaction".equals(scope)) {
             return compact(request);
         }
         throw new IllegalArgumentException("'scope' is missing or must be 'unreferenced'");
     }
 
+    public Task initialCompact(Request request) {
+        BlobCompactionAlgorithm algorithm = blobCompactionAlgorithm
+            .orElseThrow(() -> new IllegalStateException("Blob compaction is not configured on this server"));
+        return new InitialBlobCompactionTask(algorithm, buildCompactionRequest(request), clock);
+    }
+
+    public Task gcCompact(Request request) {
+        BlobCompactionAlgorithm algorithm = blobCompactionAlgorithm
+            .orElseThrow(() -> new IllegalStateException("Blob compaction is not configured on this server"));
+        return new GCBlobCompactionTask(algorithm, buildCompactionRequest(request), clock);
+    }
+
     public Task compact(Request request) {
+        BlobCompactionAlgorithm algorithm = blobCompactionAlgorithm
+            .orElseThrow(() -> new IllegalStateException("Blob compaction is not configured on this server"));
+        return new BlobCompactionTask(algorithm, buildCompactionRequest(request), clock);
+    }
+
+    private CompactionRequest buildCompactionRequest(Request request) {
         String generationParam = request.queryParams("generation");
         Preconditions.checkArgument(generationParam != null && !generationParam.isBlank(),
             "'generation' is compulsory");
@@ -141,16 +167,11 @@ public class BlobRoutes implements Routes {
                 }
             });
 
-        BlobCompactionAlgorithm algorithm = blobCompactionAlgorithm
-            .orElseThrow(() -> new IllegalStateException("Blob compaction is not configured on this server"));
-
-        CompactionRequest compactionRequest = CompactionRequest.builder()
+        return CompactionRequest.builder()
             .bucketName(bucketName)
             .generation(generation)
             .family(family)
             .build();
-
-        return new BlobCompactionTask(algorithm, compactionRequest, clock);
     }
 
     public Task gcUnreferenced(Request request) {

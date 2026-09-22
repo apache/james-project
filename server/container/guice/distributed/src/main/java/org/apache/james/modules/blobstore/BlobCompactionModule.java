@@ -91,13 +91,45 @@ public class BlobCompactionModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> initialBlobCompactionTask(BlobCompactionAlgorithm algorithm, Clock clock) {
+        return BlobCompactionDTOModules.initialCompactionTaskModule(algorithm, clock);
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> gcBlobCompactionTask(BlobCompactionAlgorithm algorithm, Clock clock) {
+        return BlobCompactionDTOModules.gcCompactionTaskModule(algorithm, clock);
+    }
+
+    @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> blobCompactionAdditionalInformation() {
         return BlobCompactionDTOModules.additionalInformationModule();
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> initialBlobCompactionAdditionalInformation() {
+        return BlobCompactionDTOModules.initialAdditionalInformationModule();
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> gcBlobCompactionAdditionalInformation() {
+        return BlobCompactionDTOModules.gcAdditionalInformationModule();
     }
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminBlobCompactionAdditionalInformation() {
         return BlobCompactionDTOModules.additionalInformationModule();
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminInitialBlobCompactionAdditionalInformation() {
+        return BlobCompactionDTOModules.initialAdditionalInformationModule();
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminGCBlobCompactionAdditionalInformation() {
+        return BlobCompactionDTOModules.gcAdditionalInformationModule();
     }
 }
