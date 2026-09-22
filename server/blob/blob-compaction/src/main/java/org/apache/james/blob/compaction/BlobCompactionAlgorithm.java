@@ -35,6 +35,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.apache.james.blob.compaction.BlobReferenceMappingSource.BlobIdMessageIdMapping;
 import org.apache.james.blob.compaction.ChunkFormat.BlobSlotContent;
@@ -262,32 +263,40 @@ public class BlobCompactionAlgorithm {
 
         // 1. Save chunk to raw storage
         return Mono.from(rawStore.save(request.bucketName(), chunkId.chunkBlobId(), BlobStoreDAO.BytesBlob.of(writeResult.chunkBytes())))
-            // 2. Update source-of-truth table references
-            .then(Flux.range(0, batch.size())
-                .concatMap(i -> {
-                    CandidateBlob candidate = batch.get(i);
-                    SlotRange range = writeResult.slotRanges().get(i);
-                    ChunkId slotRef = ChunkId.slotRef(chunkId, range.offset(), range.limit());
-                    Collection<String> messageIds = mapping.getOrDefault(candidate.blobId, Set.of());
-                    return blobIdUpdater.replaceReferences(candidate.blobId, slotRef, messageIds)
-                        .thenReturn(Optional.of(candidate))
-                        .onErrorResume(e -> {
-                            LOGGER.error("Failed to update references for candidate blob {}, skipping deletion of original blob", candidate.blobId.asString(), e);
-                            return Mono.just(Optional.empty());
-                        });
-                })
-                .flatMap(opt -> opt.map(Flux::just).orElseGet(Flux::empty))
-                .collectList()
-                .flatMap(successfulCandidates -> Flux.fromIterable(successfulCandidates)
-                    // 3. Delete original standalone blobs ONLY for successfully updated candidates
-                    .concatMap(candidate -> Mono.from(rawStore.delete(request.bucketName(), candidate.blobId)))
-                    .then()
-                    .thenReturn(CompactionResult.builder()
-                        .packedBlobs(successfulCandidates.size())
-                        .packedBytes(successfulCandidates.stream().mapToLong(c -> c.payload.length).sum())
-                        .chunksWritten(1)
-                        .freedBytes(successfulCandidates.stream().mapToLong(c -> c.payload.length).sum())
-                        .build())));
+            // 2. Update source-of-truth table references and delete original blobs
+            .then(updateReferencesAndDeleteOriginalBlobs(request.bucketName(), chunkId, batch, writeResult.slotRanges(), mapping));
+    }
+
+    private Mono<CompactionResult> updateReferencesAndDeleteOriginalBlobs(BucketName bucketName,
+                                                                         ChunkId chunkId,
+                                                                         List<CandidateBlob> batch,
+                                                                         List<SlotRange> slotRanges,
+                                                                         Map<BlobId, Set<String>> mapping) {
+        return Flux.range(0, batch.size())
+            .concatMap(i -> {
+                CandidateBlob candidate = batch.get(i);
+                SlotRange range = slotRanges.get(i);
+                ChunkId slotRef = ChunkId.slotRef(chunkId, range.offset(), range.limit());
+                Collection<String> messageIds = mapping.getOrDefault(candidate.blobId, Set.of());
+                return blobIdUpdater.replaceReferences(candidate.blobId, slotRef, messageIds)
+                    .thenReturn(Optional.of(candidate))
+                    .onErrorResume(e -> {
+                        LOGGER.error("Failed to update references for candidate blob {}, skipping deletion of original blob", candidate.blobId.asString(), e);
+                        return Mono.just(Optional.empty());
+                    });
+            })
+            .flatMap(opt -> opt.map(Flux::just).orElseGet(Flux::empty))
+            .collectList()
+            .flatMap(successfulCandidates -> Flux.fromIterable(successfulCandidates)
+                // Delete original standalone blobs ONLY for successfully updated candidates
+                .concatMap(candidate -> Mono.from(rawStore.delete(bucketName, candidate.blobId)))
+                .then()
+                .thenReturn(CompactionResult.builder()
+                    .packedBlobs(successfulCandidates.size())
+                    .packedBytes(successfulCandidates.stream().mapToLong(c -> c.payload.length).sum())
+                    .chunksWritten(1)
+                    .freedBytes(successfulCandidates.stream().mapToLong(c -> c.payload.length).sum())
+                    .build()));
     }
 
     private Mono<CompactionResult> processExistingChunks(CompactionRequest request,
