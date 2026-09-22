@@ -28,6 +28,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataName;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataValue;
+import org.apache.james.blob.api.BlobStoreDAO.BytesBlob;
+import org.apache.james.blob.api.BlobStoreDAO.ContentEncoding;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.junit.jupiter.api.Test;
 
@@ -205,7 +210,7 @@ class ChunkFormatTest {
         assertThat(crc).isEqualTo((int) crcCalculator.getValue());
 
         // Followed by metadata
-        String metadataExpected = "content-encoding=zstd\ncontent-original-size=4\n";
+        String metadataExpected = "content-encoding=zstd\ncontent-original-size=4\n\n";
         byte[] metadataBytes = metadataExpected.getBytes(StandardCharsets.US_ASCII);
         byte[] actualMetadata = Arrays.copyOfRange(chunkBytes, 13, 13 + metadataBytes.length);
         assertThat(actualMetadata).isEqualTo(metadataBytes);
@@ -219,5 +224,58 @@ class ChunkFormatTest {
         // footer content should be "1"
         byte[] footerBytes = Arrays.copyOfRange(chunkBytes, (int) footerPosition, (int) footerPosition + footerLength);
         assertThat(new String(footerBytes, StandardCharsets.US_ASCII)).isEqualTo("1");
+    }
+
+    @Test
+    void slotWithCustomMetadataRoundTrip() throws Exception {
+        byte[] raw = "Payload with custom metadata".getBytes(StandardCharsets.UTF_8);
+        BlobMetadata customMeta = BlobMetadata.empty()
+            .withMetadata(new BlobMetadataName("custom-header"), new BlobMetadataValue("my-value"))
+            .withMetadata(new BlobMetadataName("x-source-app"), new BlobMetadataValue("james-mail"));
+
+        byte[] chunkBytes = ChunkFormat.writeToBytes(List.of(ChunkFormat.BlobSlotContent.of(raw, customMeta)));
+
+        ChunkFooter footer = ChunkFormat.readFooter(chunkBytes);
+        long start = footer.slotStarts().get(0);
+        long end = footer.footerPosition();
+
+        byte[] slotData = Arrays.copyOfRange(chunkBytes, (int) start, (int) end);
+        BlobSlot slot = ChunkFormat.parseSlot(slotData, start);
+
+        assertThat(slot.metadata().get(new BlobMetadataName("custom-header")))
+            .contains(new BlobMetadataValue("my-value"));
+        assertThat(slot.metadata().get(new BlobMetadataName("x-source-app")))
+            .contains(new BlobMetadataValue("james-mail"));
+
+        BytesBlob bytesBlob = slot.toBlob();
+        assertThat(bytesBlob.metadata().get(new BlobMetadataName("custom-header")))
+            .contains(new BlobMetadataValue("my-value"));
+        assertThat(bytesBlob.metadata().contentEncoding()).contains(ContentEncoding.ZSTD);
+    }
+
+    @Test
+    void backwardsCompatibilityWithTwoLineHeaderWithoutEmptyLine() throws Exception {
+        byte[] raw = "Test content for backwards compatibility".getBytes(StandardCharsets.UTF_8);
+        byte[] compressed = com.github.luben.zstd.Zstd.compress(raw);
+        java.util.zip.CRC32C crc = new java.util.zip.CRC32C();
+        crc.update(compressed);
+        int crc32c = (int) crc.getValue();
+
+        // 2-line header without terminating empty line
+        String header = "content-encoding=zstd\ncontent-original-size=" + raw.length + "\n";
+        byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
+
+        ByteBuffer bb = ByteBuffer.allocate(8 + 4 + headerBytes.length + compressed.length);
+        bb.putLong(1L);
+        bb.putInt(crc32c);
+        bb.put(headerBytes);
+        bb.put(compressed);
+
+        byte[] slotBytes = bb.array();
+        BlobSlot parsed = ChunkFormat.parseSlot(slotBytes, 1L);
+
+        assertThat(parsed.originalSize()).isEqualTo(raw.length);
+        assertThat(parsed.compressedContent()).isEqualTo(compressed);
+        assertThat(ChunkFormat.parseSlotBytes(slotBytes, 1L)).isEqualTo(raw);
     }
 }

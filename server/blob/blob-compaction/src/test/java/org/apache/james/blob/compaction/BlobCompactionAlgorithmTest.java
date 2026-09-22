@@ -544,4 +544,47 @@ class BlobCompactionAlgorithmTest {
         assertThat(trackingStore.getMaxRangedReadBytes()).isLessThan(totalChunkSize);
         assertThat(trackingStore.getMaxRangedReadBytes()).isLessThanOrEqualTo(Math.max(65536, 76 * 1024));
     }
+
+    @Test
+    void initialCompactShouldPreserveCustomBlobMetadata() {
+        BlobId b1 = new PlainBlobId("1_2_blob1");
+        BlobId b2 = new PlainBlobId("1_2_blob2");
+
+        BlobStoreDAO.BlobMetadata meta1 = BlobStoreDAO.BlobMetadata.empty()
+            .withMetadata(new BlobStoreDAO.BlobMetadataName("custom-header"), new BlobStoreDAO.BlobMetadataValue("meta-value-1"));
+        BlobStoreDAO.BlobMetadata meta2 = BlobStoreDAO.BlobMetadata.empty()
+            .withMetadata(new BlobStoreDAO.BlobMetadataName("custom-header"), new BlobStoreDAO.BlobMetadataValue("meta-value-2"));
+
+        byte[] payload1 = "Candidate 1 with metadata".getBytes(StandardCharsets.UTF_8);
+        byte[] payload2 = "Candidate 2 with metadata".getBytes(StandardCharsets.UTF_8);
+
+        Mono.from(rawStore.save(TEST_BUCKET, b1, BlobStoreDAO.BytesBlob.of(payload1, meta1))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, b2, BlobStoreDAO.BytesBlob.of(payload2, meta2))).block();
+
+        mappingSource.add(b1, "msg1");
+        mappingSource.add(b2, "msg2");
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder().chunkTargetSize(100_000).build())
+            .build();
+
+        CompactionResult result = testee.initialCompact(request).block();
+        assertThat(result.packedBlobs()).isEqualTo(2);
+
+        List<RecordingBlobIdUpdater.Replacement> replacements = recordingUpdater.getReplacements();
+        assertThat(replacements).hasSize(2);
+
+        BlobId newRef1 = replacements.get(0).newId();
+        BlobStoreDAO.BytesBlob readBlob1 = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, newRef1)).block();
+        assertThat(readBlob1.metadata().get(new BlobStoreDAO.BlobMetadataName("custom-header")))
+            .contains(new BlobStoreDAO.BlobMetadataValue("meta-value-1"));
+
+        BlobId newRef2 = replacements.get(1).newId();
+        BlobStoreDAO.BytesBlob readBlob2 = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, newRef2)).block();
+        assertThat(readBlob2.metadata().get(new BlobStoreDAO.BlobMetadataName("custom-header")))
+            .contains(new BlobStoreDAO.BlobMetadataValue("meta-value-2"));
+    }
 }

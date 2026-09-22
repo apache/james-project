@@ -29,9 +29,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32C;
 
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataName;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataValue;
 import org.apache.james.blob.api.ObjectStoreIOException;
 
 import com.github.luben.zstd.Zstd;
@@ -45,10 +49,15 @@ public class ChunkFormat {
     public static final String METADATA_ENCODING = "content-encoding=zstd\n";
     public static final String METADATA_SIZE_PREFIX = "content-original-size=";
 
-    public record BlobSlotContent(byte[] rawContent, long originalSize) {
+    public record BlobSlotContent(byte[] rawContent, long originalSize, BlobMetadata metadata) {
         public static BlobSlotContent of(byte[] rawContent) {
+            return of(rawContent, BlobMetadata.empty());
+        }
+
+        public static BlobSlotContent of(byte[] rawContent, BlobMetadata metadata) {
             Preconditions.checkNotNull(rawContent, "'rawContent' must not be null");
-            return new BlobSlotContent(rawContent, rawContent.length);
+            Preconditions.checkNotNull(metadata, "'metadata' must not be null");
+            return new BlobSlotContent(rawContent, rawContent.length, metadata);
         }
     }
 
@@ -77,8 +86,19 @@ public class ChunkFormat {
             crc.update(compressed);
             int crc32c = (int) crc.getValue();
 
-            String metadata = METADATA_ENCODING + METADATA_SIZE_PREFIX + originalSize + "\n";
-            byte[] metadataBytes = metadata.getBytes(StandardCharsets.US_ASCII);
+            StringBuilder metadataBuilder = new StringBuilder();
+            metadataBuilder.append(METADATA_ENCODING);
+            metadataBuilder.append(METADATA_SIZE_PREFIX).append(originalSize).append('\n');
+            if (slot.metadata() != null) {
+                for (Map.Entry<BlobMetadataName, BlobMetadataValue> entry : slot.metadata().underlyingMap().entrySet()) {
+                    String key = entry.getKey().name();
+                    if (!key.equalsIgnoreCase("content-encoding") && !key.equalsIgnoreCase("content-original-size")) {
+                        metadataBuilder.append(key).append('=').append(entry.getValue().value()).append('\n');
+                    }
+                }
+            }
+            metadataBuilder.append('\n');
+            byte[] metadataBytes = metadataBuilder.toString().getBytes(StandardCharsets.US_ASCII);
 
             slotStarts.add(currentOffset);
 
@@ -138,8 +158,19 @@ public class ChunkFormat {
             crc.update(compressed);
             int crc32c = (int) crc.getValue();
 
-            String metadata = METADATA_ENCODING + METADATA_SIZE_PREFIX + originalSize + "\n";
-            byte[] metadataBytes = metadata.getBytes(StandardCharsets.US_ASCII);
+            StringBuilder metadataBuilder = new StringBuilder();
+            metadataBuilder.append(METADATA_ENCODING);
+            metadataBuilder.append(METADATA_SIZE_PREFIX).append(originalSize).append('\n');
+            if (slot.metadata() != null) {
+                for (Map.Entry<BlobMetadataName, BlobMetadataValue> entry : slot.metadata().underlyingMap().entrySet()) {
+                    String key = entry.getKey().name();
+                    if (!key.equalsIgnoreCase("content-encoding") && !key.equalsIgnoreCase("content-original-size")) {
+                        metadataBuilder.append(key).append('=').append(entry.getValue().value()).append('\n');
+                    }
+                }
+            }
+            metadataBuilder.append('\n');
+            byte[] metadataBytes = metadataBuilder.toString().getBytes(StandardCharsets.US_ASCII);
 
             slotStarts.add(currentOffset);
             long slotLength = 8L + 4L + metadataBytes.length + compressed.length;
@@ -291,47 +322,78 @@ public class ChunkFormat {
 
         int crc32c = buffer.getInt(8);
 
-        // Find metadata lines (up to second '\n')
-        int firstNewline = -1;
-        int secondNewline = -1;
-        for (int i = 12; i < slotBytes.length; i++) {
-            if (slotBytes[i] == '\n') {
-                if (firstNewline == -1) {
-                    firstNewline = i;
-                } else {
-                    secondNewline = i;
+        int lineStart = 12;
+        int lineNum = 0;
+        long originalSize = -1;
+        BlobMetadata customMetadata = BlobMetadata.empty();
+        int contentOffset = -1;
+
+        while (lineStart < slotBytes.length) {
+            int newlineIndex = -1;
+            for (int i = lineStart; i < slotBytes.length; i++) {
+                if (slotBytes[i] == '\n') {
+                    newlineIndex = i;
                     break;
                 }
             }
+            if (newlineIndex == -1) {
+                break;
+            }
+
+            int lineLen = newlineIndex - lineStart;
+            if (lineLen == 0) {
+                contentOffset = newlineIndex + 1;
+                break;
+            }
+
+            String line = new String(slotBytes, lineStart, lineLen, StandardCharsets.US_ASCII).trim();
+            if (lineNum == 0) {
+                if (!"content-encoding=zstd".equalsIgnoreCase(line)) {
+                    throw new ObjectStoreIOException("Unsupported slot encoding: " + line);
+                }
+            } else if (lineNum == 1) {
+                if (!line.startsWith(METADATA_SIZE_PREFIX)) {
+                    throw new ObjectStoreIOException("Missing original size metadata line: " + line);
+                }
+                try {
+                    originalSize = Long.parseLong(line.substring(METADATA_SIZE_PREFIX.length()).trim());
+                } catch (NumberFormatException e) {
+                    throw new ObjectStoreIOException("Corrupt original size metadata: " + line, e);
+                }
+            } else {
+                int eqIndex = line.indexOf('=');
+                if (eqIndex > 0) {
+                    String key = line.substring(0, eqIndex).trim();
+                    String val = line.substring(eqIndex + 1).trim();
+                    try {
+                        customMetadata = customMetadata.withMetadata(new BlobMetadataName(key), new BlobMetadataValue(val));
+                    } catch (IllegalArgumentException e) {
+                        contentOffset = lineStart;
+                        break;
+                    }
+                } else {
+                    contentOffset = lineStart;
+                    break;
+                }
+            }
+
+            lineNum++;
+            lineStart = newlineIndex + 1;
         }
 
-        if (firstNewline == -1 || secondNewline == -1) {
-            throw new ObjectStoreIOException("Corrupt slot metadata: missing newlines in header at " + expectedContentStart);
+        if (originalSize == -1) {
+            throw new ObjectStoreIOException("Corrupt slot metadata: missing original size at " + expectedContentStart);
         }
 
-        String encodingLine = new String(slotBytes, 12, firstNewline - 12, StandardCharsets.US_ASCII);
-        if (!"content-encoding=zstd".equals(encodingLine.trim())) {
-            throw new ObjectStoreIOException("Unsupported slot encoding: " + encodingLine);
+        if (contentOffset == -1) {
+            contentOffset = lineStart;
         }
 
-        String sizeLine = new String(slotBytes, firstNewline + 1, secondNewline - (firstNewline + 1), StandardCharsets.US_ASCII).trim();
-        if (!sizeLine.startsWith(METADATA_SIZE_PREFIX)) {
-            throw new ObjectStoreIOException("Missing original size metadata line: " + sizeLine);
-        }
-
-        long originalSize;
-        try {
-            originalSize = Long.parseLong(sizeLine.substring(METADATA_SIZE_PREFIX.length()).trim());
-        } catch (NumberFormatException e) {
-            throw new ObjectStoreIOException("Corrupt original size metadata: " + sizeLine, e);
-        }
-
-        int contentOffset = secondNewline + 1;
         int compressedLength = slotBytes.length - contentOffset;
         byte[] compressedContent = new byte[compressedLength];
         System.arraycopy(slotBytes, contentOffset, compressedContent, 0, compressedLength);
 
-        BlobSlot blobSlot = new BlobSlot(expectedContentStart, crc32c, originalSize, compressedContent);
+        BlobSlot blobSlot = new BlobSlot(expectedContentStart, crc32c, originalSize, compressedContent, customMetadata);
         blobSlot.verifyCrc();
         return blobSlot;
     }

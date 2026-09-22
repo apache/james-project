@@ -33,6 +33,7 @@ import java.util.Set;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.apache.james.blob.compaction.BlobReferenceMappingSource.BlobIdMessageIdMapping;
 import org.apache.james.blob.compaction.ChunkFormat.BlobSlotContent;
@@ -155,7 +156,7 @@ public class BlobCompactionAlgorithm {
                     .window(DEFAULT_CANDIDATE_BATCH_SIZE)
                     .concatMap(windowFlux -> windowFlux
                         .flatMap(blobId -> Mono.from(rawStore.readBytes(request.bucketName(), blobId))
-                            .map(bytesBlob -> new CandidateBlob(blobId, bytesBlob.payload()))
+                            .map(bytesBlob -> new CandidateBlob(blobId, bytesBlob.payload(), bytesBlob.metadata()))
                             .onErrorResume(error -> {
                                 LOGGER.warn("Failed reading candidate blob {}", blobId.asString(), error);
                                 return Mono.empty();
@@ -240,7 +241,7 @@ public class BlobCompactionAlgorithm {
         ChunkId chunkId = ChunkId.ofChunk(family, request.generation());
 
         List<BlobSlotContent> slots = batch.stream()
-            .map(candidate -> BlobSlotContent.of(candidate.payload))
+            .map(candidate -> BlobSlotContent.of(candidate.payload, candidate.metadata))
             .toList();
 
         ChunkWriteResult writeResult;
@@ -348,8 +349,9 @@ public class BlobCompactionAlgorithm {
                 .flatMap(sliceBlob -> {
                     try {
                         byte[] sliceData = sliceBlob.asBytes().payload();
-                        byte[] decompressed = ChunkFormat.parseSlotBytes(sliceData, liveSlot.offset);
-                        return Mono.just(new LiveSlotWithContent(liveSlot, decompressed));
+                        BlobSlot slot = ChunkFormat.parseSlot(sliceData, liveSlot.offset);
+                        byte[] decompressed = slot.originalSize() == 0 ? new byte[0] : com.github.luben.zstd.Zstd.decompress(slot.compressedContent(), (int) slot.originalSize());
+                        return Mono.just(new LiveSlotWithContent(liveSlot, decompressed, slot.metadata()));
                     } catch (IOException e) {
                         return Mono.error(new ObjectStoreIOException("Failed parsing slot", e));
                     }
@@ -357,7 +359,7 @@ public class BlobCompactionAlgorithm {
             .collectList()
             .flatMap(liveSlotsWithContent -> {
                 List<BlobSlotContent> liveSlotContents = liveSlotsWithContent.stream()
-                    .map(slot -> BlobSlotContent.of(slot.decompressedContent))
+                    .map(slot -> BlobSlotContent.of(slot.decompressedContent, slot.metadata))
                     .toList();
 
                 ChunkWriteResult writeResult;
@@ -422,8 +424,9 @@ public class BlobCompactionAlgorithm {
                 .flatMap(sliceBlob -> {
                     try {
                         byte[] sliceData = sliceBlob.asBytes().payload();
-                        byte[] decompressed = ChunkFormat.parseSlotBytes(sliceData, slot.offset);
-                        return Mono.just(new LiveSlotWithContent(slot, decompressed));
+                        BlobSlot parsed = ChunkFormat.parseSlot(sliceData, slot.offset);
+                        byte[] decompressed = parsed.originalSize() == 0 ? new byte[0] : com.github.luben.zstd.Zstd.decompress(parsed.compressedContent(), (int) parsed.originalSize());
+                        return Mono.just(new LiveSlotWithContent(slot, decompressed, parsed.metadata()));
                     } catch (IOException e) {
                         return Mono.error(new ObjectStoreIOException("Failed parsing slot", e));
                     }
@@ -436,8 +439,9 @@ public class BlobCompactionAlgorithm {
                 .flatMap(sliceBlob -> {
                     try {
                         byte[] sliceData = sliceBlob.asBytes().payload();
-                        byte[] decompressed = ChunkFormat.parseSlotBytes(sliceData, slot.offset);
-                        return Mono.just(new LiveSlotWithContent(slot, decompressed));
+                        BlobSlot parsed = ChunkFormat.parseSlot(sliceData, slot.offset);
+                        byte[] decompressed = parsed.originalSize() == 0 ? new byte[0] : com.github.luben.zstd.Zstd.decompress(parsed.compressedContent(), (int) parsed.originalSize());
+                        return Mono.just(new LiveSlotWithContent(slot, decompressed, parsed.metadata()));
                     } catch (IOException e) {
                         return Mono.error(new ObjectStoreIOException("Failed parsing slot", e));
                     }
@@ -450,7 +454,7 @@ public class BlobCompactionAlgorithm {
                 allLive.addAll(tuple.getT2());
 
                 List<BlobSlotContent> slotContents = allLive.stream()
-                    .map(slot -> BlobSlotContent.of(slot.decompressedContent))
+                    .map(slot -> BlobSlotContent.of(slot.decompressedContent, slot.metadata))
                     .toList();
 
                 ChunkWriteResult writeResult;
@@ -596,13 +600,13 @@ public class BlobCompactionAlgorithm {
         return 1;
     }
 
-    private record CandidateBlob(BlobId blobId, byte[] payload) {}
+    private record CandidateBlob(BlobId blobId, byte[] payload, BlobMetadata metadata) {}
 
     private record ExistingChunk(BlobId chunkBlobId, long totalChunkSize, ChunkFooter footer) {}
 
     private record LiveSlotMeta(long offset, long limit, ChunkId slotRef, Set<String> messageIds) {}
 
-    private record LiveSlotWithContent(LiveSlotMeta meta, byte[] decompressedContent) {}
+    private record LiveSlotWithContent(LiveSlotMeta meta, byte[] decompressedContent, BlobMetadata metadata) {}
 
     private record ChunkPair(ChunkAnalysis c1, ChunkAnalysis c2) {}
 
