@@ -158,15 +158,15 @@ public class BlobCompactionAlgorithm {
                     .filter(blobId -> matchesGenerationAndFamily(blobId.asString(), request.generation(), request.family()))
                     .filter(blobId -> !ChunkId.isChunkRef(blobId))
                     .filter(mapping::containsKey)
+                    .flatMap(blobId -> Mono.from(rawStore.readBytes(request.bucketName(), blobId))
+                        .map(bytesBlob -> new CandidateBlob(blobId, bytesBlob.payload(), bytesBlob.metadata()))
+                        .onErrorResume(error -> {
+                            LOGGER.warn("Failed reading candidate blob {}", blobId.asString(), error);
+                            return Mono.empty();
+                        }), 16)
+                    .filter(candidate -> candidate.payload.length < request.configuration().maxPackableSize())
                     .window(DEFAULT_CANDIDATE_BATCH_SIZE)
                     .concatMap(windowFlux -> windowFlux
-                        .flatMap(blobId -> Mono.from(rawStore.readBytes(request.bucketName(), blobId))
-                            .map(bytesBlob -> new CandidateBlob(blobId, bytesBlob.payload(), bytesBlob.metadata()))
-                            .onErrorResume(error -> {
-                                LOGGER.warn("Failed reading candidate blob {}", blobId.asString(), error);
-                                return Mono.empty();
-                            }))
-                        .filter(candidate -> candidate.payload.length < request.configuration().maxPackableSize())
                         .collectList()
                         .flatMap(candidates -> packAndPersistChunks(request, candidates, mapping)))
                     .reduce(CompactionResult.NONE, CompactionResult::combine);
