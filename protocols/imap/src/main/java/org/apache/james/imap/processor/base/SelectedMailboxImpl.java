@@ -209,6 +209,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     }
 
     private synchronized void clearInternalStructures() {
+        idleEventListener.set(null);
         uidMsnConverter.clear();
         flagUpdateUids.clear();
 
