@@ -151,6 +151,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                         try {
                             StatusResponse response = getStatusResponseFactory().untaggedOk(HumanReadableText.HEARTBEAT);
                             responder.respond(response);
+                            responder.flush();
 
                             // schedule the heartbeat again for the next interval
                             if (idleActive.get() && session.getState() != ImapSessionState.LOGOUT) {
@@ -168,6 +169,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         // Write the response after the listener was add
         // IMAP-341
         responder.respond(new ContinuationResponse(HumanReadableText.IDLING));
+        responder.flush();
     }
 
     @Override
