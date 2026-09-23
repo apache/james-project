@@ -77,7 +77,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         super.configure(imapConfiguration);
 
         this.heartbeatInterval = imapConfiguration.idleTimeIntervalAsDuration();
-        this.enableIdle = imapConfiguration.isEnableIdle();
+        this.enableIdle = imapConfiguration.isEnableIdle() && !heartbeatInterval.isZero() && !heartbeatInterval.isNegative();
     }
 
     @Override
