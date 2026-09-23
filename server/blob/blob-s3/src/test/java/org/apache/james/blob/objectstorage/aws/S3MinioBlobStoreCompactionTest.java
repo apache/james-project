@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
@@ -57,6 +58,8 @@ import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.github.luben.zstd.Zstd;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -165,8 +168,9 @@ class S3MinioBlobStoreCompactionTest {
         for (Map.Entry<BlobId, byte[]> entry : savedBlobs.entrySet()) {
             BlobId newSlotId = updatedIds.get(entry.getKey());
             assertThat(newSlotId).isNotNull();
-            byte[] readBytes = Mono.from(chunkedBlobStoreDAO.readBytes(BUCKET, newSlotId)).block().payload();
-            assertThat(readBytes).isEqualTo(entry.getValue());
+            BlobStoreDAO.BytesBlob readBlob = Mono.from(chunkedBlobStoreDAO.readBytes(BUCKET, newSlotId)).block();
+            byte[] decompressed = Zstd.decompress(readBlob.payload(), entry.getValue().length);
+            assertThat(decompressed).isEqualTo(entry.getValue());
         }
 
         // 4. Assert: BloomFilterGCAlgorithm after compaction does NOT delete the chunk object
