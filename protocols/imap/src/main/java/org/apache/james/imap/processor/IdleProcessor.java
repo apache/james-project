@@ -106,6 +106,11 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
         session.pushLineHandler((session1, data) -> Mono.fromRunnable(() -> {
             try {
+                if (sm != null) {
+                    sm.unregisterIdle();
+                }
+                idleActive.set(false);
+
                 String line = new String(data, StandardCharsets.US_ASCII).trim();
 
                 if (!DONE.equals(line.toUpperCase(Locale.US))) {
@@ -122,11 +127,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                     responder.flush();
                 }
             } finally {
-                if (sm != null) {
-                    sm.unregisterIdle();
-                }
                 session1.popLineHandler();
-                idleActive.set(false);
             }
         }));
 
