@@ -38,4 +38,10 @@ public class FileBlobStoreGCAlgorithmTest implements BloomFilterGCAlgorithmContr
     public BlobStoreDAO blobStoreDAO() {
         return blobStoreDAO;
     }
+
+    @Override
+    @org.junit.jupiter.api.condition.DisabledOnOs(org.junit.jupiter.api.condition.OS.WINDOWS)
+    public void allOrphanBlobIdsShouldRemovedAfterMultipleRunningTimesGC() {
+        BloomFilterGCAlgorithmContract.super.allOrphanBlobIdsShouldRemovedAfterMultipleRunningTimesGC();
+    }
 }

@@ -204,18 +204,25 @@ This bucket name is used as is: `objectstorage.bucketPrefix` is not applied to i
 
 |===
 
-==== Improve listing support for MinIO
+[[_improve_listing_support_for_minio]]
+==== Improve listing and filesystem performance with blob folder hierarchy
 
-Due to blobs being stored in folder, adding `/` in blobs name emulates folder and avoids blobs to be all stored in a
-same folder, thus improving listing.
+Due to blobs being stored in a single flat namespace by default, adding `/` in blob names creates subfolders
+and avoids millions of blobs from being stored in a single folder. This significantly improves listing on MinIO
+and prevents directory entry bloat and file system performance degradation in `FileBlobStore`.
 
 Instead of `1_628_36825033-d835-4490-9f5a-eef120b1e85c` the following blob id will be used: `1/628/3/6/8/2/5033-d835-4490-9f5a-eef120b1e85c`
 
-To enable blob hierarchy compatible with MinIO add in `jvm.properties`:
+To enable blob folder hierarchy (on by default in Postgres App distribution), add in `jvm.properties`:
 
 ----
-james.s3.minio.compatibility.mode=true
+james.blobstore.folder.hierarchy=true
 ----
+
+NOTE: The legacy property `james.s3.minio.compatibility.mode=true` is also supported as a backward-compatible alias.
+
+NOTE: The `FileBlobStore` implementation is officially not supported on Windows operating systems due to Windows mandatory file locking semantics upon concurrent file replacement/deletion. UNIX/Linux POSIX-compliant environments are recommended for production deployments.
+
 
 ==== Unordered listing for Ceph RADOS Gateway
 
