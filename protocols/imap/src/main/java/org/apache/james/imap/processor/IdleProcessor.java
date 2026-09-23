@@ -86,6 +86,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         return Mono.fromRunnable(() -> idle(request, session, responder, idleReadySink))
             .then(unsolicitedResponses(session, responder, false))
             .onErrorResume(e -> {
+                SelectedMailbox sm = session.getSelected();
+                if (sm != null) {
+                    sm.unregisterIdle();
+                }
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return logAsMono(() -> LOGGER.error("Encountered error executing IMAP IDLE", e));
             })
@@ -101,26 +105,29 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         final AtomicBoolean idleActive = new AtomicBoolean(true);
 
         session.pushLineHandler((session1, data) -> Mono.fromRunnable(() -> {
-            String line = new String(data, StandardCharsets.US_ASCII).trim();
+            try {
+                String line = new String(data, StandardCharsets.US_ASCII).trim();
 
-            if (sm != null) {
-                sm.unregisterIdle();
+                if (!DONE.equals(line.toUpperCase(Locale.US))) {
+                    String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", line);
+                    StatusResponse response = getStatusResponseFactory()
+                        .taggedBad(request.getTag(), request.getCommand(),
+                            new HumanReadableText("org.apache.james.imap.INVALID_CONTINUATION",
+                                "failed. " + message));
+                    LOGGER.info(message);
+                    responder.respond(response);
+                    responder.flush();
+                } else {
+                    okComplete(request, responder);
+                    responder.flush();
+                }
+            } finally {
+                if (sm != null) {
+                    sm.unregisterIdle();
+                }
+                session1.popLineHandler();
+                idleActive.set(false);
             }
-            if (!DONE.equals(line.toUpperCase(Locale.US))) {
-                String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", line);
-                StatusResponse response = getStatusResponseFactory()
-                    .taggedBad(request.getTag(), request.getCommand(),
-                        new HumanReadableText("org.apache.james.imap.INVALID_CONTINUATION",
-                            "failed. " + message));
-                LOGGER.info(message);
-                responder.respond(response);
-                responder.flush();
-            } else {
-                okComplete(request, responder);
-                responder.flush();
-            }
-            session1.popLineHandler();
-            idleActive.set(false);
         }));
 
         // Check if we should send heartbeats
