@@ -135,11 +135,17 @@ public class BlobStoreModulesChooser {
         }
     }
 
+    static BlobStoreDAO resolveChunkedOrEncryption(Injector injector) {
+        return Optional.ofNullable(injector.getExistingBinding(Key.get(BlobStoreDAO.class, Names.named(CHUNKED))))
+            .map(binding -> (BlobStoreDAO) binding.getProvider().get())
+            .orElseGet(() -> injector.getInstance(Key.get(BlobStoreDAO.class, Names.named(ENCRYPTION))));
+    }
+
     static class NoCompressionModule extends AbstractModule {
         @Provides
         @Singleton
-        BlobStoreDAO blobStoreDAO(@Named(CHUNKED) BlobStoreDAO chunked, MetricFactory metricFactory) {
-            return new ZstdBlobStoreDAO(chunked, CompressionConfiguration.builder().enabled(false).minRatio(0).build(), metricFactory);
+        BlobStoreDAO blobStoreDAO(Injector injector, MetricFactory metricFactory) {
+            return new ZstdBlobStoreDAO(resolveChunkedOrEncryption(injector), CompressionConfiguration.builder().enabled(false).minRatio(0).build(), metricFactory);
         }
     }
 
@@ -152,8 +158,8 @@ public class BlobStoreModulesChooser {
 
         @Provides
         @Singleton
-        BlobStoreDAO blobStoreDAO(@Named(CHUNKED) BlobStoreDAO chunked, MetricFactory metricFactory) {
-            return new ZstdBlobStoreDAO(chunked, compressionConfiguration, metricFactory);
+        BlobStoreDAO blobStoreDAO(Injector injector, MetricFactory metricFactory) {
+            return new ZstdBlobStoreDAO(resolveChunkedOrEncryption(injector), compressionConfiguration, metricFactory);
         }
 
         @Provides
@@ -237,6 +243,10 @@ public class BlobStoreModulesChooser {
     public static Module chooseEncryptionModule(Optional<CryptoConfig> cryptoConfig) {
         Optional<Module> encryptionModule = cryptoConfig.map(EncryptionModule::new);
         return encryptionModule.orElse(new NoEncryptionModule());
+    }
+
+    public static Module chooseChunkedBlobStoreDAOModule() {
+        return new ChunkedBlobStoreModule();
     }
 
     public static Module chooseCompressionModule(CompressionConfiguration compressionConfiguration) {

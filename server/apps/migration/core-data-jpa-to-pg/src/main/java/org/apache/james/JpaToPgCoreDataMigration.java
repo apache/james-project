@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import static org.apache.james.modules.blobstore.BlobStoreModulesChooser.chooseBlobStoreDAOModule;
+import static org.apache.james.modules.blobstore.BlobStoreModulesChooser.chooseChunkedBlobStoreDAOModule;
 import static org.apache.james.modules.blobstore.BlobStoreModulesChooser.chooseCompressionModule;
 import static org.apache.james.modules.blobstore.BlobStoreModulesChooser.chooseEncryptionModule;
 import static org.apache.james.modules.blobstore.BlobStoreModulesChooser.chooseStoragePolicyModule;
@@ -163,6 +164,7 @@ public class JpaToPgCoreDataMigration {
         return ImmutableList.<Module>builder()
                 .add(chooseBlobStoreDAOModule(choosingConfiguration.getImplementation()))
                 .add(chooseEncryptionModule(choosingConfiguration.getCryptoConfig()))
+                .add(chooseChunkedBlobStoreDAOModule())
                 .add(chooseCompressionModule(choosingConfiguration.getCompressionConfiguration()))
                 .addAll(chooseStoragePolicyModule(choosingConfiguration.storageStrategy()))
                 .add(binder -> binder.bind(BlobStoreConfiguration.class).toInstance(choosingConfiguration))
