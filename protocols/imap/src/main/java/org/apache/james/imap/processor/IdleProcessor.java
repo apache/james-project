@@ -25,7 +25,6 @@ import static org.apache.james.util.ReactorUtils.logAsMono;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.inject.Inject;
@@ -52,10 +51,10 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(IdleProcessor.class);
@@ -82,20 +81,20 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
     @Override
     protected Mono<Void> processRequestReactive(IdleRequest request, ImapSession session, Responder responder) {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        return Mono.fromRunnable(() -> idle(request, session, responder, countDownLatch))
+        Sinks.One<Void> idleReadySink = Sinks.one();
+        return Mono.fromRunnable(() -> idle(request, session, responder, idleReadySink))
             .then(unsolicitedResponses(session, responder, false))
             .onErrorResume(e -> {
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return logAsMono(() -> LOGGER.error("Encountered error executing IMAP IDLE", e));
             })
-            .then(Mono.fromRunnable(countDownLatch::countDown));
+            .doFinally(signalType -> idleReadySink.tryEmitEmpty());
     }
 
-    private void idle(IdleRequest request, ImapSession session, Responder responder, CountDownLatch countDownLatch) {
+    private void idle(IdleRequest request, ImapSession session, Responder responder, Sinks.One<Void> idleReadySink) {
         SelectedMailbox sm = session.getSelected();
         if (sm != null) {
-            sm.registerIdle(new IdleMailboxListener(session, responder, countDownLatch));
+            sm.registerIdle(new IdleMailboxListener(session, responder, idleReadySink));
         }
 
         final AtomicBoolean idleActive = new AtomicBoolean(true);
@@ -145,11 +144,18 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                         // outlook client, but can't harm for other clients
                         // too.
                         // See IMAP-272
-                        StatusResponse response = getStatusResponseFactory().untaggedOk(HumanReadableText.HEARTBEAT);
-                        responder.respond(response);
+                        try {
+                            StatusResponse response = getStatusResponseFactory().untaggedOk(HumanReadableText.HEARTBEAT);
+                            responder.respond(response);
 
-                        // schedule the heartbeat again for the next interval
-                        session.schedule(this, heartbeatInterval);
+                            // schedule the heartbeat again for the next interval
+                            if (idleActive.get() && session.getState() != ImapSessionState.LOGOUT) {
+                                session.schedule(this, heartbeatInterval);
+                            }
+                        } catch (Exception e) {
+                            LOGGER.debug("Failed to send IMAP IDLE heartbeat, stopping keepalive task", e);
+                            idleActive.set(false);
+                        }
                     }
                 }
             }, heartbeatInterval);
@@ -169,12 +175,12 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
         private final Responder responder;
         private final ImapSession session;
-        private final CountDownLatch countDownLatch;
+        private final Sinks.One<Void> idleReadySink;
 
-        public IdleMailboxListener(ImapSession session, Responder responder, CountDownLatch countDownLatch) {
+        public IdleMailboxListener(ImapSession session, Responder responder, Sinks.One<Void> idleReadySink) {
             this.session = session;
             this.responder = session.threadSafe(responder);
-            this.countDownLatch = countDownLatch;
+            this.idleReadySink = idleReadySink;
         }
 
         @Override
@@ -184,7 +190,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
         @Override
         public Publisher<Void> reactiveEvent(Event event) {
-            return Mono.fromRunnable(Throwing.runnable(countDownLatch::await))
+            return idleReadySink.asMono()
                 .then(Mono.defer(() -> unsolicitedResponses(session, responder, false)))
                 .then(Mono.fromRunnable(responder::flush));
         }
