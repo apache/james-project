@@ -626,7 +626,7 @@
         <apache.openjpa.version>4.1.1</apache.openjpa.version>
         <!-- Align with EE10 Persistence 3.1 & Transactions 2.0: https://openjpa.apache.org/ -->
         <h2.version>2.3.232</h2.version>
-        <log4j2.version>2.25.4</log4j2.version>
+        <log4j2.version>2.25.5</log4j2.version>
 
         <!-- Align with Jakarta EE 10
              https://jakarta.ee/release/10/ -->
@@ -639,10 +639,8 @@
         <spring.version>6.2.8</spring.version>
         <activmq-artemis.version>2.56.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.5</apache-jspf-resolver.version>
-        <angus-mail.version>2.0.3</angus-mail.version>
-        <!-- Align with EE10 Mail 2.1: https://eclipse-ee4j.github.io/angus-mail/ -->
-        <angus-activation.version>2.0.2</angus-activation.version>
-        <!-- Align with EE10 Activation 2.1: https://eclipse-ee4j.github.io/angus-activation/ -->
+        <angus-mail.version>2.0.3</angus-mail.version><!-- Align with EE10 Mail 2.1: https://eclipse-ee4j.github.io/angus-mail/ -->
+        <angus-activation.version>2.0.2</angus-activation.version><!-- Align with EE10 Activation 2.1: https://eclipse-ee4j.github.io/angus-activation/ -->
         <slf4j.version>2.0.17</slf4j.version>
         <circe.version>0.14.14</circe.version>
         <dnsjava.version>3.6.3</dnsjava.version>
@@ -680,13 +678,14 @@
         <lucene.version>10.2.1</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>7.0.0</guice.version>
-        <logback.version>1.5.19</logback.version>
+        <logback.version>1.5.38</logback.version>
         <tink.version>1.17.0</tink.version>
         <zstd-jni.version>1.5.7-7</zstd-jni.version>
         <lettuce.core.version>6.8.2.RELEASE</lettuce.core.version>
-        <io.micrometer.core.version>1.15.1</io.micrometer.core.version>
-        <io.micrometer.tracing.version>1.5.1</io.micrometer.tracing.version>
-        <bouncycastle.version>1.82</bouncycastle.version>
+        <io.micrometer.core.version>1.16.7</io.micrometer.core.version>
+        <io.micrometer.tracing.version>1.6.7</io.micrometer.tracing.version>
+
+        <bouncycastle.version>1.85</bouncycastle.version>
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.16</scala.version>
         <doclint>none</doclint>
@@ -2344,7 +2343,7 @@
             <dependency>
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
-                <version>5.34.0</version>
+                <version>5.35.0</version>
             </dependency>
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
@@ -2860,6 +2859,11 @@
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk18on</artifactId>
+                <version>1.85.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcutil-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>
@@ -2885,7 +2889,7 @@
             <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
-                <version>1.23.1</version>
+                <version>1.23.2</version>
             </dependency>
             <dependency>
                 <groupId>org.julienrf</groupId>
@@ -3065,7 +3069,7 @@
             <dependency>
                 <groupId>org.zoomba-lang</groupId>
                 <artifactId>spark-core</artifactId>
-                <version>3.0.4</version>
+                <version>3.0.5</version>
             </dependency>
             <dependency>
                 <groupId>pl.pragmatists</groupId>
