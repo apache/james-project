@@ -42,7 +42,7 @@ public class ImapIdleStateHandler extends IdleStateHandler implements NettyConst
     private static final Logger LOGGER = LoggerFactory.getLogger(ImapIdleStateHandler.class);
 
     public ImapIdleStateHandler(int allIdleTimeSeconds) {
-        this(0, 0, allIdleTimeSeconds);
+        this(allIdleTimeSeconds, 0, allIdleTimeSeconds);
     }
 
     public ImapIdleStateHandler(int readerIdleTimeSeconds, int writerIdleTimeSeconds, int allIdleTimeSeconds) {
@@ -53,7 +53,7 @@ public class ImapIdleStateHandler extends IdleStateHandler implements NettyConst
     public void channelIdle(ChannelHandlerContext ctx, IdleStateEvent e) throws Exception {
 
         // check if the client did nothing for too long
-        if (e.state().equals(IdleState.ALL_IDLE)) {
+        if (e.state().equals(IdleState.ALL_IDLE) || e.state().equals(IdleState.READER_IDLE)) {
             ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
             InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
 
