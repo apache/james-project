@@ -57,6 +57,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.github.luben.zstd.Zstd;
+
 import reactor.core.publisher.Mono;
 
 class CassandraBlobIdRepairerIntegrationTest {
@@ -138,7 +140,8 @@ class CassandraBlobIdRepairerIntegrationTest {
             .build()).block();
 
         // Read using deadSlotRef: triggers repair -> fetches canonical from imapUidTable -> fixes messageIdTable
-        byte[] readBack = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, deadSlotRef)).block().payload();
+        BlobStoreDAO.BytesBlob readBlob = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, deadSlotRef)).block();
+        byte[] readBack = Zstd.decompress(readBlob.payload(), content.length);
         assertThat(readBack).isEqualTo(content);
 
         // Verify messageIdTable is now repaired with the canonical validSlotRef
@@ -193,7 +196,8 @@ class CassandraBlobIdRepairerIntegrationTest {
             .build()).block();
 
         // Read using deadSlotRef: triggers repair -> fetches canonical from messageIdTable -> fixes imapUidTable
-        byte[] readBack = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, deadSlotRef)).block().payload();
+        BlobStoreDAO.BytesBlob readBlob = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, deadSlotRef)).block();
+        byte[] readBack = Zstd.decompress(readBlob.payload(), content.length);
         assertThat(readBack).isEqualTo(content);
 
         // Verify imapUidTable is now repaired with the canonical validSlotRef
