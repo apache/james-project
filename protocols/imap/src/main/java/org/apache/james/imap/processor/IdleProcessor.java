@@ -22,6 +22,7 @@ package org.apache.james.imap.processor;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_IDLE;
 import static org.apache.james.util.ReactorUtils.logAsMono;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
@@ -100,12 +101,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         final AtomicBoolean idleActive = new AtomicBoolean(true);
 
         session.pushLineHandler((session1, data) -> Mono.fromRunnable(() -> {
-            String line;
-            if (data.length > 2) {
-                line = new String(data, 0, data.length - 2);
-            } else {
-                line = "";
-            }
+            String line = new String(data, StandardCharsets.US_ASCII).trim();
 
             if (sm != null) {
                 sm.unregisterIdle();
