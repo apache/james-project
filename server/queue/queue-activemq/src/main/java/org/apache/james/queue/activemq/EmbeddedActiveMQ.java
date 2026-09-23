@@ -49,8 +49,8 @@ public class EmbeddedActiveMQ {
     public EmbeddedActiveMQ(FileSystem fileSystem, ActiveMQConfiguration configuration) {
         try {
             String dataDirectory = fileSystem.getFile("file://" + DATA_DIRECTORY_RELATIVE).getAbsolutePath();
-            embeddedServer = createAndStartBroker(dataDirectory);
-            connectionFactory = createConnectionFactory();
+            embeddedServer = createAndStartBroker(dataDirectory, configuration);
+            connectionFactory = createConnectionFactory(configuration);
         } catch (Exception e) {
             throw new RuntimeException("Failed to start embedded Artemis broker", e);
         }
@@ -68,7 +68,8 @@ public class EmbeddedActiveMQ {
         LOGGER.info("Stopped embedded Artemis broker");
     }
 
-    private org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ createAndStartBroker(String dataDirectory) throws Exception {
+    private org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ createAndStartBroker(String dataDirectory,
+                                                                                                 ActiveMQConfiguration configuration) throws Exception {
         Configuration config = new ConfigurationImpl()
             .setSecurityEnabled(false)
             .setJMXManagementEnabled(false)
@@ -77,22 +78,32 @@ public class EmbeddedActiveMQ {
             .setBindingsDirectory(dataDirectory + "/bindings")
             .setLargeMessagesDirectory(dataDirectory + "/largemessages")
             .setPagingDirectory(dataDirectory + "/paging")
+            .setJournalSyncTransactional(configuration.isJournalSyncTransactional())
+            .setJournalSyncNonTransactional(configuration.isJournalSyncNonTransactional())
+            .setJournalBufferTimeout_NIO(configuration.getJournalBufferTimeoutNIO())
+            .setJournalBufferSize_NIO(configuration.getJournalBufferSizeNIO())
+            .setJournalMaxIO_NIO(configuration.getJournalMaxIONIO())
+            .setEnabledAsyncConnectionExecution(configuration.isAsyncConnectionExecution())
             .addAcceptorConfiguration(new TransportConfiguration(InVMAcceptorFactory.class.getName()))
             .setName(BROKER_NAME);
 
         org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ server = new org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ();
         server.setConfiguration(config);
         server.start();
-        LOGGER.info("Started embedded Artemis broker, data directory: {}", dataDirectory);
+        LOGGER.info("Started embedded Artemis broker (bufferTimeout: {} ns, bufferSize: {} bytes, syncTx: {}, syncNonTx: {}), data directory: {}",
+            configuration.getJournalBufferTimeoutNIO(), configuration.getJournalBufferSizeNIO(),
+            configuration.isJournalSyncTransactional(), configuration.isJournalSyncNonTransactional(),
+            dataDirectory);
         return server;
     }
 
-    private ActiveMQConnectionFactory createConnectionFactory() {
+    private ActiveMQConnectionFactory createConnectionFactory(ActiveMQConfiguration configuration) {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
             "vm://0?broker-name=" + BROKER_NAME
         );
         factory.setConsumerWindowSize(0);
-        factory.setBlockOnAcknowledge(true);
+        factory.setBlockOnAcknowledge(configuration.isClientBlockOnAcknowledge());
+        factory.setBlockOnDurableSend(configuration.isClientBlockOnDurableSend());
         return factory;
     }
 }

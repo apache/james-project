@@ -38,9 +38,15 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import com.google.common.annotations.VisibleForTesting;
+
 @ExtendWith(BrokerExtension.class)
 public class JMSCacheableMailQueueTest implements DelayedManageableMailQueueContract, PriorityManageableMailQueueContract, DelayedPriorityMailQueueContract,
     MailQueueMetricContract {
+
+    @VisibleForTesting
+    static final int BUFFER_SIZE = 10;
+    private static final int DELAYED_MESSAGES_COUNT = 15;
 
     private JMSCacheableMailQueue mailQueue;
 
@@ -52,7 +58,7 @@ public class JMSCacheableMailQueueTest implements DelayedManageableMailQueueCont
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         MetricFactory metricFactory = metricTestSystem.getMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
-        MailQueueName queueName = BrokerExtension.generateRandomQueueName(broker);
+        MailQueueName queueName = BrokerExtension.generateRandomQueueName();
         mailQueue = new JMSCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory, gaugeRegistry);
     }
 
@@ -134,5 +140,27 @@ public class JMSCacheableMailQueueTest implements DelayedManageableMailQueueCont
     @Disabled("JAMES-3687 Delayed deletes are buggy")
     public void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() {
 
+    }
+
+    @Test
+    void delayedMessagesDoNotBlockReadyDelivery_JAMES4192() throws Exception {
+        // Enqueue 15 delayed messages (exceeding testing buffer size of 10) to verify out-of-band scheduled delivery (JAMES-4192)
+        // In Artemis, delayed messages are managed out-of-band by ScheduledDeliveryHandler and do not
+        // occupy active queue page buffers, preventing Head-of-Line blocking of ready messages.
+        for (int i = 0; i < DELAYED_MESSAGES_COUNT; i++) {
+            mailQueue.enQueue(org.apache.james.queue.api.Mails.defaultMail().name("delayed-" + i).build(), 1, java.util.concurrent.TimeUnit.HOURS);
+        }
+
+        // Enqueue one ready message
+        mailQueue.enQueue(org.apache.james.queue.api.Mails.defaultMail().name("ready-message").build());
+
+        // Ready message must be dequeued immediately without waiting or head-of-line blocking
+        reactor.core.publisher.Mono<MailQueue.MailQueueItem> dequeueMono =
+            reactor.core.publisher.Flux.from(mailQueue.deQueue()).next();
+
+        MailQueue.MailQueueItem dequeued = dequeueMono.block(java.time.Duration.ofSeconds(10));
+        org.assertj.core.api.Assertions.assertThat(dequeued).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(dequeued.getMail().getName()).isEqualTo("ready-message");
+        dequeued.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
     }
 }

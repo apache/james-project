@@ -11,11 +11,11 @@
 *.md eol=lf
 *.txt eol=lf
 
-# Email и календари — RFC стандарт CRLF
+# Emails and calendars — RFC standard CRLF
 *.eml eol=crlf
 *.ics eol=crlf
 
-# Binary файлы
+# Binary files
 *.jar binary
 *.class binary
 *.png binary

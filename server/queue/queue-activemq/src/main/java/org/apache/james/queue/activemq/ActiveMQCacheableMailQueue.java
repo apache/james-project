@@ -63,20 +63,4 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
                                       MailQueueName queuename, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         super(connectionFactory, mailQueueItemDecoratorFactory, queuename, metricFactory, gaugeRegistry);
     }
-
-    /**
-     * Constructor kept for backward compatibility with callers that pass useBlob flag.
-     * The useBlob flag is ignored as Artemis does not support ActiveMQ-specific BlobMessages.
-     *
-     * @param connectionFactory        the JMS connection factory
-     * @param mailQueueItemDecoratorFactory the item decorator factory
-     * @param queuename                the queue name
-     * @param useBlob                  ignored (Artemis uses standard JMS ObjectMessage)
-     * @param metricFactory            the metric factory
-     * @param gaugeRegistry            the gauge registry
-     */
-    public ActiveMQCacheableMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory,
-                                      MailQueueName queuename, boolean useBlob, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
-        super(connectionFactory, mailQueueItemDecoratorFactory, queuename, metricFactory, gaugeRegistry);
-    }
 }

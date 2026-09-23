@@ -622,7 +622,6 @@
 
         <james.groupId>org.apache.james</james.groupId>
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
-        <activemq.version>6.2.7</activemq.version>
         <apache-mime4j.version>0.8.15</apache-mime4j.version>
         <apache.openjpa.version>4.1.1</apache.openjpa.version>
         <!-- Align with EE10 Persistence 3.1 & Transactions 2.0: https://openjpa.apache.org/ -->
@@ -2679,19 +2678,6 @@
                 <version>4.0.2</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.activemq</groupId>
-                <artifactId>activemq-broker</artifactId>
-                <version>${activemq.version}</version>
-                <exclusions>
-                    <!-- exclude this, it's only used in the authentication plugin which we don't use -->
-                    <!-- exclude this, we don't use osgi yet -->
-                    <exclusion>
-                        <groupId>org.osgi</groupId>
-                        <artifactId>org.osgi.core</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.ant</groupId>
                 <artifactId>ant</artifactId>
                 <version>1.10.15</version>
@@ -2700,24 +2686,12 @@
                 <groupId>org.apache.artemis</groupId>
                 <artifactId>artemis-jakarta-client</artifactId>
                 <version>${activmq-artemis.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>io.netty</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <!-- Artemis embedded server (replaces legacy ActiveMQ BrokerService) -->
             <dependency>
                 <groupId>org.apache.artemis</groupId>
                 <artifactId>artemis-jakarta-server</artifactId>
                 <version>${activmq-artemis.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>io.netty</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>

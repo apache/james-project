@@ -53,7 +53,7 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         MetricFactory metricFactory = metricTestSystem.getMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
-        MailQueueName queueName = BrokerExtension.generateRandomQueueName(broker);
+        MailQueueName queueName = BrokerExtension.generateRandomQueueName();
         mailQueue = new ActiveMQCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory, gaugeRegistry);
     }
 

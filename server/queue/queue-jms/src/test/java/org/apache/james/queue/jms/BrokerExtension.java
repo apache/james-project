@@ -47,10 +47,10 @@ public class BrokerExtension implements ParameterResolver, BeforeAllCallback, Af
     private static final AtomicInteger BROKER_COUNTER = new AtomicInteger(0);
 
     /**
-     * Generate a random queue name and register it on the embedded broker.
+     * Generate a random queue name for the embedded broker.
      * Priority support is handled by Artemis natively; no extra configuration needed.
      */
-    public static MailQueueName generateRandomQueueName(EmbeddedActiveMQ broker) {
+    public static MailQueueName generateRandomQueueName() {
         String queueName = new RandomStringGenerator.Builder().withinRange('a', 'z').build().generate(10);
         return MailQueueName.of(queueName);
     }

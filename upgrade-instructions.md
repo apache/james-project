@@ -25,6 +25,23 @@ Change list:
  - [JAMES-4225 Blob ids default to 128 bits of entropy](#james-4225-blob-ids-default-to-128-bits-of-entropy)
  - [Dropping unneeded Cassandra schema columns](#dropping-unneeded-cassandra-schema-columns)
  - [Cassandra schema version 16: mandatory message denormalization migration](#cassandra-schema-version-16-mandatory-message-denormalization-migration)
+ - [Migration of embedded mail queue broker from ActiveMQ Classic to ActiveMQ Artemis](#migration-of-embedded-mail-queue-broker-from-activemq-classic-to-activemq-artemis)
+
+### Migration of embedded mail queue broker from ActiveMQ Classic to ActiveMQ Artemis
+
+Date: 22/09/2026
+
+Concerned products: Distributed and memory/postgres James servers relying on embedded ActiveMQ (`queue-activemq`).
+
+The embedded message broker has been migrated from Apache ActiveMQ Classic (5.x/6.x) with KahaDB to Apache ActiveMQ Artemis (2.x) with native journal storage.
+
+**Important for Operators:**
+ActiveMQ Artemis uses a different on-disk persistence layout and journal format than KahaDB. As a result, mail queues stored in ActiveMQ Classic will not be automatically read by Artemis.
+Operators upgrading from an earlier version must:
+1. Isolate the mail server (or temporarily reject new incoming SMTP traffic).
+2. Allow existing mail queues to drain / flush completely before upgrading James.
+3. Once the queues are empty, upgrade James to the new version.
+4. If you have legacy KahaDB data directories (e.g. `var/store/activemq`), they can be safely archived or removed after successful verification.
 
 ### Dropping unneeded Cassandra schema columns
 

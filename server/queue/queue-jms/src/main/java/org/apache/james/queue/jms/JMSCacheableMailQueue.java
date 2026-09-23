@@ -332,8 +332,9 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
         try {
 
-            int msgPrio = AttributeUtils.getValueAndCastFromMail(mail, MAIL_PRIORITY, Integer.class)
+            int rawPriority = AttributeUtils.getValueAndCastFromMail(mail, MAIL_PRIORITY, Integer.class)
                 .orElse(NORMAL_PRIORITY);
+            int msgPrio = Math.max(0, Math.min(9, rawPriority));
 
             Map<String, Object> props = getJMSProperties(mail, nextDeliveryTimestamp);
             produceMail(props, msgPrio, mail);
