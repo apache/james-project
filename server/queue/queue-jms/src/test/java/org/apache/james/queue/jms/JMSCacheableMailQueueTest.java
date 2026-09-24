@@ -72,7 +72,6 @@ public class JMSCacheableMailQueueTest implements DelayedManageableMailQueueCont
         return mailQueue;
     }
 
-    @Test
     @Override
     public ManageableMailQueue getManageableMailQueue() {
         return mailQueue;
