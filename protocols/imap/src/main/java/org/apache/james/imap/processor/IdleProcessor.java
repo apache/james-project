@@ -84,47 +84,52 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     protected Mono<Void> processRequestReactive(IdleRequest request, ImapSession session, Responder responder) {
         Sinks.One<Void> idleReadySink = Sinks.one();
         AtomicBoolean idleActive = new AtomicBoolean(true);
-        return Mono.fromRunnable(() -> idle(request, session, responder, idleReadySink, idleActive))
+        AtomicBoolean lineHandlerInstalled = new AtomicBoolean(false);
+        return Mono.fromRunnable(() -> idle(request, session, responder, idleReadySink, idleActive, lineHandlerInstalled))
             .then(unsolicitedResponses(session, responder, false))
             .onErrorResume(e -> {
-                cleanupIdle(session, session.getSelected(), idleActive);
+                cleanupIdle(session, session.getSelected(), idleActive, lineHandlerInstalled);
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return logAsMono(() -> LOGGER.error("Encountered error executing IMAP IDLE", e));
             })
             .doFinally(signalType -> idleReadySink.tryEmitEmpty());
     }
 
-    private void cleanupIdle(ImapSession session, SelectedMailbox sm, AtomicBoolean idleActive) {
+    private void cleanupIdle(ImapSession session, SelectedMailbox sm, AtomicBoolean idleActive, AtomicBoolean lineHandlerInstalled) {
         if (idleActive.compareAndSet(true, false)) {
             if (sm != null) {
                 sm.unregisterIdle();
             }
-            session.popLineHandler();
+            if (lineHandlerInstalled.get()) {
+                session.popLineHandler();
+            }
         }
     }
 
-    private void idle(IdleRequest request, ImapSession session, Responder responder, Sinks.One<Void> idleReadySink, AtomicBoolean idleActive) {
+    private void idle(IdleRequest request, ImapSession session, Responder responder, Sinks.One<Void> idleReadySink,
+                      AtomicBoolean idleActive, AtomicBoolean lineHandlerInstalled) {
         SelectedMailbox sm = session.getSelected();
         if (sm != null) {
-            sm.registerIdle(new IdleMailboxListener(session, responder, idleReadySink, idleActive));
+            sm.registerIdle(new IdleMailboxListener(session, responder, idleReadySink, idleActive, lineHandlerInstalled));
         } else {
             idleReadySink.tryEmitEmpty();
         }
 
         session.pushLineHandler((session1, data) -> {
-            cleanupIdle(session1, sm, idleActive);
+            cleanupIdle(session1, sm, idleActive, lineHandlerInstalled);
             String line = new String(data, StandardCharsets.US_ASCII).trim();
 
             if (line.isEmpty() || !session1.isConnected()) {
                 LOGGER.debug("IDLE continuation received empty input or disconnected session.");
                 return Mono.empty();
             }
-            if (DONE.equals(line.toUpperCase(Locale.US))) {
+            String upper = line.toUpperCase(Locale.US);
+            if (DONE.equals(upper)) {
                 okComplete(request, responder);
                 responder.flush();
                 return Mono.empty();
             }
-            if (line.toUpperCase(Locale.US).endsWith("LOGOUT")) {
+            if (upper.equals("LOGOUT") || upper.matches("^\\S+\\s+LOGOUT$")) {
                 return session1.logout();
             }
             String sanitized = line.replaceAll("[\\r\\n\\x00-\\x1F]", "");
@@ -139,6 +144,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             responder.flush();
             return Mono.empty();
         });
+        lineHandlerInstalled.set(true);
 
         // Write the response after the listener was added (IMAP-341)
         responder.respond(new ContinuationResponse(HumanReadableText.IDLING));
@@ -172,10 +178,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                             }
                         } catch (Exception e) {
                             LOGGER.debug("Failed to send IMAP IDLE heartbeat, stopping keepalive task", e);
-                            cleanupIdle(session, sm, idleActive);
+                            cleanupIdle(session, sm, idleActive, lineHandlerInstalled);
                         }
                     } else {
-                        cleanupIdle(session, sm, idleActive);
+                        cleanupIdle(session, sm, idleActive, lineHandlerInstalled);
                     }
                 }
             }, heartbeatInterval);
@@ -193,12 +199,15 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         private final ImapSession session;
         private final Sinks.One<Void> idleReadySink;
         private final AtomicBoolean idleActive;
+        private final AtomicBoolean lineHandlerInstalled;
 
-        public IdleMailboxListener(ImapSession session, Responder responder, Sinks.One<Void> idleReadySink, AtomicBoolean idleActive) {
+        public IdleMailboxListener(ImapSession session, Responder responder, Sinks.One<Void> idleReadySink,
+                                   AtomicBoolean idleActive, AtomicBoolean lineHandlerInstalled) {
             this.session = session;
             this.responder = session.threadSafe(responder);
             this.idleReadySink = idleReadySink;
             this.idleActive = idleActive;
+            this.lineHandlerInstalled = lineHandlerInstalled;
         }
 
         @Override
@@ -212,7 +221,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 .then(Mono.defer(() -> unsolicitedResponses(session, responder, false)))
                 .then(Mono.fromRunnable(responder::flush))
                 .onErrorResume(e -> {
-                    cleanupIdle(session, session.getSelected(), idleActive);
+                    cleanupIdle(session, session.getSelected(), idleActive, lineHandlerInstalled);
                     return logAsMono(() -> LOGGER.debug("Failed to push updates to idling client", e));
                 })
                 .then();
