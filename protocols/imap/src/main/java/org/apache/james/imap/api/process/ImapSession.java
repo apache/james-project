@@ -128,6 +128,15 @@ public interface ImapSession extends CommandDetectionSession {
     }
 
     /**
+     * Return true if the underlying transport connection is currently open and active.
+     *
+     * @return true if connected
+     */
+    default boolean isConnected() {
+        return true;
+    }
+
+    /**
      * Gets the current client state.
      * 
      * @return Returns the current state of this session.

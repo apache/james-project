@@ -114,9 +114,12 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
                 String line = new String(data, StandardCharsets.US_ASCII).trim();
 
-                if (line.isEmpty()) {
-                    LOGGER.debug("IDLE continuation received empty input (client disconnected).");
+                if (line.isEmpty() || !session1.isConnected()) {
+                    LOGGER.debug("IDLE continuation received empty input or disconnected session.");
                 } else if (!DONE.equals(line.toUpperCase(Locale.US))) {
+                    if (line.toUpperCase(Locale.US).endsWith("LOGOUT")) {
+                        session1.logout().subscribe();
+                    }
                     String sanitized = line.replaceAll("[\\r\\n\\x00-\\x1F]", "");
                     String displayLine = sanitized.length() > 32 ? sanitized.substring(0, 32) + "..." : sanitized;
                     String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", displayLine);
@@ -148,7 +151,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 public void run() {
                     // check if we need to cancel the Runnable
                     // See IMAP-275
-                    if (session.getState() != ImapSessionState.LOGOUT && idleActive.get()) {
+                    if (session.isConnected() && session.getState() != ImapSessionState.LOGOUT && idleActive.get()) {
                         // Send a heartbeat to the client to make sure we
                         // reset the idle timeout. This is kind of the same
                         // workaround as dovecot use.
@@ -163,7 +166,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                             responder.flush();
 
                             // schedule the heartbeat again for the next interval
-                            if (idleActive.get() && session.getState() != ImapSessionState.LOGOUT) {
+                            if (idleActive.get() && session.isConnected() && session.getState() != ImapSessionState.LOGOUT) {
                                 session.schedule(this, heartbeatInterval);
                             }
                         } catch (Exception e) {
