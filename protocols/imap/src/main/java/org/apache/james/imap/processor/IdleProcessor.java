@@ -89,14 +89,15 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         return Mono.fromRunnable(() -> idle(request, session, responder, sm, idleReadySink, idleActive, lineHandlerInstalled))
             .then(unsolicitedResponses(session, responder, false))
             .onErrorResume(e -> {
-                cleanupIdle(session, sm, idleActive, lineHandlerInstalled);
+                cleanupIdle(session, sm, idleActive, lineHandlerInstalled, idleReadySink);
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return logAsMono(() -> LOGGER.error("Encountered error executing IMAP IDLE", e));
             })
             .doFinally(signalType -> idleReadySink.tryEmitEmpty());
     }
 
-    private void cleanupIdle(ImapSession session, SelectedMailbox sm, AtomicBoolean idleActive, AtomicBoolean lineHandlerInstalled) {
+    private void cleanupIdle(ImapSession session, SelectedMailbox sm, AtomicBoolean idleActive,
+                             AtomicBoolean lineHandlerInstalled, Sinks.One<Void> idleReadySink) {
         if (idleActive.compareAndSet(true, false)) {
             if (sm != null) {
                 sm.unregisterIdle();
@@ -104,6 +105,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             if (lineHandlerInstalled.get()) {
                 session.popLineHandler();
             }
+            idleReadySink.tryEmitEmpty();
         }
     }
 
@@ -118,7 +120,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         try {
             session.pushLineHandler((session1, data) -> {
                 lineHandlerInstalled.set(true);
-                cleanupIdle(session1, sm, idleActive, lineHandlerInstalled);
+                cleanupIdle(session1, sm, idleActive, lineHandlerInstalled, idleReadySink);
                 String line = new String(data, StandardCharsets.US_ASCII).trim();
 
                 if (line.isEmpty() || !session1.isConnected()) {
@@ -131,7 +133,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                     responder.flush();
                     return Mono.empty();
                 }
-                if (upper.equals("LOGOUT") || upper.matches("^[A-Z0-9]+ LOGOUT$")) {
+                if ("LOGOUT".equals(upper)) {
                     return session1.logout();
                 }
                 String sanitized = line.replaceAll("[\\r\\n\\x00-\\x1F]", "");
@@ -184,10 +186,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                             }
                         } catch (Exception e) {
                             LOGGER.debug("Failed to send IMAP IDLE heartbeat, stopping keepalive task", e);
-                            cleanupIdle(session, sm, idleActive, lineHandlerInstalled);
+                            cleanupIdle(session, sm, idleActive, lineHandlerInstalled, idleReadySink);
                         }
                     } else {
-                        cleanupIdle(session, sm, idleActive, lineHandlerInstalled);
+                        cleanupIdle(session, sm, idleActive, lineHandlerInstalled, idleReadySink);
                     }
                 }
             }, heartbeatInterval);
@@ -229,7 +231,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 .then(Mono.defer(() -> unsolicitedResponses(session, responder, false)))
                 .then(Mono.fromRunnable(responder::flush))
                 .onErrorResume(e -> {
-                    cleanupIdle(session, sm, idleActive, lineHandlerInstalled);
+                    cleanupIdle(session, sm, idleActive, lineHandlerInstalled, idleReadySink);
                     return logAsMono(() -> LOGGER.debug("Failed to push updates to idling client", e));
                 })
                 .then();
