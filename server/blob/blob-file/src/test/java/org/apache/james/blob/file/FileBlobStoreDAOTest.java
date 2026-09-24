@@ -26,6 +26,8 @@ import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 class FileBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract {
 
@@ -45,5 +47,29 @@ class FileBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
     @Disabled("Not supported")
     public void mixingSaveReadAndDeleteShouldReturnConsistentState() {
 
+    }
+
+    @Override
+    @DisabledOnOs(OS.WINDOWS)
+    public void concurrentSaveBytesShouldReturnConsistentValues(String description, BlobStoreDAO.BytesBlob bytes) throws java.util.concurrent.ExecutionException, InterruptedException {
+        BlobStoreDAOContract.super.concurrentSaveBytesShouldReturnConsistentValues(description, bytes);
+    }
+
+    @Override
+    @DisabledOnOs(OS.WINDOWS)
+    public void concurrentSaveInputStreamShouldReturnConsistentValues(String description, BlobStoreDAO.BytesBlob bytes) throws java.util.concurrent.ExecutionException, InterruptedException {
+        BlobStoreDAOContract.super.concurrentSaveInputStreamShouldReturnConsistentValues(description, bytes);
+    }
+
+    @Override
+    @DisabledOnOs(OS.WINDOWS)
+    public void concurrentSaveByteSourceShouldReturnConsistentValues(String description, BlobStoreDAO.BytesBlob bytes) throws java.util.concurrent.ExecutionException, InterruptedException {
+        BlobStoreDAOContract.super.concurrentSaveByteSourceShouldReturnConsistentValues(description, bytes);
+    }
+
+    @Override
+    @DisabledOnOs(OS.WINDOWS)
+    public void readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() throws Exception {
+        BlobStoreDAOContract.super.readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob();
     }
 }

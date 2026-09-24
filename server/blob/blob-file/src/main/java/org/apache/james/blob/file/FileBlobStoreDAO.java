@@ -200,10 +200,32 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
         return Mono.fromRunnable(Throwing.runnable(() -> {
                 File bucketRoot = getBucketRoot(bucketName);
                 File blob = new File(bucketRoot, blobId.asString());
-                FileUtils.deleteQuietly(blob);
+                if (blob.exists()) {
+                    FileUtils.deleteQuietly(blob);
+                    deleteEmptyParentDirs(bucketRoot, blob);
+                }
             }))
             .subscribeOn(Schedulers.boundedElastic())
             .then();
+    }
+
+    private void deleteEmptyParentDirs(File bucketRoot, File file) {
+        File parent = file.getParentFile();
+        try {
+            while (FileUtils.directoryContains(bucketRoot, parent)) {
+                String[] entries = parent.list();
+                if (entries == null || entries.length > 0) {
+                    break;
+                }
+                boolean deleted = parent.delete();
+                if (!deleted) {
+                    break;
+                }
+                parent = parent.getParentFile();
+            }
+        } catch (IOException e) {
+            LOGGER.debug("Error while deleting empty parent directories for {}", file.getAbsolutePath(), e);
+        }
     }
 
     @Override
@@ -237,7 +259,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
         return Mono.fromCallable(() -> {
                 File bucketRoot = getBucketRoot(bucketName);
                 Path rootPath = bucketRoot.toPath();
-                // Blob ids may contain '/' (eg. recovery sidecar keys) and are then stored in nested
+                // Blob ids may contain '/' (eg. recovery sidecar keys or hierarchy-aware blob IDs) and are then stored in nested
                 // directories, so we walk the tree and rebuild the id from the bucket-root-relative path.
                 return Files.walk(rootPath)
                     .filter(Files::isRegularFile)
