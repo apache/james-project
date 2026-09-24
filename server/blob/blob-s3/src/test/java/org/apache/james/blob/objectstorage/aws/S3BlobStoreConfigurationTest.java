@@ -20,6 +20,7 @@
 package org.apache.james.blob.objectstorage.aws;
 
 import static org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration.UPLOAD_RETRY_EXCEPTION_PREDICATE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
@@ -72,6 +73,6 @@ public class S3BlobStoreConfigurationTest {
             .region(Region.of("af-south-1"))
             .build();
 
-        org.assertj.core.api.Assertions.assertThat(configuration.ifNoneMatchEnabled()).isTrue();
+        assertThat(configuration.ifNoneMatchEnabled()).isTrue();
     }
 }
