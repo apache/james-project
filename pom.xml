@@ -694,6 +694,7 @@
         <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
         <javacrumbs.json-unit.version>4.1.1</javacrumbs.json-unit.version>
         <fastutil-core.version>8.5.15</fastutil-core.version>
+        <git.useNativeGit>true</git.useNativeGit>
     </properties>
 
     <dependencyManagement>
@@ -4235,7 +4236,7 @@
                     </includeOnlyProperties>
                     <prefix>git</prefix>
                     <skip>false</skip>
-                    <useNativeGit>false</useNativeGit>
+                    <useNativeGit>${git.useNativeGit}</useNativeGit>
                     <verbose>false</verbose>
                 </configuration>
                 <executions>
@@ -4601,6 +4602,17 @@
                     </plugins>
                 </pluginManagement>
             </build>
+        </profile>
+        <profile>
+            <id>windows-git</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <git.useNativeGit>false</git.useNativeGit>
+            </properties>
         </profile>
     </profiles>
 </project>
