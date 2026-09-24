@@ -462,13 +462,11 @@ public interface ReadSaveBlobStoreDAOContract {
     }
 
     @Test
-    default void readRangeShouldReturnEmptyWhenStartBeyondSize() throws IOException {
+    default void readRangeShouldFailWhenStartBeyondSize() {
         byte[] payload = "0123456789".getBytes(StandardCharsets.UTF_8);
         Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(payload))).block();
 
-        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, TEST_BLOB_ID, 20, 30).block();
-
-        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(10);
-        assertThat(slice.asBytes().payload()).isEmpty();
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, TEST_BLOB_ID, 20, 30).block())
+            .isNotNull();
     }
 }

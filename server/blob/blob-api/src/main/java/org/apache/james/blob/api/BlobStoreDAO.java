@@ -338,13 +338,10 @@ public interface BlobStoreDAO {
                     byte[] slice = Arrays.copyOfRange(allBytes, from, (int) totalSize);
                     return (Blob) BytesBlob.of(slice, metadata);
                 }
-                if (start >= totalSize) {
-                    return (Blob) BytesBlob.of(new byte[0], metadata);
+                if (start >= totalSize || (end >= 0 && end < start)) {
+                    throw new IllegalArgumentException(String.format("Range [%d, %d] is out of bounds for object of size %d", start, end, totalSize));
                 }
                 long boundedEnd = Math.min(end, totalSize - 1);
-                if (boundedEnd < start) {
-                    return (Blob) BytesBlob.of(new byte[0], metadata);
-                }
                 byte[] slice = Arrays.copyOfRange(allBytes, (int) start, (int) boundedEnd + 1);
                 return (Blob) BytesBlob.of(slice, metadata);
             });

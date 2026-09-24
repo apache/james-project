@@ -72,8 +72,6 @@ import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException
 import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
@@ -265,58 +263,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
                     .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(String.valueOf(totalObjectSize)));
                 return (Blob) BytesBlob.of(responseBytes.asByteArrayUnsafe(), metadata);
             })
-            .onErrorResume(this::isRangeNotSatisfiable, e ->
-                headObject(resolvedBucketName, blobId)
-                    .map(head -> {
-                        long totalSize = head.contentLength() != null ? head.contentLength() : 0L;
-                        BlobMetadata metadata = asBlobMetadata(head.metadata())
-                            .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(String.valueOf(totalSize)));
-                        return (Blob) BytesBlob.of(new byte[0], metadata);
-                    })
-                    .onErrorMap(NoSuchBucketException.class, ex -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), ex))
-                    .onErrorMap(NoSuchKeyException.class, ex -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), ex)))
             .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause);
-    }
-
-    private boolean isRangeNotSatisfiable(Throwable t) {
-        if (t instanceof S3Exception && ((S3Exception) t).statusCode() == 416) {
-            return true;
-        }
-        if (t.getCause() instanceof S3Exception && ((S3Exception) t.getCause()).statusCode() == 416) {
-            return true;
-        }
-        return false;
-    }
-
-    private Mono<HeadObjectResponse> headObject(BucketName bucketName, BlobId blobId) {
-        return headObjectFromStore(bucketName, blobId)
-            .onErrorResume(e -> e instanceof NoSuchKeyException || e instanceof NoSuchBucketException, e -> {
-                if (fallbackNamespace.isPresent() && bucketNameResolver.isNameSpace(bucketName)) {
-                    return headObjectFromStore(fallbackNamespace.get(), blobId);
-                }
-                return Mono.error(e);
-            });
-    }
-
-    private Mono<HeadObjectResponse> headObjectFromStore(BucketName bucketName, BlobId blobId) {
-        return buildHeadObjectRequestBuilder(bucketName, blobId)
-            .flatMap(builder -> Mono.fromFuture(() -> client.headObject(builder.build())));
-    }
-
-    private Mono<HeadObjectRequest.Builder> buildHeadObjectRequestBuilder(BucketName bucketName, BlobId blobId) {
-        HeadObjectRequest.Builder baseBuilder = HeadObjectRequest.builder()
-            .bucket(bucketName.asString())
-            .key(blobId.asString());
-
-        if (s3RequestOption.ssec().enable()) {
-            return Mono.from(s3RequestOption.ssec().sseCustomerKeyFactory().get()
-                    .generate(bucketName, blobId))
-                .map(sseCustomerKey -> baseBuilder
-                    .sseCustomerAlgorithm(sseCustomerKey.ssecAlgorithm())
-                    .sseCustomerKey(sseCustomerKey.customerKey())
-                    .sseCustomerKeyMD5(sseCustomerKey.md5()));
-        }
-        return Mono.just(baseBuilder);
     }
 
     private String formatRangeHeader(long start, long end) {
