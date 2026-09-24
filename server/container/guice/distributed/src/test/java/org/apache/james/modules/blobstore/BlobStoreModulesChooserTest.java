@@ -50,6 +50,28 @@ class BlobStoreModulesChooserTest {
     }
 
     @Test
+    void provideBlobStoreShouldReturnFileBlobStoreWhenFileConfigured() {
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+                .file()
+                .disableCache()
+                .passthrough()
+                .noCryptoConfig()))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.FileBlobStoreDAODeclarationModule)
+            .hasSize(1);
+    }
+
+    @Test
+    void provideBlobStoreShouldReturnPostgresBlobStoreWhenPostgresConfigured() {
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+                .postgres()
+                .disableCache()
+                .passthrough()
+                .noCryptoConfig()))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.PostgresBlobStoreDAODeclarationModule)
+            .hasSize(1);
+    }
+
+    @Test
     void provideBlobStoreShouldReturnNoEncryptionWhenNoneConfigured() {
         assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
                     .s3()
