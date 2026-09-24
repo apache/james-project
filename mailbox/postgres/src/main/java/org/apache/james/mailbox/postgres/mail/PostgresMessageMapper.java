@@ -256,11 +256,11 @@ public class PostgresMessageMapper implements MessageMapper {
                 message.setSaveDate(Date.from(clock.instant()));
                 return message;
             })
-            .flatMap(this::setNewUidAndModSeq)
-            .then(saveBodyContent(message)
-                .flatMap(bodyBlobId -> messageDAO.insert(message, bodyBlobId.asString())
-                    .onErrorResume(PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE, e -> Mono.empty())))
-            .then(Mono.defer(() -> mailboxMessageDAO.insert(message)))
+            .then(saveBodyContent(message))
+            .flatMap(bodyBlobId -> setNewUidAndModSeq(message)
+                .then(messageDAO.insert(message, bodyBlobId.asString())
+                    .onErrorResume(PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE, e -> Mono.empty()))
+                .then(Mono.defer(() -> mailboxMessageDAO.insert(message))))
             .then(Mono.fromCallable(message::metaData));
     }
 
@@ -397,15 +397,9 @@ public class PostgresMessageMapper implements MessageMapper {
 
 
     @Override
-    public MessageMetaData move(Mailbox mailbox, MailboxMessage original) {
-        return moveReactive(mailbox, original).block();
-    }
-
-    @Override
-    public List<MessageMetaData> move(Mailbox mailbox, List<MailboxMessage> original) throws MailboxException {
+    public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
         return MailboxReactorUtils.block(moveReactive(mailbox, original));
     }
-
 
     @Override
     public Mono<MessageMetaData> moveReactive(Mailbox mailbox, MailboxMessage original) {
