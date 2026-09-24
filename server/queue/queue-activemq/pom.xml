@@ -97,11 +97,9 @@
             <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-jakarta-client</artifactId>
         </dependency>
-        <!-- Artemis Jakarta Server (embedded broker replacing legacy ActiveMQ) -->
         <dependency>
             <groupId>org.apache.artemis</groupId>
             <artifactId>artemis-jakarta-server</artifactId>
-            <version>${activmq-artemis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.angus</groupId>

@@ -28,11 +28,11 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.jms.JMSCacheableMailQueue;
 import org.apache.james.queue.jms.JMSMailQueueFactory;
 
 /**
- * {@link MailQueueFactory} implementation which returns
- * {@link ActiveMQCacheableMailQueue} instances backed by Apache ActiveMQ Artemis.
+ * {@link MailQueueFactory} implementation backed by Apache ActiveMQ Artemis.
  */
 public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
 
@@ -53,6 +53,6 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
     @Override
     protected ManageableMailQueue createCacheableMailQueue(MailQueueName name) {
         activeMQMetricCollector.collectQueueStatistics(name);
-        return new ActiveMQCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory, gaugeRegistry);
+        return new JMSCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory, gaugeRegistry);
     }
 }

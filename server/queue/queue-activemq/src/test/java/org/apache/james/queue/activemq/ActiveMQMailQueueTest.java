@@ -32,6 +32,7 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.PriorityManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.BrokerExtension;
+import org.apache.james.queue.jms.JMSCacheableMailQueue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -44,7 +45,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract,
     MailQueueMetricContract {
 
-    ActiveMQCacheableMailQueue mailQueue;
+    JMSCacheableMailQueue mailQueue;
 
     @BeforeEach
     public void setUp(EmbeddedActiveMQ broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
@@ -54,7 +55,7 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
         MetricFactory metricFactory = metricTestSystem.getMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         MailQueueName queueName = BrokerExtension.generateRandomQueueName();
-        mailQueue = new ActiveMQCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory, gaugeRegistry);
+        mailQueue = new JMSCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory, gaugeRegistry);
     }
 
     @AfterEach
