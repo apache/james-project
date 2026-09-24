@@ -133,9 +133,6 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                     responder.flush();
                     return Mono.empty();
                 }
-                if ("LOGOUT".equals(upper)) {
-                    return session1.logout();
-                }
                 String sanitized = line.replaceAll("[\\r\\n\\x00-\\x1F]", "");
                 String displayLine = sanitized.length() > 32 ? sanitized.substring(0, 32) + "..." : sanitized;
                 String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", displayLine);
