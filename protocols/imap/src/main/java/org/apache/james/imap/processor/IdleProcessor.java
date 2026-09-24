@@ -117,7 +117,9 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 if (line.isEmpty()) {
                     LOGGER.debug("IDLE continuation received empty input (client disconnected).");
                 } else if (!DONE.equals(line.toUpperCase(Locale.US))) {
-                    String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", line);
+                    String sanitized = line.replaceAll("[\\r\\n\\x00-\\x1F]", "");
+                    String displayLine = sanitized.length() > 32 ? sanitized.substring(0, 32) + "..." : sanitized;
+                    String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", displayLine);
                     StatusResponse response = getStatusResponseFactory()
                         .taggedBad(request.getTag(), request.getCommand(),
                             new HumanReadableText("org.apache.james.imap.INVALID_CONTINUATION",
