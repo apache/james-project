@@ -21,8 +21,8 @@ package org.apache.james.queue.jms;
 
 import jakarta.jms.ConnectionFactory;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -42,8 +42,8 @@ public class JMSCacheableMailQueueFactoryTest implements MailQueueFactoryContrac
     private JMSMailQueueFactory mailQueueFactory;
 
     @BeforeEach
-    void setUp(BrokerService broker) {
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+    void setUp(EmbeddedActiveMQ broker) {
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://0");
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         RecordingMetricFactory metricFactory = new RecordingMetricFactory();
         GaugeRegistry gaugeRegistry = new NoopGaugeRegistry();

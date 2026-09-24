@@ -622,9 +622,9 @@
 
         <james.groupId>org.apache.james</james.groupId>
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
-        <activemq.version>6.2.7</activemq.version>
         <apache-mime4j.version>0.8.15</apache-mime4j.version>
-        <apache.openjpa.version>4.1.1</apache.openjpa.version><!-- Align with EE10 Persistence 3.1 & Transactions 2.0: https://openjpa.apache.org/ -->
+        <apache.openjpa.version>4.1.1</apache.openjpa.version>
+        <!-- Align with EE10 Persistence 3.1 & Transactions 2.0: https://openjpa.apache.org/ -->
         <h2.version>2.3.232</h2.version>
         <log4j2.version>2.25.5</log4j2.version>
 
@@ -639,7 +639,7 @@
         <spring.version>6.2.8</spring.version>
         <activmq-artemis.version>2.56.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.5</apache-jspf-resolver.version>
-        <angus-mail.version>2.0.5</angus-mail.version>
+        <angus-mail.version>2.0.3</angus-mail.version><!-- Align with EE10 Mail 2.1: https://eclipse-ee4j.github.io/angus-mail/ -->
         <angus-activation.version>2.0.2</angus-activation.version><!-- Align with EE10 Activation 2.1: https://eclipse-ee4j.github.io/angus-activation/ -->
         <slf4j.version>2.0.17</slf4j.version>
         <circe.version>0.14.14</circe.version>
@@ -694,6 +694,7 @@
         <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
         <javacrumbs.json-unit.version>4.1.1</javacrumbs.json-unit.version>
         <fastutil-core.version>8.5.15</fastutil-core.version>
+        <git.useNativeGit>true</git.useNativeGit>
     </properties>
 
     <dependencyManagement>
@@ -2550,6 +2551,13 @@
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
                 <artifactId>netty-codec</artifactId>
                 <version>${netty.version}</version>
             </dependency>
@@ -2677,20 +2685,12 @@
                 <version>4.0.2</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.activemq</groupId>
-                <artifactId>activemq-broker</artifactId>
-                <version>${activemq.version}</version>
-                <exclusions>
-                    <!-- exclude this, it's only used in the authentication plugin which we don't use -->
-                    <!-- exclude this, we don't use osgi yet -->
-                    <exclusion>
-                        <groupId>org.osgi</groupId>
-                        <artifactId>org.osgi.core</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>org.apache.ant</groupId>
+                <artifactId>ant</artifactId>
+                <version>1.10.15</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.activemq</groupId>
+                <groupId>org.apache.artemis</groupId>
                 <artifactId>artemis-jakarta-client</artifactId>
                 <version>${activmq-artemis.version}</version>
                 <exclusions>
@@ -2700,10 +2700,11 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <!-- Artemis embedded server (replaces legacy ActiveMQ BrokerService) -->
             <dependency>
-                <groupId>org.apache.ant</groupId>
-                <artifactId>ant</artifactId>
-                <version>1.10.15</version>
+                <groupId>org.apache.artemis</groupId>
+                <artifactId>artemis-jakarta-server</artifactId>
+                <version>${activmq-artemis.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -4219,8 +4220,7 @@
                     <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
                     <injectAllReactorProjects>true</injectAllReactorProjects>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
-                    </generateGitPropertiesFilename>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <format>json</format>
                     <gitDescribe>
@@ -4236,7 +4236,7 @@
                     </includeOnlyProperties>
                     <prefix>git</prefix>
                     <skip>false</skip>
-                    <useNativeGit>true</useNativeGit>
+                    <useNativeGit>${git.useNativeGit}</useNativeGit>
                     <verbose>false</verbose>
                 </configuration>
                 <executions>
@@ -4356,7 +4356,7 @@
                     </inputExcludes>
                 </configuration>
             </plugin>
-<!--
+            <!--
             Even using the -no-fork variant of hte tasks, generating this reports
             triggers unresolved symbols errors which need to be further investigated
             trakced in https://issues.apache.org/jira/browse/JAMES-4178
@@ -4374,7 +4374,7 @@
             </plugin>
 -->
 
-<!--
+            <!--
             This plugin is not compatible with jdk21, so I disabled it
             temporarily.
             it appears the successor is spotbugs but we should do this migration
@@ -4602,6 +4602,17 @@
                     </plugins>
                 </pluginManagement>
             </build>
+        </profile>
+        <profile>
+            <id>windows-git</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <git.useNativeGit>false</git.useNativeGit>
+            </properties>
         </profile>
     </profiles>
 </project>

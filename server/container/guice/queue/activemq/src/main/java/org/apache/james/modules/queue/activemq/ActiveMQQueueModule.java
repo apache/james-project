@@ -23,8 +23,6 @@ import java.io.FileNotFoundException;
 
 import jakarta.jms.ConnectionFactory;
 
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.healthcheck.HealthCheck;
@@ -33,7 +31,7 @@ import org.apache.james.queue.activemq.ActiveMQHealthCheck;
 import org.apache.james.queue.activemq.ActiveMQMailQueueFactory;
 import org.apache.james.queue.activemq.EmbeddedActiveMQ;
 import org.apache.james.queue.activemq.metric.ActiveMQMetricCollector;
-import org.apache.james.queue.activemq.metric.ActiveMQMetricCollectorImpl;
+import org.apache.james.queue.activemq.metric.ActiveMQMetricCollectorNoop;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -50,6 +48,10 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
+/**
+ * Guice module for the Artemis-backed mail queue.
+ * Replaces the legacy ActiveMQ embedded broker with Apache ActiveMQ Artemis.
+ */
 public class ActiveMQQueueModule extends AbstractModule {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQQueueModule.class);
@@ -57,26 +59,26 @@ public class ActiveMQQueueModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(PersistenceAdapter.class).to(KahaDBPersistenceAdapter.class);
-        bind(KahaDBPersistenceAdapter.class).in(Scopes.SINGLETON);
         bind(EmbeddedActiveMQ.class).in(Scopes.SINGLETON);
         bind(ActiveMQMailQueueFactory.class).in(Scopes.SINGLETON);
-        bind(ActiveMQMetricCollector.class).to(ActiveMQMetricCollectorImpl.class);
-        bind(ActiveMQMetricCollectorImpl.class).in(Scopes.SINGLETON);
+        // Use Noop metric collector since Artemis does not support ActiveMQ Statistics Plugin.
+        // Artemis metrics can be obtained via JMX or dedicated management APIs.
+        bind(ActiveMQMetricCollector.class).to(ActiveMQMetricCollectorNoop.class);
+        bind(ActiveMQMetricCollectorNoop.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(ActiveMQHealthCheck.class);
     }
-    
+
     @Provides
     @Singleton
-    ConnectionFactory provideEmbededActiveMQ(EmbeddedActiveMQ embeddedActiveMQ) {
+    ConnectionFactory provideEmbeddedArtemis(EmbeddedActiveMQ embeddedActiveMQ) {
         return embeddedActiveMQ.getConnectionFactory();
     }
 
     @Provides
     @Singleton
     public MailQueueFactory<? extends ManageableMailQueue> createActiveMQManageableMailQueueFactory(ActiveMQMailQueueFactory activeMQMailQueueFactory) {
-        activeMQMailQueueFactory.setUseJMX(true);
+        activeMQMailQueueFactory.setUseJMX(false);
         activeMQMailQueueFactory.init();
         return activeMQMailQueueFactory;
     }
