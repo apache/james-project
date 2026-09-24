@@ -90,6 +90,8 @@ public interface ImapSession extends CommandDetectionSession {
 
     String MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY = "org.apache.james.api.imap.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY";
 
+    String UTF8_ENABLED_ATTRIBUTE_SESSION_KEY = "org.apache.james.api.imap.UTF8_ENABLED";
+
     /**
      * @return a unique identifier for this session.
      *
@@ -272,6 +274,20 @@ public interface ImapSession extends CommandDetectionSession {
 
     default MailboxSession getMailboxSession() {
         return (MailboxSession) getAttribute(MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY);
+    }
+
+    /**
+     * Record that the client has ENABLEd UTF8=ACCEPT (RFC 6855). From then on
+     * mailbox names and strings are UTF-8 octets in both directions, so the
+     * decoder and the encoder built for this session are configured from
+     * {@link #utf8Enabled()}.
+     */
+    default void enableUtf8() {
+        setAttribute(UTF8_ENABLED_ATTRIBUTE_SESSION_KEY, Boolean.TRUE);
+    }
+
+    default boolean utf8Enabled() {
+        return Boolean.TRUE.equals(getAttribute(UTF8_ENABLED_ATTRIBUTE_SESSION_KEY));
     }
 
     default Username getUserName() {
