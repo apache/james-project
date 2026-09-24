@@ -136,6 +136,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             }
         }));
 
+        // Write the response after the listener was added (IMAP-341)
+        responder.respond(new ContinuationResponse(HumanReadableText.IDLING));
+        responder.flush();
+
         // Check if we should send heartbeats
         if (enableIdle) {
             session.schedule(new Runnable() {
@@ -180,11 +184,6 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 }
             }, heartbeatInterval);
         }
-
-        // Write the response after the listener was add
-        // IMAP-341
-        responder.respond(new ContinuationResponse(HumanReadableText.IDLING));
-        responder.flush();
     }
 
     @Override
