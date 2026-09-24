@@ -38,8 +38,6 @@ import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.github.luben.zstd.Zstd;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -58,7 +56,7 @@ class BlobCompactionLayoutIntegrationTest {
     @BeforeEach
     void setUp() {
         rawStore = new MemoryBlobStoreDAO();
-        chunkedStore = new ChunkedBlobStoreDAO(rawStore, rawStore);
+        chunkedStore = new ChunkedBlobStoreDAO(rawStore);
         mappingSource = new BlobCompactionAlgorithmTest.TestMappingSource();
         updatedReferences = new ConcurrentHashMap<>();
 
@@ -70,14 +68,7 @@ class BlobCompactionLayoutIntegrationTest {
     }
 
     private byte[] readDecompressed(BlobId blobId) {
-        BlobStoreDAO.BytesBlob blob = Mono.from(chunkedStore.readBytes(TEST_BUCKET, blobId)).block();
-        if (blob.metadata().contentEncoding().filter(BlobStoreDAO.ContentEncoding.ZSTD::equals).isPresent()) {
-            long origSize = blob.metadata().get(BlobSlot.CONTENT_ORIGINAL_SIZE)
-                .map(v -> Long.parseLong(v.value()))
-                .orElse((long) blob.payload().length);
-            return Zstd.decompress(blob.payload(), (int) origSize);
-        }
-        return blob.payload();
+        return Mono.from(chunkedStore.readBytes(TEST_BUCKET, blobId)).block().payload();
     }
 
     @Test

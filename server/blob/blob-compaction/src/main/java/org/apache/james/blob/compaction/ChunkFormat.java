@@ -38,7 +38,6 @@ import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataName;
 import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataValue;
 import org.apache.james.blob.api.ObjectStoreIOException;
 
-import com.github.luben.zstd.Zstd;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
@@ -46,18 +45,16 @@ import com.google.common.io.ByteStreams;
 public class ChunkFormat {
     public static final byte FORMAT_BYTE = 0x01;
     public static final int FOOTER_METADATA_LENGTH = 12; // 4 bytes footerLength + 8 bytes footerPosition
-    public static final String METADATA_ENCODING = "content-encoding=zstd\n";
-    public static final String METADATA_SIZE_PREFIX = "content-original-size=";
 
-    public record BlobSlotContent(byte[] rawContent, long originalSize, BlobMetadata metadata) {
-        public static BlobSlotContent of(byte[] rawContent) {
-            return of(rawContent, BlobMetadata.empty());
+    public record BlobSlotContent(byte[] payload, BlobMetadata metadata) {
+        public static BlobSlotContent of(byte[] payload) {
+            return of(payload, BlobMetadata.empty());
         }
 
-        public static BlobSlotContent of(byte[] rawContent, BlobMetadata metadata) {
-            Preconditions.checkNotNull(rawContent, "'rawContent' must not be null");
+        public static BlobSlotContent of(byte[] payload, BlobMetadata metadata) {
+            Preconditions.checkNotNull(payload, "'payload' must not be null");
             Preconditions.checkNotNull(metadata, "'metadata' must not be null");
-            return new BlobSlotContent(rawContent, rawContent.length, metadata);
+            return new BlobSlotContent(payload, metadata);
         }
     }
 
@@ -72,29 +69,16 @@ public class ChunkFormat {
         List<Long> slotStarts = new ArrayList<>(slots.size());
 
         for (BlobSlotContent slot : slots) {
-            byte[] raw = slot.rawContent();
-            long originalSize = slot.originalSize();
-
-            byte[] compressed;
-            if (raw.length == 0) {
-                compressed = new byte[0];
-            } else {
-                compressed = Zstd.compress(raw);
-            }
+            byte[] payload = slot.payload();
 
             CRC32C crc = new CRC32C();
-            crc.update(compressed);
+            crc.update(payload);
             int crc32c = (int) crc.getValue();
 
             StringBuilder metadataBuilder = new StringBuilder();
-            metadataBuilder.append(METADATA_ENCODING);
-            metadataBuilder.append(METADATA_SIZE_PREFIX).append(originalSize).append('\n');
             if (slot.metadata() != null) {
                 for (Map.Entry<BlobMetadataName, BlobMetadataValue> entry : slot.metadata().underlyingMap().entrySet()) {
-                    String key = entry.getKey().name();
-                    if (!key.equalsIgnoreCase("content-encoding") && !key.equalsIgnoreCase("content-original-size")) {
-                        metadataBuilder.append(key).append('=').append(entry.getValue().value()).append('\n');
-                    }
+                    metadataBuilder.append(entry.getKey().name()).append('=').append(entry.getValue().value()).append('\n');
                 }
             }
             metadataBuilder.append('\n');
@@ -105,9 +89,9 @@ public class ChunkFormat {
             dataOut.writeLong(currentOffset);
             dataOut.writeInt(crc32c);
             dataOut.write(metadataBytes);
-            dataOut.write(compressed);
+            dataOut.write(payload);
 
-            currentOffset += 8L + 4L + metadataBytes.length + compressed.length;
+            currentOffset += 8L + 4L + metadataBytes.length + payload.length;
         }
 
         long footerPosition = currentOffset;
@@ -144,42 +128,29 @@ public class ChunkFormat {
         List<Long> slotLengths = new ArrayList<>(slots.size());
 
         for (BlobSlotContent slot : slots) {
-            byte[] raw = slot.rawContent();
-            long originalSize = slot.originalSize();
-
-            byte[] compressed;
-            if (raw.length == 0) {
-                compressed = new byte[0];
-            } else {
-                compressed = Zstd.compress(raw);
-            }
+            byte[] payload = slot.payload();
 
             CRC32C crc = new CRC32C();
-            crc.update(compressed);
+            crc.update(payload);
             int crc32c = (int) crc.getValue();
 
             StringBuilder metadataBuilder = new StringBuilder();
-            metadataBuilder.append(METADATA_ENCODING);
-            metadataBuilder.append(METADATA_SIZE_PREFIX).append(originalSize).append('\n');
             if (slot.metadata() != null) {
                 for (Map.Entry<BlobMetadataName, BlobMetadataValue> entry : slot.metadata().underlyingMap().entrySet()) {
-                    String key = entry.getKey().name();
-                    if (!key.equalsIgnoreCase("content-encoding") && !key.equalsIgnoreCase("content-original-size")) {
-                        metadataBuilder.append(key).append('=').append(entry.getValue().value()).append('\n');
-                    }
+                    metadataBuilder.append(entry.getKey().name()).append('=').append(entry.getValue().value()).append('\n');
                 }
             }
             metadataBuilder.append('\n');
             byte[] metadataBytes = metadataBuilder.toString().getBytes(StandardCharsets.US_ASCII);
 
             slotStarts.add(currentOffset);
-            long slotLength = 8L + 4L + metadataBytes.length + compressed.length;
+            long slotLength = 8L + 4L + metadataBytes.length + payload.length;
             slotLengths.add(slotLength);
 
             dataOut.writeLong(currentOffset);
             dataOut.writeInt(crc32c);
             dataOut.write(metadataBytes);
-            dataOut.write(compressed);
+            dataOut.write(payload);
 
             currentOffset += slotLength;
         }
@@ -203,7 +174,7 @@ public class ChunkFormat {
         return new ChunkWriteResult(baos.toByteArray(), ranges);
     }
 
-    public record ParsedSlot(long offset, long limit, byte[] decompressedContent) {}
+    public record ParsedSlot(long offset, long limit, byte[] payload, BlobMetadata metadata) {}
 
     public static List<ParsedSlot> parseAllSlots(byte[] chunkBytes) throws ObjectStoreIOException {
         Preconditions.checkNotNull(chunkBytes, "'chunkBytes' must not be null");
@@ -216,8 +187,8 @@ public class ChunkFormat {
             long end = (i + 1 < starts.size()) ? starts.get(i + 1) : footerPosition;
             long limit = end - offset;
             byte[] slotSlice = Arrays.copyOfRange(chunkBytes, (int) offset, (int) end);
-            byte[] decompressed = parseSlotBytes(slotSlice, offset);
-            result.add(new ParsedSlot(offset, limit, decompressed));
+            BlobSlot blobSlot = parseSlot(slotSlice, offset);
+            result.add(new ParsedSlot(offset, limit, blobSlot.payload(), blobSlot.metadata()));
         }
         return result;
     }
@@ -305,11 +276,11 @@ public class ChunkFormat {
                 contentStart, slotLength, slotBytes.length));
         }
 
-        return parseSlotBytes(slotBytes, contentStart);
+        return parseSlot(slotBytes, contentStart).payload();
     }
 
     public static BlobSlot parseSlot(byte[] slotBytes, long expectedContentStart) throws ObjectStoreIOException {
-        if (slotBytes.length < 8 + 4 + 2) { // 8B contentStart, 4B crc, at least 2 bytes metadata
+        if (slotBytes.length < 8 + 4 + 1) { // 8B contentStart, 4B crc, at least 1 byte newline for metadata
             throw new ObjectStoreIOException("Slot byte array too short: " + slotBytes.length);
         }
 
@@ -323,8 +294,6 @@ public class ChunkFormat {
         int crc32c = buffer.getInt(8);
 
         int lineStart = 12;
-        int lineNum = 0;
-        long originalSize = -1;
         BlobMetadata customMetadata = BlobMetadata.empty();
         int contentOffset = -1;
 
@@ -347,66 +316,34 @@ public class ChunkFormat {
             }
 
             String line = new String(slotBytes, lineStart, lineLen, StandardCharsets.US_ASCII).trim();
-            if (lineNum == 0) {
-                if (!"content-encoding=zstd".equalsIgnoreCase(line)) {
-                    throw new ObjectStoreIOException("Unsupported slot encoding: " + line);
-                }
-            } else if (lineNum == 1) {
-                if (!line.startsWith(METADATA_SIZE_PREFIX)) {
-                    throw new ObjectStoreIOException("Missing original size metadata line: " + line);
-                }
+            int eqIndex = line.indexOf('=');
+            if (eqIndex > 0) {
+                String key = line.substring(0, eqIndex).trim();
+                String val = line.substring(eqIndex + 1).trim();
                 try {
-                    originalSize = Long.parseLong(line.substring(METADATA_SIZE_PREFIX.length()).trim());
-                } catch (NumberFormatException e) {
-                    throw new ObjectStoreIOException("Corrupt original size metadata: " + line, e);
-                }
-            } else {
-                int eqIndex = line.indexOf('=');
-                if (eqIndex > 0) {
-                    String key = line.substring(0, eqIndex).trim();
-                    String val = line.substring(eqIndex + 1).trim();
-                    try {
-                        customMetadata = customMetadata.withMetadata(new BlobMetadataName(key), new BlobMetadataValue(val));
-                    } catch (IllegalArgumentException e) {
-                        contentOffset = lineStart;
-                        break;
-                    }
-                } else {
+                    customMetadata = customMetadata.withMetadata(new BlobMetadataName(key), new BlobMetadataValue(val));
+                } catch (IllegalArgumentException e) {
                     contentOffset = lineStart;
                     break;
                 }
+            } else {
+                contentOffset = lineStart;
+                break;
             }
 
-            lineNum++;
             lineStart = newlineIndex + 1;
-        }
-
-        if (originalSize == -1) {
-            throw new ObjectStoreIOException("Corrupt slot metadata: missing original size at " + expectedContentStart);
         }
 
         if (contentOffset == -1) {
             contentOffset = lineStart;
         }
 
-        int compressedLength = slotBytes.length - contentOffset;
-        byte[] compressedContent = new byte[compressedLength];
-        System.arraycopy(slotBytes, contentOffset, compressedContent, 0, compressedLength);
+        int payloadLength = slotBytes.length - contentOffset;
+        byte[] payload = new byte[payloadLength];
+        System.arraycopy(slotBytes, contentOffset, payload, 0, payloadLength);
 
-        BlobSlot blobSlot = new BlobSlot(expectedContentStart, crc32c, originalSize, compressedContent, customMetadata);
+        BlobSlot blobSlot = new BlobSlot(expectedContentStart, crc32c, payload, customMetadata);
         blobSlot.verifyCrc();
         return blobSlot;
-    }
-
-    public static byte[] parseSlotBytes(byte[] slotBytes, long expectedContentStart) throws ObjectStoreIOException {
-        BlobSlot blobSlot = parseSlot(slotBytes, expectedContentStart);
-        if (blobSlot.originalSize() == 0) {
-            return new byte[0];
-        }
-        try {
-            return Zstd.decompress(blobSlot.compressedContent(), (int) blobSlot.originalSize());
-        } catch (Exception e) {
-            throw new ObjectStoreIOException("Failed to decompress slot content at " + expectedContentStart, e);
-        }
     }
 }

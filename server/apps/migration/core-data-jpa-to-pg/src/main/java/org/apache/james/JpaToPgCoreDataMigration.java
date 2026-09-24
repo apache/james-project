@@ -163,8 +163,8 @@ public class JpaToPgCoreDataMigration {
     public static List<Module> chooseModules(BlobStoreConfiguration choosingConfiguration) {
         return ImmutableList.<Module>builder()
                 .add(chooseBlobStoreDAOModule(choosingConfiguration.getImplementation()))
+                .add(chooseChunkedBlobStoreDAOModule(choosingConfiguration.getImplementation()))
                 .add(chooseEncryptionModule(choosingConfiguration.getCryptoConfig()))
-                .add(chooseChunkedBlobStoreDAOModule())
                 .add(chooseCompressionModule(choosingConfiguration.getCompressionConfiguration()))
                 .addAll(chooseStoragePolicyModule(choosingConfiguration.storageStrategy()))
                 .add(binder -> binder.bind(BlobStoreConfiguration.class).toInstance(choosingConfiguration))

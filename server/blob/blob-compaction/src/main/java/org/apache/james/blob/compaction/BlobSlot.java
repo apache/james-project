@@ -22,22 +22,18 @@ package org.apache.james.blob.compaction;
 import java.util.zip.CRC32C;
 
 import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
-import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataName;
-import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataValue;
 import org.apache.james.blob.api.BlobStoreDAO.BytesBlob;
-import org.apache.james.blob.api.BlobStoreDAO.ContentEncoding;
 import org.apache.james.blob.api.ObjectStoreIOException;
 
-public record BlobSlot(long contentStart, int crc32c, long originalSize, byte[] compressedContent, BlobMetadata metadata) {
-    public static final BlobMetadataName CONTENT_ORIGINAL_SIZE = new BlobMetadataName("content-original-size");
+public record BlobSlot(long contentStart, int crc32c, byte[] payload, BlobMetadata metadata) {
 
-    public BlobSlot(long contentStart, int crc32c, long originalSize, byte[] compressedContent) {
-        this(contentStart, crc32c, originalSize, compressedContent, BlobMetadata.empty());
+    public BlobSlot(long contentStart, int crc32c, byte[] payload) {
+        this(contentStart, crc32c, payload, BlobMetadata.empty());
     }
 
     public void verifyCrc() throws ObjectStoreIOException {
         CRC32C crc = new CRC32C();
-        crc.update(compressedContent);
+        crc.update(payload);
         int computedCrc = (int) crc.getValue();
         if (computedCrc != crc32c) {
             throw new ObjectStoreIOException(String.format("CRC mismatch for chunk slot at offset %d: expected %d, got %d",
@@ -46,9 +42,6 @@ public record BlobSlot(long contentStart, int crc32c, long originalSize, byte[] 
     }
 
     public BytesBlob toBlob() {
-        BlobMetadata enriched = metadata
-            .withContentEncoding(ContentEncoding.ZSTD)
-            .withMetadata(CONTENT_ORIGINAL_SIZE, new BlobMetadataValue(String.valueOf(originalSize)));
-        return BytesBlob.of(compressedContent, enriched);
+        return BytesBlob.of(payload, metadata);
     }
 }

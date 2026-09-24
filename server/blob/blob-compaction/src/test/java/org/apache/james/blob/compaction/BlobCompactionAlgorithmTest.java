@@ -47,8 +47,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 
-import com.github.luben.zstd.Zstd;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -114,21 +112,14 @@ class BlobCompactionAlgorithmTest {
     @BeforeEach
     void setUp() {
         rawStore = new MemoryBlobStoreDAO();
-        chunkedBlobStoreDAO = new ChunkedBlobStoreDAO(rawStore, rawStore);
+        chunkedBlobStoreDAO = new ChunkedBlobStoreDAO(rawStore);
         mappingSource = new TestMappingSource();
         recordingUpdater = new RecordingBlobIdUpdater();
         testee = new BlobCompactionAlgorithm(rawStore, rawStore, mappingSource, recordingUpdater);
     }
 
     private byte[] readDecompressed(BlobId blobId) {
-        BlobStoreDAO.BytesBlob blob = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, blobId)).block();
-        if (blob.metadata().contentEncoding().filter(BlobStoreDAO.ContentEncoding.ZSTD::equals).isPresent()) {
-            long origSize = blob.metadata().get(BlobSlot.CONTENT_ORIGINAL_SIZE)
-                .map(v -> Long.parseLong(v.value()))
-                .orElse((long) blob.payload().length);
-            return Zstd.decompress(blob.payload(), (int) origSize);
-        }
-        return blob.payload();
+        return Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, blobId)).block().payload();
     }
 
     @Test

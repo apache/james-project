@@ -32,7 +32,6 @@ import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
 import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataName;
 import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataValue;
 import org.apache.james.blob.api.BlobStoreDAO.BytesBlob;
-import org.apache.james.blob.api.BlobStoreDAO.ContentEncoding;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.junit.jupiter.api.Test;
 
@@ -202,15 +201,14 @@ class ChunkFormatTest {
         ByteBuffer bb = ByteBuffer.wrap(chunkBytes);
         assertThat(bb.getLong(1)).isEqualTo(1L);
 
-        // Bytes 9..12: CRC32C of compressed content
+        // Bytes 9..12: CRC32C of content
         int crc = bb.getInt(9);
-        byte[] compressed = com.github.luben.zstd.Zstd.compress(raw);
         java.util.zip.CRC32C crcCalculator = new java.util.zip.CRC32C();
-        crcCalculator.update(compressed);
+        crcCalculator.update(raw);
         assertThat(crc).isEqualTo((int) crcCalculator.getValue());
 
-        // Followed by metadata
-        String metadataExpected = "content-encoding=zstd\ncontent-original-size=4\n\n";
+        // Followed by metadata terminator "\n"
+        String metadataExpected = "\n";
         byte[] metadataBytes = metadataExpected.getBytes(StandardCharsets.US_ASCII);
         byte[] actualMetadata = Arrays.copyOfRange(chunkBytes, 13, 13 + metadataBytes.length);
         assertThat(actualMetadata).isEqualTo(metadataBytes);
@@ -250,32 +248,32 @@ class ChunkFormatTest {
         BytesBlob bytesBlob = slot.toBlob();
         assertThat(bytesBlob.metadata().get(new BlobMetadataName("custom-header")))
             .contains(new BlobMetadataValue("my-value"));
-        assertThat(bytesBlob.metadata().contentEncoding()).contains(ContentEncoding.ZSTD);
     }
 
     @Test
     void backwardsCompatibilityWithTwoLineHeaderWithoutEmptyLine() throws Exception {
         byte[] raw = "Test content for backwards compatibility".getBytes(StandardCharsets.UTF_8);
-        byte[] compressed = com.github.luben.zstd.Zstd.compress(raw);
         java.util.zip.CRC32C crc = new java.util.zip.CRC32C();
-        crc.update(compressed);
+        crc.update(raw);
         int crc32c = (int) crc.getValue();
 
         // 2-line header without terminating empty line
         String header = "content-encoding=zstd\ncontent-original-size=" + raw.length + "\n";
         byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
 
-        ByteBuffer bb = ByteBuffer.allocate(8 + 4 + headerBytes.length + compressed.length);
+        ByteBuffer bb = ByteBuffer.allocate(8 + 4 + headerBytes.length + raw.length);
         bb.putLong(1L);
         bb.putInt(crc32c);
         bb.put(headerBytes);
-        bb.put(compressed);
+        bb.put(raw);
 
         byte[] slotBytes = bb.array();
         BlobSlot parsed = ChunkFormat.parseSlot(slotBytes, 1L);
 
-        assertThat(parsed.originalSize()).isEqualTo(raw.length);
-        assertThat(parsed.compressedContent()).isEqualTo(compressed);
-        assertThat(ChunkFormat.parseSlotBytes(slotBytes, 1L)).isEqualTo(raw);
+        assertThat(parsed.payload()).isEqualTo(raw);
+        assertThat(parsed.metadata().get(new BlobMetadataName("content-encoding")))
+            .contains(new BlobMetadataValue("zstd"));
+        assertThat(parsed.metadata().get(new BlobMetadataName("content-original-size")))
+            .contains(new BlobMetadataValue(String.valueOf(raw.length)));
     }
 }

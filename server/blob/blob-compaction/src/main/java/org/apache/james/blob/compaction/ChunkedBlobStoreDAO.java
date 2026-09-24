@@ -23,11 +23,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.BlobStoreDAO.Blob;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
@@ -35,81 +36,53 @@ import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class ChunkedBlobStoreDAO implements BlobStoreDAO {
-    private final BlobStoreDAO plainChain;
     private final BlobStoreDAO rawStore;
-    private final BlobIdRepairer blobIdRepairer;
 
-    public ChunkedBlobStoreDAO(BlobStoreDAO plainChain, BlobStoreDAO rawStore) {
-        this(plainChain, rawStore, Optional.empty());
-    }
-
-    public ChunkedBlobStoreDAO(BlobStoreDAO plainChain, BlobStoreDAO rawStore, Optional<BlobIdRepairer> blobIdRepairer) {
-        this.plainChain = Preconditions.checkNotNull(plainChain, "'plainChain' must not be null");
+    @Inject
+    public ChunkedBlobStoreDAO(@Named("raw") BlobStoreDAO rawStore) {
         this.rawStore = Preconditions.checkNotNull(rawStore, "'rawStore' must not be null");
-        this.blobIdRepairer = blobIdRepairer.orElse(BlobIdRepairer.NOOP);
     }
 
     @Override
     public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        if (ChunkId.isChunkRef(blobId)) {
-            ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
-            if (chunkId.isSlotRef()) {
-                BytesBlob bytes = Mono.from(readChunkSlotWithRepair(bucketName, chunkId, blobId)).block();
-                return InputStreamBlob.of(new ByteArrayInputStream(bytes.payload()), bytes.metadata());
-            }
+        if (!ChunkId.isChunkRef(blobId)) {
+            return rawStore.read(bucketName, blobId);
+        }
+        ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
+        if (!chunkId.isSlotRef()) {
             return rawStore.read(bucketName, chunkId.chunkBlobId());
         }
-        return plainChain.read(bucketName, blobId);
+        BytesBlob bytes = Mono.from(readChunkSlot(bucketName, chunkId)).block();
+        return InputStreamBlob.of(new ByteArrayInputStream(bytes.payload()), bytes.metadata());
     }
 
     @Override
     public Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
-        if (ChunkId.isChunkRef(blobId)) {
-            ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
-            if (chunkId.isSlotRef()) {
-                return Mono.from(readChunkSlotWithRepair(bucketName, chunkId, blobId))
-                    .map(bytesBlob -> InputStreamBlob.of(new ByteArrayInputStream(bytesBlob.payload()), bytesBlob.metadata()));
-            }
+        if (!ChunkId.isChunkRef(blobId)) {
+            return rawStore.readReactive(bucketName, blobId);
+        }
+        ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
+        if (!chunkId.isSlotRef()) {
             return rawStore.readReactive(bucketName, chunkId.chunkBlobId());
         }
-        return plainChain.readReactive(bucketName, blobId);
+        return Mono.from(readChunkSlot(bucketName, chunkId))
+            .map(bytesBlob -> InputStreamBlob.of(new ByteArrayInputStream(bytesBlob.payload()), bytesBlob.metadata()));
     }
 
     @Override
     public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
-        if (ChunkId.isChunkRef(blobId)) {
-            ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
-            if (chunkId.isSlotRef()) {
-                return readChunkSlotWithRepair(bucketName, chunkId, blobId);
-            }
+        if (!ChunkId.isChunkRef(blobId)) {
+            return rawStore.readBytes(bucketName, blobId);
+        }
+        ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
+        if (!chunkId.isSlotRef()) {
             return rawStore.readBytes(bucketName, chunkId.chunkBlobId());
         }
-        return plainChain.readBytes(bucketName, blobId);
-    }
-
-    private Mono<BytesBlob> readChunkSlotWithRepair(BucketName bucketName, ChunkId slotRef, BlobId originalBlobId) {
-        return readChunkSlot(bucketName, slotRef)
-            .onErrorResume(ObjectNotFoundException.class, notFound ->
-                blobIdRepairer.repair(bucketName, originalBlobId)
-                    .flatMap(repairedBlobId -> {
-                        if (repairedBlobId.equals(originalBlobId)) {
-                            return Mono.error(notFound);
-                        }
-                        if (ChunkId.isChunkRef(repairedBlobId)) {
-                            ChunkId repairedChunkId = ChunkId.parseChunkOrSlotRef(repairedBlobId.asString());
-                            if (repairedChunkId.isSlotRef()) {
-                                return readChunkSlot(bucketName, repairedChunkId);
-                            }
-                            return Mono.from(rawStore.readBytes(bucketName, repairedChunkId.chunkBlobId()));
-                        }
-                        return Mono.from(plainChain.readBytes(bucketName, repairedBlobId));
-                    })
-                    .switchIfEmpty(Mono.error(notFound)));
+        return readChunkSlot(bucketName, chunkId);
     }
 
     private Mono<BytesBlob> readChunkSlot(BucketName bucketName, ChunkId slotRef) {
@@ -169,56 +142,42 @@ public class ChunkedBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
-        if (ChunkId.isChunkRef(blobId)) {
-            ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
-            if (chunkId.isSlotRef()) {
-                return Mono.error(new UnsupportedOperationException(
-                    "Individual chunk slot refs cannot be saved directly; chunks are immutable. Ref: " + blobId.asString()));
-            }
-            return rawStore.save(bucketName, chunkId.chunkBlobId(), blob);
+        if (!ChunkId.isChunkRef(blobId)) {
+            return rawStore.save(bucketName, blobId, blob);
         }
-        return plainChain.save(bucketName, blobId, blob);
+        ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
+        if (chunkId.isSlotRef()) {
+            return Mono.error(new UnsupportedOperationException(
+                "Individual chunk slot refs cannot be saved directly; chunks are immutable. Ref: " + blobId.asString()));
+        }
+        return rawStore.save(bucketName, chunkId.chunkBlobId(), blob);
     }
 
     @Override
     public Publisher<Void> delete(BucketName bucketName, BlobId blobId) {
-        if (ChunkId.isChunkRef(blobId)) {
-            ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
-            if (chunkId.isSlotRef()) {
-                return Mono.error(new UnsupportedOperationException(
-                    "Individual chunk slot refs cannot be deleted directly; slots are reclaimed via compaction GC. Ref: " + blobId.asString()));
-            }
-            return rawStore.delete(bucketName, chunkId.chunkBlobId());
+        if (!ChunkId.isChunkRef(blobId)) {
+            return rawStore.delete(bucketName, blobId);
         }
-        return plainChain.delete(bucketName, blobId);
+        ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
+        if (chunkId.isSlotRef()) {
+            return Mono.error(new UnsupportedOperationException(
+                "Individual chunk slot refs cannot be deleted directly; slots are reclaimed via compaction GC. Ref: " + blobId.asString()));
+        }
+        return rawStore.delete(bucketName, chunkId.chunkBlobId());
     }
 
     @Override
     public Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds) {
-        return Mono.defer(() -> {
-            for (BlobId blobId : blobIds) {
-                if (ChunkId.isChunkRef(blobId)) {
-                    ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
-                    if (chunkId.isSlotRef()) {
-                        return Mono.error(new UnsupportedOperationException(
-                            "Individual chunk slot refs cannot be deleted directly; slots are reclaimed via compaction GC. Ref: " + blobId.asString()));
-                    }
-                }
+        for (BlobId blobId : blobIds) {
+            if (ChunkId.isChunkRef(blobId) && ChunkId.parseChunkOrSlotRef(blobId.asString()).isSlotRef()) {
+                return Mono.error(new UnsupportedOperationException(
+                    "Individual chunk slot refs cannot be deleted directly; slots are reclaimed via compaction GC. Ref: " + blobId.asString()));
             }
-            List<BlobId> chunkDeletions = blobIds.stream()
-                .filter(ChunkId::isChunkRef)
-                .map(id -> ChunkId.parseChunkOrSlotRef(id.asString()).chunkBlobId())
-                .toList();
-            List<BlobId> plainDeletions = blobIds.stream()
-                .filter(id -> !ChunkId.isChunkRef(id))
-                .toList();
-
-            return Flux.mergeDelayError(
-                1,
-                chunkDeletions.isEmpty() ? Mono.empty() : rawStore.delete(bucketName, chunkDeletions),
-                plainDeletions.isEmpty() ? Mono.empty() : plainChain.delete(bucketName, plainDeletions)
-            ).then();
-        });
+        }
+        List<BlobId> mapped = blobIds.stream()
+            .map(id -> ChunkId.isChunkRef(id) ? ChunkId.parseChunkOrSlotRef(id.asString()).chunkBlobId() : id)
+            .toList();
+        return rawStore.delete(bucketName, mapped);
     }
 
     @Override
@@ -244,8 +203,7 @@ public class ChunkedBlobStoreDAO implements BlobStoreDAO {
     @Override
     public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
         if (ChunkId.isChunkRef(blobId)) {
-            ChunkId chunkId = ChunkId.parseChunkOrSlotRef(blobId.asString());
-            return rawStore.readRange(bucketName, chunkId.chunkBlobId(), start, end);
+            throw new IllegalArgumentException("Cannot readRange on a chunk reference: " + blobId.asString());
         }
         return rawStore.readRange(bucketName, blobId, start, end);
     }
