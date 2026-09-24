@@ -24,6 +24,8 @@ import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.server.blob.deduplication.BloomFilterGCAlgorithmContract;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 public class FileBlobStoreGCAlgorithmTest implements BloomFilterGCAlgorithmContract {
 
@@ -40,7 +42,7 @@ public class FileBlobStoreGCAlgorithmTest implements BloomFilterGCAlgorithmContr
     }
 
     @Override
-    @org.junit.jupiter.api.condition.DisabledOnOs(org.junit.jupiter.api.condition.OS.WINDOWS)
+    @DisabledOnOs(OS.WINDOWS)
     public void allOrphanBlobIdsShouldRemovedAfterMultipleRunningTimesGC() {
         BloomFilterGCAlgorithmContract.super.allOrphanBlobIdsShouldRemovedAfterMultipleRunningTimesGC();
     }
