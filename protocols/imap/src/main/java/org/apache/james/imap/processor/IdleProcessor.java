@@ -170,6 +170,12 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                             }
                             session.popLineHandler();
                         }
+                    } else if (idleActive.get()) {
+                        idleActive.set(false);
+                        if (sm != null) {
+                            sm.unregisterIdle();
+                        }
+                        session.popLineHandler();
                     }
                 }
             }, heartbeatInterval);
