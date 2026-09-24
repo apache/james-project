@@ -60,4 +60,18 @@ public class S3BlobStoreConfigurationTest {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("SSEC configuration is mandatory when SSEC is enabled");
     }
+
+    @Test
+    void shouldDefaultIfNoneMatchToTrue() {
+        S3BlobStoreConfiguration configuration = S3BlobStoreConfiguration.builder()
+            .authConfiguration(AwsS3AuthConfiguration.builder()
+                .endpoint(Throwing.supplier(() -> new URI("http://localhost:1234")).get())
+                .accessKeyId("accessKeyId")
+                .secretKey("secretKey1")
+                .build())
+            .region(Region.of("af-south-1"))
+            .build();
+
+        org.assertj.core.api.Assertions.assertThat(configuration.ifNoneMatchEnabled()).isTrue();
+    }
 }
