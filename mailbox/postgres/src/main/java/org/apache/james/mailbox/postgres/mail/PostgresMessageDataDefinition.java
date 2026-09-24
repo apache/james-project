@@ -125,7 +125,8 @@ public interface PostgresMessageDataDefinition {
                 .column(USER_FLAGS)
                 .column(SAVE_DATE)
                 .constraints(DSL.primaryKey(MAILBOX_ID, MESSAGE_UID),
-                    foreignKey(MESSAGE_ID).references(MessageTable.TABLE_NAME, MessageTable.MESSAGE_ID))
+                    foreignKey(MESSAGE_ID).references(MessageTable.TABLE_NAME, MessageTable.MESSAGE_ID),
+                    DSL.constraint().foreignKey(MAILBOX_ID).references(PostgresMailboxDataDefinition.PostgresMailboxTable.TABLE_NAME, PostgresMailboxDataDefinition.PostgresMailboxTable.MAILBOX_ID).onDeleteCascade())
                 .comment("Holds mailbox and flags for each message")))
             .supportsRowLevelSecurity()
             .addAdditionalAlterQueries(CREATE_ARRAY_REMOVE_JAMES_FUNCTION)

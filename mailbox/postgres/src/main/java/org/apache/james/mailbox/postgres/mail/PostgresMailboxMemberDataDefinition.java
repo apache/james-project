@@ -41,7 +41,8 @@ public interface PostgresMailboxMemberDataDefinition {
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(USER_NAME)
                 .column(MAILBOX_ID)
-                .constraint(DSL.primaryKey(USER_NAME, MAILBOX_ID))))
+                .constraints(DSL.primaryKey(USER_NAME, MAILBOX_ID),
+                    DSL.constraint().foreignKey(MAILBOX_ID).references(PostgresMailboxDataDefinition.PostgresMailboxTable.TABLE_NAME, PostgresMailboxDataDefinition.PostgresMailboxTable.MAILBOX_ID).onDeleteCascade())))
             .supportsRowLevelSecurity()
             .build();
 
