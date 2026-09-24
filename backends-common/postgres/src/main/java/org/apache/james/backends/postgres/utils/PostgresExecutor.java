@@ -223,6 +223,21 @@ public class PostgresExecutor {
                 jamesPostgresConnectionFactory::closeConnection)));
     }
 
+    public <T> Mono<T> executeTransaction(Function<DSLContext, Mono<T>> transactionFunction) {
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-transaction-execution",
+            Mono.usingWhen(getConnection(domain),
+                connection -> Mono.from(connection.beginTransaction())
+                    .then(dslContext(connection)
+                        .flatMap(transactionFunction)
+                        .flatMap(result -> Mono.from(connection.commitTransaction()).thenReturn(result))
+                        .onErrorResume(throwable -> Mono.from(connection.rollbackTransaction()).then(Mono.error(throwable))))
+                    .timeout(postgresConfiguration.getJooqReactiveTimeout())
+                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                        .filter(preparedStatementConflictException())),
+                jamesPostgresConnectionFactory::closeConnection)));
+    }
+
     public JamesPostgresConnectionFactory connectionFactory() {
         return jamesPostgresConnectionFactory;
     }
