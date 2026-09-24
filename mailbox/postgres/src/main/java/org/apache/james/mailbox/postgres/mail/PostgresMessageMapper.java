@@ -397,21 +397,17 @@ public class PostgresMessageMapper implements MessageMapper {
 
 
     @Override
-    public MessageMetaData move(Mailbox mailbox, MailboxMessage original) {
-        return moveReactive(mailbox, original).block();
-    }
-
-    @Override
-    public List<MessageMetaData> move(Mailbox mailbox, List<MailboxMessage> original) throws MailboxException {
+    public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
         return MailboxReactorUtils.block(moveReactive(mailbox, original));
     }
-
 
     @Override
     public Mono<MessageMetaData> moveReactive(Mailbox mailbox, MailboxMessage original) {
         return copyReactive(mailbox, original)
             .flatMap(copiedResult -> mailboxMessageDAO.deleteByMailboxIdAndMessageUid((PostgresMailboxId) original.getMailboxId(), original.getUid())
-                .thenReturn(copiedResult));
+                .thenReturn(copiedResult)
+                .onErrorResume(deleteError -> mailboxMessageDAO.deleteByMailboxIdAndMessageUid((PostgresMailboxId) mailbox.getMailboxId(), copiedResult.getUid())
+                    .then(Mono.error(deleteError))));
     }
 
     @Override
