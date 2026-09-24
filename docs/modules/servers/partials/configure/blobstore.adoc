@@ -148,7 +148,7 @@ This property determines the duration (in milliseconds) to wait between retry at
 This delay is known as backoff. The jitter factor is 0.5
 
 | objectstorage.s3.ifNoneMatch.enable
-| optional: Boolean. Defaults to false. When enabled, James adds the `If-None-Match: *` header to every object upload,
+| optional: Boolean. Defaults to true. When enabled, James adds the `If-None-Match: *` header to every object upload,
 turning writes into conditional writes: the object is only written if it does not exist yet. A `412 Precondition failed`
 answer is then treated as a success as the object is already stored.
 
