@@ -113,13 +113,15 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
                 String line = new String(data, StandardCharsets.US_ASCII).trim();
 
-                if (!DONE.equals(line.toUpperCase(Locale.US))) {
+                if (line.isEmpty()) {
+                    LOGGER.debug("IDLE continuation received empty input (client disconnected).");
+                } else if (!DONE.equals(line.toUpperCase(Locale.US))) {
                     String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", line);
                     StatusResponse response = getStatusResponseFactory()
                         .taggedBad(request.getTag(), request.getCommand(),
                             new HumanReadableText("org.apache.james.imap.INVALID_CONTINUATION",
                                 "failed. " + message));
-                    LOGGER.info(message);
+                    LOGGER.debug(message);
                     responder.respond(response);
                     responder.flush();
                 } else {
@@ -160,6 +162,9 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                         } catch (Exception e) {
                             LOGGER.debug("Failed to send IMAP IDLE heartbeat, stopping keepalive task", e);
                             idleActive.set(false);
+                            if (sm != null) {
+                                sm.unregisterIdle();
+                            }
                         }
                     }
                 }
