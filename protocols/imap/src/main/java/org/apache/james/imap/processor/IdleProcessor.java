@@ -116,6 +116,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         }
 
         session.pushLineHandler((session1, data) -> {
+            lineHandlerInstalled.set(true);
             cleanupIdle(session1, sm, idleActive, lineHandlerInstalled);
             String line = new String(data, StandardCharsets.US_ASCII).trim();
 
@@ -129,7 +130,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 responder.flush();
                 return Mono.empty();
             }
-            if (upper.equals("LOGOUT") || upper.matches("^\\S+\\s+LOGOUT$")) {
+            if (upper.equals("LOGOUT") || upper.matches("^[A-Z0-9]+ LOGOUT$")) {
                 return session1.logout();
             }
             String sanitized = line.replaceAll("[\\r\\n\\x00-\\x1F]", "");
