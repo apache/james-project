@@ -52,6 +52,7 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
@@ -192,7 +193,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         }
     }
 
-    @com.google.common.annotations.VisibleForTesting
+    @VisibleForTesting
     static String sanitizeForDisplay(String line) {
         StringBuilder sanitized = new StringBuilder(Math.min(line.length(), 32));
         for (int i = 0; i < line.length() && sanitized.length() < 32; i++) {
