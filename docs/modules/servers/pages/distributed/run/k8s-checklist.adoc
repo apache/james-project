@@ -39,3 +39,4 @@ When all of this is working, normally your chain mail should be able to work. To
 * Send a mail from James to an external mail provider (your Gmail, Yahoo account for example).
 * Send a mail from an external provider to James.
 * Use services like link:https://www.mail-tester.com/[mail-tester] to check your score.
+* Check where your mail is filed, not only how it scores. Sending to one Gmail account tells you about that account; a service like link:https://email-spam-tester.com/[Email Spam Tester] reports inbox or spam folder at a dozen providers from a single test, and verifies SPF, DKIM and DMARC on the copy each of them received. On a fresh cluster this is what catches an IP with no reputation yet, or a signature broken by a relay in front of James.
