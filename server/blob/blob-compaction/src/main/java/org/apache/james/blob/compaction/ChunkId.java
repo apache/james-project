@@ -20,7 +20,6 @@
 package org.apache.james.blob.compaction;
 
 import java.security.SecureRandom;
-import java.util.Objects;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.ChunkMarker;
@@ -30,11 +29,19 @@ import org.apache.james.server.blob.deduplication.GenerationAwareBlobId;
 import com.google.common.base.Preconditions;
 import com.google.common.io.BaseEncoding;
 
-public class ChunkId implements BlobId {
+public record ChunkId(int family, long generation, String randomPart, long offset, long limit) implements BlobId {
     private static final String CHUNK_MARKER = "_chunk";
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int RANDOM_BYTES_COUNT = 16;
     private static final int MIN_RANDOM_LENGTH = 16;
+
+    public ChunkId {
+        Preconditions.checkArgument(family > 0, "'family' must be strictly positive");
+        Preconditions.checkArgument(generation >= 0, "'generation' must not be negative");
+        Preconditions.checkNotNull(randomPart, "'randomPart' must not be null");
+        Preconditions.checkArgument(offset >= 0, "'offset' must not be negative");
+        Preconditions.checkArgument(limit >= 0, "'limit' must not be negative");
+    }
 
     public static ChunkId ofChunk(int family, long generation) {
         Preconditions.checkArgument(family > 0, "'family' must be strictly positive");
@@ -140,40 +147,6 @@ public class ChunkId implements BlobId {
         return new ChunkId(family, generation, randomPart, offset, limit);
     }
 
-    private final int family;
-    private final long generation;
-    private final String randomPart;
-    private final long offset;
-    private final long limit;
-
-    public ChunkId(int family, long generation, String randomPart, long offset, long limit) {
-        this.family = family;
-        this.generation = generation;
-        this.randomPart = randomPart;
-        this.offset = offset;
-        this.limit = limit;
-    }
-
-    public int family() {
-        return family;
-    }
-
-    public long generation() {
-        return generation;
-    }
-
-    public String randomPart() {
-        return randomPart;
-    }
-
-    public long offset() {
-        return offset;
-    }
-
-    public long limit() {
-        return limit;
-    }
-
     public boolean isSlotRef() {
         return offset > 0 || limit > 0;
     }
@@ -198,26 +171,6 @@ public class ChunkId implements BlobId {
     @Override
     public BlobId withSuffix(String suffix) {
         throw new UnsupportedOperationException("ChunkId does not support withSuffix");
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o instanceof ChunkId other) {
-            return family == other.family
-                && generation == other.generation
-                && offset == other.offset
-                && limit == other.limit
-                && Objects.equals(randomPart, other.randomPart);
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(family, generation, randomPart, offset, limit);
     }
 
     @Override

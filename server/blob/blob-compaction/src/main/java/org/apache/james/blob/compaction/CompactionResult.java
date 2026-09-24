@@ -19,11 +19,13 @@
 
 package org.apache.james.blob.compaction;
 
-import java.util.Objects;
+public record CompactionResult(long packedBlobs,
+                               long packedBytes,
+                               long chunksWritten,
+                               long deadPurged,
+                               long mergedChunks,
+                               long freedBytes) {
 
-import com.google.common.base.MoreObjects;
-
-public class CompactionResult {
     public static final CompactionResult NONE = builder().build();
 
     public static class Builder {
@@ -73,46 +75,6 @@ public class CompactionResult {
         return new Builder();
     }
 
-    private final long packedBlobs;
-    private final long packedBytes;
-    private final long chunksWritten;
-    private final long deadPurged;
-    private final long mergedChunks;
-    private final long freedBytes;
-
-    public CompactionResult(long packedBlobs, long packedBytes, long chunksWritten, long deadPurged, long mergedChunks, long freedBytes) {
-        this.packedBlobs = packedBlobs;
-        this.packedBytes = packedBytes;
-        this.chunksWritten = chunksWritten;
-        this.deadPurged = deadPurged;
-        this.mergedChunks = mergedChunks;
-        this.freedBytes = freedBytes;
-    }
-
-    public long packedBlobs() {
-        return packedBlobs;
-    }
-
-    public long packedBytes() {
-        return packedBytes;
-    }
-
-    public long chunksWritten() {
-        return chunksWritten;
-    }
-
-    public long deadPurged() {
-        return deadPurged;
-    }
-
-    public long mergedChunks() {
-        return mergedChunks;
-    }
-
-    public long freedBytes() {
-        return freedBytes;
-    }
-
     public CompactionResult combine(CompactionResult other) {
         if (other == null) {
             return this;
@@ -124,38 +86,5 @@ public class CompactionResult {
             this.deadPurged + other.deadPurged,
             this.mergedChunks + other.mergedChunks,
             this.freedBytes + other.freedBytes);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o instanceof CompactionResult that) {
-            return packedBlobs == that.packedBlobs
-                && packedBytes == that.packedBytes
-                && chunksWritten == that.chunksWritten
-                && deadPurged == that.deadPurged
-                && mergedChunks == that.mergedChunks
-                && freedBytes == that.freedBytes;
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(packedBlobs, packedBytes, chunksWritten, deadPurged, mergedChunks, freedBytes);
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("packedBlobs", packedBlobs)
-            .add("packedBytes", packedBytes)
-            .add("chunksWritten", chunksWritten)
-            .add("deadPurged", deadPurged)
-            .add("mergedChunks", mergedChunks)
-            .add("freedBytes", freedBytes)
-            .toString();
     }
 }

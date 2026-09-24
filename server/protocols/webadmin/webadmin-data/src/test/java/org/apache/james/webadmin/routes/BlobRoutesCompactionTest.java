@@ -126,9 +126,33 @@ class BlobRoutesCompactionTest {
     }
 
     @Test
+    void deleteInitialCompactionWithActionParameterShouldReturnTaskId() {
+        given()
+            .queryParam("action", "initial-compaction")
+            .queryParam("generation", "2")
+            .queryParam("family", "1")
+            .delete()
+        .then()
+            .statusCode(HttpStatus.CREATED_201)
+            .body("taskId", notNullValue());
+    }
+
+    @Test
     void deleteGCCompactionShouldReturnTaskIdWhenValidParameters() {
         given()
             .queryParam("scope", "gc-compaction")
+            .queryParam("generation", "2")
+            .queryParam("family", "1")
+            .delete()
+        .then()
+            .statusCode(HttpStatus.CREATED_201)
+            .body("taskId", notNullValue());
+    }
+
+    @Test
+    void deleteReCompactionWithActionParameterShouldReturnTaskId() {
+        given()
+            .queryParam("action", "re-compaction")
             .queryParam("generation", "2")
             .queryParam("family", "1")
             .delete()

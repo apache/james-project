@@ -19,8 +19,6 @@
 
 package org.apache.james.blob.compaction;
 
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.zip.CRC32C;
 
 import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
@@ -52,27 +50,5 @@ public record BlobSlot(long contentStart, int crc32c, long originalSize, byte[] 
             .withContentEncoding(ContentEncoding.ZSTD)
             .withMetadata(CONTENT_ORIGINAL_SIZE, new BlobMetadataValue(String.valueOf(originalSize)));
         return BytesBlob.of(compressedContent, enriched);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o instanceof BlobSlot other) {
-            return contentStart == other.contentStart
-                && crc32c == other.crc32c
-                && originalSize == other.originalSize
-                && Arrays.equals(compressedContent, other.compressedContent)
-                && Objects.equals(metadata, other.metadata);
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = Objects.hash(contentStart, crc32c, originalSize, metadata);
-        result = 31 * result + Arrays.hashCode(compressedContent);
-        return result;
     }
 }

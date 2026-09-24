@@ -3188,13 +3188,14 @@ chunk objects, serving individual blobs via HTTP ranged reads.
 To compact standalone blobs of a completed generation into chunk objects:
 
 ....
-curl -XDELETE "http://ip:port/blobs?scope=initial-compaction&generation=1"
+curl -XDELETE "http://ip:port/blobs?action=initial-compaction&generation=1"
 ....
 
 link:#_endpoints_returning_a_task[More details about endpoints returning a task].
 
 Query parameters:
 
+- *action*: (Compulsory) `initial-compaction`.
 - *generation*: (Compulsory) The integer epoch generation to compact.
 - *family*: (Optional) Storage policy family identifier.
 
@@ -3218,8 +3219,14 @@ GC recompaction scans existing chunks, purges dead slots by rewriting live slots
 into new compact chunks, and merges undersized chunks:
 
 ....
-curl -XDELETE "http://ip:port/blobs?scope=gc-compaction&generation=1"
+curl -XDELETE "http://ip:port/blobs?action=re-compaction&generation=1"
 ....
+
+Query parameters:
+
+- *action*: (Compulsory) `re-compaction`.
+- *generation*: (Compulsory) The integer epoch generation to recompact.
+- *family*: (Optional) Storage policy family identifier.
 
 The created task has the following additional information:
 
@@ -3232,14 +3239,6 @@ The created task has the following additional information:
   "chunksMerged": 2,
   "freedBytes": 20971520
 }
-....
-
-=== Full Compaction
-
-To execute both initial compaction and GC recompaction in a single operation:
-
-....
-curl -XDELETE "http://ip:port/blobs?scope=compaction&generation=1"
 ....
 
 endif::[]

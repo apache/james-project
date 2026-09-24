@@ -135,8 +135,7 @@ public class BlobCompactionAlgorithm {
     }
 
     public Mono<CompactionResult> compact(CompactionRequest request) {
-        return initialCompact(request)
-            .flatMap(initialResult -> gcCompact(request).map(initialResult::combine));
+        return initialCompact(request);
     }
 
     public Mono<CompactionResult> initialCompact(CompactionRequest request) {

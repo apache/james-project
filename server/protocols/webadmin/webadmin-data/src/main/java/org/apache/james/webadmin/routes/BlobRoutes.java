@@ -110,17 +110,20 @@ public class BlobRoutes implements Routes {
     }
 
     public Task delete(Request request) {
-        String scope = request.queryParams("scope");
-        if ("unreferenced".equals(scope)) {
+        String action = request.queryParams("action");
+        if (action == null) {
+            action = request.queryParams("scope");
+        }
+        if ("gc".equals(action) || "unreferenced".equals(action)) {
             return gcUnreferenced(request);
         }
-        if ("initial-compaction".equals(scope)) {
+        if ("initial-compaction".equals(action)) {
             return initialCompact(request);
         }
-        if ("gc-compaction".equals(scope) || "recompaction".equals(scope)) {
+        if ("re-compaction".equals(action) || "recompaction".equals(action) || "gc-compaction".equals(action)) {
             return gcCompact(request);
         }
-        if ("compaction".equals(scope)) {
+        if ("compaction".equals(action)) {
             return compact(request);
         }
         throw new IllegalArgumentException("'scope' is missing or must be 'unreferenced'");
