@@ -83,63 +83,62 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     @Override
     protected Mono<Void> processRequestReactive(IdleRequest request, ImapSession session, Responder responder) {
         Sinks.One<Void> idleReadySink = Sinks.one();
-        return Mono.fromRunnable(() -> idle(request, session, responder, idleReadySink))
+        AtomicBoolean idleActive = new AtomicBoolean(true);
+        return Mono.fromRunnable(() -> idle(request, session, responder, idleReadySink, idleActive))
             .then(unsolicitedResponses(session, responder, false))
             .onErrorResume(e -> {
-                SelectedMailbox sm = session.getSelected();
-                if (sm != null) {
-                    sm.unregisterIdle();
-                }
-                session.popLineHandler();
+                cleanupIdle(session, session.getSelected(), idleActive);
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return logAsMono(() -> LOGGER.error("Encountered error executing IMAP IDLE", e));
             })
             .doFinally(signalType -> idleReadySink.tryEmitEmpty());
     }
 
-    private void idle(IdleRequest request, ImapSession session, Responder responder, Sinks.One<Void> idleReadySink) {
+    private void cleanupIdle(ImapSession session, SelectedMailbox sm, AtomicBoolean idleActive) {
+        if (idleActive.compareAndSet(true, false)) {
+            if (sm != null) {
+                sm.unregisterIdle();
+            }
+            session.popLineHandler();
+        }
+    }
+
+    private void idle(IdleRequest request, ImapSession session, Responder responder, Sinks.One<Void> idleReadySink, AtomicBoolean idleActive) {
         SelectedMailbox sm = session.getSelected();
         if (sm != null) {
-            sm.registerIdle(new IdleMailboxListener(session, responder, idleReadySink));
+            sm.registerIdle(new IdleMailboxListener(session, responder, idleReadySink, idleActive));
         } else {
             idleReadySink.tryEmitEmpty();
         }
 
-        final AtomicBoolean idleActive = new AtomicBoolean(true);
+        session.pushLineHandler((session1, data) -> {
+            cleanupIdle(session1, sm, idleActive);
+            String line = new String(data, StandardCharsets.US_ASCII).trim();
 
-        session.pushLineHandler((session1, data) -> Mono.fromRunnable(() -> {
-            try {
-                if (sm != null) {
-                    sm.unregisterIdle();
-                }
-                idleActive.set(false);
-
-                String line = new String(data, StandardCharsets.US_ASCII).trim();
-
-                if (line.isEmpty() || !session1.isConnected()) {
-                    LOGGER.debug("IDLE continuation received empty input or disconnected session.");
-                } else if (!DONE.equals(line.toUpperCase(Locale.US))) {
-                    if (line.toUpperCase(Locale.US).endsWith("LOGOUT")) {
-                        session1.logout().subscribe();
-                    }
-                    String sanitized = line.replaceAll("[\\r\\n\\x00-\\x1F]", "");
-                    String displayLine = sanitized.length() > 32 ? sanitized.substring(0, 32) + "..." : sanitized;
-                    String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", displayLine);
-                    StatusResponse response = getStatusResponseFactory()
-                        .taggedBad(request.getTag(), request.getCommand(),
-                            new HumanReadableText("org.apache.james.imap.INVALID_CONTINUATION",
-                                "failed. " + message));
-                    LOGGER.debug(message);
-                    responder.respond(response);
-                    responder.flush();
-                } else {
-                    okComplete(request, responder);
-                    responder.flush();
-                }
-            } finally {
-                session1.popLineHandler();
+            if (line.isEmpty() || !session1.isConnected()) {
+                LOGGER.debug("IDLE continuation received empty input or disconnected session.");
+                return Mono.empty();
             }
-        }));
+            if (DONE.equals(line.toUpperCase(Locale.US))) {
+                okComplete(request, responder);
+                responder.flush();
+                return Mono.empty();
+            }
+            if (line.toUpperCase(Locale.US).endsWith("LOGOUT")) {
+                return session1.logout();
+            }
+            String sanitized = line.replaceAll("[\\r\\n\\x00-\\x1F]", "");
+            String displayLine = sanitized.length() > 32 ? sanitized.substring(0, 32) + "..." : sanitized;
+            String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", displayLine);
+            StatusResponse response = getStatusResponseFactory()
+                .taggedBad(request.getTag(), request.getCommand(),
+                    new HumanReadableText("org.apache.james.imap.INVALID_CONTINUATION",
+                        "failed. " + message));
+            LOGGER.debug(message);
+            responder.respond(response);
+            responder.flush();
+            return Mono.empty();
+        });
 
         // Write the response after the listener was added (IMAP-341)
         responder.respond(new ContinuationResponse(HumanReadableText.IDLING));
@@ -173,18 +172,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                             }
                         } catch (Exception e) {
                             LOGGER.debug("Failed to send IMAP IDLE heartbeat, stopping keepalive task", e);
-                            idleActive.set(false);
-                            if (sm != null) {
-                                sm.unregisterIdle();
-                            }
-                            session.popLineHandler();
+                            cleanupIdle(session, sm, idleActive);
                         }
-                    } else if (idleActive.get()) {
-                        idleActive.set(false);
-                        if (sm != null) {
-                            sm.unregisterIdle();
-                        }
-                        session.popLineHandler();
+                    } else {
+                        cleanupIdle(session, sm, idleActive);
                     }
                 }
             }, heartbeatInterval);
@@ -201,11 +192,13 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         private final Responder responder;
         private final ImapSession session;
         private final Sinks.One<Void> idleReadySink;
+        private final AtomicBoolean idleActive;
 
-        public IdleMailboxListener(ImapSession session, Responder responder, Sinks.One<Void> idleReadySink) {
+        public IdleMailboxListener(ImapSession session, Responder responder, Sinks.One<Void> idleReadySink, AtomicBoolean idleActive) {
             this.session = session;
             this.responder = session.threadSafe(responder);
             this.idleReadySink = idleReadySink;
+            this.idleActive = idleActive;
         }
 
         @Override
@@ -218,7 +211,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             return idleReadySink.asMono()
                 .then(Mono.defer(() -> unsolicitedResponses(session, responder, false)))
                 .then(Mono.fromRunnable(responder::flush))
-                .onErrorResume(e -> logAsMono(() -> LOGGER.debug("Failed to push updates to idling client", e)))
+                .onErrorResume(e -> {
+                    cleanupIdle(session, session.getSelected(), idleActive);
+                    return logAsMono(() -> LOGGER.debug("Failed to push updates to idling client", e));
+                })
                 .then();
         }
 
