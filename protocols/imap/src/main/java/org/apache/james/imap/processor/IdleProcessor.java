@@ -165,6 +165,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                             if (sm != null) {
                                 sm.unregisterIdle();
                             }
+                            session.popLineHandler();
                         }
                     }
                 }
