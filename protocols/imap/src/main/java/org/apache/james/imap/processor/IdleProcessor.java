@@ -101,6 +101,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         SelectedMailbox sm = session.getSelected();
         if (sm != null) {
             sm.registerIdle(new IdleMailboxListener(session, responder, idleReadySink));
+        } else {
+            idleReadySink.tryEmitEmpty();
         }
 
         final AtomicBoolean idleActive = new AtomicBoolean(true);
