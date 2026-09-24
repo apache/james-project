@@ -88,16 +88,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>blob-compaction</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>blob-compaction</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>blob-memory</artifactId>
             <scope>test</scope>
         </dependency>

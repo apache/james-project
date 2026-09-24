@@ -17,16 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.compaction;
+package org.apache.james.blob.api;
 
-import java.util.Collection;
-
-import org.apache.james.blob.api.BlobId;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import reactor.core.publisher.Mono;
 
 public interface BlobIdUpdater {
-    BlobIdUpdater NOOP = (oldId, newId, messageIds) -> Mono.empty();
+    interface Factory {
+        Mono<BlobIdUpdater> forPredicate(Predicate<BlobId> generationCondition,
+                                         Consumer<BlobId> referencedBlobIdObserver);
+    }
 
-    Mono<Void> replaceReferences(BlobId oldId, BlobId newId, Collection<String> messageIds);
+    Mono<Void> replaceReferences(BlobId oldId, BlobId newId);
 }

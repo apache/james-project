@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -32,13 +31,16 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobIdUpdater;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
-import org.apache.james.blob.compaction.BlobReferenceMappingSource.BlobIdMessageIdMapping;
 import org.apache.james.blob.compaction.ChunkFormat.BlobSlotContent;
 import org.apache.james.blob.compaction.ChunkFormat.ChunkWriteResult;
 import org.apache.james.blob.compaction.ChunkFormat.SlotRange;
@@ -55,67 +57,64 @@ class BlobCompactionAlgorithmTest {
     private static final long TARGET_GENERATION = 2L;
     private static final int FAMILY = 1;
 
-    static class RecordingBlobIdUpdater implements BlobIdUpdater {
-        record Replacement(BlobId oldId, BlobId newId, Collection<String> messageIds) {}
+    public static class TestBlobIdUpdaterFactory implements BlobIdUpdater.Factory {
+        public record Replacement(BlobId oldId, BlobId newId) {}
 
-        private final List<Replacement> replacements = new ArrayList<>();
+        private final Set<BlobId> referencedBlobs = ConcurrentHashMap.newKeySet();
+        private final List<Replacement> replacements = new CopyOnWriteArrayList<>();
+        private final Map<BlobId, BlobId> updatedReferences = new ConcurrentHashMap<>();
+        private volatile Function<BlobId, Mono<Void>> replacementHook = id -> Mono.empty();
 
-        @Override
-        public synchronized Mono<Void> replaceReferences(BlobId oldId, BlobId newId, Collection<String> messageIds) {
-            replacements.add(new Replacement(oldId, newId, new ArrayList<>(messageIds)));
-            return Mono.empty();
+        public void add(BlobId blobId) {
+            referencedBlobs.add(blobId);
         }
-
-        public synchronized List<Replacement> getReplacements() {
-            return new ArrayList<>(replacements);
-        }
-    }
-
-    static class TestMappingSource implements BlobReferenceMappingSource {
-        private final Map<BlobId, Set<String>> mappings = new ConcurrentHashMap<>();
 
         public void add(BlobId blobId, String messageId) {
-            mappings.computeIfAbsent(blobId, k -> ConcurrentHashMap.newKeySet()).add(messageId);
+            referencedBlobs.add(blobId);
         }
 
         public void remove(BlobId blobId) {
-            mappings.remove(blobId);
+            referencedBlobs.remove(blobId);
+        }
+
+        public void setReplacementHook(Function<BlobId, Mono<Void>> hook) {
+            this.replacementHook = hook;
         }
 
         @Override
-        public Publisher<BlobIdMessageIdMapping> listBlobIdMessageIdMappings() {
-            List<BlobIdMessageIdMapping> list = new ArrayList<>();
-            mappings.forEach((blobId, msgIds) ->
-                msgIds.forEach(msgId -> list.add(new BlobIdMessageIdMapping(blobId, msgId))));
-            return Flux.fromIterable(list);
+        public Mono<BlobIdUpdater> forPredicate(Predicate<BlobId> generationCondition,
+                                                Consumer<BlobId> referencedBlobIdObserver) {
+            referencedBlobs.stream().filter(generationCondition).forEach(referencedBlobIdObserver);
+            return Mono.just((oldId, newId) ->
+                replacementHook.apply(oldId)
+                    .doOnSuccess(v -> {
+                        replacements.add(new Replacement(oldId, newId));
+                        updatedReferences.put(oldId, newId);
+                        referencedBlobs.remove(oldId);
+                        referencedBlobs.add(newId);
+                    }));
         }
 
-        @Override
-        public Publisher<BlobIdMessageIdMapping> loadReferencesFor(Collection<BlobId> blobIds) {
-            List<BlobIdMessageIdMapping> list = new ArrayList<>();
-            for (BlobId blobId : blobIds) {
-                Set<String> msgIds = mappings.get(blobId);
-                if (msgIds != null) {
-                    msgIds.forEach(msgId -> list.add(new BlobIdMessageIdMapping(blobId, msgId)));
-                }
-            }
-            return Flux.fromIterable(list);
+        public List<Replacement> getReplacements() {
+            return new ArrayList<>(replacements);
+        }
+
+        public Map<BlobId, BlobId> getUpdatedReferences() {
+            return updatedReferences;
         }
     }
 
     private MemoryBlobStoreDAO rawStore;
     private ChunkedBlobStoreDAO chunkedBlobStoreDAO;
-    private TestMappingSource mappingSource;
-    private RecordingBlobIdUpdater recordingUpdater;
+    private TestBlobIdUpdaterFactory updaterFactory;
     private BlobCompactionAlgorithm testee;
 
     @BeforeEach
     void setUp() {
         rawStore = new MemoryBlobStoreDAO();
         chunkedBlobStoreDAO = new ChunkedBlobStoreDAO(rawStore);
-        mappingSource = new TestMappingSource();
-        recordingUpdater = new RecordingBlobIdUpdater();
-        testee = new BlobCompactionAlgorithm(rawStore, rawStore, mappingSource, recordingUpdater);
+        updaterFactory = new TestBlobIdUpdaterFactory();
+        testee = new BlobCompactionAlgorithm(rawStore, rawStore, updaterFactory);
     }
 
     private byte[] readDecompressed(BlobId blobId) {
@@ -137,9 +136,9 @@ class BlobCompactionAlgorithmTest {
         Mono.from(rawStore.save(TEST_BUCKET, small2, BlobStoreDAO.BytesBlob.of(payload2))).block();
         Mono.from(rawStore.save(TEST_BUCKET, large, BlobStoreDAO.BytesBlob.of(largePayload))).block();
 
-        mappingSource.add(small1, "msg-1");
-        mappingSource.add(small2, "msg-2");
-        mappingSource.add(large, "msg-3");
+        updaterFactory.add(small1, "msg-1");
+        updaterFactory.add(small2, "msg-2");
+        updaterFactory.add(large, "msg-3");
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -161,9 +160,9 @@ class BlobCompactionAlgorithmTest {
             .contains(large);
 
         // Replacements recorded
-        assertThat(recordingUpdater.getReplacements()).hasSize(2);
-        BlobId newSlotRef1 = recordingUpdater.getReplacements().get(0).newId();
-        BlobId newSlotRef2 = recordingUpdater.getReplacements().get(1).newId();
+        assertThat(updaterFactory.getReplacements()).hasSize(2);
+        BlobId newSlotRef1 = updaterFactory.getReplacements().get(0).newId();
+        BlobId newSlotRef2 = updaterFactory.getReplacements().get(1).newId();
 
         assertThat(ChunkId.isChunkRef(newSlotRef1)).isTrue();
         assertThat(ChunkId.isChunkRef(newSlotRef2)).isTrue();
@@ -183,9 +182,9 @@ class BlobCompactionAlgorithmTest {
         Mono.from(rawStore.save(TEST_BUCKET, otherBlobId, BlobStoreDAO.BytesBlob.of(otherPayload))).block();
 
         // Two messages reference the SAME blob
-        mappingSource.add(sharedBlobId, "msg-A");
-        mappingSource.add(sharedBlobId, "msg-B");
-        mappingSource.add(otherBlobId, "msg-C");
+        updaterFactory.add(sharedBlobId, "msg-A");
+        updaterFactory.add(sharedBlobId, "msg-B");
+        updaterFactory.add(otherBlobId, "msg-C");
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -199,13 +198,13 @@ class BlobCompactionAlgorithmTest {
         assertThat(result.chunksWritten()).isEqualTo(1);
 
         // Replacements include one covering both messages for sharedBlobId
-        List<RecordingBlobIdUpdater.Replacement> reps = recordingUpdater.getReplacements();
+        List<TestBlobIdUpdaterFactory.Replacement> reps = updaterFactory.getReplacements();
         assertThat(reps).hasSize(2);
-        RecordingBlobIdUpdater.Replacement sharedRep = reps.stream()
+        TestBlobIdUpdaterFactory.Replacement sharedRep = reps.stream()
             .filter(r -> r.oldId().equals(sharedBlobId))
             .findFirst()
             .orElseThrow();
-        assertThat(sharedRep.messageIds()).containsExactlyInAnyOrder("msg-A", "msg-B");
+        assertThat(sharedRep.newId()).isNotNull();
 
         assertThat(readDecompressed(sharedRep.newId())).isEqualTo(sharedPayload);
     }
@@ -225,7 +224,7 @@ class BlobCompactionAlgorithmTest {
         // Only 8 slots are live, 2 slots (slots 8 and 9) are dead (20% dead > 10% threshold)
         for (int i = 0; i < 8; i++) {
             ChunkId slotRef = ChunkId.slotRef(chunkId, writeResult.slotRanges().get(i).offset(), writeResult.slotRanges().get(i).limit());
-            mappingSource.add(slotRef, "msg-" + i);
+            updaterFactory.add(slotRef, "msg-" + i);
         }
 
         CompactionRequest request = CompactionRequest.builder()
@@ -248,11 +247,11 @@ class BlobCompactionAlgorithmTest {
         assertThat(remainingBlobs).hasSize(1); // the new purged chunk
 
         // 8 surviving slots updated
-        assertThat(recordingUpdater.getReplacements()).hasSize(8);
+        assertThat(updaterFactory.getReplacements()).hasSize(8);
 
         // Surviving slots readable
         for (int i = 0; i < 8; i++) {
-            BlobId newSlotRef = recordingUpdater.getReplacements().get(i).newId();
+            BlobId newSlotRef = updaterFactory.getReplacements().get(i).newId();
             assertThat(readDecompressed(newSlotRef)).isEqualTo(("Slot content " + i).getBytes(StandardCharsets.UTF_8));
         }
     }
@@ -272,7 +271,7 @@ class BlobCompactionAlgorithmTest {
         // 9 slots are live, 1 slot is dead (10% dead). Gain threshold is 20%.
         for (int i = 0; i < 9; i++) {
             ChunkId slotRef = ChunkId.slotRef(chunkId, writeResult.slotRanges().get(i).offset(), writeResult.slotRanges().get(i).limit());
-            mappingSource.add(slotRef, "msg-" + i);
+            updaterFactory.add(slotRef, "msg-" + i);
         }
 
         CompactionRequest request = CompactionRequest.builder()
@@ -310,8 +309,8 @@ class BlobCompactionAlgorithmTest {
         ChunkId slot1 = ChunkId.slotRef(chunk1, w1.slotRanges().get(0).offset(), w1.slotRanges().get(0).limit());
         ChunkId slot2 = ChunkId.slotRef(chunk2, w2.slotRanges().get(0).offset(), w2.slotRanges().get(0).limit());
 
-        mappingSource.add(slot1, "msg-1");
-        mappingSource.add(slot2, "msg-2");
+        updaterFactory.add(slot1, "msg-1");
+        updaterFactory.add(slot2, "msg-2");
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -333,9 +332,9 @@ class BlobCompactionAlgorithmTest {
         assertThat(blobs).hasSize(1); // merged chunk
 
         // Both slots updated and readable
-        assertThat(recordingUpdater.getReplacements()).hasSize(2);
-        BlobId newSlot1 = recordingUpdater.getReplacements().get(0).newId();
-        BlobId newSlot2 = recordingUpdater.getReplacements().get(1).newId();
+        assertThat(updaterFactory.getReplacements()).hasSize(2);
+        BlobId newSlot1 = updaterFactory.getReplacements().get(0).newId();
+        BlobId newSlot2 = updaterFactory.getReplacements().get(1).newId();
 
         assertThat(readDecompressed(newSlot1)).isEqualTo(payload1);
         assertThat(readDecompressed(newSlot2)).isEqualTo(payload2);
@@ -350,7 +349,7 @@ class BlobCompactionAlgorithmTest {
         Mono.from(rawStore.save(TEST_BUCKET, chunk1.chunkBlobId(), BlobStoreDAO.BytesBlob.of(w1.chunkBytes()))).block();
 
         ChunkId slot1 = ChunkId.slotRef(chunk1, w1.slotRanges().get(0).offset(), w1.slotRanges().get(0).limit());
-        mappingSource.add(slot1, "msg-1");
+        updaterFactory.add(slot1, "msg-1");
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -415,18 +414,15 @@ class BlobCompactionAlgorithmTest {
         Mono.from(rawStore.save(TEST_BUCKET, failingBlob, BlobStoreDAO.BytesBlob.of(payloadFailing))).block();
         Mono.from(rawStore.save(TEST_BUCKET, succeedingBlob, BlobStoreDAO.BytesBlob.of(payloadSucceeding))).block();
 
-        mappingSource.add(failingBlob, "msg-fail");
-        mappingSource.add(succeedingBlob, "msg-success");
+        updaterFactory.add(failingBlob, "msg-fail");
+        updaterFactory.add(succeedingBlob, "msg-success");
 
-        BlobIdUpdater partiallyFailingUpdater = (oldId, newId, messageIds) -> {
+        updaterFactory.setReplacementHook(oldId -> {
             if (oldId.equals(failingBlob)) {
                 return Mono.error(new RuntimeException("Cassandra write timeout simulation"));
             }
             return Mono.empty();
-        };
-
-        BlobCompactionAlgorithm algorithmWithFailingUpdater = new BlobCompactionAlgorithm(
-            rawStore, rawStore, mappingSource, partiallyFailingUpdater);
+        });
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -434,7 +430,7 @@ class BlobCompactionAlgorithmTest {
             .family(FAMILY)
             .build();
 
-        CompactionResult result = algorithmWithFailingUpdater.initialCompact(request).block();
+        CompactionResult result = testee.initialCompact(request).block();
 
         assertThat(result.packedBlobs()).isEqualTo(1);
 
@@ -457,21 +453,16 @@ class BlobCompactionAlgorithmTest {
         Mono.from(rawStore.save(TEST_BUCKET, blob2Failing, BlobStoreDAO.BytesBlob.of(payload2))).block();
         Mono.from(rawStore.save(TEST_BUCKET, blob3, BlobStoreDAO.BytesBlob.of(payload3))).block();
 
-        mappingSource.add(blob1, "msg-1");
-        mappingSource.add(blob2Failing, "msg-2");
-        mappingSource.add(blob3, "msg-3");
+        updaterFactory.add(blob1, "msg-1");
+        updaterFactory.add(blob2Failing, "msg-2");
+        updaterFactory.add(blob3, "msg-3");
 
-        Map<BlobId, BlobId> updatedReferences = new ConcurrentHashMap<>();
-        BlobIdUpdater partiallyFailingUpdater = (oldId, newId, messageIds) -> {
+        updaterFactory.setReplacementHook(oldId -> {
             if (oldId.equals(blob2Failing)) {
                 return Mono.error(new RuntimeException("Simulated reference update failure"));
             }
-            updatedReferences.put(oldId, newId);
             return Mono.empty();
-        };
-
-        BlobCompactionAlgorithm algorithmWithFailingUpdater = new BlobCompactionAlgorithm(
-            rawStore, rawStore, mappingSource, partiallyFailingUpdater);
+        });
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -479,7 +470,7 @@ class BlobCompactionAlgorithmTest {
             .family(FAMILY)
             .build();
 
-        CompactionResult result = algorithmWithFailingUpdater.initialCompact(request).block();
+        CompactionResult result = testee.initialCompact(request).block();
 
         // Two succeeded, one failed
         assertThat(result.packedBlobs()).isEqualTo(2);
@@ -494,6 +485,7 @@ class BlobCompactionAlgorithmTest {
         assertThat(remainingRawBlobs).doesNotContain(blob1, blob3);
 
         // Coherence check 3: Successful candidate blobs can be read via their new chunk slot IDs
+        Map<BlobId, BlobId> updatedReferences = updaterFactory.getUpdatedReferences();
         BlobId slotRef1 = updatedReferences.get(blob1);
         BlobId slotRef3 = updatedReferences.get(blob3);
         assertThat(slotRef1).isNotNull();
@@ -508,16 +500,11 @@ class BlobCompactionAlgorithmTest {
         BlobId anotherBlob = new PlainBlobId("1_2_blob4");
         byte[] payload4 = "Content of email 4".getBytes(StandardCharsets.UTF_8);
         Mono.from(rawStore.save(TEST_BUCKET, anotherBlob, BlobStoreDAO.BytesBlob.of(payload4))).block();
-        mappingSource.add(anotherBlob, "msg-4");
+        updaterFactory.add(anotherBlob, "msg-4");
 
-        BlobIdUpdater recoveredUpdater = (oldId, newId, messageIds) -> {
-            updatedReferences.put(oldId, newId);
-            return Mono.empty();
-        };
-        BlobCompactionAlgorithm recoveredAlgorithm = new BlobCompactionAlgorithm(
-            rawStore, rawStore, mappingSource, recoveredUpdater);
+        updaterFactory.setReplacementHook(oldId -> Mono.empty());
 
-        CompactionResult secondResult = recoveredAlgorithm.initialCompact(request).block();
+        CompactionResult secondResult = testee.initialCompact(request).block();
         assertThat(secondResult.packedBlobs()).isEqualTo(2);
 
         BlobId slotRef2 = updatedReferences.get(blob2Failing);
@@ -538,14 +525,11 @@ class BlobCompactionAlgorithmTest {
 
         SlotRange range1 = writeResult.slotRanges().get(0);
         ChunkId slot1 = ChunkId.slotRef(chunkId, range1.offset(), range1.limit());
-        // Only slot 1 is live in mappingSource; slot 2 is dead
-        mappingSource.add(slot1, "msg-live");
+        // Only slot 1 is live in updaterFactory; slot 2 is dead
+        updaterFactory.add(slot1, "msg-live");
 
-        BlobIdUpdater failingUpdater = (oldId, newId, messageIds) ->
-            Mono.error(new RuntimeException("Simulated reference update failure during GC"));
-
-        BlobCompactionAlgorithm algorithm = new BlobCompactionAlgorithm(
-            rawStore, rawStore, mappingSource, failingUpdater);
+        updaterFactory.setReplacementHook(oldId ->
+            Mono.error(new RuntimeException("Simulated reference update failure during GC")));
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -557,7 +541,7 @@ class BlobCompactionAlgorithmTest {
             .build();
 
         // GC compaction fails during slot reference update
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> algorithm.gcCompact(request).block())
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> testee.gcCompact(request).block())
             .isInstanceOf(RuntimeException.class);
 
         // Coherence check 1: Original chunk was NOT deleted from raw storage
@@ -624,10 +608,9 @@ class BlobCompactionAlgorithmTest {
     @Test
     void gcCompactShouldBoundHeapUsageByMaxSlotSizeAndNeverReadWholeChunkPayloads() throws Exception {
         RangedReadTrackingMemoryBlobStoreDAO trackingStore = new RangedReadTrackingMemoryBlobStoreDAO();
-        TestMappingSource localMapping = new TestMappingSource();
-        RecordingBlobIdUpdater localUpdater = new RecordingBlobIdUpdater();
+        TestBlobIdUpdaterFactory localFactory = new TestBlobIdUpdaterFactory();
         BlobCompactionAlgorithm algorithm = new BlobCompactionAlgorithm(
-            trackingStore, trackingStore, localMapping, localUpdater);
+            trackingStore, trackingStore, localFactory);
 
         ChunkId chunkId = ChunkId.ofChunk(FAMILY, TARGET_GENERATION);
 
@@ -652,8 +635,8 @@ class BlobCompactionAlgorithmTest {
         ChunkId slot1Ref = ChunkId.slotRef(chunkId, r1.offset(), r1.limit());
         ChunkId slot3Ref = ChunkId.slotRef(chunkId, r3.offset(), r3.limit());
 
-        localMapping.add(slot1Ref, "msg-1");
-        localMapping.add(slot3Ref, "msg-3");
+        localFactory.add(slot1Ref, "msg-1");
+        localFactory.add(slot3Ref, "msg-3");
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -669,7 +652,7 @@ class BlobCompactionAlgorithmTest {
 
         assertThat(result.deadPurged()).isEqualTo(1);
         assertThat(result.packedBlobs()).isEqualTo(0);
-        assertThat(localUpdater.getReplacements()).hasSize(2);
+        assertThat(localFactory.getReplacements()).hasSize(2);
 
         // Verification of memory bounds (R2-2):
         // 1. Whole chunk readBytes must NEVER be invoked on chunk objects
@@ -697,8 +680,8 @@ class BlobCompactionAlgorithmTest {
         Mono.from(rawStore.save(TEST_BUCKET, b1, BlobStoreDAO.BytesBlob.of(payload1, meta1))).block();
         Mono.from(rawStore.save(TEST_BUCKET, b2, BlobStoreDAO.BytesBlob.of(payload2, meta2))).block();
 
-        mappingSource.add(b1, "msg1");
-        mappingSource.add(b2, "msg2");
+        updaterFactory.add(b1, "msg1");
+        updaterFactory.add(b2, "msg2");
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -710,7 +693,7 @@ class BlobCompactionAlgorithmTest {
         CompactionResult result = testee.initialCompact(request).block();
         assertThat(result.packedBlobs()).isEqualTo(2);
 
-        List<RecordingBlobIdUpdater.Replacement> replacements = recordingUpdater.getReplacements();
+        List<TestBlobIdUpdaterFactory.Replacement> replacements = updaterFactory.getReplacements();
         assertThat(replacements).hasSize(2);
 
         BlobId newRef1 = replacements.get(0).newId();
@@ -736,10 +719,10 @@ class BlobCompactionAlgorithmTest {
         Mono.from(rawStore.save(TEST_BUCKET, otherGenBlob, BlobStoreDAO.BytesBlob.of("otherGen"))).block();
         Mono.from(rawStore.save(TEST_BUCKET, otherFamilyBlob, BlobStoreDAO.BytesBlob.of("otherFamily"))).block();
 
-        mappingSource.add(targetBlob1, "msg-target1");
-        mappingSource.add(targetBlob2, "msg-target2");
-        mappingSource.add(otherGenBlob, "msg-otherGen");
-        mappingSource.add(otherFamilyBlob, "msg-otherFamily");
+        updaterFactory.add(targetBlob1, "msg-target1");
+        updaterFactory.add(targetBlob2, "msg-target2");
+        updaterFactory.add(otherGenBlob, "msg-otherGen");
+        updaterFactory.add(otherFamilyBlob, "msg-otherFamily");
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -751,7 +734,7 @@ class BlobCompactionAlgorithmTest {
         CompactionResult result = testee.initialCompact(request).block();
         assertThat(result.packedBlobs()).isEqualTo(2);
 
-        List<RecordingBlobIdUpdater.Replacement> replacements = recordingUpdater.getReplacements();
+        List<TestBlobIdUpdaterFactory.Replacement> replacements = updaterFactory.getReplacements();
         assertThat(replacements).hasSize(2);
         assertThat(replacements).extracting(r -> r.oldId().asString())
             .containsExactlyInAnyOrder("1_2_target1", "1_2_target2");
@@ -761,7 +744,7 @@ class BlobCompactionAlgorithmTest {
     void initialCompactShouldSkipPackingWhenCandidateCountIsOne() {
         BlobId singleBlob = new PlainBlobId("1_2_single");
         Mono.from(rawStore.save(TEST_BUCKET, singleBlob, BlobStoreDAO.BytesBlob.of("single-blob-payload"))).block();
-        mappingSource.add(singleBlob, "msg-single");
+        updaterFactory.add(singleBlob, "msg-single");
 
         CompactionRequest request = CompactionRequest.builder()
             .bucketName(TEST_BUCKET)
@@ -774,7 +757,7 @@ class BlobCompactionAlgorithmTest {
 
         assertThat(result.packedBlobs()).isEqualTo(0);
         assertThat(result.chunksWritten()).isEqualTo(0);
-        assertThat(recordingUpdater.getReplacements()).isEmpty();
+        assertThat(updaterFactory.getReplacements()).isEmpty();
 
         // Standalone blob remains untouched in raw storage
         assertThat(Mono.from(rawStore.readBytes(TEST_BUCKET, singleBlob)).block().payload())

@@ -22,11 +22,10 @@ package org.apache.james.modules.blobstore;
 import java.time.Clock;
 import java.util.Optional;
 
+import org.apache.james.blob.api.BlobIdUpdater;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.compaction.BlobCompactionAlgorithm;
 import org.apache.james.blob.compaction.BlobCompactionDTOModules;
-import org.apache.james.blob.compaction.BlobIdUpdater;
-import org.apache.james.blob.compaction.BlobReferenceMappingSource;
 import org.apache.james.blob.compaction.CompactionConfiguration;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
@@ -71,16 +70,14 @@ public class BlobCompactionModule extends AbstractModule {
                 return Optional.empty();
             }
         }
-        if (injector.getExistingBinding(Key.get(BlobReferenceMappingSource.class)) != null
-            && injector.getExistingBinding(Key.get(BlobIdUpdater.class)) != null
+        if (injector.getExistingBinding(Key.get(BlobIdUpdater.Factory.class)) != null
             && injector.getExistingBinding(Key.get(BlobStoreDAO.class)) != null
             && injector.getExistingBinding(Key.get(BlobStoreDAO.class, Names.named(BlobStoreModulesChooser.RAW))) != null) {
 
             BlobStoreDAO blobStoreDAO = injector.getInstance(BlobStoreDAO.class);
             BlobStoreDAO rawStore = injector.getInstance(Key.get(BlobStoreDAO.class, Names.named(BlobStoreModulesChooser.RAW)));
-            BlobReferenceMappingSource mappingSource = injector.getInstance(BlobReferenceMappingSource.class);
-            BlobIdUpdater blobIdUpdater = injector.getInstance(BlobIdUpdater.class);
-            return Optional.of(new BlobCompactionAlgorithm(blobStoreDAO, rawStore, mappingSource, blobIdUpdater));
+            BlobIdUpdater.Factory updaterFactory = injector.getInstance(BlobIdUpdater.Factory.class);
+            return Optional.of(new BlobCompactionAlgorithm(blobStoreDAO, rawStore, updaterFactory));
         }
         return Optional.empty();
     }

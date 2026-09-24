@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobIdUpdater;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
@@ -42,8 +43,6 @@ import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.compaction.BlobCompactionAlgorithm;
 import org.apache.james.blob.compaction.BlobCompactionTask;
-import org.apache.james.blob.compaction.BlobIdUpdater;
-import org.apache.james.blob.compaction.BlobReferenceMappingSource;
 import org.apache.james.blob.compaction.ChunkId;
 import org.apache.james.blob.compaction.ChunkedBlobStoreDAO;
 import org.apache.james.blob.compaction.CompactionConfiguration;
@@ -58,8 +57,6 @@ import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.github.luben.zstd.Zstd;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -99,7 +96,7 @@ class S3MinioBlobStoreCompactionTest {
         generationAwareBlobIdFactory = new GenerationAwareBlobId.Factory(clock, plainBlobIdFactory, generationConfiguration);
 
         rawStore = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, generationAwareBlobIdFactory, S3RequestOption.DEFAULT);
-        chunkedBlobStoreDAO = new ChunkedBlobStoreDAO(rawStore, rawStore);
+        chunkedBlobStoreDAO = new ChunkedBlobStoreDAO(rawStore);
     }
 
     @Test
@@ -107,12 +104,10 @@ class S3MinioBlobStoreCompactionTest {
         BlobStore blobStore = new DeDuplicationBlobStore(rawStore, BUCKET, generationAwareBlobIdFactory);
 
         Map<BlobId, byte[]> savedBlobs = new HashMap<>();
-        Map<String, BlobReferenceMappingSource.BlobIdMessageIdMapping> currentMappings = new ConcurrentHashMap<>();
         for (int i = 0; i < 20; i++) {
             byte[] content = ("blob-content-payload-" + i).getBytes(StandardCharsets.UTF_8);
             BlobId blobId = Mono.from(blobStore.save(BUCKET, content, BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
             savedBlobs.put(blobId, content);
-            currentMappings.put("msg-" + i, new BlobReferenceMappingSource.BlobIdMessageIdMapping(blobId, "msg-" + i));
         }
 
         List<BlobId> initialListed = Flux.from(rawStore.listBlobs(BUCKET)).collectList().block();
@@ -124,21 +119,21 @@ class S3MinioBlobStoreCompactionTest {
         // Advance clock into the next generation so that targetGeneration is now an old generation
         clock.setInstant(NOW.plusMonths(2).toInstant());
 
-        BlobReferenceMappingSource mappingSource = () -> Flux.fromIterable(currentMappings.values());
         Map<BlobId, BlobId> updatedIds = new ConcurrentHashMap<>();
-        BlobIdUpdater blobIdUpdater = (oldId, newId, messageIds) -> {
-            updatedIds.put(oldId, newId);
-            for (String msgId : messageIds) {
-                currentMappings.put(msgId, new BlobReferenceMappingSource.BlobIdMessageIdMapping(newId, msgId));
-            }
-            return Mono.empty();
+        BlobIdUpdater.Factory updaterFactory = (predicate, observer) -> {
+            savedBlobs.keySet().stream()
+                .filter(predicate)
+                .forEach(observer);
+            return Mono.just((oldId, newId) -> {
+                updatedIds.put(oldId, newId);
+                return Mono.empty();
+            });
         };
 
         BlobCompactionAlgorithm algorithm = new BlobCompactionAlgorithm(
             chunkedBlobStoreDAO,
             rawStore,
-            mappingSource,
-            blobIdUpdater);
+            updaterFactory);
 
         CompactionRequest request = CompactionRequest.builder()
             .generation(targetGeneration)
@@ -169,8 +164,7 @@ class S3MinioBlobStoreCompactionTest {
             BlobId newSlotId = updatedIds.get(entry.getKey());
             assertThat(newSlotId).isNotNull();
             BlobStoreDAO.BytesBlob readBlob = Mono.from(chunkedBlobStoreDAO.readBytes(BUCKET, newSlotId)).block();
-            byte[] decompressed = Zstd.decompress(readBlob.payload(), entry.getValue().length);
-            assertThat(decompressed).isEqualTo(entry.getValue());
+            assertThat(readBlob.payload()).isEqualTo(entry.getValue());
         }
 
         // 4. Assert: BloomFilterGCAlgorithm after compaction does NOT delete the chunk object

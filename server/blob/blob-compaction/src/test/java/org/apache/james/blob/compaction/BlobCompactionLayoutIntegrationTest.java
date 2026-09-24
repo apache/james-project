@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
@@ -49,7 +48,7 @@ class BlobCompactionLayoutIntegrationTest {
 
     private MemoryBlobStoreDAO rawStore;
     private ChunkedBlobStoreDAO chunkedStore;
-    private BlobCompactionAlgorithmTest.TestMappingSource mappingSource;
+    private BlobCompactionAlgorithmTest.TestBlobIdUpdaterFactory updaterFactory;
     private Map<BlobId, BlobId> updatedReferences;
     private BlobCompactionAlgorithm algorithm;
 
@@ -57,14 +56,9 @@ class BlobCompactionLayoutIntegrationTest {
     void setUp() {
         rawStore = new MemoryBlobStoreDAO();
         chunkedStore = new ChunkedBlobStoreDAO(rawStore);
-        mappingSource = new BlobCompactionAlgorithmTest.TestMappingSource();
-        updatedReferences = new ConcurrentHashMap<>();
-
-        BlobIdUpdater updater = (oldId, newId, messageIds) -> {
-            updatedReferences.put(oldId, newId);
-            return Mono.empty();
-        };
-        algorithm = new BlobCompactionAlgorithm(rawStore, rawStore, mappingSource, updater);
+        updaterFactory = new BlobCompactionAlgorithmTest.TestBlobIdUpdaterFactory();
+        updatedReferences = updaterFactory.getUpdatedReferences();
+        algorithm = new BlobCompactionAlgorithm(rawStore, rawStore, updaterFactory);
     }
 
     private byte[] readDecompressed(BlobId blobId) {
@@ -80,7 +74,7 @@ class BlobCompactionLayoutIntegrationTest {
             byte[] payload = ("Subject: Email " + i + "\r\n\r\nBody of message number " + i).getBytes(StandardCharsets.UTF_8);
             payloads.put(blobId, payload);
             Mono.from(rawStore.save(TEST_BUCKET, blobId, BlobStoreDAO.BytesBlob.of(payload))).block();
-            mappingSource.add(blobId, "msg-" + i);
+            updaterFactory.add(blobId, "msg-" + i);
         }
 
         CompactionRequest request = CompactionRequest.builder()
@@ -129,7 +123,7 @@ class BlobCompactionLayoutIntegrationTest {
             if (i < 100) {
                 // First 100 have active metadata references
                 activePayloads.put(blobId, payload);
-                mappingSource.add(blobId, "msg-active-" + i);
+                updaterFactory.add(blobId, "msg-active-" + i);
             } else {
                 // Next 100 are orphaned/unreferenced (no metadata)
                 unreferencedBlobs.add(blobId);
@@ -188,7 +182,7 @@ class BlobCompactionLayoutIntegrationTest {
                 smallPayloads.put(blobId, payload);
             }
             Mono.from(rawStore.save(TEST_BUCKET, blobId, BlobStoreDAO.BytesBlob.of(payload))).block();
-            mappingSource.add(blobId, "msg-mixed-" + i);
+            updaterFactory.add(blobId, "msg-mixed-" + i);
         }
 
         CompactionRequest request = CompactionRequest.builder()
@@ -239,13 +233,13 @@ class BlobCompactionLayoutIntegrationTest {
                 byte[] payload = ("Gen2 content " + i).getBytes(StandardCharsets.UTF_8);
                 gen2Payloads.put(blobGen2, payload);
                 Mono.from(rawStore.save(TEST_BUCKET, blobGen2, BlobStoreDAO.BytesBlob.of(payload))).block();
-                mappingSource.add(blobGen2, "msg-gen2-" + i);
+                updaterFactory.add(blobGen2, "msg-gen2-" + i);
             } else {
                 BlobId blobGen3 = new PlainBlobId("1_3_email_" + i);
                 byte[] payload = ("Gen3 content " + i).getBytes(StandardCharsets.UTF_8);
                 gen3Payloads.put(blobGen3, payload);
                 Mono.from(rawStore.save(TEST_BUCKET, blobGen3, BlobStoreDAO.BytesBlob.of(payload))).block();
-                mappingSource.add(blobGen3, "msg-gen3-" + i);
+                updaterFactory.add(blobGen3, "msg-gen3-" + i);
             }
         }
 
@@ -292,7 +286,7 @@ class BlobCompactionLayoutIntegrationTest {
             byte[] payload = ("Email payload number " + i).getBytes(StandardCharsets.UTF_8);
             allPayloads.put(blobId, payload);
             Mono.from(rawStore.save(TEST_BUCKET, blobId, BlobStoreDAO.BytesBlob.of(payload))).block();
-            mappingSource.add(blobId, "msg-ts-" + i);
+            updaterFactory.add(blobId, "msg-ts-" + i);
         }
 
         CompactionRequest initialRequest = CompactionRequest.builder()
@@ -315,10 +309,10 @@ class BlobCompactionLayoutIntegrationTest {
         for (int i = 0; i < POPULATION_SIZE; i++) {
             BlobId oldBlobId = new PlainBlobId("1_2_two_stage_" + i);
             BlobId slotRef = updatedReferences.get(oldBlobId);
-            mappingSource.remove(oldBlobId);
-            if (i < 60) {
+            if (i >= 60) {
+                updaterFactory.remove(slotRef);
+            } else {
                 livePayloads.put(slotRef, allPayloads.get(oldBlobId));
-                mappingSource.add(slotRef, "msg-ts-" + i);
             }
         }
 

@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import jakarta.mail.Flags;
 
@@ -34,6 +35,7 @@ import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobIdUpdater;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
 import org.apache.james.mailbox.MessageUid;
@@ -62,7 +64,7 @@ class CassandraBlobIdUpdaterIntegrationTest {
     private PlainBlobId.Factory blobIdFactory;
     private CassandraMessageIdDAO messageIdDAO;
     private CassandraMessageIdToImapUidDAO imapUidDAO;
-    private CassandraBlobIdUpdater testee;
+    private CassandraBlobIdUpdater.Factory updaterFactory;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
@@ -70,7 +72,7 @@ class CassandraBlobIdUpdaterIntegrationTest {
         blobIdFactory = new PlainBlobId.Factory();
         messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), blobIdFactory);
         imapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION);
-        testee = new CassandraBlobIdUpdater(cassandra.getConf());
+        updaterFactory = new CassandraBlobIdUpdater.Factory(cassandra.getConf(), blobIdFactory);
     }
 
     @Test
@@ -119,11 +121,16 @@ class CassandraBlobIdUpdaterIntegrationTest {
             .headerContent(Optional.of(originalHeaderBlobId))
             .build()).block();
 
+        List<BlobId> observed = new CopyOnWriteArrayList<>();
+        BlobIdUpdater testee = updaterFactory.forPredicate(blobId -> true, observed::add).block();
+
+        assertThat(observed).contains(originalHeaderBlobId, originalBodyBlobId);
+
         // Replace header reference
-        testee.replaceReferences(originalHeaderBlobId, newHeaderSlotRef, List.of(messageId.serialize())).block();
+        testee.replaceReferences(originalHeaderBlobId, newHeaderSlotRef).block();
 
         // Replace body reference
-        testee.replaceReferences(originalBodyBlobId, newBodySlotRef, List.of(messageId.serialize())).block();
+        testee.replaceReferences(originalBodyBlobId, newBodySlotRef).block();
 
         // Verify messageV3 has both new slot refs
         var row = cassandra.getConf().execute(

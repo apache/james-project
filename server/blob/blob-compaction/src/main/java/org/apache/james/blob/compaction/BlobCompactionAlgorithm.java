@@ -21,23 +21,20 @@ package org.apache.james.blob.compaction;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobReferenceSource;
+import org.apache.james.blob.api.BlobIdUpdater;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectStoreIOException;
-import org.apache.james.blob.compaction.BlobReferenceMappingSource.BlobIdMessageIdMapping;
 import org.apache.james.blob.compaction.ChunkFormat.BlobSlotContent;
 import org.apache.james.blob.compaction.ChunkFormat.ChunkWriteResult;
 import org.apache.james.blob.compaction.ChunkFormat.SlotRange;
@@ -53,85 +50,20 @@ import reactor.core.scheduler.Schedulers;
 
 /**
  * Executes object compaction and garbage collection for chunked blob storage in Apache James.
- *
- * <h3>Crash Safety and Liveness Invariants</h3>
- * The compaction algorithms follow a strict step ordering to ensure crash safety and liveness:
- * <ul>
- *   <li><b>Initial Compaction:</b>
- *     <ol>
- *       <li>Read candidates and accumulate slots into an immutable chunk.</li>
- *       <li>Save the new chunk to raw storage (unreferenced yet by source-of-truth tables).</li>
- *       <li>Update source-of-truth table references (Cassandra) to the new chunk-slot references.</li>
- *       <li>Delete original standalone objects from raw storage.</li>
- *     </ol>
- *     If interrupted before step 3, the saved chunk is an orphan with 0 references and will be
- *     safely reclaimed by the next {@code gc-compact} run. The original blobs and references remain untouched.
- *     If interrupted after step 3 but before step 4, the old standalone blobs have 0 references and will be
- *     cleaned up by standard GC.
- *   </li>
- *   <li><b>GC-Compact (Rewrite / Merge / Purge):</b>
- *     <ol>
- *       <li>Read existing chunk objects and inspect slot references against the BloomFilter/mapping.</li>
- *       <li>For chunks with dead slots (or pairs of small chunks to merge), assemble a new chunk with only live slots.</li>
- *       <li>Save the new chunk to raw storage.</li>
- *       <li>Update source-of-truth table references to the new chunk slot references.</li>
- *       <li>Delete the old chunk(s) from raw storage.</li>
- *     </ol>
- *     If interrupted before step 4, the newly created chunk is an orphan with no references and will be
- *     purged on the subsequent GC-compact pass. If interrupted after step 4, the old chunk has 0 references
- *     and will be purged as an orphan chunk on the next GC-compact pass.
- *   </li>
- *   <li><b>Orphan Chunk Purging:</b>
- *     Chunks with 0 live references (100% dead slots) are identified as orphan chunks and deleted immediately.
- *     This guarantees self-healing and liveness by construction across process crashes.
- *   </li>
- * </ul>
- *
- * <h3>Memory Bounds and Operational Characteristics</h3>
- * <ul>
- *   <li><b>Candidate Payload Streaming:</b> {@link #initialCompact(CompactionRequest)} streams candidate blob identifiers
- *       and partitions them into windows of {@value #DEFAULT_CANDIDATE_BATCH_SIZE} blobs. Candidate payloads are fetched
- *       and packed chunk-by-chunk. Payloads are persisted and freed window-by-window, ensuring that candidate byte arrays
- *       are never held in heap for the entire generation simultaneously. Candidate payload heap usage is bounded by
- *   <li><b>Reference Mapping Memory Bounds:</b> Reference lookups are queried on-demand via
- *       {@link BlobReferenceMappingSource#loadReferencesFor(Collection)} in windowed batches bounded by
- *       {@link CompactionConfiguration#windowBatchSize()}, avoiding full generation materialization and preventing
- *       heap exhaustion even in high-scale deployments with tens of millions of active references.</li>
- *   <li><b>GC Compaction Memory Bounds:</b> {@link #gcCompact(CompactionRequest)} discovers chunks by reading only trailing
- *       64KB footers via HTTP ranged reads (metadata-only). Orphan chunks (100% dead slots) are deleted with 0 payload bytes read.
- *       During chunk purge or merge, surviving live slots are streamed individually via HTTP ranged reads, strictly bounding
- *       GC payload heap usage to {@code O(maxSlotSize)} (~1MB).</li>
- * </ul>
  */
 public class BlobCompactionAlgorithm {
-    public static final int DEFAULT_CANDIDATE_BATCH_SIZE = 1000;
     private static final Logger LOGGER = LoggerFactory.getLogger(BlobCompactionAlgorithm.class);
 
     private final BlobStoreDAO blobStoreDAO;
     private final BlobStoreDAO rawStore;
-    private final BlobReferenceSource referenceSource;
-    private final BlobReferenceMappingSource mappingSource;
-    private final BlobIdUpdater blobIdUpdater;
+    private final BlobIdUpdater.Factory updaterFactory;
 
     public BlobCompactionAlgorithm(BlobStoreDAO blobStoreDAO,
                                   BlobStoreDAO rawStore,
-                                  BlobReferenceSource referenceSource,
-                                  BlobReferenceMappingSource mappingSource,
-                                  BlobIdUpdater blobIdUpdater) {
+                                  BlobIdUpdater.Factory updaterFactory) {
         this.blobStoreDAO = Preconditions.checkNotNull(blobStoreDAO, "'blobStoreDAO' must not be null");
         this.rawStore = Preconditions.checkNotNull(rawStore, "'rawStore' must not be null");
-        this.referenceSource = Preconditions.checkNotNull(referenceSource, "'referenceSource' must not be null");
-        this.mappingSource = Preconditions.checkNotNull(mappingSource, "'mappingSource' must not be null");
-        this.blobIdUpdater = Preconditions.checkNotNull(blobIdUpdater, "'blobIdUpdater' must not be null");
-    }
-
-    public BlobCompactionAlgorithm(BlobStoreDAO blobStoreDAO,
-                                  BlobStoreDAO rawStore,
-                                  BlobReferenceMappingSource mappingSource,
-                                  BlobIdUpdater blobIdUpdater) {
-        this(blobStoreDAO, rawStore,
-            () -> Flux.from(mappingSource.listBlobIdMessageIdMappings()).map(BlobIdMessageIdMapping::blobId),
-            mappingSource, blobIdUpdater);
+        this.updaterFactory = Preconditions.checkNotNull(updaterFactory, "'updaterFactory' must not be null");
     }
 
     public Mono<CompactionResult> compact(CompactionRequest request) {
@@ -141,33 +73,34 @@ public class BlobCompactionAlgorithm {
     public Mono<CompactionResult> initialCompact(CompactionRequest request) {
         Preconditions.checkNotNull(request, "'request' must not be null");
 
-        Publisher<BlobId> candidatesListing = request.family()
-            .map(family -> rawStore.listBlobs(request.bucketName(), family + "_" + request.generation() + "_"))
-            .orElseGet(() -> rawStore.listBlobs(request.bucketName()));
+        Set<BlobId> referencedBlobs = ConcurrentHashMap.newKeySet();
+        Predicate<BlobId> generationCondition = blobId -> matchesGenerationAndFamily(blobId.asString(), request.generation(), request.family());
 
-        return Flux.from(candidatesListing)
-            .filter(blobId -> matchesGenerationAndFamily(blobId.asString(), request.generation(), request.family()))
-            .filter(blobId -> !ChunkId.isChunkRef(blobId))
-            .buffer(request.configuration().windowBatchSize())
-            .concatMap(batchBlobIds -> loadReferenceMappingFor(batchBlobIds)
-                .flatMap(mapping -> {
-                    Flux<CandidateBlob> packableCandidates = Flux.fromIterable(batchBlobIds)
-                        .filter(mapping::containsKey)
-                        .flatMap(blobId -> Mono.from(rawStore.readBytes(request.bucketName(), blobId))
-                            .map(bytesBlob -> new CandidateBlob(blobId, bytesBlob.payload(), bytesBlob.metadata()))
-                            .onErrorResume(error -> {
-                                LOGGER.warn("Failed reading candidate blob {}", blobId.asString(), error);
-                                return Mono.empty();
-                            }), 16)
-                        .filter(candidate -> candidate.payload.length < request.configuration().maxPackableSize());
+        return updaterFactory.forPredicate(generationCondition, referencedBlobs::add)
+            .flatMap(blobIdUpdater -> {
+                Publisher<BlobId> candidatesListing = request.family()
+                    .map(family -> Flux.concat(
+                        rawStore.listBlobs(request.bucketName(), family + "/" + request.generation() + "/"),
+                        rawStore.listBlobs(request.bucketName(), family + "_" + request.generation() + "_")))
+                    .orElseGet(() -> Flux.from(rawStore.listBlobs(request.bucketName())));
 
-                    return windowByCumulativeSize(packableCandidates, request.configuration().chunkTargetSize())
-                        .filter(batch -> batch.size() > 1)
-                        .concatMap(batch -> persistChunkBatch(request, batch, mapping))
-                        .reduce(CompactionResult.NONE, (r1, r2) -> r1.combine(r2));
-                }))
-            .reduce(CompactionResult.NONE, (r1, r2) -> r1.combine(r2))
-            .defaultIfEmpty(CompactionResult.NONE);
+                return Flux.from(candidatesListing)
+                    .filter(blobId -> matchesGenerationAndFamily(blobId.asString(), request.generation(), request.family()))
+                    .filter(blobId -> !ChunkId.isChunkRef(blobId))
+                    .filter(referencedBlobs::contains)
+                    .flatMap(blobId -> Mono.from(rawStore.readBytes(request.bucketName(), blobId))
+                        .map(bytesBlob -> new CandidateBlob(blobId, bytesBlob.payload(), bytesBlob.metadata()))
+                        .onErrorResume(error -> {
+                            LOGGER.warn("Failed reading candidate blob {}", blobId.asString(), error);
+                            return Mono.empty();
+                        }), 16)
+                    .filter(candidate -> candidate.payload.length < request.configuration().maxPackableSize())
+                    .transform(candidates -> windowByCumulativeSize(candidates, request.configuration().chunkTargetSize()))
+                    .filter(batch -> batch.size() > 1)
+                    .concatMap(batch -> persistChunkBatch(request, batch, blobIdUpdater))
+                    .reduce(CompactionResult.NONE, CompactionResult::combine)
+                    .defaultIfEmpty(CompactionResult.NONE);
+            });
     }
 
     static Flux<List<CandidateBlob>> windowByCumulativeSize(Flux<CandidateBlob> candidates, long targetSize) {
@@ -185,64 +118,50 @@ public class BlobCompactionAlgorithm {
         });
     }
 
-    /**
-     * Executes GC compaction (purge dead slots, merge small chunks, delete orphan chunks).
-     * <p>
-     * Memory bound is O(maxSlotSize) (~1MB) rather than O(chunkSize) (~100MB).
-     * Chunk footers are read via suffix ranged reads (last 64KB) without buffering chunk payloads.
-     * Orphan chunks are deleted without reading any payload bytes.
-     * Chunks being purged or merged stream individual live slots via ranged reads.
-     * </p>
-     */
     public Mono<CompactionResult> gcCompact(CompactionRequest request) {
         Preconditions.checkNotNull(request, "'request' must not be null");
 
-        Publisher<BlobId> chunkListing = request.family()
-            .map(family -> rawStore.listBlobs(request.bucketName(), family + "_" + request.generation() + "_chunk"))
-            .orElseGet(() -> rawStore.listBlobs(request.bucketName()));
+        Set<BlobId> referencedBlobs = ConcurrentHashMap.newKeySet();
+        Predicate<BlobId> generationCondition = blobId -> matchesGenerationAndFamily(blobId.asString(), request.generation(), request.family());
 
-        return Flux.from(chunkListing)
-            .filter(blobId -> ChunkId.isChunkRef(blobId) && blobId.asString().indexOf('~') == -1)
-            .filter(blobId -> matchesGenerationAndFamily(blobId.asString(), request.generation(), request.family()))
-            .flatMap(chunkBlobId -> Mono.from(rawStore.readRange(request.bucketName(), chunkBlobId, -65536, -1))
-                .map(tailBlob -> {
-                    try {
-                        byte[] tailData = tailBlob.asBytes().payload();
-                        long totalSize = BlobStoreDAO.totalObjectSize(tailBlob);
-                        ChunkFooter footer = ChunkFormat.readFooter(tailData, totalSize);
-                        return new ExistingChunk(chunkBlobId, totalSize, footer);
-                    } catch (IOException e) {
-                        LOGGER.warn("Failed reading footer for chunk object {}", chunkBlobId.asString(), e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .onErrorResume(error -> {
-                    LOGGER.warn("Failed reading chunk footer {}", chunkBlobId.asString(), error);
-                    return Mono.empty();
-                }))
-            .buffer(request.configuration().windowBatchSize())
-            .concatMap(existingChunks -> {
-                List<BlobId> slotRefs = extractSlotRefs(existingChunks);
-                return loadReferenceMappingFor(slotRefs)
-                    .flatMap(mapping -> processExistingChunks(request, existingChunks, mapping));
-            })
-            .reduce(CompactionResult.NONE, CompactionResult::combine)
-            .defaultIfEmpty(CompactionResult.NONE);
-    }
+        return updaterFactory.forPredicate(generationCondition, referencedBlobs::add)
+            .flatMap(blobIdUpdater -> {
+                Publisher<BlobId> chunkListing = request.family()
+                    .map(family -> Flux.concat(
+                        rawStore.listBlobs(request.bucketName(), family + "/" + request.generation() + "/chunk"),
+                        rawStore.listBlobs(request.bucketName(), family + "_" + request.generation() + "_chunk")))
+                    .orElseGet(() -> Flux.from(rawStore.listBlobs(request.bucketName())));
 
-    private Mono<CompactionResult> packAndPersistChunks(CompactionRequest request,
-                                                       List<CandidateBlob> candidates,
-                                                       Map<BlobId, Set<String>> mapping) {
-        if (candidates.size() <= 1) {
-            return Mono.just(CompactionResult.NONE);
-        }
-        return persistChunkBatch(request, candidates, mapping);
+                return Flux.from(chunkListing)
+                    .filter(blobId -> ChunkId.isChunkRef(blobId) && blobId.asString().indexOf('~') == -1)
+                    .filter(blobId -> matchesGenerationAndFamily(blobId.asString(), request.generation(), request.family()))
+                    .flatMap(chunkBlobId -> Mono.from(rawStore.readRange(request.bucketName(), chunkBlobId, -65536, -1))
+                        .map(tailBlob -> {
+                            try {
+                                byte[] tailData = tailBlob.asBytes().payload();
+                                long totalSize = BlobStoreDAO.totalObjectSize(tailBlob);
+                                ChunkFooter footer = ChunkFormat.readFooter(tailData, totalSize);
+                                return new ExistingChunk(chunkBlobId, totalSize, footer);
+                            } catch (IOException e) {
+                                LOGGER.warn("Failed reading footer for chunk object {}", chunkBlobId.asString(), e);
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .onErrorResume(error -> {
+                            LOGGER.warn("Failed reading chunk footer {}", chunkBlobId.asString(), error);
+                            return Mono.empty();
+                        }))
+                    .buffer(request.configuration().windowBatchSize())
+                    .concatMap(existingChunks -> processExistingChunks(request, existingChunks, referencedBlobs, blobIdUpdater))
+                    .reduce(CompactionResult.NONE, CompactionResult::combine)
+                    .defaultIfEmpty(CompactionResult.NONE);
+            });
     }
 
     private Mono<CompactionResult> persistChunkBatch(CompactionRequest request,
                                                     List<CandidateBlob> batch,
-                                                    Map<BlobId, Set<String>> mapping) {
+                                                    BlobIdUpdater blobIdUpdater) {
         if (batch.size() <= 1) {
             LOGGER.debug("Skipping compaction for single candidate batch");
             return Mono.just(CompactionResult.NONE);
@@ -261,24 +180,21 @@ public class BlobCompactionAlgorithm {
             return Mono.error(new ObjectStoreIOException("Failed to write chunk " + chunkId.chunkId(), e));
         }
 
-        // 1. Save chunk to raw storage
         return Mono.from(rawStore.save(request.bucketName(), chunkId.chunkBlobId(), BlobStoreDAO.BytesBlob.of(writeResult.chunkBytes())))
-            // 2. Update source-of-truth table references and delete original blobs
-            .then(updateReferencesAndDeleteOriginalBlobs(request.bucketName(), chunkId, batch, writeResult.slotRanges(), mapping));
+            .then(updateReferencesAndDeleteOriginalBlobs(request.bucketName(), chunkId, batch, writeResult.slotRanges(), blobIdUpdater));
     }
 
     private Mono<CompactionResult> updateReferencesAndDeleteOriginalBlobs(BucketName bucketName,
                                                                          ChunkId chunkId,
                                                                          List<CandidateBlob> batch,
                                                                          List<SlotRange> slotRanges,
-                                                                         Map<BlobId, Set<String>> mapping) {
+                                                                         BlobIdUpdater blobIdUpdater) {
         return Flux.range(0, batch.size())
             .concatMap(i -> {
                 CandidateBlob candidate = batch.get(i);
                 SlotRange range = slotRanges.get(i);
                 ChunkId slotRef = ChunkId.slotRef(chunkId, range.offset(), range.limit());
-                Collection<String> messageIds = mapping.getOrDefault(candidate.blobId, Set.of());
-                return blobIdUpdater.replaceReferences(candidate.blobId, slotRef, messageIds)
+                return blobIdUpdater.replaceReferences(candidate.blobId, slotRef)
                     .thenReturn(Optional.of(candidate))
                     .onErrorResume(e -> {
                         LOGGER.error("Failed to update references for candidate blob {}, skipping deletion of original blob", candidate.blobId.asString(), e);
@@ -288,7 +204,6 @@ public class BlobCompactionAlgorithm {
             .flatMap(opt -> opt.map(Flux::just).orElseGet(Flux::empty))
             .collectList()
             .flatMap(successfulCandidates -> Flux.fromIterable(successfulCandidates)
-                // Delete original standalone blobs ONLY for successfully updated candidates
                 .concatMap(candidate -> Mono.from(rawStore.delete(bucketName, candidate.blobId)))
                 .then()
                 .thenReturn(CompactionResult.builder()
@@ -301,17 +216,17 @@ public class BlobCompactionAlgorithm {
 
     private Mono<CompactionResult> processExistingChunks(CompactionRequest request,
                                                         List<ExistingChunk> chunks,
-                                                        Map<BlobId, Set<String>> mapping) {
+                                                        Set<BlobId> referencedBlobs,
+                                                        BlobIdUpdater blobIdUpdater) {
         if (chunks.isEmpty()) {
             return Mono.just(CompactionResult.NONE);
         }
 
         List<ChunkAnalysis> analyses = new ArrayList<>();
         for (ExistingChunk chunk : chunks) {
-            analyses.add(analyzeChunk(chunk, mapping));
+            analyses.add(analyzeChunk(chunk, referencedBlobs));
         }
 
-        // 1. Delete orphan chunks (100% dead slots)
         List<ChunkAnalysis> orphanChunks = analyses.stream()
             .filter(a -> a.liveSlots.isEmpty())
             .toList();
@@ -328,17 +243,15 @@ public class BlobCompactionAlgorithm {
             .filter(a -> !a.liveSlots.isEmpty())
             .toList();
 
-        // 2. Purge dead slots for chunks with dead ratio >= threshold
         double purgeThreshold = Math.max(request.configuration().purgeDeadRatio(), request.configuration().gainThreshold());
         List<ChunkAnalysis> chunksToPurge = remaining.stream()
             .filter(a -> a.deadRatio() >= purgeThreshold)
             .toList();
 
         Mono<CompactionResult> purgeMono = Flux.fromIterable(chunksToPurge)
-            .concatMap(analysis -> purgeDeadSlots(request, analysis, mapping))
+            .concatMap(analysis -> purgeDeadSlots(request, analysis, blobIdUpdater))
             .reduce(CompactionResult.NONE, CompactionResult::combine);
 
-        // 3. Merge candidates: chunks < 50% target size
         long mergeThresholdSize = (long) (request.configuration().mergeDeadRatio() * request.configuration().chunkTargetSize());
         List<ChunkAnalysis> nonPurged = remaining.stream()
             .filter(a -> a.deadRatio() < purgeThreshold)
@@ -348,31 +261,72 @@ public class BlobCompactionAlgorithm {
             .filter(a -> a.chunk.totalChunkSize < mergeThresholdSize)
             .toList();
 
-        Mono<CompactionResult> mergeMono = mergeSmallChunks(request, smallChunks, mapping);
+        Mono<CompactionResult> mergeMono = mergeSmallChunks(request, smallChunks, blobIdUpdater);
 
-        return deleteOrphansMono
-            .flatMap(res1 -> purgeMono.map(res1::combine))
-            .flatMap(res2 -> mergeMono.map(res2::combine));
+        return Flux.merge(deleteOrphansMono, purgeMono, mergeMono)
+            .reduce(CompactionResult.NONE, CompactionResult::combine);
+    }
+
+    private ChunkAnalysis analyzeChunk(ExistingChunk chunk, Set<BlobId> referencedBlobs) {
+        ChunkId chunkId = ChunkId.parseChunk(chunk.chunkBlobId.asString());
+        ChunkFooter footer = chunk.footer;
+        List<Long> starts = footer.slotStarts();
+
+        List<LiveSlotMeta> liveSlots = new ArrayList<>();
+        int deadCount = 0;
+        long deadBytes = 0;
+        long totalSlotBytes = 0;
+
+        for (int i = 0; i < starts.size(); i++) {
+            long offset = starts.get(i);
+            long limit = footer.slotLength(i);
+            totalSlotBytes += limit;
+
+            ChunkId slotRef = ChunkId.slotRef(chunkId, offset, limit);
+            boolean isLive = isSlotReferenced(referencedBlobs, slotRef);
+
+            if (!isLive) {
+                deadCount++;
+                deadBytes += limit;
+            } else {
+                liveSlots.add(new LiveSlotMeta(offset, limit, slotRef));
+            }
+        }
+
+        return new ChunkAnalysis(chunk, liveSlots, starts.size(), deadCount, deadBytes, totalSlotBytes);
+    }
+
+    private boolean isSlotReferenced(Set<BlobId> referencedBlobs, ChunkId slotRef) {
+        if (referencedBlobs.contains(slotRef)) {
+            return true;
+        }
+        ChunkId zeroLimit = ChunkId.slotRef(slotRef.chunkBlobId().asString(), slotRef.offset(), 0L);
+        if (referencedBlobs.contains(zeroLimit)) {
+            return true;
+        }
+        for (BlobId ref : referencedBlobs) {
+            String keyStr = ref.asString();
+            if (ChunkId.isChunkRef(keyStr)) {
+                try {
+                    ChunkId parsed = ChunkId.parse(keyStr);
+                    if (parsed.chunkId().equals(slotRef.chunkId()) && parsed.offset() == slotRef.offset()) {
+                        return true;
+                    }
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+        }
+        return false;
     }
 
     private Mono<CompactionResult> purgeDeadSlots(CompactionRequest request,
                                                   ChunkAnalysis analysis,
-                                                  Map<BlobId, Set<String>> mapping) {
+                                                  BlobIdUpdater blobIdUpdater) {
         int family = extractFamily(analysis.chunk.chunkBlobId.asString());
         ChunkId newChunkId = ChunkId.ofChunk(family, request.generation());
 
-        return Flux.fromIterable(analysis.liveSlots)
-            .concatMap(liveSlot -> Mono.from(rawStore.readRange(request.bucketName(), analysis.chunk.chunkBlobId, liveSlot.offset, liveSlot.offset + liveSlot.limit - 1))
-                .publishOn(Schedulers.parallel())
-                .flatMap(sliceBlob -> {
-                    try {
-                        byte[] sliceData = sliceBlob.asBytes().payload();
-                        BlobSlot slot = ChunkFormat.parseSlot(sliceData, liveSlot.offset);
-                        return Mono.just(new LiveSlotWithContent(liveSlot, slot.payload(), slot.metadata()));
-                    } catch (IOException e) {
-                        return Mono.error(new ObjectStoreIOException("Failed parsing slot", e));
-                    }
-                }))
+        return streamSlotPayloads(request.bucketName(), analysis.chunk.chunkBlobId, analysis.liveSlots)
             .collectList()
             .flatMap(liveSlotsWithContent -> {
                 List<BlobSlotContent> liveSlotContents = liveSlotsWithContent.stream()
@@ -386,18 +340,8 @@ public class BlobCompactionAlgorithm {
                     return Mono.error(new ObjectStoreIOException("Failed writing purged chunk " + newChunkId.chunkId(), e));
                 }
 
-                // 1. Save new chunk to raw storage
                 return Mono.from(rawStore.save(request.bucketName(), newChunkId.chunkBlobId(), BlobStoreDAO.BytesBlob.of(writeResult.chunkBytes())))
-                    // 2. Update references to the new slot refs
-                    .then(Flux.range(0, liveSlotsWithContent.size())
-                        .concatMap(i -> {
-                            LiveSlotWithContent liveSlot = liveSlotsWithContent.get(i);
-                            SlotRange range = writeResult.slotRanges().get(i);
-                            ChunkId newSlotRef = ChunkId.slotRef(newChunkId, range.offset(), range.limit());
-                            return blobIdUpdater.replaceReferences(liveSlot.meta.slotRef, newSlotRef, liveSlot.meta.messageIds);
-                        })
-                        .then())
-                    // 3. Delete old chunk from raw storage
+                    .then(updateLiveSlotReferences(newChunkId, liveSlotsWithContent, writeResult.slotRanges(), blobIdUpdater))
                     .then(Mono.from(rawStore.delete(request.bucketName(), analysis.chunk.chunkBlobId)))
                     .thenReturn(CompactionResult.builder()
                         .deadPurged(analysis.deadSlotsCount)
@@ -408,7 +352,7 @@ public class BlobCompactionAlgorithm {
 
     private Mono<CompactionResult> mergeSmallChunks(CompactionRequest request,
                                                    List<ChunkAnalysis> smallChunks,
-                                                   Map<BlobId, Set<String>> mapping) {
+                                                   BlobIdUpdater blobIdUpdater) {
         if (smallChunks.size() < 2) {
             return Mono.just(CompactionResult.NONE);
         }
@@ -427,41 +371,16 @@ public class BlobCompactionAlgorithm {
         }
 
         return Flux.fromIterable(pairs)
-            .concatMap(pair -> mergePair(request, pair))
+            .concatMap(pair -> mergePair(request, pair, blobIdUpdater))
             .reduce(CompactionResult.NONE, CompactionResult::combine);
     }
 
-    private Mono<CompactionResult> mergePair(CompactionRequest request, ChunkPair pair) {
+    private Mono<CompactionResult> mergePair(CompactionRequest request, ChunkPair pair, BlobIdUpdater blobIdUpdater) {
         int family = extractFamily(pair.c1.chunk.chunkBlobId.asString());
         ChunkId newChunkId = ChunkId.ofChunk(family, request.generation());
 
-        Mono<List<LiveSlotWithContent>> c1Live = Flux.fromIterable(pair.c1.liveSlots)
-            .concatMap(slot -> Mono.from(rawStore.readRange(request.bucketName(), pair.c1.chunk.chunkBlobId, slot.offset, slot.offset + slot.limit - 1))
-                .publishOn(Schedulers.parallel())
-                .flatMap(sliceBlob -> {
-                    try {
-                        byte[] sliceData = sliceBlob.asBytes().payload();
-                        BlobSlot parsed = ChunkFormat.parseSlot(sliceData, slot.offset);
-                        return Mono.just(new LiveSlotWithContent(slot, parsed.payload(), parsed.metadata()));
-                    } catch (IOException e) {
-                        return Mono.error(new ObjectStoreIOException("Failed parsing slot", e));
-                    }
-                }))
-            .collectList();
-
-        Mono<List<LiveSlotWithContent>> c2Live = Flux.fromIterable(pair.c2.liveSlots)
-            .concatMap(slot -> Mono.from(rawStore.readRange(request.bucketName(), pair.c2.chunk.chunkBlobId, slot.offset, slot.offset + slot.limit - 1))
-                .publishOn(Schedulers.parallel())
-                .flatMap(sliceBlob -> {
-                    try {
-                        byte[] sliceData = sliceBlob.asBytes().payload();
-                        BlobSlot parsed = ChunkFormat.parseSlot(sliceData, slot.offset);
-                        return Mono.just(new LiveSlotWithContent(slot, parsed.payload(), parsed.metadata()));
-                    } catch (IOException e) {
-                        return Mono.error(new ObjectStoreIOException("Failed parsing slot", e));
-                    }
-                }))
-            .collectList();
+        Mono<List<LiveSlotWithContent>> c1Live = streamSlotPayloads(request.bucketName(), pair.c1.chunk.chunkBlobId, pair.c1.liveSlots).collectList();
+        Mono<List<LiveSlotWithContent>> c2Live = streamSlotPayloads(request.bucketName(), pair.c2.chunk.chunkBlobId, pair.c2.liveSlots).collectList();
 
         return Mono.zip(c1Live, c2Live)
             .flatMap(tuple -> {
@@ -479,18 +398,8 @@ public class BlobCompactionAlgorithm {
                     return Mono.error(new ObjectStoreIOException("Failed to write merged chunk " + newChunkId.chunkId(), e));
                 }
 
-                // 1. Save merged chunk
                 return Mono.from(rawStore.save(request.bucketName(), newChunkId.chunkBlobId(), BlobStoreDAO.BytesBlob.of(writeResult.chunkBytes())))
-                    // 2. Update table references for all slots in both chunks
-                    .then(Flux.range(0, allLive.size())
-                        .concatMap(j -> {
-                            LiveSlotWithContent liveSlot = allLive.get(j);
-                            SlotRange range = writeResult.slotRanges().get(j);
-                            ChunkId newSlotRef = ChunkId.slotRef(newChunkId, range.offset(), range.limit());
-                            return blobIdUpdater.replaceReferences(liveSlot.meta.slotRef, newSlotRef, liveSlot.meta.messageIds);
-                        })
-                        .then())
-                    // 3. Delete both old chunks
+                    .then(updateLiveSlotReferences(newChunkId, allLive, writeResult.slotRanges(), blobIdUpdater))
                     .then(Mono.from(rawStore.delete(request.bucketName(), pair.c1.chunk.chunkBlobId)))
                     .then(Mono.from(rawStore.delete(request.bucketName(), pair.c2.chunk.chunkBlobId)))
                     .thenReturn(CompactionResult.builder()
@@ -500,92 +409,33 @@ public class BlobCompactionAlgorithm {
             });
     }
 
-    private ChunkAnalysis analyzeChunk(ExistingChunk chunk, Map<BlobId, Set<String>> mapping) {
-        ChunkId chunkId = ChunkId.parseChunk(chunk.chunkBlobId.asString());
-        ChunkFooter footer = chunk.footer;
-        List<Long> starts = footer.slotStarts();
-
-        List<LiveSlotMeta> liveSlots = new ArrayList<>();
-        int deadCount = 0;
-        long deadBytes = 0;
-        long totalSlotBytes = 0;
-
-        for (int i = 0; i < starts.size(); i++) {
-            long offset = starts.get(i);
-            long limit = footer.slotLength(i);
-            totalSlotBytes += limit;
-
-            ChunkId slotRef = ChunkId.slotRef(chunkId, offset, limit);
-            Set<String> messageIds = findMessageIdsForSlot(mapping, slotRef);
-
-            if (messageIds.isEmpty()) {
-                deadCount++;
-                deadBytes += limit;
-            } else {
-                liveSlots.add(new LiveSlotMeta(offset, limit, slotRef, messageIds));
-            }
-        }
-
-        return new ChunkAnalysis(chunk, liveSlots, starts.size(), deadCount, deadBytes, totalSlotBytes);
+    private Mono<Void> updateLiveSlotReferences(ChunkId newChunkId,
+                                                List<LiveSlotWithContent> liveContents,
+                                                List<SlotRange> newRanges,
+                                                BlobIdUpdater blobIdUpdater) {
+        return Flux.range(0, liveContents.size())
+            .concatMap(i -> {
+                LiveSlotMeta oldSlot = liveContents.get(i).meta;
+                SlotRange newRange = newRanges.get(i);
+                ChunkId newSlotRef = ChunkId.slotRef(newChunkId, newRange.offset(), newRange.limit());
+                return blobIdUpdater.replaceReferences(oldSlot.slotRef, newSlotRef);
+            })
+            .then();
     }
 
-    private Set<String> findMessageIdsForSlot(Map<BlobId, Set<String>> mapping, ChunkId slotRef) {
-        Set<String> direct = mapping.get(slotRef);
-        if (direct != null && !direct.isEmpty()) {
-            return direct;
-        }
-        ChunkId zeroLimit = ChunkId.slotRef(slotRef.chunkBlobId().asString(), slotRef.offset(), 0L);
-        Set<String> zero = mapping.get(zeroLimit);
-        if (zero != null && !zero.isEmpty()) {
-            return zero;
-        }
-        for (Map.Entry<BlobId, Set<String>> entry : mapping.entrySet()) {
-            String keyStr = entry.getKey().asString();
-            if (ChunkId.isChunkRef(keyStr)) {
-                try {
-                    ChunkId parsed = ChunkId.parse(keyStr);
-                    if (parsed.chunkId().equals(slotRef.chunkId()) && parsed.offset() == slotRef.offset()) {
-                        return entry.getValue();
+    private Flux<LiveSlotWithContent> streamSlotPayloads(BucketName bucketName, BlobId chunkBlobId, List<LiveSlotMeta> liveSlots) {
+        return Flux.fromIterable(liveSlots)
+            .concatMap(liveSlot -> Mono.from(rawStore.readRange(bucketName, chunkBlobId, liveSlot.offset, liveSlot.offset + liveSlot.limit - 1))
+                .publishOn(Schedulers.parallel())
+                .flatMap(sliceBlob -> {
+                    try {
+                        byte[] sliceData = sliceBlob.asBytes().payload();
+                        BlobSlot slot = ChunkFormat.parseSlot(sliceData, liveSlot.offset);
+                        return Mono.just(new LiveSlotWithContent(liveSlot, slot.payload(), slot.metadata()));
+                    } catch (IOException e) {
+                        return Mono.error(new ObjectStoreIOException("Failed parsing slot", e));
                     }
-                } catch (Exception e) {
-                    // ignore
-                }
-            }
-        }
-        return Set.of();
-    }
-
-    private List<BlobId> extractSlotRefs(List<ExistingChunk> chunks) {
-        List<BlobId> slotRefs = new ArrayList<>();
-        for (ExistingChunk chunk : chunks) {
-            ChunkId chunkId = ChunkId.parseChunk(chunk.chunkBlobId.asString());
-            ChunkFooter footer = chunk.footer;
-            List<Long> starts = footer.slotStarts();
-            for (int i = 0; i < starts.size(); i++) {
-                long offset = starts.get(i);
-                long limit = footer.slotLength(i);
-                slotRefs.add(ChunkId.slotRef(chunkId, offset, limit));
-                slotRefs.add(ChunkId.slotRef(chunkId.chunkBlobId().asString(), offset, 0L));
-            }
-        }
-        return slotRefs;
-    }
-
-    /**
-     * Loads live references on-demand for the specified blob identifiers from {@link BlobReferenceMappingSource}.
-     * Memory consumption is strictly bounded by {@code O(batchSize * referencesPerBlob)}.
-     */
-    private Mono<Map<BlobId, Set<String>>> loadReferenceMappingFor(Collection<BlobId> blobIds) {
-        if (blobIds.isEmpty()) {
-            return Mono.just(Map.of());
-        }
-        return Flux.from(mappingSource.loadReferencesFor(blobIds))
-            .collectMultimap(BlobIdMessageIdMapping::blobId, BlobIdMessageIdMapping::messageId)
-            .map(multimap -> {
-                Map<BlobId, Set<String>> result = new HashMap<>();
-                multimap.forEach((k, v) -> result.put(k, new HashSet<>(v)));
-                return result;
-            });
+                }));
     }
 
     static boolean matchesGenerationAndFamily(String blobIdStr, long targetGeneration, Optional<Integer> targetFamily) {
@@ -633,7 +483,7 @@ public class BlobCompactionAlgorithm {
 
     private record ExistingChunk(BlobId chunkBlobId, long totalChunkSize, ChunkFooter footer) {}
 
-    private record LiveSlotMeta(long offset, long limit, ChunkId slotRef, Set<String> messageIds) {}
+    private record LiveSlotMeta(long offset, long limit, ChunkId slotRef) {}
 
     private record LiveSlotWithContent(LiveSlotMeta meta, byte[] payload, BlobMetadata metadata) {}
 
@@ -649,7 +499,7 @@ public class BlobCompactionAlgorithm {
             if (totalSlotBytes == 0) {
                 return 1.0;
             }
-            return (double) deadBytes / totalSlotBytes;
+            return (double) deadBytes / (double) totalSlotBytes;
         }
     }
 }

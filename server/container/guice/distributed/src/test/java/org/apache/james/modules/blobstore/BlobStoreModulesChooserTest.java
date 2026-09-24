@@ -25,10 +25,9 @@ import java.time.Clock;
 import java.util.Optional;
 
 import org.apache.james.blob.aes.CryptoConfig;
+import org.apache.james.blob.api.BlobIdUpdater;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.compaction.BlobCompactionAlgorithm;
-import org.apache.james.blob.compaction.BlobIdUpdater;
-import org.apache.james.blob.compaction.BlobReferenceMappingSource;
 import org.apache.james.blob.zstd.CompressionConfiguration;
 import org.junit.jupiter.api.Test;
 
@@ -141,8 +140,7 @@ class BlobStoreModulesChooserTest {
                 binder.bind(Clock.class).toInstance(Clock.systemUTC());
                 binder.bind(BlobStoreDAO.class).toProvider(() -> null);
                 binder.bind(BlobStoreDAO.class).annotatedWith(Names.named(BlobStoreModulesChooser.RAW)).toProvider(() -> null);
-                binder.bind(BlobIdUpdater.class).toProvider(() -> null);
-                binder.bind(BlobReferenceMappingSource.class).toProvider(() -> null);
+                binder.bind(BlobIdUpdater.Factory.class).toProvider(() -> null);
             },
             new BlobCompactionModule()
         );
@@ -169,8 +167,7 @@ class BlobStoreModulesChooserTest {
                 binder.bind(Clock.class).toInstance(Clock.systemUTC());
                 binder.bind(BlobStoreDAO.class).toProvider(() -> null);
                 binder.bind(BlobStoreDAO.class).annotatedWith(Names.named(BlobStoreModulesChooser.RAW)).toProvider(() -> null);
-                binder.bind(BlobIdUpdater.class).toProvider(() -> null);
-                binder.bind(BlobReferenceMappingSource.class).toProvider(() -> null);
+                binder.bind(BlobIdUpdater.Factory.class).toProvider(() -> null);
             },
             new BlobCompactionModule()
         );
