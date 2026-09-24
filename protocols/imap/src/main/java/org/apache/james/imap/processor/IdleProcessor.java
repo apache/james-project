@@ -90,6 +90,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 if (sm != null) {
                     sm.unregisterIdle();
                 }
+                session.popLineHandler();
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return logAsMono(() -> LOGGER.error("Encountered error executing IMAP IDLE", e));
             })
