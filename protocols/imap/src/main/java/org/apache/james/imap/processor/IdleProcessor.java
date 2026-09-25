@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
 
@@ -87,10 +88,11 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         Sinks.One<Void> idleReadySink = Sinks.one();
         AtomicBoolean idleActive = new AtomicBoolean(true);
         AtomicBoolean lineHandlerInstalled = new AtomicBoolean(false);
-        return Mono.fromRunnable(() -> idle(request, session, responder, selectedMailbox, idleReadySink, idleActive, lineHandlerInstalled))
+        AtomicReference<EventListener.ReactiveEventListener> idleListenerRef = new AtomicReference<>();
+        return Mono.fromRunnable(() -> idle(request, session, responder, selectedMailbox, idleReadySink, idleActive, lineHandlerInstalled, idleListenerRef))
             .then(unsolicitedResponses(session, responder, false))
             .onErrorResume(e -> {
-                cleanupIdle(session, selectedMailbox, idleActive, lineHandlerInstalled, idleReadySink, null);
+                cleanupIdle(session, selectedMailbox, idleActive, lineHandlerInstalled, idleReadySink, idleListenerRef.get());
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return logAsMono(() -> LOGGER.error("Encountered error executing IMAP IDLE", e));
             })
@@ -112,10 +114,12 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     }
 
     private void idle(IdleRequest request, ImapSession session, Responder responder, SelectedMailbox selectedMailbox,
-                      Sinks.One<Void> idleReadySink, AtomicBoolean idleActive, AtomicBoolean lineHandlerInstalled) {
+                      Sinks.One<Void> idleReadySink, AtomicBoolean idleActive, AtomicBoolean lineHandlerInstalled,
+                      AtomicReference<EventListener.ReactiveEventListener> idleListenerRef) {
         EventListener.ReactiveEventListener idleListener = null;
         if (selectedMailbox != null) {
             idleListener = new IdleMailboxListener(session, selectedMailbox, responder, idleReadySink, idleActive, lineHandlerInstalled);
+            idleListenerRef.set(idleListener);
             selectedMailbox.registerIdle(idleListener);
         } else {
             idleReadySink.tryEmitEmpty();
