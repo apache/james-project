@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-project</artifactId>
-        <version>3.9.1</version>
+        <version>3.9.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>james-core</artifactId>

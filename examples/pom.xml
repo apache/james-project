@@ -23,12 +23,12 @@
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
     <version>23</version>
-    <relativePath></relativePath>
+    <relativePath />
   </parent>
 
   <groupId>org.apache.james.examples</groupId>
   <artifactId>examples</artifactId>
-  <version>3.9.1</version>
+  <version>3.9.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Apache James :: Examples</name>
 
@@ -102,7 +102,7 @@
       <activation>
         <property>
           <name>!env.CI</name>
-          <value></value>
+          <value />
         </property>
       </activation>
       <build>
