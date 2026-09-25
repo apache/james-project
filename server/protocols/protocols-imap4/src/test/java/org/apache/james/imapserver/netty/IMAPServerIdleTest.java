@@ -27,6 +27,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -317,8 +318,8 @@ class IMAPServerIdleTest extends AbstractIMAPServerTest {
 
         // Run NOOP to verify session is clean and no stale unsolicited EXISTS from IDLE arrives
         clientConnection.write(ByteBuffer.wrap(("a4 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
-        String response = readStringUntil(clientConnection, s -> s.contains("a4 OK NOOP completed."));
-        assertThat(response)
+        List<String> response = readStringUntil(clientConnection, s -> s.contains("a4 OK NOOP completed."));
+        assertThat(String.join("", response))
             .contains("a4 OK NOOP completed.")
             .doesNotContain("EXISTS")
             .doesNotContain("EXPUNGE")
