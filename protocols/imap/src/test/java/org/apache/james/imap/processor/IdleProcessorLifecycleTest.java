@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapProcessor;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.IdleRequest;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
