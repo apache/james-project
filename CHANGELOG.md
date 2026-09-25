@@ -7,14 +7,105 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased 3.9.x]
 
-### Security
+No changes yet.
+
+## [3.9.1] - 2026-09-25
+
+### Removals
+
+ - Drop Glowroot integration: the Glowroot agent is no longer shipped within James docker images, nor configurable
+ through the helm chart. See related upgrade instructions.
+
+### Enhancements
 
  - Webadmin `password.generate`: generate a random password upon start up when none is configured, and log it.
  **Breaking change**: this defaults to `true`, thus webadmin is no longer unauthenticated out of the box, existing
  deployments included. Set `password.generate=false` in `webadmin.properties` to opt back into an unauthenticated
- webadmin, or configure `password` to pin a stable secret.
+ webadmin, or configure `password` to pin a stable secret. See related upgrade instructions.
+ - JAMES-4171 Allow configuring a strong distinction between submission and MX ports (#2941)
+ - [FIX] Better validate script names in `SieveFileRepository` (#3111)
+ - [FIX] Include more IP ranges in WebPush target validation (#3112)
+ - [FIX] Correct `Right.read` check in `StoreMessageIdManager::setInMailboxesReactive` (#2842)
+ - [ENHANCEMENT] OIDC SASL should validate `aud` upon token verification, without requiring introspection
+ - [UPGRADE] ActiveMQ + Artemis (fixes numerous CVEs) (#3175)
+ - [UPGRADE] Netty 4.1.126.Final -> 4.1.135.Final (CVE-2025-67735)
+ - [UPGRADE] Log4J 2.24.3 -> 2.25.5
+ - [UPGRADE] Logback 1.5.18 -> 1.5.38
+ - [UPGRADE] Spark java 3.0.2 -> 3.0.5
+ - [UPGRADE] BouncyCastle 1.81 -> 1.85
+ - [UPGRADE] Jackson 2.19.1 -> 2.22.2
+ - [UPGRADE] jsoup 1.20.1 -> 1.23.2
+ - [UPGRADE] MIME4J 0.8.13 -> 0.8.15 (#3170)
+ - [UPGRADE] Postgres JDBC driver 42.7.7 -> 42.7.13
+ - [UPGRADE] Cassandra driver 4.19.0 -> 4.19.3
+ - [UPGRADE] RabbitMQ amqp-client 5.25.0 -> 5.33.1
+ - [UPGRADE] angus-mail 2.0.3 -> 2.0.5
+ - [UPGRADE] Micrometer core 1.15.1 -> 1.16.7, tracing 1.5.1 -> 1.6.7
+ - [UPGRADE] commons-text 1.13.1 -> 1.15.0, commons-configuration2 2.12.0 -> 2.15.0
+ - Exclude unused httpclient5 dependencies from the OpenSearch client
 
-## [3.9.0] - 2025-xx-xx
+### New Features
+
+ - JAMES-4148 JMAP filtering rules: `moveTo` action, flag criteria, `ANY` comparator for custom headers, date based
+ criteria, plus webadmin routes to run a rule on a mailbox or on all users
+ - JAMES-4157 Implement JMAP `Blob/copy`
+ - JAMES-3728 Implement `MessageIdManager::updateEmail`, allowing `Email/set` update to combine move and setFlags
+ - [ENHANCEMENT] Implement negative ACL for JMAP (#3057)
+ - JAMES-4219 Allow customizing some SMTP replies (#3137)
+ - JAMES-4160 Add `LegacyReadOnlyUsersLDAPRepository` for Spring users relying on LDAP. See related upgrade instructions.
+ - RabbitMQ: `notification.queue.autoDelete` allows disabling notification queue auto delete in favor of `x-expires` (#3076)
+ - `SolveMailboxInconsistencies`: add an `autoMerge` mode (defaults to `false`)
+ - JAMES-3816 Record concurrent IMAP request count
+
+### Bug fixes
+
+ - [FIX] `ImapRequestFrameDecoder` drops a pipelined command after a literal
+ - [FIX] Failing class cast in `IMAPCommandThrottler`
+ - JAMES-3816 Correct `ReactiveThrottler` cancellation and set an upper bound to its pending tasks
+ - JAMES-4184 POP3 `TOP msg 0` only reads headers (#2965)
+ - JAMES-4086 `FoldLongLines`: folded content exceeding line length (#2851)
+ - [FIX] Prevent potentially blocking calls upon JMAP uploads (#3116)
+ - JAMES-3872 JMAP `Email/get`: fix attachment read level, and Postgres `FetchGroup` metadata read level (#2869, #2872)
+ - [FIX] JMAP filtering: `AddressHeader::parseFullAddress` should leniently parse malformed address headers (#2856)
+ - Limit the subject length for indexation to not go over the Lucene raw indexation max size limit
+ - [FIX] Handle partial rows in Cassandra `attachmentV2`
+ - [FIX] `CassandraMailRepository` should be more resilient to extra large mail repositories (#3121)
+ - [FIX] `ClearMailRepository` should count only once
+ - JAMES-4212 Use a string based representation for event bus groups, allowing to redeliver dead-lettered events of
+ extension groups (#3091)
+ - Deleted message vault: fix dead letter setup, be tolerant to messages without internal dates
+ - Task manager:
+   - Task cleanup should purge stalled tasks
+   - Allow canceling tasks with truncated history
+   - Handle missing task history in the Cassandra implementation like Postgres does
+   - Cassandra event store: include the snapshot in the event batch, read snapshots with a single row
+   - Tolerate failures for task additional information
+   - Explicit logs upon task publication failures, distributed task manager logs
+ - Mailbox and user rename:
+   - [FIX] `StoreMailboxManager::renameSubMailboxes` should change namespace
+   - [FIX] Cassandra folder rename: upfront read of the mailbox and its children, `SERIAL` reads for the initial
+   picture, decisions based on a truth table
+   - [FIX] User rename was returning wrong quota when target address is not empty
+   - [FIX] User rename: simplify the rename dance when destination exists, per rename temporary mailbox layout,
+   handle submailbox edge cases
+   - JAMES-3885 Forbid using the same user as source and target of user rename (#2847)
+ - Cassandra inconsistencies solving:
+   - `SolveMailboxInconsistencies`: several runs until convergence, address all possible failures, fix duplicated
+   `mailboxPathV3` registrations and recover from failed `mailboxPathV3` deletion upon rename, leverage strong
+   consistency (#3100)
+   - Account for consistency choices within `RecomputeMailboxCountersService` and `SolveMessageInconsistenciesService`
+ - JAMES-2314 Log unexpected webadmin errors (#2849)
+
+### Documentation
+
+ - Webadmin: ease 15-minute demo and custom route demo setups, authenticate Postgres provisioning scripts
+
+### Build
+
+ - Publish examples again
+ - Fix tmpfs permission mode for Cassandra, Postgres and RabbitMQ test containers, fix docker client API issue
+
+## [3.9.0] - 2025-10-03
 
 ### Important changes
 

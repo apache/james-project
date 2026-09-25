@@ -10,12 +10,59 @@ software documentation. Do not follow this guide blindly!
 
 ## Unreleased
 
-No specific operation to conduct from a 3.9.0 version.
-
-## 3.9.0 version (tagged but not yet released)
-
-Note: this section is in progress. It will be updated during all the development process until the release.
 No changes yet.
+
+## 3.9.1 version
+
+Changes to apply between 3.9.0 and 3.9.1 will be reported here.
+
+Change list:
+
+ - [WebAdmin now generates a password by default](#webadmin-now-generates-a-password-by-default)
+ - [JAMES-4160 LDAP with spring update](#james-4160-ldap-with-spring-update)
+ - [Glowroot removal](#glowroot-removal)
+
+### WebAdmin now generates a password by default
+
+Date: 25/09/2026
+
+Concerned products: all James servers exposing WebAdmin
+
+`webadmin.properties` gains a `password.generate` option, defaulting to `true`: when neither `password` nor
+`jwt.enabled` is configured, a random password is generated upon start up and written in the logs. WebAdmin is thus
+no longer unauthenticated out of the box, existing deployments included, and requests lacking the matching `Password`
+header will be rejected.
+
+Deployments relying on an unauthenticated WebAdmin need to either:
+
+ - configure a stable secret with `password` (comma separated values are supported) and send it in the `Password`
+ header of WebAdmin requests,
+ - or explicitly opt back into an unauthenticated WebAdmin:
+
+```
+password.generate=false
+```
+
+Note that the generated password changes upon each restart.
+
+### JAMES-4160 LDAP with spring update
+Date: 13/01/2026
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-4160
+
+Users using Spring in addition with LDAP usersrepository needs to use `org.apache.james.user.ldap.LegacyReadOnlyUsersLDAPRepository` instead.
+
+### Glowroot removal
+
+Date: 25/09/2026
+
+Concerned products: all Guice based James docker images, helm chart
+
+The Glowroot agent is no longer bundled with James docker images. Deployments enabling it (`-javaagent:/root/glowroot.jar`
+within `JAVA_TOOL_OPTIONS`, helm chart `james.env.glowroot.enabled`) need to drop that configuration, and rely on the
+metrics James exposes instead.
+
+## 3.9.0 version
 
 Changes to apply between 3.8.x and 3.9.0 will be reported here.
 
@@ -41,13 +88,6 @@ Change list:
  - [JAMES-1409 Change JPARecipientRewriteTable to store separate record per target address](#james-1409-change-jparecipientrewritetable-to-store-separate-record-per-target-address)
  - [JAMES-4118 Cleanup message previews](#james-4118-cleanup-message-previews)
  - [JAMES-4128 Breaking Mailet API changes](#james-4128-breaking-mailet-api-changes)
-
-### JAMES-4160 LDAP with spring update
-Date: 13/01/2026
-
-JIRA: https://issues.apache.org/jira/browse/JAMES-4160
-
-Users using Spring in addition with LDAP usersrepository needs to use `org.apache.james.user.ldap.LegacyReadOnlyUsersLDAPRepository` instead.
 
 ### JAMES-4128 Breaking Mailet API changes
 Date: 02/04/2025
