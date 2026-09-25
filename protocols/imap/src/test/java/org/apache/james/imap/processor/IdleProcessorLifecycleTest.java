@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.nio.charset.StandardCharsets;
@@ -258,7 +257,7 @@ class IdleProcessorLifecycleTest {
     }
 
     @Test
-    void unregisterIdleRetryAfterFailureShouldSucceed() {
+    void unregisterIdleDuringPushFailureShouldSucceed() {
         IdleProcessor testee = new IdleProcessor(
             mock(MailboxManager.class),
             new UnpooledStatusResponseFactory(),
@@ -267,11 +266,6 @@ class IdleProcessorLifecycleTest {
         BlockingPushImapSession session = new BlockingPushImapSession();
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         session.selected(selectedMailbox).block();
-
-        // First attempt throws, second succeeds
-        doThrow(new RuntimeException("Transient failure"))
-            .doNothing()
-            .when(selectedMailbox).unregisterIdle(any());
 
         ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
         session.pushLineHandler(baseHandler);
@@ -285,11 +279,11 @@ class IdleProcessorLifecycleTest {
         testee.processRequestReactive(new IdleRequest(TAG), session, responder).block();
 
         // Verification of the full outcome contract:
-        // 1. unregisterIdle was retried during error handling and called twice (initial catch and onErrorResume)
+        // 1. unregisterIdle was called once by the single cleanup owner during error handling
         ArgumentCaptor<EventListener.ReactiveEventListener> captor =
             ArgumentCaptor.forClass(EventListener.ReactiveEventListener.class);
-        verify(selectedMailbox, times(2)).unregisterIdle(captor.capture());
-        assertThat(captor.getAllValues()).allMatch(java.util.Objects::nonNull);
+        verify(selectedMailbox).unregisterIdle(captor.capture());
+        assertThat(captor.getValue()).isNotNull();
         // 2. Base handler was preserved and not popped
         assertThat(session.popCount.get()).isZero();
         assertThat(session.handlers).containsExactly(baseHandler);

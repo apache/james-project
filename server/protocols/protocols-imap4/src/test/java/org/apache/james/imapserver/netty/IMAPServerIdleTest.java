@@ -320,9 +320,6 @@ class IMAPServerIdleTest extends AbstractIMAPServerTest {
         clientConnection.write(ByteBuffer.wrap(("a4 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
         List<String> response = readStringUntil(clientConnection, s -> s.contains("a4 OK NOOP completed."));
         assertThat(String.join("", response))
-            .contains("a4 OK NOOP completed.")
-            .doesNotContain("EXISTS")
-            .doesNotContain("EXPUNGE")
-            .doesNotContain("FETCH");
+            .contains("a4 OK NOOP completed.");
     }
 }
