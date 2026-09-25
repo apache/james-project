@@ -133,6 +133,15 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         return false;
     }
 
+    private void cleanupUnregisteredIdle(SelectedMailbox selectedMailbox, EventListener.ReactiveEventListener idleListener,
+                                         AtomicReference<LineHandlerState> lineHandlerState, Sinks.One<Void> idleReadySink) {
+        if (selectedMailbox != null && idleListener != null) {
+            selectedMailbox.unregisterIdle(idleListener);
+        }
+        lineHandlerState.compareAndSet(LineHandlerState.REMOVAL_PENDING, LineHandlerState.REMOVED);
+        idleReadySink.tryEmitEmpty();
+    }
+
     private void idle(IdleRequest request, ImapSession session, Responder safeResponder, SelectedMailbox selectedMailbox,
                       Sinks.One<Void> idleReadySink, AtomicBoolean idleActive, AtomicReference<LineHandlerState> lineHandlerState,
                       AtomicReference<EventListener.ReactiveEventListener> idleListenerRef) {
@@ -151,11 +160,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             }
 
             if (!idleActive.get()) {
-                if (selectedMailbox != null && idleListener != null) {
-                    selectedMailbox.unregisterIdle(idleListener);
-                }
-                lineHandlerState.compareAndSet(LineHandlerState.REMOVAL_PENDING, LineHandlerState.REMOVED);
-                idleReadySink.tryEmitEmpty();
+                cleanupUnregisteredIdle(selectedMailbox, idleListener, lineHandlerState, idleReadySink);
                 return;
             }
 
@@ -208,10 +213,15 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 session.popLineHandler();
             }
         } catch (Exception e) {
-            if (selectedMailbox != null && idleListener != null) {
-                selectedMailbox.unregisterIdle(idleListener);
+            try {
+                if (selectedMailbox != null && idleListener != null) {
+                    selectedMailbox.unregisterIdle(idleListener);
+                }
+            } catch (Exception cleanupException) {
+                e.addSuppressed(cleanupException);
+            } finally {
+                lineHandlerState.set(LineHandlerState.REMOVED);
             }
-            lineHandlerState.set(LineHandlerState.REMOVED);
             throw e;
         }
 

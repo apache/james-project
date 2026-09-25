@@ -74,12 +74,19 @@ class IdleProcessorLifecycleTest {
     }
 
     private static class RecordingResponder implements ImapProcessor.Responder {
+        private final java.util.List<ImapResponseMessage> responses = new java.util.ArrayList<>();
+
         @Override
         public void respond(ImapResponseMessage message) {
+            responses.add(message);
         }
 
         @Override
         public void flush() {
+        }
+
+        public java.util.List<ImapResponseMessage> getResponses() {
+            return responses;
         }
     }
 
@@ -174,9 +181,13 @@ class IdleProcessorLifecycleTest {
         ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
         session.pushLineHandler(baseHandler);
 
-        // Simulate deselect/cleanup happening during registerIdle execution
+        // Simulate concurrent cleanup triggered via listener error event during registerIdle execution
         org.mockito.Mockito.doAnswer(invocation -> {
-            session.deselect().block();
+            org.apache.james.events.EventListener.ReactiveEventListener listener = invocation.getArgument(0);
+            org.apache.james.events.Event mockEvent = mock(org.apache.james.events.Event.class);
+            Mono.from(listener.reactiveEvent(mockEvent))
+                .onErrorResume(e -> Mono.empty())
+                .block();
             return null;
         }).when(selectedMailbox).registerIdle(org.mockito.ArgumentMatchers.any());
 
@@ -207,7 +218,8 @@ class IdleProcessorLifecycleTest {
         org.mockito.Mockito.doThrow(new RuntimeException("Mailbox error"))
             .when(selectedMailbox).registerIdle(org.mockito.ArgumentMatchers.any());
 
-        testee.processRequestReactive(new IdleRequest(TAG), session, new RecordingResponder()).block();
+        RecordingResponder responder = new RecordingResponder();
+        testee.processRequestReactive(new IdleRequest(TAG), session, responder).block();
 
         // Verification:
         // 1. unregisterIdle was called in catch block
@@ -215,6 +227,14 @@ class IdleProcessorLifecycleTest {
         // 2. base handler was not popped
         assertThat(session.popCount.get()).isZero();
         assertThat(session.handlers).containsExactly(baseHandler);
+        // 3. NO response with GENERIC_FAILURE_DURING_PROCESSING sent to client
+        assertThat(responder.getResponses()).hasSize(1);
+        assertThat(responder.getResponses().get(0))
+            .isInstanceOf(org.apache.james.imap.api.message.response.StatusResponse.class);
+        org.apache.james.imap.api.message.response.StatusResponse statusResponse =
+            (org.apache.james.imap.api.message.response.StatusResponse) responder.getResponses().get(0);
+        assertThat(statusResponse.getServerResponseType())
+            .isEqualTo(org.apache.james.imap.api.message.response.StatusResponse.Type.NO);
     }
 }
 
