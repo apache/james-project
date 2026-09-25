@@ -32,11 +32,10 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-
+import org.apache.james.events.EventListener;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponse;
+import org.mockito.ArgumentCaptor;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.SelectedMailbox;
@@ -175,7 +174,7 @@ class IdleProcessorLifecycleTest {
     }
 
     @Test
-    void cleanupDuringRegisterIdleShouldUnregisterListenerAndNotPopHandler() {
+    void exceptionDuringRegisterIdleShouldAbortBeforeInstallingHandler() {
         IdleProcessor testee = new IdleProcessor(
             mock(MailboxManager.class),
             new UnpooledStatusResponseFactory(),
@@ -188,7 +187,7 @@ class IdleProcessorLifecycleTest {
         ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
         session.pushLineHandler(baseHandler);
 
-        // When registerIdle executes, cancel the reactive pipeline to trigger onErrorResume / cleanupIdle
+        // When registerIdle executes, throw exception to simulate registration failure
         doAnswer(invocation -> {
             throw new RuntimeException("Simulated registration abort / disconnect");
         }).when(selectedMailbox).registerIdle(any());
@@ -197,7 +196,10 @@ class IdleProcessorLifecycleTest {
 
         // Verification:
         // 1. unregisterIdle was called to clean up the registered listener
-        verify(selectedMailbox).unregisterIdle(any());
+        ArgumentCaptor<EventListener.ReactiveEventListener> captor =
+            ArgumentCaptor.forClass(EventListener.ReactiveEventListener.class);
+        verify(selectedMailbox).unregisterIdle(captor.capture());
+        assertThat(captor.getValue()).isNotNull();
         // 2. IDLE line handler was never pushed, so baseHandler was not popped
         assertThat(session.popCount.get()).isZero();
         assertThat(session.handlers).containsExactly(baseHandler);
@@ -342,14 +344,17 @@ class IdleProcessorLifecycleTest {
         // 1. popLineHandler() was attempted exactly once
         assertThat(session.popCount.get()).isEqualTo(1);
         // 2. Listener was unregistered
-        verify(selectedMailbox).unregisterIdle(any());
-        // 3. Pipeline completed and emitted the response
+        ArgumentCaptor<EventListener.ReactiveEventListener> captor =
+            ArgumentCaptor.forClass(EventListener.ReactiveEventListener.class);
+        verify(selectedMailbox).unregisterIdle(captor.capture());
+        assertThat(captor.getValue()).isNotNull();
+        // 3. Pipeline completed and emitted the error response due to popLineHandler exception
         assertThat(responder.getResponses()).hasSize(1);
         assertThat(responder.getResponses().get(0))
             .isInstanceOf(StatusResponse.class);
         StatusResponse statusResponse = (StatusResponse) responder.getResponses().get(0);
         assertThat(statusResponse.getServerResponseType())
-            .isEqualTo(StatusResponse.Type.OK);
+            .isEqualTo(StatusResponse.Type.NO);
     }
 }
 
