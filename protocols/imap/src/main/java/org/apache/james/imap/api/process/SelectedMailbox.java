@@ -48,6 +48,8 @@ public interface SelectedMailbox {
 
     void registerIdle(EventListener.ReactiveEventListener idle);
 
+    void unregisterIdle();
+
     /**
      * Unregisters the given IDLE listener only if it matches the currently registered listener.
      * Implementations should override this method to provide identity-safe unregistration
