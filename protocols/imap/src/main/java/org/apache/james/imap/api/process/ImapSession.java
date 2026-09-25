@@ -128,6 +128,15 @@ public interface ImapSession extends CommandDetectionSession {
     }
 
     /**
+     * Return true if the underlying transport connection is currently open and active.
+     *
+     * @return true if connected
+     */
+    default boolean isConnected() {
+        return true;
+    }
+
+    /**
      * Gets the current client state.
      * 
      * @return Returns the current state of this session.
@@ -237,7 +246,9 @@ public interface ImapSession extends CommandDetectionSession {
     boolean startCompression(Runnable runnable);
 
     /**
-     * Push in a new {@link ImapLineHandler} which is called for the next line received
+     * Push in a new {@link ImapLineHandler} which is called for the next line received.
+     * Implementations must ensure that if an exception is thrown during push,
+     * the handler does not remain installed on the session.
      */
     void pushLineHandler(ImapLineHandler lineHandler);
 

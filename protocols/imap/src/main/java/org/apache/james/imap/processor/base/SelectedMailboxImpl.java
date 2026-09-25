@@ -178,6 +178,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     }
 
     @Override
+    public void unregisterIdle(ReactiveEventListener listener) {
+        idleEventListener.compareAndSet(listener, null);
+    }
+
+    @Override
     public boolean isIdling() {
         return idleEventListener.get() != null;
     }
@@ -209,6 +214,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     }
 
     private synchronized void clearInternalStructures() {
+        idleEventListener.set(null);
         uidMsnConverter.clear();
         flagUpdateUids.clear();
 
@@ -402,7 +408,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     public Publisher<Void> reactiveEvent(Event event) {
         return Mono.fromRunnable(() -> synchronizedEvent(event))
             .subscribeOn(Schedulers.boundedElastic())
-            .then(Mono.fromCallable(idleEventListener::get)
+            .then(Mono.defer(() -> Mono.justOrEmpty(idleEventListener.get()))
                 .flatMap(listener -> Mono.from(listener.reactiveEvent(event))));
     }
 
