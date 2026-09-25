@@ -45,4 +45,17 @@ class IdleProcessorSanitizationTest {
         assertThat(IdleProcessor.sanitizeForDisplay(longInput))
             .isEqualTo("12345678901234567890123456789012...");
     }
+
+    @Test
+    void sanitizeForDisplayShouldNotAddEllipsisWhenCleanedStringFitsLimit() {
+        String inputWithManyControlChars = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0HELLO";
+        assertThat(IdleProcessor.sanitizeForDisplay(inputWithManyControlChars))
+            .isEqualTo("HELLO");
+    }
+
+    @Test
+    void sanitizeForDisplayShouldStripNonAsciiCharacters() {
+        assertThat(IdleProcessor.sanitizeForDisplay("DONE\u200B\u00A0тест"))
+            .isEqualTo("DONE");
+    }
 }

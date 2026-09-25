@@ -178,6 +178,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     }
 
     @Override
+    public void unregisterIdle(ReactiveEventListener listener) {
+        idleEventListener.compareAndSet(listener, null);
+    }
+
+    @Override
     public boolean isIdling() {
         return idleEventListener.get() != null;
     }

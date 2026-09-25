@@ -50,6 +50,10 @@ public interface SelectedMailbox {
 
     void unregisterIdle();
 
+    default void unregisterIdle(EventListener.ReactiveEventListener listener) {
+        unregisterIdle();
+    }
+
     boolean isIdling();
 
     /**
