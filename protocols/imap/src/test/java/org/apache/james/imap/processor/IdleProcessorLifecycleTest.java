@@ -32,10 +32,12 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+
 import org.apache.james.events.EventListener;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponse;
-import org.mockito.ArgumentCaptor;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.SelectedMailbox;
@@ -45,6 +47,7 @@ import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import reactor.core.publisher.Mono;
 
@@ -174,38 +177,6 @@ class IdleProcessorLifecycleTest {
     }
 
     @Test
-    void exceptionDuringRegisterIdleShouldAbortBeforeInstallingHandler() {
-        IdleProcessor testee = new IdleProcessor(
-            mock(MailboxManager.class),
-            new UnpooledStatusResponseFactory(),
-            new RecordingMetricFactory());
-
-        BlockingPushImapSession session = new BlockingPushImapSession();
-        SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
-        session.selected(selectedMailbox).block();
-
-        ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
-        session.pushLineHandler(baseHandler);
-
-        // When registerIdle executes, throw exception to simulate registration failure
-        doAnswer(invocation -> {
-            throw new RuntimeException("Simulated registration abort / disconnect");
-        }).when(selectedMailbox).registerIdle(any());
-
-        testee.processRequestReactive(new IdleRequest(TAG), session, new RecordingResponder()).block();
-
-        // Verification:
-        // 1. unregisterIdle was called to clean up the registered listener
-        ArgumentCaptor<EventListener.ReactiveEventListener> captor =
-            ArgumentCaptor.forClass(EventListener.ReactiveEventListener.class);
-        verify(selectedMailbox).unregisterIdle(captor.capture());
-        assertThat(captor.getValue()).isNotNull();
-        // 2. IDLE line handler was never pushed, so baseHandler was not popped
-        assertThat(session.popCount.get()).isZero();
-        assertThat(session.handlers).containsExactly(baseHandler);
-    }
-
-    @Test
     void exceptionDuringRegisterIdleShouldUnregisterListenerAndNotPopHandler() {
         IdleProcessor testee = new IdleProcessor(
             mock(MailboxManager.class),
@@ -226,8 +197,11 @@ class IdleProcessorLifecycleTest {
         testee.processRequestReactive(new IdleRequest(TAG), session, responder).block();
 
         // Verification:
-        // 1. unregisterIdle was called in catch block
-        verify(selectedMailbox).unregisterIdle(any());
+        // 1. unregisterIdle was called to clean up the registered listener
+        ArgumentCaptor<EventListener.ReactiveEventListener> captor =
+            ArgumentCaptor.forClass(EventListener.ReactiveEventListener.class);
+        verify(selectedMailbox).unregisterIdle(captor.capture());
+        assertThat(captor.getValue()).isNotNull();
         // 2. base handler was not popped
         assertThat(session.popCount.get()).isZero();
         assertThat(session.handlers).containsExactly(baseHandler);
