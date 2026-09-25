@@ -109,36 +109,47 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     }
 
     private boolean cleanupIdle(ImapSession session, SelectedMailbox selectedMailbox, AtomicBoolean idleActive,
-                               AtomicReference<LineHandlerState> lineHandlerState, Sinks.One<Void> idleReadySink,
-                               EventListener.ReactiveEventListener idleListener) {
+                                AtomicReference<LineHandlerState> lineHandlerState, Sinks.One<Void> idleReadySink,
+                                EventListener.ReactiveEventListener idleListener) {
         if (idleActive.compareAndSet(true, false)) {
-            if (selectedMailbox != null) {
-                selectedMailbox.unregisterIdle(idleListener);
-            }
-            LineHandlerState previous = lineHandlerState.getAndUpdate(state -> {
-                if (state == LineHandlerState.INSTALLING) {
-                    return LineHandlerState.REMOVAL_PENDING;
+            try {
+                if (selectedMailbox != null) {
+                    selectedMailbox.unregisterIdle(idleListener);
                 }
-                if (state == LineHandlerState.INSTALLED) {
-                    return LineHandlerState.REMOVED;
+            } catch (Exception e) {
+                LOGGER.debug("Failed to unregister IDLE listener", e);
+            } finally {
+                LineHandlerState previous = lineHandlerState.getAndUpdate(state -> {
+                    if (state == LineHandlerState.INSTALLING) {
+                        return LineHandlerState.REMOVAL_PENDING;
+                    }
+                    if (state == LineHandlerState.INSTALLED) {
+                        return LineHandlerState.REMOVED;
+                    }
+                    return state;
+                });
+                if (previous == LineHandlerState.INSTALLED) {
+                    session.popLineHandler();
                 }
-                return state;
-            });
-            if (previous == LineHandlerState.INSTALLED) {
-                session.popLineHandler();
+                idleReadySink.tryEmitEmpty();
             }
-            idleReadySink.tryEmitEmpty();
             return true;
         }
         return false;
     }
 
+    private void unregisterIdleOnce(SelectedMailbox selectedMailbox, EventListener.ReactiveEventListener idleListener,
+                                    AtomicBoolean listenerUnregistered) {
+        if (selectedMailbox != null && idleListener != null && listenerUnregistered.compareAndSet(false, true)) {
+            selectedMailbox.unregisterIdle(idleListener);
+        }
+    }
+
     private void cleanupUnregisteredIdle(SelectedMailbox selectedMailbox, EventListener.ReactiveEventListener idleListener,
-                                         AtomicReference<LineHandlerState> lineHandlerState, Sinks.One<Void> idleReadySink) {
+                                         AtomicReference<LineHandlerState> lineHandlerState, Sinks.One<Void> idleReadySink,
+                                         AtomicBoolean listenerUnregistered) {
         try {
-            if (selectedMailbox != null && idleListener != null) {
-                selectedMailbox.unregisterIdle(idleListener);
-            }
+            unregisterIdleOnce(selectedMailbox, idleListener, listenerUnregistered);
         } finally {
             lineHandlerState.compareAndSet(LineHandlerState.REMOVAL_PENDING, LineHandlerState.REMOVED);
             idleReadySink.tryEmitEmpty();
@@ -153,7 +164,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         }
 
         EventListener.ReactiveEventListener idleListener = null;
-        boolean listenerUnregistered = false;
+        AtomicBoolean listenerUnregistered = new AtomicBoolean(false);
         try {
             if (selectedMailbox != null) {
                 idleListener = new IdleMailboxListener(session, selectedMailbox, safeResponder, idleReadySink, idleActive, lineHandlerState);
@@ -164,15 +175,12 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             }
 
             if (!idleActive.get()) {
-                listenerUnregistered = true;
-                cleanupUnregisteredIdle(selectedMailbox, idleListener, lineHandlerState, idleReadySink);
+                cleanupUnregisteredIdle(selectedMailbox, idleListener, lineHandlerState, idleReadySink, listenerUnregistered);
                 return;
             }
         } catch (Exception e) {
             try {
-                if (!listenerUnregistered && selectedMailbox != null && idleListener != null) {
-                    selectedMailbox.unregisterIdle(idleListener);
-                }
+                unregisterIdleOnce(selectedMailbox, idleListener, listenerUnregistered);
             } catch (Exception cleanupException) {
                 e.addSuppressed(cleanupException);
             } finally {
@@ -232,9 +240,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             }
         } catch (Exception e) {
             try {
-                if (!listenerUnregistered && selectedMailbox != null && idleListener != null) {
-                    selectedMailbox.unregisterIdle(idleListener);
-                }
+                unregisterIdleOnce(selectedMailbox, idleListener, listenerUnregistered);
             } catch (Exception cleanupException) {
                 e.addSuppressed(cleanupException);
             } finally {

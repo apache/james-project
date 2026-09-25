@@ -190,7 +190,7 @@ class IdleProcessorLifecycleTest {
 
         // Simulate concurrent disconnect/cleanup occurring during registerIdle execution without blocking
         doAnswer(invocation -> {
-            session.close();
+            session.deselect().block();
             return null;
         }).when(selectedMailbox).registerIdle(any());
 
@@ -238,5 +238,33 @@ class IdleProcessorLifecycleTest {
         assertThat(statusResponse.getServerResponseType())
             .isEqualTo(StatusResponse.Type.NO);
     }
+
+    @Test
+    void exceptionDuringUnregisterIdleShouldStillCleanUpLineHandlerStateAndSink() {
+        IdleProcessor testee = new IdleProcessor(
+            mock(MailboxManager.class),
+            new UnpooledStatusResponseFactory(),
+            new RecordingMetricFactory());
+
+        ImmediateCallbackImapSession session = new ImmediateCallbackImapSession();
+        SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
+        session.selected(selectedMailbox).block();
+
+        doThrow(new RuntimeException("Unregister failed"))
+            .when(selectedMailbox).unregisterIdle(any());
+
+        ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
+        session.pushLineHandler(baseHandler);
+
+        session.triggerCallbackDuringPush = true;
+
+        testee.processRequestReactive(new IdleRequest(TAG), session, new RecordingResponder()).block();
+
+        // Verification:
+        // 1. popLineHandler() was invoked despite unregisterIdle throwing
+        assertThat(session.popCount.get()).isEqualTo(1);
+        assertThat(session.handlers).containsExactly(baseHandler);
+    }
 }
+
 
