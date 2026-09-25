@@ -66,10 +66,6 @@ public class BlobCompactionAlgorithm {
         this.updaterFactory = Preconditions.checkNotNull(updaterFactory, "'updaterFactory' must not be null");
     }
 
-    public Mono<CompactionResult> compact(CompactionRequest request) {
-        return initialCompact(request);
-    }
-
     public Mono<CompactionResult> initialCompact(CompactionRequest request) {
         Preconditions.checkNotNull(request, "'request' must not be null");
 
