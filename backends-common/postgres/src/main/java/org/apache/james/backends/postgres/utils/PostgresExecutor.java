@@ -33,6 +33,7 @@ import jakarta.inject.Inject;
 import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.TimeoutOnPendingDemand;
 import org.jooq.DSLContext;
 import org.jooq.DeleteResultStep;
 import org.jooq.Record;
@@ -149,7 +150,7 @@ public class PostgresExecutor {
                 connection -> {
                     Flux<Record> recordFlux = dslContext(connection)
                         .flatMapMany(queryFunction)
-                        .timeout(postgresConfiguration.getJooqReactiveTimeout())
+                        .transform(TimeoutOnPendingDemand.of(postgresConfiguration.getJooqReactiveTimeout()))
                         .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
                         .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                             .filter(preparedStatementConflictException()));
@@ -168,7 +169,7 @@ public class PostgresExecutor {
             Flux.usingWhen(getConnection(domain),
                 connection -> dslContext(connection)
                     .flatMapMany(queryFunction)
-                    .timeout(postgresConfiguration.getJooqReactiveTimeout())
+                    .transform(TimeoutOnPendingDemand.of(postgresConfiguration.getJooqReactiveTimeout()))
                     .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                         .filter(preparedStatementConflictException())),

@@ -20,10 +20,12 @@
 package org.apache.james.backends.postgres;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PoolBackedPostgresConnectionFactory;
@@ -47,6 +49,7 @@ import reactor.core.publisher.Mono;
 class PostgresExecutorTimeoutTest {
     private static final Duration JOOQ_REACTIVE_TIMEOUT = Duration.ofMillis(500);
     private static final Duration SLOWER_THAN_TIMEOUT = JOOQ_REACTIVE_TIMEOUT.multipliedBy(2);
+    private static final Duration LONGER_THAN_TIMEOUT_IN_SECONDS = Duration.ofSeconds(60);
     private static final int SINGLE_CONNECTION_POOL = 1;
     private static final int ROW_COUNT = 3;
     private static final int ONE_ROW_AT_A_TIME = 1;
@@ -111,5 +114,15 @@ class PostgresExecutorTimeoutTest {
             .block();
 
         assertThat(ids).containsExactly(1, 2, 3);
+    }
+
+    @Test
+    void executeRowsShouldTimeoutWhenTheDatabaseDoesNotAnswerWhileRowsAreAwaited() {
+        assertThatThrownBy(() -> sleepOnTheDatabaseSide().collectList().block())
+            .hasCauseInstanceOf(TimeoutException.class);
+    }
+
+    private Flux<Record> sleepOnTheDatabaseSide() {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(DSL.field("pg_sleep(" + LONGER_THAN_TIMEOUT_IN_SECONDS.toSeconds() + ")"))));
     }
 }
