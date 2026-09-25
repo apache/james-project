@@ -478,4 +478,20 @@ class SelectedMailboxImplTest {
         selectedMailbox.unregisterIdle(listenerB);
         assertThat(selectedMailbox.isIdling()).isFalse();
     }
+
+    @Test
+    void deselectShouldClearIdleListener() {
+        SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(
+            mailboxManager,
+            eventBus,
+            mock(MailboxSession.class),
+            messageManager);
+
+        EventListener.ReactiveEventListener listener = mock(EventListener.ReactiveEventListener.class);
+        selectedMailbox.registerIdle(listener);
+        assertThat(selectedMailbox.isIdling()).isTrue();
+
+        selectedMailbox.deselect().block();
+        assertThat(selectedMailbox.isIdling()).isFalse();
+    }
 }

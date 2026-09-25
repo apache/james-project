@@ -131,7 +131,9 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         final EventListener.ReactiveEventListener finalIdleListener = idleListener;
         try {
             session.pushLineHandler((session1, data) -> {
-                // Defensive: ensure flag is set even if callback runs concurrently before pushLineHandler returns
+                if (!idleActive.get()) {
+                    return Mono.empty();
+                }
                 lineHandlerInstalled.set(true);
                 if (!cleanupIdle(session1, selectedMailbox, idleActive, lineHandlerInstalled, idleReadySink, finalIdleListener)) {
                     // IDLE was already cleaned up by another thread (heartbeat, disconnect, etc.)
@@ -243,7 +245,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                                    AtomicBoolean idleActive, AtomicBoolean lineHandlerInstalled) {
             this.session = session;
             this.selectedMailbox = selectedMailbox;
-            this.responder = session.threadSafe(responder);
+            this.responder = responder;
             this.idleReadySink = idleReadySink;
             this.idleActive = idleActive;
             this.lineHandlerInstalled = lineHandlerInstalled;
