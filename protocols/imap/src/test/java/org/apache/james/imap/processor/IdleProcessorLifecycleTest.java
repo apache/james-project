@@ -22,9 +22,9 @@ package org.apache.james.imap.processor;
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.nio.charset.StandardCharsets;
@@ -177,7 +177,7 @@ class IdleProcessorLifecycleTest {
     }
 
     @Test
-    void exceptionDuringRegisterIdleShouldUnregisterListenerAndNotPopHandler() {
+    void exceptionDuringRegisterIdleShouldAttemptListenerCleanup() {
         IdleProcessor testee = new IdleProcessor(
             mock(MailboxManager.class),
             new UnpooledStatusResponseFactory(),
@@ -197,7 +197,7 @@ class IdleProcessorLifecycleTest {
         testee.processRequestReactive(new IdleRequest(TAG), session, responder).block();
 
         // Verification:
-        // 1. unregisterIdle was called to clean up the registered listener
+        // 1. unregisterIdle was attempted to clean up a possibly partially registered listener
         ArgumentCaptor<EventListener.ReactiveEventListener> captor =
             ArgumentCaptor.forClass(EventListener.ReactiveEventListener.class);
         verify(selectedMailbox).unregisterIdle(captor.capture());
@@ -240,8 +240,11 @@ class IdleProcessorLifecycleTest {
         // 1. popLineHandler() was invoked despite unregisterIdle throwing
         assertThat(session.popCount.get()).isEqualTo(1);
         assertThat(session.handlers).containsExactly(baseHandler);
-        // 2. unregisterIdle was attempted
-        verify(selectedMailbox).unregisterIdle(any());
+        // 2. unregisterIdle was attempted with non-null listener
+        ArgumentCaptor<EventListener.ReactiveEventListener> captor =
+            ArgumentCaptor.forClass(EventListener.ReactiveEventListener.class);
+        verify(selectedMailbox).unregisterIdle(captor.capture());
+        assertThat(captor.getValue()).isNotNull();
         // 3. Response was delivered cleanly
         assertThat(responder.getResponses()).hasSize(1);
     }
@@ -275,7 +278,10 @@ class IdleProcessorLifecycleTest {
 
         // Verification of the full outcome contract:
         // 1. unregisterIdle was retried during error handling and called twice (initial catch and onErrorResume)
-        verify(selectedMailbox, org.mockito.Mockito.times(2)).unregisterIdle(any());
+        ArgumentCaptor<EventListener.ReactiveEventListener> captor =
+            ArgumentCaptor.forClass(EventListener.ReactiveEventListener.class);
+        verify(selectedMailbox, times(2)).unregisterIdle(captor.capture());
+        assertThat(captor.getAllValues()).allMatch(java.util.Objects::nonNull);
         // 2. Base handler was preserved and not popped
         assertThat(session.popCount.get()).isZero();
         assertThat(session.handlers).containsExactly(baseHandler);

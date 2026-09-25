@@ -246,7 +246,9 @@ public interface ImapSession extends CommandDetectionSession {
     boolean startCompression(Runnable runnable);
 
     /**
-     * Push in a new {@link ImapLineHandler} which is called for the next line received
+     * Push in a new {@link ImapLineHandler} which is called for the next line received.
+     * Implementations must ensure that if an exception is thrown during push,
+     * the handler does not remain installed on the session.
      */
     void pushLineHandler(ImapLineHandler lineHandler);
 
