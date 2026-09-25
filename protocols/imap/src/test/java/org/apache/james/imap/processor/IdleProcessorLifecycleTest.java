@@ -136,7 +136,12 @@ class IdleProcessorLifecycleTest {
         public void pushLineHandler(ImapLineHandler lineHandler) {
             handlers.push(lineHandler);
             if (onPush != null) {
-                onPush.accept(this);
+                try {
+                    onPush.accept(this);
+                } catch (RuntimeException e) {
+                    handlers.pop();
+                    throw e;
+                }
             }
         }
 
@@ -164,8 +169,11 @@ class IdleProcessorLifecycleTest {
         ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
         session.pushLineHandler(baseHandler);
 
-        // When pushLineHandler executes, simulate deselect / cleanup occurring concurrently while in INSTALLING state
-        session.onPush = s -> s.deselect().block();
+        // When pushLineHandler executes, simulate client sending DONE concurrently while in INSTALLING state
+        session.onPush = s -> {
+            ImapLineHandler idleHandler = session.handlers.peek();
+            Mono.from(idleHandler.onLine(s, "DONE\r\n".getBytes(StandardCharsets.US_ASCII))).block();
+        };
 
         testee.processRequestReactive(new IdleRequest(TAG), session, new RecordingResponder()).block();
 
