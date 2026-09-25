@@ -42,13 +42,13 @@
     <dependency>
       <groupId>org.apache.james</groupId>
       <artifactId>james-server-guice-configuration</artifactId>
-      <version>${james.baseVersion}</version>
+      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.james</groupId>
       <artifactId>james-server-lifecycle-api</artifactId>
-      <version>${james.baseVersion}</version>
+      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
