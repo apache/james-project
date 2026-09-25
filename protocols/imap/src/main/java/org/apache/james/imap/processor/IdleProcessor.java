@@ -99,9 +99,9 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             .doFinally(signalType -> idleReadySink.tryEmitEmpty());
     }
 
-    private void cleanupIdle(ImapSession session, SelectedMailbox selectedMailbox, AtomicBoolean idleActive,
-                             AtomicBoolean lineHandlerInstalled, Sinks.One<Void> idleReadySink,
-                             EventListener.ReactiveEventListener idleListener) {
+    private boolean cleanupIdle(ImapSession session, SelectedMailbox selectedMailbox, AtomicBoolean idleActive,
+                               AtomicBoolean lineHandlerInstalled, Sinks.One<Void> idleReadySink,
+                               EventListener.ReactiveEventListener idleListener) {
         if (idleActive.compareAndSet(true, false)) {
             if (selectedMailbox != null) {
                 selectedMailbox.unregisterIdle(idleListener);
@@ -110,15 +110,18 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 session.popLineHandler();
             }
             idleReadySink.tryEmitEmpty();
+            return true;
         }
+        return false;
     }
 
     private void idle(IdleRequest request, ImapSession session, Responder responder, SelectedMailbox selectedMailbox,
                       Sinks.One<Void> idleReadySink, AtomicBoolean idleActive, AtomicBoolean lineHandlerInstalled,
                       AtomicReference<EventListener.ReactiveEventListener> idleListenerRef) {
+        Responder safeResponder = session.threadSafe(responder);
         EventListener.ReactiveEventListener idleListener = null;
         if (selectedMailbox != null) {
-            idleListener = new IdleMailboxListener(session, selectedMailbox, responder, idleReadySink, idleActive, lineHandlerInstalled);
+            idleListener = new IdleMailboxListener(session, selectedMailbox, safeResponder, idleReadySink, idleActive, lineHandlerInstalled);
             idleListenerRef.set(idleListener);
             selectedMailbox.registerIdle(idleListener);
         } else {
@@ -130,7 +133,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             session.pushLineHandler((session1, data) -> {
                 // Defensive: ensure flag is set even if callback runs concurrently before pushLineHandler returns
                 lineHandlerInstalled.set(true);
-                cleanupIdle(session1, selectedMailbox, idleActive, lineHandlerInstalled, idleReadySink, finalIdleListener);
+                if (!cleanupIdle(session1, selectedMailbox, idleActive, lineHandlerInstalled, idleReadySink, finalIdleListener)) {
+                    // IDLE was already cleaned up by another thread (heartbeat, disconnect, etc.)
+                    return Mono.empty();
+                }
                 String line = new String(data, StandardCharsets.US_ASCII).trim();
 
                 if (line.isEmpty() || !session1.isConnected()) {
@@ -139,8 +145,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 }
                 String upper = line.toUpperCase(Locale.ROOT);
                 if (DONE.equals(upper)) {
-                    okComplete(request, responder);
-                    responder.flush();
+                    okComplete(request, safeResponder);
+                    safeResponder.flush();
                     return Mono.empty();
                 }
                 String displayLine = sanitizeForDisplay(line);
@@ -150,8 +156,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                         new HumanReadableText("org.apache.james.imap.INVALID_CONTINUATION",
                             "failed. " + message));
                 LOGGER.debug(message);
-                responder.respond(response);
-                responder.flush();
+                safeResponder.respond(response);
+                safeResponder.flush();
                 return Mono.empty();
             });
             lineHandlerInstalled.set(true);
@@ -161,8 +167,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         }
 
         // Write the response after the listener was added (IMAP-341)
-        responder.respond(new ContinuationResponse(HumanReadableText.IDLING));
-        responder.flush();
+        safeResponder.respond(new ContinuationResponse(HumanReadableText.IDLING));
+        safeResponder.flush();
 
         // Check if we should send heartbeats
         if (enableIdle) {
@@ -183,8 +189,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                         // See IMAP-272
                         try {
                             StatusResponse response = getStatusResponseFactory().untaggedOk(HumanReadableText.HEARTBEAT);
-                            responder.respond(response);
-                            responder.flush();
+                            safeResponder.respond(response);
+                            safeResponder.flush();
 
                             // schedule the heartbeat again for the next interval
                             if (idleActive.get() && session.isConnected() && session.getState() != ImapSessionState.LOGOUT) {
