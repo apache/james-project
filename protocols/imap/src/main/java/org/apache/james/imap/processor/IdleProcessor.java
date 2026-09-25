@@ -134,7 +134,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 if (!idleActive.get()) {
                     return Mono.empty();
                 }
-                lineHandlerInstalled.set(true);
+                lineHandlerInstalled.compareAndSet(false, true);
                 if (!cleanupIdle(session1, selectedMailbox, idleActive, lineHandlerInstalled, idleReadySink, finalIdleListener)) {
                     // IDLE was already cleaned up by another thread (heartbeat, disconnect, etc.)
                     return Mono.empty();
