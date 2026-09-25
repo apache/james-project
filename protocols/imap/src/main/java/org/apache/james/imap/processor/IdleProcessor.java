@@ -120,6 +120,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
         try {
             session.pushLineHandler((session1, data) -> {
+                // Defensive: ensure flag is set even if callback runs concurrently before pushLineHandler returns
                 lineHandlerInstalled.set(true);
                 cleanupIdle(session1, selectedMailbox, idleActive, lineHandlerInstalled, idleReadySink);
                 String line = new String(data, StandardCharsets.US_ASCII).trim();
@@ -128,7 +129,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                     LOGGER.debug("IDLE continuation received empty input or disconnected session.");
                     return Mono.empty();
                 }
-                String upper = line.toUpperCase(Locale.US);
+                String upper = line.toUpperCase(Locale.ROOT);
                 if (DONE.equals(upper)) {
                     okComplete(request, responder);
                     responder.flush();

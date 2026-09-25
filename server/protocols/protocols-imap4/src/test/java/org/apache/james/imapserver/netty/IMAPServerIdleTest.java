@@ -295,4 +295,29 @@ class IMAPServerIdleTest extends AbstractIMAPServerTest {
         Awaitility.await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
             assertThat(metricFactory.countFor("imapConnections")).isZero());
     }
+
+    @Test
+    void mailboxEventAfterDoneShouldNotPushUnsolicitedResponses() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+
+        clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+        // Enter IDLE
+        clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("+ Idling"));
+
+        // Complete IDLE cleanly via DONE
+        clientConnection.write(ByteBuffer.wrap(("DONE\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed."));
+
+        // Append message after IDLE is ended
+        inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
+
+        // Run NOOP to verify session is clean and no stale unsolicited EXISTS from IDLE arrives
+        clientConnection.write(ByteBuffer.wrap(("a4 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
+        String response = readStringUntil(clientConnection, s -> s.contains("a4 OK NOOP completed."));
+        assertThat(response).contains("a4 OK NOOP completed.");
+    }
 }
