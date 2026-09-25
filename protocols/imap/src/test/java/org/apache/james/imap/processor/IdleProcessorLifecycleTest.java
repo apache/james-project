@@ -197,11 +197,9 @@ class IdleProcessorLifecycleTest {
         ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
         session.pushLineHandler(baseHandler);
 
-        // Capture registered listener and simulate concurrent cleanup (e.g. session error/cancellation) during registerIdle
+        // When registerIdle executes, trigger session deselect to de-activate session before pushLineHandler
         doAnswer(invocation -> {
-            org.apache.james.events.EventListener.ReactiveEventListener listener = invocation.getArgument(0);
-            // Simulate error/event triggering listener reactive event failure or disconnect cleanup
-            Mono.from(listener.reactiveEvent(mock(org.apache.james.events.Event.class))).block();
+            session.deselect().block();
             return null;
         }).when(selectedMailbox).registerIdle(any());
 
@@ -309,12 +307,53 @@ class IdleProcessorLifecycleTest {
         RecordingResponder responder = new RecordingResponder();
         testee.processRequestReactive(new IdleRequest(TAG), session, responder).block();
 
-        // Verification:
+        // Verification of the full outcome contract:
         // 1. unregisterIdle was retried during error handling and called twice (initial catch and onErrorResume)
         verify(selectedMailbox, org.mockito.Mockito.times(2)).unregisterIdle(any());
-        // 2. Base handler was preserved
+        // 2. Base handler was preserved and not popped
+        assertThat(session.popCount.get()).isZero();
         assertThat(session.handlers).containsExactly(baseHandler);
-        // 3. Error response sent
+        // 3. Exactly one error response was sent to the client
+        assertThat(responder.getResponses()).hasSize(1);
+        assertThat(responder.getResponses().get(0))
+            .isInstanceOf(StatusResponse.class);
+        StatusResponse statusResponse = (StatusResponse) responder.getResponses().get(0);
+        assertThat(statusResponse.getServerResponseType())
+            .isEqualTo(StatusResponse.Type.NO);
+    }
+
+    @Test
+    void exceptionDuringPopLineHandlerShouldStillCompleteSinkAndPreservePipeline() {
+        IdleProcessor testee = new IdleProcessor(
+            mock(MailboxManager.class),
+            new UnpooledStatusResponseFactory(),
+            new RecordingMetricFactory());
+
+        ImmediateCallbackImapSession session = new ImmediateCallbackImapSession() {
+            @Override
+            public void popLineHandler() {
+                super.popLineHandler();
+                throw new RuntimeException("Faulty popLineHandler");
+            }
+        };
+        SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
+        session.selected(selectedMailbox).block();
+
+        ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
+        session.pushLineHandler(baseHandler);
+
+        session.triggerCallbackDuringPush = true;
+
+        RecordingResponder responder = new RecordingResponder();
+        // Should complete without hanging despite popLineHandler throwing exception
+        testee.processRequestReactive(new IdleRequest(TAG), session, responder).block();
+
+        // Verification:
+        // 1. popLineHandler() was attempted exactly once
+        assertThat(session.popCount.get()).isEqualTo(1);
+        // 2. Listener was unregistered
+        verify(selectedMailbox).unregisterIdle(any());
+        // 3. Pipeline completed and emitted the response
         assertThat(responder.getResponses()).hasSize(1);
     }
 }
