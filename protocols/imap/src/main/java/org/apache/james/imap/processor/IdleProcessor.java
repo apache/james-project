@@ -141,20 +141,25 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         }
 
         EventListener.ReactiveEventListener idleListener = null;
-        if (selectedMailbox != null) {
-            idleListener = new IdleMailboxListener(session, selectedMailbox, safeResponder, idleReadySink, idleActive, lineHandlerState);
-            idleListenerRef.set(idleListener);
-            selectedMailbox.registerIdle(idleListener);
-        } else {
-            idleReadySink.tryEmitEmpty();
-        }
-
-        if (!idleActive.get()) {
-            return;
-        }
-
-        final EventListener.ReactiveEventListener finalIdleListener = idleListener;
         try {
+            if (selectedMailbox != null) {
+                idleListener = new IdleMailboxListener(session, selectedMailbox, safeResponder, idleReadySink, idleActive, lineHandlerState);
+                idleListenerRef.set(idleListener);
+                selectedMailbox.registerIdle(idleListener);
+            } else {
+                idleReadySink.tryEmitEmpty();
+            }
+
+            if (!idleActive.get()) {
+                if (selectedMailbox != null && idleListener != null) {
+                    selectedMailbox.unregisterIdle(idleListener);
+                }
+                lineHandlerState.compareAndSet(LineHandlerState.REMOVAL_PENDING, LineHandlerState.REMOVED);
+                idleReadySink.tryEmitEmpty();
+                return;
+            }
+
+            final EventListener.ReactiveEventListener finalIdleListener = idleListener;
             session.pushLineHandler((session1, data) -> {
                 if (!idleActive.get()) {
                     return Mono.empty();
@@ -203,6 +208,9 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 session.popLineHandler();
             }
         } catch (Exception e) {
+            if (selectedMailbox != null && idleListener != null) {
+                selectedMailbox.unregisterIdle(idleListener);
+            }
             lineHandlerState.set(LineHandlerState.REMOVED);
             throw e;
         }

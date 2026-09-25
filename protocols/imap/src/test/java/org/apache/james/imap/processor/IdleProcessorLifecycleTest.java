@@ -159,4 +159,62 @@ class IdleProcessorLifecycleTest {
         // 2. The IDLE handler was cleaned up and the base handler remained intact
         assertThat(session.handlers).containsExactly(baseHandler);
     }
+
+    @Test
+    void cleanupDuringRegisterIdleShouldUnregisterListenerAndNotPopHandler() {
+        IdleProcessor testee = new IdleProcessor(
+            mock(MailboxManager.class),
+            new UnpooledStatusResponseFactory(),
+            new RecordingMetricFactory());
+
+        BlockingPushImapSession session = new BlockingPushImapSession();
+        SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
+        session.selected(selectedMailbox).block();
+
+        ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
+        session.pushLineHandler(baseHandler);
+
+        // Simulate deselect/cleanup happening during registerIdle execution
+        org.mockito.Mockito.doAnswer(invocation -> {
+            session.deselect().block();
+            return null;
+        }).when(selectedMailbox).registerIdle(org.mockito.ArgumentMatchers.any());
+
+        testee.processRequestReactive(new IdleRequest(TAG), session, new RecordingResponder()).block();
+
+        // Verification:
+        // 1. unregisterIdle was called to clean up the registered listener
+        org.mockito.Mockito.verify(selectedMailbox).unregisterIdle(org.mockito.ArgumentMatchers.any());
+        // 2. IDLE line handler was never pushed, so baseHandler was not popped
+        assertThat(session.popCount.get()).isZero();
+        assertThat(session.handlers).containsExactly(baseHandler);
+    }
+
+    @Test
+    void exceptionDuringRegisterIdleShouldUnregisterListenerAndNotPopHandler() {
+        IdleProcessor testee = new IdleProcessor(
+            mock(MailboxManager.class),
+            new UnpooledStatusResponseFactory(),
+            new RecordingMetricFactory());
+
+        BlockingPushImapSession session = new BlockingPushImapSession();
+        SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
+        session.selected(selectedMailbox).block();
+
+        ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
+        session.pushLineHandler(baseHandler);
+
+        org.mockito.Mockito.doThrow(new RuntimeException("Mailbox error"))
+            .when(selectedMailbox).registerIdle(org.mockito.ArgumentMatchers.any());
+
+        testee.processRequestReactive(new IdleRequest(TAG), session, new RecordingResponder()).block();
+
+        // Verification:
+        // 1. unregisterIdle was called in catch block
+        org.mockito.Mockito.verify(selectedMailbox).unregisterIdle(org.mockito.ArgumentMatchers.any());
+        // 2. base handler was not popped
+        assertThat(session.popCount.get()).isZero();
+        assertThat(session.handlers).containsExactly(baseHandler);
+    }
 }
+
