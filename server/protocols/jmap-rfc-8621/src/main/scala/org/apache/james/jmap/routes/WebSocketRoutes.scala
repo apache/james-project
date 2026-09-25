@@ -20,7 +20,7 @@
 package org.apache.james.jmap.routes
 
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 import java.util.function.Predicate
 import java.util.{Optional, stream}
 
@@ -107,7 +107,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
         .`then`
         .`then`(SMono(httpServerResponse.addHeader(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, "jmap")
           .sendWebsocket((in: WebsocketInbound, out: WebsocketOutbound) => handleWebSocketConnection(mailboxSession)(in, out), websocketServerSpec))))
-      .onErrorResume(throwable => handleHttpHandshakeError(throwable, httpServerResponse))
+      .onErrorResume(throwable => handleHttpHandshakeError(throwable, httpServerRequest, httpServerResponse))
       .asJava()
       .`then`()
 
@@ -196,9 +196,21 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       })
   }
 
-  private def handleHttpHandshakeError(throwable: Throwable, response: HttpServerResponse): SMono[Void] = throwable match {
-    case e: UnauthorizedException => respondDetails(e.addHeaders(response), ProblemDetails.forThrowable(throwable))
-    case _ => respondDetails(response, ProblemDetails.forThrowable(throwable))
+  private def handleHttpHandshakeError(throwable: Throwable, request: HttpServerRequest, response: HttpServerResponse): SMono[Void] =
+    if (isClientDisconnected(request)) {
+      WebSocketRoutes.LOGGER.info("Client disconnected during WebSocket handshake: {}", throwable.getMessage)
+      SMono.empty
+    } else {
+      throwable match {
+        case e: UnauthorizedException => respondDetails(e.addHeaders(response), ProblemDetails.forThrowable(throwable))
+        case _ => respondDetails(response, ProblemDetails.forThrowable(throwable))
+      }
+    }
+
+  private def isClientDisconnected(request: HttpServerRequest): Boolean = {
+    val disconnected = new AtomicBoolean(false)
+    request.withConnection(connection => disconnected.set(connection.isDisposed || !connection.channel().isActive))
+    disconnected.get()
   }
 
   private def asError(requestId: Option[RequestId])(throwable: Throwable): WebSocketError =
