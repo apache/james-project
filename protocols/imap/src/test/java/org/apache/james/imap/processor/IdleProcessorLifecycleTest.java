@@ -124,19 +124,10 @@ class IdleProcessorLifecycleTest {
         private final Deque<ImapLineHandler> handlers = new ArrayDeque<>();
         private final AtomicInteger popCount = new AtomicInteger();
         private Consumer<FakeImapSession> onPush;
-        private Consumer<FakeImapSession> onDeselect;
 
         @Override
         public ImapProcessor.Responder threadSafe(ImapProcessor.Responder responder) {
             return responder;
-        }
-
-        @Override
-        public Mono<Void> deselect() {
-            if (onDeselect != null) {
-                onDeselect.accept(this);
-            }
-            return super.deselect();
         }
 
         @Override
@@ -197,10 +188,9 @@ class IdleProcessorLifecycleTest {
         ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
         session.pushLineHandler(baseHandler);
 
-        // When registerIdle executes, trigger session deselect to de-activate session before pushLineHandler
+        // When registerIdle executes, cancel the reactive pipeline to trigger onErrorResume / cleanupIdle
         doAnswer(invocation -> {
-            session.deselect().block();
-            return null;
+            throw new RuntimeException("Simulated registration abort / disconnect");
         }).when(selectedMailbox).registerIdle(any());
 
         testee.processRequestReactive(new IdleRequest(TAG), session, new RecordingResponder()).block();
@@ -355,6 +345,11 @@ class IdleProcessorLifecycleTest {
         verify(selectedMailbox).unregisterIdle(any());
         // 3. Pipeline completed and emitted the response
         assertThat(responder.getResponses()).hasSize(1);
+        assertThat(responder.getResponses().get(0))
+            .isInstanceOf(StatusResponse.class);
+        StatusResponse statusResponse = (StatusResponse) responder.getResponses().get(0);
+        assertThat(statusResponse.getServerResponseType())
+            .isEqualTo(StatusResponse.Type.OK);
     }
 }
 
