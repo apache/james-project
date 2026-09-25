@@ -20,7 +20,6 @@
 package org.apache.james.user.postgres;
 
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.EAGER_FETCH;
 import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.ALGORITHM;
 import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.AUTHORIZED_USERS;
 import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.DELEGATED_USERS;
@@ -46,6 +45,7 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.DefaultUser;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -142,9 +142,7 @@ public class PostgresUsersDAO implements UsersDAO {
 
     @Override
     public Flux<Username> listReactive() {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(USERNAME)
-                .from(TABLE_NAME)), EAGER_FETCH)
-            .map(record -> Username.of(record.get(USERNAME)));
+        return listUsernames(DSL.noCondition());
     }
 
     @Override
@@ -153,10 +151,15 @@ public class PostgresUsersDAO implements UsersDAO {
             return listReactive();
         }
         String domainPattern = "%@" + domain.asString();
-        return postgresExecutor.executeRows(dslContext -> Flux.from(
-                dslContext.select(USERNAME)
-                    .from(TABLE_NAME)
-                    .where(USERNAME.like(domainPattern))), EAGER_FETCH)
+        return listUsernames(USERNAME.like(domainPattern));
+    }
+
+    private Flux<Username> listUsernames(Condition condition) {
+        return postgresExecutor.executeRowsPaginated((dslContext, lastRecord) -> dslContext.select(USERNAME)
+                .from(TABLE_NAME)
+                .where(condition)
+                .and(lastRecord.map(record -> USERNAME.greaterThan(record.get(USERNAME))).orElseGet(DSL::noCondition))
+                .orderBy(USERNAME))
             .map(record -> Username.of(record.get(USERNAME)));
     }
 

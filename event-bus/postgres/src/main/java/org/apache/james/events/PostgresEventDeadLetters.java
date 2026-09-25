@@ -28,6 +28,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.jooq.Record;
+import org.jooq.impl.DSL;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
@@ -99,10 +100,12 @@ public class PostgresEventDeadLetters implements EventDeadLetters {
     public Flux<InsertionId> failedIds(Group registeredGroup) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
 
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext
-            .select(INSERTION_ID)
-            .from(TABLE_NAME)
-            .where(GROUP.eq(registeredGroup.asString()))))
+        return postgresExecutor.executeRowsPaginated((dslContext, lastRecord) -> dslContext
+                .select(INSERTION_ID)
+                .from(TABLE_NAME)
+                .where(GROUP.eq(registeredGroup.asString()))
+                .and(lastRecord.map(record -> INSERTION_ID.greaterThan(record.get(INSERTION_ID))).orElseGet(DSL::noCondition))
+                .orderBy(INSERTION_ID))
             .map(record -> InsertionId.of(record.get(INSERTION_ID)));
     }
 

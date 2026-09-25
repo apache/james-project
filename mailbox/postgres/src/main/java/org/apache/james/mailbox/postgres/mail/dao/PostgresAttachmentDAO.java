@@ -34,6 +34,7 @@ import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresAttachmentDataDefinition.PostgresAttachmentTable;
+import org.jooq.impl.DSL;
 
 import com.google.common.collect.ImmutableList;
 
@@ -120,8 +121,10 @@ public class PostgresAttachmentDAO {
     }
 
     public Flux<BlobId> listBlobs() {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(PostgresAttachmentTable.BLOB_ID)
-                .from(PostgresAttachmentTable.TABLE_NAME)))
+        return postgresExecutor.executeRowsPaginated((dslContext, lastRecord) -> dslContext.select(PostgresAttachmentTable.ID, PostgresAttachmentTable.BLOB_ID)
+                .from(PostgresAttachmentTable.TABLE_NAME)
+                .where(lastRecord.map(record -> PostgresAttachmentTable.ID.greaterThan(record.get(PostgresAttachmentTable.ID))).orElseGet(DSL::noCondition))
+                .orderBy(PostgresAttachmentTable.ID))
             .map(row -> blobIdFactory.parse(row.get(PostgresAttachmentTable.BLOB_ID)));
     }
 }

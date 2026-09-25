@@ -73,6 +73,7 @@ import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.jooq.Record;
+import org.jooq.impl.DSL;
 import org.jooq.postgres.extensions.types.Hstore;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -210,9 +211,11 @@ public class PostgresMailRepositoryContentDAO {
     }
 
     private Flux<MailKey> listMailKeys(MailRepositoryUrl url) {
-        return postgresExecutor.executeRows(context -> Flux.from(context.select(KEY)
+        return postgresExecutor.executeRowsPaginated((context, lastRecord) -> context.select(KEY)
                 .from(TABLE_NAME)
-                .where(URL.eq(url.asString()))))
+                .where(URL.eq(url.asString()))
+                .and(lastRecord.map(record -> KEY.greaterThan(record.get(KEY))).orElseGet(DSL::noCondition))
+                .orderBy(KEY))
             .map(record -> new MailKey(record.get(KEY)));
     }
 
@@ -348,8 +351,10 @@ public class PostgresMailRepositoryContentDAO {
     }
 
     public Flux<BlobId> listBlobs() {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(HEADER_BLOB_ID, BODY_BLOB_ID)
-                .from(TABLE_NAME)))
+        return postgresExecutor.executeRowsPaginated((dslContext, lastRecord) -> dslContext.select(URL, KEY, HEADER_BLOB_ID, BODY_BLOB_ID)
+                .from(TABLE_NAME)
+                .where(lastRecord.map(record -> DSL.row(URL, KEY).greaterThan(record.get(URL), record.get(KEY))).orElseGet(DSL::noCondition))
+                .orderBy(URL, KEY))
             .flatMapIterable(record -> ImmutableList.of(blobIdFactory.parse(record.get(HEADER_BLOB_ID)), blobIdFactory.parse(record.get(BODY_BLOB_ID))));
     }
 }

@@ -23,8 +23,10 @@ import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.field;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -39,6 +41,7 @@ import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.SQLDialect;
 import org.jooq.SelectConditionStep;
+import org.jooq.SelectLimitStep;
 import org.jooq.conf.Settings;
 import org.jooq.conf.StatementType;
 import org.jooq.impl.DSL;
@@ -161,6 +164,41 @@ public class PostgresExecutor {
                     }
                 },
                 jamesPostgresConnectionFactory::closeConnection)));
+    }
+
+    /**
+     * Streams a potentially large result set using keyset pagination.
+     * <p>
+     * Each page is a short query, fully read before being emitted: the connection is released between pages, no cursor nor
+     * transaction is held open, and the next page is only fetched upon downstream demand. This makes it safe for slow
+     * consumers (throttled tasks, re-indexing...) while keeping memory bounded to a couple of pages.
+     * <p>
+     * Streaming a single query instead would hold a connection (and a Postgres snapshot) for the whole duration of the
+     * consumption, and would trip the reactive timeout as soon as the consumer pauses for longer than it.
+     *
+     * @param pageQuery builds the query for a page given the last record of the previous page (empty for the first page).
+     *                  It MUST order results by a unique key and filter records strictly after the given record for that key.
+     *                  The limit is applied by this method.
+     */
+    public Flux<Record> executeRowsPaginated(BiFunction<DSLContext, Optional<Record>, SelectLimitStep<? extends Record>> pageQuery) {
+        return executeRowsPaginated(pageQuery, PostgresUtils.QUERY_BATCH_SIZE);
+    }
+
+    public Flux<Record> executeRowsPaginated(BiFunction<DSLContext, Optional<Record>, SelectLimitStep<? extends Record>> pageQuery, int pageSize) {
+        return Flux.defer(() -> executePage(pageQuery, Optional.empty(), pageSize))
+            .expand(page -> {
+                if (page.size() < pageSize) {
+                    return Mono.empty();
+                }
+                return executePage(pageQuery, Optional.of(page.getLast()), pageSize);
+            })
+            // prefetch 1 page: do not read ahead more than what is needed
+            .concatMapIterable(Function.identity(), 1);
+    }
+
+    private Mono<List<Record>> executePage(BiFunction<DSLContext, Optional<Record>, SelectLimitStep<? extends Record>> pageQuery, Optional<Record> lastRecord, int pageSize) {
+        return executeRows(dslContext -> Flux.from(pageQuery.apply(dslContext, lastRecord).limit(pageSize)))
+            .collectList();
     }
 
     public Flux<Record> executeDeleteAndReturnList(Function<DSLContext, DeleteResultStep<Record>> queryFunction) {
