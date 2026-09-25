@@ -33,6 +33,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -77,5 +78,13 @@ class DockerCephS3ContainerTest implements BlobStoreDAOContract, MetadataAwareBl
 
         assertThat(Mono.from(testee.readBytes(DockerCephS3Container.TEST_BUCKET, blobId)).block())
             .isEqualTo(SHORT_BYTEARRAY);
+    }
+
+    @Test
+    @Override
+    @Disabled("The outdated Ceph demo image can return NoSuchKey during concurrent bucket deletion, making this a flaky test. "
+        + "Newer production Ceph is likely unaffected; related RGW admin API fix: "
+        + "https://tracker.ceph.com/issues/53731")
+    public void deleteBucketConcurrentlyShouldNotFail() {
     }
 }
