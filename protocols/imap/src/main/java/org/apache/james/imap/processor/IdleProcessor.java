@@ -119,8 +119,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         EventListener.ReactiveEventListener idleListener = null;
         if (selectedMailbox != null) {
             idleListener = new IdleMailboxListener(session, selectedMailbox, responder, idleReadySink, idleActive, lineHandlerInstalled);
-            idleListenerRef.set(idleListener);
             selectedMailbox.registerIdle(idleListener);
+            idleListenerRef.set(idleListener);
         } else {
             idleReadySink.tryEmitEmpty();
         }
