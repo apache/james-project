@@ -1,0 +1,42 @@
+---
+layout: post
+title:  "Apache James Server 3.9.1"
+date:   2026-09-25  01:16:30 +0200
+categories: james update
+---
+
+The Apache James developers are pleased to announce James server 3.9.1 release.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+The Apache James PMC would like to thank all contributors who made this release possible!
+
+## Announcement
+
+This maintenance release brings numerous bug fixes, security enhancements and dependency upgrades to the 3.9.x line.
+
+**Breaking change**: WebAdmin now generates a random password upon start up when none is configured, and logs it
+(`password.generate`, defaults to `true`). WebAdmin is thus no longer unauthenticated out of the box, existing
+deployments included. Please read the [upgrade instructions][upgrade] before upgrading.
+
+Highlights of this release include:
+
+- Several enhancements: Stricter Sieve script name and WebPush
+target validation, OIDC SASL `aud` validation without introspection, as well as the upgrade of numerous dependencies
+(Netty, ActiveMQ / Artemis, Log4J, Logback, BouncyCastle, Jackson, jsoup...).
+- JMAP filtering rules gain a `moveTo` action, flag and date based criteria, and can be applied on existing mailboxes
+through WebAdmin.
+- JMAP: `Blob/copy`, negative ACLs, and `Email/set` updates combining move and flag changes.
+- Customizable SMTP replies.
+- Numerous stability fixes for the distributed server: mailbox and user rename, Cassandra inconsistencies solving,
+task manager, IMAP pipelining and deleted message vault.
+- The Glowroot agent is no longer bundled with James docker images.
+
+## Release changelog
+
+The full changes included in this release can be seen in the [CHANGELOG][CHANGELOG].
+
+[CHANGELOG]: https://github.com/apache/james-project/blob/master/CHANGELOG.md#391---2026-09-25
+[upgrade]: https://github.com/apache/james-project/blob/master/upgrade-instructions.md#391-version
+[tracker]: https://issues.apache.org/jira/browse/JAMES
+[download]: http://james.apache.org/download.cgi#Apache_James_Server
