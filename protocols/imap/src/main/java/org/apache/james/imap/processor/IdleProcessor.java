@@ -69,6 +69,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         NOT_INSTALLED,
         INSTALLING,
         INSTALLED,
+        REMOVAL_PENDING,
         REMOVED
     }
 
@@ -114,7 +115,16 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             if (selectedMailbox != null) {
                 selectedMailbox.unregisterIdle(idleListener);
             }
-            if (lineHandlerState.getAndSet(LineHandlerState.REMOVED) == LineHandlerState.INSTALLED) {
+            LineHandlerState previous = lineHandlerState.getAndUpdate(state -> {
+                if (state == LineHandlerState.INSTALLING) {
+                    return LineHandlerState.REMOVAL_PENDING;
+                }
+                if (state == LineHandlerState.INSTALLED) {
+                    return LineHandlerState.REMOVED;
+                }
+                return state;
+            });
+            if (previous == LineHandlerState.INSTALLED) {
                 session.popLineHandler();
             }
             idleReadySink.tryEmitEmpty();
@@ -170,16 +180,20 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 safeResponder.flush();
                 return Mono.empty();
             });
-            LineHandlerState previous = lineHandlerState.getAndUpdate(state ->
-                state == LineHandlerState.INSTALLING ? LineHandlerState.INSTALLED : state);
-            if (previous == LineHandlerState.REMOVED || !idleActive.get()) {
-                // IDLE was deactivated (cleanupIdle called) while pushLineHandler was in progress;
-                // cleanupIdle couldn't pop the handler because pushLineHandler had not completed yet,
-                // so pop it now if it has not already been popped.
-                if (lineHandlerState.getAndSet(LineHandlerState.REMOVED) == LineHandlerState.INSTALLED
-                    || previous == LineHandlerState.REMOVED) {
-                    session.popLineHandler();
+            LineHandlerState previous = lineHandlerState.getAndUpdate(state -> {
+                if (state == LineHandlerState.INSTALLING) {
+                    return LineHandlerState.INSTALLED;
                 }
+                if (state == LineHandlerState.REMOVAL_PENDING) {
+                    return LineHandlerState.REMOVED;
+                }
+                return state;
+            });
+            if (previous == LineHandlerState.REMOVAL_PENDING) {
+                // cleanupIdle was called while pushLineHandler was in progress;
+                // cleanupIdle couldn't pop the handler because pushLineHandler had not completed yet,
+                // so pop it now that pushLineHandler has completed.
+                session.popLineHandler();
             }
         } catch (Exception e) {
             lineHandlerState.set(LineHandlerState.REMOVED);

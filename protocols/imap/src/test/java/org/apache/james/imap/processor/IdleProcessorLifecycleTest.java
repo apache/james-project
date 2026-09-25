@@ -32,6 +32,7 @@ import java.util.function.Consumer;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapProcessor;
+import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.IdleRequest;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
@@ -140,13 +141,15 @@ class IdleProcessorLifecycleTest {
             new RecordingMetricFactory());
 
         BlockingPushImapSession session = new BlockingPushImapSession();
+        SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
+        session.selected(selectedMailbox).block();
 
         // Push another dummy handler before IDLE to ensure IdleProcessor doesn't pop foreign handlers
         ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
         session.pushLineHandler(baseHandler);
 
-        // When pushLineHandler executes, simulate session disconnect / cleanup happening concurrently
-        session.onPush = s -> s.close();
+        // When pushLineHandler executes, simulate deselect / cleanup occurring concurrently while in INSTALLING state
+        session.onPush = s -> s.deselect().block();
 
         testee.processRequestReactive(new IdleRequest(TAG), session, new RecordingResponder()).block();
 
