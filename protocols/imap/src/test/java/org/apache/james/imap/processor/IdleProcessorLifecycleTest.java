@@ -21,15 +21,24 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
+import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.SelectedMailbox;
@@ -74,7 +83,7 @@ class IdleProcessorLifecycleTest {
     }
 
     private static class RecordingResponder implements ImapProcessor.Responder {
-        private final java.util.List<ImapResponseMessage> responses = new java.util.ArrayList<>();
+        private final List<ImapResponseMessage> responses = new CopyOnWriteArrayList<>();
 
         @Override
         public void respond(ImapResponseMessage message) {
@@ -85,7 +94,7 @@ class IdleProcessorLifecycleTest {
         public void flush() {
         }
 
-        public java.util.List<ImapResponseMessage> getResponses() {
+        public List<ImapResponseMessage> getResponses() {
             return responses;
         }
     }
@@ -181,21 +190,17 @@ class IdleProcessorLifecycleTest {
         ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
         session.pushLineHandler(baseHandler);
 
-        // Simulate concurrent cleanup triggered via listener error event during registerIdle execution
-        org.mockito.Mockito.doAnswer(invocation -> {
-            org.apache.james.events.EventListener.ReactiveEventListener listener = invocation.getArgument(0);
-            org.apache.james.events.Event mockEvent = mock(org.apache.james.events.Event.class);
-            Mono.from(listener.reactiveEvent(mockEvent))
-                .onErrorResume(e -> Mono.empty())
-                .block();
+        // Simulate concurrent disconnect/cleanup occurring during registerIdle execution without blocking
+        doAnswer(invocation -> {
+            session.close();
             return null;
-        }).when(selectedMailbox).registerIdle(org.mockito.ArgumentMatchers.any());
+        }).when(selectedMailbox).registerIdle(any());
 
         testee.processRequestReactive(new IdleRequest(TAG), session, new RecordingResponder()).block();
 
         // Verification:
         // 1. unregisterIdle was called to clean up the registered listener
-        org.mockito.Mockito.verify(selectedMailbox).unregisterIdle(org.mockito.ArgumentMatchers.any());
+        verify(selectedMailbox).unregisterIdle(any());
         // 2. IDLE line handler was never pushed, so baseHandler was not popped
         assertThat(session.popCount.get()).isZero();
         assertThat(session.handlers).containsExactly(baseHandler);
@@ -215,26 +220,25 @@ class IdleProcessorLifecycleTest {
         ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
         session.pushLineHandler(baseHandler);
 
-        org.mockito.Mockito.doThrow(new RuntimeException("Mailbox error"))
-            .when(selectedMailbox).registerIdle(org.mockito.ArgumentMatchers.any());
+        doThrow(new RuntimeException("Mailbox error"))
+            .when(selectedMailbox).registerIdle(any());
 
         RecordingResponder responder = new RecordingResponder();
         testee.processRequestReactive(new IdleRequest(TAG), session, responder).block();
 
         // Verification:
         // 1. unregisterIdle was called in catch block
-        org.mockito.Mockito.verify(selectedMailbox).unregisterIdle(org.mockito.ArgumentMatchers.any());
+        verify(selectedMailbox).unregisterIdle(any());
         // 2. base handler was not popped
         assertThat(session.popCount.get()).isZero();
         assertThat(session.handlers).containsExactly(baseHandler);
         // 3. NO response with GENERIC_FAILURE_DURING_PROCESSING sent to client
         assertThat(responder.getResponses()).hasSize(1);
         assertThat(responder.getResponses().get(0))
-            .isInstanceOf(org.apache.james.imap.api.message.response.StatusResponse.class);
-        org.apache.james.imap.api.message.response.StatusResponse statusResponse =
-            (org.apache.james.imap.api.message.response.StatusResponse) responder.getResponses().get(0);
+            .isInstanceOf(StatusResponse.class);
+        StatusResponse statusResponse = (StatusResponse) responder.getResponses().get(0);
         assertThat(statusResponse.getServerResponseType())
-            .isEqualTo(org.apache.james.imap.api.message.response.StatusResponse.Type.NO);
+            .isEqualTo(StatusResponse.Type.NO);
     }
 }
 

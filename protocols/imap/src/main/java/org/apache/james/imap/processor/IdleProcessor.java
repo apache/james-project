@@ -135,11 +135,14 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
     private void cleanupUnregisteredIdle(SelectedMailbox selectedMailbox, EventListener.ReactiveEventListener idleListener,
                                          AtomicReference<LineHandlerState> lineHandlerState, Sinks.One<Void> idleReadySink) {
-        if (selectedMailbox != null && idleListener != null) {
-            selectedMailbox.unregisterIdle(idleListener);
+        try {
+            if (selectedMailbox != null && idleListener != null) {
+                selectedMailbox.unregisterIdle(idleListener);
+            }
+        } finally {
+            lineHandlerState.compareAndSet(LineHandlerState.REMOVAL_PENDING, LineHandlerState.REMOVED);
+            idleReadySink.tryEmitEmpty();
         }
-        lineHandlerState.compareAndSet(LineHandlerState.REMOVAL_PENDING, LineHandlerState.REMOVED);
-        idleReadySink.tryEmitEmpty();
     }
 
     private void idle(IdleRequest request, ImapSession session, Responder safeResponder, SelectedMailbox selectedMailbox,
@@ -150,6 +153,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         }
 
         EventListener.ReactiveEventListener idleListener = null;
+        boolean listenerUnregistered = false;
         try {
             if (selectedMailbox != null) {
                 idleListener = new IdleMailboxListener(session, selectedMailbox, safeResponder, idleReadySink, idleActive, lineHandlerState);
@@ -160,6 +164,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             }
 
             if (!idleActive.get()) {
+                listenerUnregistered = true;
                 cleanupUnregisteredIdle(selectedMailbox, idleListener, lineHandlerState, idleReadySink);
                 return;
             }
@@ -214,7 +219,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             }
         } catch (Exception e) {
             try {
-                if (selectedMailbox != null && idleListener != null) {
+                if (!listenerUnregistered && selectedMailbox != null && idleListener != null) {
                     selectedMailbox.unregisterIdle(idleListener);
                 }
             } catch (Exception cleanupException) {
