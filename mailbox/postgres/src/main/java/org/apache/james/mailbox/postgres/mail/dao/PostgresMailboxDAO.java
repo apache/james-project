@@ -253,7 +253,9 @@ public class PostgresMailboxDAO {
     }
 
     public Flux<PostgresMailbox> getAll() {
-        return postgresExecutor.executeRows(dsl -> Flux.from(dsl.selectFrom(TABLE_NAME)))
+        return postgresExecutor.executeRowsPaginated((dsl, lastRecord) -> dsl.selectFrom(TABLE_NAME)
+                .where(lastRecord.map(record -> MAILBOX_ID.greaterThan(record.get(MAILBOX_ID))).orElseGet(DSL::noCondition))
+                .orderBy(MAILBOX_ID))
             .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION);
     }
 

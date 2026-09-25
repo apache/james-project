@@ -64,7 +64,6 @@ import jakarta.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
-import org.apache.james.backends.postgres.utils.PostgresUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -118,8 +117,6 @@ public class PostgresMailboxMessageDAO {
 
     public static final SortField<Long> DEFAULT_SORT_ORDER_BY = MESSAGE_UID.asc();
 
-    private static final int QUERY_BATCH_SIZE = PostgresUtils.QUERY_BATCH_SIZE;
-
     private final PostgresExecutor postgresExecutor;
 
     public PostgresMailboxMessageDAO(PostgresExecutor postgresExecutor) {
@@ -137,32 +134,20 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<MessageUid> listUnseen(PostgresMailboxId mailboxId) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
-                .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq((mailboxId.asUuid())))
-                .and(IS_SEEN.eq(false))
-                .orderBy(DEFAULT_SORT_ORDER_BY)), EAGER_FETCH)
-            .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+        return listUidsPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+            .and(IS_SEEN.eq(false)));
     }
 
     public Flux<MessageUid> listUnseen(PostgresMailboxId mailboxId, MessageRange range) {
         return switch (range.getType()) {
             case ALL -> listUnseen(mailboxId);
-            case FROM -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
-                    .from(TABLE_NAME)
-                    .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                    .and(IS_SEEN.eq(false))
-                    .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
-                    .orderBy(DEFAULT_SORT_ORDER_BY)), EAGER_FETCH)
-                .map(RECORD_TO_MESSAGE_UID_FUNCTION);
-            case RANGE -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
-                    .from(TABLE_NAME)
-                    .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                    .and(IS_SEEN.eq(false))
-                    .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
-                    .and(MESSAGE_UID.lessOrEqual(range.getUidTo().asLong()))
-                    .orderBy(DEFAULT_SORT_ORDER_BY)), EAGER_FETCH)
-                .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+            case FROM -> listUidsPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+                .and(IS_SEEN.eq(false))
+                .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong())));
+            case RANGE -> listUidsPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+                .and(IS_SEEN.eq(false))
+                .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
+                .and(MESSAGE_UID.lessOrEqual(range.getUidTo().asLong())));
             case ONE -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
                     .from(TABLE_NAME)
                     .where(MAILBOX_ID.eq(mailboxId.asUuid()))
@@ -177,20 +162,12 @@ public class PostgresMailboxMessageDAO {
         if (!StoreMessageManager.HANDLE_RECENT) {
             return Flux.empty();
         }
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
-                .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq((mailboxId.asUuid())))
-                .and(IS_RECENT.eq(true))
-                .orderBy(DEFAULT_SORT_ORDER_BY)), EAGER_FETCH)
-            .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+        return listUidsPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+            .and(IS_RECENT.eq(true)));
     }
 
     public Flux<MessageUid> listAllMessageUid(PostgresMailboxId mailboxId) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
-                .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq((mailboxId.asUuid())))
-                .orderBy(DEFAULT_SORT_ORDER_BY)), EAGER_FETCH)
-            .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+        return listUidsPaginated(MAILBOX_ID.eq(mailboxId.asUuid()));
     }
 
     public Flux<MessageUid> listUids(PostgresMailboxId mailboxId, MessageRange range) {
@@ -201,13 +178,23 @@ public class PostgresMailboxMessageDAO {
     }
 
     private Flux<MessageUid> doListUids(PostgresMailboxId mailboxId, MessageRange range) {
-        return  postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
+        return listUidsPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+            .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
+            .and(MESSAGE_UID.lessOrEqual(range.getUidTo().asLong())));
+    }
+
+    private Flux<MessageUid> listUidsPaginated(Condition condition) {
+        return postgresExecutor.executeRowsPaginated((dslContext, lastRecord) -> dslContext.select(MESSAGE_UID)
                 .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
-                .and(MESSAGE_UID.lessOrEqual(range.getUidTo().asLong()))
-                .orderBy(DEFAULT_SORT_ORDER_BY)), EAGER_FETCH)
+                .where(condition)
+                .and(afterUid(lastRecord))
+                .orderBy(DEFAULT_SORT_ORDER_BY))
             .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+    }
+
+    private static Condition afterUid(Optional<Record> lastRecord) {
+        return lastRecord.map(record -> MESSAGE_UID.greaterThan(record.get(MESSAGE_UID)))
+            .orElseGet(DSL::noCondition);
     }
 
     public Mono<MessageMetaData> deleteByMailboxIdAndMessageUid(PostgresMailboxId mailboxId, MessageUid messageUid) {
@@ -277,66 +264,30 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<Pair<SimpleMailboxMessage.Builder, Record>> findMessagesByMailboxId(PostgresMailboxId mailboxId, Limit limit, MessageMapper.FetchType fetchType) {
-        if (limit.isUnlimited()) {
-            return Flux.defer(() -> findMessagesByMailboxIdBatch(mailboxId, fetchType, Optional.empty(), QUERY_BATCH_SIZE))
-                .expand(messages -> {
-                    if (messages.isEmpty() || messages.size() < QUERY_BATCH_SIZE) {
-                        return Mono.empty();
-                    }
-                    return findMessagesByMailboxIdBatch(mailboxId, fetchType, Optional.of(messages.getLast().getRight().get(MESSAGE_UID)), QUERY_BATCH_SIZE);
-                })
-                .flatMapIterable(Function.identity());
-        } else {
-            return findMessagesByMailboxIdBatch(mailboxId, fetchType, Optional.empty(), limit.getLimit().get())
-                .flatMapIterable(Function.identity());
-        }
-    }
-
-    private Mono<List<Pair<SimpleMailboxMessage.Builder, Record>>> findMessagesByMailboxIdBatch(PostgresMailboxId mailboxId, MessageMapper.FetchType fetchType,
-                                                                                                Optional<Long> messageUidFrom, int batchSize) {
-        PostgresMailboxMessageFetchStrategy fetchStrategy = FETCH_TYPE_TO_FETCH_STRATEGY.apply(fetchType);
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(fetchStrategy.fetchFields())
-                .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(messageUidFrom.map(MESSAGE_UID::greaterThan).orElseGet(DSL::noCondition))
-                .orderBy(MESSAGE_UID.asc())
-                .limit(batchSize)))
-            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record))
-            .collectList()
-            .switchIfEmpty(Mono.just(ImmutableList.of()));
+        return findMessagesPaginated(MAILBOX_ID.eq(mailboxId.asUuid()), limit, fetchType);
     }
 
     public Flux<Pair<SimpleMailboxMessage.Builder, Record>> findMessagesByMailboxIdAndBetweenUIDs(PostgresMailboxId mailboxId, MessageUid from, MessageUid to, Limit limit, FetchType fetchType) {
-        if (limit.isUnlimited()) {
-            return Flux.defer(() -> findMessagesByMailboxIdAndBetweenUIDsBatch(mailboxId, MESSAGE_UID.greaterOrEqual(from.asLong()), to, fetchType, QUERY_BATCH_SIZE))
-                .expand(messages -> {
-                    if (messages.isEmpty() || messages.size() < QUERY_BATCH_SIZE) {
-                        return Mono.empty();
-                    }
-                    MessageUid messageUidFrom = MessageUid.of(messages.getLast().getRight().get(MESSAGE_UID));
-                    return findMessagesByMailboxIdAndBetweenUIDsBatch(mailboxId, MESSAGE_UID.greaterThan(messageUidFrom.asLong()), to, fetchType, QUERY_BATCH_SIZE);
-                })
-                .flatMapIterable(Function.identity());
-        } else {
-            return findMessagesByMailboxIdAndBetweenUIDsBatch(mailboxId, MESSAGE_UID.greaterOrEqual(from.asLong()), to, fetchType, limit.getLimit().get())
-                .flatMapIterable(Function.identity());
-        }
+        return findMessagesPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+                .and(MESSAGE_UID.greaterOrEqual(from.asLong()))
+                .and(MESSAGE_UID.lessOrEqual(to.asLong())),
+            limit, fetchType);
     }
 
-    private Mono<List<Pair<SimpleMailboxMessage.Builder, Record>>> findMessagesByMailboxIdAndBetweenUIDsBatch(PostgresMailboxId mailboxId, Condition messageUidFromCondition,
-                                                                                                              MessageUid to,
-                                                                                                              FetchType fetchType, int batchSize) {
+    private Flux<Pair<SimpleMailboxMessage.Builder, Record>> findMessagesPaginated(Condition condition, Limit limit, FetchType fetchType) {
         PostgresMailboxMessageFetchStrategy fetchStrategy = FETCH_TYPE_TO_FETCH_STRATEGY.apply(fetchType);
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(fetchStrategy.fetchFields())
+        Flux<Record> records = limit.getLimit()
+            .map(limitValue -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(fetchStrategy.fetchFields())
                 .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(messageUidFromCondition)
-                .and(MESSAGE_UID.lessOrEqual(to.asLong()))
-                .orderBy(MESSAGE_UID.asc())
-                .limit(batchSize)))
-            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record))
-            .collectList()
-            .switchIfEmpty(Mono.just(ImmutableList.of()));
+                .where(condition)
+                .orderBy(DEFAULT_SORT_ORDER_BY)
+                .limit(limitValue)), EAGER_FETCH))
+            .orElseGet(() -> postgresExecutor.executeRowsPaginated((dslContext, lastRecord) -> dslContext.select(fetchStrategy.fetchFields())
+                .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
+                .where(condition)
+                .and(afterUid(lastRecord))
+                .orderBy(DEFAULT_SORT_ORDER_BY)));
+        return records.map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record));
     }
 
     public Mono<Pair<SimpleMailboxMessage.Builder, Record>> findMessageByMailboxIdAndUid(PostgresMailboxId mailboxId, MessageUid uid, FetchType fetchType) {
@@ -349,35 +300,9 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<Pair<SimpleMailboxMessage.Builder, Record>> findMessagesByMailboxIdAndAfterUID(PostgresMailboxId mailboxId, MessageUid from, Limit limit, FetchType fetchType) {
-        if (limit.isUnlimited()) {
-            return Flux.defer(() -> findMessagesByMailboxIdAndAfterUIDBatch(mailboxId, MESSAGE_UID.greaterOrEqual(from.asLong()), fetchType, QUERY_BATCH_SIZE))
-                .expand(messages -> {
-                    if (messages.isEmpty() || messages.size() < QUERY_BATCH_SIZE) {
-                        return Mono.empty();
-                    }
-                    MessageUid messageUidFrom = MessageUid.of(messages.getLast().getRight().get(MESSAGE_UID));
-                    return findMessagesByMailboxIdAndAfterUIDBatch(mailboxId, MESSAGE_UID.greaterThan(messageUidFrom.asLong()), fetchType, QUERY_BATCH_SIZE);
-                })
-                .flatMapIterable(Function.identity());
-        } else {
-            return findMessagesByMailboxIdAndAfterUIDBatch(mailboxId, MESSAGE_UID.greaterOrEqual(from.asLong()), fetchType, limit.getLimit().get())
-                .flatMapIterable(Function.identity());
-        }
-    }
-
-    private Mono<List<Pair<SimpleMailboxMessage.Builder, Record>>> findMessagesByMailboxIdAndAfterUIDBatch(PostgresMailboxId mailboxId,
-                                                                                                           Condition messageUidFromCondition,
-                                                                                                           FetchType fetchType, int batchSize) {
-        PostgresMailboxMessageFetchStrategy fetchStrategy = FETCH_TYPE_TO_FETCH_STRATEGY.apply(fetchType);
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(fetchStrategy.fetchFields())
-                .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(messageUidFromCondition)
-                .orderBy(MESSAGE_UID.asc())
-                .limit(batchSize)))
-            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record))
-            .collectList()
-            .switchIfEmpty(Mono.just(ImmutableList.of()));
+        return findMessagesPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+                .and(MESSAGE_UID.greaterOrEqual(from.asLong())),
+            limit, fetchType);
     }
 
     public Flux<SimpleMailboxMessage.Builder> findMessagesByMailboxIdAndUIDs(PostgresMailboxId mailboxId, List<MessageUid> uids) {
@@ -402,33 +327,21 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<MessageUid> findDeletedMessagesByMailboxId(PostgresMailboxId mailboxId) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
-                .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(IS_DELETED.eq(true))
-                .orderBy(DEFAULT_SORT_ORDER_BY)), EAGER_FETCH)
-            .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+        return listUidsPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+            .and(IS_DELETED.eq(true)));
     }
 
     public Flux<MessageUid> findDeletedMessagesByMailboxIdAndBetweenUIDs(PostgresMailboxId mailboxId, MessageUid from, MessageUid to) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
-                .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(IS_DELETED.eq(true))
-                .and(MESSAGE_UID.greaterOrEqual(from.asLong()))
-                .and(MESSAGE_UID.lessOrEqual(to.asLong()))
-                .orderBy(DEFAULT_SORT_ORDER_BY)), EAGER_FETCH)
-            .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+        return listUidsPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+            .and(IS_DELETED.eq(true))
+            .and(MESSAGE_UID.greaterOrEqual(from.asLong()))
+            .and(MESSAGE_UID.lessOrEqual(to.asLong())));
     }
 
     public Flux<MessageUid> findDeletedMessagesByMailboxIdAndAfterUID(PostgresMailboxId mailboxId, MessageUid from) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
-                .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(IS_DELETED.eq(true))
-                .and(MESSAGE_UID.greaterOrEqual(from.asLong()))
-                .orderBy(DEFAULT_SORT_ORDER_BY)), EAGER_FETCH)
-            .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+        return listUidsPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+            .and(IS_DELETED.eq(true))
+            .and(MESSAGE_UID.greaterOrEqual(from.asLong())));
     }
 
     public Mono<MessageUid> findDeletedMessageByMailboxIdAndUid(PostgresMailboxId mailboxId, MessageUid uid) {
@@ -441,14 +354,10 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<MessageUid> listNotDeletedUids(PostgresMailboxId mailboxId, MessageRange range) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID, IS_DELETED)
-                .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
-                .and(MESSAGE_UID.lessOrEqual(range.getUidTo().asLong()))
-                .and(IS_DELETED.eq(false))
-                .orderBy(DEFAULT_SORT_ORDER_BY)), EAGER_FETCH)
-            .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+        return listUidsPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+            .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
+            .and(MESSAGE_UID.lessOrEqual(range.getUidTo().asLong()))
+            .and(IS_DELETED.eq(false)));
     }
 
     public Mono<Boolean> existsByMessageId(PostgresMessageId messageId) {
@@ -458,52 +367,23 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<ComposedMessageIdWithMetaData> findMessagesMetadata(PostgresMailboxId mailboxId, MessageRange range) {
-        return Flux.defer(() -> findMessagesMetadataBatch(mailboxId, range.getUidTo(), MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()), QUERY_BATCH_SIZE))
-            .expand(messages -> {
-                if (messages.isEmpty() || messages.size() < QUERY_BATCH_SIZE) {
-                    return Mono.empty();
-                }
-                MessageUid messageUidFrom = messages.getLast().getComposedMessageId().getUid();
-                return findMessagesMetadataBatch(mailboxId, range.getUidTo(), MESSAGE_UID.greaterThan(messageUidFrom.asLong()), QUERY_BATCH_SIZE);
-            })
-            .flatMapIterable(Function.identity());
-    }
-
-    private Mono<List<ComposedMessageIdWithMetaData>> findMessagesMetadataBatch(PostgresMailboxId mailboxId, MessageUid messageUidTo, Condition messageUidFromCondition, int batchSize) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select()
-                .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(messageUidFromCondition)
-                .and(MESSAGE_UID.lessOrEqual(messageUidTo.asLong()))
-                .orderBy(MESSAGE_UID.asc())
-                .limit(batchSize)))
-            .map(RECORD_TO_COMPOSED_MESSAGE_ID_WITH_META_DATA_FUNCTION)
-            .collectList()
-            .switchIfEmpty(Mono.just(ImmutableList.of()));
+        return findMessagesMetadataPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+            .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
+            .and(MESSAGE_UID.lessOrEqual(range.getUidTo().asLong())));
     }
 
     public Flux<ComposedMessageIdWithMetaData> findAllRecentMessageMetadata(PostgresMailboxId mailboxId) {
-        return Flux.defer(() -> findAllRecentMessageMetadataBatch(mailboxId, Optional.empty(), QUERY_BATCH_SIZE))
-            .expand(messages -> {
-                if (messages.isEmpty() || messages.size() < QUERY_BATCH_SIZE) {
-                    return Mono.empty();
-                }
-                return findAllRecentMessageMetadataBatch(mailboxId, Optional.of(messages.getLast().getComposedMessageId().getUid()), QUERY_BATCH_SIZE);
-            })
-            .flatMapIterable(Function.identity());
+        return findMessagesMetadataPaginated(MAILBOX_ID.eq(mailboxId.asUuid())
+            .and(IS_RECENT.eq(true)));
     }
 
-    private Mono<List<ComposedMessageIdWithMetaData>> findAllRecentMessageMetadataBatch(PostgresMailboxId mailboxId, Optional<MessageUid> messageUidFrom, int batchSize) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select()
+    private Flux<ComposedMessageIdWithMetaData> findMessagesMetadataPaginated(Condition condition) {
+        return postgresExecutor.executeRowsPaginated((dslContext, lastRecord) -> dslContext.select()
                 .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(IS_RECENT.eq(true))
-                .and(messageUidFrom.map(messageUid -> MESSAGE_UID.greaterThan(messageUid.asLong())).orElseGet(DSL::noCondition))
-                .orderBy(MESSAGE_UID.asc())
-                .limit(batchSize)))
-            .map(RECORD_TO_COMPOSED_MESSAGE_ID_WITH_META_DATA_FUNCTION)
-            .collectList()
-            .switchIfEmpty(Mono.just(ImmutableList.of()));
+                .where(condition)
+                .and(afterUid(lastRecord))
+                .orderBy(DEFAULT_SORT_ORDER_BY))
+            .map(RECORD_TO_COMPOSED_MESSAGE_ID_WITH_META_DATA_FUNCTION);
     }
 
     public Mono<Flags> replaceFlags(PostgresMailboxId mailboxId, MessageUid uid, Flags newFlags, ModSeq newModSeq) {

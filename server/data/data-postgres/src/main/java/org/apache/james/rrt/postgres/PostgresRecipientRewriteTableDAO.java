@@ -33,6 +33,7 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
+import org.jooq.impl.DSL;
 
 import com.google.common.collect.ImmutableList;
 
@@ -75,7 +76,11 @@ public class PostgresRecipientRewriteTableDAO {
     }
 
     public Flux<Pair<MappingSource, Mapping>> getAllMappings() {
-        return postgresExecutor.executeRows(dsl -> Flux.from(dsl.selectFrom(TABLE_NAME)))
+        return postgresExecutor.executeRowsPaginated((dsl, lastRecord) -> dsl.selectFrom(TABLE_NAME)
+                .where(lastRecord.map(record -> DSL.row(USERNAME, DOMAIN_NAME, TARGET_ADDRESS)
+                        .greaterThan(record.get(USERNAME), record.get(DOMAIN_NAME), record.get(TARGET_ADDRESS)))
+                    .orElseGet(DSL::noCondition))
+                .orderBy(USERNAME, DOMAIN_NAME, TARGET_ADDRESS))
             .map(record -> Pair.of(
                 MappingSource.fromUser(record.get(USERNAME), record.get(DOMAIN_NAME)),
                 Mapping.of(record.get(TARGET_ADDRESS))));

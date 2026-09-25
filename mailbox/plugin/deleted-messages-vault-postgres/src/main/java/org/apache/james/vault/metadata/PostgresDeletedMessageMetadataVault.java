@@ -38,6 +38,7 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 import org.jooq.Record;
+import org.jooq.impl.DSL;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
@@ -98,10 +99,12 @@ public class PostgresDeletedMessageMetadataVault implements DeletedMessageMetada
 
     @Override
     public Publisher<DeletedMessageWithStorageInformation> listMessages(BucketName bucketName, Username username) {
-        return postgresExecutor.executeRows(context -> Flux.from(context.select(METADATA)
-            .from(TABLE_NAME)
-            .where(BUCKET_NAME.eq(bucketName.asString()),
-                OWNER.eq(username.asString()))))
+        return postgresExecutor.executeRowsPaginated((context, lastRecord) -> context.select(MESSAGE_ID, METADATA)
+                .from(TABLE_NAME)
+                .where(BUCKET_NAME.eq(bucketName.asString()),
+                    OWNER.eq(username.asString()))
+                .and(lastRecord.map(record -> MESSAGE_ID.greaterThan(record.get(MESSAGE_ID))).orElseGet(DSL::noCondition))
+                .orderBy(MESSAGE_ID))
             .map(record -> metadataSerializer.deserialize(record.get(METADATA).data()))
             .handle(publishIfPresent());
     }
