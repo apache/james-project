@@ -107,7 +107,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             if (selectedMailbox != null) {
                 selectedMailbox.unregisterIdle(idleListener);
             }
-            if (lineHandlerInstalled.get()) {
+            if (lineHandlerInstalled.compareAndSet(true, false)) {
                 session.popLineHandler();
             }
             idleReadySink.tryEmitEmpty();
@@ -162,8 +162,15 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 safeResponder.flush();
                 return Mono.empty();
             });
-            if (idleActive.get()) {
-                lineHandlerInstalled.set(true);
+            if (!lineHandlerInstalled.compareAndSet(false, true)) {
+                // Already marked as installed by concurrent callback
+            }
+            if (!idleActive.get()) {
+                // IDLE was deactivated (cleanupIdle called) while pushLineHandler was in progress;
+                // cleanupIdle couldn't pop the handler because it wasn't installed yet, so pop it now.
+                if (lineHandlerInstalled.compareAndSet(true, false)) {
+                    session.popLineHandler();
+                }
             }
         } catch (Exception e) {
             lineHandlerInstalled.set(false);
