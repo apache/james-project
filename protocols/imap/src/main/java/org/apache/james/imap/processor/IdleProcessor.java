@@ -136,6 +136,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     private void idle(IdleRequest request, ImapSession session, Responder safeResponder, SelectedMailbox selectedMailbox,
                       Sinks.One<Void> idleReadySink, AtomicBoolean idleActive, AtomicReference<LineHandlerState> lineHandlerState,
                       AtomicReference<EventListener.ReactiveEventListener> idleListenerRef) {
+        if (!lineHandlerState.compareAndSet(LineHandlerState.NOT_INSTALLED, LineHandlerState.INSTALLING)) {
+            return;
+        }
+
         EventListener.ReactiveEventListener idleListener = null;
         if (selectedMailbox != null) {
             idleListener = new IdleMailboxListener(session, selectedMailbox, safeResponder, idleReadySink, idleActive, lineHandlerState);
@@ -145,9 +149,12 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             idleReadySink.tryEmitEmpty();
         }
 
+        if (!idleActive.get()) {
+            return;
+        }
+
         final EventListener.ReactiveEventListener finalIdleListener = idleListener;
         try {
-            lineHandlerState.set(LineHandlerState.INSTALLING);
             session.pushLineHandler((session1, data) -> {
                 if (!idleActive.get()) {
                     return Mono.empty();
@@ -198,6 +205,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         } catch (Exception e) {
             lineHandlerState.set(LineHandlerState.REMOVED);
             throw e;
+        }
+
+        if (!idleActive.get()) {
+            return;
         }
 
         // Write the response after the listener was added (IMAP-341)
