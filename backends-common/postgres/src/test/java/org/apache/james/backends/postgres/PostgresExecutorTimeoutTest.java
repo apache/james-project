@@ -122,6 +122,19 @@ class PostgresExecutorTimeoutTest {
             .hasCauseInstanceOf(TimeoutException.class);
     }
 
+    @Test
+    void connectionShouldBeUsableRightAfterATimeout() {
+        assertThatThrownBy(() -> sleepOnTheDatabaseSide().collectList().block())
+            .hasCauseInstanceOf(TimeoutException.class);
+
+        List<Integer> ids = postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(ID).from(TABLE).orderBy(ID)))
+            .map(record -> record.get(ID))
+            .collectList()
+            .block();
+
+        assertThat(ids).containsExactly(1, 2, 3);
+    }
+
     private Flux<Record> sleepOnTheDatabaseSide() {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(DSL.field("pg_sleep(" + LONGER_THAN_TIMEOUT_IN_SECONDS.toSeconds() + ")"))));
     }
