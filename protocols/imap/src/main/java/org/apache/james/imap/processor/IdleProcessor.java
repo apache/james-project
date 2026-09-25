@@ -168,8 +168,21 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 cleanupUnregisteredIdle(selectedMailbox, idleListener, lineHandlerState, idleReadySink);
                 return;
             }
+        } catch (Exception e) {
+            try {
+                if (!listenerUnregistered && selectedMailbox != null && idleListener != null) {
+                    selectedMailbox.unregisterIdle(idleListener);
+                }
+            } catch (Exception cleanupException) {
+                e.addSuppressed(cleanupException);
+            } finally {
+                lineHandlerState.set(LineHandlerState.REMOVED);
+            }
+            throw e;
+        }
 
-            final EventListener.ReactiveEventListener finalIdleListener = idleListener;
+        final EventListener.ReactiveEventListener finalIdleListener = idleListener;
+        try {
             session.pushLineHandler((session1, data) -> {
                 if (!idleActive.get()) {
                     return Mono.empty();
