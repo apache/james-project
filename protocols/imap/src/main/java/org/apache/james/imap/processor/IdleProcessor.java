@@ -67,6 +67,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
     private enum LineHandlerState {
         NOT_INSTALLED,
+        INSTALLING,
         INSTALLED,
         REMOVED
     }
@@ -136,11 +137,12 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
         final EventListener.ReactiveEventListener finalIdleListener = idleListener;
         try {
+            lineHandlerState.set(LineHandlerState.INSTALLING);
             session.pushLineHandler((session1, data) -> {
                 if (!idleActive.get()) {
                     return Mono.empty();
                 }
-                lineHandlerState.compareAndSet(LineHandlerState.NOT_INSTALLED, LineHandlerState.INSTALLED);
+                lineHandlerState.compareAndSet(LineHandlerState.INSTALLING, LineHandlerState.INSTALLED);
                 if (!cleanupIdle(session1, selectedMailbox, idleActive, lineHandlerState, idleReadySink, finalIdleListener)) {
                     // IDLE was already cleaned up by another thread (heartbeat, disconnect, etc.)
                     return Mono.empty();
@@ -168,11 +170,14 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 safeResponder.flush();
                 return Mono.empty();
             });
-            lineHandlerState.compareAndSet(LineHandlerState.NOT_INSTALLED, LineHandlerState.INSTALLED);
-            if (!idleActive.get()) {
+            LineHandlerState previous = lineHandlerState.getAndUpdate(state ->
+                state == LineHandlerState.INSTALLING ? LineHandlerState.INSTALLED : state);
+            if (previous == LineHandlerState.REMOVED || !idleActive.get()) {
                 // IDLE was deactivated (cleanupIdle called) while pushLineHandler was in progress;
-                // cleanupIdle couldn't pop the handler because it wasn't installed yet, so pop it now.
-                if (lineHandlerState.getAndSet(LineHandlerState.REMOVED) == LineHandlerState.INSTALLED) {
+                // cleanupIdle couldn't pop the handler because pushLineHandler had not completed yet,
+                // so pop it now if it has not already been popped.
+                if (lineHandlerState.getAndSet(LineHandlerState.REMOVED) == LineHandlerState.INSTALLED
+                    || previous == LineHandlerState.REMOVED) {
                     session.popLineHandler();
                 }
             }

@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapLineHandler;
@@ -101,6 +102,58 @@ class IdleProcessorLifecycleTest {
         // 1. popLineHandler() was invoked exactly once for the IDLE handler
         assertThat(session.popCount.get()).isEqualTo(1);
         // 2. The IDLE handler was cleaned up and the pre-existing handler was preserved
+        assertThat(session.handlers).containsExactly(baseHandler);
+    }
+
+    private static class BlockingPushImapSession extends FakeImapSession {
+        private final Deque<ImapLineHandler> handlers = new ArrayDeque<>();
+        private final AtomicInteger popCount = new AtomicInteger();
+        private Consumer<FakeImapSession> onPush;
+
+        @Override
+        public ImapProcessor.Responder threadSafe(ImapProcessor.Responder responder) {
+            return responder;
+        }
+
+        @Override
+        public void pushLineHandler(ImapLineHandler lineHandler) {
+            handlers.push(lineHandler);
+            if (onPush != null) {
+                onPush.accept(this);
+            }
+        }
+
+        @Override
+        public void popLineHandler() {
+            popCount.incrementAndGet();
+            if (!handlers.isEmpty()) {
+                handlers.pop();
+            }
+        }
+    }
+
+    @Test
+    void midPushDisconnectOrCleanupShouldPopHandlerExactlyOnceWhenPushCompletes() {
+        IdleProcessor testee = new IdleProcessor(
+            mock(MailboxManager.class),
+            new UnpooledStatusResponseFactory(),
+            new RecordingMetricFactory());
+
+        BlockingPushImapSession session = new BlockingPushImapSession();
+
+        // Push another dummy handler before IDLE to ensure IdleProcessor doesn't pop foreign handlers
+        ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
+        session.pushLineHandler(baseHandler);
+
+        // When pushLineHandler executes, simulate session disconnect / cleanup happening concurrently
+        session.onPush = s -> s.close();
+
+        testee.processRequestReactive(new IdleRequest(TAG), session, new RecordingResponder()).block();
+
+        // Verification:
+        // 1. popLineHandler() was invoked exactly once
+        assertThat(session.popCount.get()).isEqualTo(1);
+        // 2. The IDLE handler was cleaned up and the base handler remained intact
         assertThat(session.handlers).containsExactly(baseHandler);
     }
 }
