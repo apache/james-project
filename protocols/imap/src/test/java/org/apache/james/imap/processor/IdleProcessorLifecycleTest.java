@@ -35,8 +35,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import org.apache.james.events.Event;
-import org.apache.james.events.EventListener;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapLineHandler;
