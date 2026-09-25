@@ -258,12 +258,53 @@ class IdleProcessorLifecycleTest {
 
         session.triggerCallbackDuringPush = true;
 
-        testee.processRequestReactive(new IdleRequest(TAG), session, new RecordingResponder()).block();
+        RecordingResponder responder = new RecordingResponder();
+        testee.processRequestReactive(new IdleRequest(TAG), session, responder).block();
 
         // Verification:
         // 1. popLineHandler() was invoked despite unregisterIdle throwing
         assertThat(session.popCount.get()).isEqualTo(1);
         assertThat(session.handlers).containsExactly(baseHandler);
+        // 2. unregisterIdle was attempted
+        verify(selectedMailbox).unregisterIdle(any());
+        // 3. Response was delivered cleanly
+        assertThat(responder.getResponses()).hasSize(1);
+    }
+
+    @Test
+    void unregisterIdleRetryAfterFailureShouldSucceed() {
+        IdleProcessor testee = new IdleProcessor(
+            mock(MailboxManager.class),
+            new UnpooledStatusResponseFactory(),
+            new RecordingMetricFactory());
+
+        BlockingPushImapSession session = new BlockingPushImapSession();
+        SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
+        session.selected(selectedMailbox).block();
+
+        // First attempt throws, second succeeds
+        doThrow(new RuntimeException("Transient failure"))
+            .doNothing()
+            .when(selectedMailbox).unregisterIdle(any());
+
+        ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
+        session.pushLineHandler(baseHandler);
+
+        // When push happens, throw an error in pushLineHandler to trigger catch block cleanup
+        session.onPush = s -> {
+            throw new RuntimeException("Push failed");
+        };
+
+        RecordingResponder responder = new RecordingResponder();
+        testee.processRequestReactive(new IdleRequest(TAG), session, responder).block();
+
+        // Verification:
+        // 1. unregisterIdle was retried during error handling and called twice (initial catch and onErrorResume)
+        verify(selectedMailbox, org.mockito.Mockito.times(2)).unregisterIdle(any());
+        // 2. Base handler was preserved
+        assertThat(session.handlers).containsExactly(baseHandler);
+        // 3. Error response sent
+        assertThat(responder.getResponses()).hasSize(1);
     }
 }
 
