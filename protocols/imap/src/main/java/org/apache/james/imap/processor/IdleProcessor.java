@@ -142,15 +142,16 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
     private void unregisterIdleOnce(SelectedMailbox selectedMailbox, EventListener.ReactiveEventListener idleListener,
                                     AtomicBoolean listenerUnregistered) {
-        if (selectedMailbox == null || idleListener == null || listenerUnregistered == null || listenerUnregistered.get()) {
+        if (selectedMailbox == null || idleListener == null || listenerUnregistered == null) {
             return;
         }
-        synchronized (listenerUnregistered) {
-            if (listenerUnregistered.get()) {
-                return;
+        if (listenerUnregistered.compareAndSet(false, true)) {
+            try {
+                selectedMailbox.unregisterIdle(idleListener);
+            } catch (Exception e) {
+                listenerUnregistered.set(false);
+                throw e;
             }
-            selectedMailbox.unregisterIdle(idleListener);
-            listenerUnregistered.set(true);
         }
     }
 
@@ -165,13 +166,11 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         }
     }
 
-    private void idle(IdleRequest request, ImapSession session, Responder safeResponder, SelectedMailbox selectedMailbox,
-                      Sinks.One<Void> idleReadySink, AtomicBoolean idleActive, AtomicReference<LineHandlerState> lineHandlerState,
-                      AtomicReference<EventListener.ReactiveEventListener> idleListenerRef, AtomicBoolean listenerUnregistered) {
-        if (!lineHandlerState.compareAndSet(LineHandlerState.NOT_INSTALLED, LineHandlerState.INSTALLING)) {
-            return;
-        }
-
+    private EventListener.ReactiveEventListener registerIdleListener(ImapSession session, Responder safeResponder,
+                                                                    SelectedMailbox selectedMailbox, Sinks.One<Void> idleReadySink,
+                                                                    AtomicBoolean idleActive, AtomicReference<LineHandlerState> lineHandlerState,
+                                                                    AtomicReference<EventListener.ReactiveEventListener> idleListenerRef,
+                                                                    AtomicBoolean listenerUnregistered) {
         EventListener.ReactiveEventListener idleListener = null;
         try {
             if (selectedMailbox != null) {
@@ -184,8 +183,9 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
             if (!idleActive.get()) {
                 cleanupUnregisteredIdle(selectedMailbox, idleListener, lineHandlerState, idleReadySink, listenerUnregistered);
-                return;
+                return null;
             }
+            return idleListener;
         } catch (Exception e) {
             try {
                 unregisterIdleOnce(selectedMailbox, idleListener, listenerUnregistered);
@@ -196,41 +196,54 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             }
             throw e;
         }
+    }
 
-        final EventListener.ReactiveEventListener finalIdleListener = idleListener;
-        try {
-            session.pushLineHandler((session1, data) -> {
-                if (!idleActive.get()) {
-                    return Mono.empty();
-                }
-                lineHandlerState.compareAndSet(LineHandlerState.INSTALLING, LineHandlerState.INSTALLED);
-                if (!cleanupIdle(session1, selectedMailbox, idleActive, lineHandlerState, idleReadySink, finalIdleListener, listenerUnregistered)) {
-                    // IDLE was already cleaned up by another thread (heartbeat, disconnect, etc.)
-                    return Mono.empty();
-                }
-                String line = new String(data, StandardCharsets.US_ASCII).trim();
+    private ImapLineHandler createIdleLineHandler(IdleRequest request, Responder safeResponder, SelectedMailbox selectedMailbox,
+                                                  Sinks.One<Void> idleReadySink, AtomicBoolean idleActive,
+                                                  AtomicReference<LineHandlerState> lineHandlerState,
+                                                  EventListener.ReactiveEventListener idleListener,
+                                                  AtomicBoolean listenerUnregistered) {
+        return (session1, data) -> {
+            if (!idleActive.get()) {
+                return Mono.empty();
+            }
+            lineHandlerState.compareAndSet(LineHandlerState.INSTALLING, LineHandlerState.INSTALLED);
+            if (!cleanupIdle(session1, selectedMailbox, idleActive, lineHandlerState, idleReadySink, idleListener, listenerUnregistered)) {
+                // IDLE was already cleaned up by another thread (heartbeat, disconnect, etc.)
+                return Mono.empty();
+            }
+            String line = new String(data, StandardCharsets.US_ASCII).trim();
 
-                if (line.isEmpty() || !session1.isConnected()) {
-                    LOGGER.debug("IDLE continuation received empty input or disconnected session.");
-                    return Mono.empty();
-                }
-                String upper = line.toUpperCase(Locale.ROOT);
-                if (DONE.equals(upper)) {
-                    okComplete(request, safeResponder);
-                    safeResponder.flush();
-                    return Mono.empty();
-                }
-                String displayLine = sanitizeForDisplay(line);
-                String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", displayLine);
-                StatusResponse response = getStatusResponseFactory()
-                    .taggedBad(request.getTag(), request.getCommand(),
-                        new HumanReadableText("org.apache.james.imap.INVALID_CONTINUATION",
-                            "failed. " + message));
-                LOGGER.debug(message);
-                safeResponder.respond(response);
+            if (line.isEmpty() || !session1.isConnected()) {
+                LOGGER.debug("IDLE continuation received empty input or disconnected session.");
+                return Mono.empty();
+            }
+            String upper = line.toUpperCase(Locale.ROOT);
+            if (DONE.equals(upper)) {
+                okComplete(request, safeResponder);
                 safeResponder.flush();
                 return Mono.empty();
-            });
+            }
+            String displayLine = sanitizeForDisplay(line);
+            String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", displayLine);
+            StatusResponse response = getStatusResponseFactory()
+                .taggedBad(request.getTag(), request.getCommand(),
+                    new HumanReadableText("org.apache.james.imap.INVALID_CONTINUATION",
+                        "failed. " + message));
+            LOGGER.debug(message);
+            safeResponder.respond(response);
+            safeResponder.flush();
+            return Mono.empty();
+        };
+    }
+
+    private void installLineHandler(IdleRequest request, ImapSession session, Responder safeResponder, SelectedMailbox selectedMailbox,
+                                    Sinks.One<Void> idleReadySink, AtomicBoolean idleActive,
+                                    AtomicReference<LineHandlerState> lineHandlerState,
+                                    EventListener.ReactiveEventListener idleListener,
+                                    AtomicBoolean listenerUnregistered) {
+        try {
+            session.pushLineHandler(createIdleLineHandler(request, safeResponder, selectedMailbox, idleReadySink, idleActive, lineHandlerState, idleListener, listenerUnregistered));
             LineHandlerState previous = lineHandlerState.getAndUpdate(state -> {
                 if (state == LineHandlerState.INSTALLING) {
                     return LineHandlerState.INSTALLED;
@@ -256,6 +269,54 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             }
             throw e;
         }
+    }
+
+    private void scheduleHeartbeat(ImapSession session, Responder safeResponder, SelectedMailbox selectedMailbox,
+                                   Sinks.One<Void> idleReadySink, AtomicBoolean idleActive,
+                                   AtomicReference<LineHandlerState> lineHandlerState,
+                                   EventListener.ReactiveEventListener idleListener,
+                                   AtomicBoolean listenerUnregistered) {
+        if (!enableIdle) {
+            return;
+        }
+        session.schedule(new Runnable() {
+            @Override
+            public void run() {
+                if (session.isConnected() && session.getState() != ImapSessionState.LOGOUT && idleActive.get()) {
+                    try {
+                        StatusResponse response = getStatusResponseFactory().untaggedOk(HumanReadableText.HEARTBEAT);
+                        safeResponder.respond(response);
+                        safeResponder.flush();
+
+                        if (idleActive.get() && session.isConnected() && session.getState() != ImapSessionState.LOGOUT) {
+                            session.schedule(this, heartbeatInterval);
+                        }
+                    } catch (Exception e) {
+                        LOGGER.debug("Failed to send IMAP IDLE heartbeat, stopping keepalive task", e);
+                        cleanupIdle(session, selectedMailbox, idleActive, lineHandlerState, idleReadySink, idleListener, listenerUnregistered);
+                    }
+                } else {
+                    cleanupIdle(session, selectedMailbox, idleActive, lineHandlerState, idleReadySink, idleListener, listenerUnregistered);
+                }
+            }
+        }, heartbeatInterval);
+    }
+
+    private void idle(IdleRequest request, ImapSession session, Responder safeResponder, SelectedMailbox selectedMailbox,
+                      Sinks.One<Void> idleReadySink, AtomicBoolean idleActive, AtomicReference<LineHandlerState> lineHandlerState,
+                      AtomicReference<EventListener.ReactiveEventListener> idleListenerRef, AtomicBoolean listenerUnregistered) {
+        if (!lineHandlerState.compareAndSet(LineHandlerState.NOT_INSTALLED, LineHandlerState.INSTALLING)) {
+            return;
+        }
+
+        EventListener.ReactiveEventListener idleListener = registerIdleListener(session, safeResponder, selectedMailbox,
+            idleReadySink, idleActive, lineHandlerState, idleListenerRef, listenerUnregistered);
+        if (idleListener == null && selectedMailbox != null) {
+            return;
+        }
+
+        installLineHandler(request, session, safeResponder, selectedMailbox, idleReadySink, idleActive,
+            lineHandlerState, idleListener, listenerUnregistered);
 
         if (!idleActive.get()) {
             return;
@@ -265,42 +326,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         safeResponder.respond(new ContinuationResponse(HumanReadableText.IDLING));
         safeResponder.flush();
 
-        // Check if we should send heartbeats
-        if (enableIdle) {
-            session.schedule(new Runnable() {
-
-                @Override
-                public void run() {
-                    // check if we need to cancel the Runnable
-                    // See IMAP-275
-                    if (session.isConnected() && session.getState() != ImapSessionState.LOGOUT && idleActive.get()) {
-                        // Send a heartbeat to the client to make sure we
-                        // reset the idle timeout. This is kind of the same
-                        // workaround as dovecot use.
-                        //
-                        // This is mostly needed because of the broken
-                        // outlook client, but can't harm for other clients
-                        // too.
-                        // See IMAP-272
-                        try {
-                            StatusResponse response = getStatusResponseFactory().untaggedOk(HumanReadableText.HEARTBEAT);
-                            safeResponder.respond(response);
-                            safeResponder.flush();
-
-                            // schedule the heartbeat again for the next interval
-                            if (idleActive.get() && session.isConnected() && session.getState() != ImapSessionState.LOGOUT) {
-                                session.schedule(this, heartbeatInterval);
-                            }
-                        } catch (Exception e) {
-                            LOGGER.debug("Failed to send IMAP IDLE heartbeat, stopping keepalive task", e);
-                            cleanupIdle(session, selectedMailbox, idleActive, lineHandlerState, idleReadySink, finalIdleListener, listenerUnregistered);
-                        }
-                    } else {
-                        cleanupIdle(session, selectedMailbox, idleActive, lineHandlerState, idleReadySink, finalIdleListener, listenerUnregistered);
-                    }
-                }
-            }, heartbeatInterval);
-        }
+        scheduleHeartbeat(session, safeResponder, selectedMailbox, idleReadySink, idleActive,
+            lineHandlerState, idleListener, listenerUnregistered);
     }
 
     @VisibleForTesting
