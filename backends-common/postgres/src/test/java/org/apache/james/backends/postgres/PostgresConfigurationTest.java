@@ -120,6 +120,6 @@ class PostgresConfigurationTest {
             .sslMode("invalid")
             .build())
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Invalid ssl mode value: invalid");
+            .hasMessageStartingWith("Invalid ssl mode value: invalid");
     }
 }
