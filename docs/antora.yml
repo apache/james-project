@@ -5,7 +5,7 @@ prerelease: SNAPSHOT
 asciidoc:
   attributes:
     # Latest released version, as published on Maven central and Docker Hub. Bump on release.
-    james-version: '3.9.0@'
+    james-version: '3.9.1@'
     # Third party versions James is built, shipped and tested against.
     # Bump them together with the docker-compose files of server/apps/*.
     java-version: '21@'
