@@ -39,6 +39,7 @@ import org.apache.james.jmap.api.model.UploadId;
 import org.apache.james.jmap.api.model.UploadMetaData;
 import org.apache.james.mailbox.model.ContentType;
 import org.jooq.Record;
+import org.jooq.impl.DSL;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -110,8 +111,10 @@ public class PostgresUploadDAO {
     }
 
     public Flux<Pair<UploadMetaData, Username>> listByUploadDateBefore(LocalDateTime before) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectFrom(PostgresUploadTable.TABLE_NAME)
-                .where(PostgresUploadTable.UPLOAD_DATE.lessThan(before))))
+        return postgresExecutor.executeRowsPaginated((dslContext, lastRecord) -> dslContext.selectFrom(PostgresUploadTable.TABLE_NAME)
+                .where(PostgresUploadTable.UPLOAD_DATE.lessThan(before))
+                .and(lastRecord.map(record -> PostgresUploadTable.ID.greaterThan(record.get(PostgresUploadTable.ID))).orElseGet(DSL::noCondition))
+                .orderBy(PostgresUploadTable.ID))
             .map(record -> Pair.of(uploadMetaDataFromRow(record), Username.of(record.get(PostgresUploadTable.USER_NAME))));
     }
 

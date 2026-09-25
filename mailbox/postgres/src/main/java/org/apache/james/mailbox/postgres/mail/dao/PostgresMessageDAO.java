@@ -49,6 +49,7 @@ import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
 import org.apache.james.mailbox.postgres.mail.dto.AttachmentsDTO;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.jooq.Record;
+import org.jooq.impl.DSL;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -126,8 +127,10 @@ public class PostgresMessageDAO {
     }
 
     public Flux<BlobId> listBlobs() {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(BODY_BLOB_ID)
-            .from(TABLE_NAME)))
+        return postgresExecutor.executeRowsPaginated((dslContext, lastRecord) -> dslContext.select(MESSAGE_ID, BODY_BLOB_ID)
+                .from(TABLE_NAME)
+                .where(lastRecord.map(record -> MESSAGE_ID.greaterThan(record.get(MESSAGE_ID))).orElseGet(DSL::noCondition))
+                .orderBy(MESSAGE_ID))
             .map(record -> blobIdFactory.parse(record.get(BODY_BLOB_ID)));
     }
 
