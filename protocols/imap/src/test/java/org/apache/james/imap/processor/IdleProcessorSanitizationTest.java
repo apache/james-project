@@ -54,6 +54,7 @@ class IdleProcessorSanitizationTest {
     }
 
     @Test
+    @SuppressWarnings("checkstyle:avoidescapedunicodecharacters")
     void sanitizeForDisplayShouldStripNonAsciiCharacters() {
         assertThat(IdleProcessor.sanitizeForDisplay("DONE\u200B\u00A0тест"))
             .isEqualTo("DONE");
