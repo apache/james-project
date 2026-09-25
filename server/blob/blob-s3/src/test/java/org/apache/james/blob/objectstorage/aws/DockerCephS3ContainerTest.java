@@ -24,18 +24,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
 
+import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.BlobStoreDAOContract;
+import org.apache.james.blob.api.MetadataAwareBlobStoreDAOContract;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import reactor.core.publisher.Mono;
 
 @ExtendWith(DockerCephS3Extension.class)
-class DockerCephS3ContainerTest {
+class DockerCephS3ContainerTest implements BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract {
     private static S3ClientFactory s3ClientFactory;
     private static S3BlobStoreDAO testee;
 
@@ -53,6 +57,16 @@ class DockerCephS3ContainerTest {
     @AfterAll
     static void tearDown() {
         s3ClientFactory.close();
+    }
+
+    @BeforeEach
+    void cleanBuckets() {
+        testee.deleteAllBuckets().block();
+    }
+
+    @Override
+    public BlobStoreDAO testee() {
+        return testee;
     }
 
     @Test
