@@ -318,6 +318,10 @@ class IMAPServerIdleTest extends AbstractIMAPServerTest {
         // Run NOOP to verify session is clean and no stale unsolicited EXISTS from IDLE arrives
         clientConnection.write(ByteBuffer.wrap(("a4 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
         String response = readStringUntil(clientConnection, s -> s.contains("a4 OK NOOP completed."));
-        assertThat(response).contains("a4 OK NOOP completed.");
+        assertThat(response)
+            .contains("a4 OK NOOP completed.")
+            .doesNotContain("EXISTS")
+            .doesNotContain("EXPUNGE")
+            .doesNotContain("FETCH");
     }
 }
