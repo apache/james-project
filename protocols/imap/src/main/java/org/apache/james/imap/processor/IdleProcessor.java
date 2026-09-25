@@ -162,9 +162,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 safeResponder.flush();
                 return Mono.empty();
             });
-            if (!lineHandlerInstalled.compareAndSet(false, true)) {
-                // Already marked as installed by concurrent callback
-            }
+            // The callback may have marked the handler as installed already
+            lineHandlerInstalled.compareAndSet(false, true);
             if (!idleActive.get()) {
                 // IDLE was deactivated (cleanupIdle called) while pushLineHandler was in progress;
                 // cleanupIdle couldn't pop the handler because it wasn't installed yet, so pop it now.
