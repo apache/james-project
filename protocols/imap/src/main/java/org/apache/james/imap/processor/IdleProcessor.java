@@ -112,28 +112,28 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     private boolean cleanupIdle(ImapSession session, SelectedMailbox selectedMailbox, AtomicBoolean idleActive,
                                 AtomicReference<LineHandlerState> lineHandlerState, Sinks.One<Void> idleReadySink,
                                 EventListener.ReactiveEventListener idleListener, AtomicBoolean listenerUnregistered) {
-        if (idleActive.compareAndSet(true, false)) {
-            try {
-                unregisterIdleOnce(selectedMailbox, idleListener, listenerUnregistered);
-            } catch (Exception e) {
-                LOGGER.debug("Failed to unregister IDLE listener", e);
-            } finally {
-                LineHandlerState previous = lineHandlerState.getAndUpdate(state -> {
-                    if (state == LineHandlerState.INSTALLING) {
-                        return LineHandlerState.REMOVAL_PENDING;
-                    }
-                    if (state == LineHandlerState.INSTALLED) {
-                        return LineHandlerState.REMOVED;
-                    }
-                    return state;
-                });
-                try {
-                    if (previous == LineHandlerState.INSTALLED) {
-                        session.popLineHandler();
-                    }
-                } finally {
-                    idleReadySink.tryEmitEmpty();
+        boolean cleanupOwner = idleActive.compareAndSet(true, false);
+        try {
+            unregisterIdleOnce(selectedMailbox, idleListener, listenerUnregistered);
+        } catch (Exception e) {
+            LOGGER.debug("Failed to unregister IDLE listener", e);
+        }
+        if (cleanupOwner) {
+            LineHandlerState previous = lineHandlerState.getAndUpdate(state -> {
+                if (state == LineHandlerState.INSTALLING) {
+                    return LineHandlerState.REMOVAL_PENDING;
                 }
+                if (state == LineHandlerState.INSTALLED) {
+                    return LineHandlerState.REMOVED;
+                }
+                return state;
+            });
+            try {
+                if (previous == LineHandlerState.INSTALLED) {
+                    session.popLineHandler();
+                }
+            } finally {
+                idleReadySink.tryEmitEmpty();
             }
             return true;
         }

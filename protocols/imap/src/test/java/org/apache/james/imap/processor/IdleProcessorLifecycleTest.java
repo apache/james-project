@@ -124,10 +124,19 @@ class IdleProcessorLifecycleTest {
         private final Deque<ImapLineHandler> handlers = new ArrayDeque<>();
         private final AtomicInteger popCount = new AtomicInteger();
         private Consumer<FakeImapSession> onPush;
+        private Consumer<FakeImapSession> onDeselect;
 
         @Override
         public ImapProcessor.Responder threadSafe(ImapProcessor.Responder responder) {
             return responder;
+        }
+
+        @Override
+        public Mono<Void> deselect() {
+            if (onDeselect != null) {
+                onDeselect.accept(this);
+            }
+            return super.deselect();
         }
 
         @Override
@@ -188,9 +197,11 @@ class IdleProcessorLifecycleTest {
         ImapLineHandler baseHandler = (session1, data) -> Mono.empty();
         session.pushLineHandler(baseHandler);
 
-        // Simulate concurrent disconnect/cleanup occurring during registerIdle execution without blocking
+        // Capture registered listener and simulate concurrent cleanup (e.g. session error/cancellation) during registerIdle
         doAnswer(invocation -> {
-            session.deselect().block();
+            org.apache.james.events.EventListener.ReactiveEventListener listener = invocation.getArgument(0);
+            // Simulate error/event triggering listener reactive event failure or disconnect cleanup
+            Mono.from(listener.reactiveEvent(mock(org.apache.james.events.Event.class))).block();
             return null;
         }).when(selectedMailbox).registerIdle(any());
 
