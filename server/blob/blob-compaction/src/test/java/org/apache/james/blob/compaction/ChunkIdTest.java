@@ -24,11 +24,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Random;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.server.blob.deduplication.GenerationAwareBlobId;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.io.BaseEncoding;
 
 class ChunkIdTest {
     private static final GenerationAwareBlobId.Configuration CONFIG =
@@ -172,5 +175,77 @@ class ChunkIdTest {
 
         assertThat(chunk.equals(plainWithSameString)).isFalse();
         assertThat(plainWithSameString.equals(chunk)).isFalse();
+    }
+
+    @Test
+    void randomizedRoundTripSafety() {
+        Random random = new Random(42);
+        for (int i = 0; i < 200; i++) {
+            int family = random.nextInt(1000) + 1;
+            long generation = Math.abs(random.nextLong() % 10_000_000L);
+            byte[] randomBytes = new byte[16 + random.nextInt(16)];
+            random.nextBytes(randomBytes);
+            String randomPart = BaseEncoding.base64Url().omitPadding().encode(randomBytes);
+            long offset = Math.abs(random.nextLong() % 10_000_000L);
+            long limit = Math.abs(random.nextLong() % 10_000_000L);
+
+            ChunkId chunkId = new ChunkId(family, generation, randomPart, offset, limit);
+            String serialized = chunkId.asString();
+
+            ChunkId parsed = ChunkId.parse(serialized);
+            assertThat(parsed).isEqualTo(chunkId);
+            assertThat(parsed.asString()).isEqualTo(serialized);
+            assertThat(parsed.family()).isEqualTo(family);
+            assertThat(parsed.generation()).isEqualTo(generation);
+            assertThat(parsed.randomPart()).isEqualTo(randomPart);
+            assertThat(parsed.offset()).isEqualTo(offset);
+            assertThat(parsed.limit()).isEqualTo(limit);
+
+            ChunkId parsedViaOrSlot = ChunkId.parseChunkOrSlotRef(serialized);
+            assertThat(parsedViaOrSlot).isEqualTo(chunkId);
+
+            if (offset == 0 && limit == 0) {
+                ChunkId parsedChunk = ChunkId.parseChunk(chunkId.chunkId());
+                assertThat(parsedChunk).isEqualTo(chunkId);
+            }
+        }
+    }
+
+    @Test
+    void randomCorruptedStringsShouldFailSafelyWithoutUncheckedCrash() {
+        Random random = new Random(42);
+        char[] alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_~/-.:\n\t".toCharArray();
+
+        for (int i = 0; i < 500; i++) {
+            int len = random.nextInt(100);
+            char[] chars = new char[len];
+            for (int j = 0; j < len; j++) {
+                chars[j] = alphabet[random.nextInt(alphabet.length)];
+            }
+            String candidate = new String(chars);
+
+            ChunkId.isChunkRef(candidate);
+
+            try {
+                ChunkId parsed = ChunkId.parse(candidate);
+                assertThat(parsed.asString()).isNotNull();
+            } catch (Exception e) {
+                assertThat(e).isInstanceOf(IllegalArgumentException.class);
+            }
+
+            try {
+                ChunkId parsedChunk = ChunkId.parseChunk(candidate);
+                assertThat(parsedChunk.asString()).isNotNull();
+            } catch (Exception e) {
+                assertThat(e).isInstanceOf(IllegalArgumentException.class);
+            }
+
+            try {
+                ChunkId parsedOrSlot = ChunkId.parseChunkOrSlotRef(candidate);
+                assertThat(parsedOrSlot.asString()).isNotNull();
+            } catch (Exception e) {
+                assertThat(e).isInstanceOf(IllegalArgumentException.class);
+            }
+        }
     }
 }

@@ -87,6 +87,13 @@ public record ChunkId(int family, long generation, String randomPart, long offse
         return ChunkMarker.looksLikeChunkId(id);
     }
 
+    /**
+     * Parses a chunk slot reference string formatted as {@code {family}_{generation}_chunk{randomPart}~{offset}~{limit}}.
+     *
+     * @param id non-null serialized chunk slot reference
+     * @return the parsed {@link ChunkId}
+     * @throws IllegalArgumentException if the format is invalid or values are out of bounds
+     */
     public static ChunkId parse(String id) {
         Preconditions.checkNotNull(id, "'id' must not be null");
         int firstTilde = id.indexOf('~');
@@ -115,6 +122,7 @@ public record ChunkId(int family, long generation, String randomPart, long offse
     }
 
     public static ChunkId parseChunkOrSlotRef(String id) {
+        Preconditions.checkNotNull(id, "'id' must not be null");
         int firstTilde = id.indexOf('~');
         if (firstTilde == -1) {
             return parseBase(id, 0L, 0L);
