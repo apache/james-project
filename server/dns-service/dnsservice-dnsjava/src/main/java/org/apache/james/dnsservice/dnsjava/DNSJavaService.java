@@ -336,6 +336,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         cache = new Cache(DClass.IN);
         cache.setMaxEntries(maxCacheSize);
+        cache.setMaxCache(cacheMaxTTL);
         cache.setMaxNCache(negativeCacheFallbackTTL);
 
         caffeineCache = Caffeine.newBuilder()
@@ -463,10 +464,20 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         }
 
         TimeMetric timeMetric = metricFactory.timer("findMXRecords");
-        List<String> servers = new ArrayList<>();
         try {
-            servers = findMXRecordsRaw(hostname);
-            Collection<String> result = Collections.unmodifiableCollection(servers);
+            List<String> servers = findMXRecordsRaw(hostname);
+            // If we found no results, we'll add the original domain name if it's a valid DNS entry
+            if (servers.isEmpty()) {
+                LOGGER.info("Couldn't resolve MX records for domain {}.", hostname);
+                try {
+                    getByName(hostname);
+                    servers.add(hostname);
+                } catch (UnknownHostException uhe) {
+                    LOGGER.error("Couldn't resolve IP address for host {}.", hostname, uhe);
+                }
+            }
+
+            Collection<String> result = ImmutableList.copyOf(servers);
             if (caffeineCache != null) {
                 Record[] records = lookupNoException(hostname, Type.MX);
                 long ttl = computeRecordsTtl(records);
@@ -474,20 +485,6 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             }
             return result;
         } finally {
-            // If we found no results, we'll add the original domain name if
-            // it's a valid DNS entry
-            if (servers.isEmpty()) {
-                LOGGER.info("Couldn't resolve MX records for domain {}.", hostname);
-                try {
-                    getByName(hostname);
-                    servers.add(hostname);
-                } catch (UnknownHostException uhe) {
-                    // The original domain name is not a valid host,
-                    // so we can't add it to the server list. In this
-                    // case we return an empty list of servers
-                    LOGGER.error("Couldn't resolve IP address for host {}.", hostname, uhe);
-                }
-            }
             timeMetric.stopAndPublish();
         }
     }
@@ -536,7 +533,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     }
 
     private static String normalizeKey(String host) {
-        return host.toLowerCase(Locale.US);
+        return host.toLowerCase(Locale.ROOT);
     }
 
     /*
@@ -585,6 +582,10 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             }
 
             InetAddress addr = org.xbill.DNS.Address.getByAddress(name);
+            // If the name is already an IP address, return immediately without redundant DNS lookup
+            if (org.xbill.DNS.Address.isDottedQuad(name)) {
+                return addr;
+            }
             if (caffeineCache != null) {
                 Record[] records = lookupNoException(name, Type.A);
                 long ttl = computeRecordsTtl(records);
@@ -632,6 +633,10 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
             InetAddress addr = org.xbill.DNS.Address.getByAddress(name);
             Collection<InetAddress> result = ImmutableList.of(addr);
+            // If the name is already an IP address, return immediately without redundant DNS lookup
+            if (org.xbill.DNS.Address.isDottedQuad(name)) {
+                return result;
+            }
             if (caffeineCache != null) {
                 Record[] records = lookupNoException(name, Type.A);
                 long ttl = computeRecordsTtl(records);
@@ -685,11 +690,12 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 }
 
             }
+            Collection<String> result = ImmutableList.copyOf(txtR);
             if (caffeineCache != null) {
                 long ttl = computeRecordsTtl(records);
-                caffeineCache.put(new DnsKey(DnsRecordType.TXT, normalizeKey(hostname)), new DnsValue<>(txtR, ttl));
+                caffeineCache.put(new DnsKey(DnsRecordType.TXT, normalizeKey(hostname)), new DnsValue<>(result, ttl));
             }
-            return txtR;
+            return result;
         } finally {
             timeMetric.stopAndPublish();
         }
