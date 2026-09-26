@@ -176,11 +176,27 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         return Math.max(effectiveMin, Math.min(rawTtl, (long) negativeCacheMaxTTL));
     }
 
+    private SOARecord findZoneSoa(String hostname) {
+        try {
+            Name name = Name.fromString(hostname);
+            for (int i = 0; i < name.labels() - 1; i++) {
+                Name zoneName = (i == 0) ? name : new Name(name, i);
+                Record[] soa = lookupNoException(zoneName.toString(), Type.SOA);
+                if (soa != null && soa.length > 0 && soa[0] instanceof SOARecord soaRecord) {
+                    return soaRecord;
+                }
+            }
+        } catch (Exception e) {
+            // ignore and fallback
+        }
+        return null;
+    }
+
     private long computeRecordsTtl(Record[] records, String hostname) {
         if (records == null || records.length == 0) {
             if (inheritNegativeTTL && hostname != null && !hostname.isEmpty()) {
-                Record[] soa = lookupNoException(hostname, Type.SOA);
-                if (soa != null && soa.length > 0 && soa[0] instanceof SOARecord soaRecord) {
+                SOARecord soaRecord = findZoneSoa(hostname);
+                if (soaRecord != null) {
                     long negativeTtl = Math.min(soaRecord.getTTL(), soaRecord.getMinimum());
                     return clampNegativeTtl(negativeTtl);
                 }
@@ -513,9 +529,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         try {
             Lookup l = new Lookup(namestr, type);
 
-            if (caffeineCache == null) {
-                l.setCache(cache);
-            }
+            l.setCache(caffeineCache == null ? cache : null);
             l.setResolver(resolver);
             l.setCredibility(dnsCredibility);
             l.setSearchPath(searchPaths);
