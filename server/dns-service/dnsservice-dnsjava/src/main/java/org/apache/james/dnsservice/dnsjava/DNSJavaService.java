@@ -136,6 +136,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         @Override
         public synchronized SetResponse addMessage(Message in) {
+            this.capturedSoa = null;
             SetResponse response = super.addMessage(in);
             if (in != null) {
                 for (Record record : in.getSection(Section.AUTHORITY)) {
