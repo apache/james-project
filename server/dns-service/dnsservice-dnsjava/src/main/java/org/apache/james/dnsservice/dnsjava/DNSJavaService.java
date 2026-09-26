@@ -52,6 +52,7 @@ import org.xbill.DNS.DClass;
 import org.xbill.DNS.ExtendedResolver;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.MXRecord;
+import org.xbill.DNS.Message;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.PTRRecord;
 import org.xbill.DNS.Record;
@@ -59,6 +60,8 @@ import org.xbill.DNS.Resolver;
 import org.xbill.DNS.ResolverConfig;
 import org.xbill.DNS.ReverseMap;
 import org.xbill.DNS.SOARecord;
+import org.xbill.DNS.Section;
+import org.xbill.DNS.SetResponse;
 import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
@@ -129,6 +132,20 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         ResponseCaptureCache() {
             super(DClass.IN);
+        }
+
+        @Override
+        public synchronized SetResponse addMessage(Message in) {
+            SetResponse response = super.addMessage(in);
+            if (in != null) {
+                for (Record record : in.getSection(Section.AUTHORITY)) {
+                    if (record instanceof SOARecord soa) {
+                        this.capturedSoa = soa;
+                        break;
+                    }
+                }
+            }
+            return response;
         }
 
         @Override
