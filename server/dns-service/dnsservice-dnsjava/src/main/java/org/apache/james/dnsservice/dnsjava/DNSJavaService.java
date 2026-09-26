@@ -58,6 +58,7 @@ import org.xbill.DNS.Record;
 import org.xbill.DNS.Resolver;
 import org.xbill.DNS.ResolverConfig;
 import org.xbill.DNS.ReverseMap;
+import org.xbill.DNS.SOARecord;
 import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
@@ -179,8 +180,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         if (records == null || records.length == 0) {
             if (inheritNegativeTTL && hostname != null && !hostname.isEmpty()) {
                 Record[] soa = lookupNoException(hostname, Type.SOA);
-                if (soa != null && soa.length > 0) {
-                    return clampNegativeTtl(soa[0].getTTL());
+                if (soa != null && soa.length > 0 && soa[0] instanceof SOARecord soaRecord) {
+                    long negativeTtl = Math.min(soaRecord.getTTL(), soaRecord.getMinimum());
+                    return clampNegativeTtl(negativeTtl);
                 }
             }
             return clampNegativeTtl(negativeCacheFallbackTTL);
@@ -511,7 +513,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         try {
             Lookup l = new Lookup(namestr, type);
 
-            l.setCache(cache);
+            if (caffeineCache == null) {
+                l.setCache(cache);
+            }
             l.setResolver(resolver);
             l.setCredibility(dnsCredibility);
             l.setSearchPath(searchPaths);
@@ -543,11 +547,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     }
 
     private static String normalizeKey(String host) {
-        String lower = host.toLowerCase(Locale.ROOT);
-        if (lower.endsWith(".") && lower.length() > 1) {
-            return lower.substring(0, lower.length() - 1);
-        }
-        return lower;
+        return host.toLowerCase(Locale.ROOT);
     }
 
     /*
