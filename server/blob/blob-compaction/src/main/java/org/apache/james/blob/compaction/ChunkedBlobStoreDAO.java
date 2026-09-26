@@ -201,8 +201,9 @@ public class ChunkedBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
+    public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
         if (ChunkId.isChunkRef(blobId)) {
-            throw
+            throw new IllegalArgumentException("Cannot readRange on a chunk reference: " + blobId.asString());
         }
         return rawStore.readRange(bucketName, blobId, start, end);
     }
