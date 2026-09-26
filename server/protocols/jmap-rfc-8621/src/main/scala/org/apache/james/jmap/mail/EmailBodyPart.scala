@@ -87,7 +87,7 @@ object EmailBodyPart {
       blobId = BlobId.of(attachment.getAttachmentId.getId).toOption,
       headers = List(),
       size = Size.sanitizeSize(attachment.getAttachment.getSize),
-      name = attachment.getName.map(Name(_)).toScala,
+      name = attachment.getName.map(Name.of(_)).toScala,
       `type` = Type(attachment.getAttachment.getType.mimeType().asString()),
       charset = attachment.getAttachment.getType.charset().map(charset => Charset(charset.name().toUpperCase(Locale.US))).toScala,
       disposition = parseDisposition(attachment),
@@ -183,13 +183,19 @@ object Name {
       case contentTypeField: ContentTypeField => Option(contentTypeField.getParameter(FILENAME_PREFIX))
           .map(DecoderUtil.decodeEncodedWords(_, DecodeMonitor.SILENT))
       case _ => None
-    }.map(Name(_))
+    }.map(Name.of(_))
     .orElse(Option(entity.getHeader.getField(FieldName.CONTENT_DISPOSITION))
       .flatMap {
         case contentDispositionField: ContentDispositionField => Option(contentDispositionField.getFilename)
           .map(DecoderUtil.decodeEncodedWords(_, DecodeMonitor.SILENT))
         case _ => None
-      }.map(Name(_)))
+      }.map(Name.of(_)))
+
+  private val BIDI_CONTROL_CHARACTERS = "[\u200E\u200F\u202A-\u202E\u2066-\u2069]"
+
+  def normalize(value: String): String = value.replaceAll(BIDI_CONTROL_CHARACTERS, "")
+
+  def of(value: String): Name = Name(normalize(value))
 }
 
 case class Name(value: String) extends AnyVal
