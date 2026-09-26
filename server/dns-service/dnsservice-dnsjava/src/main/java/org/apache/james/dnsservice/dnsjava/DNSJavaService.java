@@ -122,6 +122,28 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     private record MxHost(String name, int priority) {}
 
+    private record LookupResult(Record[] answers, SOARecord authoritySoa) {}
+
+    private static class ResponseCaptureCache extends Cache {
+        private SOARecord capturedSoa;
+
+        ResponseCaptureCache() {
+            super(DClass.IN);
+        }
+
+        @Override
+        public synchronized void addNegative(Name name, int type, SOARecord soa, int cred) {
+            super.addNegative(name, type, soa, cred);
+            if (soa != null) {
+                this.capturedSoa = soa;
+            }
+        }
+
+        public SOARecord getCapturedSoa() {
+            return capturedSoa;
+        }
+    }
+
     protected com.github.benmanes.caffeine.cache.Cache<DnsKey, DnsValue<?>> caffeineCache;
 
     private static int sanitizeBoundedTtl(int value, int defaultVal, int minAllowed, int maxAllowed) {
@@ -176,30 +198,11 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         return Math.max(effectiveMin, Math.min(rawTtl, (long) negativeCacheMaxTTL));
     }
 
-    private SOARecord findZoneSoa(String hostname) {
-        try {
-            Name name = Name.fromString(hostname);
-            for (int i = 0; i < name.labels() - 1; i++) {
-                Name zoneName = (i == 0) ? name : new Name(name, i);
-                Record[] soa = lookupNoException(zoneName.toString(), Type.SOA);
-                if (soa != null && soa.length > 0 && soa[0] instanceof SOARecord soaRecord) {
-                    return soaRecord;
-                }
-            }
-        } catch (Exception e) {
-            // ignore and fallback
-        }
-        return null;
-    }
-
-    private long computeRecordsTtl(Record[] records, String hostname) {
+    private long computeRecordsTtl(Record[] records, SOARecord authoritySoa) {
         if (records == null || records.length == 0) {
-            if (inheritNegativeTTL && hostname != null && !hostname.isEmpty()) {
-                SOARecord soaRecord = findZoneSoa(hostname);
-                if (soaRecord != null) {
-                    long negativeTtl = Math.min(soaRecord.getTTL(), soaRecord.getMinimum());
-                    return clampNegativeTtl(negativeTtl);
-                }
+            if (inheritNegativeTTL && authoritySoa != null) {
+                long negativeTtl = Math.min(authoritySoa.getTTL(), authoritySoa.getMinimum());
+                return clampNegativeTtl(negativeTtl);
             }
             return clampNegativeTtl(negativeCacheFallbackTTL);
         }
@@ -422,11 +425,15 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * @return a list of MX records corresponding to this mail domain
      * @throws TemporaryResolutionException get thrown on temporary problems
      */
-    private List<MxHost> findMXRecordsRaw(String hostname) throws TemporaryResolutionException {
-        Record[] answers = lookup(hostname, Type.MX);
+    private record MxRawResult(List<MxHost> hosts, long ttl) {}
+
+    private MxRawResult findMXRecordsRaw(String hostname) throws TemporaryResolutionException {
+        LookupResult lookupResult = lookupInternal(hostname, Type.MX);
+        Record[] answers = lookupResult.answers();
+        long ttl = computeRecordsTtl(answers, lookupResult.authoritySoa());
         List<MxHost> servers = new ArrayList<>();
         if (answers == null) {
-            return servers;
+            return new MxRawResult(servers, ttl);
         }
 
         MXRecord[] mxAnswers = new MXRecord[answers.length];
@@ -438,7 +445,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         for (MXRecord mx : mxAnswers) {
             servers.add(new MxHost(mx.getTarget().toString(), mx.getPriority()));
         }
-        return servers;
+        return new MxRawResult(servers, ttl);
     }
 
     private static List<String> shuffleEqualPriorityMx(List<MxHost> mxHosts) {
@@ -493,7 +500,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         TimeMetric timeMetric = metricFactory.timer("findMXRecords");
         try {
-            List<MxHost> hosts = findMXRecordsRaw(hostname);
+            MxRawResult rawResult = findMXRecordsRaw(hostname);
+            List<MxHost> hosts = rawResult.hosts();
             // If we found no results, we'll add the original domain name if it's a valid DNS entry
             if (hosts.isEmpty()) {
                 LOGGER.info("Couldn't resolve MX records for domain {}.", hostname);
@@ -507,13 +515,42 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
             List<MxHost> immutableHosts = ImmutableList.copyOf(hosts);
             if (caffeineCache != null) {
-                Record[] records = lookupNoException(hostname, Type.MX);
-                long ttl = computeRecordsTtl(records, hostname);
-                caffeineCache.put(new DnsKey(DnsRecordType.MX, normalizeKey(hostname)), new DnsValue<>(immutableHosts, ttl));
+                caffeineCache.put(new DnsKey(DnsRecordType.MX, normalizeKey(hostname)), new DnsValue<>(immutableHosts, rawResult.ttl()));
             }
             return shuffleEqualPriorityMx(immutableHosts);
         } finally {
             timeMetric.stopAndPublish();
+        }
+    }
+
+    private LookupResult lookupInternal(String namestr, int type) throws TemporaryResolutionException {
+        try {
+            Lookup l = new Lookup(namestr, type);
+            ResponseCaptureCache captureCache = (caffeineCache != null) ? new ResponseCaptureCache() : null;
+            l.setCache(captureCache != null ? captureCache : cache);
+            l.setResolver(resolver);
+            l.setCredibility(dnsCredibility);
+            l.setSearchPath(searchPaths);
+            Record[] r = l.run();
+
+            if (l.getResult() == Lookup.TRY_AGAIN) {
+                throw new TemporaryResolutionException("DNSService is temporary not reachable");
+            }
+            SOARecord soa = (captureCache != null) ? captureCache.getCapturedSoa() : null;
+            return new LookupResult(r, soa);
+        } catch (TextParseException tpe) {
+            LOGGER.error("Couldn't parse name {}", namestr, tpe);
+            return new LookupResult(null, null);
+        } catch (IllegalStateException ise) {
+            throw new TemporaryResolutionException("DNSService is temporary not reachable", ise);
+        }
+    }
+
+    private LookupResult lookupInternalNoException(String namestr, int type) {
+        try {
+            return lookupInternal(namestr, type);
+        } catch (TemporaryResolutionException e) {
+            return new LookupResult(null, null);
         }
     }
 
@@ -526,38 +563,11 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * @param type     the type of record desired
      */
     protected Record[] lookup(String namestr, int type) throws TemporaryResolutionException {
-        try {
-            Lookup l = new Lookup(namestr, type);
-
-            l.setCache(caffeineCache == null ? cache : null);
-            l.setResolver(resolver);
-            l.setCredibility(dnsCredibility);
-            l.setSearchPath(searchPaths);
-            Record[] r = l.run();
-
-            if (l.getResult() == Lookup.TRY_AGAIN) {
-                throw new TemporaryResolutionException("DNSService is temporary not reachable");
-            } else {
-                return r;
-            }
-
-        } catch (TextParseException tpe) {
-            // TODO: Figure out how to handle this correctly.
-            LOGGER.error("Couldn't parse name {}", namestr, tpe);
-            return null;
-        } catch (IllegalStateException ise) {
-            // This is okay, because it mimics the original behaviour
-            // TODO find out if it's a bug in DNSJava
-            throw new TemporaryResolutionException("DNSService is temporary not reachable", ise);
-        }
+        return lookupInternal(namestr, type).answers();
     }
 
     protected Record[] lookupNoException(String namestr, int type) {
-        try {
-            return lookup(namestr, type);
-        } catch (TemporaryResolutionException e) {
-            return null;
-        }
+        return lookupInternalNoException(namestr, type).answers();
     }
 
     private static String normalizeKey(String host) {
@@ -618,7 +628,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             // Address.getByAddress parses IP literals (both IPv4 and IPv6). If it succeeds, name is an IP literal.
             return ImmutableList.of(org.xbill.DNS.Address.getByAddress(name));
         } catch (UnknownHostException e) {
-            Record[] records = lookupNoException(name, Type.A);
+            LookupResult lookupResult = lookupInternalNoException(name, Type.A);
+            Record[] records = lookupResult.answers();
 
             if (records != null && records.length >= 1) {
                 InetAddress[] addrs = new InetAddress[records.length];
@@ -628,7 +639,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 }
                 Collection<InetAddress> result = ImmutableList.copyOf(addrs);
                 if (caffeineCache != null) {
-                    long ttl = computeRecordsTtl(records, host);
+                    long ttl = computeRecordsTtl(records, lookupResult.authoritySoa());
                     caffeineCache.put(new DnsKey(DnsRecordType.A, normalizeKey(host)), new DnsValue<>(result, ttl));
                 }
                 return result;
@@ -654,7 +665,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         TimeMetric timeMetric = metricFactory.timer("findTXTRecords");
         List<String> txtR = new ArrayList<>();
-        Record[] records = lookupNoException(hostname, Type.TXT);
+        LookupResult lookupResult = lookupInternalNoException(hostname, Type.TXT);
+        Record[] records = lookupResult.answers();
 
         try {
             if (records != null) {
@@ -666,7 +678,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             }
             Collection<String> result = ImmutableList.copyOf(txtR);
             if (caffeineCache != null) {
-                long ttl = computeRecordsTtl(records, hostname);
+                long ttl = computeRecordsTtl(records, lookupResult.authoritySoa());
                 caffeineCache.put(new DnsKey(DnsRecordType.TXT, normalizeKey(hostname)), new DnsValue<>(result, ttl));
             }
             return result;
@@ -689,7 +701,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         String result;
         Name name = ReverseMap.fromAddress(addr);
         String nameString = name.toString();
-        Record[] records = lookupNoException(nameString, Type.PTR);
+        LookupResult lookupResult = lookupInternalNoException(nameString, Type.PTR);
+        Record[] records = lookupResult.answers();
 
         try {
             if (records == null) {
@@ -699,7 +712,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 result = ptr.getTarget().toString();
             }
             if (caffeineCache != null) {
-                long ttl = computeRecordsTtl(records, nameString);
+                long ttl = computeRecordsTtl(records, lookupResult.authoritySoa());
                 caffeineCache.put(new DnsKey(DnsRecordType.PTR, addr), new DnsValue<>(result, ttl));
             }
             return result;
