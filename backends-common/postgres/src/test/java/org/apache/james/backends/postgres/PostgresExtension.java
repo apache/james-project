@@ -87,11 +87,13 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     public static final PoolSize DEFAULT_POOL_SIZE = PoolSize.SMALL;
+    public static final Duration DEFAULT_JOOQ_REACTIVE_TIMEOUT = Duration.ofSeconds(20L);
     public static PostgreSQLContainer<?> PG_CONTAINER = DockerPostgresSingleton.SINGLETON;
     private final PostgresDataDefinition postgresDataDefinition;
     private final RowLevelSecurity rowLevelSecurity;
     private final PostgresFixture.Database selectedDatabase;
     private PoolSize poolSize;
+    private Duration jooqReactiveTimeout = DEFAULT_JOOQ_REACTIVE_TIMEOUT;
     private PostgresConfiguration postgresConfiguration;
     private PostgresExecutor defaultPostgresExecutor;
     private PostgresExecutor byPassRLSPostgresExecutor;
@@ -99,6 +101,11 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     private Connection defaultConnection;
     private PostgresExecutor.Factory executorFactory;
     private PostgresTableManager postgresTableManager;
+
+    public PostgresExtension withJooqReactiveTimeout(Duration jooqReactiveTimeout) {
+        this.jooqReactiveTimeout = jooqReactiveTimeout;
+        return this;
+    }
 
     public void pause() {
         PG_CONTAINER.getDockerClient().pauseContainerCmd(PG_CONTAINER.getContainerId())
@@ -161,7 +168,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .byPassRLSUser(DEFAULT_DATABASE.dbUser())
             .byPassRLSPassword(DEFAULT_DATABASE.dbPassword())
             .rowLevelSecurityEnabled(rowLevelSecurity.isRowLevelSecurityEnabled())
-            .jooqReactiveTimeout(Optional.of(Duration.ofSeconds(20L)))
+            .jooqReactiveTimeout(Optional.of(jooqReactiveTimeout))
             .build();
 
         Function<PostgresConfiguration.Credential, PostgresqlConnectionConfiguration> postgresqlConnectionConfigurationFunction = credential ->
