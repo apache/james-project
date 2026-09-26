@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,12 +32,14 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.core.Username;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -282,5 +285,33 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
             assertThat(sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.METADATA))
                 .hasSize(1);
         }
+    }
+
+    @Test
+    void findShouldFallbackAndReconcileWhenHeaderBlobNotFound(CassandraCluster cassandra) throws Exception {
+        saveMessages();
+
+        CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new PlainBlobId.Factory());
+        CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(
+            cassandra.getConf(),
+            new PlainBlobId.Factory(),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
+
+        CassandraId mailboxId = (CassandraId) benwaInboxMailbox.getMailboxId();
+        CassandraMessageId messageId = (CassandraMessageId) message1.getMessageId();
+        MessageUid uid = message1.getUid();
+        PlainBlobId staleBlobId = new PlainBlobId.Factory().of("stale-blob-id");
+
+        imapUidDAO.updateDenormalizedFields(messageId, mailboxId, uid, new Date(), 0, 100, staleBlobId).block();
+        messageIdDAO.updateDenormalizedFields(mailboxId, uid, new Date(), 0, 100, staleBlobId).block();
+
+        List<MailboxMessage> messages = sut.find(ImmutableList.of(messageId), MessageMapper.FetchType.HEADERS);
+        assertThat(messages).hasSize(1);
+
+        BlobId reconciledImapUidBlob = imapUidDAO.retrieve(messageId, Optional.of(mailboxId)).blockFirst().getHeaderContent().get();
+        BlobId reconciledMessageIdBlob = messageIdDAO.retrieve(mailboxId, uid).block().get().getHeaderContent().get();
+
+        assertThat(reconciledImapUidBlob).isNotEqualTo(staleBlobId);
+        assertThat(reconciledMessageIdBlob).isNotEqualTo(staleBlobId);
     }
 }

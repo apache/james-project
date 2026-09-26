@@ -59,6 +59,13 @@ connectors:
   `content-encoding` and the original size. On reads, it uses this metadata to
   transparently decompress the payload. This reduces storage usage and network
   transfer for compressible blob content.
+* `ChunkedBlobStoreDAO` wraps the storage DAO to provide transparent, low-latency
+  access to blobs compacted into multi-slot chunk objects. When a blob identifier
+  represents a virtual slot within a compacted chunk
+  (`<family>_<generation>_chunk_<hash>~<offset>~<limit>`), `ChunkedBlobStoreDAO`
+  translates read requests into precise HTTP byte-range queries
+  (`Range: bytes=offset-limit`) against the underlying object store. Reads of
+  uncompacted standalone blobs pass through directly without overhead.
 
 AES and Zstd can be enabled together. In the Guice binding chain, compression
 wraps encryption: `ZstdBlobStoreDAO` delegates to `AESBlobStoreDAO`, which then
@@ -66,6 +73,58 @@ delegates to the concrete storage DAO. Writes therefore compress first and
 encrypt afterwards; reads decrypt first and decompress afterwards. This ordering
 preserves the benefit of compression, as encrypted payloads are generally not
 compressible.
+
+[NOTE]
+Chunked storage relies on partial HTTP Range requests (`Range: bytes=offset-limit`)
+against the underlying object storage. If server-side encryption with customer-provided
+keys (SSE-C) is used, ensure that the encryption algorithm and key headers are
+consistently supplied with range requests. Some S3-compatible providers have limited
+support for range reads with SSE-C; verify provider compatibility before enabling
+compaction on SSE-C encrypted buckets.
+
+== S3 Object Compaction
+
+Storing millions of small objects (such as email headers and small bodies) in S3
+leads to increased storage costs, high request fees (PUT/GET), and slow metadata
+listing operations.
+
+James provides an S3 Object Compaction mechanism to mitigate this:
+
+* *Generation-aware packing*: Historical generation blobs that have become immutable
+  are gathered by `BlobCompactionAlgorithm` and packed into large (~100MB) chunk
+  objects in S3.
+* *Binary Chunk Format*: Chunks store slots containing individual blob payloads,
+  slot CRC32C checksums, slot metadata, and a trailing footer with slot offset tables.
+* *Atomic reference updates*: Cassandra message metadata tables (`messageV3`,
+  `imapUidTable`, `messageIdTable`) are updated to point to the new virtual chunk
+  slot IDs before the original standalone blobs are deleted from S3.
+* *Two-stage lifecycle*:
+  ** *Initial Compaction*: Packs standalone candidate blobs of a target generation
+     into chunks and updates references.
+  ** *GC Recompaction*: Rewrites sparse chunks (where slots were marked dead due to
+     message expunges) into new dense chunks to reclaim storage space, and merges
+     undersized chunks.
+
+=== Architectural Invariants and Guarantees
+
+The compaction design is grounded in several core invariants:
+
+* *Immutability Invariant*: Blobs in historical generations are strictly immutable.
+  Compaction never alters blob contents in-place.
+* *Reachability Invariant*: Only reachable, referenced blobs are packed into chunk
+  objects. Garbage collection of unreferenced blobs is inherently built into the
+  compaction process.
+* *Safe Deletion Invariant*: Original standalone blobs are only deleted once the
+  canonical reference table (`messageV3`) has successfully recorded the chunk slot ID.
+* *Integrity Invariant*: Every slot carries a CRC32C checksum verified on read.
+  Corrupted reads fail fast and let exceptions fly rather than silently returning
+  empty or truncated data.
+* *Idempotence & Crash Safety*: Interrupted compaction runs can be re-executed safely
+  without data loss. Partially written chunks remain unreferenced orphans cleaned up
+  by subsequent runs.
+* *Orthogonality Invariant*: Chunking is purely a physical storage layout concern.
+  It operates below encryption (AES) and compression (Zstd) layers without leaking
+  format-specific semantics.
 
 == Logical buckets
 

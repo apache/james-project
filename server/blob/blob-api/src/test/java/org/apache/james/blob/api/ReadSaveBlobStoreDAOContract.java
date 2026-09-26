@@ -405,4 +405,68 @@ public interface ReadSaveBlobStoreDAOContract {
 
         };
     }
+
+    @Test
+    default void readRangeShouldReturnMiddleSlice() throws IOException {
+        byte[] payload = "0123456789".getBytes(StandardCharsets.UTF_8);
+        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(payload))).block();
+
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, TEST_BLOB_ID, 3, 6).block();
+
+        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(10);
+        assertThat(new String(slice.asBytes().payload(), StandardCharsets.UTF_8)).isEqualTo("3456");
+    }
+
+    @Test
+    default void readRangeShouldReturnPrefix() throws IOException {
+        byte[] payload = "0123456789".getBytes(StandardCharsets.UTF_8);
+        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(payload))).block();
+
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, TEST_BLOB_ID, 0, 2).block();
+
+        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(10);
+        assertThat(new String(slice.asBytes().payload(), StandardCharsets.UTF_8)).isEqualTo("012");
+    }
+
+    @Test
+    default void readRangeShouldReturnSuffixWhenStartNegative() throws IOException {
+        byte[] payload = "0123456789".getBytes(StandardCharsets.UTF_8);
+        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(payload))).block();
+
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, TEST_BLOB_ID, -4, -1).block();
+
+        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(10);
+        assertThat(new String(slice.asBytes().payload(), StandardCharsets.UTF_8)).isEqualTo("6789");
+    }
+
+    @Test
+    default void readRangeShouldReturnFullContent() throws IOException {
+        byte[] payload = "0123456789".getBytes(StandardCharsets.UTF_8);
+        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(payload))).block();
+
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, TEST_BLOB_ID, 0, 9).block();
+
+        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(10);
+        assertThat(new String(slice.asBytes().payload(), StandardCharsets.UTF_8)).isEqualTo("0123456789");
+    }
+
+    @Test
+    default void readRangeShouldCapEndAtObjectSize() throws IOException {
+        byte[] payload = "0123456789".getBytes(StandardCharsets.UTF_8);
+        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(payload))).block();
+
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, TEST_BLOB_ID, 5, 50).block();
+
+        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(10);
+        assertThat(new String(slice.asBytes().payload(), StandardCharsets.UTF_8)).isEqualTo("56789");
+    }
+
+    @Test
+    default void readRangeShouldFailWhenStartBeyondSize() {
+        byte[] payload = "0123456789".getBytes(StandardCharsets.UTF_8);
+        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(payload))).block();
+
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, TEST_BLOB_ID, 20, 30).block())
+            .isNotNull();
+    }
 }

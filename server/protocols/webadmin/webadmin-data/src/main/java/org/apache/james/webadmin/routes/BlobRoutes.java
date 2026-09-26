@@ -31,6 +31,11 @@ import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.compaction.BlobCompactionAlgorithm;
+import org.apache.james.blob.compaction.BlobCompactionTask;
+import org.apache.james.blob.compaction.CompactionRequest;
+import org.apache.james.blob.compaction.GCBlobCompactionTask;
+import org.apache.james.blob.compaction.InitialBlobCompactionTask;
 import org.apache.james.server.blob.deduplication.BlobGCTask;
 import org.apache.james.server.blob.deduplication.GenerationAwareBlobId;
 import org.apache.james.task.Task;
@@ -58,6 +63,19 @@ public class BlobRoutes implements Routes {
     private final Set<BlobReferenceSource> blobReferenceSources;
     private final GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration;
     private final BlobId.Factory generationAwareBlobIdFactory;
+    private final Optional<BlobCompactionAlgorithm> blobCompactionAlgorithm;
+
+    public BlobRoutes(TaskManager taskManager,
+                      JsonTransformer jsonTransformer,
+                      Clock clock,
+                      BlobStoreDAO blobStoreDAO,
+                      @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) BucketName defaultBucketName,
+                      Set<BlobReferenceSource> blobReferenceSources,
+                      GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration,
+                      BlobId.Factory generationAwareBlobIdFactory) {
+        this(taskManager, jsonTransformer, clock, blobStoreDAO, defaultBucketName, blobReferenceSources,
+            generationAwareBlobIdConfiguration, generationAwareBlobIdFactory, Optional.empty());
+    }
 
     @Inject
     public BlobRoutes(TaskManager taskManager,
@@ -67,7 +85,8 @@ public class BlobRoutes implements Routes {
                       @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) BucketName defaultBucketName,
                       Set<BlobReferenceSource> blobReferenceSources,
                       GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration,
-                      BlobId.Factory generationAwareBlobIdFactory) {
+                      BlobId.Factory generationAwareBlobIdFactory,
+                      Optional<BlobCompactionAlgorithm> blobCompactionAlgorithm) {
         this.taskManager = taskManager;
         this.jsonTransformer = jsonTransformer;
         this.clock = clock;
@@ -76,6 +95,7 @@ public class BlobRoutes implements Routes {
         this.blobReferenceSources = blobReferenceSources;
         this.generationAwareBlobIdConfiguration = generationAwareBlobIdConfiguration;
         this.generationAwareBlobIdFactory = generationAwareBlobIdFactory;
+        this.blobCompactionAlgorithm = blobCompactionAlgorithm;
     }
 
     @Override
@@ -85,8 +105,76 @@ public class BlobRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        TaskFromRequest gcUnreferencedTaskRequest = this::gcUnreferenced;
-        service.delete(BASE_PATH, gcUnreferencedTaskRequest.asRoute(taskManager), jsonTransformer);
+        TaskFromRequest deleteTaskRequest = this::delete;
+        service.delete(BASE_PATH, deleteTaskRequest.asRoute(taskManager), jsonTransformer);
+    }
+
+    public Task delete(Request request) {
+        String action = request.queryParams("action");
+        if (action == null) {
+            action = request.queryParams("scope");
+        }
+        if ("gc".equals(action) || "unreferenced".equals(action)) {
+            return gcUnreferenced(request);
+        }
+        if ("initial-compaction".equals(action)) {
+            return initialCompact(request);
+        }
+        if ("re-compaction".equals(action) || "recompaction".equals(action) || "gc-compaction".equals(action)) {
+            return gcCompact(request);
+        }
+        if ("compaction".equals(action)) {
+            return compact(request);
+        }
+        throw new IllegalArgumentException("'scope' is missing or must be 'unreferenced'");
+    }
+
+    public Task initialCompact(Request request) {
+        BlobCompactionAlgorithm algorithm = blobCompactionAlgorithm
+            .orElseThrow(() -> new IllegalStateException("Blob compaction is not configured on this server"));
+        return new InitialBlobCompactionTask(algorithm, buildCompactionRequest(request), clock);
+    }
+
+    public Task gcCompact(Request request) {
+        BlobCompactionAlgorithm algorithm = blobCompactionAlgorithm
+            .orElseThrow(() -> new IllegalStateException("Blob compaction is not configured on this server"));
+        return new GCBlobCompactionTask(algorithm, buildCompactionRequest(request), clock);
+    }
+
+    public Task compact(Request request) {
+        BlobCompactionAlgorithm algorithm = blobCompactionAlgorithm
+            .orElseThrow(() -> new IllegalStateException("Blob compaction is not configured on this server"));
+        return new BlobCompactionTask(algorithm, buildCompactionRequest(request), clock);
+    }
+
+    private CompactionRequest buildCompactionRequest(Request request) {
+        String generationParam = request.queryParams("generation");
+        Preconditions.checkArgument(generationParam != null && !generationParam.isBlank(),
+            "'generation' is compulsory");
+        long generation;
+        try {
+            generation = Long.parseLong(generationParam);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid 'generation': " + generationParam, e);
+        }
+        Preconditions.checkArgument(generation >= 0, "'generation' must not be negative");
+
+        Optional<Integer> family = Optional.ofNullable(request.queryParams("family"))
+            .map(val -> {
+                try {
+                    int parsed = Integer.parseInt(val);
+                    Preconditions.checkArgument(parsed > 0, "'family' must be strictly positive");
+                    return parsed;
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Invalid 'family': " + val, e);
+                }
+            });
+
+        return CompactionRequest.builder()
+            .bucketName(bucketName)
+            .generation(generation)
+            .family(family)
+            .build();
     }
 
     public Task gcUnreferenced(Request request) {

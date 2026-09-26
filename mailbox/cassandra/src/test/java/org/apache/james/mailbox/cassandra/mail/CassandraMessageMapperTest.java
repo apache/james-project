@@ -38,9 +38,11 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.StatementRecorder.Selector;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -425,6 +427,35 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(4);
         }
+    }
+
+    @Test
+    void findInMailboxShouldFallbackAndReconcileWhenHeaderBlobNotFound(CassandraCluster cassandra) throws Exception {
+        saveMessages();
+
+        CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new PlainBlobId.Factory());
+        CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(
+            cassandra.getConf(),
+            new PlainBlobId.Factory(),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
+
+        CassandraId mailboxId = (CassandraId) benwaInboxMailbox.getMailboxId();
+        CassandraMessageId messageId = (CassandraMessageId) message1.getMessageId();
+        MessageUid uid = message1.getUid();
+        PlainBlobId staleBlobId = new PlainBlobId.Factory().of("stale-blob-id");
+
+        imapUidDAO.updateDenormalizedFields(messageId, mailboxId, uid, new Date(), 0, 100, staleBlobId).block();
+        messageIdDAO.updateDenormalizedFields(mailboxId, uid, new Date(), 0, 100, staleBlobId).block();
+
+        Iterator<MailboxMessage> messages = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(uid), FetchType.HEADERS, 1);
+        assertThat(messages).hasNext();
+        messages.next();
+
+        BlobId reconciledImapUidBlob = imapUidDAO.retrieve(messageId, Optional.of(mailboxId)).blockFirst().getHeaderContent().get();
+        BlobId reconciledMessageIdBlob = messageIdDAO.retrieve(mailboxId, uid).block().get().getHeaderContent().get();
+
+        assertThat(reconciledImapUidBlob).isNotEqualTo(staleBlobId);
+        assertThat(reconciledMessageIdBlob).isNotEqualTo(staleBlobId);
     }
 
     @Test

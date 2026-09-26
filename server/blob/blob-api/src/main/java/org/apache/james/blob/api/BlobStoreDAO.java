@@ -39,6 +39,7 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.FileBackedOutputStream;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * James virtual blob store abstraction.
@@ -302,5 +303,47 @@ public interface BlobStoreDAO {
     default Publisher<BlobId> listBlobs(BucketName bucketName, String prefix) {
         return Flux.from(listBlobs(bucketName))
             .filter(blobId -> blobId.asString().startsWith(prefix));
+    }
+
+    BlobMetadataName TOTAL_OBJECT_SIZE = new BlobMetadataName("total-object-size");
+
+    static long totalObjectSize(Blob blob) {
+        return blob.metadata().get(TOTAL_OBJECT_SIZE)
+            .map(val -> {
+                try {
+                    return Long.parseLong(val.value());
+                } catch (NumberFormatException e) {
+                    return 0L;
+                }
+            })
+            .orElseGet(() -> {
+                try {
+                    return (long) blob.asBytes().payload().length;
+                } catch (IOException e) {
+                    return 0L;
+                }
+            });
+    }
+
+    default Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+        return Mono.from(readBytes(bucketName, blobId))
+            .map(bytesBlob -> {
+                byte[] allBytes = bytesBlob.payload();
+                long totalSize = allBytes.length;
+                BlobMetadata metadata = bytesBlob.metadata()
+                    .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(String.valueOf(totalSize)));
+                if (start < 0) {
+                    int suffixLength = (int) Math.min(totalSize, -start);
+                    int from = (int) (totalSize - suffixLength);
+                    byte[] slice = Arrays.copyOfRange(allBytes, from, (int) totalSize);
+                    return (Blob) BytesBlob.of(slice, metadata);
+                }
+                if (start >= totalSize || (end >= 0 && end < start)) {
+                    throw new IllegalArgumentException(String.format("Range [%d, %d] is out of bounds for object of size %d", start, end, totalSize));
+                }
+                long boundedEnd = Math.min(end, totalSize - 1);
+                byte[] slice = Arrays.copyOfRange(allBytes, (int) start, (int) boundedEnd + 1);
+                return (Blob) BytesBlob.of(slice, metadata);
+            });
     }
 }

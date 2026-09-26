@@ -31,6 +31,7 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.ObjectStorageHealthCheck;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
+import org.apache.james.blob.compaction.ChunkedBlobStoreDAO;
 import org.apache.james.blob.file.FileBlobStoreDAO;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
@@ -68,8 +69,9 @@ import com.google.inject.name.Names;
 import modules.BlobPostgresModule;
 
 public class BlobStoreModulesChooser {
-    private static final String RAW = "raw";
-    private static final String ENCRYPTION = "encryption";
+    public static final String RAW = "raw";
+    public static final String ENCRYPTION = "encryption";
+    public static final String CHUNKED = "chunked";
 
     static class CassandraBlobStoreDAODeclarationModule extends AbstractModule {
         @Override
@@ -133,8 +135,8 @@ public class BlobStoreModulesChooser {
     static class NoCompressionModule extends AbstractModule {
         @Provides
         @Singleton
-        BlobStoreDAO blobStoreDAO(@Named(ENCRYPTION) BlobStoreDAO encryption) {
-            return encryption;
+        BlobStoreDAO blobStoreDAO(@Named(ENCRYPTION) BlobStoreDAO encryption, MetricFactory metricFactory) {
+            return new ZstdBlobStoreDAO(encryption, CompressionConfiguration.builder().enabled(false).minRatio(0).build(), metricFactory);
         }
     }
 
@@ -157,12 +159,28 @@ public class BlobStoreModulesChooser {
         }
     }
 
+    static class ChunkedBlobStoreModule extends AbstractModule {
+        @Override
+        protected void configure() {
+            bind(BlobStoreDAO.class).annotatedWith(Names.named(CHUNKED)).to(ChunkedBlobStoreDAO.class);
+        }
+    }
+
+    static class NoChunkedBlobStoreModule extends AbstractModule {
+        @Provides
+        @Singleton
+        @Named(CHUNKED)
+        BlobStoreDAO blobStoreDAO(@Named(RAW) BlobStoreDAO raw) {
+            return raw;
+        }
+    }
+
     static class NoEncryptionModule extends AbstractModule {
         @Provides
         @Singleton
         @Named(ENCRYPTION)
-        BlobStoreDAO blobStoreDAO(@Named(RAW) BlobStoreDAO raw) {
-            return raw;
+        BlobStoreDAO blobStoreDAO(@Named(CHUNKED) BlobStoreDAO chunked) {
+            return chunked;
         }
     }
 
@@ -176,8 +194,8 @@ public class BlobStoreModulesChooser {
         @Provides
         @Singleton
         @Named(ENCRYPTION)
-        BlobStoreDAO blobStoreDAO(@Named(RAW) BlobStoreDAO raw) {
-            return new AESBlobStoreDAO(raw, cryptoConfig);
+        BlobStoreDAO blobStoreDAO(@Named(CHUNKED) BlobStoreDAO chunked) {
+            return new AESBlobStoreDAO(chunked, cryptoConfig);
         }
 
         @Provides
@@ -189,8 +207,10 @@ public class BlobStoreModulesChooser {
     public static List<Module> chooseModules(BlobStoreConfiguration choosingConfiguration) {
         return ImmutableList.<Module>builder()
             .add(chooseBlobStoreDAOModule(choosingConfiguration.getImplementation()))
+            .add(chooseChunkedBlobStoreDAOModule(choosingConfiguration.getImplementation()))
             .add(chooseEncryptionModule(choosingConfiguration.getCryptoConfig()))
             .add(chooseCompressionModule(choosingConfiguration.getCompressionConfiguration()))
+            .add(new BlobCompactionModule())
             .addAll(chooseStoragePolicyModule(choosingConfiguration.storageStrategy()))
             .add(new StoragePolicyConfigurationSanityEnforcementModule())
             .add(binder -> binder.bind(BlobStoreConfiguration.class).toInstance(choosingConfiguration))
@@ -216,6 +236,13 @@ public class BlobStoreModulesChooser {
     public static Module chooseEncryptionModule(Optional<CryptoConfig> cryptoConfig) {
         Optional<Module> encryptionModule = cryptoConfig.map(EncryptionModule::new);
         return encryptionModule.orElse(new NoEncryptionModule());
+    }
+
+    public static Module chooseChunkedBlobStoreDAOModule(BlobStoreConfiguration.BlobStoreImplName implementation) {
+        if (implementation == BlobStoreConfiguration.BlobStoreImplName.S3) {
+            return new ChunkedBlobStoreModule();
+        }
+        return new NoChunkedBlobStoreModule();
     }
 
     public static Module chooseCompressionModule(CompressionConfiguration compressionConfiguration) {

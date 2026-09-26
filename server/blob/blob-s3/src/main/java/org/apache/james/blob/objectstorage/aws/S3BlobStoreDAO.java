@@ -38,6 +38,9 @@ import jakarta.inject.Singleton;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.BlobStoreDAO.Blob;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataValue;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
@@ -245,6 +248,48 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause);
     }
 
+    @Override
+    public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        String rangeHeader = formatRangeHeader(start, end);
+
+        return getObjectRangeBytes(resolvedBucketName, blobId, rangeHeader)
+            .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
+            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
+            .publishOn(Schedulers.parallel())
+            .map(responseBytes -> {
+                long totalObjectSize = extractTotalObjectSize(responseBytes.response());
+                BlobMetadata metadata = asBlobMetadata(responseBytes.response().metadata())
+                    .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(String.valueOf(totalObjectSize)));
+                return (Blob) BytesBlob.of(responseBytes.asByteArrayUnsafe(), metadata);
+            })
+            .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause);
+    }
+
+    private String formatRangeHeader(long start, long end) {
+        if (start < 0) {
+            return "bytes=" + start;
+        }
+        if (end < start) {
+            return "bytes=" + start + "-";
+        }
+        return "bytes=" + start + "-" + end;
+    }
+
+    private long extractTotalObjectSize(GetObjectResponse response) {
+        String contentRange = response.contentRange();
+        if (contentRange != null && contentRange.contains("/")) {
+            String totalPart = contentRange.substring(contentRange.lastIndexOf('/') + 1).trim();
+            try {
+                return Long.parseLong(totalPart);
+            } catch (NumberFormatException e) {
+                // fall through
+            }
+        }
+        Long contentLength = response.contentLength();
+        return contentLength != null ? contentLength : 0L;
+    }
+
     private Mono<ResponseBytes<GetObjectResponse>> getObjectBytes(BucketName bucketName, BlobId blobId) {
         return getObjectBytesFromStore(bucketName, blobId)
                 .onErrorResume(e -> e instanceof NoSuchKeyException || e instanceof NoSuchBucketException, e -> {
@@ -255,8 +300,25 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
                 });
     }
 
+    private Mono<ResponseBytes<GetObjectResponse>> getObjectRangeBytes(BucketName bucketName, BlobId blobId, String rangeHeader) {
+        return getObjectRangeBytesFromStore(bucketName, blobId, rangeHeader)
+                .onErrorResume(e -> e instanceof NoSuchKeyException || e instanceof NoSuchBucketException, e -> {
+                    if (fallbackNamespace.isPresent() && bucketNameResolver.isNameSpace(bucketName)) {
+                        return getObjectRangeBytesFromStore(fallbackNamespace.get(), blobId, rangeHeader);
+                    }
+                    return Mono.error(e);
+                });
+    }
+
     private Mono<ResponseBytes<GetObjectResponse>> getObjectBytesFromStore(BucketName bucketName, BlobId blobId) {
         return buildGetObjectRequestBuilder(bucketName, blobId)
+            .flatMap(putObjectRequest -> Mono.fromFuture(() ->
+                client.getObject(putObjectRequest.build(), new MinimalCopyBytesResponseTransformer(configuration, blobId))));
+    }
+
+    private Mono<ResponseBytes<GetObjectResponse>> getObjectRangeBytesFromStore(BucketName bucketName, BlobId blobId, String rangeHeader) {
+        return buildGetObjectRequestBuilder(bucketName, blobId)
+            .map(builder -> builder.range(rangeHeader))
             .flatMap(putObjectRequest -> Mono.fromFuture(() ->
                 client.getObject(putObjectRequest.build(), new MinimalCopyBytesResponseTransformer(configuration, blobId))));
     }

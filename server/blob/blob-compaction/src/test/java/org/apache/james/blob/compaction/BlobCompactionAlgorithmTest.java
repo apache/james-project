@@ -1,0 +1,794 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.blob.compaction;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobIdUpdater;
+import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.blob.api.PlainBlobId;
+import org.apache.james.blob.compaction.ChunkFormat.BlobSlotContent;
+import org.apache.james.blob.compaction.ChunkFormat.ChunkWriteResult;
+import org.apache.james.blob.compaction.ChunkFormat.SlotRange;
+import org.apache.james.blob.memory.MemoryBlobStoreDAO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+class BlobCompactionAlgorithmTest {
+    private static final BucketName TEST_BUCKET = BucketName.of("compaction-test-bucket");
+    private static final long TARGET_GENERATION = 2L;
+    private static final int FAMILY = 1;
+
+    public static class TestBlobIdUpdaterFactory implements BlobIdUpdater.Factory {
+        public record Replacement(BlobId oldId, BlobId newId) {}
+
+        private final Set<BlobId> referencedBlobs = ConcurrentHashMap.newKeySet();
+        private final List<Replacement> replacements = new CopyOnWriteArrayList<>();
+        private final Map<BlobId, BlobId> updatedReferences = new ConcurrentHashMap<>();
+        private volatile Function<BlobId, Mono<Void>> replacementHook = id -> Mono.empty();
+
+        public void add(BlobId blobId) {
+            referencedBlobs.add(blobId);
+        }
+
+        public void add(BlobId blobId, String messageId) {
+            referencedBlobs.add(blobId);
+        }
+
+        public void remove(BlobId blobId) {
+            referencedBlobs.remove(blobId);
+        }
+
+        public void setReplacementHook(Function<BlobId, Mono<Void>> hook) {
+            this.replacementHook = hook;
+        }
+
+        @Override
+        public Mono<BlobIdUpdater> forPredicate(Predicate<BlobId> generationCondition,
+                                                Consumer<BlobId> referencedBlobIdObserver) {
+            referencedBlobs.stream().filter(generationCondition).forEach(referencedBlobIdObserver);
+            return Mono.just((oldId, newId) ->
+                replacementHook.apply(oldId)
+                    .doOnSuccess(v -> {
+                        replacements.add(new Replacement(oldId, newId));
+                        updatedReferences.put(oldId, newId);
+                        referencedBlobs.remove(oldId);
+                        referencedBlobs.add(newId);
+                    }));
+        }
+
+        public List<Replacement> getReplacements() {
+            return new ArrayList<>(replacements);
+        }
+
+        public Map<BlobId, BlobId> getUpdatedReferences() {
+            return updatedReferences;
+        }
+    }
+
+    private MemoryBlobStoreDAO rawStore;
+    private ChunkedBlobStoreDAO chunkedBlobStoreDAO;
+    private TestBlobIdUpdaterFactory updaterFactory;
+    private BlobCompactionAlgorithm testee;
+
+    @BeforeEach
+    void setUp() {
+        rawStore = new MemoryBlobStoreDAO();
+        chunkedBlobStoreDAO = new ChunkedBlobStoreDAO(rawStore);
+        updaterFactory = new TestBlobIdUpdaterFactory();
+        testee = new BlobCompactionAlgorithm(rawStore, rawStore, updaterFactory);
+    }
+
+    private byte[] readDecompressed(BlobId blobId) {
+        return Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, blobId)).block().payload();
+    }
+
+    @Test
+    void initialCompactionShouldPackSmallBlobsAndSkipLargeBlobs() {
+        BlobId small1 = new PlainBlobId("1_2_small1");
+        BlobId small2 = new PlainBlobId("1_2_small2");
+        BlobId large = new PlainBlobId("1_2_large");
+
+        byte[] payload1 = "Small payload 1".getBytes(StandardCharsets.UTF_8);
+        byte[] payload2 = "Small payload 2".getBytes(StandardCharsets.UTF_8);
+        byte[] largePayload = new byte[2 * 1024 * 1024]; // 2MB
+        Arrays.fill(largePayload, (byte) 'L');
+
+        Mono.from(rawStore.save(TEST_BUCKET, small1, BlobStoreDAO.BytesBlob.of(payload1))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, small2, BlobStoreDAO.BytesBlob.of(payload2))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, large, BlobStoreDAO.BytesBlob.of(largePayload))).block();
+
+        updaterFactory.add(small1, "msg-1");
+        updaterFactory.add(small2, "msg-2");
+        updaterFactory.add(large, "msg-3");
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder()
+                .maxPackableSize(1024 * 1024L) // 1MB
+                .build())
+            .build();
+
+        CompactionResult result = testee.initialCompact(request).block();
+
+        assertThat(result.packedBlobs()).isEqualTo(2);
+        assertThat(result.chunksWritten()).isEqualTo(1);
+
+        // Standalone small blobs should be deleted
+        assertThat(Flux.from(rawStore.listBlobs(TEST_BUCKET)).collectList().block())
+            .doesNotContain(small1, small2)
+            .contains(large);
+
+        // Replacements recorded
+        assertThat(updaterFactory.getReplacements()).hasSize(2);
+        BlobId newSlotRef1 = updaterFactory.getReplacements().get(0).newId();
+        BlobId newSlotRef2 = updaterFactory.getReplacements().get(1).newId();
+
+        assertThat(ChunkId.isChunkRef(newSlotRef1)).isTrue();
+        assertThat(ChunkId.isChunkRef(newSlotRef2)).isTrue();
+
+        assertThat(readDecompressed(newSlotRef1)).isEqualTo(payload1);
+        assertThat(readDecompressed(newSlotRef2)).isEqualTo(payload2);
+    }
+
+    @Test
+    void initialCompactionPreservesDeduplication() {
+        BlobId sharedBlobId = new PlainBlobId("1_2_shared");
+        BlobId otherBlobId = new PlainBlobId("1_2_other");
+        byte[] sharedPayload = "Shared email attachment body".getBytes(StandardCharsets.UTF_8);
+        byte[] otherPayload = "Other email attachment body".getBytes(StandardCharsets.UTF_8);
+
+        Mono.from(rawStore.save(TEST_BUCKET, sharedBlobId, BlobStoreDAO.BytesBlob.of(sharedPayload))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, otherBlobId, BlobStoreDAO.BytesBlob.of(otherPayload))).block();
+
+        // Two messages reference the SAME blob
+        updaterFactory.add(sharedBlobId, "msg-A");
+        updaterFactory.add(sharedBlobId, "msg-B");
+        updaterFactory.add(otherBlobId, "msg-C");
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .build();
+
+        CompactionResult result = testee.initialCompact(request).block();
+
+        assertThat(result.packedBlobs()).isEqualTo(2);
+        assertThat(result.chunksWritten()).isEqualTo(1);
+
+        // Replacements include one covering both messages for sharedBlobId
+        List<TestBlobIdUpdaterFactory.Replacement> reps = updaterFactory.getReplacements();
+        assertThat(reps).hasSize(2);
+        TestBlobIdUpdaterFactory.Replacement sharedRep = reps.stream()
+            .filter(r -> r.oldId().equals(sharedBlobId))
+            .findFirst()
+            .orElseThrow();
+        assertThat(sharedRep.newId()).isNotNull();
+
+        assertThat(readDecompressed(sharedRep.newId())).isEqualTo(sharedPayload);
+    }
+
+    @Test
+    void gcCompactShouldPurgeDeadSlotsWhenThresholdExceeded() throws Exception {
+        ChunkId chunkId = ChunkId.ofChunk(FAMILY, TARGET_GENERATION);
+
+        List<BlobSlotContent> slots = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            slots.add(BlobSlotContent.of(("Slot content " + i).getBytes(StandardCharsets.UTF_8)));
+        }
+
+        ChunkWriteResult writeResult = ChunkFormat.writeChunk(slots);
+        Mono.from(rawStore.save(TEST_BUCKET, chunkId.chunkBlobId(), BlobStoreDAO.BytesBlob.of(writeResult.chunkBytes()))).block();
+
+        // Only 8 slots are live, 2 slots (slots 8 and 9) are dead (20% dead > 10% threshold)
+        for (int i = 0; i < 8; i++) {
+            ChunkId slotRef = ChunkId.slotRef(chunkId, writeResult.slotRanges().get(i).offset(), writeResult.slotRanges().get(i).limit());
+            updaterFactory.add(slotRef, "msg-" + i);
+        }
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder()
+                .purgeDeadRatio(0.1)
+                .gainThreshold(0.1)
+                .build())
+            .build();
+
+        CompactionResult result = testee.gcCompact(request).block();
+
+        assertThat(result.deadPurged()).isEqualTo(2);
+
+        // Old chunk deleted
+        List<BlobId> remainingBlobs = Flux.from(rawStore.listBlobs(TEST_BUCKET)).collectList().block();
+        assertThat(remainingBlobs).doesNotContain(chunkId.chunkBlobId());
+        assertThat(remainingBlobs).hasSize(1); // the new purged chunk
+
+        // 8 surviving slots updated
+        assertThat(updaterFactory.getReplacements()).hasSize(8);
+
+        // Surviving slots readable
+        for (int i = 0; i < 8; i++) {
+            BlobId newSlotRef = updaterFactory.getReplacements().get(i).newId();
+            assertThat(readDecompressed(newSlotRef)).isEqualTo(("Slot content " + i).getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
+    void gcCompactShouldRespectGainThreshold() throws Exception {
+        ChunkId chunkId = ChunkId.ofChunk(FAMILY, TARGET_GENERATION);
+
+        List<BlobSlotContent> slots = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            slots.add(BlobSlotContent.of(("Slot content " + i).getBytes(StandardCharsets.UTF_8)));
+        }
+
+        ChunkWriteResult writeResult = ChunkFormat.writeChunk(slots);
+        Mono.from(rawStore.save(TEST_BUCKET, chunkId.chunkBlobId(), BlobStoreDAO.BytesBlob.of(writeResult.chunkBytes()))).block();
+
+        // 9 slots are live, 1 slot is dead (10% dead). Gain threshold is 20%.
+        for (int i = 0; i < 9; i++) {
+            ChunkId slotRef = ChunkId.slotRef(chunkId, writeResult.slotRanges().get(i).offset(), writeResult.slotRanges().get(i).limit());
+            updaterFactory.add(slotRef, "msg-" + i);
+        }
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder()
+                .purgeDeadRatio(0.1)
+                .gainThreshold(0.20) // 20% > 10% dead
+                .build())
+            .build();
+
+        CompactionResult result = testee.gcCompact(request).block();
+
+        assertThat(result.deadPurged()).isEqualTo(0);
+        // Old chunk is untouched
+        assertThat(Flux.from(rawStore.listBlobs(TEST_BUCKET)).collectList().block())
+            .contains(chunkId.chunkBlobId());
+    }
+
+    @Test
+    void gcCompactShouldMergeTwoSmallChunks() throws Exception {
+        ChunkId chunk1 = ChunkId.ofChunk(FAMILY, TARGET_GENERATION);
+        ChunkId chunk2 = ChunkId.ofChunk(FAMILY, TARGET_GENERATION);
+
+        byte[] payload1 = "Chunk 1 payload".getBytes(StandardCharsets.UTF_8);
+        byte[] payload2 = "Chunk 2 payload".getBytes(StandardCharsets.UTF_8);
+
+        ChunkWriteResult w1 = ChunkFormat.writeChunk(List.of(BlobSlotContent.of(payload1)));
+        ChunkWriteResult w2 = ChunkFormat.writeChunk(List.of(BlobSlotContent.of(payload2)));
+
+        Mono.from(rawStore.save(TEST_BUCKET, chunk1.chunkBlobId(), BlobStoreDAO.BytesBlob.of(w1.chunkBytes()))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, chunk2.chunkBlobId(), BlobStoreDAO.BytesBlob.of(w2.chunkBytes()))).block();
+
+        ChunkId slot1 = ChunkId.slotRef(chunk1, w1.slotRanges().get(0).offset(), w1.slotRanges().get(0).limit());
+        ChunkId slot2 = ChunkId.slotRef(chunk2, w2.slotRanges().get(0).offset(), w2.slotRanges().get(0).limit());
+
+        updaterFactory.add(slot1, "msg-1");
+        updaterFactory.add(slot2, "msg-2");
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder()
+                .chunkTargetSize(100_000L)
+                .mergeDeadRatio(0.5) // chunks < 50,000 bytes qualify for merge
+                .build())
+            .build();
+
+        CompactionResult result = testee.gcCompact(request).block();
+
+        assertThat(result.mergedChunks()).isEqualTo(2);
+
+        // Old chunks deleted
+        List<BlobId> blobs = Flux.from(rawStore.listBlobs(TEST_BUCKET)).collectList().block();
+        assertThat(blobs).doesNotContain(chunk1.chunkBlobId(), chunk2.chunkBlobId());
+        assertThat(blobs).hasSize(1); // merged chunk
+
+        // Both slots updated and readable
+        assertThat(updaterFactory.getReplacements()).hasSize(2);
+        BlobId newSlot1 = updaterFactory.getReplacements().get(0).newId();
+        BlobId newSlot2 = updaterFactory.getReplacements().get(1).newId();
+
+        assertThat(readDecompressed(newSlot1)).isEqualTo(payload1);
+        assertThat(readDecompressed(newSlot2)).isEqualTo(payload2);
+    }
+
+    @Test
+    void gcCompactShouldKeepSingleSmallChunkAlone() throws Exception {
+        ChunkId chunk1 = ChunkId.ofChunk(FAMILY, TARGET_GENERATION);
+        byte[] payload1 = "Single chunk payload".getBytes(StandardCharsets.UTF_8);
+
+        ChunkWriteResult w1 = ChunkFormat.writeChunk(List.of(BlobSlotContent.of(payload1)));
+        Mono.from(rawStore.save(TEST_BUCKET, chunk1.chunkBlobId(), BlobStoreDAO.BytesBlob.of(w1.chunkBytes()))).block();
+
+        ChunkId slot1 = ChunkId.slotRef(chunk1, w1.slotRanges().get(0).offset(), w1.slotRanges().get(0).limit());
+        updaterFactory.add(slot1, "msg-1");
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder()
+                .chunkTargetSize(100_000L)
+                .mergeDeadRatio(0.5)
+                .build())
+            .build();
+
+        CompactionResult result = testee.gcCompact(request).block();
+
+        assertThat(result.mergedChunks()).isEqualTo(0);
+        assertThat(Flux.from(rawStore.listBlobs(TEST_BUCKET)).collectList().block())
+            .contains(chunk1.chunkBlobId());
+    }
+
+    @Test
+    void gcCompactShouldDeleteOrphanChunkForCrashRecovery() throws Exception {
+        ChunkId orphanChunk = ChunkId.ofChunk(FAMILY, TARGET_GENERATION);
+        byte[] payload = "Orphan chunk content with no references".getBytes(StandardCharsets.UTF_8);
+
+        ChunkWriteResult w = ChunkFormat.writeChunk(List.of(BlobSlotContent.of(payload)));
+        Mono.from(rawStore.save(TEST_BUCKET, orphanChunk.chunkBlobId(), BlobStoreDAO.BytesBlob.of(w.chunkBytes()))).block();
+
+        // Notice: NO references in mappingSource (100% orphan)
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .build();
+
+        CompactionResult result = testee.gcCompact(request).block();
+
+        assertThat(result.deadPurged()).isEqualTo(1);
+        assertThat(Flux.from(rawStore.listBlobs(TEST_BUCKET)).collectList().block())
+            .doesNotContain(orphanChunk.chunkBlobId());
+    }
+
+    @Test
+    void gcCompactShouldBeIdempotentAndTerminateWithEmptyResult() {
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .build();
+
+        CompactionResult result = testee.gcCompact(request).block();
+        assertThat(result).isEqualTo(CompactionResult.NONE);
+    }
+
+    @Test
+    void initialCompactShouldNotDeleteOriginalBlobWhenReferenceUpdateFails() {
+        BlobId failingBlob = new PlainBlobId("1_2_failing");
+        BlobId succeedingBlob = new PlainBlobId("1_2_succeeding");
+
+        byte[] payloadFailing = "Payload failing".getBytes(StandardCharsets.UTF_8);
+        byte[] payloadSucceeding = "Payload succeeding".getBytes(StandardCharsets.UTF_8);
+
+        Mono.from(rawStore.save(TEST_BUCKET, failingBlob, BlobStoreDAO.BytesBlob.of(payloadFailing))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, succeedingBlob, BlobStoreDAO.BytesBlob.of(payloadSucceeding))).block();
+
+        updaterFactory.add(failingBlob, "msg-fail");
+        updaterFactory.add(succeedingBlob, "msg-success");
+
+        updaterFactory.setReplacementHook(oldId -> {
+            if (oldId.equals(failingBlob)) {
+                return Mono.error(new RuntimeException("Cassandra write timeout simulation"));
+            }
+            return Mono.empty();
+        });
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .build();
+
+        CompactionResult result = testee.initialCompact(request).block();
+
+        assertThat(result.packedBlobs()).isEqualTo(1);
+
+        List<BlobId> remainingBlobs = Flux.from(rawStore.listBlobs(TEST_BUCKET)).collectList().block();
+        assertThat(remainingBlobs).contains(failingBlob);
+        assertThat(remainingBlobs).doesNotContain(succeedingBlob);
+    }
+
+    @Test
+    void initialCompactShouldMaintainStoreCoherenceWhenReferenceUpdateFailsForSomeBlobs() {
+        BlobId blob1 = new PlainBlobId("1_2_blob1");
+        BlobId blob2Failing = new PlainBlobId("1_2_blob2_fail");
+        BlobId blob3 = new PlainBlobId("1_2_blob3");
+
+        byte[] payload1 = "Content of email 1".getBytes(StandardCharsets.UTF_8);
+        byte[] payload2 = "Content of email 2".getBytes(StandardCharsets.UTF_8);
+        byte[] payload3 = "Content of email 3".getBytes(StandardCharsets.UTF_8);
+
+        Mono.from(rawStore.save(TEST_BUCKET, blob1, BlobStoreDAO.BytesBlob.of(payload1))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, blob2Failing, BlobStoreDAO.BytesBlob.of(payload2))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, blob3, BlobStoreDAO.BytesBlob.of(payload3))).block();
+
+        updaterFactory.add(blob1, "msg-1");
+        updaterFactory.add(blob2Failing, "msg-2");
+        updaterFactory.add(blob3, "msg-3");
+
+        updaterFactory.setReplacementHook(oldId -> {
+            if (oldId.equals(blob2Failing)) {
+                return Mono.error(new RuntimeException("Simulated reference update failure"));
+            }
+            return Mono.empty();
+        });
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .build();
+
+        CompactionResult result = testee.initialCompact(request).block();
+
+        // Two succeeded, one failed
+        assertThat(result.packedBlobs()).isEqualTo(2);
+
+        // Coherence check 1: Failed candidate blob was NOT deleted from raw storage
+        byte[] readBlob2 = Mono.from(rawStore.readBytes(TEST_BUCKET, blob2Failing)).block().payload();
+        assertThat(readBlob2).isEqualTo(payload2);
+
+        // Coherence check 2: Successful candidate blobs had standalone blobs deleted
+        List<BlobId> remainingRawBlobs = Flux.from(rawStore.listBlobs(TEST_BUCKET)).collectList().block();
+        assertThat(remainingRawBlobs).contains(blob2Failing);
+        assertThat(remainingRawBlobs).doesNotContain(blob1, blob3);
+
+        // Coherence check 3: Successful candidate blobs can be read via their new chunk slot IDs
+        Map<BlobId, BlobId> updatedReferences = updaterFactory.getUpdatedReferences();
+        BlobId slotRef1 = updatedReferences.get(blob1);
+        BlobId slotRef3 = updatedReferences.get(blob3);
+        assertThat(slotRef1).isNotNull();
+        assertThat(slotRef3).isNotNull();
+
+        byte[] readSlot1 = readDecompressed(slotRef1);
+        byte[] readSlot3 = readDecompressed(slotRef3);
+        assertThat(readSlot1).isEqualTo(payload1);
+        assertThat(readSlot3).isEqualTo(payload3);
+
+        // Coherence check 4: Re-compacting once the failure is resolved allows the remaining blob to be compacted
+        BlobId anotherBlob = new PlainBlobId("1_2_blob4");
+        byte[] payload4 = "Content of email 4".getBytes(StandardCharsets.UTF_8);
+        Mono.from(rawStore.save(TEST_BUCKET, anotherBlob, BlobStoreDAO.BytesBlob.of(payload4))).block();
+        updaterFactory.add(anotherBlob, "msg-4");
+
+        updaterFactory.setReplacementHook(oldId -> Mono.empty());
+
+        CompactionResult secondResult = testee.initialCompact(request).block();
+        assertThat(secondResult.packedBlobs()).isEqualTo(2);
+
+        BlobId slotRef2 = updatedReferences.get(blob2Failing);
+        assertThat(slotRef2).isNotNull();
+        byte[] readSlot2 = readDecompressed(slotRef2);
+        assertThat(readSlot2).isEqualTo(payload2);
+    }
+
+    @Test
+    void gcCompactShouldMaintainStoreCoherenceWhenSlotReferenceUpdateFails() throws Exception {
+        byte[] payload1 = "Active live slot payload".getBytes(StandardCharsets.UTF_8);
+        byte[] payload2 = "Dead obsolete slot payload".getBytes(StandardCharsets.UTF_8);
+        ChunkWriteResult writeResult = ChunkFormat.writeChunk(List.of(
+            BlobSlotContent.of(payload1),
+            BlobSlotContent.of(payload2)));
+        ChunkId chunkId = ChunkId.ofChunk(FAMILY, TARGET_GENERATION);
+        Mono.from(rawStore.save(TEST_BUCKET, chunkId.chunkBlobId(), BlobStoreDAO.BytesBlob.of(writeResult.chunkBytes()))).block();
+
+        SlotRange range1 = writeResult.slotRanges().get(0);
+        ChunkId slot1 = ChunkId.slotRef(chunkId, range1.offset(), range1.limit());
+        // Only slot 1 is live in updaterFactory; slot 2 is dead
+        updaterFactory.add(slot1, "msg-live");
+
+        updaterFactory.setReplacementHook(oldId ->
+            Mono.error(new RuntimeException("Simulated reference update failure during GC")));
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder()
+                .purgeDeadRatio(0.4)
+                .build())
+            .build();
+
+        // GC compaction fails during slot reference update
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> testee.gcCompact(request).block())
+            .isInstanceOf(RuntimeException.class);
+
+        // Coherence check 1: Original chunk was NOT deleted from raw storage
+        List<BlobId> remainingBlobs = Flux.from(rawStore.listBlobs(TEST_BUCKET)).collectList().block();
+        assertThat(remainingBlobs).contains(chunkId.chunkBlobId());
+
+        // Coherence check 2: Original live slot is still readable through ChunkedBlobStoreDAO and returns exact payload
+        byte[] readLiveSlot = readDecompressed(slot1);
+        assertThat(readLiveSlot).isEqualTo(payload1);
+    }
+
+    static class RangedReadTrackingMemoryBlobStoreDAO extends MemoryBlobStoreDAO {
+        private final AtomicLong maxRangedReadBytes = new AtomicLong(0);
+        private final List<BlobId> wholeChunkReads = new CopyOnWriteArrayList<>();
+        private final Map<BlobId, byte[]> rawBlobs = new ConcurrentHashMap<>();
+
+        @Override
+        public Mono<Void> save(BucketName bucketName, BlobId blobId, BytesBlob blob) {
+            rawBlobs.put(blobId, blob.payload());
+            return super.save(bucketName, blobId, blob);
+        }
+
+        @Override
+        public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+            byte[] allBytes = rawBlobs.get(blobId);
+            if (allBytes == null) {
+                return Mono.error(new ObjectNotFoundException("Blob not found: " + blobId.asString()));
+            }
+            long totalSize = allBytes.length;
+            int from;
+            int to;
+            if (start < 0) {
+                int suffixLength = (int) Math.min(totalSize, -start);
+                from = (int) Math.max(0, totalSize - suffixLength);
+                to = (int) totalSize;
+            } else {
+                from = (int) Math.min(totalSize, start);
+                to = (int) Math.min(totalSize, end + 1);
+            }
+            byte[] slice = Arrays.copyOfRange(allBytes, from, to);
+            maxRangedReadBytes.updateAndGet(curr -> Math.max(curr, slice.length));
+            BlobMetadata metadata = BlobMetadata.empty()
+                .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(String.valueOf(totalSize)));
+            return Mono.just(BytesBlob.of(slice, metadata));
+        }
+
+        @Override
+        public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
+            if (ChunkId.isChunkRef(blobId)) {
+                wholeChunkReads.add(blobId);
+            }
+            return super.readBytes(bucketName, blobId);
+        }
+
+        public long getMaxRangedReadBytes() {
+            return maxRangedReadBytes.get();
+        }
+
+        public List<BlobId> getWholeChunkReads() {
+            return new ArrayList<>(wholeChunkReads);
+        }
+    }
+
+    @Test
+    void gcCompactShouldBoundHeapUsageByMaxSlotSizeAndNeverReadWholeChunkPayloads() throws Exception {
+        RangedReadTrackingMemoryBlobStoreDAO trackingStore = new RangedReadTrackingMemoryBlobStoreDAO();
+        TestBlobIdUpdaterFactory localFactory = new TestBlobIdUpdaterFactory();
+        BlobCompactionAlgorithm algorithm = new BlobCompactionAlgorithm(
+            trackingStore, trackingStore, localFactory);
+
+        ChunkId chunkId = ChunkId.ofChunk(FAMILY, TARGET_GENERATION);
+
+        Random random = new Random(42);
+        byte[] slot1Payload = new byte[50 * 1024];
+        random.nextBytes(slot1Payload);
+        byte[] slot2Payload = new byte[100 * 1024];
+        random.nextBytes(slot2Payload);
+        byte[] slot3Payload = new byte[75 * 1024];
+        random.nextBytes(slot3Payload);
+
+        ChunkWriteResult writeResult = ChunkFormat.writeChunk(List.of(
+            BlobSlotContent.of(slot1Payload),
+            BlobSlotContent.of(slot2Payload),
+            BlobSlotContent.of(slot3Payload)
+        ));
+
+        Mono.from(trackingStore.save(TEST_BUCKET, chunkId.chunkBlobId(), BlobStoreDAO.BytesBlob.of(writeResult.chunkBytes()))).block();
+
+        SlotRange r1 = writeResult.slotRanges().get(0);
+        SlotRange r3 = writeResult.slotRanges().get(2);
+        ChunkId slot1Ref = ChunkId.slotRef(chunkId, r1.offset(), r1.limit());
+        ChunkId slot3Ref = ChunkId.slotRef(chunkId, r3.offset(), r3.limit());
+
+        localFactory.add(slot1Ref, "msg-1");
+        localFactory.add(slot3Ref, "msg-3");
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder()
+                .purgeDeadRatio(0.1)
+                .gainThreshold(0.1)
+                .build())
+            .build();
+
+        CompactionResult result = algorithm.gcCompact(request).block();
+
+        assertThat(result.deadPurged()).isEqualTo(1);
+        assertThat(result.packedBlobs()).isEqualTo(0);
+        assertThat(localFactory.getReplacements()).hasSize(2);
+
+        // Verification of memory bounds (R2-2):
+        // 1. Whole chunk readBytes must NEVER be invoked on chunk objects
+        assertThat(trackingStore.getWholeChunkReads()).isEmpty();
+
+        // 2. The largest single ranged read must be strictly bounded by max(64KB footer, maxSlotSize + slot header)
+        long totalChunkSize = writeResult.chunkBytes().length;
+        assertThat(trackingStore.getMaxRangedReadBytes()).isLessThan(totalChunkSize);
+        assertThat(trackingStore.getMaxRangedReadBytes()).isLessThanOrEqualTo(Math.max(65536, 76 * 1024));
+    }
+
+    @Test
+    void initialCompactShouldPreserveCustomBlobMetadata() {
+        BlobId b1 = new PlainBlobId("1_2_blob1");
+        BlobId b2 = new PlainBlobId("1_2_blob2");
+
+        BlobStoreDAO.BlobMetadata meta1 = BlobStoreDAO.BlobMetadata.empty()
+            .withMetadata(new BlobStoreDAO.BlobMetadataName("custom-header"), new BlobStoreDAO.BlobMetadataValue("meta-value-1"));
+        BlobStoreDAO.BlobMetadata meta2 = BlobStoreDAO.BlobMetadata.empty()
+            .withMetadata(new BlobStoreDAO.BlobMetadataName("custom-header"), new BlobStoreDAO.BlobMetadataValue("meta-value-2"));
+
+        byte[] payload1 = "Candidate 1 with metadata".getBytes(StandardCharsets.UTF_8);
+        byte[] payload2 = "Candidate 2 with metadata".getBytes(StandardCharsets.UTF_8);
+
+        Mono.from(rawStore.save(TEST_BUCKET, b1, BlobStoreDAO.BytesBlob.of(payload1, meta1))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, b2, BlobStoreDAO.BytesBlob.of(payload2, meta2))).block();
+
+        updaterFactory.add(b1, "msg1");
+        updaterFactory.add(b2, "msg2");
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder().chunkTargetSize(100_000).build())
+            .build();
+
+        CompactionResult result = testee.initialCompact(request).block();
+        assertThat(result.packedBlobs()).isEqualTo(2);
+
+        List<TestBlobIdUpdaterFactory.Replacement> replacements = updaterFactory.getReplacements();
+        assertThat(replacements).hasSize(2);
+
+        BlobId newRef1 = replacements.get(0).newId();
+        BlobStoreDAO.BytesBlob readBlob1 = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, newRef1)).block();
+        assertThat(readBlob1.metadata().get(new BlobStoreDAO.BlobMetadataName("custom-header")))
+            .contains(new BlobStoreDAO.BlobMetadataValue("meta-value-1"));
+
+        BlobId newRef2 = replacements.get(1).newId();
+        BlobStoreDAO.BytesBlob readBlob2 = Mono.from(chunkedBlobStoreDAO.readBytes(TEST_BUCKET, newRef2)).block();
+        assertThat(readBlob2.metadata().get(new BlobStoreDAO.BlobMetadataName("custom-header")))
+            .contains(new BlobStoreDAO.BlobMetadataValue("meta-value-2"));
+    }
+
+    @Test
+    void initialCompactShouldUsePrefixPushdownToAvoidListingOtherFamiliesOrGenerations() {
+        BlobId targetBlob1 = new PlainBlobId("1_2_target1");
+        BlobId targetBlob2 = new PlainBlobId("1_2_target2");
+        BlobId otherGenBlob = new PlainBlobId("1_3_otherGen");
+        BlobId otherFamilyBlob = new PlainBlobId("2_2_otherFamily");
+
+        Mono.from(rawStore.save(TEST_BUCKET, targetBlob1, BlobStoreDAO.BytesBlob.of("target1"))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, targetBlob2, BlobStoreDAO.BytesBlob.of("target2"))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, otherGenBlob, BlobStoreDAO.BytesBlob.of("otherGen"))).block();
+        Mono.from(rawStore.save(TEST_BUCKET, otherFamilyBlob, BlobStoreDAO.BytesBlob.of("otherFamily"))).block();
+
+        updaterFactory.add(targetBlob1, "msg-target1");
+        updaterFactory.add(targetBlob2, "msg-target2");
+        updaterFactory.add(otherGenBlob, "msg-otherGen");
+        updaterFactory.add(otherFamilyBlob, "msg-otherFamily");
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder().chunkTargetSize(100_000).build())
+            .build();
+
+        CompactionResult result = testee.initialCompact(request).block();
+        assertThat(result.packedBlobs()).isEqualTo(2);
+
+        List<TestBlobIdUpdaterFactory.Replacement> replacements = updaterFactory.getReplacements();
+        assertThat(replacements).hasSize(2);
+        assertThat(replacements).extracting(r -> r.oldId().asString())
+            .containsExactlyInAnyOrder("1_2_target1", "1_2_target2");
+    }
+
+    @Test
+    void initialCompactShouldSkipPackingWhenCandidateCountIsOne() {
+        BlobId singleBlob = new PlainBlobId("1_2_single");
+        Mono.from(rawStore.save(TEST_BUCKET, singleBlob, BlobStoreDAO.BytesBlob.of("single-blob-payload"))).block();
+        updaterFactory.add(singleBlob, "msg-single");
+
+        CompactionRequest request = CompactionRequest.builder()
+            .bucketName(TEST_BUCKET)
+            .generation(TARGET_GENERATION)
+            .family(FAMILY)
+            .configuration(CompactionConfiguration.builder().chunkTargetSize(100_000).build())
+            .build();
+
+        CompactionResult result = testee.initialCompact(request).block();
+
+        assertThat(result.packedBlobs()).isEqualTo(0);
+        assertThat(result.chunksWritten()).isEqualTo(0);
+        assertThat(updaterFactory.getReplacements()).isEmpty();
+
+        // Standalone blob remains untouched in raw storage
+        assertThat(Mono.from(rawStore.readBytes(TEST_BUCKET, singleBlob)).block().payload())
+            .isEqualTo("single-blob-payload".getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void windowByCumulativeSizeShouldPartitionCandidatesWhenSizeExceedsTarget() {
+        BlobStoreDAO.BlobMetadata empty = BlobStoreDAO.BlobMetadata.empty();
+        List<BlobCompactionAlgorithm.CandidateBlob> candidates = List.of(
+            new BlobCompactionAlgorithm.CandidateBlob(new PlainBlobId("1_2_b1"), new byte[30], empty),
+            new BlobCompactionAlgorithm.CandidateBlob(new PlainBlobId("1_2_b2"), new byte[40], empty),
+            new BlobCompactionAlgorithm.CandidateBlob(new PlainBlobId("1_2_b3"), new byte[50], empty),
+            new BlobCompactionAlgorithm.CandidateBlob(new PlainBlobId("1_2_b4"), new byte[40], empty),
+            new BlobCompactionAlgorithm.CandidateBlob(new PlainBlobId("1_2_b5"), new byte[20], empty)
+        );
+
+        List<List<BlobCompactionAlgorithm.CandidateBlob>> batches = BlobCompactionAlgorithm
+            .windowByCumulativeSize(Flux.fromIterable(candidates), 80L)
+            .collectList()
+            .block();
+
+        assertThat(batches).hasSize(3);
+        // Batch 1: 30 + 40 = 70 bytes <= 80
+        assertThat(batches.get(0)).extracting(c -> c.blobId().asString())
+            .containsExactly("1_2_b1", "1_2_b2");
+        // Batch 2: 50 bytes <= 80
+        assertThat(batches.get(1)).extracting(c -> c.blobId().asString())
+            .containsExactly("1_2_b3");
+        // Batch 3: 40 + 20 = 60 bytes <= 80
+        assertThat(batches.get(2)).extracting(c -> c.blobId().asString())
+            .containsExactly("1_2_b4", "1_2_b5");
+    }
+}
