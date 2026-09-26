@@ -21,12 +21,15 @@ package org.apache.james.dnsservice.dnsjava;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
@@ -59,6 +62,8 @@ import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Expiry;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -66,8 +71,6 @@ import com.google.common.collect.ImmutableList;
  */
 public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DNSJavaService.class);
-
-    private static final int CACHE_TTL_DISABLE = -1;
 
     /**
      * A resolver instance used to retrieve DNS records. This is a reference to
@@ -86,12 +89,105 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      */
     private int maxCacheSize = 50000;
 
-    private int negativeCacheTTL;
+    public static final int ABSOLUTE_MAX_TTL = 7 * 86400; // 7 days safety cap
+    public static final int ABSOLUTE_MIN_TTL = 60; // 60 seconds minimum protective safety cap
+    public static final int DEFAULT_CACHE_FALLBACK_TTL = 300; // 5 minutes, used when inheritTTL=false or no TTL available
+    public static final int DEFAULT_CACHE_MIN_TTL = 60;
+    public static final int DEFAULT_CACHE_MAX_TTL = 86400; // 1 day
+    public static final int DEFAULT_NEGATIVE_CACHE_FALLBACK_TTL = 60; // used when inheritNegativeTTL=false or no SOA TTL available
+    public static final int DEFAULT_NEGATIVE_CACHE_MIN_TTL = 60;
+    public static final int DEFAULT_NEGATIVE_CACHE_MAX_TTL = 3600; // 1 hour safety cap for negative cache
+
+    private boolean inheritTTL = true;
+    private int cacheFallbackTTL = DEFAULT_CACHE_FALLBACK_TTL;
+    private int cacheMinTTL = DEFAULT_CACHE_MIN_TTL;
+    private int cacheMaxTTL = DEFAULT_CACHE_MAX_TTL;
+
+    private boolean inheritNegativeTTL = true;
+    private int negativeCacheFallbackTTL = DEFAULT_NEGATIVE_CACHE_FALLBACK_TTL;
+    private int negativeCacheMinTTL = DEFAULT_NEGATIVE_CACHE_MIN_TTL;
+    private int negativeCacheMaxTTL = DEFAULT_NEGATIVE_CACHE_MAX_TTL;
 
     /**
      * Whether the DNS response is required to be authoritative
      */
     private int dnsCredibility;
+
+    private enum DnsRecordType { MX, PTR, A, ALL_A, TXT }
+
+    private record DnsKey(DnsRecordType type, Object target) {}
+
+    private record DnsValue<T>(T value, long ttlSeconds) {}
+
+    protected com.github.benmanes.caffeine.cache.Cache<DnsKey, DnsValue<?>> caffeineCache;
+
+    private static int sanitizeBoundedTtl(int value, int defaultVal, int minAllowed, int maxAllowed) {
+        if (value < minAllowed) {
+            LOGGER.warn("Configured TTL {} is below minimum allowed {}. Falling back to {}.", value, minAllowed, defaultVal);
+            return defaultVal;
+        }
+        if (value > maxAllowed) {
+            LOGGER.warn("Configured TTL {} exceeds maximum allowed {}. Clamping to {}.", value, maxAllowed, maxAllowed);
+            return maxAllowed;
+        }
+        return value;
+    }
+
+    private static int resolveJvmSecurityTtl(String secProp, String sysProp, int fallback) {
+        try {
+            String val = Security.getProperty(secProp);
+            if (val != null && !val.trim().isEmpty()) {
+                int parsed = Integer.parseInt(val.trim());
+                if (parsed >= 0) {
+                    return parsed;
+                }
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        try {
+            String sysVal = System.getProperty(sysProp);
+            if (sysVal != null && !sysVal.trim().isEmpty()) {
+                int parsed = Integer.parseInt(sysVal.trim());
+                if (parsed >= 0) {
+                    return parsed;
+                }
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        return fallback;
+    }
+
+    private static long ttlNanos(DnsValue<?> value) {
+        return TimeUnit.SECONDS.toNanos(Math.max(1, value.ttlSeconds()));
+    }
+
+    private long clampTtl(long rawTtl) {
+        long effectiveMin = Math.max((long) ABSOLUTE_MIN_TTL, (long) cacheMinTTL);
+        return Math.max(effectiveMin, Math.min(rawTtl, (long) cacheMaxTTL));
+    }
+
+    private long clampNegativeTtl(long rawTtl) {
+        long effectiveMin = Math.max((long) ABSOLUTE_MIN_TTL, (long) negativeCacheMinTTL);
+        return Math.max(effectiveMin, Math.min(rawTtl, (long) negativeCacheMaxTTL));
+    }
+
+    private long computeRecordsTtl(Record[] records) {
+        if (records == null || records.length == 0) {
+            return clampNegativeTtl(negativeCacheFallbackTTL);
+        }
+        if (!inheritTTL) {
+            return clampTtl(cacheFallbackTTL);
+        }
+        long minTtl = Long.MAX_VALUE;
+        for (Record record : records) {
+            if (record != null) {
+                minTtl = Math.min(minTtl, record.getTTL());
+            }
+        }
+        return minTtl == Long.MAX_VALUE ? clampNegativeTtl(negativeCacheFallbackTTL) : clampTtl(minTtl);
+    }
 
     /**
      * The DNS servers to be used by this service
@@ -189,7 +285,29 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         maxCacheSize = configuration.getInt("maxcachesize", maxCacheSize);
 
-        negativeCacheTTL = configuration.getInt("negativeCacheTTL", CACHE_TTL_DISABLE);
+        inheritTTL = configuration.getBoolean("inheritTTL", true);
+        inheritNegativeTTL = configuration.getBoolean("inheritNegativeTTL", true);
+
+        int jvmPosTtl = resolveJvmSecurityTtl("networkaddress.cache.ttl", "sun.net.inetaddr.ttl", DEFAULT_CACHE_MAX_TTL);
+        int jvmNegTtl = resolveJvmSecurityTtl("networkaddress.cache.negative.ttl", "sun.net.inetaddr.negative.ttl", DEFAULT_NEGATIVE_CACHE_FALLBACK_TTL);
+
+        int rawFallbackTtl = configuration.getInt("cacheFallbackTTL", DEFAULT_CACHE_FALLBACK_TTL);
+        cacheFallbackTTL = sanitizeBoundedTtl(rawFallbackTtl, DEFAULT_CACHE_FALLBACK_TTL, ABSOLUTE_MIN_TTL, ABSOLUTE_MAX_TTL);
+
+        int rawMinTtl = configuration.getInt("cacheMinTTL", DEFAULT_CACHE_MIN_TTL);
+        cacheMinTTL = sanitizeBoundedTtl(rawMinTtl, DEFAULT_CACHE_MIN_TTL, ABSOLUTE_MIN_TTL, ABSOLUTE_MAX_TTL);
+
+        int rawMaxTtl = configuration.getInt("cacheMaxTTL", jvmPosTtl);
+        cacheMaxTTL = sanitizeBoundedTtl(rawMaxTtl, jvmPosTtl, cacheMinTTL, ABSOLUTE_MAX_TTL);
+
+        int rawNegFallbackTtl = configuration.getInt("negativeCacheFallbackTTL", jvmNegTtl);
+        negativeCacheFallbackTTL = sanitizeBoundedTtl(rawNegFallbackTtl, jvmNegTtl, ABSOLUTE_MIN_TTL, DEFAULT_NEGATIVE_CACHE_MAX_TTL);
+
+        int rawNegMinTtl = configuration.getInt("negativeCacheMinTTL", DEFAULT_NEGATIVE_CACHE_MIN_TTL);
+        negativeCacheMinTTL = sanitizeBoundedTtl(rawNegMinTtl, DEFAULT_NEGATIVE_CACHE_MIN_TTL, ABSOLUTE_MIN_TTL, DEFAULT_NEGATIVE_CACHE_MAX_TTL);
+
+        int rawNegMaxTtl = configuration.getInt("negativeCacheMaxTTL", DEFAULT_NEGATIVE_CACHE_MAX_TTL);
+        negativeCacheMaxTTL = sanitizeBoundedTtl(rawNegMaxTtl, DEFAULT_NEGATIVE_CACHE_MAX_TTL, negativeCacheMinTTL, DEFAULT_NEGATIVE_CACHE_MAX_TTL);
     }
 
     @PostConstruct
@@ -218,7 +336,27 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         cache = new Cache(DClass.IN);
         cache.setMaxEntries(maxCacheSize);
-        cache.setMaxNCache(negativeCacheTTL);
+        cache.setMaxNCache(negativeCacheFallbackTTL);
+
+        caffeineCache = Caffeine.newBuilder()
+            .maximumSize(maxCacheSize)
+            .expireAfter(new Expiry<DnsKey, DnsValue<?>>() {
+                @Override
+                public long expireAfterCreate(DnsKey key, DnsValue<?> value, long currentTime) {
+                    return ttlNanos(value);
+                }
+
+                @Override
+                public long expireAfterUpdate(DnsKey key, DnsValue<?> value, long currentTime, long currentDuration) {
+                    return ttlNanos(value);
+                }
+
+                @Override
+                public long expireAfterRead(DnsKey key, DnsValue<?> value, long currentTime, long currentDuration) {
+                    return currentDuration;
+                }
+            })
+            .build();
 
         if (setAsDNSJavaDefault) {
             Lookup.setDefaultResolver(resolver);
@@ -314,11 +452,27 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     @Override
     public Collection<String> findMXRecords(String hostname) throws TemporaryResolutionException {
+        if (caffeineCache != null) {
+            DnsKey key = new DnsKey(DnsRecordType.MX, normalizeKey(hostname));
+            DnsValue<?> cached = caffeineCache.getIfPresent(key);
+            if (cached != null) {
+                @SuppressWarnings("unchecked")
+                Collection<String> cachedResult = (Collection<String>) cached.value();
+                return cachedResult;
+            }
+        }
+
         TimeMetric timeMetric = metricFactory.timer("findMXRecords");
         List<String> servers = new ArrayList<>();
         try {
             servers = findMXRecordsRaw(hostname);
-            return Collections.unmodifiableCollection(servers);
+            Collection<String> result = Collections.unmodifiableCollection(servers);
+            if (caffeineCache != null) {
+                Record[] records = lookupNoException(hostname, Type.MX);
+                long ttl = computeRecordsTtl(records);
+                caffeineCache.put(new DnsKey(DnsRecordType.MX, normalizeKey(hostname)), new DnsValue<>(result, ttl));
+            }
+            return result;
         } finally {
             // If we found no results, we'll add the original domain name if
             // it's a valid DNS entry
@@ -381,7 +535,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         }
     }
 
-
+    private static String normalizeKey(String host) {
+        return host.toLowerCase(Locale.US);
+    }
 
     /*
      * java.net.InetAddress.get[All]ByName(String) allows an IP literal to be
@@ -411,6 +567,14 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     @Override
     public InetAddress getByName(String host) throws UnknownHostException {
+        if (caffeineCache != null) {
+            DnsKey key = new DnsKey(DnsRecordType.A, normalizeKey(host));
+            DnsValue<?> cached = caffeineCache.getIfPresent(key);
+            if (cached != null) {
+                return (InetAddress) cached.value();
+            }
+        }
+
         TimeMetric timeMetric = metricFactory.timer("getByName");
         String name = allowIPLiteral(host);
 
@@ -420,13 +584,24 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 return getLocalHost();
             }
 
-            return org.xbill.DNS.Address.getByAddress(name);
+            InetAddress addr = org.xbill.DNS.Address.getByAddress(name);
+            if (caffeineCache != null) {
+                Record[] records = lookupNoException(name, Type.A);
+                long ttl = computeRecordsTtl(records);
+                caffeineCache.put(new DnsKey(DnsRecordType.A, normalizeKey(host)), new DnsValue<>(addr, ttl));
+            }
+            return addr;
         } catch (UnknownHostException e) {
             Record[] records = lookupNoException(name, Type.A);
 
             if (records != null && records.length >= 1) {
                 ARecord a = (ARecord) records[0];
-                return InetAddress.getByAddress(name, a.getAddress().getAddress());
+                InetAddress addr = InetAddress.getByAddress(name, a.getAddress().getAddress());
+                if (caffeineCache != null) {
+                    long ttl = computeRecordsTtl(records);
+                    caffeineCache.put(new DnsKey(DnsRecordType.A, normalizeKey(host)), new DnsValue<>(addr, ttl));
+                }
+                return addr;
             } else {
                 throw e;
             }
@@ -437,6 +612,16 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     @Override
     public Collection<InetAddress> getAllByName(String host) throws UnknownHostException {
+        if (caffeineCache != null) {
+            DnsKey key = new DnsKey(DnsRecordType.ALL_A, normalizeKey(host));
+            DnsValue<?> cached = caffeineCache.getIfPresent(key);
+            if (cached != null) {
+                @SuppressWarnings("unchecked")
+                Collection<InetAddress> cachedResult = (Collection<InetAddress>) cached.value();
+                return cachedResult;
+            }
+        }
+
         TimeMetric timeMetric = metricFactory.timer("getAllByName");
         String name = allowIPLiteral(host);
         try {
@@ -446,7 +631,13 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             }
 
             InetAddress addr = org.xbill.DNS.Address.getByAddress(name);
-            return ImmutableList.of(addr);
+            Collection<InetAddress> result = ImmutableList.of(addr);
+            if (caffeineCache != null) {
+                Record[] records = lookupNoException(name, Type.A);
+                long ttl = computeRecordsTtl(records);
+                caffeineCache.put(new DnsKey(DnsRecordType.ALL_A, normalizeKey(host)), new DnsValue<>(result, ttl));
+            }
+            return result;
         } catch (UnknownHostException e) {
             Record[] records = lookupNoException(name, Type.A);
 
@@ -456,7 +647,12 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                     ARecord a = (ARecord) records[i];
                     addrs[i] = InetAddress.getByAddress(name, a.getAddress().getAddress());
                 }
-                return ImmutableList.copyOf(addrs);
+                Collection<InetAddress> result = ImmutableList.copyOf(addrs);
+                if (caffeineCache != null) {
+                    long ttl = computeRecordsTtl(records);
+                    caffeineCache.put(new DnsKey(DnsRecordType.ALL_A, normalizeKey(host)), new DnsValue<>(result, ttl));
+                }
+                return result;
             } else {
                 throw e;
             }
@@ -467,6 +663,16 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     @Override
     public Collection<String> findTXTRecords(String hostname) {
+        if (caffeineCache != null) {
+            DnsKey key = new DnsKey(DnsRecordType.TXT, normalizeKey(hostname));
+            DnsValue<?> cached = caffeineCache.getIfPresent(key);
+            if (cached != null) {
+                @SuppressWarnings("unchecked")
+                Collection<String> cachedResult = (Collection<String>) cached.value();
+                return cachedResult;
+            }
+        }
+
         TimeMetric timeMetric = metricFactory.timer("findTXTRecords");
         List<String> txtR = new ArrayList<>();
         Record[] records = lookupNoException(hostname, Type.TXT);
@@ -479,6 +685,10 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 }
 
             }
+            if (caffeineCache != null) {
+                long ttl = computeRecordsTtl(records);
+                caffeineCache.put(new DnsKey(DnsRecordType.TXT, normalizeKey(hostname)), new DnsValue<>(txtR, ttl));
+            }
             return txtR;
         } finally {
             timeMetric.stopAndPublish();
@@ -487,6 +697,14 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     @Override
     public String getHostName(InetAddress addr) {
+        if (caffeineCache != null) {
+            DnsKey key = new DnsKey(DnsRecordType.PTR, addr);
+            DnsValue<?> cached = caffeineCache.getIfPresent(key);
+            if (cached != null) {
+                return (String) cached.value();
+            }
+        }
+
         TimeMetric timeMetric = metricFactory.timer("getHostName");
         String result;
         Name name = ReverseMap.fromAddress(addr);
@@ -498,6 +716,10 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             } else {
                 PTRRecord ptr = (PTRRecord) records[0];
                 result = ptr.getTarget().toString();
+            }
+            if (caffeineCache != null) {
+                long ttl = computeRecordsTtl(records);
+                caffeineCache.put(new DnsKey(DnsRecordType.PTR, addr), new DnsValue<>(result, ttl));
             }
             return result;
         } finally {
@@ -523,6 +745,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     @Override
     public void clearCache() {
         cache.clearCache();
+        if (caffeineCache != null) {
+            caffeineCache.invalidateAll();
+        }
     }
 
 }

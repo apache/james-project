@@ -24,4 +24,47 @@
   <autodiscover>true</autodiscover>
   <authoritative>false</authoritative>
   <maxcachesize>50000</maxcachesize>
+
+  <!-- ================= Positive DNS Record Cache Settings ================= -->
+
+  <!-- Whether to inherit the per-record TTL returned by upstream DNS servers. -->
+  <!-- When true (default), each cached entry expires according to the DNS record TTL, clamped between cacheMinTTL and cacheMaxTTL. -->
+  <!-- When false, cacheFallbackTTL is used as the fixed expiration time for all positive cache entries. -->
+  <inheritTTL>true</inheritTTL>
+
+  <!-- Fallback TTL in seconds for positive DNS records, applied when inheritTTL=false -->
+  <!-- or when all DNS records in a response carry no usable TTL. -->
+  <!-- Must be between 60 (ABSOLUTE_MIN_TTL) and 604800 (7 days). Default is 300 seconds (5 minutes). -->
+  <cacheFallbackTTL>300</cacheFallbackTTL>
+
+  <!-- Minimum cache duration in seconds for positive DNS records. -->
+  <!-- Prevents cache thrashing from zero or ultra-low TTL responses from upstream servers. -->
+  <!-- Minimum safe limit is 60 seconds. Default is 60 seconds. -->
+  <cacheMinTTL>60</cacheMinTTL>
+
+  <!-- Maximum cache duration in seconds for positive DNS records. -->
+  <!-- Caps long TTL responses to ensure updates to records (e.g. MX, A, TXT) are picked up within a reasonable window. -->
+  <!-- If omitted, falls back to JVM security property 'networkaddress.cache.ttl' or 86400 (1 day). Maximum safe limit is 604800 (7 days). -->
+  <cacheMaxTTL>86400</cacheMaxTTL>
+
+  <!-- ================= Negative DNS Record Cache Settings ================= -->
+
+  <!-- Whether to inherit the SOA negative caching TTL (RFC 2308) from upstream DNS responses. -->
+  <!-- When true (default), negative entries use the upstream SOA MINIMUM/TTL, clamped between negativeCacheMinTTL and negativeCacheMaxTTL. -->
+  <!-- When false, negativeCacheFallbackTTL is used as the fixed expiration time for all negative cache entries. -->
+  <inheritNegativeTTL>true</inheritNegativeTTL>
+
+  <!-- Fallback TTL in seconds for negative DNS results (NXDOMAIN, record not found, or temporary resolution failures). -->
+  <!-- Applied when inheritNegativeTTL=false or when the upstream DNS response carries no SOA TTL. -->
+  <!-- If omitted, falls back to JVM security property 'networkaddress.cache.negative.ttl' or 60 seconds. Safe limit is 3600 seconds. -->
+  <negativeCacheFallbackTTL>60</negativeCacheFallbackTTL>
+
+  <!-- Minimum cache duration in seconds for negative DNS entries. -->
+  <!-- Minimum safe limit is 60 seconds. Default is 60 seconds. -->
+  <negativeCacheMinTTL>60</negativeCacheMinTTL>
+
+  <!-- Maximum cache duration in seconds for negative DNS entries. -->
+  <!-- Caps negative caching time so that newly created domains or restored records become resolvable quickly. -->
+  <!-- Must be >= negativeCacheMinTTL. Default is 3600 seconds (1 hour). -->
+  <negativeCacheMaxTTL>3600</negativeCacheMaxTTL>
 </dnsservice>
