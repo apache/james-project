@@ -44,7 +44,7 @@ import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
-import org.apache.james.jmap.mail.{BlobId, MinimalEmailBodyPart}
+import org.apache.james.jmap.mail.{BlobId, MinimalEmailBodyPart, Name}
 import org.apache.james.jmap.method.{AccountNotFoundException, ZoneIdProvider}
 import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
@@ -382,7 +382,8 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
   private def addCacheControlHeader(): HttpServerResponse => HttpServerResponse =
     resp => resp.header(HttpHeaderNames.CACHE_CONTROL, "private, immutable, max-age=31536000")
 
-  private def addContentDispositionHeaderRegardingEncoding(name: String, resp: HttpServerResponse): HttpServerResponse =
+  private def addContentDispositionHeaderRegardingEncoding(rawName: String, resp: HttpServerResponse): HttpServerResponse = {
+    val name = Name.normalize(rawName)
     if (CharMatcher.ascii.matchesAllOf(name)) {
       Try(resp.header("Content-Disposition", "attachment; filename=\"" + name + "\""))
         // Can fail if the file name contains valid ascii character that are invalid in a contentDisposition header
@@ -390,6 +391,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
     } else {
       resp.header("Content-Disposition", encodedFileName(name))
     }
+  }
 
   private def encodedFileName(name: String) = "attachment; filename*=\"" + EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN) + "\""
 
