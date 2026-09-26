@@ -119,6 +119,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     private record DnsValue<T>(T value, long ttlSeconds) {}
 
+    private record MxHost(String name, int priority) {}
+
     protected com.github.benmanes.caffeine.cache.Cache<DnsKey, DnsValue<?>> caffeineCache;
 
     private static int sanitizeBoundedTtl(int value, int defaultVal, int minAllowed, int maxAllowed) {
@@ -396,59 +398,61 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * @return a list of MX records corresponding to this mail domain
      * @throws TemporaryResolutionException get thrown on temporary problems
      */
-    private List<String> findMXRecordsRaw(String hostname) throws TemporaryResolutionException {
+    private List<MxHost> findMXRecordsRaw(String hostname) throws TemporaryResolutionException {
         Record[] answers = lookup(hostname, Type.MX);
-        List<String> servers = new ArrayList<>();
+        List<MxHost> servers = new ArrayList<>();
         if (answers == null) {
             return servers;
         }
 
         MXRecord[] mxAnswers = new MXRecord[answers.length];
-
         for (int i = 0; i < answers.length; i++) {
             mxAnswers[i] = (MXRecord) answers[i];
         }
-        // just sort for now.. This will ensure that mx records with same prio
-        // are in sequence
         Arrays.sort(mxAnswers, mxComparator);
 
-        // now add the mx records to the right list and take care of shuffle
-        // mx records with the same priority
+        for (MXRecord mx : mxAnswers) {
+            servers.add(new MxHost(mx.getTarget().toString(), mx.getPriority()));
+        }
+        return servers;
+    }
+
+    private static List<String> shuffleEqualPriorityMx(List<MxHost> mxHosts) {
+        List<String> result = new ArrayList<>(mxHosts.size());
         int currentPrio = -1;
         List<String> samePrio = new ArrayList<>();
-        for (int i = 0; i < mxAnswers.length; i++) {
+
+        for (int i = 0; i < mxHosts.size(); i++) {
+            MxHost host = mxHosts.get(i);
             boolean same = false;
-            boolean lastItem = i + 1 == mxAnswers.length;
-            MXRecord mx = mxAnswers[i];
+            boolean lastItem = (i + 1 == mxHosts.size());
+
             if (i == 0) {
-                currentPrio = mx.getPriority();
+                currentPrio = host.priority();
             } else {
-                same = currentPrio == mx.getPriority();
+                same = (currentPrio == host.priority());
             }
 
-            String mxRecord = mx.getTarget().toString();
             if (same) {
-                samePrio.add(mxRecord);
+                samePrio.add(host.name());
             } else {
-                // shuffle entries with same prio
-                // JAMES-913
-                Collections.shuffle(samePrio);
-                servers.addAll(samePrio);
-
+                if (samePrio.size() > 1) {
+                    Collections.shuffle(samePrio);
+                }
+                result.addAll(samePrio);
                 samePrio.clear();
-                samePrio.add(mxRecord);
-
+                currentPrio = host.priority();
+                samePrio.add(host.name());
             }
 
             if (lastItem) {
-                // shuffle entries with same prio
-                // JAMES-913
-                Collections.shuffle(samePrio);
-                servers.addAll(samePrio);
+                if (samePrio.size() > 1) {
+                    Collections.shuffle(samePrio);
+                }
+                result.addAll(samePrio);
             }
-            LOGGER.debug("Found MX record {}", mxRecord);
         }
-        return servers;
+        return result;
     }
 
     @Override
@@ -458,32 +462,32 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             DnsValue<?> cached = caffeineCache.getIfPresent(key);
             if (cached != null) {
                 @SuppressWarnings("unchecked")
-                Collection<String> cachedResult = (Collection<String>) cached.value();
-                return cachedResult;
+                List<MxHost> cachedHosts = (List<MxHost>) cached.value();
+                return shuffleEqualPriorityMx(cachedHosts);
             }
         }
 
         TimeMetric timeMetric = metricFactory.timer("findMXRecords");
         try {
-            List<String> servers = findMXRecordsRaw(hostname);
+            List<MxHost> hosts = findMXRecordsRaw(hostname);
             // If we found no results, we'll add the original domain name if it's a valid DNS entry
-            if (servers.isEmpty()) {
+            if (hosts.isEmpty()) {
                 LOGGER.info("Couldn't resolve MX records for domain {}.", hostname);
                 try {
                     getByName(hostname);
-                    servers.add(hostname);
+                    hosts.add(new MxHost(hostname, 0));
                 } catch (UnknownHostException uhe) {
                     LOGGER.error("Couldn't resolve IP address for host {}.", hostname, uhe);
                 }
             }
 
-            Collection<String> result = ImmutableList.copyOf(servers);
+            List<MxHost> immutableHosts = ImmutableList.copyOf(hosts);
             if (caffeineCache != null) {
                 Record[] records = lookupNoException(hostname, Type.MX);
                 long ttl = computeRecordsTtl(records);
-                caffeineCache.put(new DnsKey(DnsRecordType.MX, normalizeKey(hostname)), new DnsValue<>(result, ttl));
+                caffeineCache.put(new DnsKey(DnsRecordType.MX, normalizeKey(hostname)), new DnsValue<>(immutableHosts, ttl));
             }
-            return result;
+            return shuffleEqualPriorityMx(immutableHosts);
         } finally {
             timeMetric.stopAndPublish();
         }
@@ -581,17 +585,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 return getLocalHost();
             }
 
-            InetAddress addr = org.xbill.DNS.Address.getByAddress(name);
-            // If the name is already an IP address, return immediately without redundant DNS lookup
-            if (org.xbill.DNS.Address.isDottedQuad(name)) {
-                return addr;
-            }
-            if (caffeineCache != null) {
-                Record[] records = lookupNoException(name, Type.A);
-                long ttl = computeRecordsTtl(records);
-                caffeineCache.put(new DnsKey(DnsRecordType.A, normalizeKey(host)), new DnsValue<>(addr, ttl));
-            }
-            return addr;
+            // Address.getByAddress parses IP literals (both IPv4 and IPv6). If it succeeds, name is an IP literal.
+            return org.xbill.DNS.Address.getByAddress(name);
         } catch (UnknownHostException e) {
             Record[] records = lookupNoException(name, Type.A);
 
@@ -631,18 +626,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 return ImmutableList.of(getLocalHost());
             }
 
-            InetAddress addr = org.xbill.DNS.Address.getByAddress(name);
-            Collection<InetAddress> result = ImmutableList.of(addr);
-            // If the name is already an IP address, return immediately without redundant DNS lookup
-            if (org.xbill.DNS.Address.isDottedQuad(name)) {
-                return result;
-            }
-            if (caffeineCache != null) {
-                Record[] records = lookupNoException(name, Type.A);
-                long ttl = computeRecordsTtl(records);
-                caffeineCache.put(new DnsKey(DnsRecordType.ALL_A, normalizeKey(host)), new DnsValue<>(result, ttl));
-            }
-            return result;
+            // Address.getByAddress parses IP literals (both IPv4 and IPv6). If it succeeds, name is an IP literal.
+            return ImmutableList.of(org.xbill.DNS.Address.getByAddress(name));
         } catch (UnknownHostException e) {
             Record[] records = lookupNoException(name, Type.A);
 
