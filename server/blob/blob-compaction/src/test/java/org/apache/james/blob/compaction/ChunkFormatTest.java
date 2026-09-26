@@ -25,8 +25,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
 import org.apache.james.blob.api.BlobStoreDAO.BlobMetadataName;
@@ -275,5 +277,56 @@ class ChunkFormatTest {
             .contains(new BlobMetadataValue("zstd"));
         assertThat(parsed.metadata().get(new BlobMetadataName("content-original-size")))
             .contains(new BlobMetadataValue(String.valueOf(raw.length)));
+    }
+
+    @Test
+    void randomizedPayloadsRoundTripSafety() throws Exception {
+        Random random = new Random(42);
+        for (int run = 0; run < 50; run++) {
+            int slotCount = random.nextInt(8) + 1;
+            List<ChunkFormat.BlobSlotContent> slots = new ArrayList<>();
+            for (int s = 0; s < slotCount; s++) {
+                byte[] payload = new byte[random.nextInt(4096)];
+                random.nextBytes(payload);
+                slots.add(ChunkFormat.BlobSlotContent.of(payload));
+            }
+
+            byte[] chunkBytes = ChunkFormat.writeToBytes(slots);
+            ChunkFooter footer = ChunkFormat.readFooter(chunkBytes);
+            assertThat(footer.slotCount()).isEqualTo(slotCount);
+
+            for (int s = 0; s < slotCount; s++) {
+                long start = footer.slotStarts().get(s);
+                long end = (s == slotCount - 1) ? footer.footerPosition() : footer.slotStarts().get(s + 1);
+                byte[] slotSlice = Arrays.copyOfRange(chunkBytes, (int) start, (int) end);
+                byte[] read = ChunkFormat.readSlot(new ByteArrayInputStream(slotSlice), start, end);
+                assertThat(read).isEqualTo(slots.get(s).payload());
+            }
+        }
+    }
+
+    @Test
+    void randomCorruptedBytesShouldFailSafelyWithoutHangingOrUncheckedCrash() {
+        Random random = new Random(42);
+        for (int i = 0; i < 200; i++) {
+            byte[] corrupted = new byte[random.nextInt(2048) + 1];
+            random.nextBytes(corrupted);
+
+            try {
+                ChunkFooter footer = ChunkFormat.readFooter(corrupted);
+                if (!footer.slotStarts().isEmpty()) {
+                    long start = footer.slotStarts().get(0);
+                    long end = footer.footerPosition();
+                    if (start >= 0 && end > start && end <= corrupted.length) {
+                        ChunkFormat.readSlot(new ByteArrayInputStream(corrupted), start, end);
+                    }
+                }
+            } catch (Exception e) {
+                assertThat(e).isInstanceOfAny(
+                    ObjectStoreIOException.class,
+                    IllegalArgumentException.class,
+                    IndexOutOfBoundsException.class);
+            }
+        }
     }
 }

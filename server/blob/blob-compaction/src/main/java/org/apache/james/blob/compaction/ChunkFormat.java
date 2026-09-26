@@ -42,6 +42,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
 
+/**
+ * Binary chunk layout for S3 multi-slot compaction.
+ *
+ * A chunk consists of sequential slot payloads followed by a trailing footer:
+ * [FORMAT_BYTE (1B)] [SLOT_1] [SLOT_2] ... [SLOT_N] [FOOTER_TEXT] [FOOTER_LEN (4B)] [FOOTER_POS (8B)]
+ */
 public class ChunkFormat {
     public static final byte FORMAT_BYTE = 0x01;
     public static final int FOOTER_METADATA_LENGTH = 12; // 4 bytes footerLength + 8 bytes footerPosition
