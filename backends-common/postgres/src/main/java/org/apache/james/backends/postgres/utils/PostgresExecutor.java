@@ -51,8 +51,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import io.r2dbc.postgresql.api.PostgresqlConnection;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.R2dbcBadGrammarException;
+import io.r2dbc.spi.Wrapped;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -121,7 +123,7 @@ public class PostgresExecutor {
                 connection -> dslContext(connection)
                     .flatMap(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                         .filter(preparedStatementConflictException()))
                     .then(),
@@ -153,7 +155,7 @@ public class PostgresExecutor {
                     Flux<Record> recordFlux = dslContext(connection)
                         .flatMapMany(queryFunction)
                         .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                        .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                        .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                         .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                             .filter(preparedStatementConflictException()));
 
@@ -207,7 +209,7 @@ public class PostgresExecutor {
                 connection -> dslContext(connection)
                     .flatMapMany(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                         .filter(preparedStatementConflictException())),
                 jamesPostgresConnectionFactory::closeConnection)));
@@ -219,7 +221,7 @@ public class PostgresExecutor {
                 connection -> dslContext(connection)
                     .flatMap(queryFunction.andThen(Mono::from))
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                         .filter(preparedStatementConflictException())),
                 jamesPostgresConnectionFactory::closeConnection)));
@@ -237,7 +239,7 @@ public class PostgresExecutor {
                 connection -> dslContext(connection)
                     .flatMap(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                         .filter(preparedStatementConflictException()))
                     .map(Record1::value1),
@@ -255,7 +257,7 @@ public class PostgresExecutor {
                 connection -> dslContext(connection)
                     .flatMap(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                         .filter(preparedStatementConflictException())),
                 jamesPostgresConnectionFactory::closeConnection)));
@@ -283,6 +285,37 @@ public class PostgresExecutor {
     @VisibleForTesting
     public void dispose() {
         jamesPostgresConnectionFactory.close().block();
+    }
+
+    private <T> Mono<T> handleTimeout(Connection connection, TimeoutException timeoutException) {
+        LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, timeoutException);
+        return cancelRunningQuery(connection)
+            .then(Mono.error(timeoutException));
+    }
+
+    /**
+     * Cancelling the reactive pipeline does not stop the query on the Postgres server side: the connection stays busy
+     * until the query completes, and is handed back to the pool in that state. Asking Postgres to cancel the running query
+     * ensures the connection is quickly usable again.
+     */
+    private Mono<Void> cancelRunningQuery(Connection connection) {
+        return unwrapPostgresqlConnection(connection)
+            .map(postgresqlConnection -> postgresqlConnection.cancelRequest()
+                .onErrorResume(e -> {
+                    LOGGER.warn("Failed to cancel the timed out Postgres query", e);
+                    return Mono.empty();
+                }))
+            .orElse(Mono.empty());
+    }
+
+    private Optional<PostgresqlConnection> unwrapPostgresqlConnection(Connection connection) {
+        if (connection instanceof PostgresqlConnection postgresqlConnection) {
+            return Optional.of(postgresqlConnection);
+        }
+        if (connection instanceof Wrapped<?> wrapped && wrapped.unwrap() instanceof PostgresqlConnection postgresqlConnection) {
+            return Optional.of(postgresqlConnection);
+        }
+        return Optional.empty();
     }
 
     private Predicate<Throwable> preparedStatementConflictException() {
