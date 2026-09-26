@@ -113,7 +113,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      */
     private int dnsCredibility;
 
-    private enum DnsRecordType { MX, PTR, A, ALL_A, TXT }
+    private enum DnsRecordType { MX, PTR, A, TXT }
 
     private record DnsKey(DnsRecordType type, Object target) {}
 
@@ -452,7 +452,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 result.addAll(samePrio);
             }
         }
-        return result;
+        return ImmutableList.copyOf(result);
     }
 
     @Override
@@ -568,48 +568,13 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     @Override
     public InetAddress getByName(String host) throws UnknownHostException {
-        if (caffeineCache != null) {
-            DnsKey key = new DnsKey(DnsRecordType.A, normalizeKey(host));
-            DnsValue<?> cached = caffeineCache.getIfPresent(key);
-            if (cached != null) {
-                return (InetAddress) cached.value();
-            }
-        }
-
-        TimeMetric timeMetric = metricFactory.timer("getByName");
-        String name = allowIPLiteral(host);
-
-        try {
-            // Check if its local
-            if (name.equalsIgnoreCase(localHostName) || name.equalsIgnoreCase(localCanonicalHostName) || name.equals(localAddress)) {
-                return getLocalHost();
-            }
-
-            // Address.getByAddress parses IP literals (both IPv4 and IPv6). If it succeeds, name is an IP literal.
-            return org.xbill.DNS.Address.getByAddress(name);
-        } catch (UnknownHostException e) {
-            Record[] records = lookupNoException(name, Type.A);
-
-            if (records != null && records.length >= 1) {
-                ARecord a = (ARecord) records[0];
-                InetAddress addr = InetAddress.getByAddress(name, a.getAddress().getAddress());
-                if (caffeineCache != null) {
-                    long ttl = computeRecordsTtl(records);
-                    caffeineCache.put(new DnsKey(DnsRecordType.A, normalizeKey(host)), new DnsValue<>(addr, ttl));
-                }
-                return addr;
-            } else {
-                throw e;
-            }
-        } finally {
-            timeMetric.stopAndPublish();
-        }
+        return getAllByName(host).iterator().next();
     }
 
     @Override
     public Collection<InetAddress> getAllByName(String host) throws UnknownHostException {
         if (caffeineCache != null) {
-            DnsKey key = new DnsKey(DnsRecordType.ALL_A, normalizeKey(host));
+            DnsKey key = new DnsKey(DnsRecordType.A, normalizeKey(host));
             DnsValue<?> cached = caffeineCache.getIfPresent(key);
             if (cached != null) {
                 @SuppressWarnings("unchecked")
@@ -640,7 +605,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 Collection<InetAddress> result = ImmutableList.copyOf(addrs);
                 if (caffeineCache != null) {
                     long ttl = computeRecordsTtl(records);
-                    caffeineCache.put(new DnsKey(DnsRecordType.ALL_A, normalizeKey(host)), new DnsValue<>(result, ttl));
+                    caffeineCache.put(new DnsKey(DnsRecordType.A, normalizeKey(host)), new DnsValue<>(result, ttl));
                 }
                 return result;
             } else {
