@@ -175,8 +175,14 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         return Math.max(effectiveMin, Math.min(rawTtl, (long) negativeCacheMaxTTL));
     }
 
-    private long computeRecordsTtl(Record[] records) {
+    private long computeRecordsTtl(Record[] records, String hostname) {
         if (records == null || records.length == 0) {
+            if (inheritNegativeTTL && hostname != null && !hostname.isEmpty()) {
+                Record[] soa = lookupNoException(hostname, Type.SOA);
+                if (soa != null && soa.length > 0) {
+                    return clampNegativeTtl(soa[0].getTTL());
+                }
+            }
             return clampNegativeTtl(negativeCacheFallbackTTL);
         }
         if (!inheritTTL) {
@@ -484,7 +490,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             List<MxHost> immutableHosts = ImmutableList.copyOf(hosts);
             if (caffeineCache != null) {
                 Record[] records = lookupNoException(hostname, Type.MX);
-                long ttl = computeRecordsTtl(records);
+                long ttl = computeRecordsTtl(records, hostname);
                 caffeineCache.put(new DnsKey(DnsRecordType.MX, normalizeKey(hostname)), new DnsValue<>(immutableHosts, ttl));
             }
             return shuffleEqualPriorityMx(immutableHosts);
@@ -537,7 +543,11 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     }
 
     private static String normalizeKey(String host) {
-        return host.toLowerCase(Locale.ROOT);
+        String lower = host.toLowerCase(Locale.ROOT);
+        if (lower.endsWith(".") && lower.length() > 1) {
+            return lower.substring(0, lower.length() - 1);
+        }
+        return lower;
     }
 
     /*
@@ -604,7 +614,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 }
                 Collection<InetAddress> result = ImmutableList.copyOf(addrs);
                 if (caffeineCache != null) {
-                    long ttl = computeRecordsTtl(records);
+                    long ttl = computeRecordsTtl(records, host);
                     caffeineCache.put(new DnsKey(DnsRecordType.A, normalizeKey(host)), new DnsValue<>(result, ttl));
                 }
                 return result;
@@ -642,7 +652,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             }
             Collection<String> result = ImmutableList.copyOf(txtR);
             if (caffeineCache != null) {
-                long ttl = computeRecordsTtl(records);
+                long ttl = computeRecordsTtl(records, hostname);
                 caffeineCache.put(new DnsKey(DnsRecordType.TXT, normalizeKey(hostname)), new DnsValue<>(result, ttl));
             }
             return result;
@@ -664,7 +674,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         TimeMetric timeMetric = metricFactory.timer("getHostName");
         String result;
         Name name = ReverseMap.fromAddress(addr);
-        Record[] records = lookupNoException(name.toString(), Type.PTR);
+        String nameString = name.toString();
+        Record[] records = lookupNoException(nameString, Type.PTR);
 
         try {
             if (records == null) {
@@ -674,7 +685,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 result = ptr.getTarget().toString();
             }
             if (caffeineCache != null) {
-                long ttl = computeRecordsTtl(records);
+                long ttl = computeRecordsTtl(records, nameString);
                 caffeineCache.put(new DnsKey(DnsRecordType.PTR, addr), new DnsValue<>(result, ttl));
             }
             return result;
