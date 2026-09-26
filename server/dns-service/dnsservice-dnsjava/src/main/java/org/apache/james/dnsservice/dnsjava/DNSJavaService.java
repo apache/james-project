@@ -21,12 +21,15 @@ package org.apache.james.dnsservice.dnsjava;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
@@ -49,16 +52,22 @@ import org.xbill.DNS.DClass;
 import org.xbill.DNS.ExtendedResolver;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.MXRecord;
+import org.xbill.DNS.Message;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.PTRRecord;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.Resolver;
 import org.xbill.DNS.ResolverConfig;
 import org.xbill.DNS.ReverseMap;
+import org.xbill.DNS.SOARecord;
+import org.xbill.DNS.Section;
+import org.xbill.DNS.SetResponse;
 import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Expiry;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -66,8 +75,6 @@ import com.google.common.collect.ImmutableList;
  */
 public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DNSJavaService.class);
-
-    private static final int CACHE_TTL_DISABLE = -1;
 
     /**
      * A resolver instance used to retrieve DNS records. This is a reference to
@@ -86,12 +93,148 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      */
     private int maxCacheSize = 50000;
 
-    private int negativeCacheTTL;
+    public static final int ABSOLUTE_MAX_TTL = 7 * 86400; // 7 days safety cap
+    public static final int ABSOLUTE_MIN_TTL = 60; // 60 seconds minimum protective safety cap
+    public static final int DEFAULT_CACHE_FALLBACK_TTL = 300; // 5 minutes, used when inheritTTL=false or no TTL available
+    public static final int DEFAULT_CACHE_MIN_TTL = 60;
+    public static final int DEFAULT_CACHE_MAX_TTL = 86400; // 1 day
+    public static final int DEFAULT_NEGATIVE_CACHE_FALLBACK_TTL = 60; // used when inheritNegativeTTL=false or no SOA TTL available
+    public static final int DEFAULT_NEGATIVE_CACHE_MIN_TTL = 60;
+    public static final int DEFAULT_NEGATIVE_CACHE_MAX_TTL = 3600; // 1 hour safety cap for negative cache
+
+    private boolean inheritTTL = true;
+    private int cacheFallbackTTL = DEFAULT_CACHE_FALLBACK_TTL;
+    private int cacheMinTTL = DEFAULT_CACHE_MIN_TTL;
+    private int cacheMaxTTL = DEFAULT_CACHE_MAX_TTL;
+
+    private boolean inheritNegativeTTL = true;
+    private int negativeCacheFallbackTTL = DEFAULT_NEGATIVE_CACHE_FALLBACK_TTL;
+    private int negativeCacheMinTTL = DEFAULT_NEGATIVE_CACHE_MIN_TTL;
+    private int negativeCacheMaxTTL = DEFAULT_NEGATIVE_CACHE_MAX_TTL;
 
     /**
      * Whether the DNS response is required to be authoritative
      */
     private int dnsCredibility;
+
+    private enum DnsRecordType { MX, PTR, A, TXT }
+
+    private record DnsKey(DnsRecordType type, Object target) {}
+
+    private record DnsValue<T>(T value, long ttlSeconds) {}
+
+    private record MxHost(String name, int priority) {}
+
+    private record LookupResult(Record[] answers, SOARecord authoritySoa) {}
+
+    private static class ResponseCaptureCache extends Cache {
+        private SOARecord capturedSoa;
+
+        ResponseCaptureCache() {
+            super(DClass.IN);
+        }
+
+        @Override
+        public synchronized SetResponse addMessage(Message in) {
+            this.capturedSoa = null;
+            SetResponse response = super.addMessage(in);
+            if (in != null) {
+                for (Record record : in.getSection(Section.AUTHORITY)) {
+                    if (record instanceof SOARecord soa) {
+                        this.capturedSoa = soa;
+                        break;
+                    }
+                }
+            }
+            return response;
+        }
+
+        @Override
+        public synchronized void addNegative(Name name, int type, SOARecord soa, int cred) {
+            super.addNegative(name, type, soa, cred);
+            if (soa != null) {
+                this.capturedSoa = soa;
+            }
+        }
+
+        public SOARecord getCapturedSoa() {
+            return capturedSoa;
+        }
+    }
+
+    protected com.github.benmanes.caffeine.cache.Cache<DnsKey, DnsValue<?>> caffeineCache;
+
+    private static int sanitizeBoundedTtl(int value, int defaultVal, int minAllowed, int maxAllowed) {
+        if (value < minAllowed) {
+            LOGGER.warn("Configured TTL {} is below minimum allowed {}. Falling back to {}.", value, minAllowed, defaultVal);
+            return defaultVal;
+        }
+        if (value > maxAllowed) {
+            LOGGER.warn("Configured TTL {} exceeds maximum allowed {}. Clamping to {}.", value, maxAllowed, maxAllowed);
+            return maxAllowed;
+        }
+        return value;
+    }
+
+    private static int resolveJvmSecurityTtl(String secProp, String sysProp, int fallback) {
+        try {
+            String val = Security.getProperty(secProp);
+            if (val != null && !val.trim().isEmpty()) {
+                int parsed = Integer.parseInt(val.trim());
+                if (parsed >= 0) {
+                    return parsed;
+                }
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        try {
+            String sysVal = System.getProperty(sysProp);
+            if (sysVal != null && !sysVal.trim().isEmpty()) {
+                int parsed = Integer.parseInt(sysVal.trim());
+                if (parsed >= 0) {
+                    return parsed;
+                }
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        return fallback;
+    }
+
+    private static long ttlNanos(DnsValue<?> value) {
+        return TimeUnit.SECONDS.toNanos(Math.max(1, value.ttlSeconds()));
+    }
+
+    private long clampTtl(long rawTtl) {
+        long effectiveMin = Math.max((long) ABSOLUTE_MIN_TTL, (long) cacheMinTTL);
+        return Math.max(effectiveMin, Math.min(rawTtl, (long) cacheMaxTTL));
+    }
+
+    private long clampNegativeTtl(long rawTtl) {
+        long effectiveMin = Math.max((long) ABSOLUTE_MIN_TTL, (long) negativeCacheMinTTL);
+        return Math.max(effectiveMin, Math.min(rawTtl, (long) negativeCacheMaxTTL));
+    }
+
+    private long computeRecordsTtl(Record[] records, SOARecord authoritySoa) {
+        if (records == null || records.length == 0) {
+            if (inheritNegativeTTL && authoritySoa != null) {
+                long negativeTtl = Math.min(authoritySoa.getTTL(), authoritySoa.getMinimum());
+                return clampNegativeTtl(negativeTtl);
+            }
+            return clampNegativeTtl(negativeCacheFallbackTTL);
+        }
+        if (!inheritTTL) {
+            return clampTtl(cacheFallbackTTL);
+        }
+        long minTtl = Long.MAX_VALUE;
+        for (Record record : records) {
+            if (record != null) {
+                minTtl = Math.min(minTtl, record.getTTL());
+            }
+        }
+        return minTtl == Long.MAX_VALUE ? clampNegativeTtl(negativeCacheFallbackTTL) : clampTtl(minTtl);
+    }
 
     /**
      * The DNS servers to be used by this service
@@ -189,7 +332,29 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         maxCacheSize = configuration.getInt("maxcachesize", maxCacheSize);
 
-        negativeCacheTTL = configuration.getInt("negativeCacheTTL", CACHE_TTL_DISABLE);
+        inheritTTL = configuration.getBoolean("inheritTTL", true);
+        inheritNegativeTTL = configuration.getBoolean("inheritNegativeTTL", true);
+
+        int jvmPosTtl = resolveJvmSecurityTtl("networkaddress.cache.ttl", "sun.net.inetaddr.ttl", DEFAULT_CACHE_MAX_TTL);
+        int jvmNegTtl = resolveJvmSecurityTtl("networkaddress.cache.negative.ttl", "sun.net.inetaddr.negative.ttl", DEFAULT_NEGATIVE_CACHE_FALLBACK_TTL);
+
+        int rawFallbackTtl = configuration.getInt("cacheFallbackTTL", DEFAULT_CACHE_FALLBACK_TTL);
+        cacheFallbackTTL = sanitizeBoundedTtl(rawFallbackTtl, DEFAULT_CACHE_FALLBACK_TTL, ABSOLUTE_MIN_TTL, ABSOLUTE_MAX_TTL);
+
+        int rawMinTtl = configuration.getInt("cacheMinTTL", DEFAULT_CACHE_MIN_TTL);
+        cacheMinTTL = sanitizeBoundedTtl(rawMinTtl, DEFAULT_CACHE_MIN_TTL, ABSOLUTE_MIN_TTL, ABSOLUTE_MAX_TTL);
+
+        int rawMaxTtl = configuration.getInt("cacheMaxTTL", jvmPosTtl);
+        cacheMaxTTL = sanitizeBoundedTtl(rawMaxTtl, jvmPosTtl, cacheMinTTL, ABSOLUTE_MAX_TTL);
+
+        int rawNegFallbackTtl = configuration.getInt("negativeCacheFallbackTTL", jvmNegTtl);
+        negativeCacheFallbackTTL = sanitizeBoundedTtl(rawNegFallbackTtl, jvmNegTtl, ABSOLUTE_MIN_TTL, DEFAULT_NEGATIVE_CACHE_MAX_TTL);
+
+        int rawNegMinTtl = configuration.getInt("negativeCacheMinTTL", DEFAULT_NEGATIVE_CACHE_MIN_TTL);
+        negativeCacheMinTTL = sanitizeBoundedTtl(rawNegMinTtl, DEFAULT_NEGATIVE_CACHE_MIN_TTL, ABSOLUTE_MIN_TTL, DEFAULT_NEGATIVE_CACHE_MAX_TTL);
+
+        int rawNegMaxTtl = configuration.getInt("negativeCacheMaxTTL", DEFAULT_NEGATIVE_CACHE_MAX_TTL);
+        negativeCacheMaxTTL = sanitizeBoundedTtl(rawNegMaxTtl, DEFAULT_NEGATIVE_CACHE_MAX_TTL, negativeCacheMinTTL, DEFAULT_NEGATIVE_CACHE_MAX_TTL);
     }
 
     @PostConstruct
@@ -218,7 +383,28 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         cache = new Cache(DClass.IN);
         cache.setMaxEntries(maxCacheSize);
-        cache.setMaxNCache(negativeCacheTTL);
+        cache.setMaxCache(cacheMaxTTL);
+        cache.setMaxNCache(negativeCacheFallbackTTL);
+
+        caffeineCache = Caffeine.newBuilder()
+            .maximumSize(maxCacheSize)
+            .expireAfter(new Expiry<DnsKey, DnsValue<?>>() {
+                @Override
+                public long expireAfterCreate(DnsKey key, DnsValue<?> value, long currentTime) {
+                    return ttlNanos(value);
+                }
+
+                @Override
+                public long expireAfterUpdate(DnsKey key, DnsValue<?> value, long currentTime, long currentDuration) {
+                    return ttlNanos(value);
+                }
+
+                @Override
+                public long expireAfterRead(DnsKey key, DnsValue<?> value, long currentTime, long currentDuration) {
+                    return currentDuration;
+                }
+            })
+            .build();
 
         if (setAsDNSJavaDefault) {
             Lookup.setDefaultResolver(resolver);
@@ -257,84 +443,132 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * @return a list of MX records corresponding to this mail domain
      * @throws TemporaryResolutionException get thrown on temporary problems
      */
-    private List<String> findMXRecordsRaw(String hostname) throws TemporaryResolutionException {
-        Record[] answers = lookup(hostname, Type.MX);
-        List<String> servers = new ArrayList<>();
+    private record MxRawResult(List<MxHost> hosts, long ttl) {}
+
+    private MxRawResult findMXRecordsRaw(String hostname) throws TemporaryResolutionException {
+        LookupResult lookupResult = lookupInternal(hostname, Type.MX);
+        Record[] answers = lookupResult.answers();
+        long ttl = computeRecordsTtl(answers, lookupResult.authoritySoa());
+        List<MxHost> servers = new ArrayList<>();
         if (answers == null) {
-            return servers;
+            return new MxRawResult(servers, ttl);
         }
 
         MXRecord[] mxAnswers = new MXRecord[answers.length];
-
         for (int i = 0; i < answers.length; i++) {
             mxAnswers[i] = (MXRecord) answers[i];
         }
-        // just sort for now.. This will ensure that mx records with same prio
-        // are in sequence
         Arrays.sort(mxAnswers, mxComparator);
 
-        // now add the mx records to the right list and take care of shuffle
-        // mx records with the same priority
+        for (MXRecord mx : mxAnswers) {
+            servers.add(new MxHost(mx.getTarget().toString(), mx.getPriority()));
+        }
+        return new MxRawResult(servers, ttl);
+    }
+
+    private static List<String> shuffleEqualPriorityMx(List<MxHost> mxHosts) {
+        List<String> result = new ArrayList<>(mxHosts.size());
         int currentPrio = -1;
         List<String> samePrio = new ArrayList<>();
-        for (int i = 0; i < mxAnswers.length; i++) {
+
+        for (int i = 0; i < mxHosts.size(); i++) {
+            MxHost host = mxHosts.get(i);
             boolean same = false;
-            boolean lastItem = i + 1 == mxAnswers.length;
-            MXRecord mx = mxAnswers[i];
+            boolean lastItem = (i + 1 == mxHosts.size());
+
             if (i == 0) {
-                currentPrio = mx.getPriority();
+                currentPrio = host.priority();
             } else {
-                same = currentPrio == mx.getPriority();
+                same = (currentPrio == host.priority());
             }
 
-            String mxRecord = mx.getTarget().toString();
             if (same) {
-                samePrio.add(mxRecord);
+                samePrio.add(host.name());
             } else {
-                // shuffle entries with same prio
-                // JAMES-913
-                Collections.shuffle(samePrio);
-                servers.addAll(samePrio);
-
+                if (samePrio.size() > 1) {
+                    Collections.shuffle(samePrio);
+                }
+                result.addAll(samePrio);
                 samePrio.clear();
-                samePrio.add(mxRecord);
-
+                currentPrio = host.priority();
+                samePrio.add(host.name());
             }
 
             if (lastItem) {
-                // shuffle entries with same prio
-                // JAMES-913
-                Collections.shuffle(samePrio);
-                servers.addAll(samePrio);
+                if (samePrio.size() > 1) {
+                    Collections.shuffle(samePrio);
+                }
+                result.addAll(samePrio);
             }
-            LOGGER.debug("Found MX record {}", mxRecord);
         }
-        return servers;
+        return ImmutableList.copyOf(result);
     }
 
     @Override
     public Collection<String> findMXRecords(String hostname) throws TemporaryResolutionException {
+        if (caffeineCache != null) {
+            DnsKey key = new DnsKey(DnsRecordType.MX, normalizeKey(hostname));
+            DnsValue<?> cached = caffeineCache.getIfPresent(key);
+            if (cached != null) {
+                @SuppressWarnings("unchecked")
+                List<MxHost> cachedHosts = (List<MxHost>) cached.value();
+                return shuffleEqualPriorityMx(cachedHosts);
+            }
+        }
+
         TimeMetric timeMetric = metricFactory.timer("findMXRecords");
-        List<String> servers = new ArrayList<>();
         try {
-            servers = findMXRecordsRaw(hostname);
-            return Collections.unmodifiableCollection(servers);
-        } finally {
-            // If we found no results, we'll add the original domain name if
-            // it's a valid DNS entry
-            if (servers.isEmpty()) {
+            MxRawResult rawResult = findMXRecordsRaw(hostname);
+            List<MxHost> hosts = rawResult.hosts();
+            // If we found no results, we'll add the original domain name if it's a valid DNS entry
+            if (hosts.isEmpty()) {
                 LOGGER.info("Couldn't resolve MX records for domain {}.", hostname);
                 try {
                     getByName(hostname);
-                    servers.add(hostname);
+                    hosts.add(new MxHost(hostname, 0));
                 } catch (UnknownHostException uhe) {
-                    // The original domain name is not a valid host,
-                    // so we can't add it to the server list. In this
-                    // case we return an empty list of servers
                     LOGGER.error("Couldn't resolve IP address for host {}.", hostname, uhe);
                 }
             }
+
+            List<MxHost> immutableHosts = ImmutableList.copyOf(hosts);
+            if (caffeineCache != null) {
+                caffeineCache.put(new DnsKey(DnsRecordType.MX, normalizeKey(hostname)), new DnsValue<>(immutableHosts, rawResult.ttl()));
+            }
+            return shuffleEqualPriorityMx(immutableHosts);
+        } finally {
             timeMetric.stopAndPublish();
+        }
+    }
+
+    private LookupResult lookupInternal(String namestr, int type) throws TemporaryResolutionException {
+        try {
+            Lookup l = new Lookup(namestr, type);
+            ResponseCaptureCache captureCache = (caffeineCache != null) ? new ResponseCaptureCache() : null;
+            l.setCache(captureCache != null ? captureCache : cache);
+            l.setResolver(resolver);
+            l.setCredibility(dnsCredibility);
+            l.setSearchPath(searchPaths);
+            Record[] r = l.run();
+
+            if (l.getResult() == Lookup.TRY_AGAIN) {
+                throw new TemporaryResolutionException("DNSService is temporary not reachable");
+            }
+            SOARecord soa = (captureCache != null) ? captureCache.getCapturedSoa() : null;
+            return new LookupResult(r, soa);
+        } catch (TextParseException tpe) {
+            LOGGER.error("Couldn't parse name {}", namestr, tpe);
+            return new LookupResult(null, null);
+        } catch (IllegalStateException ise) {
+            throw new TemporaryResolutionException("DNSService is temporary not reachable", ise);
+        }
+    }
+
+    private LookupResult lookupInternalNoException(String namestr, int type) {
+        try {
+            return lookupInternal(namestr, type);
+        } catch (TemporaryResolutionException e) {
+            return new LookupResult(null, null);
         }
     }
 
@@ -347,41 +581,16 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * @param type     the type of record desired
      */
     protected Record[] lookup(String namestr, int type) throws TemporaryResolutionException {
-        try {
-            Lookup l = new Lookup(namestr, type);
-
-            l.setCache(cache);
-            l.setResolver(resolver);
-            l.setCredibility(dnsCredibility);
-            l.setSearchPath(searchPaths);
-            Record[] r = l.run();
-
-            if (l.getResult() == Lookup.TRY_AGAIN) {
-                throw new TemporaryResolutionException("DNSService is temporary not reachable");
-            } else {
-                return r;
-            }
-
-        } catch (TextParseException tpe) {
-            // TODO: Figure out how to handle this correctly.
-            LOGGER.error("Couldn't parse name {}", namestr, tpe);
-            return null;
-        } catch (IllegalStateException ise) {
-            // This is okay, because it mimics the original behaviour
-            // TODO find out if it's a bug in DNSJava
-            throw new TemporaryResolutionException("DNSService is temporary not reachable", ise);
-        }
+        return lookupInternal(namestr, type).answers();
     }
 
     protected Record[] lookupNoException(String namestr, int type) {
-        try {
-            return lookup(namestr, type);
-        } catch (TemporaryResolutionException e) {
-            return null;
-        }
+        return lookupInternalNoException(namestr, type).answers();
     }
 
-
+    private static String normalizeKey(String host) {
+        return host.toLowerCase(Locale.ROOT);
+    }
 
     /*
      * java.net.InetAddress.get[All]ByName(String) allows an IP literal to be
@@ -411,32 +620,21 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     @Override
     public InetAddress getByName(String host) throws UnknownHostException {
-        TimeMetric timeMetric = metricFactory.timer("getByName");
-        String name = allowIPLiteral(host);
-
-        try {
-            // Check if its local
-            if (name.equalsIgnoreCase(localHostName) || name.equalsIgnoreCase(localCanonicalHostName) || name.equals(localAddress)) {
-                return getLocalHost();
-            }
-
-            return org.xbill.DNS.Address.getByAddress(name);
-        } catch (UnknownHostException e) {
-            Record[] records = lookupNoException(name, Type.A);
-
-            if (records != null && records.length >= 1) {
-                ARecord a = (ARecord) records[0];
-                return InetAddress.getByAddress(name, a.getAddress().getAddress());
-            } else {
-                throw e;
-            }
-        } finally {
-            timeMetric.stopAndPublish();
-        }
+        return getAllByName(host).iterator().next();
     }
 
     @Override
     public Collection<InetAddress> getAllByName(String host) throws UnknownHostException {
+        if (caffeineCache != null) {
+            DnsKey key = new DnsKey(DnsRecordType.A, normalizeKey(host));
+            DnsValue<?> cached = caffeineCache.getIfPresent(key);
+            if (cached != null) {
+                @SuppressWarnings("unchecked")
+                Collection<InetAddress> cachedResult = (Collection<InetAddress>) cached.value();
+                return cachedResult;
+            }
+        }
+
         TimeMetric timeMetric = metricFactory.timer("getAllByName");
         String name = allowIPLiteral(host);
         try {
@@ -445,10 +643,11 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 return ImmutableList.of(getLocalHost());
             }
 
-            InetAddress addr = org.xbill.DNS.Address.getByAddress(name);
-            return ImmutableList.of(addr);
+            // Address.getByAddress parses IP literals (both IPv4 and IPv6). If it succeeds, name is an IP literal.
+            return ImmutableList.of(org.xbill.DNS.Address.getByAddress(name));
         } catch (UnknownHostException e) {
-            Record[] records = lookupNoException(name, Type.A);
+            LookupResult lookupResult = lookupInternalNoException(name, Type.A);
+            Record[] records = lookupResult.answers();
 
             if (records != null && records.length >= 1) {
                 InetAddress[] addrs = new InetAddress[records.length];
@@ -456,7 +655,12 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                     ARecord a = (ARecord) records[i];
                     addrs[i] = InetAddress.getByAddress(name, a.getAddress().getAddress());
                 }
-                return ImmutableList.copyOf(addrs);
+                Collection<InetAddress> result = ImmutableList.copyOf(addrs);
+                if (caffeineCache != null) {
+                    long ttl = computeRecordsTtl(records, lookupResult.authoritySoa());
+                    caffeineCache.put(new DnsKey(DnsRecordType.A, normalizeKey(host)), new DnsValue<>(result, ttl));
+                }
+                return result;
             } else {
                 throw e;
             }
@@ -467,9 +671,20 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     @Override
     public Collection<String> findTXTRecords(String hostname) {
+        if (caffeineCache != null) {
+            DnsKey key = new DnsKey(DnsRecordType.TXT, normalizeKey(hostname));
+            DnsValue<?> cached = caffeineCache.getIfPresent(key);
+            if (cached != null) {
+                @SuppressWarnings("unchecked")
+                Collection<String> cachedResult = (Collection<String>) cached.value();
+                return cachedResult;
+            }
+        }
+
         TimeMetric timeMetric = metricFactory.timer("findTXTRecords");
         List<String> txtR = new ArrayList<>();
-        Record[] records = lookupNoException(hostname, Type.TXT);
+        LookupResult lookupResult = lookupInternalNoException(hostname, Type.TXT);
+        Record[] records = lookupResult.answers();
 
         try {
             if (records != null) {
@@ -479,7 +694,12 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 }
 
             }
-            return txtR;
+            Collection<String> result = ImmutableList.copyOf(txtR);
+            if (caffeineCache != null) {
+                long ttl = computeRecordsTtl(records, lookupResult.authoritySoa());
+                caffeineCache.put(new DnsKey(DnsRecordType.TXT, normalizeKey(hostname)), new DnsValue<>(result, ttl));
+            }
+            return result;
         } finally {
             timeMetric.stopAndPublish();
         }
@@ -487,10 +707,20 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     @Override
     public String getHostName(InetAddress addr) {
+        if (caffeineCache != null) {
+            DnsKey key = new DnsKey(DnsRecordType.PTR, addr);
+            DnsValue<?> cached = caffeineCache.getIfPresent(key);
+            if (cached != null) {
+                return (String) cached.value();
+            }
+        }
+
         TimeMetric timeMetric = metricFactory.timer("getHostName");
         String result;
         Name name = ReverseMap.fromAddress(addr);
-        Record[] records = lookupNoException(name.toString(), Type.PTR);
+        String nameString = name.toString();
+        LookupResult lookupResult = lookupInternalNoException(nameString, Type.PTR);
+        Record[] records = lookupResult.answers();
 
         try {
             if (records == null) {
@@ -498,6 +728,10 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             } else {
                 PTRRecord ptr = (PTRRecord) records[0];
                 result = ptr.getTarget().toString();
+            }
+            if (caffeineCache != null) {
+                long ttl = computeRecordsTtl(records, lookupResult.authoritySoa());
+                caffeineCache.put(new DnsKey(DnsRecordType.PTR, addr), new DnsValue<>(result, ttl));
             }
             return result;
         } finally {
@@ -523,6 +757,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     @Override
     public void clearCache() {
         cache.clearCache();
+        if (caffeineCache != null) {
+            caffeineCache.invalidateAll();
+        }
     }
 
 }
