@@ -124,6 +124,28 @@ class BlobStoreModulesChooserTest {
     }
 
     @Test
+    void provideBlobStoreShouldReturnChunkedBlobStoreModuleWhenS3() {
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+            .s3()
+            .disableCache()
+            .deduplication()
+            .noCryptoConfig()))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.ChunkedBlobStoreModule)
+            .hasSize(1);
+    }
+
+    @Test
+    void provideBlobStoreShouldReturnNoChunkedBlobStoreModuleWhenNotS3() {
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+            .cassandra()
+            .disableCache()
+            .deduplication()
+            .noCryptoConfig()))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.NoChunkedBlobStoreModule)
+            .hasSize(1);
+    }
+
+    @Test
     void optionalBlobCompactionAlgorithmShouldReturnEmptyWhenCryptoConfigured() {
         BlobStoreConfiguration config = BlobStoreConfiguration.builder()
             .cassandra()

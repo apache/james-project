@@ -245,10 +245,6 @@ public class BlobStoreModulesChooser {
         return new NoChunkedBlobStoreModule();
     }
 
-    public static Module chooseChunkedBlobStoreDAOModule() {
-        return new ChunkedBlobStoreModule();
-    }
-
     public static Module chooseCompressionModule(CompressionConfiguration compressionConfiguration) {
         if (compressionConfiguration.enabled()) {
             return new CompressionModule(compressionConfiguration);
