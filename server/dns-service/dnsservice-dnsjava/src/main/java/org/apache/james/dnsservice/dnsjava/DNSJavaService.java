@@ -315,25 +315,26 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     @Override
     public Collection<String> findMXRecords(String hostname) throws TemporaryResolutionException {
         TimeMetric timeMetric = metricFactory.timer("findMXRecords");
-        List<String> servers = new ArrayList<>();
         try {
-            servers = findMXRecordsRaw(hostname);
-            return Collections.unmodifiableCollection(servers);
-        } finally {
+            List<String> servers = findMXRecordsRaw(hostname);
+            if (!servers.isEmpty()) {
+                return Collections.unmodifiableCollection(servers);
+            }
+
             // If we found no results, we'll add the original domain name if
             // it's a valid DNS entry
-            if (servers.isEmpty()) {
-                LOGGER.info("Couldn't resolve MX records for domain {}.", hostname);
-                try {
-                    getByName(hostname);
-                    servers.add(hostname);
-                } catch (UnknownHostException uhe) {
-                    // The original domain name is not a valid host,
-                    // so we can't add it to the server list. In this
-                    // case we return an empty list of servers
-                    LOGGER.error("Couldn't resolve IP address for host {}.", hostname, uhe);
-                }
+            LOGGER.info("Couldn't resolve MX records for domain {}. Falling back to A/AAAA resolution instead", hostname);
+            try {
+                getByName(hostname);
+                return ImmutableList.of(hostname);
+            } catch (UnknownHostException uhe) {
+                // The original domain name is not a valid host,
+                // so we can't add it to the server list. In this
+                // case we return an empty list of servers
+                LOGGER.info("Couldn't resolve IP address for host {}.", hostname, uhe);
+                return ImmutableList.of();
             }
+        } finally {
             timeMetric.stopAndPublish();
         }
     }
