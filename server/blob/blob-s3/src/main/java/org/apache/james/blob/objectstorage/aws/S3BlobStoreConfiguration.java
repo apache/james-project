@@ -92,7 +92,7 @@ public class S3BlobStoreConfiguration {
                 this.inMemoryReadLimit = Optional.empty();
                 this.uploadRetrySpec = Optional.empty();
                 this.fallbackBucketName = Optional.empty();
-                this.ifNoneMatchEnabled = false;
+                this.ifNoneMatchEnabled = true;
             }
 
             public ReadyToBuild defaultBucketName(Optional<BucketName> defaultBucketName) {

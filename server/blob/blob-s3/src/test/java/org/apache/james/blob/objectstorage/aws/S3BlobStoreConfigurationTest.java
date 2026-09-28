@@ -20,6 +20,7 @@
 package org.apache.james.blob.objectstorage.aws;
 
 import static org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration.UPLOAD_RETRY_EXCEPTION_PREDICATE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
@@ -59,5 +60,19 @@ public class S3BlobStoreConfigurationTest {
             .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("SSEC configuration is mandatory when SSEC is enabled");
+    }
+
+    @Test
+    void shouldDefaultIfNoneMatchToTrue() {
+        S3BlobStoreConfiguration configuration = S3BlobStoreConfiguration.builder()
+            .authConfiguration(AwsS3AuthConfiguration.builder()
+                .endpoint(Throwing.supplier(() -> new URI("http://localhost:1234")).get())
+                .accessKeyId("accessKeyId")
+                .secretKey("secretKey1")
+                .build())
+            .region(Region.of("af-south-1"))
+            .build();
+
+        assertThat(configuration.ifNoneMatchEnabled()).isTrue();
     }
 }

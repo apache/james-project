@@ -106,4 +106,16 @@ class S3BlobStoreDAOIfNoneMatchTest {
 
         verify(client, times(2)).putObject(any(PutObjectRequest.class), any(AsyncRequestBody.class));
     }
+
+    @Test
+    void saveByteSourceShouldRetryConditionalRequestConflict() {
+        when(client.putObject(any(PutObjectRequest.class), any(AsyncRequestBody.class)))
+            .thenReturn(failedFuture(s3Exception(CONDITIONAL_REQUEST_CONFLICT_STATUS_CODE, CONDITIONAL_REQUEST_CONFLICT_ERROR_CODE)))
+            .thenReturn(CompletableFuture.completedFuture(PutObjectResponse.builder().build()));
+
+        assertThatCode(() -> Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY.asByteSource())).block())
+            .doesNotThrowAnyException();
+
+        verify(client, times(2)).putObject(any(PutObjectRequest.class), any(AsyncRequestBody.class));
+    }
 }

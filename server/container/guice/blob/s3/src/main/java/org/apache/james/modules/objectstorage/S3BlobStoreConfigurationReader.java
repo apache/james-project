@@ -82,7 +82,7 @@ public class S3BlobStoreConfigurationReader {
 
         Optional<String> fallbackNamespace = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_NAMESPACE_READ_FALLBACK, null));
 
-        boolean ifNoneMatchEnabled = configuration.getBoolean(OBJECTSTORAGE_S3_IF_NONE_MATCH_ENABLE, false);
+        boolean ifNoneMatchEnabled = configuration.getBoolean(OBJECTSTORAGE_S3_IF_NONE_MATCH_ENABLE, true);
 
         S3BlobStoreConfiguration.Builder.ReadyToBuild configBuilder = S3BlobStoreConfiguration.builder()
             .authConfiguration(AwsS3ConfigurationReader.from(configuration))
