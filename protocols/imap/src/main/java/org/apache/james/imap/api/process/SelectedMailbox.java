@@ -50,6 +50,18 @@ public interface SelectedMailbox {
 
     void unregisterIdle();
 
+    /**
+     * Unregisters the given IDLE listener only if it matches the currently registered listener.
+     * Implementations should override this method to provide identity-safe unregistration
+     * (e.g. via atomic compareAndSet) preventing delayed cleanups from unregistering newer listeners.
+     * The default implementation falls back to {@link #unregisterIdle()} for backward compatibility.
+     *
+     * @param listener the listener instance to unregister
+     */
+    default void unregisterIdle(EventListener.ReactiveEventListener listener) {
+        unregisterIdle();
+    }
+
     boolean isIdling();
 
     /**
