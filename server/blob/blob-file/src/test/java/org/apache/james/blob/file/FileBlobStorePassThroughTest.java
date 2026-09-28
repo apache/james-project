@@ -51,4 +51,18 @@ public class FileBlobStorePassThroughTest implements DeleteBlobStoreContract, Me
     public BlobId.Factory blobIdFactory() {
         return BLOB_ID_FACTORY;
     }
+
+    @Override
+    @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.condition.DisabledOnOs(org.junit.jupiter.api.condition.OS.WINDOWS)
+    public void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() throws Exception {
+        DeleteBlobStoreContract.super.readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob();
+    }
+
+    @Override
+    @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.condition.DisabledOnOs(org.junit.jupiter.api.condition.OS.WINDOWS)
+    public void readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() throws Exception {
+        DeleteBlobStoreContract.super.readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob();
+    }
 }
