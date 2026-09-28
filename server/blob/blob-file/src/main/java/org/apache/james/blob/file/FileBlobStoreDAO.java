@@ -27,12 +27,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.UserDefinedFileAttributeView;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -59,6 +63,7 @@ import com.google.common.io.ByteSource;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 public class FileBlobStoreDAO implements BlobStoreDAO {
 
@@ -88,27 +93,20 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     private File getBlobFile(BucketName bucketName, BlobId blobId) {
         File bucketRoot = getBucketRoot(bucketName);
         File blob = new File(bucketRoot, blobId.asString());
-        assertWithinRoot(blob);
         Preconditions.checkArgument(!isStagingFile(blob.toPath()), "Blob name uses reserved staging prefix: %s", blobId.asString());
         return blob;
     }
 
     private File getBucketRoot(BucketName bucketName) {
         File bucketRoot = new File(root, bucketName.asString());
-        assertWithinRoot(bucketRoot);
-        return bucketRoot;
-    }
-
-    private void assertWithinRoot(File target) {
-        try {
-            Path canonicalRoot = root.getCanonicalFile().toPath();
-            Path canonicalTarget = target.getCanonicalFile().toPath();
-            if (!canonicalTarget.startsWith(canonicalRoot)) {
-                throw new IllegalArgumentException(String.format("Path %s is outside root %s", target, root));
+        if (!bucketRoot.exists()) {
+            try {
+                FileUtils.forceMkdir(bucketRoot);
+            } catch (IOException e) {
+                throw new ObjectStoreIOException("Cannot create bucket", e);
             }
-        } catch (IOException e) {
-            throw new ObjectStoreIOException("Failed to validate path boundary", e);
         }
+        return bucketRoot;
     }
 
     @Override
@@ -147,7 +145,9 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
         Preconditions.checkNotNull(inputStream);
         return Mono.fromRunnable(() -> save(inputStream, getBlobFile(bucketName, blobId), metadata))
             .subscribeOn(Schedulers.boundedElastic())
-            .then();
+            .then()
+            .retryWhen(Retry.backoff(10, Duration.ofMillis(100))
+                .filter(e -> e instanceof OverlappingFileLockException));
     }
 
     private void save(InputStream inputStream, File blob, BlobMetadata metadata) {
@@ -173,11 +173,14 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     }
 
     private void writeToTempFile(File tempFile, InputStream inputStream, BlobMetadata metadata) throws IOException {
-        try (FileOutputStream out = new FileOutputStream(tempFile)) {
+        try (FileOutputStream out = new FileOutputStream(tempFile);
+             FileChannel channel = out.getChannel();
+             FileLock fileLock = channel.lock()) {
             inputStream.transferTo(out);
             writeMetadata(tempFile.toPath(), metadata);
         }
     }
+
 
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content, BlobMetadata metadata) {
         return Mono.using(
@@ -218,10 +221,8 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
         return Mono.fromRunnable(Throwing.runnable(() -> {
-                File bucketRoot = getBucketRoot(bucketName);
-                if (bucketRoot.exists()) {
-                    FileUtils.deleteQuietly(bucketRoot);
-                }
+                File bucketRoot = new File(root, bucketName.asString());
+                FileUtils.deleteQuietly(bucketRoot);
             }))
             .subscribeOn(Schedulers.boundedElastic())
             .then();
@@ -239,10 +240,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     @Override
     public Publisher<BlobId> listBlobs(BucketName bucketName) {
         return Mono.fromCallable(() -> {
-                File bucketRoot = getBucketRoot(bucketName);
-                if (!bucketRoot.exists()) {
-                    return java.util.stream.Stream.<BlobId>empty();
-                }
+                File bucketRoot = new File(root, bucketName.asString());
                 Path rootPath = bucketRoot.toPath();
                 // Blob ids may contain '/' (eg. recovery sidecar keys or hierarchy-aware blob IDs) and are then stored in nested
                 // directories, so we walk the tree and rebuild the id from the bucket-root-relative path.
