@@ -28,15 +28,13 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.jms.JMSCacheableMailQueue;
 import org.apache.james.queue.jms.JMSMailQueueFactory;
 
 /**
- * {@link MailQueueFactory} implementations which return
- * {@link ActiveMQCacheableMailQueue} instances
+ * {@link MailQueueFactory} implementation backed by Apache ActiveMQ Artemis.
  */
 public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
-
-    private boolean useBlob = true;
 
     private final ActiveMQMetricCollector activeMQMetricCollector;
 
@@ -52,13 +50,9 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
         this(embeddedActiveMQ.getConnectionFactory(), mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry, activeMQMetricCollector);
     }
 
-    public void setUseBlobMessages(boolean useBlob) {
-        this.useBlob = useBlob;
-    }
-
     @Override
     protected ManageableMailQueue createCacheableMailQueue(MailQueueName name) {
         activeMQMetricCollector.collectQueueStatistics(name);
-        return new ActiveMQCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, useBlob, metricFactory, gaugeRegistry);
+        return new JMSCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory, gaugeRegistry);
     }
 }
