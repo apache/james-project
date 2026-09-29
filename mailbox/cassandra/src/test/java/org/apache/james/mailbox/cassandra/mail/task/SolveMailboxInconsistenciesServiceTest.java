@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail.task;
 
 import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
+import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -38,20 +39,28 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDe
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService.Context;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclDataDefinition;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxDataDefinition;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
+import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.task.Task.Result;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class SolveMailboxInconsistenciesServiceTest {
     private static final UidValidity UID_VALIDITY_1 = UidValidity.of(145);
@@ -490,5 +499,66 @@ class SolveMailboxInconsistenciesServiceTest {
                 .containsExactlyInAnyOrder(MAILBOX_2, loserOtherPath);
             softly.assertThat(context.snapshot().getConflictingEntries()).isEmpty();
         });
+    }
+
+    @Test
+    void autoMergeShouldReportAnErrorWhenMergeIsPartial(CassandraCluster cassandra) {
+        // Ghost CASSANDRA_ID_1 squats path "abc" owned by CASSANDRA_ID_2.
+        Mailbox pathOwnerProjection = new Mailbox(MAILBOX_PATH, UID_VALIDITY_2, CASSANDRA_ID_2);
+        mailboxDAO.save(MAILBOX).block();
+        mailboxDAO.save(pathOwnerProjection).block();
+        mailboxPathV3DAO.save(MAILBOX_2).block();
+
+        // Real merging runner: failing to drop the ghost projection makes the merge partial.
+        testee = new SolveMailboxInconsistenciesService(mailboxDAO, mailboxPathV3DAO,
+            new CassandraSchemaVersionManager(versionDAO), realMergingRunner());
+        cassandra.getConf().registerScenario(fail()
+            .forever()
+            .whenQueryStartsWith("DELETE FROM mailbox WHERE"));
+
+        Context context = new Context();
+        Result result = testee.fixMailboxInconsistencies(context, new SolveMailboxInconsistenciesService.RunningOptions(5, true)).block();
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(result).isEqualTo(Result.PARTIAL);
+            softly.assertThat(context.snapshot().getErrors()).isEqualTo(1);
+            softly.assertThat(context.snapshot().getFixedInconsistencies()).isEmpty();
+            softly.assertThat(mailboxDAO.retrieveAllMailboxes().collectList().block())
+                .containsExactlyInAnyOrder(MAILBOX, pathOwnerProjection);
+        });
+    }
+
+    @Test
+    void autoMergeShouldReportAnErrorWhenCleanGhostCheckFails(CassandraCluster cassandra) {
+        // Ghost CASSANDRA_ID_1 squats path "abc" owned by CASSANDRA_ID_2.
+        Mailbox pathOwnerProjection = new Mailbox(MAILBOX_PATH, UID_VALIDITY_2, CASSANDRA_ID_2);
+        mailboxDAO.save(MAILBOX).block();
+        mailboxDAO.save(pathOwnerProjection).block();
+        mailboxPathV3DAO.save(MAILBOX_2).block();
+
+        // The first read by id is the one checking the ghost still resolves to the conflicting path.
+        cassandra.getConf().registerScenario(fail()
+            .times(1)
+            .whenQueryStartsWith("SELECT id,mailboxbase,uidvalidity,name FROM mailbox WHERE"));
+
+        Context context = new Context();
+        Result result = testee.fixMailboxInconsistencies(context, new SolveMailboxInconsistenciesService.RunningOptions(1, true)).block();
+
+        SoftAssertions.assertSoftly(softly -> {
+            verify(mergingRunner, never()).runReactive(any(), any(), any());
+            softly.assertThat(result).isEqualTo(Result.PARTIAL);
+            softly.assertThat(context.snapshot().getErrors()).isEqualTo(1);
+            softly.assertThat(context.snapshot().getFixedInconsistencies()).isEmpty();
+        });
+    }
+
+    private MailboxMergingTaskRunner realMergingRunner() {
+        CassandraMessageIdDAO messageIdDAO = mock(CassandraMessageIdDAO.class);
+        when(messageIdDAO.retrieveMessages(any(), any(), any())).thenReturn(Flux.empty());
+        ACLMapper aclMapper = mock(ACLMapper.class);
+        when(aclMapper.getACL(any())).thenReturn(Mono.just(MailboxACL.EMPTY));
+        when(aclMapper.setACL(any(), any())).thenReturn(Mono.empty());
+        return new MailboxMergingTaskRunner(mock(MailboxManager.class), mock(StoreMessageIdManager.class),
+            messageIdDAO, mailboxDAO, aclMapper);
     }
 }
