@@ -22,9 +22,8 @@ package org.apache.james.queue.activemq;
 import static org.apache.james.queue.activemq.ActiveMQHealthCheck.COMPONENT_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQPrefetchPolicy;
-import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.queue.jms.BrokerExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,16 +36,13 @@ import reactor.core.publisher.Mono;
 class ActiveMQHealthCheckTest {
 
     private ActiveMQHealthCheck testee;
-    private BrokerService broker;
+    private EmbeddedActiveMQ broker;
 
     @BeforeEach
-    void setup(BrokerService broker) {
+    void setup(EmbeddedActiveMQ broker) {
         this.broker = broker;
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
-        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
-        prefetchPolicy.setQueuePrefetch(0);
-        connectionFactory.setPrefetchPolicy(prefetchPolicy);
-
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://0");
+        connectionFactory.setConsumerWindowSize(0);
         testee = new ActiveMQHealthCheck(connectionFactory);
     }
 
@@ -68,4 +64,3 @@ class ActiveMQHealthCheckTest {
         assertThat(Mono.from(testee.check()).block().isUnHealthy()).isTrue();
     }
 }
-

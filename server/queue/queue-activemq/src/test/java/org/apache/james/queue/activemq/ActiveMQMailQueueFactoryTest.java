@@ -21,8 +21,8 @@ package org.apache.james.queue.activemq;
 
 import jakarta.jms.ConnectionFactory;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.queue.activemq.metric.ActiveMQMetricCollector;
@@ -46,15 +46,14 @@ public class ActiveMQMailQueueFactoryTest {
         ActiveMQMailQueueFactory mailQueueFactory;
 
         @BeforeEach
-        public void setUp(BrokerService brokerService) {
-            ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+        public void setUp(EmbeddedActiveMQ brokerService) {
+            ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://0");
             RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
             RecordingMetricFactory metricFactory = new RecordingMetricFactory();
             NoopGaugeRegistry gaugeRegistry = new NoopGaugeRegistry();
             ActiveMQMetricCollector metricCollector = new ActiveMQMetricCollectorNoop();
             mailQueueFactory = new ActiveMQMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry, metricCollector);
             mailQueueFactory.setUseJMX(false);
-            mailQueueFactory.setUseBlobMessages(false);
         }
 
         @AfterEach
@@ -68,25 +67,21 @@ public class ActiveMQMailQueueFactoryTest {
         }
     }
 
+    /**
+     * Blob-based test is kept as a nested class but now uses standard Artemis JMS.
+     * BlobMessages are not supported in Artemis; this test exercises the same queue
+     * using ObjectMessage transport (the new default).
+     */
     @Nested
     @ExtendWith(BrokerExtension.class)
     public static class ActiveMQMailQueueFactoryBlobsTest implements MailQueueFactoryContract<ManageableMailQueue>, ManageableMailQueueFactoryContract {
 
-        static final String BASE_DIR = "file://target/james-test";
-
         ActiveMQMailQueueFactory mailQueueFactory;
-        ActiveMQMailQueueBlobTest.MyFileSystem fileSystem;
 
         @BeforeEach
-        public void setUp(BrokerService brokerService) {
-            fileSystem = new ActiveMQMailQueueBlobTest.MyFileSystem();
-            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
-
-
-            FileSystemBlobTransferPolicy policy = new FileSystemBlobTransferPolicy();
-            policy.setFileSystem(fileSystem);
-            policy.setDefaultUploadUrl(BASE_DIR);
-            connectionFactory.setBlobTransferPolicy(policy);
+        public void setUp(EmbeddedActiveMQ brokerService) {
+            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://0");
+            connectionFactory.setConsumerWindowSize(0);
 
             RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
             RecordingMetricFactory metricFactory = new RecordingMetricFactory();
@@ -94,13 +89,11 @@ public class ActiveMQMailQueueFactoryTest {
             ActiveMQMetricCollector metricCollector = new ActiveMQMetricCollectorNoop();
             mailQueueFactory = new ActiveMQMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry, metricCollector);
             mailQueueFactory.setUseJMX(false);
-            mailQueueFactory.setUseBlobMessages(true);
         }
 
         @AfterEach
-        public void tearDown() throws Exception {
+        public void tearDown() {
             mailQueueFactory.destroy();
-            fileSystem.destroy();
         }
 
         @Override

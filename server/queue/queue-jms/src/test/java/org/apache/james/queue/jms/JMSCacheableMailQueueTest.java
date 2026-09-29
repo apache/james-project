@@ -19,9 +19,8 @@
 
 package org.apache.james.queue.jms;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQPrefetchPolicy;
-import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
@@ -46,15 +45,14 @@ public class JMSCacheableMailQueueTest implements DelayedManageableMailQueueCont
     private JMSCacheableMailQueue mailQueue;
 
     @BeforeEach
-    void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
-        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
-        prefetchPolicy.setQueuePrefetch(0);
-        connectionFactory.setPrefetchPolicy(prefetchPolicy);
+    void setUp(EmbeddedActiveMQ broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
+        // Use InVM transport - broker ID matches BrokerExtension instance counter
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://0");
+        connectionFactory.setConsumerWindowSize(0);
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         MetricFactory metricFactory = metricTestSystem.getMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
-        MailQueueName queueName = BrokerExtension.generateRandomQueueName(broker);
+        MailQueueName queueName = BrokerExtension.generateRandomQueueName();
         mailQueue = new JMSCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory, gaugeRegistry);
     }
 
@@ -68,7 +66,6 @@ public class JMSCacheableMailQueueTest implements DelayedManageableMailQueueCont
         return mailQueue;
     }
 
-    @Test
     @Override
     public ManageableMailQueue getManageableMailQueue() {
         return mailQueue;
