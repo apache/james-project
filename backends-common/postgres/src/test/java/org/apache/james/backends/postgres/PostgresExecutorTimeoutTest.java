@@ -51,6 +51,8 @@ class PostgresExecutorTimeoutTest {
     private static final Duration LONGER_THAN_TIMEOUT_IN_SECONDS = Duration.ofSeconds(60);
     private static final int SINGLE_CONNECTION_POOL = 1;
     private static final int ROW_COUNT = 3;
+    private static final int ROW_INSERTED_BY_TIMED_OUT_TRANSACTION = 42;
+    private static final Duration WELL_BEFORE_THE_DATABASE_SLEEP_ENDS = Duration.ofSeconds(10);
     private static final Table<Record> TABLE = DSL.table("timeout_test");
     private static final Field<Integer> ID = DSL.field("id", SQLDataType.INTEGER);
 
@@ -119,6 +121,22 @@ class PostgresExecutorTimeoutTest {
             .map(record -> record.get(ID))
             .collectList()
             .block();
+
+        assertThat(ids).containsExactly(1, 2, 3);
+    }
+
+    @Test
+    void executeTransactionShouldRollbackAndLeaveTheConnectionUsableRightAfterATimeout() {
+        assertThatThrownBy(() -> postgresExecutor.executeTransaction(dslContext -> Mono.from(dslContext.insertInto(TABLE, ID).values(ROW_INSERTED_BY_TIMED_OUT_TRANSACTION))
+                    .then(Mono.from(dslContext.select(DSL.field("pg_sleep(" + LONGER_THAN_TIMEOUT_IN_SECONDS.toSeconds() + ")")))))
+                .block(WELL_BEFORE_THE_DATABASE_SLEEP_ENDS))
+            .hasCauseInstanceOf(TimeoutException.class)
+            .hasMessageContaining("Did not observe any item or terminal signal");
+
+        List<Integer> ids = postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(ID).from(TABLE).orderBy(ID)))
+            .map(record -> record.get(ID))
+            .collectList()
+            .block(WELL_BEFORE_THE_DATABASE_SLEEP_ENDS);
 
         assertThat(ids).containsExactly(1, 2, 3);
     }

@@ -275,7 +275,7 @@ public class PostgresExecutor {
                         .flatMap(result -> Mono.from(connection.commitTransaction()).thenReturn(result))
                         .onErrorResume(throwable -> Mono.from(connection.rollbackTransaction()).then(Mono.error(throwable))))
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                         .filter(preparedStatementConflictException())),
                 jamesPostgresConnectionFactory::closeConnection)));
