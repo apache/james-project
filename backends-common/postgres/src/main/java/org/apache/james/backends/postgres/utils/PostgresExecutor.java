@@ -198,7 +198,10 @@ public class PostgresExecutor {
 
     private Mono<List<Record>> executePage(BiFunction<DSLContext, Optional<Record>, SelectLimitStep<? extends Record>> pageQuery, Optional<Record> lastRecord, int pageSize) {
         return executeRows(dslContext -> Flux.from(pageQuery.apply(dslContext, lastRecord).limit(pageSize)))
-            .collectList();
+            .collectList()
+            // expand subscribes to the next page without downstream demand, and collectList only requests upon demand:
+            // cache forces the page to be read right away so that the connection is released, and replays it later
+            .cache();
     }
 
     public Flux<Record> executeDeleteAndReturnList(Function<DSLContext, DeleteResultStep<Record>> queryFunction) {
