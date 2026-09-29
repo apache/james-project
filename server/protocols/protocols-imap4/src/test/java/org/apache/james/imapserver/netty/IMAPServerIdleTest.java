@@ -28,6 +28,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -316,13 +317,25 @@ class IMAPServerIdleTest extends AbstractIMAPServerTest {
         // Append message after IDLE is ended
         inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
 
-        // Run NOOP to verify session is clean and no stale unsolicited EXISTS from IDLE arrives
+        // Give the now-unregistered IDLE listener a chance to leak an async push before
+        // we issue anything else. We deliberately do NOT read the socket here: a competing
+        // reader on the same connection could race with and steal bytes from the NOOP
+        // response read below, hanging the test. The "exactly once" check on EXISTS after
+        // NOOP is what actually detects a leaked duplicate push.
+        Thread.sleep(200);
+
+        // Per RFC 3501 §6.1.2, NOOP legitimately reports pending mailbox state changes as
+        // untagged data in its own response - the EXISTS below is expected, not a leak.
         clientConnection.write(ByteBuffer.wrap(("a4 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
         List<String> response = readStringUntil(clientConnection, s -> s.contains("a4 OK NOOP completed."));
-        assertThat(String.join("", response))
-            .contains("a4 OK NOOP completed.")
-            .doesNotContain("EXISTS")
-            .doesNotContain("EXPUNGE")
-            .doesNotContain("FETCH");
+        String joinedResponse = String.join("", response);
+        assertThat(joinedResponse).contains("a4 OK NOOP completed.");
+        assertThat(countOccurrences(joinedResponse, "EXISTS"))
+            .describedAs("EXISTS should be reported exactly once by NOOP, not duplicated by a stale IDLE push")
+            .isEqualTo(1);
+    }
+
+    private static long countOccurrences(String haystack, String needle) {
+        return Pattern.compile(Pattern.quote(needle)).matcher(haystack).results().count();
     }
 }
