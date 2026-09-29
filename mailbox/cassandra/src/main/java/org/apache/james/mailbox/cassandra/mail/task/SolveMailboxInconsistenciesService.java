@@ -235,25 +235,9 @@ public class SolveMailboxInconsistenciesService {
         // for the loser *nowhere*. If the loser owns another path, it is a genuine mailbox with its
         // own (same-id) conflict to resolve first, so we report rather than destroy it.
         private Mono<Result> autoMergeConflict(Context context, CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO) {
-            CassandraId winnerId = (CassandraId) mailboxPathEntry.getMailboxId();
-            CassandraId loserId = (CassandraId) mailboxDaoEntry.getMailboxId();
-            MailboxPath conflictingPath = mailboxPathEntry.generateAssociatedPath();
-
-            Mono<Boolean> pathStillOwnedByWinner = pathV3DAO.retrieve(conflictingPath, STRONG)
-                .map(entry -> entry.getMailboxId().equals(winnerId))
-                .defaultIfEmpty(false);
-            Mono<Boolean> loserStillResolvesToPath = mailboxDAO.retrieveMailbox(loserId)
-                .map(projection -> projection.generateAssociatedPath().equals(conflictingPath))
-                .defaultIfEmpty(false);
-            Mono<Boolean> loserIsUnregistered = pathV3DAO.listUserMailboxes(mailboxDaoEntry.getNamespace(), mailboxDaoEntry.getUser(), STRONG)
-                .filter(entry -> entry.getMailboxId().equals(loserId))
-                .hasElements()
-                .map(referenced -> !referenced);
-
-            return Mono.zip(pathStillOwnedByWinner, loserStillResolvesToPath, loserIsUnregistered)
-                .flatMap(state -> {
-                    boolean cleanGhost = state.getT1() && state.getT2() && state.getT3();
-                    if (!cleanGhost) {
+            return validateMergeNeeded(mailboxDAO, pathV3DAO)
+                .flatMap(mergeNeeded -> {
+                    if (!mergeNeeded) {
                         // State no longer matches the clean-ghost picture: either already reconciled,
                         // or the loser owns another path. In the latter case the loser is a genuine
                         // mailbox whose stale projection gets realigned onto its registered path by the
@@ -261,13 +245,76 @@ public class SolveMailboxInconsistenciesService {
                         // We therefore leave it to that resolution rather than destroying or reporting it.
                         return Mono.just(Result.COMPLETED);
                     }
-                    return mergingRunner.runReactive(loserId, winnerId, new MailboxMergingTask.Context(0))
-                        .doOnNext(result -> {
-                            LOGGER.info("Auto-merged ghost mailbox {} into {} at path {}",
-                                loserId.serialize(), winnerId.serialize(), conflictingPath.asString());
-                            context.addFixedInconsistency(winnerId);
-                        });
+                    return mergeBothMailboxes(context);
+                })
+                .onErrorResume(e -> {
+                    LOGGER.error("Failed auto-merging ghost mailbox {} into {} at path {}",
+                        loserId().serialize(), winnerId().serialize(), conflictingPath().asString(), e);
+                    context.incrementErrors();
+                    return Mono.just(Result.PARTIAL);
                 });
+        }
+
+        private Mono<Boolean> validateMergeNeeded(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathV3DAO pathV3DAO) {
+            return Mono.zip(pathStillOwnedByWinner(pathV3DAO), loserStillResolvesToPath(mailboxDAO), loserIsUnregistered(pathV3DAO))
+                .map(state -> state.getT1() && state.getT2() && state.getT3());
+        }
+
+        private Mono<Boolean> pathStillOwnedByWinner(CassandraMailboxPathV3DAO pathV3DAO) {
+            return pathV3DAO.retrieve(conflictingPath(), STRONG)
+                .map(entry -> entry.getMailboxId().equals(winnerId()))
+                .defaultIfEmpty(false);
+        }
+
+        private Mono<Boolean> loserStillResolvesToPath(CassandraMailboxDAO mailboxDAO) {
+            return mailboxDAO.retrieveMailbox(loserId())
+                .map(projection -> projection.generateAssociatedPath().equals(conflictingPath()))
+                .defaultIfEmpty(false);
+        }
+
+        private Mono<Boolean> loserIsUnregistered(CassandraMailboxPathV3DAO pathV3DAO) {
+            return pathV3DAO.listUserMailboxes(mailboxDaoEntry.getNamespace(), mailboxDaoEntry.getUser(), STRONG)
+                .filter(entry -> entry.getMailboxId().equals(loserId()))
+                .hasElements()
+                .map(referenced -> !referenced);
+        }
+
+        private Mono<Result> mergeBothMailboxes(Context context) {
+            MailboxMergingTask.Context mergingContext = new MailboxMergingTask.Context(0);
+            return mergingRunner.runReactive(loserId(), winnerId(), mergingContext)
+                .doOnNext(result -> {
+                    if (result == Result.COMPLETED) {
+                        notifyMergeSuccess(context);
+                    } else {
+                        notifyMergeFailure(context, mergingContext);
+                    }
+                });
+        }
+
+        private void notifyMergeSuccess(Context context) {
+            LOGGER.info("Auto-merged ghost mailbox {} into {} at path {}",
+                loserId().serialize(), winnerId().serialize(), conflictingPath().asString());
+            context.addFixedInconsistency(winnerId());
+        }
+
+        // The ghost is kept when the merge is partial: this is not a fix.
+        private void notifyMergeFailure(Context context, MailboxMergingTask.Context mergingContext) {
+            LOGGER.error("Failed auto-merging ghost mailbox {} into {} at path {}: {} message(s) moved, {} message(s) failed",
+                loserId().serialize(), winnerId().serialize(), conflictingPath().asString(),
+                mergingContext.getMessageMovedCount(), mergingContext.getMessageFailedCount());
+            context.incrementErrors();
+        }
+
+        private CassandraId winnerId() {
+            return (CassandraId) mailboxPathEntry.getMailboxId();
+        }
+
+        private CassandraId loserId() {
+            return (CassandraId) mailboxDaoEntry.getMailboxId();
+        }
+
+        private MailboxPath conflictingPath() {
+            return mailboxPathEntry.generateAssociatedPath();
         }
 
         // Auto-resolution is restricted to the case where BOTH the conflicting path entry and the
