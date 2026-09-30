@@ -144,9 +144,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                     if (!idleActive.get()) {
                         return Mono.empty();
                     }
-                    if (!cleanupIdle(session1, selectedMailbox, idleActive, lineHandlerAdded, idleReadySink, idleListener)) {
-                        return Mono.empty();
-                    }
+                    cleanupIdle(session1, selectedMailbox, idleActive, lineHandlerAdded, idleReadySink, idleListener);
                     String line = new String(data, StandardCharsets.US_ASCII).trim();
                     if (!session1.isConnected()) {
                         LOGGER.debug("IDLE continuation received disconnected session.");
