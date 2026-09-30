@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.queue.activemq;
 
-import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -37,6 +37,7 @@ import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageProducer;
+import jakarta.jms.ObjectMessage;
 import jakarta.jms.Queue;
 import jakarta.jms.QueueBrowser;
 import jakarta.jms.Session;
@@ -62,19 +63,52 @@ import com.google.common.collect.Iterators;
  * <p>
  * {@link MailQueue} implementation backed by Apache ActiveMQ Artemis.
  * </p>
- * <p>
- * Fixes JAMES-4192: Instead of using JMS message selectors on the main queue
- * (which cause head-of-line blocking and memory deadlocks when paging in Artemis),
- * this queue routes delayed messages to a dedicated separate delayed queue ({@code <queueName>-delayed}).
- * Consumers on the main queue consume directly with NO selector at wire speed.
- * A background scheduler periodically transfers ready messages from the delayed queue
- * to the main queue.
- * </p>
+ *
+ * <p><b>JAMES-4192 fix.</b> Delayed mails are NOT filtered on the main queue with a
+ * JMS message selector (which caused head-of-line blocking: Artemis evaluates selectors
+ * only against in-memory messages, so once paging kicks in, ready mail sitting in page
+ * files behind rejected delayed mail is never delivered). Instead:</p>
+ *
+ * <ol>
+ *   <li>Delayed mails are routed to a dedicated companion queue
+ *       {@code <queueName>} + {@value #DELAYED_QUEUE_SUFFIX}. They are stored as ordinary
+ *       (non-scheduled) JMS messages, so they remain fully browsable and their body is
+ *       available &mdash; unlike Artemis native scheduled messages, which are hidden from
+ *       {@code browse()}/{@code getSize()} and truncated by the management API
+ *       (ARTEMIS-3141/3128/3175).</li>
+ *   <li>A background task periodically moves <em>due</em> messages from the delayed queue
+ *       to the main queue. Crucially the transfer consumer uses <b>no selector</b>: it
+ *       drains messages and evaluates {@code JAMES_NEXT_DELIVERY <= now} <em>in memory</em>,
+ *       re-enqueuing not-yet-due messages. This is paging-safe &mdash; it never asks the
+ *       broker to evaluate a selector against paged-out messages, so the JAMES-4192
+ *       starvation cannot occur.</li>
+ *   <li>The main queue is consumed with <b>no selector</b>
+ *       ({@link #getMessageSelector()} returns {@code null}) at wire speed.</li>
+ * </ol>
+ *
+ * <p>{@code getSize()}, {@code browse()}, {@code remove()}, {@code clear()} and
+ * {@code flush()} span both queues so the {@code ManageableMailQueue} contract holds for
+ * delayed mail.</p>
  */
 public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQCacheableMailQueue.class);
     private static final String DELAYED_QUEUE_SUFFIX = "-delayed";
+
+    /**
+     * Interval between two transfer passes moving due mail from the delayed queue to the
+     * main queue. Delayed mail is retry traffic (minutes-to-hours delays), so a coarse
+     * interval keeps re-enqueue churn of not-yet-due messages low while adding at most
+     * this much latency to a mail becoming due.
+     */
+    private static final Duration TRANSFER_INTERVAL = Duration.ofMillis(200);
+
+    /**
+     * Upper bound on the number of messages consumed from the delayed queue per transfer
+     * pass, to cap memory and journal churn when the delayed backlog is large. Remaining
+     * messages are handled on subsequent passes.
+     */
+    private static final int TRANSFER_BATCH_LIMIT = 1000;
 
     private final String delayedQueueName;
     private final Session delayedSession;
@@ -99,12 +133,14 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
 
         this.transferScheduler = Executors.newSingleThreadScheduledExecutor(
             NamedThreadFactory.withName("ActiveMQMailQueue-Transfer-" + queueName.asString()));
-        this.transferScheduler.scheduleWithFixedDelay(this::transferReadyDelayedMessagesSafe, 50, 50, TimeUnit.MILLISECONDS);
+        this.transferScheduler.scheduleWithFixedDelay(this::transferReadyDelayedMessagesSafe,
+            TRANSFER_INTERVAL.toMillis(), TRANSFER_INTERVAL.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     /**
-     * Consumes from the main queue without any message selector, completely eliminating
-     * head-of-line blocking and memory paging deadlocks (JAMES-4192).
+     * No message selector on the main queue: due-time filtering happens during transfer
+     * from the delayed queue, not on the delivery consumer. This is the core of the
+     * JAMES-4192 fix (see class javadoc).
      */
     @Override
     protected String getMessageSelector() {
@@ -113,8 +149,7 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
 
     @Override
     public void enQueue(Mail mail, Duration delay) throws MailQueue.MailQueueException {
-        long delayMillis = (delay != null && !delay.isNegative()) ? delay.toMillis() : 0L;
-        if (delayMillis > 0) {
+        if (delay != null && !delay.isNegative() && !delay.isZero()) {
             enQueueDelayed(mail, delay);
         } else {
             super.enQueue(mail, delay);
@@ -124,18 +159,17 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
     private void enQueueDelayed(Mail mail, Duration delay) throws MailQueue.MailQueueException {
         TimeMetric timeMetric = metricFactory.timer(ENQUEUED_TIMER_METRIC_NAME_PREFIX + queueName.asString());
         long nextDeliveryTimestamp = computeNextDeliveryTimestamp(delay);
-
         try {
             int rawPriority = AttributeUtils.getValueAndCastFromMail(mail, MAIL_PRIORITY, Integer.class)
                 .orElse(NORMAL_PRIORITY);
             int msgPrio = Math.max(0, Math.min(9, rawPriority));
 
             Map<String, Object> props = getJMSProperties(mail, nextDeliveryTimestamp);
+            ObjectMessage message = createDelayedMessage(props, mail);
 
             synchronized (delayedProducer) {
-                produceMailToQueue(delayedSession, delayedProducer, props, msgPrio, mail);
+                delayedProducer.send(message, Message.DEFAULT_DELIVERY_MODE, msgPrio, Message.DEFAULT_TIME_TO_LIVE);
             }
-
             enqueuedMailsMetric.increment();
         } catch (Exception e) {
             throw new MailQueue.MailQueueException("Unable to enqueue delayed mail " + mail, e);
@@ -144,20 +178,16 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
         }
     }
 
-    private void produceMailToQueue(Session targetSession, MessageProducer targetProducer,
-                                    Map<String, Object> props, int msgPrio, Mail mail)
-            throws JMSException, MessagingException, IOException {
-        jakarta.jms.ObjectMessage message = targetSession.createObjectMessage();
+    private ObjectMessage createDelayedMessage(Map<String, Object> props, Mail mail) throws Exception {
+        ObjectMessage message = delayedSession.createObjectMessage();
         for (Map.Entry<String, Object> entry : props.entrySet()) {
             message.setObjectProperty(entry.getKey(), entry.getValue());
         }
-
         long size = mail.getMessageSize();
-        java.io.ByteArrayOutputStream out = size > -1 ? new java.io.ByteArrayOutputStream((int) size) : new java.io.ByteArrayOutputStream();
+        ByteArrayOutputStream out = size > -1 ? new ByteArrayOutputStream((int) size) : new ByteArrayOutputStream();
         mail.getMessage().writeTo(out);
         message.setObject(out.toByteArray());
-
-        targetProducer.send(message, Message.DEFAULT_DELIVERY_MODE, msgPrio, Message.DEFAULT_TIME_TO_LIVE);
+        return message;
     }
 
     private void transferReadyDelayedMessagesSafe() {
@@ -168,17 +198,38 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
         }
     }
 
+    /**
+     * Moves due mail from the delayed queue to the main queue. The consumer intentionally
+     * uses <b>no selector</b>: all drained messages are held by the transacted session, the
+     * due/not-due decision is made in memory, and not-yet-due messages are re-enqueued.
+     * This avoids any broker-side selector evaluation against paged-out messages (JAMES-4192).
+     */
     private void transferReadyDelayedMessages() throws JMSException {
-        String selector = JAMES_NEXT_DELIVERY + " <= " + System.currentTimeMillis() + " OR " + FORCE_DELIVERY + " = true";
+        long now = System.currentTimeMillis();
         try (Session transferSession = connection.createSession(true, Session.SESSION_TRANSACTED)) {
             Queue delayedQueue = transferSession.createQueue(delayedQueueName);
             Queue mainQueue = transferSession.createQueue(queueName.asString());
-            try (MessageConsumer consumer = transferSession.createConsumer(delayedQueue, selector);
-                 MessageProducer mainProducer = transferSession.createProducer(mainQueue)) {
+            try (MessageConsumer consumer = transferSession.createConsumer(delayedQueue);
+                 MessageProducer mainProducer = transferSession.createProducer(mainQueue);
+                 MessageProducer requeueProducer = transferSession.createProducer(delayedQueue)) {
+
+                // Drain up to the batch limit first. Consumed messages are retained by the
+                // transacted session until commit, so re-enqueued (not-due) messages cannot
+                // be re-read within this same pass.
+                List<Message> drained = new ArrayList<>();
                 Message message;
-                while ((message = consumer.receiveNoWait()) != null) {
-                    Message copy = copy(transferSession, message);
-                    mainProducer.send(copy, message.getJMSDeliveryMode(), message.getJMSPriority(), message.getJMSExpiration());
+                while (drained.size() < TRANSFER_BATCH_LIMIT
+                        && (message = consumer.receiveNoWait()) != null) {
+                    drained.add(message);
+                }
+
+                for (Message m : drained) {
+                    Message copy = copy(transferSession, m);
+                    if (isDue(m, now)) {
+                        mainProducer.send(copy, m.getJMSDeliveryMode(), m.getJMSPriority(), m.getJMSExpiration());
+                    } else {
+                        requeueProducer.send(copy, m.getJMSDeliveryMode(), m.getJMSPriority(), m.getJMSExpiration());
+                    }
                 }
                 transferSession.commit();
             } catch (Exception e) {
@@ -188,20 +239,34 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
         }
     }
 
+    private static boolean isDue(Message message, long now) throws JMSException {
+        if (message.propertyExists(FORCE_DELIVERY) && message.getBooleanProperty(FORCE_DELIVERY)) {
+            return true;
+        }
+        return message.getLongProperty(JAMES_NEXT_DELIVERY) <= now;
+    }
+
     @Override
     public long getSize() throws MailQueue.MailQueueException {
         long mainSize = super.getSize();
-        long delayedSize = 0;
-        try (QueueBrowser browser = delayedSession.createBrowser(delayedJmsQueue)) {
+        // Use a dedicated short-lived session: JMS Session is not thread-safe and
+        // delayedSession is reserved for the enqueue path.
+        try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+            Queue delayedQueue = session.createQueue(delayedQueueName);
+            QueueBrowser browser = session.createBrowser(delayedQueue);
             Enumeration<?> enumeration = browser.getEnumeration();
-            delayedSize = Iterators.size(new EnumerationIterator(enumeration));
+            return mainSize + Iterators.size(new EnumerationIterator(enumeration));
         } catch (Exception e) {
             LOGGER.error("Unable to get size of delayed queue {}", delayedQueueName, e);
             throw new MailQueue.MailQueueException("Unable to get size of delayed queue " + delayedQueueName, e);
         }
-        return mainSize + delayedSize;
     }
 
+    /**
+     * Forces immediate delivery of all delayed mail by draining the delayed queue
+     * (selector-less, paging-safe) and re-enqueuing every message on the main queue with
+     * {@code FORCE_DELIVERY}, then delegates to the base flush for the main queue.
+     */
     @Override
     public long flush() throws MailQueue.MailQueueException {
         long flushedDelayed = 0;
@@ -225,23 +290,19 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
         } catch (JMSException e) {
             throw new MailQueue.MailQueueException("Unable to flush delayed queue " + delayedQueueName, e);
         }
-
-        long flushedMain = super.flush();
-        return flushedDelayed + flushedMain;
+        return flushedDelayed + super.flush();
     }
 
     @Override
     public long clear() throws MailQueue.MailQueueException {
-        long mainCleared = super.clear();
-        long delayedCleared = count(removeWithSelectorFromDelayedQueue(null));
-        return mainCleared + delayedCleared;
+        return super.clear() + count(removeFromDelayedQueue(null));
     }
 
     @Override
     public long remove(Type type, String value) throws MailQueue.MailQueueException {
         long mainRemoved = super.remove(type, value);
         String selector = buildSelector(type, value);
-        long delayedRemoved = (selector != null) ? count(removeWithSelectorFromDelayedQueue(selector)) : 0;
+        long delayedRemoved = selector != null ? count(removeFromDelayedQueue(selector)) : 0;
         return mainRemoved + delayedRemoved;
     }
 
@@ -256,49 +317,51 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
                     JAMES_MAIL_RECIPIENTS + " = '" + value + "'",
                     JAMES_MAIL_RECIPIENTS + " LIKE '" + value + JAMES_MAIL_SEPARATOR + "%'",
                     JAMES_MAIL_RECIPIENTS + " LIKE '%" + JAMES_MAIL_SEPARATOR + value + JAMES_MAIL_SEPARATOR + "%'",
-                    JAMES_MAIL_RECIPIENTS + " LIKE '%" + JAMES_MAIL_SEPARATOR + value + "'"
-                );
+                    JAMES_MAIL_RECIPIENTS + " LIKE '%" + JAMES_MAIL_SEPARATOR + value + "'");
             default:
                 return null;
         }
     }
 
-    private List<Message> removeWithSelectorFromDelayedQueue(String selector) throws MailQueue.MailQueueException {
-        boolean first = true;
+    private List<Message> removeFromDelayedQueue(String selector) throws MailQueue.MailQueueException {
         List<Message> messages = new ArrayList<>();
-        try {
-            try (Session txSession = connection.createSession(true, Session.SESSION_TRANSACTED)) {
-                Queue dQueue = txSession.createQueue(delayedQueueName);
-                try (MessageConsumer consumer = txSession.createConsumer(dQueue, selector)) {
-                    Message message = null;
-                    while (first || message != null) {
-                        if (first) {
-                            message = consumer.receive(2000);
-                        } else {
-                            message = consumer.receiveNoWait();
-                        }
-                        first = false;
-                        if (message != null) {
-                            messages.add(message);
-                        }
+        try (Session session = connection.createSession(true, Session.SESSION_TRANSACTED)) {
+            Queue delayedQueue = session.createQueue(delayedQueueName);
+            try (MessageConsumer consumer = selector != null
+                    ? session.createConsumer(delayedQueue, selector)
+                    : session.createConsumer(delayedQueue)) {
+                boolean first = true;
+                Message message = null;
+                while (first || message != null) {
+                    message = first ? consumer.receive(2000) : consumer.receiveNoWait();
+                    first = false;
+                    if (message != null) {
+                        messages.add(message);
                     }
                 }
-                txSession.commit();
             }
+            session.commit();
             return messages;
         } catch (Exception e) {
-            throw new MailQueue.MailQueueException("Unable to remove mails from delayed queue", e);
+            throw new MailQueue.MailQueueException("Unable to remove mails from delayed queue " + delayedQueueName, e);
         }
     }
 
     @Override
     public MailQueueIterator browse() throws MailQueue.MailQueueException {
         MailQueueIterator mainIterator = super.browse();
+        // Dedicated session for the lifetime of this iterator: JMS Session is not
+        // thread-safe and delayedSession is reserved for the enqueue path. The session
+        // is closed by CombinedMailQueueIterator.close().
+        Session browseSession = null;
         QueueBrowser delayedBrowser = null;
         try {
-            delayedBrowser = delayedSession.createBrowser(delayedJmsQueue);
+            browseSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue delayedQueue = browseSession.createQueue(delayedQueueName);
+            delayedBrowser = browseSession.createBrowser(delayedQueue);
+            @SuppressWarnings("unchecked")
             Enumeration<Message> delayedMessages = delayedBrowser.getEnumeration();
-            return new CombinedMailQueueIterator(mainIterator, delayedBrowser, delayedMessages);
+            return new CombinedMailQueueIterator(mainIterator, browseSession, delayedBrowser, delayedMessages);
         } catch (Exception e) {
             if (delayedBrowser != null) {
                 try {
@@ -307,6 +370,7 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
                     // Ignore. See JAMES-2509
                 }
             }
+            closeSession(browseSession);
             mainIterator.close();
             throw new MailQueue.MailQueueException("Unable to browse queues", e);
         }
@@ -314,11 +378,13 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
 
     private final class CombinedMailQueueIterator implements MailQueueIterator {
         private final MailQueueIterator mainIterator;
+        private final Session browseSession;
         private final QueueBrowser delayedBrowser;
         private final Enumeration<Message> delayedMessages;
 
-        CombinedMailQueueIterator(MailQueueIterator mainIterator, QueueBrowser delayedBrowser, Enumeration<Message> delayedMessages) {
+        CombinedMailQueueIterator(MailQueueIterator mainIterator, Session browseSession, QueueBrowser delayedBrowser, Enumeration<Message> delayedMessages) {
             this.mainIterator = mainIterator;
+            this.browseSession = browseSession;
             this.delayedBrowser = delayedBrowser;
             this.delayedMessages = delayedMessages;
         }
@@ -361,6 +427,7 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue {
                         // Ignore. See JAMES-2509
                     }
                 }
+                closeSession(browseSession);
             }
         }
 

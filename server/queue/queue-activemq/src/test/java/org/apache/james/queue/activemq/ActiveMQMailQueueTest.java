@@ -198,4 +198,78 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
             .containsExactly("ready-0", "ready-1", "ready-2", "ready-3", "ready-4",
                              "ready-5", "ready-6", "ready-7", "ready-8", "ready-9");
     }
+
+    @Test
+    void delayedMailShouldNotBeDeliveredBeforeItsDelayElapses() throws Exception {
+        // Given a mail delayed for delivery by 2 seconds
+        mailQueue.enQueue(org.apache.james.queue.api.Mails.defaultMail()
+                .name("scheduled")
+                .build(),
+            2,
+            java.util.concurrent.TimeUnit.SECONDS);
+
+        // When we try to dequeue almost immediately, nothing should be available:
+        // the mail sits on the companion delayed queue and is not transferred until due.
+        reactor.core.publisher.Mono<org.apache.james.queue.api.MailQueue.MailQueueItem> next =
+            reactor.core.publisher.Flux.from(mailQueue.deQueue())
+                .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                .next();
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> next.block(java.time.Duration.ofMillis(500)))
+            .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void delayedMailShouldBecomeAvailableAfterItsDelayElapses() throws Exception {
+        // Given a mail scheduled for delivery in 1 second
+        mailQueue.enQueue(org.apache.james.queue.api.Mails.defaultMail()
+                .name("scheduled")
+                .build(),
+            1,
+            java.util.concurrent.TimeUnit.SECONDS);
+
+        // When we wait past the delay, the transfer task moves the mail to the main
+        // queue and the selector-less consumer delivers it.
+        org.apache.james.queue.api.MailQueue.MailQueueItem item =
+            reactor.core.publisher.Flux.from(mailQueue.deQueue())
+                .next()
+                .block(java.time.Duration.ofSeconds(5));
+
+        org.assertj.core.api.Assertions.assertThat(item).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(item.getMail().getName()).isEqualTo("scheduled");
+    }
+
+    @Test
+    void getSizeShouldCountScheduledMessages() throws Exception {
+        // Given a not-yet-due delayed mail
+        mailQueue.enQueue(org.apache.james.queue.api.Mails.defaultMail()
+                .name("scheduled")
+                .build(),
+            1,
+            java.util.concurrent.TimeUnit.HOURS);
+
+        // Delayed mail lives on the companion queue as an ordinary message, so getSize()
+        // spans both queues and must report it.
+        org.assertj.core.api.Assertions.assertThat(mailQueue.getSize()).isEqualTo(1L);
+    }
+
+    @Test
+    void browseShouldReturnScheduledMessages() throws Exception {
+        // Given a not-yet-due delayed mail
+        mailQueue.enQueue(org.apache.james.queue.api.Mails.defaultMail()
+                .name("scheduled")
+                .build(),
+            1,
+            java.util.concurrent.TimeUnit.HOURS);
+
+        // browse() spans both queues and must expose the delayed mail with its next-delivery date.
+        java.util.List<String> browsedNames = new java.util.ArrayList<>();
+        try (ManageableMailQueue.MailQueueIterator iterator = mailQueue.browse()) {
+            while (iterator.hasNext()) {
+                browsedNames.add(iterator.next().getMail().getName());
+            }
+        }
+
+        org.assertj.core.api.Assertions.assertThat(browsedNames).contains("scheduled");
+    }
 }

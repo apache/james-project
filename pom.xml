@@ -640,7 +640,8 @@
         <activmq-artemis.version>2.56.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.5</apache-jspf-resolver.version>
         <angus-mail.version>2.0.5</angus-mail.version>
-        <angus-activation.version>2.0.2</angus-activation.version><!-- Align with EE10 Activation 2.1: https://eclipse-ee4j.github.io/angus-activation/ -->
+        <angus-activation.version>2.0.2</angus-activation.version>
+        <!-- Align with EE10 Activation 2.1: https://eclipse-ee4j.github.io/angus-activation/ -->
         <slf4j.version>2.0.17</slf4j.version>
         <circe.version>0.14.14</circe.version>
         <dnsjava.version>3.6.3</dnsjava.version>
@@ -2685,12 +2686,7 @@
                 <version>4.0.2</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.ant</groupId>
-                <artifactId>ant</artifactId>
-                <version>1.10.15</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.artemis</groupId>
+                <groupId>org.apache.activemq</groupId>
                 <artifactId>artemis-jakarta-client</artifactId>
                 <version>${activmq-artemis.version}</version>
                 <exclusions>
@@ -2702,9 +2698,14 @@
             </dependency>
             <!-- Artemis embedded server (replaces legacy ActiveMQ BrokerService) -->
             <dependency>
-                <groupId>org.apache.artemis</groupId>
+                <groupId>org.apache.activemq</groupId>
                 <artifactId>artemis-jakarta-server</artifactId>
                 <version>${activmq-artemis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.ant</groupId>
+                <artifactId>ant</artifactId>
+                <version>1.10.15</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -4602,17 +4603,6 @@
                     </plugins>
                 </pluginManagement>
             </build>
-        </profile>
-        <profile>
-            <id>windows-git</id>
-            <activation>
-                <os>
-                    <family>windows</family>
-                </os>
-            </activation>
-            <properties>
-                <git.useNativeGit>false</git.useNativeGit>
-            </properties>
         </profile>
     </profiles>
 </project>
