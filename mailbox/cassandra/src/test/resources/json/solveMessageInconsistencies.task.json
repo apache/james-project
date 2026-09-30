@@ -1,6 +1,7 @@
 {
   "type":"solve-message-inconsistencies",
   "runningOptions":{
-    "messagesPerSecond":2
+    "messagesPerSecond":2,
+    "cleanupEntriesWithoutContent":true
   }
 }

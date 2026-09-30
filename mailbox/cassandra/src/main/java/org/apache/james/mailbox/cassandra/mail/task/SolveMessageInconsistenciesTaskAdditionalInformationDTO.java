@@ -44,6 +44,7 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
             details.getAddedMessageIdEntries(),
             details.getUpdatedMessageIdEntries(),
             details.getRemovedMessageIdEntries(),
+            details.getRemovedImapUidEntries(),
             Optional.of(RunningOptionsDTO.asDTO(details.getRunningOptions())),
             details.getFixedInconsistencies(),
             details.getErrors());
@@ -65,6 +66,7 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
     private final long addedMessageIdEntries;
     private final long updatedMessageIdEntries;
     private final long removedMessageIdEntries;
+    private final long removedImapUidEntries;
     private final Optional<RunningOptionsDTO> runningOptions;
     private final ImmutableList<MessageInconsistenciesEntry> fixedInconsistencies;
     private final ImmutableList<MessageInconsistenciesEntry> errors;
@@ -75,6 +77,7 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
                                                                    @JsonProperty("addedMessageIdEntries") long addedMessageIdEntries,
                                                                    @JsonProperty("updatedMessageIdEntries") long updatedMessageIdEntries,
                                                                    @JsonProperty("removedMessageIdEntries")long removedMessageIdEntries,
+                                                                   @JsonProperty("removedImapUidEntries") long removedImapUidEntries,
                                                                    @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions,
                                                                    @JsonProperty("fixedInconsistencies") ImmutableList<MessageInconsistenciesEntry> fixedInconsistencies,
                                                                    @JsonProperty("errors") ImmutableList<MessageInconsistenciesEntry> errors) {
@@ -85,6 +88,7 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
         this.addedMessageIdEntries = addedMessageIdEntries;
         this.updatedMessageIdEntries = updatedMessageIdEntries;
         this.removedMessageIdEntries = removedMessageIdEntries;
+        this.removedImapUidEntries = removedImapUidEntries;
         this.runningOptions = runningOptions;
         this.fixedInconsistencies = fixedInconsistencies;
         this.errors = errors;
@@ -108,6 +112,10 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
 
     public long getRemovedMessageIdEntries() {
         return removedMessageIdEntries;
+    }
+
+    public long getRemovedImapUidEntries() {
+        return removedImapUidEntries;
     }
 
     public Optional<RunningOptionsDTO> getRunningOptions() {
@@ -139,6 +147,7 @@ public class SolveMessageInconsistenciesTaskAdditionalInformationDTO implements 
             addedMessageIdEntries,
             updatedMessageIdEntries,
             removedMessageIdEntries,
+            removedImapUidEntries,
             runningOptions
                 .map(RunningOptionsDTO::asDomainObject)
                 .orElse(RunningOptions.DEFAULT),

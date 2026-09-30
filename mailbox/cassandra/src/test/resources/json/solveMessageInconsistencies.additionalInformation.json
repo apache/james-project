@@ -6,8 +6,10 @@
   "addedMessageIdEntries": 1,
   "updatedMessageIdEntries": 0,
   "removedMessageIdEntries": 1,
+  "removedImapUidEntries": 1,
   "runningOptions":{
-      "messagesPerSecond": 2
+      "messagesPerSecond": 2,
+      "cleanupEntriesWithoutContent": true
   },
   "fixedInconsistencies": [
     {
