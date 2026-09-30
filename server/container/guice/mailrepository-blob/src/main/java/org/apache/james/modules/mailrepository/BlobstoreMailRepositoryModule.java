@@ -32,7 +32,6 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.blob.BlobMailRepository;
 import org.apache.james.mailrepository.blob.BlobMailRepositoryFactory;
-import org.apache.james.mailrepository.blob.BlobMailRepositoryV2;
 import org.apache.james.mailrepository.blob.BlobMailRepositoryV2BlobReferenceSource;
 import org.apache.james.mailrepository.blob.BlobMailRepositoryV2Factory;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
@@ -52,13 +51,6 @@ public class BlobstoreMailRepositoryModule extends AbstractModule {
                         new MailRepositoryStoreConfiguration.Item(
                                 ImmutableList.of(new Protocol("blob")),
                                 BlobMailRepository.class.getName(),
-                                new BaseHierarchicalConfiguration())
-                );
-        bind(MailRepositoryStoreConfiguration.Item.class)
-                .toInstance(
-                        new MailRepositoryStoreConfiguration.Item(
-                                ImmutableList.of(new Protocol("blobv2")),
-                                BlobMailRepositoryV2.class.getName(),
                                 new BaseHierarchicalConfiguration())
                 );
         bind(MailRepositoryStore.class).to(MemoryMailRepositoryStore.class);
