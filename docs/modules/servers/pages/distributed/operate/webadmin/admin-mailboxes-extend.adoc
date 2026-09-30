@@ -167,6 +167,14 @@ The message is SEEN via JMAP
 The message is UNSEEN via IMAP
 ....
 
+Entries of `imapUidTable` missing in `messageIdTable` are propagated to
+`messageIdTable` only if the message content (`messageV3` table) still
+exists. Otherwise the entry is left untouched, logged and reported in
+the `errors` of the task, as exposing it would lead to a message that
+can not be read. Such entries typically result from deleted data being
+resurrected, for instance when Cassandra repairs are not run within
+`gc_grace_seconds`.
+
 link:#_endpoints_returning_a_task[More details about endpoints returning
 a task].
 
