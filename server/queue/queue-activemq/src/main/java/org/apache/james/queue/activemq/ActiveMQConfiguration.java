@@ -31,7 +31,7 @@ public class ActiveMQConfiguration {
     private static final boolean JOURNAL_SYNC_TRANSACTIONAL_DEFAULT = true;
 
     private static final String JOURNAL_SYNC_NON_TRANSACTIONAL = "artemis.journal.sync.non.transactional";
-    private static final boolean JOURNAL_SYNC_NON_TRANSACTIONAL_DEFAULT = true;
+    private static final boolean JOURNAL_SYNC_NON_TRANSACTIONAL_DEFAULT = false;
 
     private static final String JOURNAL_BUFFER_TIMEOUT_NIO = "artemis.journal.buffer.timeout.nio";
     // Default 1_500_000 ns (1.5 ms) enables group commit across concurrent threads
@@ -47,10 +47,10 @@ public class ActiveMQConfiguration {
     private static final boolean ASYNC_CONNECTION_EXECUTION_DEFAULT = true;
 
     private static final String CLIENT_BLOCK_ON_DURABLE_SEND = "artemis.client.block.on.durable.send";
-    private static final boolean CLIENT_BLOCK_ON_DURABLE_SEND_DEFAULT = true;
+    private static final boolean CLIENT_BLOCK_ON_DURABLE_SEND_DEFAULT = false;
 
     private static final String CLIENT_BLOCK_ON_ACKNOWLEDGE = "artemis.client.block.on.acknowledge";
-    private static final boolean CLIENT_BLOCK_ON_ACKNOWLEDGE_DEFAULT = true;
+    private static final boolean CLIENT_BLOCK_ON_ACKNOWLEDGE_DEFAULT = false;
 
     private final ActiveMQMetricConfiguration metricConfiguration;
     private final boolean adjustUsageLimits;

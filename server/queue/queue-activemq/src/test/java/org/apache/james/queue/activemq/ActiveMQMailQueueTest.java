@@ -143,4 +143,59 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
     public void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() {
 
     }
+
+    @Test
+    void delayedMessagesShouldNotBlockReadyMessagesHolBlocking() throws Exception {
+        // Enqueue a burst of delayed messages
+        for (int i = 0; i < 50; i++) {
+            mailQueue.enQueue(org.apache.james.queue.api.Mails.defaultMail()
+                .name("delayed-" + i)
+                .build(),
+                1,
+                java.util.concurrent.TimeUnit.HOURS);
+        }
+
+        // Enqueue an immediate (ready) message behind the delayed ones
+        mailQueue.enQueue(org.apache.james.queue.api.Mails.defaultMail()
+            .name("ready-message")
+            .build());
+
+        // Dequeue should instantly receive the ready message without head-of-line blocking
+        reactor.core.publisher.Mono<org.apache.james.queue.api.MailQueue.MailQueueItem> itemMono =
+            reactor.core.publisher.Flux.from(mailQueue.deQueue()).next();
+        org.apache.james.queue.api.MailQueue.MailQueueItem dequeuedItem =
+            itemMono.block(java.time.Duration.ofSeconds(5));
+
+        org.assertj.core.api.Assertions.assertThat(dequeuedItem).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(dequeuedItem.getMail().getName()).isEqualTo("ready-message");
+    }
+
+    @Test
+    void readyMessagesShouldBeConsumedAtWireSpeedEvenWhenDelayedMessagesExist() throws Exception {
+        // Enqueue delayed messages
+        for (int i = 0; i < 20; i++) {
+            mailQueue.enQueue(org.apache.james.queue.api.Mails.defaultMail()
+                .name("delayed-" + i)
+                .build(),
+                30,
+                java.util.concurrent.TimeUnit.MINUTES);
+        }
+
+        // Enqueue multiple ready messages
+        for (int i = 0; i < 10; i++) {
+            mailQueue.enQueue(org.apache.james.queue.api.Mails.defaultMail()
+                .name("ready-" + i)
+                .build());
+        }
+
+        java.util.List<String> dequeuedNames = reactor.core.publisher.Flux.from(mailQueue.deQueue())
+            .take(10)
+            .map(item -> item.getMail().getName())
+            .collectList()
+            .block(java.time.Duration.ofSeconds(10));
+
+        org.assertj.core.api.Assertions.assertThat(dequeuedNames)
+            .containsExactly("ready-0", "ready-1", "ready-2", "ready-3", "ready-4",
+                             "ready-5", "ready-6", "ready-7", "ready-8", "ready-9");
+    }
 }
