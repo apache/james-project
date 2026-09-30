@@ -118,7 +118,9 @@ class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerInteg
             .body("additionalInformation.addedMessageIdEntries", is(0))
             .body("additionalInformation.updatedMessageIdEntries", is(0))
             .body("additionalInformation.removedMessageIdEntries", is(0))
+            .body("additionalInformation.removedImapUidEntries", is(0))
             .body("additionalInformation.runningOptions.messagesPerSecond", is(100))
+            .body("additionalInformation.runningOptions.cleanupEntriesWithoutContent", is(false))
             .body("additionalInformation.fixedInconsistencies", hasSize(0))
             .body("additionalInformation.errors", hasSize(0));
     }

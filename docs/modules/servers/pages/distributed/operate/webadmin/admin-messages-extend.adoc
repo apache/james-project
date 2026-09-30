@@ -48,6 +48,18 @@ Default is 100.
 This optional parameter must have a strictly positive integer as a value
 and be passed as query parameter.
 
+An admin can also request the removal of the entries whose message
+content is missing:
+
+* `cleanupEntriesWithoutContent` when `true`, the content (`messageV3`
+table) of every `imapUidTable` entry is checked, and entries without
+content are removed from both `imapUidTable` and `messageIdTable`.
+Entries of messages created less than a day ago are never removed.
+Default is `false`, in which case such entries are only reported when
+detected as orphan.
+
+This optional parameter must be passed as query parameter. 
+
 An admin can also specify the reindexing mode it wants to use when
 running the task:
 
@@ -88,8 +100,10 @@ The scheduled task will have the following type
   "addedMessageIdEntries": 1,
   "updatedMessageIdEntries": 0,
   "removedMessageIdEntries": 1,
+  "removedImapUidEntries": 0,
   "runningOptions":{
     "messagesPerSecond": 200,
+    "cleanupEntriesWithoutContent": false,
     "mode":"REBUILD_ALL"
   },
   "fixedInconsistencies": [
