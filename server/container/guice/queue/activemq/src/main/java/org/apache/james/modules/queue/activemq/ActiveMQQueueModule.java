@@ -61,8 +61,10 @@ public class ActiveMQQueueModule extends AbstractModule {
     protected void configure() {
         bind(EmbeddedActiveMQ.class).in(Scopes.SINGLETON);
         bind(ActiveMQMailQueueFactory.class).in(Scopes.SINGLETON);
-        // Use Noop metric collector since Artemis does not support ActiveMQ Statistics Plugin.
-        // Artemis metrics can be obtained via JMX or dedicated management APIs.
+        // ActiveMQMetricCollector polled ActiveMQ Classic's proprietary Statistics Plugin advisory queues.
+        // Artemis does not use this plugin; James queue metrics (enqueued, dequeued, queueSize) continue
+        // to be gathered directly by JMSCacheableMailQueue via MetricFactory & GaugeRegistry.
+        // Broker-level Artemis metrics are exposed via native Artemis JMX / Micrometer plugins.
         bind(ActiveMQMetricCollector.class).to(ActiveMQMetricCollectorNoop.class);
         bind(ActiveMQMetricCollectorNoop.class).in(Scopes.SINGLETON);
 

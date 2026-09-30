@@ -48,7 +48,9 @@ Migrate the embedded message queue broker in Apache James from ActiveMQ Classic 
    - Enforce strict compliance with JMS identifier rules for message properties (`AMQ139012`), escaping dots and hyphens into hexadecimal sequences.
 
 4. **Metrics & Health Check:**
-   - ActiveMQ Classic's `StatisticsBrokerPlugin` (request-reply destination statistics) is specific to Classic and omitted in Artemis. Legacy collector is substituted by a safe no-op implementation in favor of native Artemis JMX / Management APIs.
+   - ActiveMQ Classic's `StatisticsBrokerPlugin` (request-reply destination statistics via advisory temporary queues) was proprietary to Classic and is omitted in Artemis. The legacy broker-stats polling collector is substituted by a safe no-op implementation (`ActiveMQMetricCollectorNoop`).
+   - James application-level queue metrics (`enqueuedMailsMetric`, `dequeuedMailsMetric`, and `queueSizeGauge`) remain fully gathered inside James via `JMSCacheableMailQueue` through standard `MetricFactory` and `GaugeRegistry`.
+   - Broker-level metrics in Artemis are natively exposed via Micrometer / Prometheus or JMX.
    - Maintain `ActiveMQHealthCheck` verifying connectivity and session creation.
 
 ## Consequences
