@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 import jakarta.inject.Inject;
-import jakarta.mail.Flags;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice;
@@ -125,7 +124,8 @@ public class SolveMessageInconsistenciesService {
             ComposedMessageIdWithMetaData id = messageFromImapUid.getComposedMessageId();
             return messageIdDAO.updateMetadata(id.getComposedMessageId(),
                     UpdatedFlags.builder()
-                        .oldFlags(new Flags())
+                        // The update only writes flag changes: diff against the stale record so that extra flags get removed
+                        .oldFlags(messageFromMessageId.getComposedMessageId().getFlags())
                         .newFlags(id.getFlags())
                         .modSeq(id.getModSeq())
                         .messageId(id.getComposedMessageId().getMessageId())
