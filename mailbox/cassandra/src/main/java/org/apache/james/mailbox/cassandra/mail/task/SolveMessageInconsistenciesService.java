@@ -38,12 +38,14 @@ import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProf
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageMetadata;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.task.Task;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
@@ -107,6 +109,28 @@ public class SolveMessageInconsistenciesService {
             LOGGER.info("Inconsistency fixed for orphan message in ImapUid: {}", message.getComposedMessageId());
             context.incrementAddedMessageIdEntries();
             context.addFixedInconsistency(message.getComposedMessageId().getComposedMessageId());
+        }
+    }
+
+    /**
+     * The message is referenced in ImapUid but its content is missing in MessageV3.
+     *
+     * This happens when deleted index entries are resurrected (eg: tombstones purged before being repaired)
+     * while the message content is not. The entry is not propagated to MessageId: doing so would expose
+     * a message that can not be read. It is reported instead.
+     */
+    private static class ImapUidEntryWithoutContent implements Inconsistency {
+        private final CassandraMessageMetadata message;
+
+        private ImapUidEntryWithoutContent(CassandraMessageMetadata message) {
+            this.message = message;
+        }
+
+        @Override
+        public Mono<Task.Result> fix(Context context, CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO) {
+            context.addErrors(message.getComposedMessageId().getComposedMessageId());
+            LOGGER.warn("Skipping orphan message in ImapUid as its content is missing in MessageV3: {}", message.getComposedMessageId());
+            return Mono.just(Task.Result.PARTIAL);
         }
     }
 
@@ -424,13 +448,15 @@ public class SolveMessageInconsistenciesService {
 
     private final CassandraMessageIdToImapUidDAO messageIdToImapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
+    private final CassandraMessageDAOV3 messageDAOV3;
     private final CassandraConfiguration cassandraConfiguration;
 
     @Inject
     SolveMessageInconsistenciesService(CassandraMessageIdToImapUidDAO messageIdToImapUidDAO, CassandraMessageIdDAO messageIdDAO,
-                                       CassandraConfiguration cassandraConfiguration) {
+                                       CassandraMessageDAOV3 messageDAOV3, CassandraConfiguration cassandraConfiguration) {
         this.messageIdToImapUidDAO = messageIdToImapUidDAO;
         this.messageIdDAO = messageIdDAO;
+        this.messageDAOV3 = messageDAOV3;
         this.cassandraConfiguration = cassandraConfiguration;
     }
 
@@ -492,8 +518,20 @@ public class SolveMessageInconsistenciesService {
     private Mono<Inconsistency> detectOrphanImapUidEntry(CassandraId mailboxId, CassandraMessageId messageId) {
         return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), chooseReadConsistency())
             .next()
-            .<Inconsistency>map(OrphanImapUidEntry::new)
+            .flatMap(orphanEntry -> hasContent(messageId)
+                .map(hasContent -> {
+                    if (hasContent) {
+                        return new OrphanImapUidEntry(orphanEntry);
+                    }
+                    return new ImapUidEntryWithoutContent(orphanEntry);
+                }))
             .switchIfEmpty(Mono.just(NO_INCONSISTENCY));
+    }
+
+    // Upon optimistic consistency, an empty read is retried with the READ execution profile (QUORUM by default)
+    private Mono<Boolean> hasContent(CassandraMessageId messageId) {
+        return messageDAOV3.retrieveMessage(messageId, FetchType.METADATA)
+            .hasElement();
     }
 
     private Flux<Task.Result> fixInconsistenciesInMessageId(Context context, RunningOptions runningOptions) {
