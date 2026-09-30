@@ -110,12 +110,23 @@ public interface Store<T, I> {
                 .flatMap(entry -> readByteSource(bucketName, entry.getValue(), entry.getKey().getStoragePolicy())
                     .map(result -> Pair.of(entry.getKey(), result)))
                 .collectMap(Map.Entry::getKey, Pair::getValue)
+                // A downstream onErrorContinue can silently drop a failed blob read
+                .flatMap(streams -> ensureAllPartsRead(blobIds, streams))
                 // Critical to correctly propagate errors.
                 // Replacing by `map` would cause the error not to be catch downstream. No idea why, failed to reproduce with a test.
                 // Impact: unacknowledged messages for RabbitMQ mailQueue that eventually piles up to interruption of service.
                 .flatMap(streams -> Mono.fromCallable(() -> decoder.decode(streams))
                     .doOnError(e -> streams.forEach(Throwing.biConsumer((blobType, byteSource) -> byteSource.close())))
                     .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER));
+        }
+
+        private Mono<Map<BlobType, CloseableByteSource>> ensureAllPartsRead(I blobIds, Map<BlobType, CloseableByteSource> streams) {
+            if (streams.keySet().containsAll(blobIds.asMap().keySet())) {
+                return Mono.just(streams);
+            }
+            return Mono.fromRunnable(() -> streams.forEach(Throwing.biConsumer((blobType, byteSource) -> byteSource.close())))
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+                .then(Mono.error(() -> new ObjectNotFoundException("Missing blob parts for " + blobIds.asMap())));
         }
 
         private Mono<CloseableByteSource> readByteSource(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
