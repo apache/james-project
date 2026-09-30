@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra.mail.task;
 import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.util.Date;
 import java.util.Optional;
@@ -34,18 +35,24 @@ import org.apache.james.backends.cassandra.Scenario;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
+import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreCacheCallback;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageMetadata;
+import org.apache.james.mailbox.cassandra.mail.MessageRepresentation;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService.Context;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService.RunningOptions;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageDataDefinition;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.ThreadId;
@@ -57,6 +64,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -65,11 +74,14 @@ public class SolveMessageInconsistenciesServiceTest {
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final CassandraMessageId MESSAGE_ID_1 = new CassandraMessageId.Factory().fromString("d2bee791-7e63-11ea-883c-95b84008f979");
     private static final CassandraMessageId MESSAGE_ID_2 = new CassandraMessageId.Factory().fromString("eeeeeeee-7e63-11ea-883c-95b84008f979");
+    private static final CassandraMessageId MESSAGE_ID_3 = new CassandraMessageId.Factory().fromString("ffffffff-7e63-11ea-883c-95b84008f979");
     private static final MessageUid MESSAGE_UID_1 = MessageUid.of(1L);
     private static final MessageUid MESSAGE_UID_2 = MessageUid.of(2L);
+    private static final MessageUid MESSAGE_UID_3 = MessageUid.of(3L);
     private static final ModSeq MOD_SEQ_1 = ModSeq.of(1L);
     private static final ModSeq MOD_SEQ_2 = ModSeq.of(2L);
     private static final PlainBlobId HEADER_BLOB_ID = new PlainBlobId.Factory().of("header");
+    private static final PlainBlobId BODY_BLOB_ID = new PlainBlobId.Factory().of("body");
     private static final Date INTERNAL_DATE = new Date(1586000000000L);
     private static final long SIZE = 36L;
     private static final int BODY_START_OCTET = 18;
@@ -102,6 +114,14 @@ public class SolveMessageInconsistenciesServiceTest {
         .threadId(ThreadId.fromBaseMessageId(MESSAGE_ID_2))
         .build());
 
+    // No content is stored for this message within MessageV3
+    private static final CassandraMessageMetadata MESSAGE_3 = metadata(ComposedMessageIdWithMetaData.builder()
+        .composedMessageId(new ComposedMessageId(MAILBOX_ID, MESSAGE_ID_3, MESSAGE_UID_3))
+        .modSeq(MOD_SEQ_1)
+        .flags(new Flags())
+        .threadId(ThreadId.fromBaseMessageId(MESSAGE_ID_3))
+        .build());
+
     private static CassandraMessageMetadata metadata(ComposedMessageIdWithMetaData ids) {
         return CassandraMessageMetadata.builder()
             .ids(ids)
@@ -120,6 +140,7 @@ public class SolveMessageInconsistenciesServiceTest {
 
     CassandraMessageIdToImapUidDAO imapUidDAO;
     CassandraMessageIdDAO messageIdDAO;
+    CassandraMessageDAOV3 messageDAOV3;
     SolveMessageInconsistenciesService testee;
 
     @BeforeEach
@@ -127,7 +148,19 @@ public class SolveMessageInconsistenciesServiceTest {
         PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         imapUidDAO = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION);
         messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), blobIdFactory);
-        testee = new SolveMessageInconsistenciesService(imapUidDAO, messageIdDAO, CassandraConfiguration.DEFAULT_CONFIGURATION);
+        // Only MessageV3 metadata is read: blobs are never accessed
+        messageDAOV3 = new CassandraMessageDAOV3(cassandra.getConf(), cassandra.getTypesProvider(), mock(BlobStore.class),
+            mock(BlobStoreDAO.class), blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, BlobStoreCacheCallback.NOOP);
+        testee = new SolveMessageInconsistenciesService(imapUidDAO, messageIdDAO, messageDAOV3, CassandraConfiguration.DEFAULT_CONFIGURATION);
+
+        saveContent(MESSAGE_ID_1);
+        saveContent(MESSAGE_ID_2);
+    }
+
+    private void saveContent(CassandraMessageId messageId) {
+        messageDAOV3.save(new MessageRepresentation(messageId, INTERNAL_DATE, SIZE, BODY_START_OCTET,
+                new ByteContent(new byte[0]), ImmutableList.of(), HEADER_BLOB_ID, BODY_BLOB_ID))
+            .block();
     }
 
     @Test
@@ -605,6 +638,37 @@ public class SolveMessageInconsistenciesServiceTest {
                 .addedMessageIdEntries(1)
                 .addFixedInconsistencies(MESSAGE_1.getComposedMessageId().getComposedMessageId())
                 .build());
+    }
+
+    @Test
+    void orphanImapUidEntryWithoutContentShouldNotBePropagated() {
+        imapUidDAO.insert(MESSAGE_3).block();
+
+        testee.fixMessageInconsistencies(new Context(), RunningOptions.DEFAULT).block();
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(imapUidDAO.retrieve(MESSAGE_ID_3, Optional.of(MAILBOX_ID)).collectList().block())
+                .containsExactly(MESSAGE_3);
+            softly.assertThat(messageIdDAO.retrieve(MAILBOX_ID, MESSAGE_UID_3).block())
+                .isEmpty();
+        });
+    }
+
+    @Test
+    void orphanImapUidEntryWithoutContentShouldBeReportedAsError() {
+        Context context = new Context();
+        imapUidDAO.insert(MESSAGE_3).block();
+
+        Task.Result result = testee.fixMessageInconsistencies(context, RunningOptions.DEFAULT).block();
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(result).isEqualTo(Task.Result.PARTIAL);
+            softly.assertThat(context.snapshot())
+                .isEqualTo(Context.Snapshot.builder()
+                    .processedImapUidEntries(1)
+                    .errors(MESSAGE_3.getComposedMessageId().getComposedMessageId())
+                    .build());
+        });
     }
 
     @Test
