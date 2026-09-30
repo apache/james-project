@@ -27,9 +27,12 @@ import spark.Request;
 
 public class RunningOptionsParser {
     public static RunningOptions parse(Request request) {
-        return intQueryParameter(request, "messagesPerSecond")
-            .map(RunningOptions::new)
-            .orElse(RunningOptions.DEFAULT);
+        int messagesPerSecond = intQueryParameter(request, "messagesPerSecond")
+            .orElse(RunningOptions.DEFAULT.getMessagesPerSecond());
+        boolean cleanupEntriesWithoutContent = Optional.ofNullable(request.queryParams("cleanupEntriesWithoutContent"))
+            .map(Boolean::parseBoolean)
+            .orElse(RunningOptions.DEFAULT_CLEANUP_ENTRIES_WITHOUT_CONTENT);
+        return new RunningOptions(messagesPerSecond, cleanupEntriesWithoutContent);
     }
 
     public static Optional<Integer> intQueryParameter(Request request, String queryParameter) {

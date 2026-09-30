@@ -44,12 +44,14 @@ public class SolveMessageInconsistenciesTask implements Task {
         private final long addedMessageIdEntries;
         private final long updatedMessageIdEntries;
         private final long removedMessageIdEntries;
+        private final long removedImapUidEntries;
         private final RunningOptions runningOptions;
         private final ImmutableList<MessageInconsistenciesEntry> fixedInconsistencies;
         private final ImmutableList<MessageInconsistenciesEntry> errors;
 
         public Details(Instant instant, long processedImapUidEntries, long processedMessageIdEntries,
-                       long addedMessageIdEntries, long updatedMessageIdEntries, long removedMessageIdEntries, RunningOptions runningOptions,
+                       long addedMessageIdEntries, long updatedMessageIdEntries, long removedMessageIdEntries,
+                       long removedImapUidEntries, RunningOptions runningOptions,
                        ImmutableList<MessageInconsistenciesEntry> fixedInconsistencies, ImmutableList<MessageInconsistenciesEntry> errors) {
             this.instant = instant;
             this.processedImapUidEntries = processedImapUidEntries;
@@ -57,6 +59,7 @@ public class SolveMessageInconsistenciesTask implements Task {
             this.addedMessageIdEntries = addedMessageIdEntries;
             this.updatedMessageIdEntries = updatedMessageIdEntries;
             this.removedMessageIdEntries = removedMessageIdEntries;
+            this.removedImapUidEntries = removedImapUidEntries;
             this.runningOptions = runningOptions;
             this.fixedInconsistencies = fixedInconsistencies;
             this.errors = errors;
@@ -85,6 +88,10 @@ public class SolveMessageInconsistenciesTask implements Task {
 
         public long getRemovedMessageIdEntries() {
             return removedMessageIdEntries;
+        }
+
+        public long getRemovedImapUidEntries() {
+            return removedImapUidEntries;
         }
 
         public RunningOptions getRunningOptions() {
@@ -129,7 +136,8 @@ public class SolveMessageInconsistenciesTask implements Task {
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         Snapshot snapshot = context.snapshot();
         return Optional.of(new Details(Clock.systemUTC().instant(), snapshot.getProcessedImapUidEntries(), snapshot.getProcessedMessageIdEntries(),
-            snapshot.getAddedMessageIdEntries(), snapshot.getUpdatedMessageIdEntries(), snapshot.getRemovedMessageIdEntries(), runningOptions,
+            snapshot.getAddedMessageIdEntries(), snapshot.getUpdatedMessageIdEntries(), snapshot.getRemovedMessageIdEntries(),
+            snapshot.getRemovedImapUidEntries(), runningOptions,
             snapshot.getFixedInconsistencies().stream()
                 .map(this::toMessageInconsistenciesEntry)
                 .collect(ImmutableList.toImmutableList()),

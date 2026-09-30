@@ -28,21 +28,30 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RunningOptionsDTO {
     public static RunningOptionsDTO asDTO(SolveMessageInconsistenciesService.RunningOptions domainObject) {
-        return new RunningOptionsDTO(Optional.of(domainObject.getMessagesPerSecond()));
+        return new RunningOptionsDTO(Optional.of(domainObject.getMessagesPerSecond()),
+            Optional.of(domainObject.isCleanupEntriesWithoutContent()));
     }
 
     private final Optional<Integer> messagesPerSecond;
+    private final Optional<Boolean> cleanupEntriesWithoutContent;
 
     @JsonCreator
-    public RunningOptionsDTO(@JsonProperty("messagesPerSecond") Optional<Integer> messagesPerSecond) {
+    public RunningOptionsDTO(@JsonProperty("messagesPerSecond") Optional<Integer> messagesPerSecond,
+                             @JsonProperty("cleanupEntriesWithoutContent") Optional<Boolean> cleanupEntriesWithoutContent) {
         this.messagesPerSecond = messagesPerSecond;
+        this.cleanupEntriesWithoutContent = cleanupEntriesWithoutContent;
     }
 
     public Optional<Integer> getMessagesPerSecond() {
         return messagesPerSecond;
     }
 
+    public Optional<Boolean> getCleanupEntriesWithoutContent() {
+        return cleanupEntriesWithoutContent;
+    }
+
     public RunningOptions asDomainObject() {
-        return new RunningOptions(messagesPerSecond.orElse(RunningOptions.DEFAULT.getMessagesPerSecond()));
+        return new RunningOptions(messagesPerSecond.orElse(RunningOptions.DEFAULT.getMessagesPerSecond()),
+            cleanupEntriesWithoutContent.orElse(RunningOptions.DEFAULT_CLEANUP_ENTRIES_WITHOUT_CONTENT));
     }
 }

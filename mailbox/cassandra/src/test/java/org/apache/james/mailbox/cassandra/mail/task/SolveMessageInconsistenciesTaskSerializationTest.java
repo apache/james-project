@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableList;
 public class SolveMessageInconsistenciesTaskSerializationTest {
 
     private static final SolveMessageInconsistenciesService SERVICE = mock(SolveMessageInconsistenciesService.class);
-    private static final SolveMessageInconsistenciesTask TASK = new SolveMessageInconsistenciesTask(SERVICE, new RunningOptions(2));
+    private static final SolveMessageInconsistenciesTask TASK = new SolveMessageInconsistenciesTask(SERVICE, new RunningOptions(2, true));
 
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
     private static final String MAILBOX_ID = "551f0580-82fb-11ea-970e-f9c83d4cf8c2";
@@ -61,7 +61,7 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
         .messageId(MESSAGE_ID_3)
         .messageUid(MESSAGE_UID_3);
 
-    private static final Details DETAILS = new SolveMessageInconsistenciesTask.Details(INSTANT, 2, 1, 1, 0, 1, new SolveMessageInconsistenciesService.RunningOptions(2), ImmutableList.of(MESSAGE_1, MESSAGE_2), ImmutableList.of(MESSAGE_3));
+    private static final Details DETAILS = new SolveMessageInconsistenciesTask.Details(INSTANT, 2, 1, 1, 0, 1, 1, new SolveMessageInconsistenciesService.RunningOptions(2, true), ImmutableList.of(MESSAGE_1, MESSAGE_2), ImmutableList.of(MESSAGE_3));
 
     @Test
     void taskShouldBeSerializable() throws Exception {
@@ -108,6 +108,7 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
             1,
             0,
             1,
+            0,
             RunningOptions.DEFAULT,
             ImmutableList.of(MESSAGE_1, MESSAGE_2),
             ImmutableList.of(MESSAGE_3)

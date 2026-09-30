@@ -23,10 +23,13 @@ import static org.apache.james.backends.cassandra.init.configuration.JamesExecut
 import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.WEAK;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -129,8 +132,61 @@ public class SolveMessageInconsistenciesService {
         @Override
         public Mono<Task.Result> fix(Context context, CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO) {
             context.addErrors(message.getComposedMessageId().getComposedMessageId());
-            LOGGER.warn("Skipping orphan message in ImapUid as its content is missing in MessageV3: {}", message.getComposedMessageId());
+            LOGGER.warn("Skipping message in ImapUid as its content is missing in MessageV3: {}", message.getComposedMessageId());
             return Mono.just(Task.Result.PARTIAL);
+        }
+    }
+
+    /**
+     * Same as {@link ImapUidEntryWithoutContent} but the admin explicitly asked for such entries to be removed.
+     *
+     * The entry is removed from both ImapUid and MessageId. Mailbox counters, quotas and search indexes are not
+     * updated and need to be recomputed.
+     *
+     * The content is checked again right before removal, so that removals are only based on up to date reads.
+     */
+    private static class RemovableImapUidEntryWithoutContent implements Inconsistency {
+        private final CassandraMessageMetadata message;
+        private final Mono<Boolean> hasContent;
+
+        private RemovableImapUidEntryWithoutContent(CassandraMessageMetadata message, Mono<Boolean> hasContent) {
+            this.message = message;
+            this.hasContent = hasContent;
+        }
+
+        @Override
+        public Mono<Task.Result> fix(Context context, CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO) {
+            return hasContent
+                .flatMap(contentFound -> {
+                    if (contentFound) {
+                        LOGGER.warn("Content found in MessageV3 upon re-check, skipping removal of {}", message.getComposedMessageId());
+                        return Mono.just(Task.Result.COMPLETED);
+                    }
+                    return remove(context, imapUidDAO, messageIdDAO);
+                })
+                .onErrorResume(error -> {
+                    notifyFailure(context, error);
+                    return Mono.just(Task.Result.PARTIAL);
+                });
+        }
+
+        private Mono<Task.Result> remove(Context context, CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO) {
+            ComposedMessageId id = message.getComposedMessageId().getComposedMessageId();
+            return imapUidDAO.delete((CassandraMessageId) id.getMessageId(), (CassandraId) id.getMailboxId())
+                .then(messageIdDAO.delete((CassandraId) id.getMailboxId(), id.getUid()))
+                .then(Mono.fromRunnable(() -> notifySuccess(context)))
+                .thenReturn(Task.Result.COMPLETED);
+        }
+
+        private void notifyFailure(Context context, Throwable error) {
+            context.addErrors(message.getComposedMessageId().getComposedMessageId());
+            LOGGER.error("Failed to remove message without content in MessageV3: {}", message.getComposedMessageId(), error);
+        }
+
+        private void notifySuccess(Context context) {
+            LOGGER.warn("Removed message without content in MessageV3: {}", message.getComposedMessageId());
+            context.incrementRemovedImapUidEntries();
+            context.addFixedInconsistency(message.getComposedMessageId().getComposedMessageId());
         }
     }
 
@@ -208,18 +264,29 @@ public class SolveMessageInconsistenciesService {
 
     public static class RunningOptions {
 
+        public static final boolean DEFAULT_CLEANUP_ENTRIES_WITHOUT_CONTENT = false;
         public static final RunningOptions DEFAULT = new RunningOptions(100);
 
         private final int messagesPerSecond;
+        private final boolean cleanupEntriesWithoutContent;
 
         public RunningOptions(int messagesPerSecond) {
+            this(messagesPerSecond, DEFAULT_CLEANUP_ENTRIES_WITHOUT_CONTENT);
+        }
+
+        public RunningOptions(int messagesPerSecond, boolean cleanupEntriesWithoutContent) {
             Preconditions.checkArgument(messagesPerSecond > 0, "'messagesPerSecond' must be strictly positive");
 
             this.messagesPerSecond = messagesPerSecond;
+            this.cleanupEntriesWithoutContent = cleanupEntriesWithoutContent;
         }
 
         public int getMessagesPerSecond() {
             return this.messagesPerSecond;
+        }
+
+        public boolean isCleanupEntriesWithoutContent() {
+            return cleanupEntriesWithoutContent;
         }
     }
 
@@ -235,6 +302,7 @@ public class SolveMessageInconsistenciesService {
                 private Optional<Long> addedMessageIdEntries;
                 private Optional<Long> updatedMessageIdEntries;
                 private Optional<Long> removedMessageIdEntries;
+                private Optional<Long> removedImapUidEntries;
                 private ImmutableList.Builder<ComposedMessageId> fixedInconsistencies;
                 private ImmutableList.Builder<ComposedMessageId> errors;
 
@@ -244,6 +312,7 @@ public class SolveMessageInconsistenciesService {
                     addedMessageIdEntries = Optional.empty();
                     updatedMessageIdEntries = Optional.empty();
                     removedMessageIdEntries = Optional.empty();
+                    removedImapUidEntries = Optional.empty();
                     fixedInconsistencies = ImmutableList.builder();
                     errors = ImmutableList.builder();
                 }
@@ -273,6 +342,11 @@ public class SolveMessageInconsistenciesService {
                     return this;
                 }
 
+                public Builder removedImapUidEntries(long count) {
+                    removedImapUidEntries = Optional.of(count);
+                    return this;
+                }
+
                 public Builder addFixedInconsistencies(ComposedMessageId composedMessageId) {
                     fixedInconsistencies.add(composedMessageId);
                     return this;
@@ -290,6 +364,7 @@ public class SolveMessageInconsistenciesService {
                         addedMessageIdEntries.orElse(0L),
                         updatedMessageIdEntries.orElse(0L),
                         removedMessageIdEntries.orElse(0L),
+                        removedImapUidEntries.orElse(0L),
                         fixedInconsistencies.build(),
                         errors.build());
                 }
@@ -300,12 +375,13 @@ public class SolveMessageInconsistenciesService {
             private final long addedMessageIdEntries;
             private final long updatedMessageIdEntries;
             private final long removedMessageIdEntries;
+            private final long removedImapUidEntries;
             private final ImmutableList<ComposedMessageId> fixedInconsistencies;
             private final ImmutableList<ComposedMessageId> errors;
 
             private Snapshot(long processedImapUidEntries, long processedMessageIdEntries,
                              long addedMessageIdEntries, long updatedMessageIdEntries,
-                             long removedMessageIdEntries,
+                             long removedMessageIdEntries, long removedImapUidEntries,
                              ImmutableList<ComposedMessageId> fixedInconsistencies,
                              ImmutableList<ComposedMessageId> errors) {
                 this.processedImapUidEntries = processedImapUidEntries;
@@ -313,6 +389,7 @@ public class SolveMessageInconsistenciesService {
                 this.addedMessageIdEntries = addedMessageIdEntries;
                 this.updatedMessageIdEntries = updatedMessageIdEntries;
                 this.removedMessageIdEntries = removedMessageIdEntries;
+                this.removedImapUidEntries = removedImapUidEntries;
                 this.fixedInconsistencies = fixedInconsistencies;
                 this.errors = errors;
             }
@@ -337,6 +414,10 @@ public class SolveMessageInconsistenciesService {
                 return removedMessageIdEntries;
             }
 
+            public long getRemovedImapUidEntries() {
+                return removedImapUidEntries;
+            }
+
             public ImmutableList<ComposedMessageId> getFixedInconsistencies() {
                 return fixedInconsistencies;
             }
@@ -355,6 +436,7 @@ public class SolveMessageInconsistenciesService {
                         && Objects.equals(this.addedMessageIdEntries, snapshot.addedMessageIdEntries)
                         && Objects.equals(this.updatedMessageIdEntries, snapshot.updatedMessageIdEntries)
                         && Objects.equals(this.removedMessageIdEntries, snapshot.removedMessageIdEntries)
+                        && Objects.equals(this.removedImapUidEntries, snapshot.removedImapUidEntries)
                         && Objects.equals(this.errors, snapshot.errors)
                         && Objects.equals(this.fixedInconsistencies, snapshot.fixedInconsistencies);
                 }
@@ -363,7 +445,7 @@ public class SolveMessageInconsistenciesService {
 
             @Override
             public final int hashCode() {
-                return Objects.hash(processedImapUidEntries, processedMessageIdEntries, addedMessageIdEntries, updatedMessageIdEntries, removedMessageIdEntries, fixedInconsistencies, errors);
+                return Objects.hash(processedImapUidEntries, processedMessageIdEntries, addedMessageIdEntries, updatedMessageIdEntries, removedMessageIdEntries, removedImapUidEntries, fixedInconsistencies, errors);
             }
 
             @Override
@@ -374,6 +456,7 @@ public class SolveMessageInconsistenciesService {
                     .add("addedMessageIdEntries", addedMessageIdEntries)
                     .add("updatedMessageIdEntries", updatedMessageIdEntries)
                     .add("removedMessageIdEntries", removedMessageIdEntries)
+                    .add("removedImapUidEntries", removedImapUidEntries)
                     .add("fixedInconsistencies", fixedInconsistencies)
                     .add("errors", errors)
                     .toString();
@@ -385,21 +468,23 @@ public class SolveMessageInconsistenciesService {
         private final AtomicLong addedMessageIdEntries;
         private final AtomicLong updatedMessageIdEntries;
         private final AtomicLong removedMessageIdEntries;
+        private final AtomicLong removedImapUidEntries;
         private final ConcurrentLinkedDeque<ComposedMessageId> fixedInconsistencies;
         private final ConcurrentLinkedDeque<ComposedMessageId> errors;
 
         Context() {
-            this(new AtomicLong(), new AtomicLong(), new AtomicLong(), new AtomicLong(), new AtomicLong(), ImmutableList.of(), ImmutableList.of());
+            this(new AtomicLong(), new AtomicLong(), new AtomicLong(), new AtomicLong(), new AtomicLong(), new AtomicLong(), ImmutableList.of(), ImmutableList.of());
         }
 
         private Context(AtomicLong processedImapUidEntries, AtomicLong processedMessageIdEntries, AtomicLong addedMessageIdEntries,
-                        AtomicLong updatedMessageIdEntries, AtomicLong removedMessageIdEntries,
+                        AtomicLong updatedMessageIdEntries, AtomicLong removedMessageIdEntries, AtomicLong removedImapUidEntries,
                         Collection<ComposedMessageId> fixedInconsistencies, Collection<ComposedMessageId> errors) {
             this.processedImapUidEntries = processedImapUidEntries;
             this.processedMessageIdEntries = processedMessageIdEntries;
             this.addedMessageIdEntries = addedMessageIdEntries;
             this.updatedMessageIdEntries = updatedMessageIdEntries;
             this.removedMessageIdEntries = removedMessageIdEntries;
+            this.removedImapUidEntries = removedImapUidEntries;
             this.fixedInconsistencies = new ConcurrentLinkedDeque<>(fixedInconsistencies);
             this.errors = new ConcurrentLinkedDeque<>(errors);
         }
@@ -424,6 +509,10 @@ public class SolveMessageInconsistenciesService {
             removedMessageIdEntries.incrementAndGet();
         }
 
+        void incrementRemovedImapUidEntries() {
+            removedImapUidEntries.incrementAndGet();
+        }
+
         void addFixedInconsistency(ComposedMessageId messageId) {
             fixedInconsistencies.add(messageId);
         }
@@ -439,6 +528,7 @@ public class SolveMessageInconsistenciesService {
                 addedMessageIdEntries.get(),
                 updatedMessageIdEntries.get(),
                 removedMessageIdEntries.get(),
+                removedImapUidEntries.get(),
                 ImmutableList.copyOf(fixedInconsistencies),
                 ImmutableList.copyOf(errors));
         }
@@ -446,19 +536,29 @@ public class SolveMessageInconsistenciesService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SolveMessageInconsistenciesService.class);
     private static final Duration PERIOD = Duration.ofSeconds(1);
+    // Entries of messages created recently are never removed: their content could be written but not visible yet
+    private static final Duration CLEANUP_GRACE_PERIOD = Duration.ofDays(1);
+    private static final long UUID_EPOCH_OFFSET_IN_100NS = 0x01B21DD213814000L;
 
     private final CassandraMessageIdToImapUidDAO messageIdToImapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
     private final CassandraMessageDAOV3 messageDAOV3;
     private final CassandraConfiguration cassandraConfiguration;
+    private final Clock clock;
 
     @Inject
     SolveMessageInconsistenciesService(CassandraMessageIdToImapUidDAO messageIdToImapUidDAO, CassandraMessageIdDAO messageIdDAO,
                                        CassandraMessageDAOV3 messageDAOV3, CassandraConfiguration cassandraConfiguration) {
+        this(messageIdToImapUidDAO, messageIdDAO, messageDAOV3, cassandraConfiguration, Clock.systemUTC());
+    }
+
+    SolveMessageInconsistenciesService(CassandraMessageIdToImapUidDAO messageIdToImapUidDAO, CassandraMessageIdDAO messageIdDAO,
+                                       CassandraMessageDAOV3 messageDAOV3, CassandraConfiguration cassandraConfiguration, Clock clock) {
         this.messageIdToImapUidDAO = messageIdToImapUidDAO;
         this.messageIdDAO = messageIdDAO;
         this.messageDAOV3 = messageDAOV3;
         this.cassandraConfiguration = cassandraConfiguration;
+        this.clock = clock;
     }
 
     private ConsistencyChoice chooseReadConsistency() {
@@ -480,17 +580,52 @@ public class SolveMessageInconsistenciesService {
             .transform(ReactorUtils.<CassandraMessageMetadata, Task.Result>throttle()
                 .elements(runningOptions.getMessagesPerSecond())
                 .per(PERIOD)
-                .forOperation(metaData -> detectInconsistencyInImapUid(metaData)
+                .forOperation(metaData -> detectInconsistencyInImapUid(metaData, runningOptions)
                     .doOnNext(any -> context.incrementProcessedImapUidEntries())
                     .flatMap(inconsistency -> inconsistency.fix(context, messageIdToImapUidDAO, messageIdDAO))));
     }
 
-    private Mono<Inconsistency> detectInconsistencyInImapUid(CassandraMessageMetadata message) {
-        return compareWithMessageIdRecord(message)
+    private Mono<Inconsistency> detectInconsistencyInImapUid(CassandraMessageMetadata message, RunningOptions runningOptions) {
+        return checkContentIfNeeded(message, runningOptions)
+            .switchIfEmpty(Mono.defer(() -> compareWithMessageIdRecord(message, runningOptions)))
             .onErrorResume(error -> Mono.just(new FailedToRetrieveRecord(message)));
     }
 
-    private Mono<Inconsistency> compareWithMessageIdRecord(CassandraMessageMetadata messageFromImapUid) {
+    // Entries resurrected in both ImapUid and MessageId are consistent with each other: the content is thus checked
+    // for every entry when a cleanup is requested.
+    private Mono<Inconsistency> checkContentIfNeeded(CassandraMessageMetadata message, RunningOptions runningOptions) {
+        if (!runningOptions.isCleanupEntriesWithoutContent()) {
+            return Mono.empty();
+        }
+        CassandraMessageId messageId = (CassandraMessageId) message.getComposedMessageId().getComposedMessageId().getMessageId();
+        return hasContent(messageId)
+            .filter(hasContent -> !hasContent)
+            .map(any -> entryWithoutContent(message, runningOptions));
+    }
+
+    private Inconsistency entryWithoutContent(CassandraMessageMetadata message, RunningOptions runningOptions) {
+        CassandraMessageId messageId = (CassandraMessageId) message.getComposedMessageId().getComposedMessageId().getMessageId();
+        if (runningOptions.isCleanupEntriesWithoutContent() && isOutsideGracePeriod(messageId)) {
+            return new RemovableImapUidEntryWithoutContent(message, Mono.defer(() -> hasContent(messageId)));
+        }
+        return new ImapUidEntryWithoutContent(message);
+    }
+
+    private boolean isOutsideGracePeriod(CassandraMessageId messageId) {
+        return creationInstant(messageId)
+            .map(creation -> creation.plus(CLEANUP_GRACE_PERIOD).isBefore(clock.instant()))
+            .orElse(false);
+    }
+
+    private static Optional<Instant> creationInstant(CassandraMessageId messageId) {
+        UUID uuid = messageId.get();
+        if (uuid.version() != 1) {
+            return Optional.empty();
+        }
+        return Optional.of(Instant.ofEpochMilli((uuid.timestamp() - UUID_EPOCH_OFFSET_IN_100NS) / 10_000));
+    }
+
+    private Mono<Inconsistency> compareWithMessageIdRecord(CassandraMessageMetadata messageFromImapUid, RunningOptions runningOptions) {
         ComposedMessageId ids = messageFromImapUid.getComposedMessageId().getComposedMessageId();
         CassandraId mailboxId = (CassandraId) ids.getMailboxId();
         MessageUid uid = ids.getUid();
@@ -505,7 +640,7 @@ public class SolveMessageInconsistenciesService {
                 return detectOutdatedMessageIdEntry(mailboxId, messageId, messageIdRecord);
             })
             .switchIfEmpty(
-                detectOrphanImapUidEntry(mailboxId, messageId));
+                detectOrphanImapUidEntry(mailboxId, messageId, runningOptions));
     }
 
     private Mono<Inconsistency> detectOutdatedMessageIdEntry(CassandraId mailboxId, CassandraMessageId messageId, CassandraMessageMetadata messageIdRecord) {
@@ -516,7 +651,7 @@ public class SolveMessageInconsistenciesService {
             .switchIfEmpty(Mono.just(NO_INCONSISTENCY));
     }
 
-    private Mono<Inconsistency> detectOrphanImapUidEntry(CassandraId mailboxId, CassandraMessageId messageId) {
+    private Mono<Inconsistency> detectOrphanImapUidEntry(CassandraId mailboxId, CassandraMessageId messageId, RunningOptions runningOptions) {
         return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), chooseReadConsistency())
             .next()
             .flatMap(orphanEntry -> hasContent(messageId)
@@ -524,7 +659,7 @@ public class SolveMessageInconsistenciesService {
                     if (hasContent) {
                         return new OrphanImapUidEntry(orphanEntry);
                     }
-                    return new ImapUidEntryWithoutContent(orphanEntry);
+                    return entryWithoutContent(orphanEntry, runningOptions);
                 }))
             .switchIfEmpty(Mono.just(NO_INCONSISTENCY));
     }
