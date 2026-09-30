@@ -226,4 +226,39 @@ class SolveMessageInconsistenciesRequestToTaskTest {
             .body("type", is("solve-message-inconsistencies"))
             .body("additionalInformation.runningOptions.messagesPerSecond", is(20));
     }
+
+    @Test
+    void cleanupEntriesWithoutContentShouldBePartOfTaskDetails() {
+        String taskId = with()
+            .queryParam("action", "SolveInconsistencies")
+            .queryParam("cleanupEntriesWithoutContent", "true")
+        .post()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("taskId", is(taskId))
+            .body("additionalInformation.runningOptions.cleanupEntriesWithoutContent", is(true));
+    }
+
+    @Test
+    void cleanupEntriesWithoutContentShouldBeDisabledByDefault() {
+        String taskId = with()
+            .queryParam("action", "SolveInconsistencies")
+        .post()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("taskId", is(taskId))
+            .body("additionalInformation.runningOptions.cleanupEntriesWithoutContent", is(false));
+    }
 }

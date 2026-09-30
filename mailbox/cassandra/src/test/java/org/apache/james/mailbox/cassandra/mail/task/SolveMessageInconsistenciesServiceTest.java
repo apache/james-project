@@ -20,10 +20,14 @@
 package org.apache.james.mailbox.cassandra.mail.task;
 
 import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
+import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.Optional;
 
@@ -669,6 +673,180 @@ public class SolveMessageInconsistenciesServiceTest {
                     .errors(MESSAGE_3.getComposedMessageId().getComposedMessageId())
                     .build());
         });
+    }
+
+    @Nested
+    class CleanupEntriesWithoutContentTest {
+        private static final RunningOptions CLEANUP = new RunningOptions(100, true);
+
+        @Test
+        void cleanupShouldRemoveEntriesWithoutContent() {
+            // Resurrected in both tables: ImapUid and MessageId are consistent with each other
+            imapUidDAO.insert(MESSAGE_3).block();
+            messageIdDAO.insert(MESSAGE_3).block();
+
+            testee.fixMessageInconsistencies(new Context(), CLEANUP).block();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(imapUidDAO.retrieveAllMessages().collectList().block())
+                    .isEmpty();
+                softly.assertThat(messageIdDAO.retrieveAllMessages().collectList().block())
+                    .isEmpty();
+            });
+        }
+
+        @Test
+        void cleanupShouldReportRemovedEntries() {
+            Context context = new Context();
+            imapUidDAO.insert(MESSAGE_3).block();
+            messageIdDAO.insert(MESSAGE_3).block();
+
+            Task.Result result = testee.fixMessageInconsistencies(context, CLEANUP).block();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEqualTo(Task.Result.COMPLETED);
+                softly.assertThat(context.snapshot())
+                    .isEqualTo(Context.Snapshot.builder()
+                        .processedImapUidEntries(1)
+                        .processedMessageIdEntries(1)
+                        .removedImapUidEntries(1)
+                        .addFixedInconsistencies(MESSAGE_3.getComposedMessageId().getComposedMessageId())
+                        .build());
+            });
+        }
+
+        @Test
+        void cleanupShouldRemoveOrphanImapUidEntriesWithoutContent() {
+            imapUidDAO.insert(MESSAGE_3).block();
+
+            testee.fixMessageInconsistencies(new Context(), CLEANUP).block();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(imapUidDAO.retrieveAllMessages().collectList().block())
+                    .isEmpty();
+                softly.assertThat(messageIdDAO.retrieveAllMessages().collectList().block())
+                    .isEmpty();
+            });
+        }
+
+        @Test
+        void cleanupShouldNotRemoveEntriesWithContent() {
+            imapUidDAO.insert(MESSAGE_1).block();
+            messageIdDAO.insert(MESSAGE_1).block();
+
+            Task.Result result = testee.fixMessageInconsistencies(new Context(), CLEANUP).block();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEqualTo(Task.Result.COMPLETED);
+                softly.assertThat(imapUidDAO.retrieveAllMessages().collectList().block())
+                    .containsExactly(MESSAGE_1);
+                softly.assertThat(messageIdDAO.retrieveAllMessages().collectList().block())
+                    .containsExactly(MESSAGE_1);
+            });
+        }
+
+        @Test
+        void cleanupShouldNotRemoveRecentEntries() {
+            // One hour after MESSAGE_ID_3 creation: within the grace period
+            Clock clock = Clock.fixed(Instant.parse("2020-04-14T16:24:15Z"), ZoneOffset.UTC);
+            testee = new SolveMessageInconsistenciesService(imapUidDAO, messageIdDAO, messageDAOV3, CassandraConfiguration.DEFAULT_CONFIGURATION, clock);
+            Context context = new Context();
+            imapUidDAO.insert(MESSAGE_3).block();
+            messageIdDAO.insert(MESSAGE_3).block();
+
+            Task.Result result = testee.fixMessageInconsistencies(context, CLEANUP).block();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEqualTo(Task.Result.PARTIAL);
+                softly.assertThat(context.snapshot().getErrors())
+                    .containsExactly(MESSAGE_3.getComposedMessageId().getComposedMessageId());
+                softly.assertThat(imapUidDAO.retrieveAllMessages().collectList().block())
+                    .containsExactly(MESSAGE_3);
+                softly.assertThat(messageIdDAO.retrieveAllMessages().collectList().block())
+                    .containsExactly(MESSAGE_3);
+            });
+        }
+
+        @Test
+        void cleanupShouldNotRemoveEntriesWhoseContentAppearsBeforeRemoval(CassandraCluster cassandra) throws Exception {
+            imapUidDAO.insert(MESSAGE_3).block();
+            messageIdDAO.insert(MESSAGE_3).block();
+
+            // The detection read is executed normally, the re-check read right before the removal is blocked
+            Scenario.Barrier barrier = new Scenario.Barrier(1);
+            cassandra.getConf()
+                .registerScenario(
+                    executeNormally()
+                        .times(1)
+                        .whenQueryStartsWith("SELECT * FROM messagev3 WHERE messageid=:messageid"),
+                    awaitOn(barrier)
+                        .thenExecuteNormally()
+                        .times(1)
+                        .whenQueryStartsWith("SELECT * FROM messagev3 WHERE messageid=:messageid"));
+
+            Context context = new Context();
+            Mono<Task.Result> task = testee.fixMessageInconsistencies(context, CLEANUP).subscribeOn(Schedulers.boundedElastic()).cache();
+            task.subscribe();
+
+            barrier.awaitCaller();
+            saveContent(MESSAGE_ID_3);
+            barrier.releaseCaller();
+
+            Task.Result result = task.block();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEqualTo(Task.Result.COMPLETED);
+                softly.assertThat(context.snapshot().getRemovedImapUidEntries()).isZero();
+                softly.assertThat(imapUidDAO.retrieveAllMessages().collectList().block())
+                    .containsExactly(MESSAGE_3);
+                softly.assertThat(messageIdDAO.retrieveAllMessages().collectList().block())
+                    .containsExactly(MESSAGE_3);
+            });
+        }
+
+        @Test
+        void cleanupShouldNotRemoveEntriesWhenContentReCheckFails(CassandraCluster cassandra) {
+            imapUidDAO.insert(MESSAGE_3).block();
+            messageIdDAO.insert(MESSAGE_3).block();
+
+            cassandra.getConf()
+                .registerScenario(
+                    executeNormally()
+                        .times(1)
+                        .whenQueryStartsWith("SELECT * FROM messagev3 WHERE messageid=:messageid"),
+                    fail()
+                        .times(1)
+                        .whenQueryStartsWith("SELECT * FROM messagev3 WHERE messageid=:messageid"));
+
+            Context context = new Context();
+            Task.Result result = testee.fixMessageInconsistencies(context, CLEANUP).block();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEqualTo(Task.Result.PARTIAL);
+                softly.assertThat(context.snapshot().getErrors())
+                    .containsExactly(MESSAGE_3.getComposedMessageId().getComposedMessageId());
+                softly.assertThat(imapUidDAO.retrieveAllMessages().collectList().block())
+                    .containsExactly(MESSAGE_3);
+                softly.assertThat(messageIdDAO.retrieveAllMessages().collectList().block())
+                    .containsExactly(MESSAGE_3);
+            });
+        }
+
+        @Test
+        void entriesWithoutContentShouldNotBeRemovedWhenNoCleanup() {
+            imapUidDAO.insert(MESSAGE_3).block();
+            messageIdDAO.insert(MESSAGE_3).block();
+
+            Task.Result result = testee.fixMessageInconsistencies(new Context(), RunningOptions.DEFAULT).block();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEqualTo(Task.Result.COMPLETED);
+                softly.assertThat(imapUidDAO.retrieveAllMessages().collectList().block())
+                    .containsExactly(MESSAGE_3);
+                softly.assertThat(messageIdDAO.retrieveAllMessages().collectList().block())
+                    .containsExactly(MESSAGE_3);
+            });
+        }
     }
 
     @Test
