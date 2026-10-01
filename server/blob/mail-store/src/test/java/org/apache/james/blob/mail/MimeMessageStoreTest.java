@@ -43,6 +43,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class MimeMessageStoreTest {
@@ -104,6 +105,29 @@ class MimeMessageStoreTest {
 
         assertThatThrownBy(() -> testee.read(parts).block())
             .isInstanceOf(ObjectNotFoundException.class);
+    }
+
+    @Test
+    void readShouldThrowObjectNotFoundWhenOnePartIsMissingAndDownstreamUsesOnErrorContinue() throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addFrom("any@any.com")
+            .addToRecipient("toddy@any.com")
+            .setSubject("Important Mail")
+            .setText("Important mail content")
+            .build();
+
+        MimeMessagePartsId parts = testee.save(message).block();
+        Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), parts.getHeaderBlobId())).block();
+
+        // Mimics JamesMailSpooler: an onErrorContinue downstream must not truncate the blob parts read
+        Throwable error = Flux.just(parts)
+            .flatMap(partsId -> testee.read(partsId)
+                .then(Mono.<Throwable>empty())
+                .onErrorResume(Mono::just))
+            .onErrorContinue((e, o) -> { })
+            .blockFirst();
+
+        assertThat(error).isInstanceOf(ObjectNotFoundException.class);
     }
 
     @Test
