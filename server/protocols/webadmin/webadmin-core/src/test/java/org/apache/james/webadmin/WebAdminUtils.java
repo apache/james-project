@@ -101,6 +101,7 @@ public class WebAdminUtils {
 
     public static RequestSpecBuilder buildHttpsRequestSpecification(WebAdminServer webAdminServer) {
         return buildRequestSpecification(webAdminServer.getPort())
+            .setBaseUri("https://localhost")
             .setRelaxedHTTPSValidation();
     }
 
