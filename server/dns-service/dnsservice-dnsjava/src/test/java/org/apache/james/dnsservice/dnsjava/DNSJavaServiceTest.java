@@ -210,6 +210,48 @@ class DNSJavaServiceTest {
         assertThat(records.size()).isEqualTo(1);
         assertThat(records.contains("mx1.one-mx.bar.")).isTrue();
     }
+
+    @Test
+    void testFindMXRecordsShouldReturnFallbackAddressWhenNoMX() throws Exception {
+        doAnswer(new ZoneCacheLookupRecordsAnswer(loadZone("dnstest.com.")))
+                .when(mockedCache).lookupRecords(any(Name.class), anyInt(), anyInt());
+        dnsServer.setCache(mockedCache);
+
+        Collection<String> records = dnsServer.findMXRecords("nomx.dnstest.com.");
+        assertThat(records).containsExactly("nomx.dnstest.com.");
+    }
+
+    @Test
+    void testFindMXRecordsShouldReturnEmptyCollectionWhenNoMXAndUnknownHost() throws Exception {
+        doAnswer(new ZoneCacheLookupRecordsAnswer(loadZone("dnstest.com.")))
+                .when(mockedCache).lookupRecords(any(Name.class), anyInt(), anyInt());
+        dnsServer.setCache(mockedCache);
+
+        Collection<String> records = dnsServer.findMXRecords("nonexistent.dnstest.com.");
+        assertThat(records).isEmpty();
+    }
+
+    @Test
+    void testFindMXRecordsShouldNotExecuteFallbackWhenTemporaryResolutionExceptionThrown() {
+        dnsServer.setCache(mockedCache);
+        when(mockedCache.lookupRecords(any(Name.class), anyInt(), anyInt()))
+                .thenThrow(new IllegalStateException("Simulated DNS failure"));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> dnsServer.findMXRecords("dnstest.com."))
+                .isInstanceOf(org.apache.james.dnsservice.api.TemporaryResolutionException.class);
+    }
+
+    @Test
+    void testFindMXRecordsShouldReturnUnmodifiableCollection() throws Exception {
+        doAnswer(new ZoneCacheLookupRecordsAnswer(loadZone("dnstest.com.")))
+                .when(mockedCache).lookupRecords(any(Name.class), anyInt(), anyInt());
+        dnsServer.setCache(mockedCache);
+
+        Collection<String> records = dnsServer.findMXRecords("dnstest.com.");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> records.add("evil.host.com."))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
     /*
      * public void testCNAMEasMXrecords() throws Exception { // Zone z =
      * loadZone("brandilyncollins.com."); dnsServer.setResolver(null);
