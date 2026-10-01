@@ -24,13 +24,13 @@ import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.jwt.introspection.IntrospectionEndpoint;
-import org.apache.james.jwt.introspection.TokenIntrospectionResponse;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import reactor.core.publisher.Mono;
 
@@ -75,9 +75,8 @@ public class OidcJwtTokenVerifier {
         try {
             return new JwtTokenVerifier(JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL()))
                 .verify(jwtToken)
-                .filter(claims -> oidcSASLConfiguration.getAud().map(expectedAud -> claims.getAudience().contains(expectedAud))
-                    .orElse(true)) // true if no aud is configured
-                .flatMap(claims -> Optional.ofNullable(claims.get(oidcSASLConfiguration.getClaim(), String.class)));
+                .filter(this::hasExpectedAudience)
+                .flatMap(this::extractConfiguredClaim);
         } catch (JwtException e) {
             LOGGER.info("Failed Jwt verification", e);
             return Optional.empty();
@@ -89,10 +88,14 @@ public class OidcJwtTokenVerifier {
         return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken))
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
             .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.introspect(introspectionEndpoint, jwtToken))
-                .filter(TokenIntrospectionResponse::active)
-                .filter(tokenIntrospectionResponse -> tokenIntrospectionResponse.claimByPropertyName(oidcSASLConfiguration.getClaim())
-                    .map(claim -> claim.equals(claimResult))
-                    .orElse(false))
+                .filter(tokenIntrospectionResponse -> {
+                    if (!tokenIntrospectionResponse.active()) {
+                        LOGGER.info("OIDC token rejected: introspection endpoint reported the token as inactive");
+                        return false;
+                    }
+                    return true;
+                })
+                .filter(tokenIntrospectionResponse -> claimMatches("introspection", tokenIntrospectionResponse.claimByPropertyName(oidcSASLConfiguration.getClaim()), claimResult))
                 .map(activeResponse -> claimResult));
     }
 
@@ -101,9 +104,40 @@ public class OidcJwtTokenVerifier {
         return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken))
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
             .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.userInfo(userinfoEndpoint, jwtToken))
-                .filter(userinfoResponse -> userinfoResponse.claimByPropertyName(oidcSASLConfiguration.getClaim())
-                    .map(claim -> claim.equals(claimResult))
-                    .orElse(false))
+                .filter(userinfoResponse -> claimMatches("userinfo", userinfoResponse.claimByPropertyName(oidcSASLConfiguration.getClaim()), claimResult))
                 .map(userinfoResponse -> claimResult));
+    }
+
+    private boolean hasExpectedAudience(Claims claims) {
+        return oidcSASLConfiguration.getAud()
+            .map(expectedAud -> {
+                boolean matches = claims.getAudience() != null && claims.getAudience().contains(expectedAud);
+                if (!matches) {
+                    LOGGER.info("OIDC token rejected: expected audience '{}' but token audience is {}", expectedAud, claims.getAudience());
+                }
+                return matches;
+            })
+            .orElse(true); // true if no aud is configured
+    }
+
+    private Optional<String> extractConfiguredClaim(Claims claims) {
+        Optional<String> claim = Optional.ofNullable(claims.get(oidcSASLConfiguration.getClaim(), String.class));
+        if (claim.isEmpty()) {
+            LOGGER.info("OIDC token rejected: claim '{}' is missing from the token", oidcSASLConfiguration.getClaim());
+        }
+        return claim;
+    }
+
+    private boolean claimMatches(String source, Optional<String> remoteClaim, String tokenClaim) {
+        if (remoteClaim.isEmpty()) {
+            LOGGER.info("OIDC token rejected: claim '{}' is missing from the {} response", oidcSASLConfiguration.getClaim(), source);
+            return false;
+        }
+        if (!remoteClaim.get().equals(tokenClaim)) {
+            LOGGER.info("OIDC token rejected: claim '{}' from the {} response ({}) does not match the token ({})",
+                oidcSASLConfiguration.getClaim(), source, remoteClaim.get(), tokenClaim);
+            return false;
+        }
+        return true;
     }
 }
