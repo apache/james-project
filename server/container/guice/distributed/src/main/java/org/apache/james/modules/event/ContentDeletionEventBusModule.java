@@ -25,6 +25,7 @@ import java.util.Set;
 
 import jakarta.inject.Named;
 
+import org.apache.james.backends.rabbitmq.MonitoredDeadLetterQueue;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
@@ -36,7 +37,6 @@ import org.apache.james.events.EventListener;
 import org.apache.james.events.GroupRegistrationHandler;
 import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
-import org.apache.james.events.RabbitMQContentDeletionEventBusDeadLetterQueueHealthCheck;
 import org.apache.james.events.RabbitMQEventBus;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
@@ -92,8 +92,8 @@ public class ContentDeletionEventBusModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    HealthCheck contentDeletionEventBusDeadLetterQueueHealthCheck(RabbitMQConfiguration rabbitMQConfiguration) {
-        return new RabbitMQContentDeletionEventBusDeadLetterQueueHealthCheck(rabbitMQConfiguration);
+    MonitoredDeadLetterQueue contentDeletionEventBusDeadLetterQueue(RabbitMQConfiguration rabbitMQConfiguration) {
+        return new MonitoredDeadLetterQueue(rabbitMQConfiguration, CONTENT_DELETION_NAMING_STRATEGY.deadLetterQueue().getName());
     }
 
     @Provides
