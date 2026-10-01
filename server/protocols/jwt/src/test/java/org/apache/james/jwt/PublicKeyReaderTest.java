@@ -20,6 +20,7 @@
 package org.apache.james.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.security.Security;
 import java.time.Clock;
@@ -90,28 +91,38 @@ class PublicKeyReaderTest {
     }
 
     @Test
-    void fromPEMShouldReturnRSAPublicKeyEvenWhenExpiredX509Certificate() {
-        // X509_CERTIFICATE expired on 2022-08-30, key is still extracted with a warning in logs
+    void fromPEMShouldThrowWhenExpiredX509CertificateByDefault() {
         Clock clockAfterExpiry = Clock.fixed(Instant.parse("2023-01-01T00:00:00Z"), ZoneOffset.UTC);
-        assertThat(new PublicKeyReader(clockAfterExpiry).fromPEM(X509_CERTIFICATE)).isPresent();
+        assertThatThrownBy(() -> new PublicKeyReader(clockAfterExpiry).fromPEM(X509_CERTIFICATE))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Certificate is not valid");
     }
 
     @Test
-    void fromPEMShouldLogWarnWhenExpiredX509Certificate() {
+    void fromPEMShouldThrowWhenNotYetValidX509CertificateByDefault() {
+        Clock clockBeforeValidity = Clock.fixed(Instant.parse("2020-01-01T00:00:00Z"), ZoneOffset.UTC);
+        assertThatThrownBy(() -> new PublicKeyReader(clockBeforeValidity).fromPEM(X509_CERTIFICATE))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Certificate is not valid");
+    }
+
+    @Test
+    void fromPEMShouldReturnRSAPublicKeyWhenExpiredX509CertificateAndAllowOutdated() {
+        Clock clockAfterExpiry = Clock.fixed(Instant.parse("2023-01-01T00:00:00Z"), ZoneOffset.UTC);
+        boolean allowOutdated = true;
+        assertThat(new PublicKeyReader(clockAfterExpiry, allowOutdated).fromPEM(X509_CERTIFICATE)).isPresent();
+    }
+
+    @Test
+    void fromPEMShouldLogWarnWhenExpiredX509CertificateAndAllowOutdated() {
         ListAppender<ILoggingEvent> loggingEvents = getListAppenderForClass(PublicKeyReader.class);
         Clock clockAfterExpiry = Clock.fixed(Instant.parse("2023-01-01T00:00:00Z"), ZoneOffset.UTC);
+        boolean allowOutdated = true;
 
-        new PublicKeyReader(clockAfterExpiry).fromPEM(X509_CERTIFICATE);
+        new PublicKeyReader(clockAfterExpiry, allowOutdated).fromPEM(X509_CERTIFICATE);
 
         assertThat(loggingEvents.list)
             .anySatisfy(event -> assertThat(event.getFormattedMessage()).contains("Certificate is not valid"));
-    }
-
-    @Test
-    void fromPEMShouldReturnRSAPublicKeyEvenWhenNotYetValidX509Certificate() {
-        // X509_CERTIFICATE validity starts on 2021-08-30, key is still extracted with a warning in logs
-        Clock clockBeforeValidity = Clock.fixed(Instant.parse("2020-01-01T00:00:00Z"), ZoneOffset.UTC);
-        assertThat(new PublicKeyReader(clockBeforeValidity).fromPEM(X509_CERTIFICATE)).isPresent();
     }
 
     private static ListAppender<ILoggingEvent> getListAppenderForClass(Class<?> clazz) {

@@ -36,15 +36,22 @@ import org.slf4j.LoggerFactory;
 public class PublicKeyReader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PublicKeyReader.class);
+    private static final String ALLOW_OUTDATED_PROPERTY = "james.pem.certificates.allow.outdated";
 
     private final Clock clock;
+    private final boolean allowOutdated;
 
     public PublicKeyReader() {
-        this(Clock.systemUTC());
+        this(Clock.systemUTC(), Boolean.getBoolean(ALLOW_OUTDATED_PROPERTY));
     }
 
     public PublicKeyReader(Clock clock) {
+        this(clock, Boolean.getBoolean(ALLOW_OUTDATED_PROPERTY));
+    }
+
+    public PublicKeyReader(Clock clock, boolean allowOutdated) {
         this.clock = clock;
+        this.allowOutdated = allowOutdated;
     }
 
     public Optional<PublicKey> fromPEM(String pemKey) {
@@ -61,8 +68,13 @@ public class PublicKeyReader {
                 X509CertificateHolder certHolder = (X509CertificateHolder) readPEM;
                 Date now = Date.from(clock.instant());
                 if (now.before(certHolder.getNotBefore()) || now.after(certHolder.getNotAfter())) {
-                    LOGGER.warn("Certificate is not valid at {}. Validity: [{} - {}]",
-                        now, certHolder.getNotBefore(), certHolder.getNotAfter());
+                    if (allowOutdated) {
+                        LOGGER.warn("Certificate is not valid at {}. Validity: [{} - {}]",
+                            now, certHolder.getNotBefore(), certHolder.getNotAfter());
+                    } else {
+                        throw new IllegalArgumentException(String.format("Certificate is not valid at %s. Validity: [%s - %s]",
+                            now, certHolder.getNotBefore(), certHolder.getNotAfter()));
+                    }
                 }
                 SubjectPublicKeyInfo keyInfo = certHolder.getSubjectPublicKeyInfo();
                 return Optional.of(new JcaPEMKeyConverter().getPublicKey(keyInfo));
