@@ -21,6 +21,8 @@ package org.apache.james.jwt;
 import java.io.IOException;
 import java.io.StringReader;
 import java.security.PublicKey;
+import java.time.Clock;
+import java.util.Date;
 import java.util.Optional;
 
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -35,6 +37,16 @@ public class PublicKeyReader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PublicKeyReader.class);
 
+    private final Clock clock;
+
+    public PublicKeyReader() {
+        this(Clock.systemUTC());
+    }
+
+    public PublicKeyReader(Clock clock) {
+        this.clock = clock;
+    }
+
     public Optional<PublicKey> fromPEM(String pemKey) {
         return publicKeyFrom(new PEMParser(new PemReader(new StringReader(pemKey))));
     }
@@ -46,7 +58,13 @@ public class PublicKeyReader {
                 return Optional.of(new JcaPEMKeyConverter().getPublicKey((SubjectPublicKeyInfo) readPEM));
             }
             if (readPEM instanceof X509CertificateHolder) {
-                SubjectPublicKeyInfo keyInfo = ((X509CertificateHolder) readPEM).getSubjectPublicKeyInfo();
+                X509CertificateHolder certHolder = (X509CertificateHolder) readPEM;
+                Date now = Date.from(clock.instant());
+                if (now.before(certHolder.getNotBefore()) || now.after(certHolder.getNotAfter())) {
+                    LOGGER.warn("Certificate is not valid at {}. Validity: [{} - {}]",
+                        now, certHolder.getNotBefore(), certHolder.getNotAfter());
+                }
+                SubjectPublicKeyInfo keyInfo = certHolder.getSubjectPublicKeyInfo();
                 return Optional.of(new JcaPEMKeyConverter().getPublicKey(keyInfo));
             }
             LOGGER.warn("Key is not an instance of SubjectPublicKeyInfo or X509CertificateHolder but of {}", readPEM);

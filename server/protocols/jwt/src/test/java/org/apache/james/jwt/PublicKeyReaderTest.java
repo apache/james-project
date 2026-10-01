@@ -22,10 +22,18 @@ package org.apache.james.jwt;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.security.Security;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 class PublicKeyReaderTest {
 
@@ -76,6 +84,41 @@ class PublicKeyReaderTest {
 
     @Test
     void fromPEMShouldReturnRSAPublicKeyWhenValidX509Certificate() {
-        assertThat(new PublicKeyReader().fromPEM(X509_CERTIFICATE)).isPresent();
+        // X509_CERTIFICATE is valid between 2021-08-30 and 2022-08-30
+        Clock clockDuringValidity = Clock.fixed(Instant.parse("2021-12-01T00:00:00Z"), ZoneOffset.UTC);
+        assertThat(new PublicKeyReader(clockDuringValidity).fromPEM(X509_CERTIFICATE)).isPresent();
+    }
+
+    @Test
+    void fromPEMShouldReturnRSAPublicKeyEvenWhenExpiredX509Certificate() {
+        // X509_CERTIFICATE expired on 2022-08-30, key is still extracted with a warning in logs
+        Clock clockAfterExpiry = Clock.fixed(Instant.parse("2023-01-01T00:00:00Z"), ZoneOffset.UTC);
+        assertThat(new PublicKeyReader(clockAfterExpiry).fromPEM(X509_CERTIFICATE)).isPresent();
+    }
+
+    @Test
+    void fromPEMShouldLogWarnWhenExpiredX509Certificate() {
+        ListAppender<ILoggingEvent> loggingEvents = getListAppenderForClass(PublicKeyReader.class);
+        Clock clockAfterExpiry = Clock.fixed(Instant.parse("2023-01-01T00:00:00Z"), ZoneOffset.UTC);
+
+        new PublicKeyReader(clockAfterExpiry).fromPEM(X509_CERTIFICATE);
+
+        assertThat(loggingEvents.list)
+            .anySatisfy(event -> assertThat(event.getFormattedMessage()).contains("Certificate is not valid"));
+    }
+
+    @Test
+    void fromPEMShouldReturnRSAPublicKeyEvenWhenNotYetValidX509Certificate() {
+        // X509_CERTIFICATE validity starts on 2021-08-30, key is still extracted with a warning in logs
+        Clock clockBeforeValidity = Clock.fixed(Instant.parse("2020-01-01T00:00:00Z"), ZoneOffset.UTC);
+        assertThat(new PublicKeyReader(clockBeforeValidity).fromPEM(X509_CERTIFICATE)).isPresent();
+    }
+
+    private static ListAppender<ILoggingEvent> getListAppenderForClass(Class<?> clazz) {
+        Logger logger = (Logger) LoggerFactory.getLogger(clazz);
+        ListAppender<ILoggingEvent> loggingEventListAppender = new ListAppender<>();
+        loggingEventListAppender.start();
+        logger.addAppender(loggingEventListAppender);
+        return loggingEventListAppender;
     }
 }
