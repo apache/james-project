@@ -23,6 +23,7 @@ import static org.apache.james.events.NamingStrategy.JMAP_NAMING_STRATEGY;
 
 import jakarta.inject.Named;
 
+import org.apache.james.backends.rabbitmq.MonitoredDeadLetterQueue;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
@@ -34,7 +35,6 @@ import org.apache.james.events.GroupRegistrationHandler;
 import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
 import org.apache.james.events.RabbitMQEventBus;
-import org.apache.james.events.RabbitMQJmapEventBusDeadLetterQueueHealthCheck;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
 import org.apache.james.jmap.InjectionKeys;
@@ -90,8 +90,8 @@ public class JMAPEventBusModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    HealthCheck jmapEventBusDeadLetterQueueHealthCheck(RabbitMQConfiguration rabbitMQConfiguration) {
-        return new RabbitMQJmapEventBusDeadLetterQueueHealthCheck(rabbitMQConfiguration);
+    MonitoredDeadLetterQueue jmapEventBusDeadLetterQueue(RabbitMQConfiguration rabbitMQConfiguration) {
+        return new MonitoredDeadLetterQueue(rabbitMQConfiguration, JMAP_NAMING_STRATEGY.deadLetterQueue().getName());
     }
 
     @Provides

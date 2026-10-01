@@ -21,6 +21,7 @@ package org.apache.james.modules.event;
 
 import static org.apache.james.events.NamingStrategy.MAILBOX_EVENT_NAMING_STRATEGY;
 
+import org.apache.james.backends.rabbitmq.MonitoredDeadLetterQueue;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
@@ -33,7 +34,6 @@ import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.NamingStrategy;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
 import org.apache.james.events.RabbitMQEventBus;
-import org.apache.james.events.RabbitMQMailboxEventBusDeadLetterQueueHealthCheck;
 import org.apache.james.events.RegistrationKey;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
@@ -58,9 +58,11 @@ public class MailboxEventBusModule extends AbstractModule {
 
         bind(RetryBackoffConfiguration.class).toInstance(RetryBackoffConfiguration.DEFAULT);
         bind(EventBusId.class).toInstance(EventBusId.random());
+    }
 
-        Multibinder.newSetBinder(binder(), HealthCheck.class)
-            .addBinding().to(RabbitMQMailboxEventBusDeadLetterQueueHealthCheck.class);
+    @ProvidesIntoSet
+    MonitoredDeadLetterQueue deadLetterQueue(NamingStrategy namingStrategy, RabbitMQConfiguration configuration) {
+        return new MonitoredDeadLetterQueue(configuration, namingStrategy.deadLetterQueue().getName());
     }
 
     @ProvidesIntoSet

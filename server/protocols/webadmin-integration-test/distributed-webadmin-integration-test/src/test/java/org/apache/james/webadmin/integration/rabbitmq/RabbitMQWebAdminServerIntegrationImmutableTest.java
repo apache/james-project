@@ -29,19 +29,25 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import java.util.List;
+import java.util.Set;
+
+import jakarta.inject.Inject;
 
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerOpenSearchExtension;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.backends.rabbitmq.MonitoredDeadLetterQueue;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.utils.GuiceProbe;
 import org.apache.james.webadmin.integration.WebAdminServerIntegrationImmutableTest;
 import org.apache.james.webadmin.routes.HealthCheckRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
@@ -50,8 +56,24 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.google.inject.multibindings.Multibinder;
+
 @Tag(BasicFeature.TAG)
 class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerIntegrationImmutableTest {
+    public static class MonitoredRabbitMQProbe implements GuiceProbe {
+        private final Set<MonitoredDeadLetterQueue> deadLetterQueues;
+
+        @Inject
+        public MonitoredRabbitMQProbe(Set<MonitoredDeadLetterQueue> deadLetterQueues) {
+            this.deadLetterQueues = deadLetterQueues;
+        }
+
+        List<String> deadLetterQueues() {
+            return deadLetterQueues.stream()
+                .map(MonitoredDeadLetterQueue::queue)
+                .toList();
+        }
+    }
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
@@ -70,7 +92,9 @@ class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerInteg
         .extension(new CassandraExtension())
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
-        .server(CassandraRabbitMQJamesServerMain::createServer)
+        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
+            .overrideWith(binder -> Multibinder.newSetBinder(binder, GuiceProbe.class)
+                .addBinding().to(MonitoredRabbitMQProbe.class)))
         .lifeCycle(PER_CLASS)
         .build();
 
@@ -138,12 +162,26 @@ class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerInteg
                 .getList("checks.componentName", String.class);
 
         assertThat(listComponentNames).containsOnly("Guice application lifecycle", "EmptyErrorMailRepository",
-            "RabbitMQ backend", "RabbitMQMailQueueDeadLetterQueueHealthCheck",
-            "RabbitMQMailboxEventBusDeadLetterQueueHealthCheck", "MailReceptionCheck",
+            "RabbitMQ backend", "RabbitMQDeadLetterQueues", "MailReceptionCheck",
             "Cassandra backend", "EventDeadLettersHealthCheck", "MessageFastViewProjection",
             "RabbitMQMailQueue BrowseStart", "OpenSearch Backend", "ObjectStorage", "DistributedTaskManagerConsumers",
             "EventbusConsumers-jmapEvent", "MailQueueConsumers", "EventbusConsumers-mailboxEvent",
-            "RabbitMQJmapEventBusDeadLetterQueueHealthCheck", "IMAPHealthCheck",
-            "RabbitMQContentDeletionEventBusDeadLetterQueueHealthCheck", "EventbusConsumers-contentDeletionEvent");
+            "IMAPHealthCheck", "EventbusConsumers-contentDeletionEvent");
+    }
+
+    @Test
+    void everyRabbitMQDeadLetterQueueShouldBeMonitored(GuiceJamesServer server) {
+        assertThat(server.getProbe(MonitoredRabbitMQProbe.class).deadLetterQueues())
+            .containsExactlyInAnyOrder("mailboxEvent-dead-letter-queue", "jmapEvent-dead-letter-queue", "contentDeletionEvent-dead-letter-queue",
+                "JamesMailQueue-dead-letter-queue-spool");
+    }
+
+    @Test
+    void rabbitMQDeadLetterQueuesShouldBeHealthy() {
+        when()
+            .get(HealthCheckRoutes.HEALTHCHECK + "/checks/RabbitMQDeadLetterQueues")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("status", is("healthy"));
     }
 }

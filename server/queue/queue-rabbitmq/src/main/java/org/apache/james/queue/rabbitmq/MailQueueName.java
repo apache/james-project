@@ -140,7 +140,7 @@ public final class MailQueueName {
         return DEAD_LETTER_EXCHANGE_PREFIX + name;
     }
 
-    String toDeadLetterQueueName() {
+    public String toDeadLetterQueueName() {
         return DEAD_LETTER_QUEUE_PREFIX + name;
     }
 

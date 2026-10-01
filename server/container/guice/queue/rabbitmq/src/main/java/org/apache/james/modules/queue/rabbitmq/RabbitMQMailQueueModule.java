@@ -23,31 +23,37 @@ import static org.apache.james.modules.queue.rabbitmq.RabbitMQModule.RABBITMQ_CO
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
+import org.apache.james.backends.rabbitmq.MonitoredDeadLetterQueue;
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueue;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueueConsumerHealthCheck;
-import org.apache.james.queue.rabbitmq.RabbitMQMailQueueDeadLetterQueueHealthCheck;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueueFactory;
 import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class RabbitMQMailQueueModule extends AbstractModule {
     @Override
     protected void configure() {
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(SpoolerReconnectionHandler.class);
-        Multibinder<HealthCheck> healthCheckMultiBinder = Multibinder.newSetBinder(binder(), HealthCheck.class);
-        healthCheckMultiBinder.addBinding().to(RabbitMQMailQueueDeadLetterQueueHealthCheck.class);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding()
             .to(RabbitMQMailQueueConsumerHealthCheck.class);
+    }
+
+    @ProvidesIntoSet
+    MonitoredDeadLetterQueue spoolDeadLetterQueue(RabbitMQConfiguration configuration) {
+        return new MonitoredDeadLetterQueue(configuration, MailQueueName.fromString(MailQueueFactory.SPOOL.asString()).toDeadLetterQueueName());
     }
 
     @Provides
