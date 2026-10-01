@@ -32,6 +32,7 @@ import com.github.fge.lambdas.Throwing;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -73,8 +74,9 @@ public class RabbitMQMailQueueConsumerHealthCheck implements HealthCheck {
             .anyMatch(Throwing.predicate(queue -> channel.consumerCount(queue) == 0));
 
         if (queueWithoutConsumers) {
-            return Mono.fromRunnable(() -> reconnectionHandlers.forEach(r -> r.handleReconnection(connection)))
-                .thenReturn(Result.degraded(COMPONENT, "No consumers"));
+            return Flux.fromIterable(reconnectionHandlers)
+                .concatMap(reconnectionHandler -> reconnectionHandler.handleReconnection(connection))
+                .then(Mono.just(Result.degraded(COMPONENT, "No consumers")));
         } else {
             return Mono.just(Result.healthy(COMPONENT));
         }
