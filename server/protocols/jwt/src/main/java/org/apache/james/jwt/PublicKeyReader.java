@@ -24,6 +24,7 @@ import java.security.PublicKey;
 import java.util.Optional;
 
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -44,7 +45,11 @@ public class PublicKeyReader {
             if (readPEM instanceof SubjectPublicKeyInfo) {
                 return Optional.of(new JcaPEMKeyConverter().getPublicKey((SubjectPublicKeyInfo) readPEM));
             }
-            LOGGER.warn("Key is not an instance of SubjectPublicKeyInfo but of {}", readPEM);
+            if (readPEM instanceof X509CertificateHolder) {
+                SubjectPublicKeyInfo keyInfo = ((X509CertificateHolder) readPEM).getSubjectPublicKeyInfo();
+                return Optional.of(new JcaPEMKeyConverter().getPublicKey(keyInfo));
+            }
+            LOGGER.warn("Key is not an instance of SubjectPublicKeyInfo or X509CertificateHolder but of {}", readPEM);
             return Optional.empty();
         } catch (IOException e) {
             LOGGER.warn("Error when reading the PEM file", e);
