@@ -70,14 +70,16 @@ public class BlobDeduplicationGCModule extends AbstractModule {
     @Singleton
     @Provides
     public BlobId.Factory generationAwareBlobIdFactory(Clock clock, PlainBlobId.Factory delegate, GenerationAwareBlobId.Configuration configuration) {
-            String property = System.getProperty("james.s3.minio.compatibility.mode");
-            boolean compatibilityModeActivated = Optional.ofNullable(property).map(Boolean::parseBoolean).orElse(false);
+        boolean compatibilityModeActivated = Optional.ofNullable(System.getProperty("james.blobstore.folder.hierarchy"))
+            .or(() -> Optional.ofNullable(System.getProperty("james.s3.minio.compatibility.mode")))
+            .map(Boolean::parseBoolean)
+            .orElse(false);
 
-            if (compatibilityModeActivated) {
-                return new MinIOGenerationAwareBlobId.Factory(clock, configuration, delegate);
-            } else {
-                return new GenerationAwareBlobId.Factory(clock, delegate, configuration);
-            }
+        if (compatibilityModeActivated) {
+            return new MinIOGenerationAwareBlobId.Factory(clock, configuration, delegate);
+        } else {
+            return new GenerationAwareBlobId.Factory(clock, delegate, configuration);
+        }
     }
 
     @Singleton

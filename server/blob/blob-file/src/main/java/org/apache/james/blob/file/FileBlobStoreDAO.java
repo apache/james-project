@@ -66,11 +66,13 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
 public class FileBlobStoreDAO implements BlobStoreDAO {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(FileBlobStoreDAO.class);
     private static final String JAMES_BLOB_METADATA_ATTRIBUTE_PREFIX = "james-blob-metadata-";
+    private static final String STAGING_PREFIX = ".james-staging-";
 
     private final File root;
-    private final  BlobId.Factory blobIdFactory;
+    private final BlobId.Factory blobIdFactory;
 
     @Inject
     public FileBlobStoreDAO(FileSystem fileSystem, BlobId.Factory blobIdFactory) throws FileNotFoundException {
@@ -80,13 +82,19 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        File bucketRoot = getBucketRoot(bucketName);
-        File blob = new File(bucketRoot, blobId.asString());
+        File blob = getBlobFile(bucketName, blobId);
         try {
             return InputStreamBlob.of(new FileInputStream(blob), readMetadata(blob.toPath()));
         } catch (FileNotFoundException e) {
             throw new ObjectNotFoundException(String.format("Cannot locate %s within %s", blobId.asString(), bucketName.asString()), e);
         }
+    }
+
+    private File getBlobFile(BucketName bucketName, BlobId blobId) {
+        File bucketRoot = getBucketRoot(bucketName);
+        File blob = new File(bucketRoot, blobId.asString());
+        Preconditions.checkArgument(!isStagingFile(blob.toPath()), "Blob name uses reserved staging prefix: %s", blobId.asString());
+        return blob;
     }
 
     private File getBucketRoot(BucketName bucketName) {
@@ -110,8 +118,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     @Override
     public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.fromCallable(() -> {
-                File bucketRoot = getBucketRoot(bucketName);
-                File blob = new File(bucketRoot, blobId.asString());
+                File blob = getBlobFile(bucketName, blobId);
                 return BytesBlob.of(FileUtils.readFileToByteArray(blob), readMetadata(blob.toPath()));
             }).onErrorResume(NoSuchFileException.class, e -> Mono.error(new ObjectNotFoundException(String.format("Cannot locate %s within %s", blobId.asString(), bucketName.asString()), e)))
             .subscribeOn(Schedulers.boundedElastic());
@@ -129,22 +136,14 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data, BlobMetadata metadata) {
         Preconditions.checkNotNull(data);
 
-        return Mono.fromRunnable(() -> {
-                File bucketRoot = getBucketRoot(bucketName);
-                File blob = new File(bucketRoot, blobId.asString());
-                save(data, blob, metadata);
-            })
+        return Mono.fromRunnable(() -> save(data, getBlobFile(bucketName, blobId), metadata))
             .subscribeOn(Schedulers.boundedElastic())
             .then();
     }
 
     public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream, BlobMetadata metadata) {
         Preconditions.checkNotNull(inputStream);
-        return Mono.fromRunnable(() -> {
-                File bucketRoot = getBucketRoot(bucketName);
-                File blob = new File(bucketRoot, blobId.asString());
-                save(inputStream, blob, metadata);
-            })
+        return Mono.fromRunnable(() -> save(inputStream, getBlobFile(bucketName, blobId), metadata))
             .subscribeOn(Schedulers.boundedElastic())
             .then()
             .retryWhen(Retry.backoff(10, Duration.ofMillis(100))
@@ -182,15 +181,18 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
         }
     }
 
+
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content, BlobMetadata metadata) {
-        return Mono.fromCallable(() -> {
+        return Mono.using(
+            () -> {
                 try {
-                    return content.read();
+                    return content.openStream();
                 } catch (IOException e) {
                     throw new ObjectStoreIOException("IOException occurred", e);
                 }
-            })
-            .flatMap(bytes -> save(bucketName, blobId, bytes, metadata));
+            },
+            is -> save(bucketName, blobId, is, metadata),
+            Throwing.consumer(InputStream::close).sneakyThrow());
     }
 
     @Override
@@ -198,9 +200,12 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
         Preconditions.checkNotNull(bucketName);
 
         return Mono.fromRunnable(Throwing.runnable(() -> {
-                File bucketRoot = getBucketRoot(bucketName);
-                File blob = new File(bucketRoot, blobId.asString());
-                FileUtils.deleteQuietly(blob);
+                File blob = getBlobFile(bucketName, blobId);
+                try {
+                    Files.deleteIfExists(blob.toPath());
+                } catch (IOException e) {
+                    throw new ObjectStoreIOException("Error deleting blob", e);
+                }
             }))
             .subscribeOn(Schedulers.boundedElastic())
             .then();
@@ -235,16 +240,18 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     @Override
     public Publisher<BlobId> listBlobs(BucketName bucketName) {
         return Mono.fromCallable(() -> {
-                File bucketRoot = getBucketRoot(bucketName);
+                File bucketRoot = new File(root, bucketName.asString());
                 Path rootPath = bucketRoot.toPath();
-                // Blob ids may contain '/' (eg. recovery sidecar keys) and are then stored in nested
+                // Blob ids may contain '/' (eg. recovery sidecar keys or hierarchy-aware blob IDs) and are then stored in nested
                 // directories, so we walk the tree and rebuild the id from the bucket-root-relative path.
                 return Files.walk(rootPath)
                     .filter(Files::isRegularFile)
+                    .filter(path -> !isStagingFile(path))
                     .map(path -> blobIdFactory.parse(toBlobId(rootPath.relativize(path))));
             })
             .flatMapMany(Flux::fromStream)
-            .subscribeOn(Schedulers.boundedElastic());
+            .subscribeOn(Schedulers.boundedElastic())
+            .onErrorResume(NoSuchFileException.class, e -> Flux.empty());
     }
 
     private String toBlobId(Path relativePath) {
@@ -311,12 +318,15 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
         return StandardCharsets.UTF_8.decode(byteBuffer).toString();
     }
 
+    private boolean isStagingFile(Path path) {
+        return path.getFileName().toString().startsWith(STAGING_PREFIX);
+    }
+
     private File createTempFile(File blob) {
+        Path parentPath = blob.getParentFile().toPath();
         try {
-            // Blob ids may contain '/' (eg. recovery sidecar keys), introducing nested directories
-            // that must exist before the temp file is created alongside the target blob.
-            Files.createDirectories(blob.getParentFile().toPath());
-            return Files.createTempFile(blob.getParentFile().toPath(), blob.getName(), ".tmp").toFile();
+            Files.createDirectories(parentPath);
+            return Files.createTempFile(parentPath, STAGING_PREFIX, "").toFile();
         } catch (IOException e) {
             throw new ObjectStoreIOException("IOException occurred", e);
         }
