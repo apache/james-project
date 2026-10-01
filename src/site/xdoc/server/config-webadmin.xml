@@ -48,10 +48,14 @@
         <dd>Specify the public key used to verify JWT tokens. Must be a url pointing to a PEM file, e.g. file://conf/jwt.public.pem.</dd>
         <dt><strong>https.enable</strong></dt>
         <dd>Use HTTPS (default: false)</dd>
+        <dt><strong>https.certificates</strong></dt>
+        <dd>Specify the path to the PEM certificates file (e.g. Let's Encrypt fullchain.pem). Optional alternative to https.keystore.</dd>
+        <dt><strong>https.privateKey</strong></dt>
+        <dd>Specify the path to the PEM private key file (e.g. Let's Encrypt privkey.pem). Required when https.certificates is used.</dd>
         <dt><strong>https.keystore</strong></dt>
         <dd>Specify a keystore file for https (default: null)</dd>
         <dt><strong>https.password</strong></dt>
-        <dd>Specify the keystore password (default: null)</dd>
+        <dd>Specify the keystore password or private key password (default: null)</dd>
         <dt><strong>https.trust.keystore</strong></dt>
         <dd>Specify a truststore file for https (default: null)</dd>
         <dt><strong>https.trust.password</strong></dt>

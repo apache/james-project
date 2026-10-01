@@ -21,6 +21,7 @@ package org.apache.james.webadmin.jettyserver;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.security.KeyStore;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
@@ -64,6 +65,7 @@ public class EmbeddedJettyServer extends VirtualThreadAware.Proxy implements Emb
 
     private ThreadPool threadPool = null;
     private boolean trustForwardHeaders = true; // true by default
+    private KeyStore keyStore;
 
     public EmbeddedJettyServer(JettyServerFactory serverFactory, boolean httpOnly, MatcherFilter matcherFilter) {
         super(serverFactory);
@@ -120,7 +122,7 @@ public class EmbeddedJettyServer extends VirtualThreadAware.Proxy implements Emb
         if (sslStores == null) {
             connector = SocketConnectorFactory.createSocketConnector(server, host, port, useHTTP2, trustForwardHeaders);
         } else {
-            connector = SocketConnectorFactory.createSecureSocketConnector(server, host, port, sslStores, useHTTP2, trustForwardHeaders);
+            connector = SocketConnectorFactory.createSecureSocketConnector(server, host, port, sslStores, keyStore, useHTTP2, trustForwardHeaders);
         }
 
         Connector[] previousConnectors = server.getConnectors();
@@ -198,6 +200,11 @@ public class EmbeddedJettyServer extends VirtualThreadAware.Proxy implements Emb
      */
     public EmbeddedJettyServer withThreadPool(ThreadPool threadPool) {
         this.threadPool = threadPool;
+        return this;
+    }
+
+    public EmbeddedJettyServer withKeyStore(KeyStore keyStore) {
+        this.keyStore = keyStore;
         return this;
     }
 }
