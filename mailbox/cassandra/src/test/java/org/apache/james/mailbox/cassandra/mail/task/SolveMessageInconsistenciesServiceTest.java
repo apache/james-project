@@ -40,8 +40,6 @@ import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BlobStoreCacheCallback;
-import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MessageUid;
@@ -60,6 +58,7 @@ import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.task.Task;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -154,7 +153,7 @@ public class SolveMessageInconsistenciesServiceTest {
         messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), blobIdFactory);
         // Only MessageV3 metadata is read: blobs are never accessed
         messageDAOV3 = new CassandraMessageDAOV3(cassandra.getConf(), cassandra.getTypesProvider(), mock(BlobStore.class),
-            mock(BlobStoreDAO.class), blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, BlobStoreCacheCallback.NOOP);
+            blobIdFactory);
         testee = new SolveMessageInconsistenciesService(imapUidDAO, messageIdDAO, messageDAOV3, CassandraConfiguration.DEFAULT_CONFIGURATION);
 
         saveContent(MESSAGE_ID_1);
@@ -163,7 +162,7 @@ public class SolveMessageInconsistenciesServiceTest {
 
     private void saveContent(CassandraMessageId messageId) {
         messageDAOV3.save(new MessageRepresentation(messageId, INTERNAL_DATE, SIZE, BODY_START_OCTET,
-                new ByteContent(new byte[0]), ImmutableList.of(), HEADER_BLOB_ID, BODY_BLOB_ID))
+                new ByteContent(new byte[0]), new PropertyBuilder().build(), ImmutableList.of(), HEADER_BLOB_ID, BODY_BLOB_ID))
             .block();
     }
 
