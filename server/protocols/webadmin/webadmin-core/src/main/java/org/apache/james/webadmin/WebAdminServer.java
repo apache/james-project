@@ -194,6 +194,8 @@ public class WebAdminServer implements Startable {
         if (configuration.isTlsEnabled()) {
             TlsConfiguration tlsConfiguration = configuration.getTlsConfiguration();
             if (tlsConfiguration.isPem()) {
+                // Spark requires non-null keystoreFile and keystorePassword to activate SSL internally.
+                // The actual TLS material is loaded directly from the in-memory KeyStore configured on EmbeddedJettyFactory.
                 service.secure(tlsConfiguration.getCertificatesFilePath(),
                     Optional.ofNullable(tlsConfiguration.getPrivateKeyPassword()).orElse(""),
                     tlsConfiguration.getTruststoreFilePath(),
