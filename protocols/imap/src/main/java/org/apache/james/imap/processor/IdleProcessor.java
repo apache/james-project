@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.inject.Inject;
@@ -90,9 +91,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         AtomicBoolean idleActive = new AtomicBoolean(true);
         AtomicBoolean lineHandlerAdded = new AtomicBoolean(false);
 
-        IdleMailboxListener idleListener = selectedMailbox != null
-            ? new IdleMailboxListener(session, safeResponder, idleReadySink, idleActive)
-            : null;
+        Optional<IdleMailboxListener> idleListener = Optional.ofNullable(selectedMailbox)
+            .map(mailbox -> new IdleMailboxListener(session, safeResponder, idleReadySink, idleActive));
 
         return Mono.fromRunnable(() -> idle(request, session, safeResponder, selectedMailbox, idleReadySink, idleActive, lineHandlerAdded, idleListener))
             .then(unsolicitedResponses(session, safeResponder, false))
@@ -106,15 +106,17 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
     private boolean cleanupIdle(ImapSession session, SelectedMailbox selectedMailbox, AtomicBoolean idleActive,
                                 AtomicBoolean lineHandlerAdded, Sinks.One<Void> idleReadySink,
-                                EventListener.ReactiveEventListener idleListener) {
+                                Optional<IdleMailboxListener> idleListener) {
         boolean cleanupOwner = idleActive.compareAndSet(true, false);
         if (cleanupOwner) {
-            if (selectedMailbox != null && idleListener != null) {
-                try {
-                    selectedMailbox.unregisterIdle(idleListener);
-                } catch (Exception e) {
-                    LOGGER.debug("Failed to unregister IDLE listener", e);
-                }
+            if (selectedMailbox != null) {
+                idleListener.ifPresent(listener -> {
+                    try {
+                        selectedMailbox.unregisterIdle(listener);
+                    } catch (Exception e) {
+                        LOGGER.debug("Failed to unregister IDLE listener", e);
+                    }
+                });
             }
             try {
                 if (session != null && lineHandlerAdded.compareAndSet(true, false)) {
@@ -130,10 +132,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
     private void idle(IdleRequest request, ImapSession session, Responder safeResponder, SelectedMailbox selectedMailbox,
                       Sinks.One<Void> idleReadySink, AtomicBoolean idleActive, AtomicBoolean lineHandlerAdded,
-                      IdleMailboxListener idleListener) {
+                      Optional<IdleMailboxListener> idleListener) {
         try {
             if (selectedMailbox != null) {
-                selectedMailbox.registerIdle(idleListener);
+                idleListener.ifPresent(selectedMailbox::registerIdle);
             } else {
                 idleReadySink.tryEmitEmpty();
             }
@@ -190,7 +192,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
     private void scheduleHeartbeat(ImapSession session, Responder safeResponder, SelectedMailbox selectedMailbox,
                                    Sinks.One<Void> idleReadySink, AtomicBoolean idleActive, AtomicBoolean lineHandlerAdded,
-                                   EventListener.ReactiveEventListener idleListener) {
+                                   Optional<IdleMailboxListener> idleListener) {
         session.schedule(new Runnable() {
             @Override
             public void run() {
