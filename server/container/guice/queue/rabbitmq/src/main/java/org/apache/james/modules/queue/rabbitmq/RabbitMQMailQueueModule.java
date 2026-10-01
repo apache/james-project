@@ -24,15 +24,15 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
 import org.apache.james.backends.rabbitmq.MonitoredDeadLetterQueue;
+import org.apache.james.backends.rabbitmq.MonitoredRabbitMQConsumers;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
-import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueue;
-import org.apache.james.queue.rabbitmq.RabbitMQMailQueueConsumerHealthCheck;
+import org.apache.james.queue.rabbitmq.RabbitMQMailQueueConsumers;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueueFactory;
 import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 
@@ -46,9 +46,11 @@ public class RabbitMQMailQueueModule extends AbstractModule {
     protected void configure() {
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(SpoolerReconnectionHandler.class);
+    }
 
-        Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding()
-            .to(RabbitMQMailQueueConsumerHealthCheck.class);
+    @ProvidesIntoSet
+    MonitoredRabbitMQConsumers mailQueueConsumers(RabbitMQMailQueueConsumers mailQueueConsumers) {
+        return mailQueueConsumers;
     }
 
     @ProvidesIntoSet

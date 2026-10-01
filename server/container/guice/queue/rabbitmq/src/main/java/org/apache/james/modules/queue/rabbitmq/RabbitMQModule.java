@@ -27,7 +27,9 @@ import jakarta.inject.Singleton;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.rabbitmq.MonitoredDeadLetterQueue;
+import org.apache.james.backends.rabbitmq.MonitoredRabbitMQConsumers;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
+import org.apache.james.backends.rabbitmq.RabbitMQConsumersHealthCheck;
 import org.apache.james.backends.rabbitmq.RabbitMQDeadLetterQueuesHealthCheck;
 import org.apache.james.backends.rabbitmq.RabbitMQHealthCheck;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
@@ -65,7 +67,9 @@ public class RabbitMQModule extends AbstractModule {
         Multibinder<HealthCheck> healthCheckMultiBinder = Multibinder.newSetBinder(binder(), HealthCheck.class);
         healthCheckMultiBinder.addBinding().to(RabbitMQHealthCheck.class);
         healthCheckMultiBinder.addBinding().to(RabbitMQDeadLetterQueuesHealthCheck.class);
+        healthCheckMultiBinder.addBinding().to(RabbitMQConsumersHealthCheck.class);
         Multibinder.newSetBinder(binder(), MonitoredDeadLetterQueue.class);
+        Multibinder.newSetBinder(binder(), MonitoredRabbitMQConsumers.class);
 
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
     }

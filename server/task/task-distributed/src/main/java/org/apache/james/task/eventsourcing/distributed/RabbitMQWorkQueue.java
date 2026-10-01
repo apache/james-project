@@ -74,7 +74,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
         .orElse(1);
 
     static final String EXCHANGE_NAME = "taskManagerWorkQueueExchange";
-    static final String QUEUE_NAME = "taskManagerWorkQueue";
+    public static final String QUEUE_NAME = "taskManagerWorkQueue";
     static final String ROUTING_KEY = "taskManagerWorkQueueRoutingKey";
 
     static final String CANCEL_REQUESTS_EXCHANGE_NAME = "taskManagerCancelRequestsExchange";
