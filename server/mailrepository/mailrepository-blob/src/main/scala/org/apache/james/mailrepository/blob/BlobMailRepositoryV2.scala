@@ -229,21 +229,28 @@ class BlobMailRepositoryV2(val mailMetaDataBlobStore: BlobStore,
 
   @throws[MessagingException]
   override def removeAll(): Unit = {
+    removeAll(_ => ())
+  }
+
+  override def removeAll(progressCallback: java.util.function.Consumer[MailKey]): Unit = {
     Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName, metadataPrefix))
-      .flatMap(blobId => this.remove(MailPartsId(blobId)))
-      .blockLast()
+      .flatMap(blobId => this.remove(MailPartsId(blobId)).`then`(SMono.just(blobId)))
+      .map[MailKey](blobId => new MailKey(blobId.asString))
+      .doOnNext(progressCallback)
+      .then()
+      .block()
   }
 
   /**
-   * Exposes the MIME parts ids referenced by every mail currently stored in
-   * this repository, so that [[BlobMailRepositoryV2BlobReferenceSource]] can
-   * report them to the blob store garbage collector as still-referenced.
+   * Exposes the blob ids referenced by every mail currently stored in
+   * this repository (metadata blob + header and body MIME blobs), so that
+   * [[BlobMailRepositoryV2BlobReferenceSource]] can report them to the blob
+   * store garbage collector as still-referenced.
    */
-  private[blob] def listReferencedMimeParts: Flux[MimeMessagePartsId] =
+  private[blob] def listReferencedBlobs: Flux[BlobId] =
     Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName, metadataPrefix))
       .flatMap(metadataBlobId => Flux.from(mailMetadataStore.read(MailPartsId(metadataBlobId)))
-        .map { case (_, mimePartsId) => mimePartsId }
-        .onErrorResume(_ => Flux.empty()))
+        .flatMapIterable(tuple => java.util.List.of(metadataBlobId, tuple._2.getHeaderBlobId, tuple._2.getBodyBlobId)))
 
   private val mailMetadataStore = new Store.Impl[(Mail, MimeMessagePartsId), BlobMailRepositoryV2.MailPartsId](
     new MailPartsId.Factory,

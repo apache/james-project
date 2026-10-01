@@ -19,6 +19,9 @@
 
 package org.apache.james.mailrepository.blob;
 
+import java.time.Instant;
+
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
@@ -28,26 +31,28 @@ import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.Protocol;
+import org.apache.james.server.blob.deduplication.GenerationAwareBlobId;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * Contract test for {@link BlobMailRepositoryV2}.
- *
- * Exercises {@link MailRepositoryContract} behaviour for V2.
- */
-class BlobMailRepositoryV2Test implements MailRepositoryContract {
+class GenerationAwareBlobMailRepositoryV2Test implements MailRepositoryContract {
+
+    private static final Instant NOW = Instant.parse("2021-08-19T10:15:30.00Z");
 
     private MailRepository blobMailRepositoryV2;
-    private PlainBlobId.Factory blobIdFactory;
+    private BlobId.Factory blobIdFactory;
     private MemoryBlobStoreDAO blobStore;
     private MimeMessageStore.Factory mimeMessageStoreFactory;
     private BlobMailRepositoryV2Factory blobMailRepositoryV2Factory;
 
     @BeforeEach
     void setup() {
-        blobIdFactory = new PlainBlobId.Factory();
+        blobIdFactory = new GenerationAwareBlobId.Factory(
+            new UpdatableTickingClock(NOW),
+            new PlainBlobId.Factory(),
+            GenerationAwareBlobId.Configuration.DEFAULT);
         blobStore = new MemoryBlobStoreDAO();
         var mimeMessageBlobStore = MemoryBlobStoreFactory.builder()
                 .blobIdFactory(blobIdFactory)

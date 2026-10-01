@@ -64,10 +64,5 @@ class BlobMailRepositoryV2BlobReferenceSource @Inject()(mailRepositoryStore: Mai
 
   override def listReferencedBlobs(): Flux[BlobId] =
     Flux.fromIterable(blobV2Repositories.iterator.to(Iterable).asJava)
-      .flatMap(repository => repository.listReferencedMimeParts
-        .onErrorResume(e => {
-          LOGGER.warn("Failed listing referenced MIME parts for a BlobMailRepositoryV2 instance", e)
-          Flux.empty()
-        }))
-      .flatMapIterable(mimePartsId => java.util.List.of(mimePartsId.getHeaderBlobId, mimePartsId.getBodyBlobId))
+      .flatMap(repository => repository.listReferencedBlobs)
 }
