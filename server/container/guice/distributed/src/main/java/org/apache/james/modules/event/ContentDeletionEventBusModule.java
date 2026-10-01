@@ -26,9 +26,9 @@ import java.util.Set;
 import jakarta.inject.Named;
 
 import org.apache.james.backends.rabbitmq.MonitoredDeadLetterQueue;
+import org.apache.james.backends.rabbitmq.MonitoredRabbitMQConsumers;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
-import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
@@ -36,8 +36,8 @@ import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.GroupRegistrationHandler;
 import org.apache.james.events.KeyReconnectionHandler;
-import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
 import org.apache.james.events.RabbitMQEventBus;
+import org.apache.james.events.RabbitMQEventBusConsumers;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
 import org.apache.james.jmap.change.Factory;
@@ -85,10 +85,9 @@ public class ContentDeletionEventBusModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    HealthCheck healthCheck(@Named(CONTENT_DELETION) RabbitMQEventBus eventBus,
-                            SimpleConnectionPool connectionPool) {
-        return new RabbitEventBusConsumerHealthCheck(eventBus, CONTENT_DELETION_NAMING_STRATEGY, connectionPool,
-            GroupRegistrationHandler.GROUP);
+    MonitoredRabbitMQConsumers eventBusConsumers(@Named(CONTENT_DELETION) RabbitMQEventBus eventBus,
+                                                 SimpleConnectionPool connectionPool) {
+        return new RabbitMQEventBusConsumers(eventBus, CONTENT_DELETION_NAMING_STRATEGY, connectionPool, GroupRegistrationHandler.GROUP);
     }
 
     @ProvidesIntoSet

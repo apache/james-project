@@ -28,8 +28,8 @@ import jakarta.inject.Singleton;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.rabbitmq.MonitoredRabbitMQConsumers;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
-import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.modules.server.HostnameModule;
 import org.apache.james.modules.server.TaskSerializationModule;
 import org.apache.james.task.TaskManager;
@@ -40,7 +40,6 @@ import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionModule;
 import org.apache.james.task.eventsourcing.distributed.CancelRequestQueueName;
-import org.apache.james.task.eventsourcing.distributed.DistributedTaskManagerHealthCheck;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQTerminationSubscriber;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueueConfiguration;
@@ -53,11 +52,14 @@ import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
+
+import reactor.core.publisher.Mono;
 
 public class DistributedTaskManagerModule extends AbstractModule {
 
@@ -83,10 +85,12 @@ public class DistributedTaskManagerModule extends AbstractModule {
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(RabbitMQWorkQueueReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(TerminationReconnectionHandler.class);
+    }
 
-        Multibinder.newSetBinder(binder(), HealthCheck.class)
-            .addBinding()
-            .to(DistributedTaskManagerHealthCheck.class);
+    @ProvidesIntoSet
+    MonitoredRabbitMQConsumers taskManagerConsumers(EventSourcingTaskManager taskManager, SimpleConnectionPool connectionPool) {
+        return MonitoredRabbitMQConsumers.of("task manager", connectionPool, () -> ImmutableList.of(RabbitMQWorkQueue.QUEUE_NAME),
+            connection -> Mono.fromRunnable(taskManager::restart));
     }
 
     @Provides

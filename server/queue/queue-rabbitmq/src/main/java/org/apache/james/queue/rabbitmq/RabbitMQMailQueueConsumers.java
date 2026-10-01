@@ -19,66 +19,60 @@
 
 package org.apache.james.queue.rabbitmq;
 
+import java.util.List;
 import java.util.Set;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.backends.rabbitmq.MonitoredRabbitMQConsumers;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
-import org.apache.james.core.healthcheck.ComponentName;
-import org.apache.james.core.healthcheck.HealthCheck;
-import org.apache.james.core.healthcheck.Result;
+import org.reactivestreams.Publisher;
 
-import com.github.fge.lambdas.Throwing;
-import com.rabbitmq.client.Channel;
+import com.google.common.collect.ImmutableList;
 import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
-public class RabbitMQMailQueueConsumerHealthCheck implements HealthCheck {
-    public static final ComponentName COMPONENT_NAME = new ComponentName("RabbitMQMailQueueConsumersHealthCheck");
-    public static final ComponentName COMPONENT = new ComponentName("MailQueueConsumers");
-
+/**
+ * The consumers of the mail queues. Restarting them runs every {@link SimpleConnectionPool.ReconnectionHandler}.
+ */
+public class RabbitMQMailQueueConsumers implements MonitoredRabbitMQConsumers {
     private final RabbitMQMailQueueFactory queueFactory;
     private final Set<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlers;
     private final SimpleConnectionPool connectionPool;
 
     @Inject
-    public RabbitMQMailQueueConsumerHealthCheck(RabbitMQMailQueueFactory queueFactory, Set<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlers, SimpleConnectionPool connectionPool) {
+    public RabbitMQMailQueueConsumers(RabbitMQMailQueueFactory queueFactory, Set<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlers,
+                                      SimpleConnectionPool connectionPool) {
         this.queueFactory = queueFactory;
         this.reconnectionHandlers = reconnectionHandlers;
         this.connectionPool = connectionPool;
     }
 
     @Override
-    public ComponentName componentName() {
-        return COMPONENT_NAME;
+    public String name() {
+        return "mail queues";
     }
 
     @Override
-    public Mono<Result> check() {
-        return connectionPool.getResilientConnection()
-            .flatMap(connection -> Mono.using(connection::createChannel,
-                channel -> check(connection, channel),
-                Throwing.consumer(Channel::close)))
-            .subscribeOn(Schedulers.boundedElastic());
+    public SimpleConnectionPool connectionPool() {
+        return connectionPool;
     }
 
-    private Mono<Result> check(Connection connection, Channel channel) {
-        boolean queueWithoutConsumers = queueFactory.listCreatedMailQueues()
+    @Override
+    public List<String> queues() {
+        return queueFactory.listCreatedMailQueues()
             .stream()
             .map(org.apache.james.queue.api.MailQueueName::asString)
             .map(MailQueueName::fromString)
-            .map(m -> m.toWorkQueueName().asString())
-            .anyMatch(Throwing.predicate(queue -> channel.consumerCount(queue) == 0));
+            .map(mailQueueName -> mailQueueName.toWorkQueueName().asString())
+            .collect(ImmutableList.toImmutableList());
+    }
 
-        if (queueWithoutConsumers) {
-            return Flux.fromIterable(reconnectionHandlers)
-                .concatMap(reconnectionHandler -> reconnectionHandler.handleReconnection(connection))
-                .then(Mono.just(Result.degraded(COMPONENT, "No consumers")));
-        } else {
-            return Mono.just(Result.healthy(COMPONENT));
-        }
+    @Override
+    public Publisher<Void> restart(Connection connection) {
+        return Flux.fromIterable(reconnectionHandlers)
+            .concatMap(reconnectionHandler -> reconnectionHandler.handleReconnection(connection))
+            .then();
     }
 }

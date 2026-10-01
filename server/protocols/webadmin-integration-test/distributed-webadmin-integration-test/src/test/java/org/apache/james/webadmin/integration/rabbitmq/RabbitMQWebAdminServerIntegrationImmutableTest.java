@@ -43,6 +43,7 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.rabbitmq.MonitoredDeadLetterQueue;
+import org.apache.james.backends.rabbitmq.MonitoredRabbitMQConsumers;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
@@ -55,6 +56,8 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.inject.multibindings.Multibinder;
 
@@ -62,15 +65,23 @@ import com.google.inject.multibindings.Multibinder;
 class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerIntegrationImmutableTest {
     public static class MonitoredRabbitMQProbe implements GuiceProbe {
         private final Set<MonitoredDeadLetterQueue> deadLetterQueues;
+        private final Set<MonitoredRabbitMQConsumers> consumers;
 
         @Inject
-        public MonitoredRabbitMQProbe(Set<MonitoredDeadLetterQueue> deadLetterQueues) {
+        public MonitoredRabbitMQProbe(Set<MonitoredDeadLetterQueue> deadLetterQueues, Set<MonitoredRabbitMQConsumers> consumers) {
             this.deadLetterQueues = deadLetterQueues;
+            this.consumers = consumers;
         }
 
         List<String> deadLetterQueues() {
             return deadLetterQueues.stream()
                 .map(MonitoredDeadLetterQueue::queue)
+                .toList();
+        }
+
+        List<String> consumerNames() {
+            return consumers.stream()
+                .map(MonitoredRabbitMQConsumers::name)
                 .toList();
         }
     }
@@ -162,9 +173,8 @@ class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerInteg
         assertThat(listComponentNames).containsOnly("Guice application lifecycle", "EmptyErrorMailRepository",
             "RabbitMQ backend", "RabbitMQDeadLetterQueues", "MailReceptionCheck",
             "Cassandra backend", "EventDeadLettersHealthCheck", "MessageFastViewProjection",
-            "RabbitMQMailQueue BrowseStart", "OpenSearch Backend", "ObjectStorage", "DistributedTaskManagerConsumers",
-            "EventbusConsumers-jmapEvent", "MailQueueConsumers", "EventbusConsumers-mailboxEvent",
-            "IMAPHealthCheck", "EventbusConsumers-contentDeletionEvent");
+            "RabbitMQMailQueue BrowseStart", "OpenSearch Backend", "ObjectStorage", "RabbitMQConsumers",
+            "IMAPHealthCheck");
     }
 
     @Test
@@ -175,9 +185,16 @@ class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerInteg
     }
 
     @Test
-    void rabbitMQDeadLetterQueuesShouldBeHealthy() {
+    void everyRabbitMQConsumerShouldBeMonitored(GuiceJamesServer server) {
+        assertThat(server.getProbe(MonitoredRabbitMQProbe.class).consumerNames())
+            .containsExactlyInAnyOrder("mailboxEvent event bus", "jmapEvent event bus", "contentDeletionEvent event bus", "task manager", "mail queues");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"RabbitMQDeadLetterQueues", "RabbitMQConsumers"})
+    void rabbitMQHealthChecksShouldBeHealthy(String componentName) {
         when()
-            .get(HealthCheckRoutes.HEALTHCHECK + "/checks/RabbitMQDeadLetterQueues")
+            .get(HealthCheckRoutes.HEALTHCHECK + "/checks/" + componentName)
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("status", is("healthy"));

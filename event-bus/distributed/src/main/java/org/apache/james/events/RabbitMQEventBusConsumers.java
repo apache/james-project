@@ -19,31 +19,30 @@
 
 package org.apache.james.events;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.stream.Stream;
 
+import org.apache.james.backends.rabbitmq.MonitoredRabbitMQConsumers;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
-import org.apache.james.core.healthcheck.ComponentName;
-import org.apache.james.core.healthcheck.HealthCheck;
-import org.apache.james.core.healthcheck.Result;
-import org.apache.james.util.ReactorUtils;
+import org.reactivestreams.Publisher;
 
-import com.github.fge.lambdas.Throwing;
-import com.rabbitmq.client.Channel;
+import com.google.common.collect.ImmutableList;
+import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Mono;
 
-public class RabbitEventBusConsumerHealthCheck implements HealthCheck {
-    public static final String COMPONENT = "EventbusConsumers";
-
+/**
+ * The group consumers of a RabbitMQ event bus, restarted with the event bus.
+ */
+public class RabbitMQEventBusConsumers implements MonitoredRabbitMQConsumers {
     private final EventBus eventBus;
     private final NamingStrategy namingStrategy;
     private final SimpleConnectionPool connectionPool;
     private final Group groupRegistrationHandlerGroup;
 
-    public RabbitEventBusConsumerHealthCheck(EventBus eventBus, NamingStrategy namingStrategy,
-                                             SimpleConnectionPool connectionPool,
-                                             Group groupRegistrationHandlerGroup) {
+    public RabbitMQEventBusConsumers(EventBus eventBus, NamingStrategy namingStrategy,
+                                     SimpleConnectionPool connectionPool,
+                                     Group groupRegistrationHandlerGroup) {
         this.eventBus = eventBus;
         this.namingStrategy = namingStrategy;
         this.connectionPool = connectionPool;
@@ -51,36 +50,27 @@ public class RabbitEventBusConsumerHealthCheck implements HealthCheck {
     }
 
     @Override
-    public ComponentName componentName() {
-        return new ComponentName(COMPONENT + "-" + namingStrategy.getEventBusName().value());
+    public String name() {
+        return namingStrategy.getEventBusName().value() + " event bus";
     }
 
     @Override
-    public Mono<Result> check() {
-        return connectionPool.getResilientConnection()
-            .map(Throwing.function(connection -> {
-                try (Channel channel = connection.createChannel()) {
-                    return check(channel);
-                }
-            })).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+    public SimpleConnectionPool connectionPool() {
+        return connectionPool;
     }
 
-    private Result check(Channel channel) {
-        Stream<Group> groups = Stream.concat(
-            eventBus.listRegisteredGroups().stream(),
-            Stream.of(groupRegistrationHandlerGroup));
-
-        Optional<String> queueWithoutConsumers = groups
+    @Override
+    public List<String> queues() {
+        return Stream.concat(
+                eventBus.listRegisteredGroups().stream(),
+                Stream.of(groupRegistrationHandlerGroup))
             .map(namingStrategy::workQueue)
             .map(GroupRegistration.WorkQueueName::asString)
-            .filter(Throwing.predicate(queue -> channel.consumerCount(queue) == 0))
-            .findAny();
+            .collect(ImmutableList.toImmutableList());
+    }
 
-        if (queueWithoutConsumers.isPresent()) {
-            eventBus.restart();
-            return Result.degraded(componentName(), "No consumers on " + queueWithoutConsumers.get());
-        } else {
-            return Result.healthy(componentName());
-        }
+    @Override
+    public Publisher<Void> restart(Connection connection) {
+        return Mono.fromRunnable(eventBus::restart);
     }
 }
