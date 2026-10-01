@@ -29,16 +29,23 @@ import java.util.Set;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession;
+import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
+import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.DsnParameters.RecipientDsnParameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class DSNRcptParameterHook implements RcptHook {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DSNRcptParameterHook.class);
+
     public static class Builder {
         private final ImmutableMap.Builder<MailAddress, RecipientDsnParameters> entries;
 
@@ -59,6 +66,14 @@ public class DSNRcptParameterHook implements RcptHook {
     public static final ProtocolSession.AttachmentKey<Builder> DSN_RCPT_PARAMETERS =
         ProtocolSession.AttachmentKey.of("DSN_RCPT_PARAMETERS", Builder.class);
 
+    private static HookResult syntaxError(String description) {
+        return HookResult.builder()
+            .hookReturnCode(HookReturnCode.deny())
+            .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
+            .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " " + description)
+            .build();
+    }
+
     @Override
     public Set<String> supportedParameters() {
         return ImmutableSet.of(ORCPT_PARAMETER, NOTIFY_PARAMETER);
@@ -66,11 +81,16 @@ public class DSNRcptParameterHook implements RcptHook {
 
     @Override
     public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt, Map<String, String> parameters) {
-        Builder builder = session.getAttachment(DSN_RCPT_PARAMETERS, Transaction)
-            .orElse(new Builder());
-        DsnParameters.RecipientDsnParameters.fromSMTPArgLine(parameters)
-            .ifPresent(rcptParameters ->
-                session.setAttachment(DSN_RCPT_PARAMETERS, builder.add(rcpt, rcptParameters), Transaction));
-        return HookResult.DECLINED;
+        try {
+            Builder builder = session.getAttachment(DSN_RCPT_PARAMETERS, Transaction)
+                .orElse(new Builder());
+            DsnParameters.RecipientDsnParameters.fromSMTPArgLine(parameters)
+                .ifPresent(rcptParameters ->
+                    session.setAttachment(DSN_RCPT_PARAMETERS, builder.add(rcpt, rcptParameters), Transaction));
+            return HookResult.DECLINED;
+        } catch (IllegalArgumentException e) {
+            LOGGER.debug("Invalid DSN RCPT parameters {} for <{}>", parameters, rcpt.asString(), e);
+            return syntaxError("Invalid NOTIFY or ORCPT parameter value");
+        }
     }
 }

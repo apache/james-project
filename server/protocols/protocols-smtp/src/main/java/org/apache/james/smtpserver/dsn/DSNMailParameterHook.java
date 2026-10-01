@@ -26,8 +26,11 @@ import static org.apache.mailet.DsnParameters.RET_PARAMETER;
 import java.util.Optional;
 
 import org.apache.james.protocols.api.ProtocolSession;
+import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
+import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
 import org.apache.mailet.DsnParameters;
 import org.slf4j.Logger;
@@ -38,6 +41,14 @@ public class DSNMailParameterHook implements MailParametersHook {
 
     public static final ProtocolSession.AttachmentKey<DsnParameters.Ret> DSN_RET = ProtocolSession.AttachmentKey.of("DSN_RET", DsnParameters.Ret.class);
     public static final ProtocolSession.AttachmentKey<DsnParameters.EnvId> DSN_ENVID = ProtocolSession.AttachmentKey.of("DSN_ENVID", DsnParameters.EnvId.class);
+
+    private static HookResult syntaxError(String description) {
+        return HookResult.builder()
+            .hookReturnCode(HookReturnCode.deny())
+            .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
+            .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " " + description)
+            .build();
+    }
 
     @Override
     public HookResult doMailParameter(SMTPSession session, String paramName, String paramValue) {
@@ -50,8 +61,12 @@ public class DSNMailParameterHook implements MailParametersHook {
                 .ifPresent(ret -> session.setAttachment(DSN_RET, ret, Transaction));
         }
         if (paramName.equals(ENVID_PARAMETER)) {
-            DsnParameters.EnvId envId = DsnParameters.EnvId.of(paramValue);
-            session.setAttachment(DSN_ENVID, envId, Transaction);
+            try {
+                session.setAttachment(DSN_ENVID, DsnParameters.EnvId.of(paramValue), Transaction);
+            } catch (IllegalArgumentException e) {
+                LOGGER.debug("Invalid DSN ENVID value: {}", paramValue, e);
+                return syntaxError("Invalid ENVID parameter value");
+            }
         }
         return HookResult.DECLINED;
     }
