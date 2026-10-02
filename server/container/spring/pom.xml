@@ -128,15 +128,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-spring</artifactId>
-            <version>${activemq.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
+            <!-- Artemis Jakarta Server replaces legacy activemq-spring for embedded broker -->
+            <groupId>org.apache.artemis</groupId>
+            <artifactId>artemis-jakarta-server</artifactId>
+            <version>${activmq-artemis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
