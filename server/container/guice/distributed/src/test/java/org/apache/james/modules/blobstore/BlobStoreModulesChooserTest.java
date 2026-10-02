@@ -21,9 +21,23 @@ package org.apache.james.modules.blobstore;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.reflect.Proxy;
+import java.time.Clock;
+import java.util.List;
+import java.util.Optional;
+
 import org.apache.james.blob.aes.CryptoConfig;
+import org.apache.james.blob.api.BlobIdUpdater;
+import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.compaction.BlobCompactionAlgorithm;
 import org.apache.james.blob.zstd.CompressionConfiguration;
 import org.junit.jupiter.api.Test;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 
 class BlobStoreModulesChooserTest {
 
@@ -120,5 +134,197 @@ class BlobStoreModulesChooserTest {
                 .build())))
             .filteredOn(module -> module instanceof BlobStoreModulesChooser.CompressionModule)
             .hasSize(1);
+    }
+
+    @Test
+    void provideBlobStoreShouldReturnBlobCompactionModule() {
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+            .s3()
+            .disableCache()
+            .deduplication()
+            .noCryptoConfig()))
+            .filteredOn(module -> module instanceof BlobCompactionModule)
+            .hasSize(1);
+    }
+
+    @Test
+    void provideBlobStoreShouldReturnChunkedBlobStoreModuleWhenS3() {
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+            .s3()
+            .disableCache()
+            .deduplication()
+            .noCryptoConfig()))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.ChunkedBlobStoreModule)
+            .hasSize(1);
+    }
+
+    @Test
+    void provideBlobStoreShouldReturnNoChunkedBlobStoreModuleWhenNotS3() {
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+            .cassandra()
+            .disableCache()
+            .deduplication()
+            .noCryptoConfig()))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.NoChunkedBlobStoreModule)
+            .hasSize(1);
+    }
+
+    @Test
+    void optionalBlobCompactionAlgorithmShouldReturnEmptyWhenCryptoConfigured() {
+        BlobStoreConfiguration config = BlobStoreConfiguration.builder()
+            .cassandra()
+            .disableCache()
+            .passthrough()
+            .cryptoConfig(CryptoConfig.builder()
+                .password("myPass".toCharArray())
+                .salt("73616c7479")
+                .build());
+
+        Injector injector = Guice.createInjector(
+            binder -> {
+                binder.bind(BlobStoreConfiguration.class).toInstance(config);
+                binder.bind(Clock.class).toInstance(Clock.systemUTC());
+                binder.bind(BlobStoreDAO.class).toProvider(() -> null);
+                binder.bind(BlobStoreDAO.class).annotatedWith(Names.named(BlobStoreModulesChooser.RAW)).toProvider(() -> null);
+                binder.bind(BlobIdUpdater.Factory.class).toProvider(() -> null);
+            },
+            new BlobCompactionModule()
+        );
+
+        Optional<BlobCompactionAlgorithm> algorithm = injector.getInstance(
+            Key.get(new TypeLiteral<Optional<BlobCompactionAlgorithm>>() {}));
+        assertThat(algorithm).isEmpty();
+    }
+
+    @Test
+    void optionalBlobCompactionAlgorithmShouldReturnEmptyWhenCompressionConfigured() {
+        BlobStoreConfiguration config = BlobStoreConfiguration.builder()
+            .cassandra()
+            .disableCache()
+            .passthrough()
+            .noCryptoConfig()
+            .compressionConfig(CompressionConfiguration.builder()
+                .enabled(true)
+                .build());
+
+        Injector injector = Guice.createInjector(
+            binder -> {
+                binder.bind(BlobStoreConfiguration.class).toInstance(config);
+                binder.bind(Clock.class).toInstance(Clock.systemUTC());
+                binder.bind(BlobStoreDAO.class).toProvider(() -> null);
+                binder.bind(BlobStoreDAO.class).annotatedWith(Names.named(BlobStoreModulesChooser.RAW)).toProvider(() -> null);
+                binder.bind(BlobIdUpdater.Factory.class).toProvider(() -> null);
+            },
+            new BlobCompactionModule()
+        );
+
+        Optional<BlobCompactionAlgorithm> algorithm = injector.getInstance(
+            Key.get(new TypeLiteral<Optional<BlobCompactionAlgorithm>>() {}));
+        assertThat(algorithm).isEmpty();
+    }
+
+    @Test
+    void optionalBlobCompactionAlgorithmShouldReturnEmptyInNonCassandraEnvironmentWithoutMappingDependencies() {
+        BlobStoreConfiguration config = BlobStoreConfiguration.builder()
+            .postgres()
+            .disableCache()
+            .passthrough()
+            .noCryptoConfig();
+
+        Injector injector = Guice.createInjector(
+            binder -> {
+                binder.bind(BlobStoreConfiguration.class).toInstance(config);
+                binder.bind(Clock.class).toInstance(Clock.systemUTC());
+                binder.bind(BlobStoreDAO.class).toProvider(() -> null);
+                binder.bind(BlobStoreDAO.class).annotatedWith(Names.named(BlobStoreModulesChooser.RAW)).toProvider(() -> null);
+            },
+            new BlobCompactionModule()
+        );
+
+        Optional<BlobCompactionAlgorithm> algorithm = injector.getInstance(
+            Key.get(new TypeLiteral<Optional<BlobCompactionAlgorithm>>() {}));
+        assertThat(algorithm).isEmpty();
+    }
+
+    @Test
+    void optionalBlobCompactionAlgorithmShouldReturnEmptyForNonS3Implementations() {
+        for (BlobStoreConfiguration.BlobStoreImplName impl : List.of(
+            BlobStoreConfiguration.BlobStoreImplName.CASSANDRA,
+            BlobStoreConfiguration.BlobStoreImplName.FILE,
+            BlobStoreConfiguration.BlobStoreImplName.POSTGRES)) {
+
+            BlobStoreConfiguration config = BlobStoreConfiguration.builder()
+                .implementation(impl)
+                .disableCache()
+                .passthrough()
+                .noCryptoConfig();
+
+            Injector injector = Guice.createInjector(
+                binder -> {
+                    binder.bind(BlobStoreConfiguration.class).toInstance(config);
+                    binder.bind(Clock.class).toInstance(Clock.systemUTC());
+                    binder.bind(BlobStoreDAO.class).toInstance(createDummyBlobStoreDAO());
+                    binder.bind(BlobStoreDAO.class).annotatedWith(Names.named(BlobStoreModulesChooser.RAW)).toInstance(createDummyBlobStoreDAO());
+                    binder.bind(BlobIdUpdater.Factory.class).toInstance(createDummyBlobIdUpdaterFactory());
+                },
+                new BlobCompactionModule()
+            );
+
+            Optional<BlobCompactionAlgorithm> algorithm = injector.getInstance(
+                Key.get(new TypeLiteral<Optional<BlobCompactionAlgorithm>>() {}));
+            assertThat(algorithm).isEmpty();
+        }
+    }
+
+    @Test
+    void optionalBlobCompactionAlgorithmShouldReturnEmptyWhenBlobStoreConfigurationIsMissing() {
+        Injector injector = Guice.createInjector(
+            binder -> {
+                binder.bind(Clock.class).toInstance(Clock.systemUTC());
+                binder.bind(BlobStoreDAO.class).toInstance(createDummyBlobStoreDAO());
+                binder.bind(BlobStoreDAO.class).annotatedWith(Names.named(BlobStoreModulesChooser.RAW)).toInstance(createDummyBlobStoreDAO());
+                binder.bind(BlobIdUpdater.Factory.class).toInstance(createDummyBlobIdUpdaterFactory());
+            },
+            new BlobCompactionModule()
+        );
+
+        Optional<BlobCompactionAlgorithm> algorithm = injector.getInstance(
+            Key.get(new TypeLiteral<Optional<BlobCompactionAlgorithm>>() {}));
+        assertThat(algorithm).isEmpty();
+    }
+
+    @Test
+    void optionalBlobCompactionAlgorithmShouldReturnPresentForS3WithoutEncryptionOrCompression() {
+        BlobStoreConfiguration config = BlobStoreConfiguration.builder()
+            .s3()
+            .disableCache()
+            .passthrough()
+            .noCryptoConfig();
+
+        Injector injector = Guice.createInjector(
+            binder -> {
+                binder.bind(BlobStoreConfiguration.class).toInstance(config);
+                binder.bind(Clock.class).toInstance(Clock.systemUTC());
+                binder.bind(BlobStoreDAO.class).toInstance(createDummyBlobStoreDAO());
+                binder.bind(BlobStoreDAO.class).annotatedWith(Names.named(BlobStoreModulesChooser.RAW)).toInstance(createDummyBlobStoreDAO());
+                binder.bind(BlobIdUpdater.Factory.class).toInstance(createDummyBlobIdUpdaterFactory());
+            },
+            new BlobCompactionModule()
+        );
+
+        Optional<BlobCompactionAlgorithm> algorithm = injector.getInstance(
+            Key.get(new TypeLiteral<Optional<BlobCompactionAlgorithm>>() {}));
+        assertThat(algorithm).isPresent();
+    }
+
+    private BlobStoreDAO createDummyBlobStoreDAO() {
+        return (BlobStoreDAO) Proxy.newProxyInstance(
+            BlobStoreDAO.class.getClassLoader(),
+            new Class<?>[]{BlobStoreDAO.class},
+            (proxy, method, args) -> null);
+    }
+
+    private BlobIdUpdater.Factory createDummyBlobIdUpdaterFactory() {
+        return (predicate, observer) -> reactor.core.publisher.Mono.empty();
     }
 }
