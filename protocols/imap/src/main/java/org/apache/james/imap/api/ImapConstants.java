@@ -104,7 +104,9 @@ public interface ImapConstants {
     Capability SUPPORTS_UIDPLUS = Capability.of("UIDPLUS");
 
     Capability SUPPORTS_ANNOTATION = Capability.of("METADATA");
-    
+
+    Capability SUPPORTS_UTF8_ACCEPT = Capability.of("UTF8=ACCEPT");
+
     String INBOX_NAME = "INBOX";
 
     String MIME_TYPE_TEXT = "TEXT";
