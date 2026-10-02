@@ -36,11 +36,9 @@ public class RedisExtension implements GuiceModuleTestExtension {
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
         DOCKER_REDIS_SINGLETON.start();
-    }
-
-    @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        DOCKER_REDIS_SINGLETON.stop();
+        if (DOCKER_REDIS_SINGLETON.isPaused()) {
+            DOCKER_REDIS_SINGLETON.unPause();
+        }
     }
 
     @Override
