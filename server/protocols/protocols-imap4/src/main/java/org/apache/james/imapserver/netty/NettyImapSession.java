@@ -187,6 +187,11 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     @Override
+    public boolean isConnected() {
+        return channel.isActive();
+    }
+
+    @Override
     public ImapSessionState getState() {
         return this.state;
     }

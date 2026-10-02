@@ -27,6 +27,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -226,5 +228,114 @@ class IMAPServerIdleTest extends AbstractIMAPServerTest {
         Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
             assertThat(readStringUntil(clientConnection, s -> s.contains("* 1 EXISTS")))
                 .isNotNull());
+    }
+
+    @Test
+    void invalidContinuationShouldEndIdleAndAllowSubsequentCommands() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+
+        clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+        // Issue IDLE followed by an invalid continuation command
+        clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\nINVALID\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        // Expect tagged BAD response for IDLE
+        Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a3 BAD IDLE failed.")))
+                .isNotNull());
+
+        // Subsequent command must succeed normally, proving line handler was cleanly popped
+        clientConnection.write(ByteBuffer.wrap(("a4 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
+        Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a4 OK NOOP completed.")))
+                .isNotNull());
+    }
+
+    @Test
+    void midIdleLogoutShouldRejectContinuationAndAllowSubsequentLogout() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+
+        clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+        clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("+ Idling"));
+
+        // Sending unexpected continuation during IDLE
+        clientConnection.write(ByteBuffer.wrap(("LOGOUT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        // Server should reject IDLE with BAD
+        Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a3 BAD IDLE failed. Continuation for IMAP IDLE was not understood. Expected 'DONE', got 'LOGOUT'.")))
+                .isNotNull());
+
+        // Subsequent tagged LOGOUT command must succeed normally
+        clientConnection.write(ByteBuffer.wrap(("a4 LOGOUT\r\n").getBytes(StandardCharsets.UTF_8)));
+        Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a4 OK LOGOUT completed.")))
+                .isNotNull());
+    }
+
+    @Test
+    void disconnectDuringIdleShouldCleanlyDecrementConnections() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+
+        clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+        clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("+ Idling"));
+
+        // Abruptly sever connection
+        clientConnection.close();
+
+        // Verify connection metric decrements back to 0
+        Awaitility.await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
+            assertThat(metricFactory.countFor("imapConnections")).isZero());
+    }
+
+    @Test
+    void mailboxEventAfterDoneShouldNotPushUnsolicitedResponses() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+
+        clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+        // Enter IDLE
+        clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("+ Idling"));
+
+        // Complete IDLE cleanly via DONE
+        clientConnection.write(ByteBuffer.wrap(("DONE\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed."));
+
+        // Append message after IDLE is ended
+        inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
+
+        // Give the now-unregistered IDLE listener a chance to leak an async push before
+        // we issue anything else. We deliberately do NOT read the socket here: a competing
+        // reader on the same connection could race with and steal bytes from the NOOP
+        // response read below, hanging the test. The "exactly once" check on EXISTS after
+        // NOOP is what actually detects a leaked duplicate push.
+        Thread.sleep(200);
+
+        // Per RFC 3501 §6.1.2, NOOP legitimately reports pending mailbox state changes as
+        // untagged data in its own response - the EXISTS below is expected, not a leak.
+        clientConnection.write(ByteBuffer.wrap(("a4 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
+        List<String> response = readStringUntil(clientConnection, s -> s.contains("a4 OK NOOP completed."));
+        String joinedResponse = String.join("", response);
+        assertThat(joinedResponse).contains("a4 OK NOOP completed.");
+        assertThat(countOccurrences(joinedResponse, "EXISTS"))
+            .describedAs("EXISTS should be reported exactly once by NOOP, not duplicated by a stale IDLE push")
+            .isEqualTo(1);
+    }
+
+    private static long countOccurrences(String haystack, String needle) {
+        return Pattern.compile(Pattern.quote(needle)).matcher(haystack).results().count();
     }
 }

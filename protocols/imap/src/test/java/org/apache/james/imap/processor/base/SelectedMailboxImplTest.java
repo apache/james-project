@@ -438,4 +438,60 @@ class SelectedMailboxImplTest {
                 .newFlags(newFlags)
                 .build();
     }
+
+    @Test
+    void unregisterIdleWithMatchingListenerShouldClearIdleState() {
+        SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(
+            mailboxManager,
+            eventBus,
+            mock(MailboxSession.class),
+            messageManager);
+
+        EventListener.ReactiveEventListener listenerA = mock(EventListener.ReactiveEventListener.class);
+        selectedMailbox.registerIdle(listenerA);
+        assertThat(selectedMailbox.isIdling()).isTrue();
+
+        selectedMailbox.unregisterIdle(listenerA);
+        assertThat(selectedMailbox.isIdling()).isFalse();
+    }
+
+    @Test
+    void unregisterIdleWithStaleListenerShouldNotClearNewListener() {
+        SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(
+            mailboxManager,
+            eventBus,
+            mock(MailboxSession.class),
+            messageManager);
+
+        EventListener.ReactiveEventListener listenerA = mock(EventListener.ReactiveEventListener.class);
+        EventListener.ReactiveEventListener listenerB = mock(EventListener.ReactiveEventListener.class);
+
+        // Register initial listener A, then new listener B arrives
+        selectedMailbox.registerIdle(listenerA);
+        selectedMailbox.registerIdle(listenerB);
+
+        // Delayed cleanup of A should NOT unregister B
+        selectedMailbox.unregisterIdle(listenerA);
+        assertThat(selectedMailbox.isIdling()).isTrue();
+
+        // Cleanup of B should successfully unregister
+        selectedMailbox.unregisterIdle(listenerB);
+        assertThat(selectedMailbox.isIdling()).isFalse();
+    }
+
+    @Test
+    void deselectShouldClearIdleListener() {
+        SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(
+            mailboxManager,
+            eventBus,
+            mock(MailboxSession.class),
+            messageManager);
+
+        EventListener.ReactiveEventListener listener = mock(EventListener.ReactiveEventListener.class);
+        selectedMailbox.registerIdle(listener);
+        assertThat(selectedMailbox.isIdling()).isTrue();
+
+        selectedMailbox.deselect().block();
+        assertThat(selectedMailbox.isIdling()).isFalse();
+    }
 }
