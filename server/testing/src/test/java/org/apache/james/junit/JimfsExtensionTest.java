@@ -158,4 +158,55 @@ class JimfsExtensionTest {
 
         assertThat(jimfsTotalMs).isLessThan(diskTotalMs);
     }
+
+    @Test
+    @Order(6)
+    void simulateManyTestSetupsCumulativeSpeedup(FileSystem jimfsFileSystem, @TempDir Path diskBase) throws Exception {
+        // Simulate what happens in a large test suite: each test creates a working directory
+        // with the standard James config layout. We measure 500 such setups to reflect
+        // cumulative CI build overhead.
+        int testCount = 500;
+        String[] configFiles = {
+            "conf/smtpserver.xml",
+            "conf/imapserver.xml",
+            "conf/pop3server.xml",
+            "conf/mailetcontainer.xml",
+            "conf/domainlist.xml"
+        };
+        String xmlContent = "<?xml version=\"1.0\"?><configuration><server><port>0</port></server></configuration>";
+        byte[] xmlBytes = xmlContent.getBytes(StandardCharsets.UTF_8);
+
+        // Jimfs: 500 test setups
+        Stopwatch jimfsWatch = Stopwatch.createStarted();
+        for (int t = 0; t < testCount; t++) {
+            Path testRoot = jimfsFileSystem.getPath("/test-" + t);
+            for (String config : configFiles) {
+                Path confFile = testRoot.resolve(config);
+                Files.createDirectories(confFile.getParent());
+                Files.write(confFile, xmlBytes);
+            }
+        }
+        jimfsWatch.stop();
+        long jimfsTotalMs = jimfsWatch.elapsed(TimeUnit.MILLISECONDS);
+
+        // Disk: 500 test setups
+        Stopwatch diskWatch = Stopwatch.createStarted();
+        for (int t = 0; t < testCount; t++) {
+            Path testRoot = diskBase.resolve("test-" + t);
+            for (String config : configFiles) {
+                Path confFile = testRoot.resolve(config);
+                Files.createDirectories(confFile.getParent());
+                Files.write(confFile, xmlBytes);
+            }
+        }
+        diskWatch.stop();
+        long diskTotalMs = diskWatch.elapsed(TimeUnit.MILLISECONDS);
+
+        System.out.printf("%n[JimfsExtensionTest] Cumulative Test-Setup Speedup (%d tests × %d config files):%n",
+            testCount, configFiles.length);
+        System.out.printf("  Total time: Jimfs = %d ms | Disk = %d ms (%.1fx faster)%n%n",
+            jimfsTotalMs, diskTotalMs, (double) diskTotalMs / Math.max(1, jimfsTotalMs));
+
+        assertThat(jimfsTotalMs).isLessThan(diskTotalMs);
+    }
 }
