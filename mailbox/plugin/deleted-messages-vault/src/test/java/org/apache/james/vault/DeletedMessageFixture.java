@@ -43,6 +43,7 @@ public interface DeletedMessageFixture {
     InMemoryId MAILBOX_ID_3 = InMemoryId.of(45);
     Username USERNAME = Username.of("bob@apache.org");
     Username USERNAME_2 = Username.of("dimitri@apache.org");
+    String PASSWORD = "123456";
     ZonedDateTime DELIVERY_DATE = ZonedDateTime.parse("2014-10-30T14:12:00Z");
     ZonedDateTime DELETION_DATE = ZonedDateTime.parse("2015-10-30T14:12:00Z");
     ZonedDateTime NOW = ZonedDateTime.parse("2015-10-30T16:12:00Z");

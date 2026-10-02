@@ -25,8 +25,8 @@ import java.util.List;
 import jakarta.inject.Inject;
 import jakarta.mail.internet.AddressException;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
@@ -40,15 +40,12 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class DeletedMessageWithStorageInformationConverter {
-    private final BlobId.Factory blobFactory;
     private final MessageId.Factory messageIdFactory;
     private final MailboxId.Factory mailboxIdFactory;
 
     @Inject
-    public DeletedMessageWithStorageInformationConverter(BlobId.Factory blobFactory,
-                                                         MessageId.Factory messageIdFactory,
+    public DeletedMessageWithStorageInformationConverter(MessageId.Factory messageIdFactory,
                                                          MailboxId.Factory mailboxIdFactory) {
-        this.blobFactory = blobFactory;
         this.messageIdFactory = messageIdFactory;
         this.mailboxIdFactory = mailboxIdFactory;
     }
@@ -56,7 +53,7 @@ public class DeletedMessageWithStorageInformationConverter {
     public StorageInformation toDomainObject(DeletedMessageWithStorageInformationDTO.StorageInformationDTO storageInformationDTO) {
         return StorageInformation.builder()
             .bucketName(BucketName.of(storageInformationDTO.getBucketName()))
-            .blobId(blobFactory.parse(storageInformationDTO.getBlobId()));
+            .blobId(new PlainBlobId(storageInformationDTO.getBlobId()));
     }
 
     public DeletedMessage toDomainObject(DeletedMessageWithStorageInformationDTO.DeletedMessageDTO deletedMessageDTO) throws AddressException {
@@ -82,7 +79,7 @@ public class DeletedMessageWithStorageInformationConverter {
 
     private ImmutableList<MailboxId> deserializeOriginMailboxes(List<String> originMailboxes) {
         return originMailboxes.stream()
-            .map(mailboxId -> mailboxIdFactory.fromString(mailboxId))
+            .map(mailboxIdFactory::fromString)
             .collect(ImmutableList.toImmutableList());
     }
 
