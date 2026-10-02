@@ -119,15 +119,14 @@ public class PostgresExecutor {
 
     public Mono<Void> executeVoid(Function<DSLContext, Mono<?>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Mono.usingWhen(getConnection(domain),
+            usingConnection(
                 connection -> dslContext(connection)
                     .flatMap(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
                     .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                         .filter(preparedStatementConflictException()))
-                    .then(),
-                jamesPostgresConnectionFactory::closeConnection)));
+                    .then())));
     }
 
     public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
@@ -150,7 +149,7 @@ public class PostgresExecutor {
      */
     public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction, boolean isEagerFetch) {
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Flux.usingWhen(getConnection(domain),
+            usingConnectionMany(
                 connection -> {
                     Flux<Record> recordFlux = dslContext(connection)
                         .flatMapMany(queryFunction)
@@ -164,8 +163,7 @@ public class PostgresExecutor {
                     } else {
                         return recordFlux;
                     }
-                },
-                jamesPostgresConnectionFactory::closeConnection)));
+                })));
     }
 
     /**
@@ -208,26 +206,24 @@ public class PostgresExecutor {
 
     public Flux<Record> executeDeleteAndReturnList(Function<DSLContext, DeleteResultStep<Record>> queryFunction) {
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Flux.usingWhen(getConnection(domain),
+            usingConnectionMany(
                 connection -> dslContext(connection)
                     .flatMapMany(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
                     .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                        .filter(preparedStatementConflictException())),
-                jamesPostgresConnectionFactory::closeConnection)));
+                        .filter(preparedStatementConflictException())))));
     }
 
     public Mono<Record> executeRow(Function<DSLContext, Publisher<Record>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Mono.usingWhen(getConnection(domain),
+            usingConnection(
                 connection -> dslContext(connection)
                     .flatMap(queryFunction.andThen(Mono::from))
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
                     .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                        .filter(preparedStatementConflictException())),
-                jamesPostgresConnectionFactory::closeConnection)));
+                        .filter(preparedStatementConflictException())))));
     }
 
     public Mono<Optional<Record>> executeSingleRowOptional(Function<DSLContext, Publisher<Record>> queryFunction) {
@@ -238,15 +234,14 @@ public class PostgresExecutor {
 
     public Mono<Integer> executeCount(Function<DSLContext, Mono<Record1<Integer>>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Mono.usingWhen(getConnection(domain),
+            usingConnection(
                 connection -> dslContext(connection)
                     .flatMap(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
                     .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                         .filter(preparedStatementConflictException()))
-                    .map(Record1::value1),
-                jamesPostgresConnectionFactory::closeConnection)));
+                    .map(Record1::value1))));
     }
 
     public Mono<Boolean> executeExists(Function<DSLContext, SelectConditionStep<?>> queryFunction) {
@@ -256,19 +251,18 @@ public class PostgresExecutor {
 
     public Mono<Integer> executeReturnAffectedRowsCount(Function<DSLContext, Mono<Integer>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Mono.usingWhen(getConnection(domain),
+            usingConnection(
                 connection -> dslContext(connection)
                     .flatMap(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
                     .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                        .filter(preparedStatementConflictException())),
-                jamesPostgresConnectionFactory::closeConnection)));
+                        .filter(preparedStatementConflictException())))));
     }
 
     public <T> Mono<T> executeTransaction(Function<DSLContext, Mono<T>> transactionFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-transaction-execution",
-            Mono.usingWhen(getConnection(domain),
+            usingConnection(this::cancelRunningQueryThenRollbackAndRelease,
                 connection -> Mono.from(connection.beginTransaction())
                     .then(dslContext(connection)
                         .flatMap(transactionFunction)
@@ -277,8 +271,7 @@ public class PostgresExecutor {
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
                     .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                        .filter(preparedStatementConflictException())),
-                jamesPostgresConnectionFactory::closeConnection)));
+                        .filter(preparedStatementConflictException())))));
     }
 
     public JamesPostgresConnectionFactory connectionFactory() {
@@ -290,6 +283,44 @@ public class PostgresExecutor {
         jamesPostgresConnectionFactory.close().block();
     }
 
+    private <T> Mono<T> usingConnection(Function<Connection, Mono<T>> closure) {
+        return usingConnection(this::cancelRunningQueryAndRelease, closure);
+    }
+
+    /**
+     * Releasing the connection upon cancellation is not enough: see {@link #cancelRunningQuery(Connection)}.
+     */
+    private <T> Mono<T> usingConnection(Function<Connection, Mono<Void>> onCancel, Function<Connection, Mono<T>> closure) {
+        return Mono.usingWhen(getConnection(domain),
+            closure,
+            jamesPostgresConnectionFactory::closeConnection,
+            (connection, error) -> jamesPostgresConnectionFactory.closeConnection(connection),
+            onCancel);
+    }
+
+    private <T> Flux<T> usingConnectionMany(Function<Connection, Flux<T>> closure) {
+        return Flux.usingWhen(getConnection(domain),
+            closure,
+            jamesPostgresConnectionFactory::closeConnection,
+            (connection, error) -> jamesPostgresConnectionFactory.closeConnection(connection),
+            this::cancelRunningQueryAndRelease);
+    }
+
+    private Mono<Void> cancelRunningQueryAndRelease(Connection connection) {
+        return cancelRunningQuery(connection)
+            .then(jamesPostgresConnectionFactory.closeConnection(connection));
+    }
+
+    private Mono<Void> cancelRunningQueryThenRollbackAndRelease(Connection connection) {
+        return cancelRunningQuery(connection)
+            .then(Mono.from(connection.rollbackTransaction())
+                .onErrorResume(e -> {
+                    LOGGER.warn("Failed to rollback the cancelled Postgres transaction", e);
+                    return Mono.empty();
+                }))
+            .then(jamesPostgresConnectionFactory.closeConnection(connection));
+    }
+
     private <T> Mono<T> handleTimeout(Connection connection, TimeoutException timeoutException) {
         LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, timeoutException);
         return cancelRunningQuery(connection)
@@ -297,9 +328,11 @@ public class PostgresExecutor {
     }
 
     /**
-     * Cancelling the reactive pipeline does not stop the query on the Postgres server side: the connection stays busy
-     * until the query completes, and is handed back to the pool in that state. Asking Postgres to cancel the running query
-     * ensures the connection is quickly usable again.
+     * Cancelling the reactive pipeline (timeout, or a downstream short-circuit like `any`, `next`, `take`...) does not stop
+     * the query on the Postgres server side: the connection stays busy until the query completes, and is handed back to
+     * the pool in that state. Asking Postgres to cancel the running query ensures the connection is quickly usable again.
+     * <p>
+     * Asking Postgres to cancel a query that already completed is a no-op.
      */
     private Mono<Void> cancelRunningQuery(Connection connection) {
         return unwrapPostgresqlConnection(connection)
