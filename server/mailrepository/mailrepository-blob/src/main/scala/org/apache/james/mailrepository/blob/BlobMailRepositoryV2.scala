@@ -183,17 +183,20 @@ class BlobMailRepositoryV2(val mailMetaDataBlobStore: BlobStore,
       .map(mailPartsId => mailPartsId.toMailKey)
       .block()
 
-  private val metadataPrefix: String = url.getPath.asString() + "/"
+  private def belongsToMailRepository(blobId: BlobId): Boolean =
+    blobId.asString().contains(url.getPath.asString() + "/")
 
   @throws[MessagingException]
   override def size: Long =
-    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName, metadataPrefix))
+    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+      .filter(this.belongsToMailRepository)
       .count()
       .block()
 
   @throws[MessagingException]
   override def list: util.Iterator[MailKey] =
-    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName, metadataPrefix))
+    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+      .filter(this.belongsToMailRepository)
       .map[MailKey](blobId => new MailKey(blobId.asString))
       .toIterable
       .iterator
@@ -229,16 +232,10 @@ class BlobMailRepositoryV2(val mailMetaDataBlobStore: BlobStore,
 
   @throws[MessagingException]
   override def removeAll(): Unit = {
-    removeAll(_ => ())
-  }
-
-  override def removeAll(progressCallback: java.util.function.Consumer[MailKey]): Unit = {
-    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName, metadataPrefix))
-      .flatMap(blobId => this.remove(MailPartsId(blobId)).`then`(SMono.just(blobId)))
-      .map[MailKey](blobId => new MailKey(blobId.asString))
-      .doOnNext(progressCallback)
-      .then()
-      .block()
+    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+      .filter(this.belongsToMailRepository)
+      .flatMap(blobId => this.remove(MailPartsId(blobId)))
+      .blockLast()
   }
 
   /**
@@ -248,7 +245,8 @@ class BlobMailRepositoryV2(val mailMetaDataBlobStore: BlobStore,
    * store garbage collector as still-referenced.
    */
   private[blob] def listReferencedBlobs: Flux[BlobId] =
-    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName, metadataPrefix))
+    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+      .filter(this.belongsToMailRepository)
       .flatMap(metadataBlobId => Flux.from(mailMetadataStore.read(MailPartsId(metadataBlobId)))
         .flatMapIterable(tuple => java.util.List.of(metadataBlobId, tuple._2.getHeaderBlobId, tuple._2.getBodyBlobId)))
 

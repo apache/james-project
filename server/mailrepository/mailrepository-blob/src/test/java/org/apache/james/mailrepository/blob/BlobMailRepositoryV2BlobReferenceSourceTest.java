@@ -135,7 +135,7 @@ class BlobMailRepositoryV2BlobReferenceSourceTest {
             new BlobMailRepositoryV2BlobReferenceSource(new SimpleMailRepositoryStore(repository, true));
 
         assertThatThrownBy(() -> faultyTestee.listReferencedBlobs().collectList().block())
-            .hasRootCauseInstanceOf(RuntimeException.class)
-            .hasRootCauseMessage("Store failure");
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Store failure");
     }
 }
