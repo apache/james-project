@@ -18,6 +18,8 @@
  ****************************************************************/
 
 package org.apache.james.webadmin.jettyserver;
+ 
+import java.security.KeyStore;
 
 import org.eclipse.jetty.util.thread.ThreadPool;
 
@@ -33,6 +35,7 @@ public class EmbeddedJettyFactory implements EmbeddedServerFactory {
     private final JettyServerFactory serverFactory;
     private ThreadPool threadPool;
     private boolean httpOnly = true;
+    private KeyStore keyStore;
 
     public EmbeddedJettyFactory() {
         this(new JettyServer());
@@ -49,7 +52,14 @@ public class EmbeddedJettyFactory implements EmbeddedServerFactory {
         MatcherFilter matcherFilter = new MatcherFilter(routeMatcher, staticFilesConfiguration, exceptionMapper, false, hasMultipleHandler);
         matcherFilter.init(null);
 
-        return new EmbeddedJettyServer(serverFactory, httpOnly, matcherFilter).withThreadPool(threadPool);
+        return new EmbeddedJettyServer(serverFactory, httpOnly, matcherFilter)
+            .withKeyStore(keyStore)
+            .withThreadPool(threadPool);
+    }
+
+    public EmbeddedJettyFactory withKeyStore(KeyStore keyStore) {
+        this.keyStore = keyStore;
+        return this;
     }
 
     /**

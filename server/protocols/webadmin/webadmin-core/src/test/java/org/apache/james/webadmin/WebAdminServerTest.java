@@ -18,10 +18,13 @@
  ****************************************************************/
 package org.apache.james.webadmin;
 
+import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.is;
+
+import java.nio.file.Paths;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.Port;
@@ -151,5 +154,42 @@ class WebAdminServerTest {
                 service.get("/myRoute", (req, res) -> constAnswer);
             }
         };
+    }
+
+    @Test
+    void startShouldSupportPemHttps() throws Exception {
+        String certPath = Paths.get(WebAdminServerTest.class.getClassLoader().getResource("certs.self-signed.csr").toURI()).toString();
+        String keyPath = Paths.get(WebAdminServerTest.class.getClassLoader().getResource("private.nopass.key").toURI()).toString();
+
+        WebAdminConfiguration configuration = WebAdminConfiguration.builder()
+            .enabled()
+            .tls(TlsConfiguration.builder()
+                .pem(certPath, keyPath)
+                .build())
+            .additionalRoutes(ImmutableList.of())
+            .port(new RandomPortSupplier())
+            .build();
+
+        String answer = "secure hello";
+        WebAdminServer server = new WebAdminServer(
+            configuration,
+            ImmutableList.of(myPublicRouteWithConstAnswer(answer)),
+            new NoAuthenticationFilter(),
+            new RecordingMetricFactory(),
+            LoggingRequestFilter.create())
+            .start();
+
+        try {
+            given(WebAdminUtils.buildHttpsRequestSpecification(server)
+                    .setBasePath("/myRoute")
+                    .build())
+                .when()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .body(is(answer));
+        } finally {
+            server.destroy();
+        }
     }
 }

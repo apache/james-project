@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.jettyserver;
 
 import java.lang.reflect.Field;
+import java.security.KeyStore;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.http.UriCompliance;
@@ -106,14 +107,28 @@ public class SocketConnectorFactory {
                                                               SslStores sslStores,
                                                               boolean useHTTP2,
                                                               boolean trustForwardHeaders) {
+        return createSecureSocketConnector(server, host, port, sslStores, null, useHTTP2, trustForwardHeaders);
+    }
+
+    public static ServerConnector createSecureSocketConnector(Server server,
+                                                              String host,
+                                                              int port,
+                                                              SslStores sslStores,
+                                                              KeyStore keyStore,
+                                                              boolean useHTTP2,
+                                                              boolean trustForwardHeaders) {
         Assert.notNull(server, "'server' must not be null");
         Assert.notNull(host, "'host' must not be null");
         Assert.notNull(sslStores, "'sslStores' must not be null");
 
         final SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
-        runOrDefault(() -> sslContextFactory.setKeyStorePath(sslStores.keystoreFile()), () -> {
-            forceInsertNonExistingResource(sslContextFactory, "_keyStoreResource", sslStores.keystoreFile());
-        });
+        if (keyStore != null) {
+            sslContextFactory.setKeyStore(keyStore);
+        } else {
+            runOrDefault(() -> sslContextFactory.setKeyStorePath(sslStores.keystoreFile()), () -> {
+                forceInsertNonExistingResource(sslContextFactory, "_keyStoreResource", sslStores.keystoreFile());
+            });
+        }
 
         if (sslStores.keystorePassword() != null) {
             sslContextFactory.setKeyStorePassword(sslStores.keystorePassword());
