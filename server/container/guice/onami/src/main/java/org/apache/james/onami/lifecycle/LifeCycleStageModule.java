@@ -24,14 +24,26 @@ import static java.util.Arrays.asList;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import com.google.inject.Binding;
 import com.google.inject.Key;
+import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
+import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.InjectionListener;
+import com.google.inject.spi.ProviderInstanceBinding;
+import com.google.inject.spi.ProviderKeyBinding;
+import com.google.inject.spi.ProvisionListener;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.util.Types;
 
@@ -68,6 +80,41 @@ public abstract class LifeCycleStageModule extends LifeCycleModule {
         return stagerType;
     }
 
+    private static boolean isProviderBuiltSingleton(Binding<?> binding) {
+        return (binding instanceof ProviderInstanceBinding || binding instanceof ProviderKeyBinding) && Scopes.isSingleton(binding);
+    }
+
+    private static List<Method> stageMethods(Class<?> klass, Class<? extends Annotation> stage) {
+        return AbstractMethodTypeListener.lifecycleHierarchy(klass).stream()
+            .flatMap(type -> Arrays.stream(type.getDeclaredMethods()))
+            .filter(method -> method.isAnnotationPresent(stage) && method.getParameterCount() == 0)
+            .toList();
+    }
+
+    // Invoking an overridden declaration runs the override: both must be registered only once
+    private static Object overrideKey(Method method) {
+        if (Modifier.isPrivate(method.getModifiers())) {
+            return method;
+        }
+        return List.of(method.getName(), List.of(method.getParameterTypes()));
+    }
+
+    private static boolean isFirstRegistration(Map<Object, Set<Object>> registeredMethods, Object instance, Method stageMethod) {
+        synchronized (registeredMethods) {
+            return registeredMethods.computeIfAbsent(instance, any -> new HashSet<>())
+                .add(overrideKey(stageMethod));
+        }
+    }
+
+    private static void registerOnce(Map<Object, Set<Object>> registeredMethods, Stager<?> stager, StageableTypeMapper typeMapper,
+                                     Object instance, Method stageMethod, TypeLiteral<?> type) {
+        if (isFirstRegistration(registeredMethods, instance, stageMethod)) {
+            Stageable stageable = new StageableMethod(stageMethod, instance);
+            stager.register(stageable);
+            typeMapper.registerType(stageable, type);
+        }
+    }
+
     @Override
     protected final void configure() {
         if (bindings != null) {
@@ -87,17 +134,37 @@ public abstract class LifeCycleStageModule extends LifeCycleModule {
     private <A extends Annotation> void bind(BindingBuilder<A> binding) {
         final Stager<A> stager = binding.stager;
         final StageableTypeMapper typeMapper = binding.typeMapper;
+        // Shared by both listeners: an instance both injected and returned by a provider, or exposed under several keys, is staged once
+        final Map<Object, Set<Object>> registeredMethods = new IdentityHashMap<>();
         bind(type(stager.getStage())).toInstance(stager);
 
         bindListener(binding.typeMatcher, new AbstractMethodTypeListener(asList(stager.getStage())) {
             @Override
             protected <I> void hear(final Method stageMethod, final TypeLiteral<I> parentType,
                                     final TypeEncounter<I> encounter, final Class<? extends Annotation> annotationType) {
-                encounter.register((InjectionListener<I>) injectee -> {
-                    Stageable stageable = new StageableMethod(stageMethod, injectee);
-                    stager.register(stageable);
-                    typeMapper.registerType(stageable, parentType);
-                });
+                encounter.register((InjectionListener<I>) injectee ->
+                    registerOnce(registeredMethods, stager, typeMapper, injectee, stageMethod, parentType));
+            }
+        });
+
+        // Guice does not inject objects returned by providers (provider methods, instances or classes), so the type listener above never hears them
+        bindListener(new AbstractMatcher<Binding<?>>() {
+            @Override
+            public boolean matches(Binding<?> candidate) {
+                return isProviderBuiltSingleton(candidate);
+            }
+        }, new ProvisionListener() {
+            @Override
+            public <T> void onProvision(ProvisionInvocation<T> provision) {
+                T instance = provision.provision();
+                if (instance == null) {
+                    return;
+                }
+                TypeLiteral<?> instanceType = TypeLiteral.get(instance.getClass());
+                if (binding.typeMatcher.matches(instanceType)) {
+                    stageMethods(instance.getClass(), stager.getStage())
+                        .forEach(stageMethod -> registerOnce(registeredMethods, stager, typeMapper, instance, stageMethod, instanceType));
+                }
             }
         });
     }
