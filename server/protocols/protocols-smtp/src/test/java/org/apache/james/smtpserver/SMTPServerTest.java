@@ -554,10 +554,42 @@ public class SMTPServerTest {
             .isNotNull();
     }
 
+    @Test
+    public void testReceivedHeaderPreservedAcrossMultipleTransactions() throws Exception {
+        init(smtpConfiguration);
+
+        SMTPClient smtp = newSMTPClient();
+
+        smtp.helo("myclient.example.com");
+        smtp.setSender("mail@localhost");
+        smtp.addRecipient("mail@localhost");
+        boolean firstSent = smtp.sendShortMessageData("Subject: mail 1\r\n\r\nBody 1\r\n");
+        assertThat(firstSent).isTrue();
+        assertThat(testSystem.queue.getSize()).isEqualTo(1);
+        assertThat(testSystem.queue.getLastMail().getMessage().getSubject()).isEqualTo("mail 1");
+        assertThat(testSystem.queue.getLastMail().getMessage().getHeader("Received")[0])
+            .contains("(HELO myclient.example.com)");
+
+        // Send a second mail within the same connection without re-sending HELO
+        smtp.setSender("mail@localhost");
+        smtp.addRecipient("mail@localhost");
+        boolean secondSent = smtp.sendShortMessageData("Subject: mail 2\r\n\r\nBody 2\r\n");
+        assertThat(secondSent).isTrue();
+        assertThat(testSystem.queue.getSize()).isEqualTo(2);
+
+        smtp.quit();
+        smtp.disconnect();
+
+        assertThat(testSystem.queue.getLastMail().getMessage().getSubject()).isEqualTo("mail 2");
+        assertThat(testSystem.queue.getLastMail().getMessage().getHeader("Received")[0])
+            .contains("(HELO myclient.example.com)");
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"good", "adomain.com", "sub.domain.com",  "127.0.0.1",  "[127.0.0.1]",
         "fe80::1ff:fe23:4567:890a", "[fe80::1ff:fe23:4567:890a]",
-        "2001:db8:85a3:8d3:1319:8a2e:370:7348", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]"})
+        "2001:db8:85a3:8d3:1319:8a2e:370:7348", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]",
+        "A2:9B:D4:8A:AA:47", "123.example.com", "mx-ll-110-164-x-x.2s1n"})
     public void testValidHELO(String helo) throws Exception {
         init(smtpConfiguration);
 

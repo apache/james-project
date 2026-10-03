@@ -53,7 +53,9 @@ public class ResolvableEhloHeloHandler implements HeloHook, MailHook, RcptHook {
      */
     protected void checkEhloHelo(SMTPSession session, String argument) {
         if (isBadHelo(argument)) {
-            session.setAttachment(BAD_EHLO_HELO, true, State.Transaction);
+            session.setAttachment(BAD_EHLO_HELO, true, State.Connection);
+        } else {
+            session.removeAttachment(BAD_EHLO_HELO, State.Connection);
         }
     }
     
@@ -74,7 +76,7 @@ public class ResolvableEhloHeloHandler implements HeloHook, MailHook, RcptHook {
     }
 
     protected HookResult doCheck(SMTPSession session) {
-        if (session.getAttachment(BAD_EHLO_HELO, State.Transaction).isPresent()) {
+        if (session.getAttachment(BAD_EHLO_HELO, State.Connection).isPresent()) {
             return HookResult.builder()
                 .hookReturnCode(HookReturnCode.deny())
                 .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
