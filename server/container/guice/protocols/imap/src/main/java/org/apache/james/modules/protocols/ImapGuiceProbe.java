@@ -22,7 +22,6 @@ import java.net.InetSocketAddress;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 
 import org.apache.james.imapserver.netty.IMAPServerFactory;
@@ -37,11 +36,6 @@ public class ImapGuiceProbe implements GuiceProbe {
     @Inject
     private ImapGuiceProbe(IMAPServerFactory imapServerFactory) {
         this.imapServerFactory = imapServerFactory;
-    }
-
-    @PreDestroy
-    void destroy() {
-        imapServerFactory.destroy();
     }
 
     public int getImapPort() {

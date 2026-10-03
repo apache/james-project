@@ -21,6 +21,7 @@ package org.apache.james.onami.lifecycle;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.inject.TypeLiteral;
@@ -38,6 +39,25 @@ abstract class AbstractMethodTypeListener implements TypeListener {
     private static final String JAVA_PACKAGE = "java";
 
     /**
+     * Lists the input klass and its superclasses, stopping at the first {@code java} package class.
+     *
+     * @param klass the class to start from.
+     * @return the classes to scan for lifecycle methods, from the input klass up.
+     */
+    static List<Class<?>> lifecycleHierarchy(Class<?> klass) {
+        List<Class<?>> hierarchy = new ArrayList<>();
+        for (Class<?> current = klass; current != null && !isJavaClass(current); current = current.getSuperclass()) {
+            hierarchy.add(current);
+        }
+        return hierarchy;
+    }
+
+    private static boolean isJavaClass(Class<?> klass) {
+        Package pkg = klass.getPackage();
+        return pkg != null && pkg.getName().startsWith(JAVA_PACKAGE);
+    }
+
+    /**
      * The lifecycle annotations to search on methods in the order to be searched.
      */
     protected final List<? extends Class<? extends Annotation>> annotationTypes;
@@ -53,36 +73,20 @@ abstract class AbstractMethodTypeListener implements TypeListener {
 
     @Override
     public final <I> void hear(TypeLiteral<I> type, TypeEncounter<I> encounter) {
-        hear(type, type.getRawType(), encounter);
-    }
+        for (Class<?> klass : lifecycleHierarchy(type.getRawType())) {
+            for (Class<? extends Annotation> annotationType : annotationTypes) {
+                for (Method method : klass.getDeclaredMethods()) {
+                    if (method.isAnnotationPresent(annotationType)) {
+                        if (method.getParameterTypes().length != 0) {
+                            encounter.addError("Annotated methods with @%s must not accept any argument, found %s",
+                                annotationType.getName(), method);
+                        }
 
-    /**
-     * Allows traverse the input klass hierarchy.
-     *
-     * @param parentType the owning type being heard
-     * @param klass      encountered by Guice.
-     * @param encounter  the injection context.
-     */
-    private <I> void hear(final TypeLiteral<I> parentType, Class<? super I> klass, TypeEncounter<I> encounter) {
-        Package pkg;
-        if (klass == null || ((pkg = klass.getPackage()) != null && pkg.getName().startsWith(JAVA_PACKAGE))) {
-            return;
-        }
-
-        for (Class<? extends Annotation> annotationType : annotationTypes) {
-            for (Method method : klass.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(annotationType)) {
-                    if (method.getParameterTypes().length != 0) {
-                        encounter.addError("Annotated methods with @%s must not accept any argument, found %s",
-                            annotationType.getName(), method);
+                        hear(method, type, encounter, annotationType);
                     }
-
-                    hear(method, parentType, encounter, annotationType);
                 }
             }
         }
-
-        hear(parentType, klass.getSuperclass(), encounter);
     }
 
     /**
