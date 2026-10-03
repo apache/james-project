@@ -45,6 +45,7 @@ class MemoryDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegr
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule())
             .overrideWith(new DeletedMessageVaultProbeModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override

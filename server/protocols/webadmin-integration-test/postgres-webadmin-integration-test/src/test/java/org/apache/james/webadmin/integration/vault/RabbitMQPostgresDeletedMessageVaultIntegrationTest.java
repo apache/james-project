@@ -77,6 +77,7 @@ class RabbitMQPostgresDeletedMessageVaultIntegrationTest extends DeletedMessageV
         .extension(PostgresExtension.empty())
         .extension(new ClockExtension())
         .extension(rabbitMQExtension)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override

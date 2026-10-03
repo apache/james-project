@@ -54,6 +54,7 @@ class PostgresDeletedMessageVaultIntegrationTest extends DeletedMessageVaultInte
             .overrideWith(new DeletedMessageVaultProbeModule()))
         .extension(PostgresExtension.empty())
         .extension(new ClockExtension())
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override

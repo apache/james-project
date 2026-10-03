@@ -53,6 +53,7 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.GuiceModuleTestExtension;
@@ -127,9 +128,6 @@ public abstract class DeletedMessageVaultIntegrationTest {
     private static final ZonedDateTime TWO_MONTH_AFTER_ONE_YEAR_EXPIRATION = NOW.plusYears(1).plusMonths(2);
     private static final String FIRST_SUBJECT = "first subject";
     private static final String SECOND_SUBJECT = "second subject";
-    private static final String HOMER = "homer@" + DOMAIN;
-    private static final String BART = "bart@" + DOMAIN;
-    private static final String JACK = "jack@" + DOMAIN;
     private static final String PASSWORD = "password";
     private static final String BOB_PASSWORD = "bobPassword";
     private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(TWO_MINUTES);
@@ -145,14 +143,6 @@ public abstract class DeletedMessageVaultIntegrationTest {
         "\"combinator\": \"and\"," +
         "\"criteria\": []" +
         "}";
-    private static final ExportRequest EXPORT_ALL_HOMER_MESSAGES_TO_BART = ExportRequest
-        .userExportFrom(HOMER)
-        .exportTo(BART)
-        .query(MATCH_ALL_QUERY);
-    private static final ExportRequest EXPORT_ALL_JACK_MESSAGES_TO_HOMER = ExportRequest
-        .userExportFrom(JACK)
-        .exportTo(HOMER)
-        .query(MATCH_ALL_QUERY);
 
     private TestIMAPClient testIMAPClient;
     private RequestSpecification webAdminApi;
@@ -161,13 +151,34 @@ public abstract class DeletedMessageVaultIntegrationTest {
     private MailboxProbeImpl mailboxProbe;
     private GuiceJamesServer jmapServer;
 
+    private String homer;
+    private String bart;
+    private String jack;
+    private ExportRequest exportAllHomerMessagesToBart;
+    private ExportRequest exportAllJackMessagesToHomer;
+
     private UserCredential homerCredential;
     private UserCredential bartCredential;
     private UserCredential jackCredential;
 
     @BeforeEach
-    void setup(GuiceJamesServer jmapServer) throws Throwable {
+    void setup(GuiceJamesServer jmapServer, UpdatableTickingClock clock) throws Throwable {
         this.jmapServer = jmapServer;
+        // Servers may be shared across tests: each test gets its own users and starts at NOW
+        clock.setInstant(NOW.toInstant());
+        String userSuffix = UUID.randomUUID().toString();
+        homer = "homer-" + userSuffix + "@" + DOMAIN;
+        bart = "bart-" + userSuffix + "@" + DOMAIN;
+        jack = "jack-" + userSuffix + "@" + DOMAIN;
+        exportAllHomerMessagesToBart = ExportRequest
+            .userExportFrom(homer)
+            .exportTo(bart)
+            .query(MATCH_ALL_QUERY);
+        exportAllJackMessagesToHomer = ExportRequest
+            .userExportFrom(jack)
+            .exportTo(homer)
+            .query(MATCH_ALL_QUERY);
+
         mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
 
@@ -178,17 +189,17 @@ public abstract class DeletedMessageVaultIntegrationTest {
             .build();
         RestAssured.defaultParser = Parser.JSON;
 
-        dataProbe.addDomain(DOMAIN);
-        dataProbe.addUser(HOMER, PASSWORD);
-        dataProbe.addUser(BART, BOB_PASSWORD);
-        dataProbe.addUser(JACK, PASSWORD);
-        mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
-        otherMailboxId = mailboxProbe.createMailbox("#private", HOMER, MAILBOX_NAME);
-        ownerOnlyMailboxId = mailboxProbe.createMailbox("#private", HOMER, OWNER_ONLY_MAILBOX_NAME);
+        dataProbe.fluent().addDomain(DOMAIN);
+        dataProbe.addUser(homer, PASSWORD);
+        dataProbe.addUser(bart, BOB_PASSWORD);
+        dataProbe.addUser(jack, PASSWORD);
+        mailboxProbe.createMailbox("#private", homer, DefaultMailboxes.INBOX);
+        otherMailboxId = mailboxProbe.createMailbox("#private", homer, MAILBOX_NAME);
+        ownerOnlyMailboxId = mailboxProbe.createMailbox("#private", homer, OWNER_ONLY_MAILBOX_NAME);
 
-        homerCredential = getUserCredential(HOMER, PASSWORD);
-        bartCredential = getUserCredential(BART, BOB_PASSWORD);
-        jackCredential = getUserCredential(JACK, PASSWORD);
+        homerCredential = getUserCredential(homer, PASSWORD);
+        bartCredential = getUserCredential(bart, BOB_PASSWORD);
+        jackCredential = getUserCredential(jack, PASSWORD);
 
         testIMAPClient = new TestIMAPClient();
 
@@ -231,7 +242,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
 
         testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(HOMER, PASSWORD)
+            .login(homer, PASSWORD)
             .select(TestIMAPClient.INBOX)
             .setFlagsForAllMessagesInMailbox("\\Deleted");
         testIMAPClient.expunge();
@@ -255,7 +266,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
 
         testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(HOMER, PASSWORD)
+            .login(homer, PASSWORD)
             .select(TestIMAPClient.INBOX);
 
         testIMAPClient.moveFirstMessage(MAILBOX_NAME);
@@ -314,7 +325,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
             "    }" +
             "  ]" +
             "}";
-        restoreMessagesForUserWithQuery(webAdminApi, HOMER, query);
+        restoreMessagesForUserWithQuery(webAdminApi, homer, query);
 
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
 
@@ -345,7 +356,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
             "    }" +
             "  ]" +
             "}";
-        restoreMessagesForUserWithQuery(webAdminApi, HOMER, query);
+        restoreMessagesForUserWithQuery(webAdminApi, homer, query);
 
 
         Thread.sleep(Duration.ofSeconds(2).toMillis());
@@ -378,7 +389,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
             "    }" +
             "  ]" +
             "}";
-        restoreMessagesForUserWithQuery(webAdminApi, HOMER, query);
+        restoreMessagesForUserWithQuery(webAdminApi, homer, query);
 
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
     }
@@ -389,7 +400,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
 
         testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(HOMER, PASSWORD)
+            .login(homer, PASSWORD)
             .select(TestIMAPClient.INBOX);
 
         testIMAPClient.moveFirstMessage(MAILBOX_NAME);
@@ -433,7 +444,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         bartDeletesMessages(listMessageIdsForAccount(bartCredential));
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(bartCredential)).hasSize(0));
 
-        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfUserFromVault(jmapServer, Username.of(BART))).hasSize(1));
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfUserFromVault(jmapServer, Username.of(bart))).hasSize(1));
 
         restoreAllMessagesOfHomer();
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
@@ -491,10 +502,10 @@ public abstract class DeletedMessageVaultIntegrationTest {
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfHomerFromVault(jmapServer)).hasSize(1));
 
         // The deletion was attributed to Homer, not to Bart: Bart's own vault stays empty
-        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfUserFromVault(jmapServer, Username.of(BART))).isEmpty());
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfUserFromVault(jmapServer, Username.of(bart))).isEmpty());
 
         // THEN Bart should not restore anything from his own DMV
-        restoreMessagesFor(BART);
+        restoreMessagesFor(bart);
         awaitSearchUpToDate();
 
         // No message had been restored for Bart as his vault is empty
@@ -574,7 +585,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         // THEN neither Homer nor Bart should restore anything from DMV
         restoreAllMessagesOfHomer();
-        restoreMessagesFor(BART);
+        restoreMessagesFor(bart);
         awaitSearchUpToDate();
 
         assertThat(restoredMessagesCount(homerCredential)).isEqualTo(0);
@@ -599,7 +610,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         // THEN Homer should be able to restore the message, but Bart should not
         restoreAllMessagesOfHomer();
-        restoreMessagesFor(BART);
+        restoreMessagesFor(bart);
         awaitSearchUpToDate();
 
         awaitRestoredMessagesCount(homerCredential, 1);
@@ -629,7 +640,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         // THEN Homer should be able to restore the message, but Bart should not
         restoreAllMessagesOfHomer();
-        restoreMessagesFor(BART);
+        restoreMessagesFor(bart);
         awaitSearchUpToDate();
 
         awaitRestoredMessagesCount(homerCredential, 1);
@@ -652,7 +663,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfHomerFromVault(jmapServer)).hasSize(1));
 
-        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
+        String fileLocation = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
 
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
@@ -668,7 +679,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         String messageIdOfHomer = listMessageIdsForAccount(homerCredential).get(0);
 
         testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(HOMER, PASSWORD)
+            .login(homer, PASSWORD)
             .select(TestIMAPClient.INBOX)
             .setFlagsForAllMessagesInMailbox("\\Deleted");
         testIMAPClient.expunge();
@@ -677,7 +688,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfHomerFromVault(jmapServer)).hasSize(1));
 
-        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
+        String fileLocation = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
 
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
@@ -693,7 +704,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         String messageIdOfHomer = listMessageIdsForAccount(homerCredential).get(0);
 
         testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(HOMER, PASSWORD)
+            .login(homer, PASSWORD)
             .select(TestIMAPClient.INBOX);
 
         testIMAPClient.moveFirstMessage(MAILBOX_NAME);
@@ -706,7 +717,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfHomerFromVault(jmapServer)).hasSize(1));
 
-        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
+        String fileLocation = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
 
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
@@ -729,8 +740,8 @@ public abstract class DeletedMessageVaultIntegrationTest {
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfHomerFromVault(jmapServer)).hasSize(2));
 
         ExportRequest exportRequest = ExportRequest
-            .userExportFrom(HOMER)
-            .exportTo(BART)
+            .userExportFrom(homer)
+            .exportTo(bart)
             .query("""
                 {
                     "fieldName": "subject",
@@ -757,8 +768,8 @@ public abstract class DeletedMessageVaultIntegrationTest {
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfHomerFromVault(jmapServer)).hasSize(2));
 
         ExportRequest exportRequest = ExportRequest
-            .userExportFrom(HOMER)
-            .exportTo(BART)
+            .userExportFrom(homer)
+            .exportTo(bart)
             .query("{" +
                 "  \"fieldName\": \"subject\"," +
                 "  \"operator\": \"equals\"," +
@@ -773,7 +784,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
     @Test
     void vaultExportShouldExportEmptyZipWhenVaultIsEmpty() throws Exception {
-        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
+        String fileLocation = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
 
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasNoEntry();
@@ -790,8 +801,8 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfHomerFromVault(jmapServer)).hasSize(1));
 
-        String fileLocationFirstExport = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
-        String fileLocationSecondExport = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
+        String fileLocationFirstExport = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
+        String fileLocationSecondExport = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
 
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocationFirstExport))) {
             zipAssert.hasSameContentWith(new FileInputStream(fileLocationSecondExport));
@@ -813,7 +824,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         clock.setInstant(TWO_MONTH_AFTER_ONE_YEAR_EXPIRATION.toInstant());
         purgeVault(webAdminApi);
 
-        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
+        String fileLocation = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasNoEntry();
         }
@@ -840,7 +851,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         purgeVault(webAdminApi);
 
-        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
+        String fileLocation = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
                 .allSatisfies(entry -> hasName(messageIdOfNotExpiredMessage + ".eml"));
@@ -861,7 +872,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         purgeVault(webAdminApi);
 
-        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
+        String fileLocation = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(3);
         }
@@ -896,9 +907,9 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfHomerFromVault(jmapServer)).hasSize(1));
 
-        deleteFromVault(webAdminApi, HOMER, messageIdOfHomer);
+        deleteFromVault(webAdminApi, homer, messageIdOfHomer);
 
-        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
+        String fileLocation = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasNoEntry();
         }
@@ -911,9 +922,9 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         String messageIdOfHomer = listMessageIdsForAccount(homerCredential).get(0);
 
-        deleteFromVault(webAdminApi, HOMER, messageIdOfHomer);
+        deleteFromVault(webAdminApi, homer, messageIdOfHomer);
 
-        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
+        String fileLocation = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasNoEntry();
         }
@@ -933,9 +944,9 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfHomerFromVault(jmapServer)).hasSize(1));
 
-        deleteFromVault(webAdminApi, HOMER, messageIdOfBart);
+        deleteFromVault(webAdminApi, homer, messageIdOfBart);
 
-        String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartCredential);
+        String fileLocation = exportAndGetFileLocationFromLastMail(exportAllHomerMessagesToBart, bartCredential);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
                 .allSatisfies(entry -> hasName(messageIdOfHomer + ".eml"));
@@ -954,7 +965,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfHomerFromVault(jmapServer)).hasSize(1));
 
-        deleteFromVault(webAdminApi, HOMER, messageIdOfHomer);
+        deleteFromVault(webAdminApi, homer, messageIdOfHomer);
 
         assertThat(listMessageIdsForAccount(homerCredential))
             .hasSize(0);
@@ -976,12 +987,12 @@ public abstract class DeletedMessageVaultIntegrationTest {
         jackDeletesMessages(ImmutableList.of(jackInboxMessageId));
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(jackCredential)).hasSize(0));
 
-        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfUserFromVault(jmapServer, Username.of(JACK))).hasSize(1));
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfUserFromVault(jmapServer, Username.of(jack))).hasSize(1));
 
         // delete from homer's vault, expecting the message contains the same blob in jack's vault will be deleted
-        deleteFromVault(webAdminApi, HOMER, homerInboxMessageId);
+        deleteFromVault(webAdminApi, homer, homerInboxMessageId);
 
-        String fileLocationOfBartMessages = exportAndGetFileLocationFromLastMail(EXPORT_ALL_JACK_MESSAGES_TO_HOMER, homerCredential);
+        String fileLocationOfBartMessages = exportAndGetFileLocationFromLastMail(exportAllJackMessagesToHomer, homerCredential);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocationOfBartMessages))) {
             zipAssert.hasNoEntry();
         }
@@ -1005,12 +1016,12 @@ public abstract class DeletedMessageVaultIntegrationTest {
         jackDeletesMessages(ImmutableList.of(jackInboxMessageId));
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(jackCredential)).hasSize(0));
 
-        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfUserFromVault(jmapServer, Username.of(JACK))).hasSize(1));
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessagesOfUserFromVault(jmapServer, Username.of(jack))).hasSize(1));
 
         // delete from homer's vault, expecting jack's vault still be intact
-        deleteFromVault(webAdminApi, HOMER, homerInboxMessageId);
+        deleteFromVault(webAdminApi, homer, homerInboxMessageId);
 
-        String fileLocationOfBartMessages = exportAndGetFileLocationFromLastMail(EXPORT_ALL_JACK_MESSAGES_TO_HOMER, homerCredential);
+        String fileLocationOfBartMessages = exportAndGetFileLocationFromLastMail(exportAllJackMessagesToHomer, homerCredential);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocationOfBartMessages))) {
             zipAssert.hasEntriesSize(1)
                 .allSatisfies(entry -> hasName(jackInboxMessageId + ".eml"));
@@ -1081,7 +1092,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
                             ]
                         ]
                     }
-                """.formatted(homerCredential.accountId(), otherMailboxId.serialize(), BART))
+                """.formatted(homerCredential.accountId(), otherMailboxId.serialize(), bart))
             .post("/jmap");
     }
 
@@ -1112,12 +1123,12 @@ public abstract class DeletedMessageVaultIntegrationTest {
                 "                        }" +
                 "                    }," +
                 "                    \"to\": [{" +
-                "                        \"email\": \"" + HOMER + "\"" +
+                "                        \"email\": \"" + homer + "\"" +
                 "                    }, {" +
-                "                        \"email\": \"" + JACK + "\"" +
+                "                        \"email\": \"" + jack + "\"" +
                 "                    }]," +
                 "                    \"from\": [{" +
-                "                        \"email\": \"" + BART + "\"" +
+                "                        \"email\": \"" + bart + "\"" +
                 "                    }]" +
                 "                }" +
                 "            }" +
@@ -1133,11 +1144,11 @@ public abstract class DeletedMessageVaultIntegrationTest {
                 "                \"k1490\": {" +
                 "                    \"emailId\": \"#e1526\"," +
                 "                    \"envelope\": {" +
-                "                        \"mailFrom\": {\"email\": \"" + BART + "\"}," +
+                "                        \"mailFrom\": {\"email\": \"" + bart + "\"}," +
                 "                        \"rcptTo\": [{" +
-                "                            \"email\": \"" + HOMER + "\"" +
+                "                            \"email\": \"" + homer + "\"" +
                 "                        }, {" +
-                "                            \"email\": \"" + JACK + "\"" +
+                "                            \"email\": \"" + jack + "\"" +
                 "                        }]" +
                 "                    }" +
                 "                }" +
@@ -1177,8 +1188,8 @@ public abstract class DeletedMessageVaultIntegrationTest {
                 "                            \"value\": \"Test <b>body</b>, HTML version\"" +
                 "                        }" +
                 "                    }," +
-                "                    \"to\": [{\"email\": \"" + HOMER + "\"}]," +
-                "                    \"from\": [{\"email\": \"" + BART + "\"}]" +
+                "                    \"to\": [{\"email\": \"" + homer + "\"}]," +
+                "                    \"from\": [{\"email\": \"" + bart + "\"}]" +
                 "                }" +
                 "            }" +
                 "        }, \"c1\"]," +
@@ -1193,8 +1204,8 @@ public abstract class DeletedMessageVaultIntegrationTest {
                 "                \"k1490\": {" +
                 "                    \"emailId\": \"#e1526\"," +
                 "                    \"envelope\": {" +
-                "                        \"mailFrom\": {\"email\": \"" + BART + "\"}," +
-                "                        \"rcptTo\": [{\"email\": \"" + HOMER + "\"}]" +
+                "                        \"mailFrom\": {\"email\": \"" + bart + "\"}," +
+                "                        \"rcptTo\": [{\"email\": \"" + homer + "\"}]" +
                 "                    }" +
                 "                }" +
                 "            }" +
@@ -1232,7 +1243,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
     }
 
     private void restoreAllMessagesOfHomer() {
-        restoreMessagesFor(HOMER);
+        restoreMessagesFor(homer);
     }
 
     private void restoreMessagesFor(String user) {
@@ -1257,9 +1268,9 @@ public abstract class DeletedMessageVaultIntegrationTest {
     private void bartCopiesSharedMessageToOwnInbox() {
         try {
             mailboxProbe.copy(
-                Username.of(BART),
-                new MailboxPath("#private", Username.of(HOMER), MAILBOX_NAME),
-                MailboxPath.forUser(Username.of(BART), DefaultMailboxes.INBOX),
+                Username.of(bart),
+                new MailboxPath("#private", Username.of(homer), MAILBOX_NAME),
+                MailboxPath.forUser(Username.of(bart), DefaultMailboxes.INBOX),
                 MessageUid.of(1));
         } catch (Exception e) {
             throw new RuntimeException("Failed to copy shared message to Bart inbox", e);
@@ -1269,9 +1280,9 @@ public abstract class DeletedMessageVaultIntegrationTest {
     private void homerCopiesSharedMessageToOwnerOnlyMailbox() {
         try {
             mailboxProbe.copy(
-                Username.of(HOMER),
-                new MailboxPath("#private", Username.of(HOMER), MAILBOX_NAME),
-                new MailboxPath("#private", Username.of(HOMER), OWNER_ONLY_MAILBOX_NAME),
+                Username.of(homer),
+                new MailboxPath("#private", Username.of(homer), MAILBOX_NAME),
+                new MailboxPath("#private", Username.of(homer), OWNER_ONLY_MAILBOX_NAME),
                 MessageUid.of(1));
         } catch (Exception e) {
             throw new RuntimeException("Failed to copy shared message to Homer owner-only mailbox", e);
@@ -1303,7 +1314,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
     private void homerDeletesMailbox(GuiceJamesServer jmapServer) throws Exception {
         testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(HOMER, PASSWORD)
+            .login(homer, PASSWORD)
             .select(TestIMAPClient.INBOX);
 
         testIMAPClient.delete(MAILBOX_NAME);
@@ -1317,7 +1328,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
     }
 
     private List<DeletedMessage> listMessagesOfHomerFromVault(GuiceJamesServer jmapServer) {
-        return listMessagesOfUserFromVault(jmapServer, Username.of(HOMER));
+        return listMessagesOfUserFromVault(jmapServer, Username.of(homer));
     }
 
     private List<DeletedMessage> listMessagesOfUserFromVault(GuiceJamesServer jmapServer, Username username) {
