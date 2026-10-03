@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.webadmin;
 
+import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -157,8 +158,8 @@ class WebAdminServerTest {
 
     @Test
     void startShouldSupportPemHttps() throws Exception {
-        String certPath = Paths.get(ClassLoader.getSystemResource("certs.self-signed.csr").toURI()).toString();
-        String keyPath = Paths.get(ClassLoader.getSystemResource("private.nopass.key").toURI()).toString();
+        String certPath = Paths.get(WebAdminServerTest.class.getClassLoader().getResource("certs.self-signed.csr").toURI()).toString();
+        String keyPath = Paths.get(WebAdminServerTest.class.getClassLoader().getResource("private.nopass.key").toURI()).toString();
 
         WebAdminConfiguration configuration = WebAdminConfiguration.builder()
             .enabled()
@@ -179,15 +180,14 @@ class WebAdminServerTest {
             .start();
 
         try {
-            RestAssured.requestSpecification = WebAdminUtils.buildHttpsRequestSpecification(server)
-                .setBasePath("/myRoute")
-                .build();
-
-            when()
-                .get()
-            .then()
-                .statusCode(200)
-                .body(is(answer));
+            given(WebAdminUtils.buildHttpsRequestSpecification(server)
+                    .setBasePath("/myRoute")
+                    .build())
+                .when()
+                    .get()
+                .then()
+                    .statusCode(200)
+                    .body(is(answer));
         } finally {
             server.destroy();
         }
