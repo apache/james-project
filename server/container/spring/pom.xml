@@ -129,7 +129,7 @@
         </dependency>
         <dependency>
             <!-- Artemis Jakarta Server replaces legacy activemq-spring for embedded broker -->
-            <groupId>org.apache.artemis</groupId>
+            <groupId>org.apache.activemq</groupId>
             <artifactId>artemis-jakarta-server</artifactId>
             <version>${activmq-artemis.version}</version>
         </dependency>

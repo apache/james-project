@@ -94,11 +94,11 @@
         </dependency>
         <!-- Artemis Jakarta Client (JMS transport) -->
         <dependency>
-            <groupId>org.apache.artemis</groupId>
+            <groupId>org.apache.activemq</groupId>
             <artifactId>artemis-jakarta-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.artemis</groupId>
+            <groupId>org.apache.activemq</groupId>
             <artifactId>artemis-jakarta-server</artifactId>
         </dependency>
         <dependency>

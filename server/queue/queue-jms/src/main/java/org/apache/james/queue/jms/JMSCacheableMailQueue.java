@@ -159,10 +159,15 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     public static final String FORCE_DELIVERY = "FORCE_DELIVERY";
     private static final String JAMES_MAIL_ATTR_PROP_PREFIX = "JAMES_ATTR_";
 
-    protected static String encodeAttributePropertyName(String attributeName) {
-        StringBuilder sb = new StringBuilder(JAMES_MAIL_ATTR_PROP_PREFIX);
-        for (int i = 0; i < attributeName.length(); i++) {
-            char c = attributeName.charAt(i);
+    /**
+     * Encode an arbitrary string as a valid JMS identifier: characters that are not
+     * valid Java identifier parts are escaped as {@code _XXXX_} (4-digit hex). The
+     * given prefix (itself a valid identifier) is prepended. See JAMES-1241.
+     */
+    private static String encodeAsJmsPropertyName(String prefix, String input) {
+        StringBuilder sb = new StringBuilder(prefix);
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
             if (Character.isJavaIdentifierPart(c)) {
                 sb.append(c);
             } else {
@@ -172,17 +177,12 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         return sb.toString();
     }
 
+    protected static String encodeAttributePropertyName(String attributeName) {
+        return encodeAsJmsPropertyName(JAMES_MAIL_ATTR_PROP_PREFIX, attributeName);
+    }
+
     protected static String encodePerRecipientHeaderPropertyName(String recipientAddress) {
-        StringBuilder sb = new StringBuilder(JAMES_MAIL_PER_RECIPIENT_HEADERS).append('_');
-        for (int i = 0; i < recipientAddress.length(); i++) {
-            char c = recipientAddress.charAt(i);
-            if (Character.isJavaIdentifierPart(c)) {
-                sb.append(c);
-            } else {
-                sb.append(String.format("_%04x_", (int) c));
-            }
-        }
-        return sb.toString();
+        return encodeAsJmsPropertyName(JAMES_MAIL_PER_RECIPIENT_HEADERS + "_", recipientAddress);
     }
 
     protected static String decodePerRecipientHeaderPropertyName(String propertyName) {
@@ -548,7 +548,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
             if (attrValue == null) {
                 attrValue = message.getObjectProperty(name);
             }
-        } catch (Exception e) {
+        } catch (JMSException e) {
             LOGGER.warn("Error reading mail attribute {} from JMS message. Skipping attribute.", name, e);
             return Stream.empty();
         }

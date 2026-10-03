@@ -97,11 +97,11 @@
             <artifactId>jakarta.inject-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.artemis</groupId>
+            <groupId>org.apache.activemq</groupId>
             <artifactId>artemis-jakarta-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.artemis</groupId>
+            <groupId>org.apache.activemq</groupId>
             <artifactId>artemis-jakarta-server</artifactId>
             <scope>test</scope>
         </dependency>
