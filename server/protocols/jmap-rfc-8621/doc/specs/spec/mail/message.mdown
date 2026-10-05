@@ -832,7 +832,8 @@ Due to the format of the Email object, when creating an Email there are a number
   attachments properties.
 
 > :warning:
-> Not implemented. *bodyStructure* property is not supported in Email/set create.
+> Not implemented. *bodyStructure* property is not supported in Email/set create: such a creation
+> request is rejected with an `invalidProperties` error. So are creation requests with unknown properties.
 
 - If given, the bodyStructure EmailBodyPart MUST NOT contain a property
   representing a header field that is already defined on the top-level Email

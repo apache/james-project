@@ -667,6 +667,106 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def createShouldRejectBodyStructure(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+
+    val response = createEmail(
+      s"""{
+         |  "mailboxIds": {"${mailboxId.serialize}": true},
+         |  "subject": "Title",
+         |  "bodyValues": {"t": {"value": "Hello in text"}, "h": {"value": "<p>Hello in HTML</p>"}},
+         |  "bodyStructure": {"type": "multipart/alternative", "subParts": [
+         |    {"partId": "t", "type": "text/plain"},
+         |    {"partId": "h", "type": "text/html"}]}
+         |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+        s"""{
+           |  "accountId": "$bobAccountId",
+           |  "oldState": "$${json-unit.ignore}",
+           |  "newState": "$${json-unit.ignore}",
+           |  "notCreated": {
+           |    "aaaaaa": {
+           |      "type": "invalidProperties",
+           |      "description": "'bodyStructure' is not supported on Email/set create, use 'textBody', 'htmlBody' and 'attachments' instead",
+           |      "properties": ["bodyStructure"]
+           |    }
+           |  }
+           |}""".stripMargin)
+  }
+
+  @Test
+  def createShouldRejectBodyStructureCombinedWithHtmlBody(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+
+    val response = createEmail(
+      s"""{
+         |  "mailboxIds": {"${mailboxId.serialize}": true},
+         |  "subject": "Title",
+         |  "bodyValues": {"h": {"value": "<p>Hello in HTML</p>"}},
+         |  "htmlBody": [{"partId": "h", "type": "text/html"}],
+         |  "bodyStructure": {"partId": "h", "type": "text/html"}
+         |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(
+        s"""{
+           |  "type": "invalidProperties",
+           |  "description": "'bodyStructure' is not supported on Email/set create, use 'textBody', 'htmlBody' and 'attachments' instead",
+           |  "properties": ["bodyStructure"]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def createShouldRejectUnknownProperties(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+
+    val response = createEmail(
+      s"""{
+         |  "mailboxIds": {"${mailboxId.serialize}": true},
+         |  "subject": "Title",
+         |  "bodyValues": {"t": {"value": "Hello in text"}},
+         |  "textBody": [{"partId": "t", "type": "text/plain"}],
+         |  "notAnEmailProperty": true
+         |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(
+        s"""{
+           |  "type": "invalidProperties",
+           |  "description": "Unknown or unsupported properties on Email/set create: notAnEmailProperty",
+           |  "properties": ["notAnEmailProperty"]
+           |}""".stripMargin)
+  }
+
+  private def createEmail(creationRequest: String): String =
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [
+           |    ["Email/set", {
+           |      "accountId": "$bobAccountId",
+           |      "create": {
+           |        "aaaaaa": $creationRequest
+           |      }
+           |    }, "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+  @Test
   def shouldNotResetKeywordWhenFalseValue(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
 
