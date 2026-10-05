@@ -114,8 +114,11 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
       case _ => None
     })
 
+    val requestedIds: Set[MessageId] = validUpdates.map(_._1).toSet
+
     for {
-      updates <- SFlux.fromPublisher(messageIdManager.messagesMetadata(validUpdates.map(_._1).asJavaCollection, session))
+      updates <- SFlux.fromPublisher(messageIdManager.messagesMetadata(requestedIds.asJavaCollection, session))
+        .filter(metaData => requestedIds.contains(metaData.getComposedMessageId.getMessageId))
         .collectMultimap(metaData => metaData.getComposedMessageId.getMessageId)
         .flatMap(doUpdate(validUpdates, _, session))
     } yield {
