@@ -1,0 +1,135 @@
+= Guice-Xodus Server How-to
+
+The *Apache James Xodus Server* (`xodus-app`) is an embedded, lightweight, and high-performance server distribution for Apache James. It replaces external relational databases (RDBMS), distributed message queues, and remote search clusters with a 100% embedded transactional architecture.
+
+== Why Xodus-App?
+
+Traditional distributions like `jpa-app` or `postgres-app` rely on relational tables, object-relational mapping (ORM), or client-server database daemons over TCP sockets:
+
+* **No External Dependencies (Zero-Ops)**: Runs entirely within a single JVM process (`java -jar`). No external PostgreSQL, Cassandra, OpenSearch, or RabbitMQ services to deploy, monitor, or maintain.
+* **Append-Only Sequential I/O**: JetBrains Xodus stores data and B-Trees in append-only `.xd` segments with configurable fsync batching (`xodus.log.syncPeriod=2000`). This eliminates random 4K write amplification on SSDs/NVMe and prevents head-thrashing on HDDs.
+* **Zero ORM / Socket Overhead**: No JPA reflection/dirty checking and no PostgreSQL wire protocol serialization over sockets. Data flows directly in-process from Netty network buffers to the storage engine.
+* **Transparent Zstd & CAS Deduplication**: Integrated streaming Zstandard compression for message payloads, combined with content-addressable storage (SHA-256) and Xodus V2 in-place blob deduplication.
+* **Transactional Full-Text Search**: Apache Lucene 10.5 indices run inside the unified Xodus transactional log via `XodusDirectory`, guaranteeing that search index states never desynchronize from mailbox states during crashes.
+* **Instant ACID Crash Recovery**: MVCC transactional snapshots allow instant restart with zero loss or index corruption even after abrupt power loss or SIGKILL.
+
+=== Comparison at a Glance
+
+[cols="1,2,2,2",options="header"]
+|===
+| Dimension | Traditional `jpa-app` | Enterprise `postgres-app` | Native `xodus-app`
+| *Architecture* | Embedded SQL / Local RDBMS | Multi-process client/server daemon | Single-process embedded (`java -jar`)
+| *Data Access* | Heavy JPA/ORM reflection | JDBC wire protocol over TCP socket | Zero-overhead B-Tree cursor traversal
+| *Disk Writes* | Random page overwrites | WAL + table pages + MVCC bloat | Pure append-only sequential log (`.xd`)
+| *Attachments* | JVM heap byte arrays or SQL LOBs | Hex/Bytea stream over socket | Streamed `FileSystemBlobVault` + Zstd
+| *Deduplication*| None | Custom schema / manual scripts | Automatic content-addressable SHA-256
+| *Search Index* | SQL LIKE or detached Lucene | Postgres GIN or OpenSearch cluster | Embedded Lucene 10.5 in Xodus log
+| *RAM Footprint*| ~2 GB idle / 6-8 GB peak | ~3 GB idle / 6-10 GB peak | < 1.2 GB idle / 4 GB peak
+|===
+
+== Requirements
+
+* Java 21+ SDK
+* Linux / macOS / Windows
+
+== Running
+
+=== 1. Prepare Configuration
+
+Create a working directory and copy the sample configurations into a `conf` subdirectory:
+
+[source,bash]
+----
+$ mkdir -p my-mail-server/conf
+$ cp -r sample-configuration/* my-mail-server/conf/
+$ cd my-mail-server
+----
+
+=== 2. Generate Keystore (TLS)
+
+Generate a self-signed PKCS12 keystore for TLS:
+
+[source,bash]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore -storepass james72laBalle -storetype PKCS12
+----
+
+=== 3. Launch Server
+
+Run the server with the recommended JVM options:
+
+[source,bash]
+----
+# Recommended Production Profile (Java 21+ Generational ZGC, low STW pause):
+$ java -Xms4g -Xmx6g \
+       -XX:+UseZGC \
+       -XX:+ZGenerational \
+       -Dworking.directory=. \
+       -jar james-server-xodus-app.jar
+
+# Compact Profile (for <= 4 GB RAM VPS):
+# java -Xms2g -Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=50 -Dworking.directory=. -jar james-server-xodus-app.jar
+----
+
+NOTE: Binding standard ports (25, 465, 587, 143, 993) requires root/administrator privileges or port mapping via authbind / iptables / Docker.
+
+== Default Network Ports
+
+[cols="1,2,2,3",options="header"]
+|===
+| Port | Protocol | Security | Purpose
+| *25* | SMTP | Plain / No Auth | Incoming MX relay
+| *465* | SMTPS | Implicit TLS | Authenticated submission
+| *587* | SMTP Submission | STARTTLS Required | Authenticated submission
+| *143* | IMAP4 | STARTTLS Required | Mailbox access (plain auth disallowed before TLS)
+| *993* | IMAPS | Implicit TLS | Secure encrypted mailbox access
+| *4190*| ManageSieve | STARTTLS Optional | Sieve scripts & vacation auto-reply
+| *8000*| WebAdmin REST | HTTP / Admin Auth | Administrative management API
+|===
+
+== WebAdmin Management
+
+=== Add Domain & User
+
+[source,bash]
+----
+$ curl -XPUT http://localhost:8000/domains/example.com
+$ curl -XPUT http://localhost:8000/users/alice@example.com \
+       -d '{"password":"SecretPassword123"}' \
+       -H "Content-Type: application/json"
+----
+
+=== Online Atomic Hot-Backup
+
+Triggers an atomic, non-blocking backup of the Xodus environment while actively serving email traffic:
+
+[source,bash]
+----
+$ curl -XPOST "http://localhost:8000/xodus/backup?backupDir=/var/backups"
+----
+
+=== Health & Diagnostics
+
+[source,bash]
+----
+$ curl http://localhost:8000/xodus/check
+----
+
+== Production OS Tuning (Linux)
+
+* **File Descriptors**: Ensure generous limits for Netty channels, Xodus `.xd` files, and Lucene segments:
++
+[source]
+----
+* soft nofile 65535
+* hard nofile 100000
+----
+
+* **Memory-Mapped Files**:
++
+[source]
+----
+sysctl -w vm.max_map_count=262144
+----
+
+* **Filesystem**: Mount `var/xodus` storage with `noatime,nodiratime` to eliminate metadata write amplification on disk reads.

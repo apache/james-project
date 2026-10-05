@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+ -->
+
+<!-- Read https://james.apache.org/server/config-imap4.html for further details -->
+
+<imapservers>
+    <!-- Port 143: plaintext with STARTTLS upgrade. Plain auth blocked until TLS established (RFC 3501 §6.2.2) -->
+    <imapserver enabled="true">
+        <bind>0.0.0.0:143</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <tls socketTLS="false" startTLS="true">
+            <keystore>file://conf/keystore</keystore>
+            <keystoreType>PKCS12</keystoreType>
+            <secret>james72laBalle</secret>
+            <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+        </tls>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <idleTimeInterval>120</idleTimeInterval>
+        <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
+        <enableIdle>true</enableIdle>
+        <plainAuthDisallowed>true</plainAuthDisallowed>
+        <auth>
+            <plainAuthEnabled>true</plainAuthEnabled>
+        </auth>
+    </imapserver>
+
+    <!-- Port 993: implicit TLS (IMAPS). Plain auth permitted since connection is already encrypted -->
+    <imapserver enabled="true">
+        <bind>0.0.0.0:993</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <tls socketTLS="true" startTLS="false">
+            <keystore>file://conf/keystore</keystore>
+            <keystoreType>PKCS12</keystoreType>
+            <secret>james72laBalle</secret>
+            <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+        </tls>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <idleTimeInterval>120</idleTimeInterval>
+        <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
+        <enableIdle>true</enableIdle>
+        <auth>
+            <plainAuthEnabled>true</plainAuthEnabled>
+        </auth>
+    </imapserver>
+</imapservers>

@@ -50,6 +50,7 @@
         <module>apps/scaling-pulsar-smtp</module>
         <module>apps/spring-app</module>
         <module>apps/webadmin-cli</module>
+        <module>apps/xodus-app</module>
 
         <module>blob</module>
 
