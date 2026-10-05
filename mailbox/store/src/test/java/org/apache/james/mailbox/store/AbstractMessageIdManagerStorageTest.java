@@ -23,10 +23,12 @@ import static org.apache.james.mailbox.fixture.MailboxFixture.BOB;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 
 import jakarta.mail.Flags;
 
@@ -40,6 +42,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.DeleteResult;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
@@ -55,11 +58,14 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Flux;
+
 public abstract class AbstractMessageIdManagerStorageTest {
     public static final Flags FLAGS = new Flags();
 
     private static final MessageUid messageUid1 = MessageUid.of(111);
     private static final MessageUid messageUid2 = MessageUid.of(222);
+    private static final int MANY_MESSAGES = 300;
 
     private MessageIdManagerTestSystem testingData;
     private MessageIdManager messageIdManager;
@@ -117,6 +123,34 @@ public abstract class AbstractMessageIdManagerStorageTest {
         MessageId messageId = testingData.createNotUsedMessageId();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), aliceSession);
+    }
+
+    @Test
+    void messagesMetadataShouldCompleteWhenManyMessagesAreNotReadable() {
+        List<MessageId> aliceMessageIds = persistAliceMessages(MANY_MESSAGES);
+
+        List<ComposedMessageIdWithMetaData> bobMetadata = Flux.from(messageIdManager.messagesMetadata(aliceMessageIds, bobSession))
+            .collectList()
+            .block(Duration.ofSeconds(10));
+
+        assertThat(bobMetadata).isEmpty();
+    }
+
+    @Test
+    void getMessagesReactiveShouldCompleteWhenManyMessagesAreNotReadable() {
+        List<MessageId> aliceMessageIds = persistAliceMessages(MANY_MESSAGES);
+
+        List<MessageResult> bobMessages = Flux.from(messageIdManager.getMessagesReactive(aliceMessageIds, FetchGroup.MINIMAL, bobSession))
+            .collectList()
+            .block(Duration.ofSeconds(10));
+
+        assertThat(bobMessages).isEmpty();
+    }
+
+    private List<MessageId> persistAliceMessages(int count) {
+        return IntStream.rangeClosed(1, count)
+            .mapToObj(uid -> testingData.persist(aliceMailbox1.getMailboxId(), MessageUid.of(uid), FLAGS, aliceSession))
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Test
