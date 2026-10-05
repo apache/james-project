@@ -31,6 +31,7 @@
     <name>Apache James :: Server :: Xodus - Application</name>
 
     <properties/>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -191,6 +192,31 @@
             <version>3.1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>in-project-xodus-repo</id>
+            <name>In Project Xodus Repository</name>
+            <url>file://${project.basedir}/repo</url>
+        </repository>
+        <repository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>jetbrains-xodus-daily</id>
+            <name>JetBrains Xodus Daily Repository</name>
+            <url>https://packages.jetbrains.team/maven/p/xodus/xodus-daily</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>

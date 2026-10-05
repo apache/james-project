@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- This module was also published with a richer model, Gradle metadata,  -->
+  <!-- which should be used instead. Do not delete the following line which  -->
+  <!-- is to indicate to Gradle or any Gradle module metadata file consumer  -->
+  <!-- that they should prefer consuming it instead. -->
+  <!-- do_not_remove: published-with-gradle-metadata -->
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jetbrains.xodus</groupId>
+  <artifactId>xodus-entity-store</artifactId>
+  <version>3.1.0-SNAPSHOT</version>
+  <name>Xodus</name>
+  <description>Xodus is pure Java transactional schema-less embedded database</description>
+  <url>https://github.com/JetBrains/xodus</url>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>JetBrains</id>
+      <name>JetBrains Team</name>
+      <organization>JetBrains s.r.o</organization>
+      <organizationUrl>https://www.jetbrains.com</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:https://github.com/JetBrains/xodus.git</connection>
+    <developerConnection>scm:git:https://github.com/JetBrains/xodus.git</developerConnection>
+    <url>https://github.com/JetBrains/xodus</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>org.jetbrains.xodus</groupId>
+      <artifactId>xodus-openAPI</artifactId>
+      <version>3.1.0-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.27.1</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.lz4</groupId>
+      <artifactId>lz4-java</artifactId>
+      <version>1.8.0</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>it.unimi.dsi</groupId>
+      <artifactId>fastutil</artifactId>
+      <version>8.5.12</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jctools</groupId>
+      <artifactId>jctools-core</artifactId>
+      <version>4.0.1</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-stdlib</artifactId>
+      <version>1.9.21</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.microutils</groupId>
+      <artifactId>kotlin-logging-jvm</artifactId>
+      <version>3.0.5</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.xodus</groupId>
+      <artifactId>xodus-utils</artifactId>
+      <version>3.1.0-SNAPSHOT</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.xodus</groupId>
+      <artifactId>xodus-environment</artifactId>
+      <version>3.1.0-SNAPSHOT</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.xodus</groupId>
+      <artifactId>xodus-compress</artifactId>
+      <version>3.1.0-SNAPSHOT</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.11.0</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+</project>
