@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -184,10 +185,9 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageMapper.FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
         boolean delayError = false;
         int prefetch = 1;
+        Function<MailboxId, Mono<Boolean>> canRead = cachedReadRight(mailboxSession);
         return messageIdMapper.findReactive(messageIds, fetchType)
-            .groupBy(MailboxMessage::getMailboxId)
-            .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(mailboxSession, Right.Read).apply(groupedFlux.key()), DEFAULT_CONCURRENCY)
-            .flatMap(Function.identity(), DEFAULT_CONCURRENCY)
+            .filterWhen(message -> canRead.apply(message.getMailboxId()), DEFAULT_CONCURRENCY)
             .publishOn(forFetchType(fetchType), delayError, prefetch)
             .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow());
     }
@@ -203,11 +203,17 @@ public class StoreMessageIdManager implements MessageIdManager {
     public Publisher<ComposedMessageIdWithMetaData> messagesMetadata(Collection<MessageId> ids, MailboxSession session) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(session);
         int concurrency = 4;
+        Function<MailboxId, Mono<Boolean>> canRead = cachedReadRight(session);
         return Flux.fromIterable(ids)
             .flatMap(messageIdMapper::findMetadata, concurrency)
-            .groupBy(metaData -> metaData.getComposedMessageId().getMailboxId())
-            .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(session, Right.Read).apply(groupedFlux.key()), DEFAULT_CONCURRENCY)
-            .flatMap(Function.identity(), DEFAULT_CONCURRENCY);
+            .filterWhen(metaData -> canRead.apply(metaData.getComposedMessageId().getMailboxId()), DEFAULT_CONCURRENCY);
+    }
+
+    // Unlike groupBy + filterWhen, never leaves rejected elements buffered: those would stall the Flux once the groupBy prefetch is reached
+    private Function<MailboxId, Mono<Boolean>> cachedReadRight(MailboxSession session) {
+        Function<MailboxId, Mono<Boolean>> hasReadRight = hasRightsOnMailboxReactive(session, Right.Read);
+        Map<MailboxId, Mono<Boolean>> rightsByMailbox = new ConcurrentHashMap<>();
+        return mailboxId -> rightsByMailbox.computeIfAbsent(mailboxId, id -> hasReadRight.apply(id).cache());
     }
 
     private Mono<ImmutableSet<MailboxId>> getAllowedMailboxIds(MailboxSession mailboxSession, Stream<MailboxId> idList, Right... rights) {
