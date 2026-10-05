@@ -53,6 +53,7 @@ class PostgresExecutorTimeoutTest {
     private static final int ROW_COUNT = 3;
     private static final int ROW_INSERTED_BY_TIMED_OUT_TRANSACTION = 42;
     private static final Duration WELL_BEFORE_THE_DATABASE_SLEEP_ENDS = Duration.ofSeconds(10);
+    private static final Duration BEFORE_THE_JOOQ_REACTIVE_TIMEOUT = Duration.ofMillis(100);
     private static final Table<Record> TABLE = DSL.table("timeout_test");
     private static final Field<Integer> ID = DSL.field("id", SQLDataType.INTEGER);
 
@@ -139,6 +140,41 @@ class PostgresExecutorTimeoutTest {
             .block(WELL_BEFORE_THE_DATABASE_SLEEP_ENDS);
 
         assertThat(ids).containsExactly(1, 2, 3);
+    }
+
+    @Test
+    void connectionShouldBeUsableRightAfterCancellingExecuteRows() {
+        sleepOnTheDatabaseSide()
+            .take(BEFORE_THE_JOOQ_REACTIVE_TIMEOUT)
+            .collectList()
+            .block();
+
+        assertThat(readIds().block(WELL_BEFORE_THE_DATABASE_SLEEP_ENDS)).containsExactly(1, 2, 3);
+    }
+
+    @Test
+    void connectionShouldBeUsableRightAfterCancellingExecuteRow() {
+        postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(DSL.field("pg_sleep(" + LONGER_THAN_TIMEOUT_IN_SECONDS.toSeconds() + ")"))))
+            .take(BEFORE_THE_JOOQ_REACTIVE_TIMEOUT)
+            .blockOptional();
+
+        assertThat(readIds().block(WELL_BEFORE_THE_DATABASE_SLEEP_ENDS)).containsExactly(1, 2, 3);
+    }
+
+    @Test
+    void executeTransactionShouldRollbackAndLeaveTheConnectionUsableRightAfterACancellation() {
+        postgresExecutor.executeTransaction(dslContext -> Mono.from(dslContext.insertInto(TABLE, ID).values(ROW_INSERTED_BY_TIMED_OUT_TRANSACTION))
+                .then(Mono.from(dslContext.select(DSL.field("pg_sleep(" + LONGER_THAN_TIMEOUT_IN_SECONDS.toSeconds() + ")")))))
+            .take(BEFORE_THE_JOOQ_REACTIVE_TIMEOUT)
+            .blockOptional();
+
+        assertThat(readIds().block(WELL_BEFORE_THE_DATABASE_SLEEP_ENDS)).containsExactly(1, 2, 3);
+    }
+
+    private Mono<List<Integer>> readIds() {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(ID).from(TABLE).orderBy(ID)))
+            .map(record -> record.get(ID))
+            .collectList();
     }
 
     private Flux<Record> sleepOnTheDatabaseSide() {
