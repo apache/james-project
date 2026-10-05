@@ -63,6 +63,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 
+import reactor.core.publisher.Flux;
+
 public abstract class MessageIdMapperTest {
     private static final Username BENWA = Username.of("benwa");
 
@@ -130,6 +132,18 @@ public abstract class MessageIdMapperTest {
         saveMessages();
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId(), message4.getMessageId(), message3.getMessageId()), FetchType.FULL);
         assertMessages(messages).containOnly(message1, message4, message3);
+    }
+
+    @Test
+    void findMetadataShouldReturnOnlyTheGivenMessage() throws MailboxException {
+        saveMessages();
+
+        List<MessageId> messageIds = Flux.from(sut.findMetadata(message1.getMessageId()))
+            .map(metaData -> metaData.getComposedMessageId().getMessageId())
+            .collectList()
+            .block();
+
+        assertThat(messageIds).containsOnly(message1.getMessageId());
     }
 
     @Test

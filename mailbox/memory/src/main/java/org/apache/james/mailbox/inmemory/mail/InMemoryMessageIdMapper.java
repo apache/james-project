@@ -72,8 +72,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
 
     @Override
     public Publisher<ComposedMessageIdWithMetaData> findMetadata(MessageId messageId) {
-        return mailboxMapper.list()
-            .flatMap(mailbox -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.FULL, UNLIMITED), DEFAULT_CONCURRENCY)
+        return findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA)
             .map(message -> new ComposedMessageIdWithMetaData(
                 new ComposedMessageId(
                     message.getMailboxId(),
