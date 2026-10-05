@@ -30,7 +30,7 @@ import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
-import org.apache.james.jmap.mail.{AttachmentNotFoundException, BlobId, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, ThreadId}
+import org.apache.james.jmap.mail.{AttachmentNotFoundException, BlobId, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, InvalidEmailCreationPropertiesException, ThreadId}
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers}
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -80,6 +80,9 @@ object EmailSetCreatePerformer {
       case e: SizeExceededException =>
         LOGGER.info("Attempt to create too big of a message")
         SetError.tooLarge(SetErrorDescription(e.getMessage))
+      case e: InvalidEmailCreationPropertiesException =>
+        LOGGER.info("Invalid properties in Email/set create: {}", e.getMessage)
+        SetError.invalidProperties(SetErrorDescription(e.getMessage), Some(Properties.toProperties(e.properties)))
       case e: IllegalArgumentException =>
         LOGGER.info("Illegal argument in Email/set create", e)
         SetError.invalidArguments(SetErrorDescription(e.getMessage))
@@ -106,7 +109,8 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
       .concatMap {
         case (clientId, json) => serializer.deserializeCreationRequest(json)
           .fold(e => SMono.just[CreationResult](CreationFailure(clientId, new IllegalArgumentException(e.toString))),
-            creationRequest => creationRequest.validateRequest
+            creationRequest => EmailCreationRequest.validateProperties(json)
+              .flatMap(_ => creationRequest.validateRequest)
               .fold(e => SMono.just[CreationResult](CreationFailure(clientId, e)),
                 _ => create(clientId, creationRequest, mailboxSession)))
       }.collectSeq()

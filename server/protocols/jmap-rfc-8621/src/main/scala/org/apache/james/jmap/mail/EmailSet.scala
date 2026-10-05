@@ -176,8 +176,40 @@ case class UncheckedAddressesHeaderValue(value: List[UncheckedEmailAddress]) {
     .map(l => AddressesHeaderValue(l))
 }
 
+case class InvalidEmailCreationPropertiesException(properties: Set[String], description: String) extends IllegalArgumentException(description)
+
 object EmailCreationRequest {
   val KEYWORD_DRAFT: Keyword = org.apache.james.jmap.mail.Keyword("$draft")
+
+  private val SPECIFIC_HEADER_PREFIX: String = "header:"
+  private val BODY_STRUCTURE: String = "bodyStructure"
+  private val SUPPORTED_PROPERTIES: Set[String] = Set("mailboxIds", "messageId", "references", "inReplyTo", "from", "to",
+    "cc", "bcc", "sender", "replyTo", "subject", "sentAt", "keywords", "receivedAt", "htmlBody", "textBody", "bodyValues",
+    "attachments")
+
+  def validateProperties(creationRequest: JsObject): Either[InvalidEmailCreationPropertiesException, JsObject] = {
+    val properties: Set[String] = creationRequest.keys.toSet
+
+    if (properties.contains(BODY_STRUCTURE)) {
+      Left(InvalidEmailCreationPropertiesException(Set(BODY_STRUCTURE),
+        "'bodyStructure' is not supported on Email/set create, use 'textBody', 'htmlBody' and 'attachments' instead"))
+    } else {
+      validateKnownProperties(creationRequest, properties)
+    }
+  }
+
+  private def validateKnownProperties(creationRequest: JsObject, properties: Set[String]): Either[InvalidEmailCreationPropertiesException, JsObject] = {
+    val unknownProperties: Set[String] = properties
+      .filterNot(SUPPORTED_PROPERTIES.contains)
+      .filterNot(_.startsWith(SPECIFIC_HEADER_PREFIX))
+
+    if (unknownProperties.isEmpty) {
+      Right(creationRequest)
+    } else {
+      Left(InvalidEmailCreationPropertiesException(unknownProperties,
+        s"Unknown or unsupported properties on Email/set create: ${unknownProperties.toList.sorted.mkString(", ")}"))
+    }
+  }
 }
 case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 messageId: Option[MessageIdsHeaderValue],
