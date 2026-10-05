@@ -194,7 +194,10 @@ object ReadLevel {
       case FastViewWithAttachmentsMetadataReadLevel => FastViewWithAttachmentsMetadataReadLevel
       case _ => FastViewReadLevel
     }
-    case _ => throw new NotImplementedError()
+    case FastViewWithAttachmentsMetadataReadLevel => readLevel2 match {
+      case FullReadLevel => FullReadLevel
+      case _ => FastViewWithAttachmentsMetadataReadLevel
+    }
   }
 }
 
