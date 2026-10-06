@@ -27,6 +27,7 @@ import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
@@ -86,15 +87,15 @@ public class PostgresUidProvider implements UidProvider {
     @Override
     public Mono<MessageUid> nextUidReactive(MailboxId mailboxId) {
         return mailboxDAO.incrementAndGetLastUid(mailboxId, 1)
-            .defaultIfEmpty(MessageUid.MIN_VALUE);
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxId)));
     }
 
     @Override
     public Mono<List<MessageUid>> nextUids(MailboxId mailboxId, int count) {
         Preconditions.checkArgument(count > 0, "Count need to be positive");
-        Mono<MessageUid> updateNewLastUid = mailboxDAO.incrementAndGetLastUid(mailboxId, count)
-            .defaultIfEmpty(MessageUid.MIN_VALUE);
-        return updateNewLastUid.map(lastUid -> range(lastUid, count));
+        return mailboxDAO.incrementAndGetLastUid(mailboxId, count)
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxId)))
+            .map(lastUid -> range(lastUid, count));
     }
 
     private List<MessageUid> range(MessageUid higherInclusive, int count) {

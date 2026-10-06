@@ -23,6 +23,7 @@ import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
@@ -87,6 +88,6 @@ public class PostgresModSeqProvider implements ModSeqProvider {
     @Override
     public Mono<ModSeq> nextModSeqReactive(MailboxId mailboxId) {
         return mailboxDAO.incrementAndGetModSeq(mailboxId)
-            .defaultIfEmpty(ModSeq.first());
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxId)));
     }
 }
