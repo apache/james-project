@@ -548,7 +548,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
             if (attrValue == null) {
                 attrValue = message.getObjectProperty(name);
             }
-        } catch (JMSException e) {
+        } catch (Exception e) {
             LOGGER.warn("Error reading mail attribute {} from JMS message. Skipping attribute.", name, e);
             return Stream.empty();
         }
