@@ -148,8 +148,7 @@ class JMAPServerTest {
         try {
             given()
                 .relaxedHTTPSValidation()
-                .port(jmapServer.getPort().getValue())
-                .basePath("https://localhost")
+                .baseUri("https://localhost:" + jmapServer.getPort().getValue())
             .when()
                 .get()
             .then()
@@ -165,7 +164,7 @@ class JMAPServerTest {
             .enable()
             .randomPort()
             .keystore("classpath:keystore")
-            .secret("james72****")
+            .secret("james72laBalle")
             .build();
         VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
         JMAPServer jmapServer = new JMAPServer(configuration, NO_ROUTES_HANDLERS, versionParser, new org.apache.james.filesystem.api.FileSystem() {
@@ -194,8 +193,7 @@ class JMAPServerTest {
         try {
             given()
                 .relaxedHTTPSValidation()
-                .port(jmapServer.getPort().getValue())
-                .basePath("https://localhost")
+                .baseUri("https://localhost:" + jmapServer.getPort().getValue())
             .when()
                 .get()
             .then()
