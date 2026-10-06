@@ -27,6 +27,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
+import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 
 import reactor.core.publisher.Mono;
@@ -60,8 +61,7 @@ public class PostgresModSeqProvider implements ModSeqProvider {
 
     @Override
     public ModSeq nextModSeq(MailboxId mailboxId) throws MailboxException {
-        return nextModSeqReactive(mailboxId)
-            .blockOptional()
+        return MailboxReactorUtils.blockOptional(nextModSeqReactive(mailboxId))
             .orElseThrow(() -> new MailboxException("Can not retrieve modseq for " + mailboxId));
     }
 

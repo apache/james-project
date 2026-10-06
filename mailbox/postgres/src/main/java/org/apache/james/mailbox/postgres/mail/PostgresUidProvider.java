@@ -31,6 +31,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
+import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.mail.UidProvider;
 
 import com.google.common.base.Preconditions;
@@ -72,8 +73,7 @@ public class PostgresUidProvider implements UidProvider {
 
     @Override
     public MessageUid nextUid(MailboxId mailboxId) throws MailboxException {
-        return nextUidReactive(mailboxId)
-            .blockOptional()
+        return MailboxReactorUtils.blockOptional(nextUidReactive(mailboxId))
             .orElseThrow(() -> new MailboxException("Error during Uid update"));
     }
 
