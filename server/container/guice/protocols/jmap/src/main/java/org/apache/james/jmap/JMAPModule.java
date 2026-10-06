@@ -237,6 +237,11 @@ public class JMAPModule extends AbstractModule {
             .maximumSendSize(Optional.ofNullable(configuration.getString("email.send.max.size", null))
                 .map(Throwing.function(Size::parse))
                 .map(Size::asBytes))
+            .keystore(configuration.getString("tls.keystoreURL", null))
+            .keystoreType(configuration.getString("tls.keystoreType", null))
+            .privateKey(configuration.getString("tls.privateKey", null))
+            .certificates(configuration.getString("tls.certificates", null))
+            .secret(configuration.getString("tls.secret", null))
             .build();
     }
 
