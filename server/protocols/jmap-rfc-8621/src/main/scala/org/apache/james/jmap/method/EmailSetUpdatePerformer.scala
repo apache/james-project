@@ -230,29 +230,33 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
           .doOnSuccess(_ => auditMove(Seq(messageId), mailboxIds.value, targetIds.value, session))
           .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
           .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
-      } else {
-        updateFlags(messageId, update, mailboxIds, storedMetaData, session)
-          .flatMap {
-            case failure: EmailUpdateFailure => SMono.just[EmailUpdateResult](failure)
-            case _: EmailUpdateSuccess => updateMailboxIds(messageId, update, mailboxIds, session)
-          }
+      } else if (update.update.isFlagUpdate) {
+        // RFC 8621 sec.3: flags-only -- single atomic setFlagsReactive call, no partial-update window
+        val originalFlags: Flags = storedMetaData
+          .foldLeft[Flags](new Flags())((flags: Flags, m: ComposedMessageIdWithMetaData) => {
+            flags.add(m.getFlags)
+            flags
+          })
+        val newFlags = update.keywordsTransformation
+          .apply(LENIENT_KEYWORDS_FACTORY.fromFlags(originalFlags).get)
+          .asFlagsWithRecentAndDeletedFrom(originalFlags)
+        SMono(messageIdManager.setFlagsReactive(newFlags, FlagsUpdateMode.REPLACE, messageId, ImmutableList.copyOf(mailboxIds.value.asJavaCollection), session))
+          .then(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
           .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
           .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
+      } else if (update.update.isMailboxUpdate) {
+        // RFC 8621 sec.3: mailbox-only -- single atomic setInMailboxesReactive call, no partial-update window
+        val targetIds = update.mailboxIdsTransformation.apply(mailboxIds)
+        SMono(messageIdManager.setInMailboxesReactive(messageId, targetIds.value.asJava, session))
+          .then(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
+          .doOnSuccess(_ => auditMove(Seq(messageId), mailboxIds.value, targetIds.value, session))
+          .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
+          .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
+      } else {
+        SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId))
       }
     }
   }
-
-  private def updateMailboxIds(messageId: MessageId, update: ValidatedEmailSetUpdate, mailboxIds: MailboxIds, session: MailboxSession): SMono[EmailUpdateResult] =
-    if (update.update.isMailboxUpdate) {
-      val targetIds = update.mailboxIdsTransformation.apply(mailboxIds)
-      SMono(messageIdManager.setInMailboxesReactive(messageId, targetIds.value.asJava, session))
-        .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
-        .doOnSuccess(_ => auditMove(Seq(messageId), mailboxIds.value, targetIds.value, session))
-        .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
-        .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
-    } else {
-      SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId))
-    }
 
   private def auditMove(messageIds: Iterable[MessageId], fromIds: Iterable[MailboxId], toIds: Iterable[MailboxId], session: MailboxSession): Unit = {
     val from = fromIds.map(_.serialize()).mkString(", ")
@@ -270,21 +274,4 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
     }
   }
 
-  private def updateFlags(messageId: MessageId, update: ValidatedEmailSetUpdate, mailboxIds: MailboxIds, storedMetaData: List[ComposedMessageIdWithMetaData], session: MailboxSession): SMono[EmailUpdateResult] =
-    if (update.update.isFlagUpdate) {
-      val originalFlags: Flags = storedMetaData
-        .foldLeft[Flags](new Flags())((flags: Flags, m: ComposedMessageIdWithMetaData) => {
-          flags.add(m.getFlags)
-          flags
-        })
-
-      val newFlags = update.keywordsTransformation
-        .apply(LENIENT_KEYWORDS_FACTORY.fromFlags(originalFlags).get)
-        .asFlagsWithRecentAndDeletedFrom(originalFlags)
-
-      SMono(messageIdManager.setFlagsReactive(newFlags, FlagsUpdateMode.REPLACE, messageId, ImmutableList.copyOf(mailboxIds.value.asJavaCollection), session))
-        .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
-    } else {
-      SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId))
-    }
 }
