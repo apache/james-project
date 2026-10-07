@@ -19,9 +19,10 @@
 
 package org.apache.james.webadmin.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.function.Predicate;
 
 import jakarta.inject.Inject;
 
@@ -29,10 +30,11 @@ import org.apache.james.core.Username;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
-import org.apache.james.util.streams.Iterators;
 import org.apache.james.webadmin.dto.UserResponse;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
 
 public class UserService {
     private final UsersRepository usersRepository;
@@ -42,13 +44,39 @@ public class UserService {
         this.usersRepository = usersRepository;
     }
 
-    public List<UserResponse> getUsers() throws UsersRepositoryException {
-        return  Optional.ofNullable(usersRepository.list())
-            .map(Iterators::toStream)
-            .orElse(Stream.of())
-            .map(Username::asString)
-            .map(UserResponse::new)
-            .collect(ImmutableList.toImmutableList());
+    /**
+     * Users sorted alphabetically, strictly after the anchor, optionally matching the query.
+     *
+     * The condition is applied after the repository pagination: repository pages are read until 'limit' users
+     * matching the condition are found, or the repository is exhausted.
+     */
+    public List<UserResponse> getUsers(Optional<String> query, Optional<Username> anchor, Optional<Integer> limit, Predicate<Username> condition) {
+        List<UserResponse> result = new ArrayList<>();
+        Optional<Username> pageAnchor = anchor;
+        while (true) {
+            List<Username> page = readPage(query, pageAnchor, limit);
+            page.stream()
+                .filter(condition)
+                .limit(limit.map(value -> value - result.size()).orElse(Integer.MAX_VALUE))
+                .map(Username::asString)
+                .map(UserResponse::new)
+                .forEach(result::add);
+
+            boolean exhausted = limit.map(value -> page.size() < value).orElse(true);
+            boolean full = limit.map(value -> result.size() >= value).orElse(false);
+            if (exhausted || full) {
+                return ImmutableList.copyOf(result);
+            }
+            pageAnchor = Optional.of(page.get(page.size() - 1));
+        }
+    }
+
+    private List<Username> readPage(Optional<String> query, Optional<Username> anchor, Optional<Integer> limit) {
+        return Flux.from(query
+                .map(q -> usersRepository.searchPaginated(q, anchor, limit))
+                .orElseGet(() -> usersRepository.listPaginated(anchor, limit)))
+            .collectList()
+            .block();
     }
 
     public void removeUser(Username username) throws UsersRepositoryException {

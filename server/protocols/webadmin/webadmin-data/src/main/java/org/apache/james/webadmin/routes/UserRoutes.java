@@ -25,6 +25,7 @@ import static spark.Spark.halt;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -50,6 +51,7 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.apache.james.webadmin.utils.Parsers;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
@@ -74,6 +76,8 @@ public class UserRoutes implements Routes {
     private static final String FORCE_PARAM = "force";
     private static final String VERIFY = "verify";
     private static final String AUTHORIZED_USERS = "authorizedUsers";
+    private static final String QUERY_PARAM = "query";
+    private static final String ANCHOR_PARAM = "anchor";
 
     private final UserService userService;
     private final JsonTransformer jsonTransformer;
@@ -174,16 +178,21 @@ public class UserRoutes implements Routes {
             jsonTransformer);
     }
 
-    private List<UserResponse> getUsers(Request request, Response response) throws UsersRepositoryException {
+    private List<UserResponse> getUsers(Request request, Response response) {
         UserCondition combinedCondition = userConditionMap.entrySet()
             .stream()
             .filter(entry -> request.queryParams().contains(entry.getKey()))
             .map(Map.Entry::getValue)
             .reduce(ALL, UserCondition::and);
-        return userService.getUsers()
-            .stream()
-            .filter(userResponse -> combinedCondition.test(Username.of(userResponse.getUsername())))
-            .toList();
+
+        Optional<Integer> limit = ParametersExtractor.extractLimit(request).getLimit();
+        Optional<String> query = Optional.ofNullable(request.queryParams(QUERY_PARAM))
+            .filter(s -> !s.isEmpty());
+        Optional<Username> anchor = Optional.ofNullable(request.queryParams(ANCHOR_PARAM))
+            .filter(s -> !s.isEmpty())
+            .map(Parsers::parseUsername);
+
+        return userService.getUsers(query, anchor, limit, combinedCondition);
     }
 
     private String removeUser(Request request, Response response) {

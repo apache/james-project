@@ -19,7 +19,9 @@
 
 package org.apache.james.user.api;
 
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
@@ -185,6 +187,49 @@ public interface UsersRepository {
         return Mono.fromRunnable(Throwing.runnable(() -> assertValid(username)).sneakyThrow())
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .then();
+    }
+
+    Comparator<Username> USERNAME_ALPHABETICAL_ORDER = Comparator.comparing(Username::asString);
+
+    /**
+     * Lists users sorted alphabetically on their username.
+     *
+     * @param anchor exclusive lower bound: only users strictly after it are returned
+     * @param limit maximum count of users returned, no limit if empty
+     */
+    default Publisher<Username> listPaginated(Optional<Username> anchor, Optional<Integer> limit) {
+        return applyLimit(Flux.from(listReactive())
+            .filter(username -> isAfter(username, anchor))
+            .sort(USERNAME_ALPHABETICAL_ORDER), limit);
+    }
+
+    /**
+     * Lists users whose username contains (case insensitively) the query, sorted alphabetically on their username.
+     *
+     * @param query substring the username needs to contain
+     * @param anchor exclusive lower bound: only users strictly after it are returned
+     * @param limit maximum count of users returned, no limit if empty
+     */
+    default Publisher<Username> searchPaginated(String query, Optional<Username> anchor, Optional<Integer> limit) {
+        return applyLimit(Flux.from(listReactive())
+            .filter(username -> matches(username, query))
+            .filter(username -> isAfter(username, anchor))
+            .sort(USERNAME_ALPHABETICAL_ORDER), limit);
+    }
+
+    static Flux<Username> applyLimit(Flux<Username> usernames, Optional<Integer> limit) {
+        return limit.map(value -> usernames.take(value, true))
+            .orElse(usernames);
+    }
+
+    static boolean isAfter(Username username, Optional<Username> anchor) {
+        return anchor.map(a -> USERNAME_ALPHABETICAL_ORDER.compare(username, a) > 0)
+            .orElse(true);
+    }
+
+    static boolean matches(Username username, String query) {
+        return username.asString().toLowerCase(Locale.US)
+            .contains(query.toLowerCase(Locale.US));
     }
 
     default Publisher<Username> listUsersOfADomainReactive(Domain domain) {

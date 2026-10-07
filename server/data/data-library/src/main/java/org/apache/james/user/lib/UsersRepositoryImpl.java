@@ -263,6 +263,16 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
     }
 
     @Override
+    public Publisher<Username> listPaginated(Optional<Username> anchor, Optional<Integer> limit) {
+        return usersDAO.listPaginated(anchor, limit);
+    }
+
+    @Override
+    public Publisher<Username> searchPaginated(String query, Optional<Username> anchor, Optional<Integer> limit) {
+        return usersDAO.searchPaginated(query, anchor, limit);
+    }
+
+    @Override
     public Publisher<Username> listUsersOfADomainReactive(Domain domain) {
         return usersDAO.listUsersOfADomainReactive(domain, supportVirtualHosting());
     }
