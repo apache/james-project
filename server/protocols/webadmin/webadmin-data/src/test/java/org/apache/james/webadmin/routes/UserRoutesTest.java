@@ -26,6 +26,7 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -651,7 +652,7 @@ class UserRoutesTest {
 
             @Test
             default void getShouldFailOnRepositoryException(UsersRepository usersRepository) throws Exception {
-                when(usersRepository.listPaginated(any(), any())).thenReturn(Flux.error(new UsersRepositoryException("message")));
+                doReturn(Flux.error(new UsersRepositoryException("message"))).when(usersRepository).searchPaginated(any(), any(), any());
 
                 when()
                     .get()
@@ -713,7 +714,7 @@ class UserRoutesTest {
 
             @Test
             default void getShouldFailOnUnknownException(UsersRepository usersRepository) throws Exception {
-                when(usersRepository.listPaginated(any(), any())).thenThrow(new RuntimeException());
+                doThrow(new RuntimeException()).when(usersRepository).searchPaginated(any(), any(), any());
 
                 when()
                     .get()

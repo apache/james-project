@@ -28,6 +28,7 @@ import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -41,6 +42,7 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.model.UsernamePredicate;
 import org.apache.james.user.lib.UsersRepositoryContract;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.awaitility.Awaitility;
@@ -137,6 +139,42 @@ class ReadOnlyUsersLDAPRepositoryTest {
             assertThat(ImmutableList.copyOf(usersLDAPRepository.list()))
                 .containsOnly(JAMES_USER_MAIL, Username.of("bob@extra.org"));
         }
+
+        @Test
+        void searchPaginatedShouldListUsersOfAllDNsSorted() {
+            assertThat(searchPaginated(usersLDAPRepository, ImmutableList.of(), Optional.empty(), Optional.empty()))
+                .containsExactly(Username.of("bob@extra.org"), JAMES_USER_MAIL);
+        }
+
+        @Test
+        void searchPaginatedShouldApplyAnchorAndLimitAcrossDNs() {
+            assertThat(searchPaginated(usersLDAPRepository, ImmutableList.of(), Optional.of(Username.of("bob@extra.org")), Optional.of(1)))
+                .containsExactly(JAMES_USER_MAIL);
+        }
+
+        @Test
+        void searchPaginatedShouldFilterByDomainOfAnExtraDN() {
+            assertThat(searchPaginated(usersLDAPRepository, ImmutableList.of(UsernamePredicate.domain(Domain.of("extra.org"))), Optional.empty(), Optional.empty()))
+                .containsExactly(Username.of("bob@extra.org"));
+        }
+
+        @Test
+        void searchPaginatedShouldFilterByMainDomain() {
+            assertThat(searchPaginated(usersLDAPRepository, ImmutableList.of(UsernamePredicate.domain(Domain.of(DOMAIN))), Optional.empty(), Optional.empty()))
+                .containsExactly(JAMES_USER_MAIL);
+        }
+
+        @Test
+        void searchPaginatedShouldReturnEmptyForUnknownDomain() {
+            assertThat(searchPaginated(usersLDAPRepository, ImmutableList.of(UsernamePredicate.domain(Domain.of("nonexistant.org"))), Optional.empty(), Optional.empty()))
+                .isEmpty();
+        }
+
+        @Test
+        void searchPaginatedShouldFilterByPrefixIgnoringCase() {
+            assertThat(searchPaginated(usersLDAPRepository, ImmutableList.of(UsernamePredicate.prefix("JAMES")), Optional.empty(), Optional.empty()))
+                .containsExactly(JAMES_USER_MAIL);
+        }
     }
 
     @Nested
@@ -181,6 +219,13 @@ class ReadOnlyUsersLDAPRepositoryTest {
         void shouldListEntriesInUserListBase() throws Exception {
             // james-user@james.org is not in userListBase thus is not listed
             assertThat(ImmutableList.copyOf(usersLDAPRepository.list())).containsOnly(Username.of("bob@extra.org"));
+        }
+
+        @Test
+        void searchPaginatedShouldListEntriesInUserListBase() {
+            // james-user@james.org is not in userListBase thus is not listed
+            assertThat(searchPaginated(usersLDAPRepository, ImmutableList.of(), Optional.empty(), Optional.empty()))
+                .containsExactly(Username.of("bob@extra.org"));
         }
     }
 
@@ -236,6 +281,34 @@ class ReadOnlyUsersLDAPRepositoryTest {
             usersLDAPRepository.init();
 
             assertThat(ImmutableList.copyOf(usersLDAPRepository.list())).isEmpty();
+        }
+
+        @Test
+        void searchPaginatedShouldKeepMatchingEntries() throws Exception {
+            HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
+            configuration.addProperty("[@filter]", "(sn=james-user)");
+
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry(),
+                LdapRepositoryConfiguration.from(configuration));
+            usersLDAPRepository.configure(configuration);
+            usersLDAPRepository.init();
+
+            assertThat(searchPaginated(usersLDAPRepository, ImmutableList.of(UsernamePredicate.prefix("james")), Optional.empty(), Optional.of(10)))
+                .containsExactly(JAMES_USER);
+        }
+
+        @Test
+        void searchPaginatedShouldTakeFilterIntoAccount() throws Exception {
+            HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
+            configuration.addProperty("[@filter]", "(sn=nomatch)");
+
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry(),
+                LdapRepositoryConfiguration.from(configuration));
+            usersLDAPRepository.configure(configuration);
+            usersLDAPRepository.init();
+
+            assertThat(searchPaginated(usersLDAPRepository, ImmutableList.of(), Optional.empty(), Optional.of(10)))
+                .isEmpty();
         }
     }
 
@@ -571,6 +644,13 @@ class ReadOnlyUsersLDAPRepositoryTest {
         ldapRepository.configure(configuration);
         ldapRepository.init();
         return ldapRepository;
+    }
+
+    static List<Username> searchPaginated(UsersRepository usersRepository, List<UsernamePredicate> predicates,
+                                          Optional<Username> anchor, Optional<Integer> limit) {
+        return Flux.from(usersRepository.searchPaginated(predicates, anchor, limit))
+            .collectList()
+            .block();
     }
 
     static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration(LdapGenericContainer ldapContainer) {

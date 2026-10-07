@@ -699,17 +699,19 @@ curl -XGET http://ip:port/users?hasNoMailboxes
 curl -XGET http://ip:port/users?hasNotAllSystemMailboxes
 ....
 
-- `limit`, `anchor` and `query` allow paginating and searching the user list. Users are sorted alphabetically on their
+- `limit`, `anchor`, `query` and `domain` allow paginating and searching the user list. Users are sorted alphabetically on their
 username.
   - `limit`: maximum count of users returned (strictly positive integer). No limit if omitted.
   - `anchor`: only users whose username comes strictly after the anchor are returned. Pass the last username of the
 previous page to get the next one.
-  - `query`: only users whose username contains (case insensitively) this value are returned.
+  - `query`: only users whose username starts (case insensitively) with this value are returned.
+  - `domain`: only users of this domain are returned.
 
 ....
 curl -XGET http://ip:port/users?limit=50
 curl -XGET http://ip:port/users?limit=50&anchor=btellier@linagora.com
 curl -XGET http://ip:port/users?query=bte&limit=50&anchor=btellier@linagora.com
+curl -XGET http://ip:port/users?domain=linagora.com&limit=50
 ....
 
 These parameters can be combined with the condition parameters above.
@@ -717,7 +719,7 @@ These parameters can be combined with the condition parameters above.
 Response codes:
 
 * 200: The user name list was successfully retrieved
-* 400: Invalid `limit` or `anchor`
+* 400: Invalid `limit`, `anchor` or `domain`
 
 === Retrieving the list of allowed `From` headers for a given user
 
