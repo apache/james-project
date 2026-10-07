@@ -20,16 +20,17 @@
 package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.apache.james.webadmin.UserCondition.ALL;
 import static spark.Spark.halt;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.rrt.api.CanSendFrom;
@@ -39,6 +40,7 @@ import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.api.model.UsernamePredicate;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.UserCondition;
@@ -78,6 +80,7 @@ public class UserRoutes implements Routes {
     private static final String AUTHORIZED_USERS = "authorizedUsers";
     private static final String QUERY_PARAM = "query";
     private static final String ANCHOR_PARAM = "anchor";
+    private static final String DOMAIN_PARAM = "domain";
 
     private final UserService userService;
     private final JsonTransformer jsonTransformer;
@@ -179,20 +182,28 @@ public class UserRoutes implements Routes {
     }
 
     private List<UserResponse> getUsers(Request request, Response response) {
-        UserCondition combinedCondition = userConditionMap.entrySet()
+        Optional<UserCondition> combinedCondition = userConditionMap.entrySet()
             .stream()
             .filter(entry -> request.queryParams().contains(entry.getKey()))
             .map(Map.Entry::getValue)
-            .reduce(ALL, UserCondition::and);
+            .reduce(UserCondition::and);
 
         Optional<Integer> limit = ParametersExtractor.extractLimit(request).getLimit();
-        Optional<String> query = Optional.ofNullable(request.queryParams(QUERY_PARAM))
-            .filter(s -> !s.isEmpty());
+        Optional<UsernamePredicate> prefixPredicate = Optional.ofNullable(request.queryParams(QUERY_PARAM))
+            .filter(s -> !s.isEmpty())
+            .map(UsernamePredicate::prefix);
+        Optional<UsernamePredicate> domainPredicate = Optional.ofNullable(request.queryParams(DOMAIN_PARAM))
+            .filter(s -> !s.isEmpty())
+            .map(this::parseDomain)
+            .map(UsernamePredicate::domain);
+        List<UsernamePredicate> predicates = Stream.of(prefixPredicate, domainPredicate)
+            .flatMap(Optional::stream)
+            .toList();
         Optional<Username> anchor = Optional.ofNullable(request.queryParams(ANCHOR_PARAM))
             .filter(s -> !s.isEmpty())
             .map(Parsers::parseUsername);
 
-        return userService.getUsers(query, anchor, limit, combinedCondition);
+        return userService.getUsers(predicates, anchor, limit, combinedCondition);
     }
 
     private String removeUser(Request request, Response response) {
@@ -400,6 +411,19 @@ public class UserRoutes implements Routes {
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                 .type(ErrorType.SERVER_ERROR)
                 .message(errorMessage)
+                .cause(e)
+                .haltError();
+        }
+    }
+
+    private Domain parseDomain(String domain) {
+        try {
+            return Domain.of(domain);
+        } catch (IllegalArgumentException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Invalid domain: " + domain)
                 .cause(e)
                 .haltError();
         }

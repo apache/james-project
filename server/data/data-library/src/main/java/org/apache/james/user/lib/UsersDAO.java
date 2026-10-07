@@ -20,13 +20,15 @@
 package org.apache.james.user.lib;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.apache.james.user.api.model.UsernamePredicate;
+import org.apache.james.user.api.model.UsersPaginationHelpers;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
@@ -73,17 +75,12 @@ public interface UsersDAO {
                 .orElse(!supportsVirtualHosting));
     }
 
-    default Publisher<Username> listPaginated(Optional<Username> anchor, Optional<Integer> limit) {
-        return UsersRepository.applyLimit(Flux.from(listReactive())
-            .filter(username -> UsersRepository.isAfter(username, anchor))
-            .sort(UsersRepository.USERNAME_ALPHABETICAL_ORDER), limit);
-    }
-
-    default Publisher<Username> searchPaginated(String query, Optional<Username> anchor, Optional<Integer> limit) {
-        return UsersRepository.applyLimit(Flux.from(listReactive())
-            .filter(username -> UsersRepository.matches(username, query))
-            .filter(username -> UsersRepository.isAfter(username, anchor))
-            .sort(UsersRepository.USERNAME_ALPHABETICAL_ORDER), limit);
+    default Publisher<Username> searchPaginated(List<UsernamePredicate> predicates, Optional<Username> anchor, Optional<Integer> limit) {
+        // DomainPredicate only matches usernames having a domain part, hence virtual hosting can be assumed
+        Publisher<Username> candidates = UsersPaginationHelpers.domain(predicates)
+            .map(domain -> listUsersOfADomainReactive(domain, true))
+            .orElseGet(this::listReactive);
+        return UsersPaginationHelpers.paginate(candidates, predicates, anchor, limit);
     }
 
     void addUser(Username username, String password) throws UsersRepositoryException;

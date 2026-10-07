@@ -22,6 +22,7 @@ package org.apache.james.user.lib;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -44,6 +45,7 @@ import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.apache.james.user.api.model.UsernamePredicate;
 import org.apache.james.util.DurationParser;
 import org.reactivestreams.Publisher;
 import org.slf4j.LoggerFactory;
@@ -263,13 +265,8 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
     }
 
     @Override
-    public Publisher<Username> listPaginated(Optional<Username> anchor, Optional<Integer> limit) {
-        return usersDAO.listPaginated(anchor, limit);
-    }
-
-    @Override
-    public Publisher<Username> searchPaginated(String query, Optional<Username> anchor, Optional<Integer> limit) {
-        return usersDAO.searchPaginated(query, anchor, limit);
+    public Publisher<Username> searchPaginated(List<UsernamePredicate> predicates, Optional<Username> anchor, Optional<Integer> limit) {
+        return usersDAO.searchPaginated(predicates, anchor, limit);
     }
 
     @Override

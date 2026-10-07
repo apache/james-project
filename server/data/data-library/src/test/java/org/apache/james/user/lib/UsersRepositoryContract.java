@@ -22,7 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +40,7 @@ import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.apache.james.user.api.model.UsernamePredicate;
 import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.DefaultUser;
 import org.junit.jupiter.api.Assumptions;
@@ -50,6 +53,8 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 
@@ -247,6 +252,112 @@ public interface UsersRepositoryContract {
             assertThat(actual)
                 .toIterable()
                 .containsOnly(testSystem.user1, testSystem.user2, testSystem.user3);
+        }
+
+        default List<Username> searchPaginated(List<UsernamePredicate> predicates, Optional<Username> anchor, Optional<Integer> limit) {
+            return Flux.from(testee().searchPaginated(predicates, anchor, limit))
+                .collectList()
+                .block();
+        }
+
+        default List<Username> addUsers(TestSystem testSystem, String... localParts) throws UsersRepositoryException {
+            ImmutableList.Builder<Username> usernames = ImmutableList.builder();
+            for (String localPart : localParts) {
+                Username username = testSystem.toUsername(localPart);
+                testee().addUser(username, "password");
+                usernames.add(username);
+            }
+            return usernames.build().stream()
+                .sorted(Comparator.comparing(Username::asString))
+                .collect(ImmutableList.toImmutableList());
+        }
+
+        @Test
+        default void searchPaginatedShouldReturnEmptyWhenEmptyRepository() {
+            assertThat(searchPaginated(ImmutableList.of(), Optional.empty(), Optional.empty()))
+                .isEmpty();
+        }
+
+        @Test
+        default void searchPaginatedShouldReturnAllUsersSortedAlphabetically(TestSystem testSystem) throws UsersRepositoryException {
+            List<Username> sortedUsers = addUsers(testSystem, "charlie", "alice", "bob");
+
+            assertThat(searchPaginated(ImmutableList.of(), Optional.empty(), Optional.empty()))
+                .containsExactlyElementsOf(sortedUsers);
+        }
+
+        @Test
+        default void searchPaginatedShouldApplyTheLimit(TestSystem testSystem) throws UsersRepositoryException {
+            List<Username> sortedUsers = addUsers(testSystem, "charlie", "alice", "bob");
+
+            assertThat(searchPaginated(ImmutableList.of(), Optional.empty(), Optional.of(2)))
+                .containsExactlyElementsOf(sortedUsers.subList(0, 2));
+        }
+
+        @Test
+        default void searchPaginatedShouldReturnUsersStrictlyAfterTheAnchor(TestSystem testSystem) throws UsersRepositoryException {
+            List<Username> sortedUsers = addUsers(testSystem, "charlie", "alice", "bob", "dave");
+
+            assertThat(searchPaginated(ImmutableList.of(), Optional.of(sortedUsers.get(1)), Optional.of(1)))
+                .containsExactly(sortedUsers.get(2));
+        }
+
+        @Test
+        default void searchPaginatedShouldAcceptAnAnchorThatIsNotAUser(TestSystem testSystem) throws UsersRepositoryException {
+            List<Username> sortedUsers = addUsers(testSystem, "alice", "charlie");
+
+            assertThat(searchPaginated(ImmutableList.of(), Optional.of(testSystem.toUsername("bob")), Optional.empty()))
+                .containsExactly(sortedUsers.get(1));
+        }
+
+        @Test
+        default void searchPaginatedShouldReturnEmptyAfterTheLastUser(TestSystem testSystem) throws UsersRepositoryException {
+            List<Username> sortedUsers = addUsers(testSystem, "alice", "bob");
+
+            assertThat(searchPaginated(ImmutableList.of(), Optional.of(sortedUsers.getLast()), Optional.of(10)))
+                .isEmpty();
+        }
+
+        @Test
+        default void browsingPagesShouldReturnAllUsersOnce(TestSystem testSystem) throws UsersRepositoryException {
+            List<Username> sortedUsers = addUsers(testSystem, "user1", "user2", "user3", "user4", "user5", "user6", "user7");
+
+            List<Username> browsed = new ArrayList<>();
+            Optional<Username> anchor = Optional.empty();
+            while (true) {
+                List<Username> page = searchPaginated(ImmutableList.of(), anchor, Optional.of(3));
+                browsed.addAll(page);
+                if (page.size() < 3) {
+                    break;
+                }
+                anchor = Optional.of(page.getLast());
+            }
+
+            assertThat(browsed).containsExactlyElementsOf(sortedUsers);
+        }
+
+        @Test
+        default void searchPaginatedShouldFilterByPrefix(TestSystem testSystem) throws UsersRepositoryException {
+            addUsers(testSystem, "albert", "bob", "alice");
+
+            assertThat(searchPaginated(ImmutableList.of(UsernamePredicate.prefix("al")), Optional.empty(), Optional.empty()))
+                .containsExactly(testSystem.toUsername("albert"), testSystem.toUsername("alice"));
+        }
+
+        @Test
+        default void searchPaginatedPrefixShouldBeCaseInsensitive(TestSystem testSystem) throws UsersRepositoryException {
+            addUsers(testSystem, "albert", "bob");
+
+            assertThat(searchPaginated(ImmutableList.of(UsernamePredicate.prefix("AL")), Optional.empty(), Optional.empty()))
+                .containsExactly(testSystem.toUsername("albert"));
+        }
+
+        @Test
+        default void searchPaginatedShouldCombinePrefixAnchorAndLimit(TestSystem testSystem) throws UsersRepositoryException {
+            addUsers(testSystem, "alan", "albert", "alice", "alvin", "bob");
+
+            assertThat(searchPaginated(ImmutableList.of(UsernamePredicate.prefix("al")), Optional.of(testSystem.toUsername("albert")), Optional.of(2)))
+                .containsExactly(testSystem.toUsername("alice"), testSystem.toUsername("alvin"));
         }
 
         @Test
@@ -602,6 +713,43 @@ public interface UsersRepositoryContract {
                 .collectList()
                 .block())
                 .containsExactlyInAnyOrder(Username.of("alice@domain.tld"), Username.of("bob@domain.tld"));
+        }
+
+        @Test
+        default void searchPaginatedShouldFilterByDomain(TestSystem testSystem) throws Exception {
+            testSystem.domainList.addDomain(Domain.of("domain1.tld"));
+            testSystem.domainList.addDomain(Domain.of("domain2.tld"));
+            testee().addUser(Username.of("bob@domain1.tld"), "password");
+            testee().addUser(Username.of("alice@domain1.tld"), "password");
+            testee().addUser(Username.of("alice@domain2.tld"), "password");
+
+            assertThat(searchPaginated(ImmutableList.of(UsernamePredicate.domain(Domain.of("domain1.tld"))), Optional.empty(), Optional.empty()))
+                .containsExactly(Username.of("alice@domain1.tld"), Username.of("bob@domain1.tld"));
+        }
+
+        @Test
+        default void searchPaginatedShouldReturnEmptyWhenNoUserInDomain(TestSystem testSystem) throws Exception {
+            testSystem.domainList.addDomain(Domain.of("empty.tld"));
+            testee().addUser(testSystem.user1, "password");
+
+            assertThat(searchPaginated(ImmutableList.of(UsernamePredicate.domain(Domain.of("empty.tld"))), Optional.empty(), Optional.empty()))
+                .isEmpty();
+        }
+
+        @Test
+        default void searchPaginatedShouldCombineDomainPrefixAnchorAndLimit(TestSystem testSystem) throws Exception {
+            testSystem.domainList.addDomain(Domain.of("domain1.tld"));
+            testSystem.domainList.addDomain(Domain.of("domain2.tld"));
+            testee().addUser(Username.of("alan@domain1.tld"), "password");
+            testee().addUser(Username.of("albert@domain1.tld"), "password");
+            testee().addUser(Username.of("alice@domain1.tld"), "password");
+            testee().addUser(Username.of("alvin@domain1.tld"), "password");
+            testee().addUser(Username.of("alice@domain2.tld"), "password");
+            testee().addUser(Username.of("bob@domain1.tld"), "password");
+
+            assertThat(searchPaginated(ImmutableList.of(UsernamePredicate.domain(Domain.of("domain1.tld")), UsernamePredicate.prefix("al")),
+                    Optional.of(Username.of("alan@domain1.tld")), Optional.of(2)))
+                .containsExactly(Username.of("albert@domain1.tld"), Username.of("alice@domain1.tld"));
         }
 
         @Test

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -42,9 +43,10 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.api.GaugeRegistry;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.apache.james.user.api.model.UsernamePredicate;
+import org.apache.james.user.api.model.UsersPaginationHelpers;
 import org.apache.james.user.lib.UsersDAO;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -62,6 +64,7 @@ import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
+import com.unboundid.ldap.sdk.ResultCode;
 import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
@@ -211,8 +214,27 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     /**
      * Relies on the simple paged results control (RFC 2696) so that listing a large directory is not capped by the
      * server size limit. The paging cookie is bound to the LDAP connection thus all pages are read on the same connection.
+     *
+     * As the connection is not handled by the pool, we mimic its retry of operations failing due to an invalid connection
+     * (eg failover): the search is retried once on a new connection, as long as no entry was handed over yet.
      */
     private void pagedSearch(String dn, Filter filter, String attributes, Consumer<SearchResultEntry> entryConsumer) throws LDAPException {
+        AtomicBoolean entryHandedOver = new AtomicBoolean(false);
+        Consumer<SearchResultEntry> trackingConsumer = entry -> {
+            entryHandedOver.set(true);
+            entryConsumer.accept(entry);
+        };
+        try {
+            pagedSearchOnSingleConnection(dn, filter, attributes, trackingConsumer);
+        } catch (LDAPException e) {
+            if (ResultCode.isConnectionUsable(e.getResultCode()) || entryHandedOver.get()) {
+                throw e;
+            }
+            pagedSearchOnSingleConnection(dn, filter, attributes, entryConsumer);
+        }
+    }
+
+    private void pagedSearchOnSingleConnection(String dn, Filter filter, String attributes, Consumer<SearchResultEntry> entryConsumer) throws LDAPException {
         LDAPConnection connection = ldapConnectionPool.getConnection();
         try {
             ASN1OctetString cookie = null;
@@ -393,46 +415,61 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
 
     @Override
-    public Publisher<Username> listPaginated(Optional<Username> anchor, Optional<Integer> limit) {
+    public Publisher<Username> searchPaginated(List<UsernamePredicate> predicates, Optional<Username> anchor, Optional<Integer> limit) {
         if (ldapConfiguration.getRestriction().isActivated()) {
-            return UsersDAO.super.listPaginated(anchor, limit);
+            return UsersDAO.super.searchPaginated(predicates, anchor, limit);
         }
-        return firstUsernamesAfter(listingFilter, username -> true, anchor, limit);
+        String usernameAttribute = usernameAttribute();
+        Filter filter = Filter.createANDFilter(ImmutableList.<Filter>builder()
+            .add(listingFilter)
+            .addAll(predicates.stream()
+                .map(predicate -> asLdapFilter(predicate, usernameAttribute))
+                .toList())
+            .build());
+        // Only the base DN of the searched domain needs to be scanned
+        List<String> dns = UsersPaginationHelpers.domain(predicates)
+            .map(domain -> List.of(userBase(domain)))
+            .orElseGet(() -> allDNs().toList());
+        return firstUsernamesAfter(dns, filter, username -> UsersPaginationHelpers.matchesAll(username, predicates), anchor, limit);
     }
 
-    @Override
-    public Publisher<Username> searchPaginated(String query, Optional<Username> anchor, Optional<Integer> limit) {
-        if (ldapConfiguration.getRestriction().isActivated()) {
-            return UsersDAO.super.searchPaginated(query, anchor, limit);
-        }
-        Filter queryFilter = Filter.createSubstringFilter(usernameAttribute(), null, new String[]{query}, null);
-        return firstUsernamesAfter(Filter.createANDFilter(listingFilter, queryFilter),
-            username -> UsersRepository.matches(username, query), anchor, limit);
+    private Filter asLdapFilter(UsernamePredicate predicate, String usernameAttribute) {
+        return switch (predicate) {
+            case UsernamePredicate.DomainPredicate domainPredicate ->
+                Filter.createSubstringFilter(usernameAttribute, null, null, "@" + domainPredicate.domain().asString());
+            case UsernamePredicate.UsernamePrefixPredicate prefixPredicate ->
+                Filter.createSubstringFilter(usernameAttribute, prefixPredicate.prefix(), null, null);
+        };
     }
 
     /**
      * Only the username attribute is retrieved, and only the 'limit' first usernames after the anchor are retained
      * in memory while the (paged) LDAP search results are being read.
      */
-    private Flux<Username> firstUsernamesAfter(Filter filter, Predicate<Username> predicate, Optional<Username> anchor, Optional<Integer> limit) {
-        String usernameAttribute = usernameAttribute();
-        return Mono.fromCallable(() -> {
-                TreeSet<Username> firstUsernames = new TreeSet<>(UsersRepository.USERNAME_ALPHABETICAL_ORDER);
-                for (String dn : allDNs().toList()) {
-                    pagedSearch(dn, filter, usernameAttribute, entry -> asUsername(entry, usernameAttribute)
-                        .filter(predicate)
-                        .filter(username -> UsersRepository.isAfter(username, anchor))
-                        .ifPresent(username -> {
-                            firstUsernames.add(username);
-                            if (limit.isPresent() && firstUsernames.size() > limit.get()) {
-                                firstUsernames.pollLast();
-                            }
-                        }));
-                }
-                return firstUsernames;
-            })
+    private Flux<Username> firstUsernamesAfter(List<String> dns, Filter filter, Predicate<Username> predicate, Optional<Username> anchor, Optional<Integer> limit) {
+        return Mono.fromCallable(() -> collectFirstUsernamesAfter(dns, filter, predicate, anchor, limit))
             .flatMapIterable(usernames -> usernames)
             .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    private TreeSet<Username> collectFirstUsernamesAfter(List<String> dns, Filter filter, Predicate<Username> predicate,
+                                                         Optional<Username> anchor, Optional<Integer> limit) throws LDAPException {
+        String usernameAttribute = usernameAttribute();
+        TreeSet<Username> firstUsernames = new TreeSet<>(UsersPaginationHelpers.USERNAME_ALPHABETICAL_ORDER);
+        for (String dn : dns) {
+            pagedSearch(dn, filter, usernameAttribute, entry -> asUsername(entry, usernameAttribute)
+                .filter(predicate)
+                .filter(username -> UsersPaginationHelpers.isAfter(username, anchor))
+                .ifPresent(username -> addWithinLimit(firstUsernames, username, limit)));
+        }
+        return firstUsernames;
+    }
+
+    private static void addWithinLimit(TreeSet<Username> firstUsernames, Username username, Optional<Integer> limit) {
+        firstUsernames.add(username);
+        if (limit.isPresent() && firstUsernames.size() > limit.get()) {
+            firstUsernames.pollLast();
+        }
     }
 
     @Override
