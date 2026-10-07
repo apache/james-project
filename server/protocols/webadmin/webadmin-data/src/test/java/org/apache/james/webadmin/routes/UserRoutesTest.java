@@ -651,7 +651,7 @@ class UserRoutesTest {
 
             @Test
             default void getShouldFailOnRepositoryException(UsersRepository usersRepository) throws Exception {
-                when(usersRepository.list()).thenThrow(new UsersRepositoryException("message"));
+                when(usersRepository.listPaginated(any(), any())).thenReturn(Flux.error(new UsersRepositoryException("message")));
 
                 when()
                     .get()
@@ -713,7 +713,7 @@ class UserRoutesTest {
 
             @Test
             default void getShouldFailOnUnknownException(UsersRepository usersRepository) throws Exception {
-                when(usersRepository.list()).thenThrow(new RuntimeException());
+                when(usersRepository.listPaginated(any(), any())).thenThrow(new RuntimeException());
 
                 when()
                     .get()

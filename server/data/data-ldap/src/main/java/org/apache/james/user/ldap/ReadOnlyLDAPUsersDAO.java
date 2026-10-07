@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 
@@ -39,32 +42,39 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.api.GaugeRegistry;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.unboundid.asn1.ASN1OctetString;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldap.sdk.Filter;
+import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
-import com.unboundid.ldap.sdk.LDAPSearchException;
 import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
+import com.unboundid.ldap.sdk.controls.SimplePagedResultsControl;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUsersDAO.class);
+    private static final int LDAP_PAGE_SIZE = 500;
 
     private final GaugeRegistry gaugeRegistry;
     private final LdapRepositoryConfiguration ldapConfiguration;
@@ -184,35 +194,69 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             ldapConfiguration.getPerDomainBaseDN().values().stream());
     }
 
-    private Stream<SearchResultEntry> entriesFromDN(String dn) throws LDAPSearchException {
+    private Stream<SearchResultEntry> entriesFromDN(String dn) throws LDAPException {
         return entriesFromDN(dn, SearchRequest.NO_ATTRIBUTES);
     }
 
-    private Stream<SearchResultEntry> entriesFromDN(String dn, String attributes) throws LDAPSearchException {
-        SearchRequest searchRequest = new SearchRequest(dn,
-            SearchScope.SUB,
-            listingFilter,
-            attributes);
-
-        return ldapConnectionPool.search(searchRequest)
-            .getSearchEntries()
-            .stream();
+    private Stream<SearchResultEntry> entriesFromDN(String dn, String attributes) throws LDAPException {
+        return pagedSearch(dn, listingFilter, attributes).stream();
     }
 
-    private Stream<Username> getAllUsernamesFromLDAP() throws LDAPException {
-        String usernameAttribute = ldapConfiguration.getUsernameAttribute().orElse(ldapConfiguration.getUserIdAttribute());
-        return allDNs()
-            .flatMap(Throwing.<String, Stream<SearchResultEntry>>function(s -> entriesFromDN(s, usernameAttribute)).sneakyThrow())
-            .flatMap(entry -> Optional.ofNullable(entry.getAttribute(usernameAttribute)).stream())
+    private List<SearchResultEntry> pagedSearch(String dn, Filter filter, String attributes) throws LDAPException {
+        ImmutableList.Builder<SearchResultEntry> entries = ImmutableList.builder();
+        pagedSearch(dn, filter, attributes, entries::add);
+        return entries.build();
+    }
+
+    /**
+     * Relies on the simple paged results control (RFC 2696) so that listing a large directory is not capped by the
+     * server size limit. The paging cookie is bound to the LDAP connection thus all pages are read on the same connection.
+     */
+    private void pagedSearch(String dn, Filter filter, String attributes, Consumer<SearchResultEntry> entryConsumer) throws LDAPException {
+        LDAPConnection connection = ldapConnectionPool.getConnection();
+        try {
+            ASN1OctetString cookie = null;
+            do {
+                SearchRequest searchRequest = new SearchRequest(dn, SearchScope.SUB, filter, attributes);
+                searchRequest.setControls(new SimplePagedResultsControl(LDAP_PAGE_SIZE, cookie));
+                SearchResult searchResult = connection.search(searchRequest);
+                searchResult.getSearchEntries().forEach(entryConsumer);
+
+                SimplePagedResultsControl responseControl = SimplePagedResultsControl.get(searchResult);
+                cookie = Optional.ofNullable(responseControl)
+                    .filter(SimplePagedResultsControl::moreResultsToReturn)
+                    .map(SimplePagedResultsControl::getCookie)
+                    .orElse(null);
+            } while (cookie != null);
+            ldapConnectionPool.releaseConnection(connection);
+        } catch (LDAPException e) {
+            ldapConnectionPool.releaseConnectionAfterException(connection, e);
+            throw e;
+        }
+    }
+
+    private String usernameAttribute() {
+        return ldapConfiguration.getUsernameAttribute().orElse(ldapConfiguration.getUserIdAttribute());
+    }
+
+    private Optional<Username> asUsername(SearchResultEntry entry, String usernameAttribute) {
+        return Optional.ofNullable(entry.getAttribute(usernameAttribute))
             .map(Attribute::getValue)
             .flatMap(name -> {
                 try {
-                    return Stream.of(Username.of(name));
+                    return Optional.of(Username.of(name));
                 } catch (Exception e) {
                     LOGGER.warn("Invalid username in the LDAP: {}", name, e);
-                    return Stream.empty();
+                    return Optional.empty();
                 }
-            })
+            });
+    }
+
+    private Stream<Username> getAllUsernamesFromLDAP() throws LDAPException {
+        String usernameAttribute = usernameAttribute();
+        return allDNs()
+            .flatMap(Throwing.<String, Stream<SearchResultEntry>>function(s -> entriesFromDN(s, usernameAttribute)).sneakyThrow())
+            .flatMap(entry -> asUsername(entry, usernameAttribute).stream())
             .distinct();
     }
 
@@ -349,6 +393,49 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
 
     @Override
+    public Publisher<Username> listPaginated(Optional<Username> anchor, Optional<Integer> limit) {
+        if (ldapConfiguration.getRestriction().isActivated()) {
+            return UsersDAO.super.listPaginated(anchor, limit);
+        }
+        return firstUsernamesAfter(listingFilter, username -> true, anchor, limit);
+    }
+
+    @Override
+    public Publisher<Username> searchPaginated(String query, Optional<Username> anchor, Optional<Integer> limit) {
+        if (ldapConfiguration.getRestriction().isActivated()) {
+            return UsersDAO.super.searchPaginated(query, anchor, limit);
+        }
+        Filter queryFilter = Filter.createSubstringFilter(usernameAttribute(), null, new String[]{query}, null);
+        return firstUsernamesAfter(Filter.createANDFilter(listingFilter, queryFilter),
+            username -> UsersRepository.matches(username, query), anchor, limit);
+    }
+
+    /**
+     * Only the username attribute is retrieved, and only the 'limit' first usernames after the anchor are retained
+     * in memory while the (paged) LDAP search results are being read.
+     */
+    private Flux<Username> firstUsernamesAfter(Filter filter, Predicate<Username> predicate, Optional<Username> anchor, Optional<Integer> limit) {
+        String usernameAttribute = usernameAttribute();
+        return Mono.fromCallable(() -> {
+                TreeSet<Username> firstUsernames = new TreeSet<>(UsersRepository.USERNAME_ALPHABETICAL_ORDER);
+                for (String dn : allDNs().toList()) {
+                    pagedSearch(dn, filter, usernameAttribute, entry -> asUsername(entry, usernameAttribute)
+                        .filter(predicate)
+                        .filter(username -> UsersRepository.isAfter(username, anchor))
+                        .ifPresent(username -> {
+                            firstUsernames.add(username);
+                            if (limit.isPresent() && firstUsernames.size() > limit.get()) {
+                                firstUsernames.pollLast();
+                            }
+                        }));
+                }
+                return firstUsernames;
+            })
+            .flatMapIterable(usernames -> usernames)
+            .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @Override
     public Flux<Username> listUsersOfADomainReactive(Domain domain, boolean supportsVirtualHosting) {
         return Flux.fromStream(() -> {
                 try {
@@ -371,22 +458,11 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     private Stream<Username> getUnrestrictedUsernamesForDomain(Domain domain) throws LDAPException {
-        String usernameAttribute = ldapConfiguration.getUsernameAttribute().orElse(ldapConfiguration.getUserIdAttribute());
+        String usernameAttribute = usernameAttribute();
         Filter domainFilter = Filter.createSubstringFilter(usernameAttribute, null, null, "@" + domain.asString());
-        SearchRequest searchRequest = new SearchRequest(userBase(domain), SearchScope.SUB,
-            Filter.createANDFilter(listingFilter, domainFilter), usernameAttribute);
-        return ldapConnectionPool.search(searchRequest)
-            .getSearchEntries().stream()
-            .flatMap(entry -> Optional.ofNullable(entry.getAttribute(usernameAttribute)).stream())
-            .map(Attribute::getValue)
-            .flatMap(name -> {
-                try {
-                    return Stream.of(Username.of(name));
-                } catch (Exception e) {
-                    LOGGER.warn("Invalid username in the LDAP: {}", name, e);
-                    return Stream.empty();
-                }
-            })
+        return pagedSearch(userBase(domain), Filter.createANDFilter(listingFilter, domainFilter), usernameAttribute)
+            .stream()
+            .flatMap(entry -> asUsername(entry, usernameAttribute).stream())
             .filter(username -> username.getDomainPart().map(domain::equals).orElse(!ldapConfiguration.supportsVirtualHosting()))
             .distinct();
     }

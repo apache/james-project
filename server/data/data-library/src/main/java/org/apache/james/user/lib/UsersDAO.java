@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.util.ReactorUtils;
@@ -70,6 +71,19 @@ public interface UsersDAO {
             .filter(username -> username.getDomainPart()
                 .map(domain::equals)
                 .orElse(!supportsVirtualHosting));
+    }
+
+    default Publisher<Username> listPaginated(Optional<Username> anchor, Optional<Integer> limit) {
+        return UsersRepository.applyLimit(Flux.from(listReactive())
+            .filter(username -> UsersRepository.isAfter(username, anchor))
+            .sort(UsersRepository.USERNAME_ALPHABETICAL_ORDER), limit);
+    }
+
+    default Publisher<Username> searchPaginated(String query, Optional<Username> anchor, Optional<Integer> limit) {
+        return UsersRepository.applyLimit(Flux.from(listReactive())
+            .filter(username -> UsersRepository.matches(username, query))
+            .filter(username -> UsersRepository.isAfter(username, anchor))
+            .sort(UsersRepository.USERNAME_ALPHABETICAL_ORDER), limit);
     }
 
     void addUser(Username username, String password) throws UsersRepositoryException;
