@@ -42,6 +42,7 @@ import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.FIVE_SECONDS;
 import static org.awaitility.Durations.TEN_MINUTES;
 import static org.awaitility.Durations.TEN_SECONDS;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -764,6 +765,14 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
                 assertThat(rabbitManagementAPI.listQueues())
                     .anySatisfy(queue -> assertThat(queue.getName()).contains(GroupA.class.getName()));
+            }
+
+            @Test
+            void stopShouldNotWaitLongWhenRabbitMQIsUnavailable() {
+                eventBus.start();
+                rabbitMQExtension.getRabbitMQ().pause();
+
+                assertTimeoutPreemptively(Duration.ofSeconds(30), () -> eventBus.stop());
             }
 
             @Test

@@ -59,6 +59,7 @@ class KeyRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyRegistrationHandler.class);
 
     private static final Duration TOPOLOGY_CHANGES_TIMEOUT = Duration.ofMinutes(1);
+    private static final Duration STOP_QUEUE_DELETION_TIMEOUT = Duration.ofSeconds(10);
 
     private final EventBusId eventBusId;
     private final LocalListenerRegistry localListenerRegistry;
@@ -135,13 +136,17 @@ class KeyRegistrationHandler {
     }
 
     void stop() {
-        sender.delete(QueueSpecification.queue(registrationQueue.asString()))
-            .timeout(TOPOLOGY_CHANGES_TIMEOUT)
-            .retryWhen(configurations.retryBackoff().asReactorRetry().scheduler(Schedulers.parallel()))
-            .block();
         receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
                 .ifPresent(Disposable::dispose);
         Optional.ofNullable(scheduler).ifPresent(Scheduler::dispose);
+        // Best effort and bounded: stopping must not wait minutes on an unavailable broker
+        sender.delete(QueueSpecification.queue(registrationQueue.asString()))
+            .timeout(STOP_QUEUE_DELETION_TIMEOUT)
+            .onErrorResume(e -> {
+                LOGGER.warn("Could not delete key registration queue {} while stopping the event bus", registrationQueue.asString(), e);
+                return Mono.empty();
+            })
+            .block();
     }
 
     Mono<Registration> register(EventListener.ReactiveEventListener listener, RegistrationKey key) {
