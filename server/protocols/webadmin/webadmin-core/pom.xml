@@ -108,6 +108,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.github.hakky54</groupId>
+            <artifactId>ayza-for-pem</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>

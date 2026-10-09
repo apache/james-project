@@ -72,6 +72,58 @@ class TlsConfigurationTest {
     }
 
     @Test
+    void pemShouldThrowOnNullCertificates() {
+        assertThatThrownBy(() -> TlsConfiguration.builder()
+            .pem(null, "private.key"))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void pemShouldThrowOnNullPrivateKey() {
+        assertThatThrownBy(() -> TlsConfiguration.builder()
+            .pem("certs.pem", null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void buildShouldWorkOnPemWithoutPassword() {
+        TlsConfiguration tlsConfiguration = TlsConfiguration.builder()
+            .pem("certs.pem", "private.key")
+            .build();
+
+        assertThat(tlsConfiguration.isPem()).isTrue();
+        assertThat(tlsConfiguration.getCertificatesFilePath()).isEqualTo("certs.pem");
+        assertThat(tlsConfiguration.getPrivateKeyFilePath()).isEqualTo("private.key");
+        assertThat(tlsConfiguration.getPrivateKeyPassword()).isNull();
+    }
+
+    @Test
+    void buildShouldWorkOnPemWithPassword() {
+        TlsConfiguration tlsConfiguration = TlsConfiguration.builder()
+            .pem("certs.pem", "private.key", "secret")
+            .build();
+
+        assertThat(tlsConfiguration.isPem()).isTrue();
+        assertThat(tlsConfiguration.getCertificatesFilePath()).isEqualTo("certs.pem");
+        assertThat(tlsConfiguration.getPrivateKeyFilePath()).isEqualTo("private.key");
+        assertThat(tlsConfiguration.getPrivateKeyPassword()).isEqualTo("secret");
+    }
+
+    @Test
+    void buildShouldWorkOnPemWithTrustStore() {
+        TlsConfiguration tlsConfiguration = TlsConfiguration.builder()
+            .pem("certs.pem", "private.key", "secret", "truststore", "trustpass")
+            .build();
+
+        assertThat(tlsConfiguration.isPem()).isTrue();
+        assertThat(tlsConfiguration.getCertificatesFilePath()).isEqualTo("certs.pem");
+        assertThat(tlsConfiguration.getPrivateKeyFilePath()).isEqualTo("private.key");
+        assertThat(tlsConfiguration.getPrivateKeyPassword()).isEqualTo("secret");
+        assertThat(tlsConfiguration.getTruststoreFilePath()).isEqualTo("truststore");
+        assertThat(tlsConfiguration.getTruststorePassword()).isEqualTo("trustpass");
+    }
+
+    @Test
     void shouldRespectBeanContract() {
         EqualsVerifier.forClass(TlsConfiguration.class).verify();
     }
