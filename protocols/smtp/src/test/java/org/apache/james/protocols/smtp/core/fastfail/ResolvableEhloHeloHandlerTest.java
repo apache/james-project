@@ -19,7 +19,7 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import static org.apache.james.protocols.api.ProtocolSession.State.Transaction;
+import static org.apache.james.protocols.api.ProtocolSession.State.Connection;
 import static org.apache.james.protocols.smtp.core.fastfail.ResolvableEhloHeloHandler.BAD_EHLO_HELO;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -79,6 +79,11 @@ public class ResolvableEhloHeloHandlerTest {
             }
 
             @Override
+            public void resetState() {
+                map.clear();
+            }
+
+            @Override
             public <T> Optional<T> setAttachment(AttachmentKey<T> key, T value, State state) {
                 Preconditions.checkNotNull(key, "key cannot be null");
                 Preconditions.checkNotNull(value, "value cannot be null");
@@ -133,11 +138,35 @@ public class ResolvableEhloHeloHandlerTest {
         ResolvableEhloHeloHandler handler = createHandler();
         
         handler.doHelo(session, INVALID_HOST);
-        assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Invalid HELO").isPresent();
+        assertThat(session.getAttachment(BAD_EHLO_HELO, Connection)).withFailMessage("Invalid HELO").isPresent();
 
         HookReturnCode result = handler.doMail(session, MaybeSender.nullSender()).getResult();
         assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(result);
     }
+
+    @Test
+    void testBadHeloPersistsAcrossResetsAndClearsOnValidHelo() throws Exception {
+        SMTPSession session = setupMockSession(INVALID_HOST, false, false, null);
+        ResolvableEhloHeloHandler handler = createHandler();
+
+        // 1. Initial bad HELO
+        handler.doHelo(session, INVALID_HOST);
+        assertThat(session.getAttachment(BAD_EHLO_HELO, Connection)).isPresent();
+        assertThat(handler.doMail(session, MaybeSender.nullSender()).getResult()).isEqualTo(HookReturnCode.deny());
+
+        // 2. Transaction reset occurs (e.g. RSET or transaction completion)
+        session.resetState();
+
+        // Transaction is cleared, but bad HELO must still persist in Connection scope
+        assertThat(session.getAttachment(BAD_EHLO_HELO, Connection)).isPresent();
+        assertThat(handler.doMail(session, MaybeSender.nullSender()).getResult()).isEqualTo(HookReturnCode.deny());
+
+        // 3. Client issues a new valid HELO/EHLO on the same connection
+        handler.doHelo(session, VALID_HOST);
+        assertThat(session.getAttachment(BAD_EHLO_HELO, Connection)).isEmpty();
+        assertThat(handler.doMail(session, MaybeSender.nullSender()).getResult()).isEqualTo(HookReturnCode.declined());
+    }
+
     
     @Test
     void testNotRejectValidHelo() throws Exception {
@@ -146,7 +175,7 @@ public class ResolvableEhloHeloHandlerTest {
 
   
         handler.doHelo(session, VALID_HOST);
-        assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Valid HELO").isEmpty();
+        assertThat(session.getAttachment(BAD_EHLO_HELO, Connection)).withFailMessage("Valid HELO").isEmpty();
 
         HookReturnCode result = handler.doMail(session, MaybeSender.nullSender()).getResult();
         assertThat(HookReturnCode.declined()).describedAs("Not reject").isEqualTo(result);
@@ -159,7 +188,7 @@ public class ResolvableEhloHeloHandlerTest {
 
 
         handler.doHelo(session, INVALID_HOST);
-        assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Value stored").isPresent();
+        assertThat(session.getAttachment(BAD_EHLO_HELO, Connection)).withFailMessage("Value stored").isPresent();
 
 
         HookReturnCode result = handler.doMail(session, MaybeSender.nullSender()).getResult();
@@ -174,7 +203,7 @@ public class ResolvableEhloHeloHandlerTest {
 
 
         handler.doHelo(session, INVALID_HOST);
-        assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Value stored").isPresent();
+        assertThat(session.getAttachment(BAD_EHLO_HELO, Connection)).withFailMessage("Value stored").isPresent();
 
 
         HookReturnCode result = handler.doMail(session, MaybeSender.nullSender()).getResult();

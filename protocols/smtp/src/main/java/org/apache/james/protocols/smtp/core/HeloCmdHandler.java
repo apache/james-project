@@ -31,6 +31,7 @@ import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -38,8 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.net.InetAddresses;
-import com.google.common.net.InternetDomainName;
 
 /**
  * Handles HELO command
@@ -73,7 +72,7 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
                                  String parameters) {
 
         if (!isValid(parameters)) {
-            LOGGER.error("Invalid EHLO argument received: {}. Must be a domain name or an IP address.", parameters);
+            LOGGER.error("Invalid HELO argument received: {}. Must be a domain name or an IP address.", parameters);
             return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
                 DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Invalid domain name or ip supplied as HELO argument");
         }
@@ -89,20 +88,7 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
     }
 
     private boolean isValid(String argument) {
-        String hostname = unquote(argument);
-
-        // Without [] Guava attempt to parse IPV4
-        return InetAddresses.isUriInetAddress(hostname)
-            // Guava tries parsing IPv6 if and only if wrapped by []
-            || InetAddresses.isUriInetAddress("[" + hostname + "]")
-            || InternetDomainName.isValid(hostname);
-    }
-
-    private String unquote(String argument) {
-        if (argument.startsWith("[") && argument.endsWith("]")) {
-            return argument.substring(1, argument.length() - 1);
-        }
-        return argument;
+        return EhloCmdHandler.isValid(argument);
     }
 
     @Override
