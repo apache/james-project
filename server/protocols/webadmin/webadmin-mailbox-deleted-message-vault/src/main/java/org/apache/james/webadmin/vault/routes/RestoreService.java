@@ -93,7 +93,11 @@ public class RestoreService {
                         .withInternalDate(Date.from(deletedMessage.getDeliveryDate().toInstant()))
                         .build(content), session))
                     .map(any -> RESTORE_SUCCEED),
+                content -> Mono.fromRunnable(Throwing.runnable(content::close)),
+                (content, error) -> Mono.fromRunnable(Throwing.runnable(content::close)),
                 content -> Mono.fromRunnable(Throwing.runnable(content::close))),
+            stream -> Mono.fromRunnable(Throwing.runnable(stream::close)),
+            (stream, error) -> Mono.fromRunnable(Throwing.runnable(stream::close)),
             stream -> Mono.fromRunnable(Throwing.runnable(stream::close)))
             .onErrorResume(throwable -> {
                 LOGGER.error("append message {} to restore mailbox of user {} didn't success",
