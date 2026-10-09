@@ -61,7 +61,7 @@ public class OriginalRecipient implements Field {
         public OriginalRecipient build() {
             Preconditions.checkNotNull(originalRecipient);
 
-            return new OriginalRecipient(addressType.orElse(AddressType.RFC_822), originalRecipient);
+            return new OriginalRecipient(addressType.orElseGet(() -> AddressType.pickFor(originalRecipient)), originalRecipient);
         }
     }
 

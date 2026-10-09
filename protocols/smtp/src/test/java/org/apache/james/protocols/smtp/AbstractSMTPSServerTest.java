@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.james.protocols.api.Protocol;
@@ -28,8 +32,8 @@ import org.apache.james.protocols.netty.Encryption;
 
 
 public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest {
-    
-    
+
+
     @Override
     protected SMTPClient createClient() {
         SMTPSClient client = new SMTPSClient(true,BogusSslContextFactory.getClientContext());
@@ -37,11 +41,23 @@ public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest {
         return client;
     }
 
-    
+
     @Override
     protected ProtocolServer createServer(Protocol protocol) {
         return createEncryptedServer(protocol, Encryption.createTls(BogusSslContextFactory.getServerContext()));
     }
-    
+
     protected abstract ProtocolServer createEncryptedServer(Protocol protocol, Encryption enc);
+
+    /**
+     * The UTF-8 tests drive a raw socket to control the bytes on the wire; under
+     * implicit TLS that socket has to speak TLS too, otherwise the exchange
+     * silently reads back nothing.
+     */
+    @Override
+    protected Socket createRawSocket(InetSocketAddress address) throws IOException {
+        return BogusSslContextFactory.getClientContext()
+            .getSocketFactory()
+            .createSocket(address.getAddress().getHostAddress(), address.getPort());
+    }
 }

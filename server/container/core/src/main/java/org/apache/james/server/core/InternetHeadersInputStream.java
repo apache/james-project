@@ -69,7 +69,7 @@ public class InternetHeadersInputStream extends InputStream {
             if (!headerLines.hasMoreElements()) {
                 line += LINE_SEPERATOR;
             }
-            currLine = line.getBytes(StandardCharsets.US_ASCII);
+            currLine = line.getBytes(StandardCharsets.UTF_8);
             return true;
         } else {
             return false;

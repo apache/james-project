@@ -313,7 +313,10 @@ public class SMTPServerTest {
 
         assertThat(capabilitieslist)
             .as("capabilities")
-            .hasSize(3);
+            .hasSize(4);
+        assertThat(capabilitieslist.contains("SMTPUTF8"))
+            .as("capabilities present SMTPUTF8")
+            .isTrue();
         assertThat(capabilitieslist.contains("PIPELINING"))
             .as("capabilities present PIPELINING")
             .isTrue();
@@ -457,10 +460,10 @@ public class SMTPServerTest {
 
         assertThat(capabilitieslist)
             .as("capabilities")
-            .hasSize(4);
+            .hasSize(5);
         assertThat(capabilitieslist)
-            .as("capabilities present PIPELINING ENHANCEDSTATUSCODES 8BITMIME STARTTLS")
-            .containsOnly("PIPELINING", "ENHANCEDSTATUSCODES", "8BITMIME", "STARTTLS");
+            .as("capabilities present PIPELINING ENHANCEDSTATUSCODES 8BITMIME SMTPUTF8 STARTTLS")
+            .containsOnly("PIPELINING", "ENHANCEDSTATUSCODES", "8BITMIME", "SMTPUTF8", "STARTTLS");
 
         smtpProtocol.quit();
         smtpProtocol.disconnect();

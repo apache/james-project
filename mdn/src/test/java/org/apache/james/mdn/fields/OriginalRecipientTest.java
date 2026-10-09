@@ -73,6 +73,17 @@ class OriginalRecipientTest {
     }
 
     @Test
+    void addressTypeShouldDefaultToUtf8WhenAddressContainsNonAscii() {
+        Text address = Text.fromRawText("arnt@grå.org");
+
+        assertThat(OriginalRecipient.builder()
+                .originalRecipient(address)
+                .build()
+                .getAddressType())
+            .isEqualTo(AddressType.UTF_8);
+    }
+
+    @Test
     void formattedValueShouldDisplayAddress() {
         assertThat(OriginalRecipient.builder()
                 .originalRecipient(ADDRESS)
