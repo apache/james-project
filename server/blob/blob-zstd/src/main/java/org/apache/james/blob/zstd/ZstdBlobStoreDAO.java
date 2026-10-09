@@ -286,6 +286,8 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
                         return Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(originalContent.asByteSource(), originalSize, inputStreamBlob.metadata())))
                             .doOnSuccess(ignored -> metricRecorder.recordThresholdSkip());
                     }),
+                originalContent -> Mono.fromRunnable(Throwing.runnable(originalContent::reset)).subscribeOn(Schedulers.boundedElastic()),
+                (originalContent, error) -> Mono.fromRunnable(Throwing.runnable(originalContent::reset)).subscribeOn(Schedulers.boundedElastic()),
                 originalContent -> Mono.fromRunnable(Throwing.runnable(originalContent::reset)).subscribeOn(Schedulers.boundedElastic()))
             .subscribeOn(Schedulers.boundedElastic())
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob " + blobId.asString(), e));
@@ -333,6 +335,8 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
                 compressContent -> prepareCompressedContent.apply(compressContent)
                     .flatMap(compressionDecision -> saveCompressedIfWorthKeeping(bucketName, blobId, originalSize, metadata,
                         compressContent, compressionDecision, saveOriginal)),
+                compressContent -> Mono.fromRunnable(Throwing.runnable(compressContent::reset)).subscribeOn(Schedulers.boundedElastic()),
+                (compressContent, error) -> Mono.fromRunnable(Throwing.runnable(compressContent::reset)).subscribeOn(Schedulers.boundedElastic()),
                 compressContent -> Mono.fromRunnable(Throwing.runnable(compressContent::reset)).subscribeOn(Schedulers.boundedElastic()))
             .subscribeOn(Schedulers.boundedElastic());
     }
