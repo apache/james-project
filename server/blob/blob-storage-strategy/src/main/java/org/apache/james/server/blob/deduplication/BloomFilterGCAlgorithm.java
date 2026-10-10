@@ -34,6 +34,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.ChunkMarker;
 import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
 import org.slf4j.Logger;
@@ -281,6 +282,7 @@ public class BloomFilterGCAlgorithm {
                 }
                 return false;
             })
+            .filter(blobId -> !ChunkMarker.isChunkId(blobId))
             .filter(blobId -> !bloomFilter.mightContain(salt + blobId.asString()))
             .window(deletionWindowSize)
             .flatMap(blobIdFlux -> handlePagedDeletion(bucketName, context, blobIdFlux), DEFAULT_CONCURRENCY)
