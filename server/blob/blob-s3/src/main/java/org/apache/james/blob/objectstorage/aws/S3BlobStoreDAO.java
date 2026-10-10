@@ -254,7 +254,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
         return getObjectRangeBytes(resolvedBucketName, blobId, rangeHeader)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
-            .onErrorMap(this::isRangeNotSatisfiable, e -> new IllegalArgumentException("Range not satisfiable: " + rangeHeader, e))
+            .onErrorMap(S3BlobStoreDAO::isRangeNotSatisfiable, e -> new IllegalArgumentException("Range not satisfiable: " + rangeHeader, e))
             .publishOn(Schedulers.parallel())
             .map(responseBytes -> BytesBlob.of(responseBytes.asByteArrayUnsafe(), metadataForRange(responseBytes.response())))
             .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause);
