@@ -86,27 +86,29 @@ public interface MailsShouldBeWellReceived {
 
     @Test
     default void mailsContentWithUnicodeCharactersShouldBeKeptUnChanged(GuiceJamesServer server) throws Exception {
+        String jamesUser = uniqueUser("james-user");
+        String sender = uniqueUser("bob");
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(JAMES_USER, PASSWORD)
-            .addUser(SENDER, PASSWORD);
+            .addUser(jamesUser, PASSWORD)
+            .addUser(sender, PASSWORD);
 
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
-        mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox("#private", jamesUser, DefaultMailboxes.INBOX);
 
         Port smtpPort = Port.of(smtpPort(server));
-        try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
-            sender.connect(JAMES_SERVER_HOST, smtpPort);
+        try (SMTPMessageSender smtpSender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
+            smtpSender.connect(JAMES_SERVER_HOST, smtpPort);
             MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("eml/mail-containing-unicode-characters.eml"));
 
             FakeMail.Builder mail = FakeMail.builder()
                 .name("test-unicode-body")
-                .sender(SENDER)
-                .recipient(JAMES_USER)
+                .sender(sender)
+                .recipient(jamesUser)
                 .mimeMessage(mimeMessage);
 
-            sender.authenticate(SENDER, PASSWORD).sendMessage(mail);
+            smtpSender.authenticate(sender, PASSWORD).sendMessage(mail);
         }
 
         CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
@@ -114,7 +116,7 @@ public interface MailsShouldBeWellReceived {
         try (TestIMAPClient reader = new TestIMAPClient()) {
             int imapPort = imapPort(server);
             reader.connect(JAMES_SERVER_HOST, imapPort)
-                .login(JAMES_USER, PASSWORD)
+                .login(jamesUser, PASSWORD)
                 .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1);
 
@@ -125,27 +127,29 @@ public interface MailsShouldBeWellReceived {
 
     @Test
     default void mailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
+        String jamesUser = uniqueUser("james-user");
+        String sender = uniqueUser("bob");
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(JAMES_USER, PASSWORD)
-            .addUser(SENDER, PASSWORD);
+            .addUser(jamesUser, PASSWORD)
+            .addUser(sender, PASSWORD);
 
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
-        mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox("#private", jamesUser, DefaultMailboxes.INBOX);
 
         Port smtpPort = Port.of(smtpPort(server));
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
-        try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
-            sender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(SENDER, PASSWORD);
-            sendUniqueMessage(sender, message);
+        try (SMTPMessageSender smtpSender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
+            smtpSender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(sender, PASSWORD);
+            sendUniqueMessageToUsers(smtpSender, sender, message, ImmutableList.of(jamesUser));
         }
 
         CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
 
         try (TestIMAPClient reader = new TestIMAPClient()) {
             reader.connect(JAMES_SERVER_HOST, imapPort(server))
-                .login(JAMES_USER, PASSWORD)
+                .login(jamesUser, PASSWORD)
                 .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1);
         }
@@ -154,33 +158,36 @@ public interface MailsShouldBeWellReceived {
 
     @Test
     default void mailsShouldBeWellReceivedByBothRecipient(GuiceJamesServer server) throws Exception {
+        String jamesUser = uniqueUser("james-user");
+        String otherUser = uniqueUser("other-user");
+        String sender = uniqueUser("bob");
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(JAMES_USER, PASSWORD)
-            .addUser(OTHER_USER, PASSWORD_OTHER)
-            .addUser(SENDER, PASSWORD);
+            .addUser(jamesUser, PASSWORD)
+            .addUser(otherUser, PASSWORD_OTHER)
+            .addUser(sender, PASSWORD);
 
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
-        mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
-        mailboxProbe.createMailbox("#private", OTHER_USER, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox("#private", jamesUser, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox("#private", otherUser, DefaultMailboxes.INBOX);
 
         Port smtpPort = Port.of(smtpPort(server));
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
-        try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
-            sender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(SENDER, PASSWORD);
-            sendUniqueMessageToTwoUsers(sender, message);
+        try (SMTPMessageSender smtpSender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
+            smtpSender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(sender, PASSWORD);
+            sendUniqueMessageToUsers(smtpSender, sender, message, ImmutableList.of(jamesUser, otherUser));
         }
 
         CALMLY_AWAIT.untilAsserted(() -> assertThat(server.getProbe(SpoolerProbe.class).processingFinished()).isTrue());
 
         try (TestIMAPClient reader = new TestIMAPClient()) {
             reader.connect(JAMES_SERVER_HOST, imapPort(server))
-                .login(JAMES_USER, PASSWORD)
+                .login(jamesUser, PASSWORD)
                 .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1);
             reader.connect(JAMES_SERVER_HOST, imapPort(server))
-                .login(OTHER_USER, PASSWORD_OTHER)
+                .login(otherUser, PASSWORD_OTHER)
                 .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1);
         }
@@ -189,10 +196,10 @@ public interface MailsShouldBeWellReceived {
 
     @Test
     default void mailsShouldBeWellReceivedByTenRecipient(GuiceJamesServer server) throws Exception {
+        String sender = uniqueUser("bob");
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(JAMES_USER, PASSWORD)
-            .addUser(SENDER, PASSWORD);
+            .addUser(sender, PASSWORD);
 
         ImmutableList<String> users = generateNUsers(10);
 
@@ -201,7 +208,6 @@ public interface MailsShouldBeWellReceived {
                         .addUser(user, PASSWORD));
 
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
-        mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
         users.forEach((ThrowingConsumer<String>) user ->
                         mailboxProbe.createMailbox("#private", user, DefaultMailboxes.INBOX));
 
@@ -209,9 +215,9 @@ public interface MailsShouldBeWellReceived {
         Port smtpPort = Port.of(smtpPort(server));
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
-        try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
-            sender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(SENDER, PASSWORD);
-            sendUniqueMessageToUsers(sender, message, users);
+        try (SMTPMessageSender smtpSender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
+            smtpSender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(sender, PASSWORD);
+            sendUniqueMessageToUsers(smtpSender, sender, message, users);
         }
 
         CALMLY_AWAIT_FIVE_MINUTE.untilAsserted(() ->
@@ -232,24 +238,26 @@ public interface MailsShouldBeWellReceived {
 
     @Test
     default void concurrentMailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
+        String jamesUser = uniqueUser("james-user");
+        String sender = uniqueUser("bob");
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(JAMES_USER, PASSWORD)
-            .addUser(SENDER, PASSWORD);
+            .addUser(jamesUser, PASSWORD)
+            .addUser(sender, PASSWORD);
 
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
-        mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox("#private", jamesUser, DefaultMailboxes.INBOX);
 
         int messageCount = 50;
 
         Port smtpPort = Port.of(smtpPort(server));
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
-        try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
+        try (SMTPMessageSender smtpSender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
             Mono.fromRunnable(
                 Throwing.runnable(() -> {
-                    sender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(SENDER, PASSWORD);
-                    sendUniqueMessage(sender, message);
+                    smtpSender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(sender, PASSWORD);
+                    sendUniqueMessageToUsers(smtpSender, sender, message, ImmutableList.of(jamesUser));
             }))
                 .repeat(messageCount - 1)
                 .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
@@ -260,7 +268,7 @@ public interface MailsShouldBeWellReceived {
 
         try (TestIMAPClient reader = new TestIMAPClient()) {
             reader.connect(JAMES_SERVER_HOST, imapPort(server))
-                .login(JAMES_USER, PASSWORD)
+                .login(jamesUser, PASSWORD)
                 .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, messageCount);
         }
@@ -271,19 +279,24 @@ public interface MailsShouldBeWellReceived {
         sender.sendMessageWithHeaders("bob@apache.org", JAMES_USER, uniqueMessage);
     }
 
-    default void sendUniqueMessageToTwoUsers(SMTPMessageSender sender, String message) throws IOException {
-        sendUniqueMessageToUsers(sender, message, ImmutableList.of(JAMES_USER, OTHER_USER));
+    default void sendUniqueMessageToUsers(SMTPMessageSender sender, String message, ImmutableList<String> users) throws IOException {
+        sendUniqueMessageToUsers(sender, "bob@apache.org", message, users);
     }
 
-    default void sendUniqueMessageToUsers(SMTPMessageSender sender, String message, ImmutableList<String> users) throws IOException {
+    default void sendUniqueMessageToUsers(SMTPMessageSender smtpSender, String from, String message, ImmutableList<String> users) throws IOException {
         String uniqueMessage = message.replace("banana", "UUID " + UUID.randomUUID().toString());
-        sender.sendMessageWithHeaders("bob@apache.org", users, uniqueMessage);
+        smtpSender.sendMessageWithHeaders(from, users, uniqueMessage);
+    }
+
+    // Unique per call, so that tests sharing one server (PER_CLASS) do not see each other's users and mails
+    default String uniqueUser(String localPartPrefix) {
+        return localPartPrefix + "-" + UUID.randomUUID() + "@" + DOMAIN;
     }
 
     default ImmutableList<String> generateNUsers(int nbUsers) {
         return IntStream.range(0, nbUsers)
                 .boxed()
-                .map(index -> "user" + index + "@" + DOMAIN)
+                .map(index -> uniqueUser("user" + index))
                 .collect(ImmutableList.toImmutableList());
     }
 

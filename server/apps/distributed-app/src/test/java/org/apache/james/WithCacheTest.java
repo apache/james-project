@@ -48,6 +48,6 @@ class WithCacheTest implements MailsShouldBeWellReceivedConcreteContract {
 
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = baseExtensionBuilder()
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

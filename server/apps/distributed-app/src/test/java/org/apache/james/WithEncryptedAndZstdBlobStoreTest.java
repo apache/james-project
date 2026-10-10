@@ -108,7 +108,7 @@ public class WithEncryptedAndZstdBlobStoreTest implements MailsShouldBeWellRecei
                 .addBinding()
                 .to(EncryptedZstdBlobStoreProbe.class)))
         .extension(new AwsS3BlobStoreExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Test
