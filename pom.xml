@@ -3946,6 +3946,8 @@
                             <!--https://issues.apache.org/jira/browse/JAMES-3724-->
                             <james.lifecycle.leak.detection.mode>NONE</james.lifecycle.leak.detection.mode>
                             <james.exit.on.startup.error>false</james.exit.on.startup.error>
+                            <!-- The embedded Artemis broker blocks every send above 90% disk usage, hanging the tests -->
+                            <brokerconfig.maxDiskUsage>-1</brokerconfig.maxDiskUsage>
                         </systemPropertyVariables>
                         <argLine>-Djava.library.path=
                             -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec:${org.mockito:mockito-core:jar}
