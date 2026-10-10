@@ -40,6 +40,7 @@ import static org.hamcrest.Matchers.nullValue;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.UUID;
 
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
@@ -98,9 +99,6 @@ import io.restassured.specification.RequestSpecification;
 @Tag(BasicFeature.TAG)
 class FixingGhostMailboxTest {
     private static final String DOMAIN = "domain.tld";
-    private static final String CEDRIC = "cedric@" + DOMAIN;
-    private static final String BOB = "bob@" + DOMAIN;
-    private static final String ALICE = "alice@" + DOMAIN;
     private static final String ALICE_SECRET = "aliceSecret";
     private static final String BOB_SECRET = "bobSecret";
     private static final Duration THIRTY_SECONDS = Duration.ofSeconds(30);
@@ -129,8 +127,12 @@ class FixingGhostMailboxTest {
                     .mailboxCountersReadRepairMax(0)
                     .mailboxCountersReadRepairChanceOneHundred(0)
                     .build())))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
+    private String alice;
+    private String bob;
+    private String cedric;
     private UserCredential aliceCredential;
     private MailboxProbeImpl mailboxProbe;
     private ACLProbe aclProbe;
@@ -142,6 +144,10 @@ class FixingGhostMailboxTest {
 
     @BeforeEach
     void setup(GuiceJamesServer server) throws Throwable {
+        // Unique users per test: the tests share one server and each corrupts its own user's mailbox
+        alice = "alice-" + UUID.randomUUID() + "@" + DOMAIN;
+        bob = "bob-" + UUID.randomUUID() + "@" + DOMAIN;
+        cedric = "cedric-" + UUID.randomUUID() + "@" + DOMAIN;
         WebAdminGuiceProbe webAdminProbe = server.getProbe(WebAdminGuiceProbe.class);
         mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         aclProbe = server.getProbe(ACLProbeImpl.class);
@@ -160,9 +166,9 @@ class FixingGhostMailboxTest {
 
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(ALICE, ALICE_SECRET)
-            .addUser(BOB, BOB_SECRET);
-        aliceCredential = JmapRFCCommonRequests.getUserCredential(Username.of(ALICE), ALICE_SECRET);
+            .addUser(alice, ALICE_SECRET)
+            .addUser(bob, BOB_SECRET);
+        aliceCredential = JmapRFCCommonRequests.getUserCredential(Username.of(alice), ALICE_SECRET);
 
         CassandraProbe probe = server.getProbe(CassandraProbe.class);
         ClusterConfiguration cassandraConfiguration = probe.getConfiguration();
@@ -174,16 +180,16 @@ class FixingGhostMailboxTest {
     private void simulateGhostMailboxBug(CqlSession session) throws MailboxException, IOException {
         // State before ghost mailbox bug
         // Alice INBOX is delegated to Bob and contains one message
-        aliceInboxPath = MailboxPath.inbox(Username.of(ALICE));
-        aliceGhostInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
-        aclProbe.addRights(aliceInboxPath, BOB, MailboxACL.FULL_RIGHTS);
-        message1 = mailboxProbe.appendMessage(ALICE, aliceInboxPath, AppendCommand.from(generateMessageContent()));
+        aliceInboxPath = MailboxPath.inbox(Username.of(alice));
+        aliceGhostInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+        aclProbe.addRights(aliceInboxPath, bob, MailboxACL.FULL_RIGHTS);
+        message1 = mailboxProbe.appendMessage(alice, aliceInboxPath, AppendCommand.from(generateMessageContent()));
         testExtension.await();
 
         // Simulate ghost mailbox bug
         session.execute(deleteFrom(CassandraMailboxPathV3Table.TABLE_NAME)
             .where(column(CassandraMailboxPathV3Table.NAMESPACE).isEqualTo(literal(MailboxConstants.USER_NAMESPACE)),
-                column(CassandraMailboxPathV3Table.USER).isEqualTo(literal(ALICE)),
+                column(CassandraMailboxPathV3Table.USER).isEqualTo(literal(alice)),
                 column(CassandraMailboxPathV3Table.MAILBOX_NAME).isEqualTo(literal(MailboxConstants.INBOX)))
             .build());
 
@@ -213,7 +219,7 @@ class FixingGhostMailboxTest {
             .statusCode(200);
 
         // Received a new message
-        message2 = mailboxProbe.appendMessage(ALICE, aliceInboxPath, AppendCommand.from(generateMessageContent()));
+        message2 = mailboxProbe.appendMessage(alice, aliceInboxPath, AppendCommand.from(generateMessageContent()));
         testExtension.await();
     }
 
@@ -226,14 +232,14 @@ class FixingGhostMailboxTest {
 
     @Test
     void ghostMailboxBugShouldChangeMailboxId() {
-        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
 
         assertThat(aliceGhostInboxId).isNotEqualTo(newAliceInbox);
     }
 
     @Test
     void ghostMailboxBugShouldDiscardOldContent() {
-        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
 
         calmlyAwait
             .timeout(THIRTY_SECONDS)
@@ -277,7 +283,7 @@ class FixingGhostMailboxTest {
     @Test
     @Tag(Unstable.TAG)
     void webadminCanMergeTwoMailboxes() {
-        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
 
         fixGhostMailboxes(newAliceInbox);
 
@@ -314,8 +320,8 @@ class FixingGhostMailboxTest {
 
     @Test
     void webadminCanMergeTwoMailboxesRights() throws Exception {
-        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
-        aclProbe.addRights(aliceInboxPath, CEDRIC, MailboxACL.FULL_RIGHTS);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+        aclProbe.addRights(aliceInboxPath, cedric, MailboxACL.FULL_RIGHTS);
 
         fixGhostMailboxes(newAliceInbox);
 
@@ -340,14 +346,14 @@ class FixingGhostMailboxTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body("methodResponses[0][1].list[0].rights", hasKey(BOB))
-            .body("methodResponses[0][1].list[0].rights", hasKey(CEDRIC));
+            .body("methodResponses[0][1].list[0].rights", hasKey(bob))
+            .body("methodResponses[0][1].list[0].rights", hasKey(cedric));
     }
 
     @Test
     void oldGhostedMailboxShouldNoMoreBeAccessible() throws Exception {
-        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
-        aclProbe.addRights(aliceInboxPath, CEDRIC, MailboxACL.FULL_RIGHTS);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+        aclProbe.addRights(aliceInboxPath, cedric, MailboxACL.FULL_RIGHTS);
 
         fixGhostMailboxes(newAliceInbox);
 
@@ -380,7 +386,7 @@ class FixingGhostMailboxTest {
 
     @Test
     void mergingMailboxTaskShouldBeInformative() {
-        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
 
         String taskId = fixGhostMailboxes(newAliceInbox);
 
