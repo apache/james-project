@@ -245,6 +245,66 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause);
     }
 
+    @Override
+    public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+        validateRange(start, end);
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        String rangeHeader = formatRangeHeader(start, end);
+
+        return getObjectRangeBytes(resolvedBucketName, blobId, rangeHeader)
+            .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
+            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
+            .onErrorMap(S3BlobStoreDAO::isRangeNotSatisfiable, e -> new IllegalArgumentException("Range not satisfiable: " + rangeHeader, e))
+            .publishOn(Schedulers.parallel())
+            .map(responseBytes -> BytesBlob.of(responseBytes.asByteArrayUnsafe(), metadataForRange(responseBytes.response())))
+            .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause);
+    }
+
+    private static void validateRange(long start, long end) {
+        if (start < 0) {
+            Preconditions.checkArgument(start != Long.MIN_VALUE, "'start' must be greater than %s", Long.MIN_VALUE);
+            Preconditions.checkArgument(end == -1, "'end' must be -1 for a suffix range");
+            return;
+        }
+        Preconditions.checkArgument(end == -1 || end >= start,
+            "'end' (%s) must be -1 or greater than or equal to 'start' (%s)", end, start);
+    }
+
+    private static String formatRangeHeader(long start, long end) {
+        if (start < 0) {
+            return "bytes=" + start;
+        }
+        if (end == -1) {
+            return "bytes=" + start + "-";
+        }
+        return "bytes=" + start + "-" + end;
+    }
+
+    private static boolean isRangeNotSatisfiable(Throwable throwable) {
+        return Throwables.getCausalChain(throwable)
+            .stream()
+            .filter(S3Exception.class::isInstance)
+            .map(S3Exception.class::cast)
+            .anyMatch(s3Exception -> s3Exception.statusCode() == 416);
+    }
+
+    private BlobMetadata metadataForRange(GetObjectResponse response) {
+        return asBlobMetadata(response.metadata())
+            .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(Long.toString(extractTotalObjectSize(response))));
+    }
+
+    private static long extractTotalObjectSize(GetObjectResponse response) {
+        String contentRange = response.contentRange();
+        if (contentRange != null && contentRange.contains("/")) {
+            try {
+                return Long.parseLong(contentRange.substring(contentRange.lastIndexOf('/') + 1));
+            } catch (NumberFormatException e) {
+                throw new ObjectStoreIOException("Invalid content range returned by S3: " + contentRange, e);
+            }
+        }
+        throw new ObjectStoreIOException("S3 did not return a content range for a ranged read");
+    }
+
     private Mono<ResponseBytes<GetObjectResponse>> getObjectBytes(BucketName bucketName, BlobId blobId) {
         return getObjectBytesFromStore(bucketName, blobId)
                 .onErrorResume(e -> e instanceof NoSuchKeyException || e instanceof NoSuchBucketException, e -> {
@@ -255,10 +315,27 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
                 });
     }
 
+    private Mono<ResponseBytes<GetObjectResponse>> getObjectRangeBytes(BucketName bucketName, BlobId blobId, String rangeHeader) {
+        return getObjectRangeBytesFromStore(bucketName, blobId, rangeHeader)
+            .onErrorResume(e -> e instanceof NoSuchKeyException || e instanceof NoSuchBucketException, e -> {
+                if (fallbackNamespace.isPresent() && bucketNameResolver.isNameSpace(bucketName)) {
+                    return getObjectRangeBytesFromStore(fallbackNamespace.get(), blobId, rangeHeader);
+                }
+                return Mono.error(e);
+            });
+    }
+
     private Mono<ResponseBytes<GetObjectResponse>> getObjectBytesFromStore(BucketName bucketName, BlobId blobId) {
         return buildGetObjectRequestBuilder(bucketName, blobId)
             .flatMap(putObjectRequest -> Mono.fromFuture(() ->
                 client.getObject(putObjectRequest.build(), new MinimalCopyBytesResponseTransformer(configuration, blobId))));
+    }
+
+    private Mono<ResponseBytes<GetObjectResponse>> getObjectRangeBytesFromStore(BucketName bucketName, BlobId blobId, String rangeHeader) {
+        return buildGetObjectRequestBuilder(bucketName, blobId)
+            .map(builder -> builder.range(rangeHeader))
+            .flatMap(getObjectRequestBuilder -> Mono.fromFuture(() ->
+                client.getObject(getObjectRequestBuilder.build(), new MinimalCopyBytesResponseTransformer(configuration, blobId))));
     }
 
     private Mono<GetObjectRequest.Builder> buildGetObjectRequestBuilder(BucketName bucketName, BlobId blobId) {
