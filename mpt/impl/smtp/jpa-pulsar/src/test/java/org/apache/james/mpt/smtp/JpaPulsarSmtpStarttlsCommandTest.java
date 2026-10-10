@@ -40,7 +40,7 @@ public class JpaPulsarSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
             .extension(new AwsS3BlobStoreExtension())
             .extension(new InMemoryDnsExtension())
             .server(Main::createServer)
-            .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+            .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
             .build();
 
     @Order(2)
