@@ -52,7 +52,6 @@ public abstract class WebAdminServerIntegrationImmutableTest {
     private static final String DOMAIN = "domain";
     protected static final String USERNAME = "username@" + DOMAIN;
     private static final String JMAP_USER = "jmap@" + DOMAIN;
-    private static final String EXPORT_USER = "export@" + DOMAIN;
     private static final String RESTORE_USER = "restore@" + DOMAIN;
 
     private static DataProbe dataProbe;
@@ -266,25 +265,6 @@ public abstract class WebAdminServerIntegrationImmutableTest {
         .then()
             .body("status", is("completed"))
             .body("type", is("RecomputeUserFastViewProjectionItemsTask"));
-    }
-
-    @Test
-    void mailboxesExportTasksShouldBeExposed() throws Exception {
-        dataProbe.addUser(EXPORT_USER, "anyPassword");
-
-        String taskId = with()
-            .queryParam("task", "export")
-            .post("/users/" + EXPORT_USER + "/mailboxes")
-            .jsonPath()
-            .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("type", is("MailboxesExportTask"));
     }
 
     @Test

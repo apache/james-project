@@ -63,6 +63,7 @@ public abstract class WebAdminServerIntegrationTest {
     protected static final String USERNAME = "username@" + DOMAIN;
     private static final String USERNAME_2 = "username2@" + DOMAIN;
     private static final String GROUP = "group@" + DOMAIN;
+    private static final String EXPORT_USER = "export@" + DOMAIN;
     private static final String SPECIFIC_DOMAIN = DomainsRoutes.DOMAINS + SEPARATOR + DOMAIN;
     private static final String SPECIFIC_USER = UserRoutes.USERS + SEPARATOR + USERNAME;
     private static final String MAILBOX = "mailbox";
@@ -270,5 +271,25 @@ public abstract class WebAdminServerIntegrationTest {
         logger.addAppender(loggingEventListAppender);
 
         return loggingEventListAppender;
+    }
+
+    // Not immutable: the export mails a link to the user, and that message stays on the server
+    @Test
+    void mailboxesExportTasksShouldBeExposed() throws Exception {
+        dataProbe.addUser(EXPORT_USER, "anyPassword");
+
+        String taskId = with()
+            .queryParam("task", "export")
+            .post("/users/" + EXPORT_USER + "/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("type", is("MailboxesExportTask"));
     }
 }
