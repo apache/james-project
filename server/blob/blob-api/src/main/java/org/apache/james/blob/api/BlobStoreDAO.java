@@ -39,6 +39,7 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.FileBackedOutputStream;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * James virtual blob store abstraction.
@@ -302,5 +303,74 @@ public interface BlobStoreDAO {
     default Publisher<BlobId> listBlobs(BucketName bucketName, String prefix) {
         return Flux.from(listBlobs(bucketName))
             .filter(blobId -> blobId.asString().startsWith(prefix));
+    }
+
+    BlobMetadataName TOTAL_OBJECT_SIZE = new BlobMetadataName("total-object-size");
+
+    /**
+     * Returns the size of the source object from a ranged-read result.
+     *
+     * <p>The value is the complete object size, rather than the range payload size. Implementations that support
+     * efficient ranged reads must add it to their result metadata. The default ranged-read implementation does so
+     * after reading the complete object.</p>
+     */
+    static long totalObjectSize(Blob blob) {
+        return blob.metadata().get(TOTAL_OBJECT_SIZE)
+            .map(BlobMetadataValue::value)
+            .map(Long::parseLong)
+            .orElseThrow(() -> new IllegalArgumentException("Ranged-read result is missing total object size metadata"));
+    }
+
+    /**
+     * Reads an inclusive byte range while preserving the blob metadata.
+     *
+     * <p>When {@code start} is non-negative, {@code end} is either an inclusive byte offset or {@code -1} to read
+     * through the end of the object. When {@code start} is negative, it requests that many bytes from the end of the
+     * object and {@code end} must be {@code -1}. For example, {@code readRange(bucket, id, -65536, -1)} reads up to
+     * the final 64 KiB. Implementations capable of backend range requests should override this method.</p>
+     *
+     * @return the requested bytes, its original metadata, and {@link #TOTAL_OBJECT_SIZE} metadata
+     * @throws IllegalArgumentException when the range is malformed or starts beyond the end of the object
+     */
+    default Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+        validateRange(start, end);
+
+        return Mono.from(readBytes(bucketName, blobId))
+            .map(bytesBlob -> {
+                long totalSize = bytesBlob.payload().length;
+                int from = rangeStart(start, totalSize);
+                int toExclusive = rangeEndExclusive(start, end, totalSize);
+
+                BlobMetadata metadata = bytesBlob.metadata()
+                    .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(Long.toString(totalSize)));
+                return BytesBlob.of(Arrays.copyOfRange(bytesBlob.payload(), from, toExclusive), metadata);
+            });
+    }
+
+    private static void validateRange(long start, long end) {
+        if (start < 0) {
+            Preconditions.checkArgument(start != Long.MIN_VALUE, "'start' must be greater than %s", Long.MIN_VALUE);
+            Preconditions.checkArgument(end == -1, "'end' must be -1 for a suffix range");
+            return;
+        }
+        Preconditions.checkArgument(end == -1 || end >= start,
+            "'end' (%s) must be -1 or greater than or equal to 'start' (%s)", end, start);
+    }
+
+    private static int rangeStart(long start, long totalSize) {
+        Preconditions.checkArgument(totalSize > 0, "Cannot read a range from an empty object");
+        if (start < 0) {
+            return (int) Math.max(0, totalSize + start);
+        }
+        Preconditions.checkArgument(start < totalSize,
+            "'start' (%s) must be smaller than the object size (%s)", start, totalSize);
+        return (int) start;
+    }
+
+    private static int rangeEndExclusive(long start, long end, long totalSize) {
+        if (start < 0 || end == -1) {
+            return (int) totalSize;
+        }
+        return end >= totalSize - 1 ? (int) totalSize : (int) (end + 1);
     }
 }
