@@ -27,6 +27,6 @@ public class DistributedJamesWithTikaTest implements MailsShouldBeWellReceivedCo
     static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
         .extension(new AwsS3BlobStoreExtension())
         .extension(new TikaExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

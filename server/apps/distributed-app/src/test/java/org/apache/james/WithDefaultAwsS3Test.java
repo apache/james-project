@@ -26,6 +26,6 @@ public class WithDefaultAwsS3Test implements MailsShouldBeWellReceivedConcreteCo
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
         .extension(new AwsS3BlobStoreExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

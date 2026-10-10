@@ -48,6 +48,6 @@ public class WithEncryptedBlobStoreTest implements MailsShouldBeWellReceivedConc
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
         .extension(new AwsS3BlobStoreExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

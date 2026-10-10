@@ -29,6 +29,6 @@ public class WithS3SSECTest implements MailsShouldBeWellReceivedConcreteContract
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
         .extension(new S3SSECBlobStoreExtension(s3SSECConfiguration))
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
