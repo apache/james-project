@@ -108,7 +108,7 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
         return resp;
     }
 
-    boolean isValid(String argument) {
+    public static boolean isValid(String argument) {
         String hostname = unquote(argument);
 
         // Without [] Guava attempt to parse IPV4
@@ -127,15 +127,15 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
     // RFC 5321 §4.1.2 / RFC 1123 §2.1: labels may start with a letter or digit,
     // contain letters/digits/hyphens, and must not start or end with a hyphen.
     // Validated character-by-character to avoid any regex backtracking (ReDoS).
-    private boolean isRfc5321Hostname(String hostname) {
+    private static boolean isRfc5321Hostname(String hostname) {
         if (hostname.isEmpty() || hostname.length() > MAX_HOSTNAME_LENGTH) {
             return false;
         }
         return LABEL_SPLITTER.splitToStream(hostname)
-            .allMatch(this::isValidRfc1123Label);
+            .allMatch(EhloCmdHandler::isValidRfc1123Label);
     }
 
-    private boolean isValidRfc1123Label(String label) {
+    private static boolean isValidRfc1123Label(String label) {
         if (label.isEmpty() || label.length() > MAX_LABEL_LENGTH) {
             return false;
         }
@@ -147,13 +147,13 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
 
     // Some clients uses hostname (CF JAMES-4066) or MAC address, neither of which is a domain nor an
     // address-literal.
-    private boolean isOpaqueIdentifier(String hostname) {
+    private static boolean isOpaqueIdentifier(String hostname) {
         return ALPHANUMERIC_MATCHER.matchesAnyOf(hostname)
             && OPAQUE_IDENTIFIER_MATCHER.matchesAllOf(hostname);
     }
 
     // CF JAMES-4040 IPv6v4-full https://datatracker.ietf.org/doc/html/rfc5321
-    private boolean emClientCompatibility(String hostname) {
+    private static boolean emClientCompatibility(String hostname) {
         int separator = hostname.lastIndexOf(':');
         if (separator == -1 || separator == hostname.length() - 1) {
             return false;
@@ -175,7 +175,7 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
         return ipv6;
     }
 
-    private String unquote(String argument) {
+    private static String unquote(String argument) {
         if (argument.startsWith("[") && argument.endsWith("]")) {
             return argument.substring(1, argument.length() - 1);
         }
