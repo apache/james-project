@@ -119,7 +119,9 @@ for JMAP filters. This projection optimizes reads, but needs to be correctly pop
 systems with filters already defined would result in those filters to be not read.
 
 | delay.sends.enabled
-| Optional boolean. Defaults to false. Whether to support or not the delay send with JMAP protocol.
+| Optional boolean. Defaults to false. Whether to support or not the delay send with JMAP protocol. When disabled,
+`EmailSubmission/set` rejects `holdFor` / `holdUntil` with an `invalidProperties` SetError. Note that the RabbitMQ
+mail queue does not support delays: delayed sends are always rejected on servers relying on it.
 
 | send.validate.rcpt
 | Optional boolean. Defaults to false. Whether `EmailSubmission/set` rejects recipients James knows it cannot

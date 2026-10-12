@@ -21,4 +21,6 @@ package org.apache.james.jmap.http.rfc8621;
 
 public interface InjectionKeys {
     String RFC_8621 = "RFC-8621";
+    // EmailSubmissionSetValidation contributed by Guice modules, on top of the configured ones
+    String COMPOSED_EMAIL_SUBMISSION_SET_VALIDATIONS = "composedEmailSubmissionSetValidations";
 }

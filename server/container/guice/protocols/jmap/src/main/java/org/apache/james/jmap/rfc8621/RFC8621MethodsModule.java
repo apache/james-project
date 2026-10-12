@@ -66,6 +66,9 @@ import org.apache.james.jmap.method.EmailQueryMethod;
 import org.apache.james.jmap.method.EmailQueryOptimizer;
 import org.apache.james.jmap.method.EmailQueryViewOptimizer;
 import org.apache.james.jmap.method.EmailSetMethod;
+import org.apache.james.jmap.method.EmailSubmissionChangesMethod;
+import org.apache.james.jmap.method.EmailSubmissionGetMethod;
+import org.apache.james.jmap.method.EmailSubmissionQueryMethod;
 import org.apache.james.jmap.method.EmailSubmissionSetMethod;
 import org.apache.james.jmap.method.EmailSubmissionSetValidation;
 import org.apache.james.jmap.method.IdentityChangesMethod;
@@ -124,6 +127,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 public class RFC8621MethodsModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(RFC8621MethodsModule.class);
@@ -157,6 +161,9 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(EmailParseMethod.class);
         methods.addBinding().to(EmailSetMethod.class);
         methods.addBinding().to(EmailSubmissionSetMethod.class);
+        methods.addBinding().to(EmailSubmissionGetMethod.class);
+        methods.addBinding().to(EmailSubmissionChangesMethod.class);
+        methods.addBinding().to(EmailSubmissionQueryMethod.class);
         methods.addBinding().to(IdentityGetMethod.class);
         methods.addBinding().to(IdentitySetMethod.class);
         methods.addBinding().to(IdentityChangesMethod.class);
@@ -212,6 +219,8 @@ public class RFC8621MethodsModule extends AbstractModule {
         connectionDescriptionSupplierMultibinder.addBinding().to(WebSocketRoutes.class);
         connectionDescriptionSupplierMultibinder.addBinding().to(EventSourceRoutes.class);
 
+        Multibinder.newSetBinder(binder(), EmailSubmissionSetValidation.class, Names.named(InjectionKeys.COMPOSED_EMAIL_SUBMISSION_SET_VALIDATIONS));
+
         Multibinder<EmailQueryOptimizer> emailQueryOptimizerMultibinder = Multibinder.newSetBinder(binder(), EmailQueryOptimizer.class);
         emailQueryOptimizerMultibinder.addBinding().to(EmailQueryViewOptimizer.class);
     }
@@ -250,8 +259,10 @@ public class RFC8621MethodsModule extends AbstractModule {
     @Singleton
     public Set<EmailSubmissionSetValidation> provideEmailSubmissionSetValidations(JmapRfc8621Configuration configuration,
                                                                                  Provider<RecipientValidator> recipientValidator,
-                                                                                 GuiceLoader guiceLoader) {
+                                                                                 GuiceLoader guiceLoader,
+                                                                                 @Named(InjectionKeys.COMPOSED_EMAIL_SUBMISSION_SET_VALIDATIONS) Set<EmailSubmissionSetValidation> composedValidations) {
         ImmutableSet.Builder<EmailSubmissionSetValidation> validations = ImmutableSet.builder();
+        validations.addAll(composedValidations);
 
         if (configuration.validateRecipientsOnSend()) {
             validations.add(new ValidRcptEmailSubmissionSetValidation(recipientValidator.get(), configuration.recipientValidationPolicy()));

@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableMap
 import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
 import jakarta.annotation.PreDestroy
-import jakarta.inject.Inject
+import jakarta.inject.{Inject, Named}
 import jakarta.mail.Address
 import jakarta.mail.Message.RecipientType
 import jakarta.mail.internet.{InternetAddress, MimeMessage}
@@ -40,7 +40,7 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.core.{ClientId, Invocation, JmapRfc8621Configuration, Properties, ServerId, SessionTranslator, SetError, SubmissionCapabilityFactory, UTCDate, UuidState}
 import org.apache.james.jmap.json.EmailSubmissionSetSerializer
-import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue}
+import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue, ThreadId, UndoStatus, UnparsedEmailSubmissionId}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, NO_DELAY, VALID_PARAMETER_NAME_SET, formatter}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
@@ -69,6 +69,7 @@ object EmailSubmissionSetMethod {
   val noRecipients: SetErrorType = "noRecipients"
   val forbiddenFrom: SetErrorType = "forbiddenFrom"
   val forbiddenMailFrom: SetErrorType = "forbiddenMailFrom"
+  val cannotUnsend: SetErrorType = "cannotUnsend"
   val formatter = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("Z"))
   val VALID_PARAMETER_NAME_SET: Set[ParameterName] = Set(ParameterName.holdFor, ParameterName.holdUntil)
   val NO_DELAY: Duration = Duration.ZERO
@@ -87,6 +88,9 @@ object EmailSubmissionSetMethod {
       case e: EmailSubmissionCreationParseException =>
         LOGGER.info("Failed to parse EMailSubmission/set create", e)
         e.setError
+      case e: InvalidEnvelopeParametersException =>
+        LOGGER.info("Invalid envelope parameters in EmailSubmission/set: {}", e.getMessage)
+        SetError.invalidProperties(SetErrorDescription(e.getMessage), Some(Properties("envelope")))
       case _: NoRecipientException =>
         LOGGER.info("Attempt to send a mail with no recipients")
         SetError(EmailSubmissionSetMethod.noRecipients,
@@ -136,6 +140,12 @@ object EmailSubmissionSetMethod {
       }
       .toMap
 
+    def isCreatedSubmission(id: UnparsedEmailSubmissionId): Option[EmailSubmissionId] =
+      created.collectFirst {
+        case success: CreationSuccess if id.id.value.equals("#" + success.emailSubmissionCreationId.id.value) => success.emailSubmissionCreationResponse.id
+        case success: CreationSuccess if id.id.value.equals(success.emailSubmissionCreationResponse.id.value.value) => success.emailSubmissionCreationResponse.id
+      }
+
     def resolveMessageId(creationId: EmailSubmissionCreationId): Either[IllegalArgumentException, Option[MessageId]] = {
       if (creationId.id.startsWith("#")) {
         val realId = creationId.id.substring(1)
@@ -161,6 +171,7 @@ object EmailSubmissionSetMethod {
 
 case class EmailSubmissionCreationParseException(setError: SetError) extends Exception
 case class EmailSubmissionSetValidationException(setError: SetError) extends Exception
+case class InvalidEnvelopeParametersException(message: String) extends IllegalArgumentException(message)
 case class NoRecipientException() extends Exception
 case class ForbiddenFromException(from: String) extends Exception
 case class ForbiddenMailFromException(from: List[String]) extends Exception
@@ -182,6 +193,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
                                          emailSetMethod: EmailSetMethod,
                                          clock: Clock,
                                          javaValidations: java.util.Set[EmailSubmissionSetValidation],
+                                         @Named("supportsDelaySends") supportsDelaySends: Boolean,
                                          val metricFactory: MetricFactory,
                                          val sessionSupplier: SessionSupplier,
                                          val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with Startable {
@@ -206,7 +218,9 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
               accountId = request.accountId,
               newState = UuidState.INSTANCE,
               created = Some(createdResults._1.retrieveCreated).filter(_.nonEmpty),
-              notCreated = Some(createdResults._1.retrieveErrors).filter(_.nonEmpty)))
+              notCreated = Some(createdResults._1.retrieveErrors).filter(_.nonEmpty),
+              notUpdated = request.update.map(_.keySet.map(id => notUpdated(id, createdResults._1)).toMap).filter(_.nonEmpty),
+              notDestroyed = request.destroy.map(_.map(notFound).toMap).filter(_.nonEmpty)))
               .as[JsObject]),
             methodCallId = invocation.invocation.methodCallId),
           processingContext = createdResults._2)
@@ -222,6 +236,19 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
         SFlux.concat(SMono.just(explicitInvocation), emailSetCall)
       })
+
+  /**
+   * EmailSubmission storage is not implemented and sent mails cannot be canceled: an update can never succeed.
+   * Submissions created by this very call are known to be sent, thus `cannotUnsend`; any other id is unknown.
+   */
+  private def notUpdated(id: UnparsedEmailSubmissionId, creationResults: CreationResults): (UnparsedEmailSubmissionId, SetError) =
+    creationResults.isCreatedSubmission(id)
+      .map(submissionId => UnparsedEmailSubmissionId(submissionId.value) -> SetError(EmailSubmissionSetMethod.cannotUnsend,
+        SetErrorDescription(s"EmailSubmission ${submissionId.value.value} was already sent and can no longer be canceled"), None))
+      .getOrElse(id -> notFound(id)._2)
+
+  private def notFound(id: UnparsedEmailSubmissionId): (UnparsedEmailSubmissionId, SetError) =
+    id -> SetError.notFound(SetErrorDescription(s"EmailSubmission ${id.id.value} was not found"))
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailSubmissionSetRequest] =
     serializer.deserializeEmailSubmissionSetRequest(invocation.arguments.value)
@@ -279,6 +306,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       message <- SFlux(messageIdManager.getMessagesReactive(List(request.emailId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
         .next
         .switchIfEmpty(SMono.error(MessageNotFoundException(request.emailId)))
+      threadId = ThreadId.fromJava(message.getThreadId)
       submissionId = EmailSubmissionId.generate
       message <- SMono.fromTry(toMimeMessage(submissionId.value, message))
       _ <- validateMimeMessages(message)
@@ -299,12 +327,12 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         mailImpl.setMessageNoCopy(message)
         mailImpl
       }
-      _ <- applyValidations(mail)
+      _ <- applyValidations(mail, delay)
       _ <- enqueue(mail, delay, mailboxSession)
         .`then`(SMono.just(submissionId))
       sendAt = UTCDate(ZonedDateTime.now(clock).plus(delay))
     } yield {
-      EmailSubmissionCreationResponse(submissionId, sendAt) -> request.emailId
+      EmailSubmissionCreationResponse(submissionId, threadId, UndoStatus.FINAL, sendAt) -> request.emailId
     }
 
   /**
@@ -312,9 +340,9 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
    * subsequent validations are not evaluated. As the mail holds the message content, it needs
    * disposing whenever it does not reach the queue.
    */
-  private def applyValidations(mail: Mail): SMono[Mail] =
+  private def applyValidations(mail: Mail, delay: Duration): SMono[Mail] =
     SFlux.fromIterable(validations)
-      .concatMap(_.validate(mail))
+      .concatMap(_.validate(mail, delay))
       .filter(_.isDefined)
       .map(_.get)
       .next()
@@ -365,20 +393,25 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     mailParameters match {
       case None => Success(NO_DELAY)
       case Some(aMap) if aMap.contains(ParameterName.holdFor) =>
-        aMap(ParameterName.holdFor).map(paramValue => Try(Duration.ofSeconds(paramValue.value.toLong)))
+        aMap(ParameterName.holdFor).map(paramValue => Try(Duration.ofSeconds(paramValue.value.toLong))
+            .recoverWith(e => Failure(InvalidEnvelopeParametersException(e.getMessage))))
           .getOrElse(Success(NO_DELAY))
       case Some(aMap) if aMap.contains(ParameterName.holdUntil) =>
-        aMap(ParameterName.holdUntil).map(paramValue => Try(Duration.between(LocalDateTime.now(clock), LocalDateTime.parse(paramValue.value, formatter))))
+        aMap(ParameterName.holdUntil).map(paramValue => Try(Duration.between(LocalDateTime.now(clock), LocalDateTime.parse(paramValue.value, formatter)))
+            .recoverWith(e => Failure(InvalidEnvelopeParametersException(e.getMessage))))
           .getOrElse(Success(NO_DELAY))
       case _ => Success(NO_DELAY)
     }
 
 
   def validateDelay(delay: Duration): Try[Duration] =
-    if (delay.getSeconds >= 0 && delay.getSeconds <= SubmissionCapabilityFactory.maximumDelays.getSeconds) {
-      Success(delay)
+    if (delay.getSeconds < 0 || delay.getSeconds > SubmissionCapabilityFactory.maximumDelays.getSeconds) {
+      Failure(InvalidEnvelopeParametersException("Invalid delayed time!"))
+    } else if (!delay.isZero && !supportsDelaySends) {
+      // Follow the advertised capability: maxDelayedSend is 0 when delayed sends are disabled
+      Failure(InvalidEnvelopeParametersException("Delayed sends are not supported (maxDelayedSend is 0)"))
     } else {
-      Failure(new IllegalArgumentException("Invalid delayed time!"))
+      Success(delay)
     }
 
   def validateMimeMessages(mimeMessage: MimeMessage) : SMono[MimeMessage] = validateMailAddressHeaderMimeMessage(mimeMessage)
@@ -416,7 +449,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       .collectSeq()
       .flatMap(recipientsList => {
         if (recipientsList.length != recipients.length) {
-          SMono.just(Failure(new IllegalArgumentException("Some recipients have invalid delay parameters")))
+          SMono.just(Failure(InvalidEnvelopeParametersException("Some recipients have invalid delay parameters")))
         } else {
           SMono.just(Success(recipientsList.toList))
         }
@@ -435,12 +468,12 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     val invalidEntries = keySet -- VALID_PARAMETER_NAME_SET
     if (invalidEntries.isEmpty) {
       if (invalidFutureReleaseParameter(keySet)) {
-        Failure(new IllegalArgumentException("Can't specify holdFor and holdUntil simultaneously"))
+        Failure(InvalidEnvelopeParametersException("Can't specify holdFor and holdUntil simultaneously"))
       } else {
         Success(mailParameters)
       }
     } else {
-      Failure(new IllegalArgumentException("Unsupported parameterName"))
+      Failure(InvalidEnvelopeParametersException("Unsupported parameterName"))
     }
   }
 

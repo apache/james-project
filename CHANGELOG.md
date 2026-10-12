@@ -88,6 +88,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### Fixes
 
+ - JAMES-4236 JMAP `EmailSubmission` conformity: `EmailSubmission/set` `update` / `destroy` are answered in
+ `notUpdated` / `notDestroyed` (`notFound`, or `cannotUnsend` for submissions created by the same call) instead of
+ being silently ignored (which meant success); `EmailSubmission/get`, `/changes` and `/query` answer over an empty set
+ instead of `unknownMethod`; `created` carries `threadId` and `undoStatus`. Delayed sends (`holdFor` / `holdUntil`,
+ now case-insensitive) are rejected when `maxDelayedSend` is 0, and on the RabbitMQ mail queue which ignores delays.
+ **Breaking change**: invalid envelope parameters are reported as `invalidProperties` (`properties: ["envelope"]`)
+ instead of `invalidArguments`.
  - [FIX] JMAP DownloadRoutes: avoid noisy benign `IllegalStateException` upon mid-stream errors
  - [FIX] `ICALAttributeDTO` should sanitize invalid dtstamp (#3084)
  - [FIX] Better handle `InterruptedException` in `receiveMessageInTimespan` (#3083)

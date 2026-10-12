@@ -40,11 +40,29 @@ object EmailSubmissionId {
 object ParameterName {
   val holdFor: ParameterName = ParameterName("holdFor")
   val holdUntil: ParameterName = ParameterName("holdUntil")
+
+  private val knownParameters: Set[ParameterName] = Set(holdFor, holdUntil)
+
+  // SMTP parameter keywords are case-insensitive (RFC 5321 section 2.4)
+  def from(name: String): ParameterName =
+    knownParameters.find(_.value.equalsIgnoreCase(name))
+      .getOrElse(ParameterName(name))
 }
+
+case class UnparsedEmailSubmissionId(id: Id)
+
+object UndoStatus {
+  // Without EmailSubmission storage nor cancellation support, a submission can never be undone
+  val FINAL: UndoStatus = UndoStatus("final")
+}
+
+case class UndoStatus(value: String) extends AnyVal
 case class EmailSubmissionCreationId(id: Id)
 
 case class EmailSubmissionSetRequest(accountId: AccountId,
                                      create: Option[Map[EmailSubmissionCreationId, JsObject]],
+                                     update: Option[Map[UnparsedEmailSubmissionId, JsObject]],
+                                     destroy: Option[List[UnparsedEmailSubmissionId]],
                                      onSuccessUpdateEmail: Option[Map[EmailSubmissionCreationId, JsObject]],
                                      onSuccessDestroyEmail: Option[List[EmailSubmissionCreationId]]) extends WithAccountId with ValidableRequest {
   def implicitEmailSetRequest(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[EmailSetRequest]] =
@@ -95,7 +113,7 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
   }
 
   private def validateIdCount(configuration: JmapRfc8621Configuration): Either[Exception, EmailSubmissionSetRequest] = {
-    val idCount = create.map(_.size).getOrElse(0)
+    val idCount = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
     if (idCount > configuration.maxObjectsInSet.value.value) {
       Left(RequestTooLargeException(s"Too many items in a set request ${this.getClass}. " +
         s"Got $idCount items instead of maximum ${configuration.maxObjectsInSet.value}."))
@@ -139,11 +157,13 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
 case class EmailSubmissionSetResponse(accountId: AccountId,
                                       newState: UuidState,
                                       created: Option[Map[EmailSubmissionCreationId, EmailSubmissionCreationResponse]],
-                                      notCreated: Option[Map[EmailSubmissionCreationId, SetError]])
+                                      notCreated: Option[Map[EmailSubmissionCreationId, SetError]],
+                                      notUpdated: Option[Map[UnparsedEmailSubmissionId, SetError]] = None,
+                                      notDestroyed: Option[Map[UnparsedEmailSubmissionId, SetError]] = None)
 
 case class EmailSubmissionId(value: Id)
 
-case class EmailSubmissionCreationResponse(id: EmailSubmissionId, sendAt: UTCDate)
+case class EmailSubmissionCreationResponse(id: EmailSubmissionId, threadId: ThreadId, undoStatus: UndoStatus, sendAt: UTCDate)
 case class ParameterName(value: String) extends AnyVal
 case class ParameterValue(value: String) extends AnyVal
 case class EmailSubmissionAddress(email: MailAddress, parameters: Option[Map[ParameterName, Option[ParameterValue]]] = Option.empty)

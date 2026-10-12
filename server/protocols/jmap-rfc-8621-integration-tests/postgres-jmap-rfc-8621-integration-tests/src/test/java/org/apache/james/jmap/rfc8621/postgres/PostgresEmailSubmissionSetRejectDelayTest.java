@@ -21,30 +21,21 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
-import org.apache.james.ClockExtension;
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.PostgresJamesConfiguration;
 import org.apache.james.PostgresJamesServerMain;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.jmap.rfc8621.contract.EmailSubmissionSetMethodFutureReleaseContract;
-import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
-import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.postgres.PostgresMessageId;
+import org.apache.james.jmap.rfc8621.contract.EmailSubmissionSetRejectDelayContract;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
-import org.apache.james.utils.UpdatableTickingClock;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.inject.name.Names;
 
-public class PostgresEmailSubmissionSetMethodFutureReleaseTest implements EmailSubmissionSetMethodFutureReleaseContract {
-    public static final PostgresMessageId.Factory MESSAGE_ID_FACTORY = new PostgresMessageId.Factory();
-
+public class PostgresEmailSubmissionSetRejectDelayTest implements EmailSubmissionSetRejectDelayContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
@@ -61,36 +52,9 @@ public class PostgresEmailSubmissionSetMethodFutureReleaseTest implements EmailS
             .build())
         .extension(PostgresExtension.empty())
         .extension(new RabbitMQExtension())
-        .extension(new ClockExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule())
-            .overrideWith(new DelegationProbeModule()))
+            .overrideWith(new TestJMAPServerModule()))
         .overrideServerModule(binder -> binder.bind(Boolean.class).annotatedWith(Names.named("supportsDelaySends")).toInstance(true))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
-
-    @Override
-    public MessageId randomMessageId() {
-        return MESSAGE_ID_FACTORY.generate();
-    }
-
-    @Disabled("Not work for postgres test")
-    @Override
-    public void emailSubmissionSetCreateShouldDeliverEmailWhenHoldForExpired(GuiceJamesServer server, UpdatableTickingClock updatableTickingClock){
-    }
-
-    @Disabled("Not work for postgres test")
-    @Override
-    public void emailSubmissionSetCreateShouldDeliverEmailWhenHoldUntilExpired(GuiceJamesServer server, UpdatableTickingClock updatableTickingClock){
-    }
-
-    @Disabled("Not work for postgres test")
-    @Override
-    public void emailSubmissionSetCreateShouldDelayEmailWithHoldFor(GuiceJamesServer server, UpdatableTickingClock updatableTickingClock){
-    }
-
-    @Disabled("Not work for postgres test")
-    @Override
-    public void emailSubmissionSetCreateShouldDelayEmailWithHoldUntil(GuiceJamesServer server, UpdatableTickingClock updatableTickingClock){
-    }
 }

@@ -71,6 +71,7 @@ import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.queue.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.queue.rabbitmq.FakeMailQueueViewModule;
+import org.apache.james.modules.queue.rabbitmq.RabbitMQMailQueueJMAPModule;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQMailQueueModule;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.DKIMMailetModule;
@@ -242,6 +243,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
                     new ContentDeletionEventBusModule(),
                     new RabbitMQModule(),
                     new RabbitMQMailQueueModule(),
+                    new RabbitMQMailQueueJMAPModule(),
                     new FakeMailQueueViewModule(),
                     new RabbitMailQueueRoutesModule(),
                     new DistributedTaskSerializationModule());

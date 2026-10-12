@@ -528,7 +528,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .post
       .`then`
       .statusCode(SC_OK)
-      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidArguments"))
+      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidProperties"))
       .body("methodResponses[0][1].notCreated.k1490.description", Matchers.is("Invalid delayed time!"))
   }
 
@@ -581,7 +581,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .post
       .`then`
       .statusCode(SC_OK)
-      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidArguments"))
+      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidProperties"))
       .body("methodResponses[0][1].notCreated.k1490.description", Matchers.is("Invalid delayed time!"))
   }
 
@@ -719,7 +719,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .post
       .`then`
       .statusCode(SC_OK)
-      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidArguments"))
+      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidProperties"))
       .body("methodResponses[0][1].notCreated.k1490.description", Matchers.is(s"For input string: \"not a number\""))
   }
 
@@ -967,7 +967,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .post
       .`then`
       .statusCode(SC_OK)
-      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidArguments"))
+      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidProperties"))
       .body("methodResponses[0][1].notCreated.k1490.description", Matchers.is("Invalid delayed time!"))
   }
 
@@ -1020,7 +1020,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .post
       .`then`
       .statusCode(SC_OK)
-      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidArguments"))
+      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidProperties"))
       .body("methodResponses[0][1].notCreated.k1490.description", Matchers.is("Invalid delayed time!"))
   }
 
@@ -1127,7 +1127,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .post
       .`then`
       .statusCode(SC_OK)
-      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidArguments"))
+      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidProperties"))
       .body("methodResponses[0][1].notCreated.k1490.description", Matchers.is("Can't specify holdFor and holdUntil simultaneously"))
   }
 
@@ -1180,7 +1180,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .post
       .`then`
       .statusCode(SC_OK)
-      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidArguments"))
+      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidProperties"))
       .body("methodResponses[0][1].notCreated.k1490.description", Matchers.is("Text 'not a date' could not be parsed at index 0"))
   }
 
@@ -1240,7 +1240,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .post
       .`then`
       .statusCode(SC_OK)
-      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidArguments"))
+      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidProperties"))
       .body("methodResponses[0][1].notCreated.k1490.description", Matchers.is("Some recipients have invalid delay parameters"))
   }
 
@@ -1275,6 +1275,57 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |							"email": "${bobUsername.asString}",
          |							"parameters": {
          |							  "holdFor": "1000"
+         |							}
+         |						},
+         |						"rcptTo": [{
+         |							"email": "${andreUsername.asString}"
+         |						}]
+         |					}
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .post
+      .`then`
+      .statusCode(SC_OK)
+      .body("methodResponses[0][1].created.k1490.sendAt", Matchers.is("2023-04-14T10:16:40Z"))
+  }
+
+  @Test
+  def holdForShouldBeCaseInsensitive(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
+      .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |	"methodCalls": [
+         |		["EmailSubmission/set", {
+         |			"accountId": "$bobAccountId",
+         |			"create": {
+         |				"k1490": {
+         |					"emailId": "${messageId.serialize}",
+         |					"envelope": {
+         |						"mailFrom": {
+         |							"email": "${bobUsername.asString}",
+         |							"parameters": {
+         |							  "HOLDFOR": "1000"
          |							}
          |						},
          |						"rcptTo": [{
@@ -1394,7 +1445,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .post
       .`then`
       .statusCode(SC_OK)
-      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidArguments"))
+      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidProperties"))
       .body("methodResponses[0][1].notCreated.k1490.description", Matchers.is("Unsupported parameterName"))
   }
 
@@ -1448,7 +1499,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .post
       .`then`
       .statusCode(SC_OK)
-      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidArguments"))
+      .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidProperties"))
       .body("methodResponses[0][1].notCreated.k1490.description", Matchers.is("Unsupported parameterName"))
   }
 

@@ -77,6 +77,7 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.queue.rabbitmq.MailQueueViewChoice;
+import org.apache.james.modules.queue.rabbitmq.RabbitMQMailQueueJMAPModule;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQMailQueueModule;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.DKIMMailetModule;
@@ -176,6 +177,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
     protected static final Module MODULES = Modules.override(REQUIRE_TASK_MANAGER_MODULE, new DistributedTaskManagerModule())
         .with(new RabbitMQModule(),
             new RabbitMQMailQueueModule(),
+            new RabbitMQMailQueueJMAPModule(),
             new RabbitMailQueueRoutesModule(),
             new MailboxEventBusModule(),
             new ContentDeletionEventBusModule(),

@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.method
 
+import java.time.Duration
+
 import org.apache.james.jmap.core.SetError
 import org.apache.mailet.Mail
 import reactor.core.scala.publisher.SMono
@@ -32,7 +34,12 @@ import reactor.core.scala.publisher.SMono
  *
  * Implementations are expected to emit `None` when the mail is accepted, and `Some(setError)` 
  * when it is rejected. 
+ *
+ * Implementations needing the requested delay (`holdFor` / `holdUntil`) override
+ * `validate(mail, delay)`, which defaults to `validate(mail)`.
  */
 trait EmailSubmissionSetValidation {
   def validate(mail: Mail): SMono[Option[SetError]]
+
+  def validate(mail: Mail, delay: Duration): SMono[Option[SetError]] = validate(mail)
 }
