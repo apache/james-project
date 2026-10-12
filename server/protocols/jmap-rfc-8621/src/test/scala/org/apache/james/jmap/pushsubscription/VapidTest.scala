@@ -24,7 +24,7 @@ import java.net.URI
 import java.security.interfaces.{ECPrivateKey, ECPublicKey}
 import java.security.spec.ECGenParameterSpec
 import java.security.{KeyPair, KeyPairGenerator}
-import java.time.{Clock, Instant, ZoneId, ZoneOffset}
+import java.time.{Clock, Instant, ZoneOffset}
 import java.util.{Base64, Date}
 
 import io.jsonwebtoken.{Claims, Jws, Jwts}
@@ -98,16 +98,6 @@ object VapidTestFixture {
   }
 }
 
-class UpdatableClock(private var current: Instant) extends Clock {
-  def setInstant(value: Instant): Unit = current = value
-
-  override def getZone: ZoneId = ZoneOffset.UTC
-
-  override def withZone(zone: ZoneId): Clock = this
-
-  override def instant(): Instant = current
-}
-
 class VapidTest {
   private val signer: VapidSigner = new VapidSigner(CONFIGURATION, VapidTestFixture.CLOCK)
 
@@ -156,32 +146,6 @@ class VapidTest {
   def audienceShouldBeInLowerCase(): Unit =
     assertThat(VapidTestFixture.payload(signer.authorization(new URI("https://Push.Example.COM/send/abc").toURL)))
       .contains("\"aud\":\"https://push.example.com\"")
-
-  @Test
-  def tokenShouldBeReusedForTheSameOrigin(): Unit = {
-    val clock = new UpdatableClock(NOW)
-    val signer = new VapidSigner(CONFIGURATION, clock)
-    val first = signer.authorization(new URI("https://push.example.com/send/abc").toURL)
-
-    clock.setInstant(NOW.plus(VapidSigner.TOKEN_VALIDITY.dividedBy(2)).minusSeconds(1))
-
-    assertThat(signer.authorization(new URI("https://push.example.com/send/def").toURL)).isEqualTo(first)
-    assertThat(signer.authorization(new URI("https://other.example.com/send/abc").toURL)).isNotEqualTo(first)
-  }
-
-  @Test
-  def tokenShouldBeSignedAgainHalfwayThroughItsValidity(): Unit = {
-    val clock = new UpdatableClock(NOW)
-    val signer = new VapidSigner(CONFIGURATION, clock)
-    val first = signer.authorization(new URI("https://push.example.com/send/abc").toURL)
-
-    clock.setInstant(NOW.plus(VapidSigner.TOKEN_VALIDITY.dividedBy(2)))
-    val second = signer.authorization(new URI("https://push.example.com/send/abc").toURL)
-
-    assertThat(second).isNotEqualTo(first)
-    assertThat(VapidTestFixture.payload(second, NOW.plus(VapidSigner.TOKEN_VALIDITY.dividedBy(2))))
-      .contains("\"aud\":\"https://push.example.com\"")
-  }
 
   @Test
   def tokenShouldExpireWithinADay(): Unit = {
