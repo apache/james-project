@@ -111,7 +111,7 @@ class PushSubscriptionSetCreateProcessor @Inject()(webPushClient: WebPushClient)
     SMono.fromCallable(() => Json.stringify(PushSerializer.serializePushVerification(pushVerification)).getBytes(StandardCharsets.UTF_8))
       .map(clearPayload => keys.map(keysValue => keysValue.encrypt(clearPayload)).getOrElse(clearPayload))
       .flatMap(payload => SMono.fromPublisher(webPushClient.push(pushSubscriptionServerURL, PushRequest(
-        ttl = PushTTL.FOUR_WEEKS,
+        ttl = PushTTL.ONE_WEEK,
         // Without it the client cannot tell that the payload is encrypted, nor read it
         contentCoding = keys.map(_ => Aes128gcm),
         payload = payload))))
