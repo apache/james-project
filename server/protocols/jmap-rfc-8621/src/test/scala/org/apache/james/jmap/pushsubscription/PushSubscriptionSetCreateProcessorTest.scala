@@ -77,7 +77,7 @@ class PushSubscriptionSetCreateProcessorTest {
 
     assertThat(requests.size).isEqualTo(1)
     assertThat(requests.head.containsHeader("Content-Encoding")).isFalse
-    assertThat(requests.head.getFirstHeader("TTL")).isEqualTo("2419200")
+    assertThat(requests.head.getFirstHeader("TTL")).isEqualTo("604800")
     assertThatJson(requests.head.getBodyAsString)
       .isEqualTo(
         """{

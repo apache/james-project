@@ -56,7 +56,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - [ENHANCEMENT] Implement negative ACL for JMAP
  - JAMES-4157 Implement JMAP `Blob/copy` (#2896)
  - [ENHANCEMENT] JMAP Web Push: authenticate requests with VAPID and advertise the `urn:ietf:params:jmap:webpush-vapid` capability (RFC-9749), see `webpush.vapid.*` in `jmap.properties`
- - [ENHANCEMENT] JMAP Web Push: ask push services to retain pushes four weeks (`TTL`) instead of 68 years
+ - [ENHANCEMENT] JMAP Web Push: ask push services to retain pushes one week (`TTL`) instead of 68 years
  - JAMES-3728 Implement `MessageIdManager::updateEmail`, allowing `Email/set` update to combine move and setFlags
  - JAMES-4203 Add Identity events, plugged into `CustomIdentityDAO`
  - JAMES-3893 Allow deleting identities via WebAdmin

@@ -88,8 +88,8 @@ object PushTTL {
       .map(new IllegalArgumentException(_))
 
   val MAX: PushTTL = validate(MAX_INT).toOption.get
-  // The longest push services commonly retain a message: they cap a longer TTL
-  val FOUR_WEEKS: PushTTL = validate(Duration.ofDays(28).getSeconds).toOption.get
+  // A push that could not be delivered for a week is not worth delivering any more
+  val ONE_WEEK: PushTTL = validate(Duration.ofDays(7).getSeconds).toOption.get
 }
 
 case class PushTopicConstraint()
