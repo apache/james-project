@@ -28,6 +28,7 @@ import java.util.{Base64, UUID}
 import com.google.crypto.tink.HybridEncrypt
 import com.google.crypto.tink.apps.webpush.WebPushHybridEncrypt
 import com.google.crypto.tink.subtle.EllipticCurves
+import com.google.crypto.tink.subtle.EllipticCurves.{CurveType, PointFormatType}
 import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.ExpireTimeInvalidException.TIME_FORMATTER
 
@@ -67,6 +68,11 @@ case class PushSubscriptionExpiredTime(value: ZonedDateTime) {
   def isBefore(date: ZonedDateTime): Boolean = value.isBefore(date)
 }
 
+object PushSubscriptionKeys {
+  private val UNCOMPRESSED_POINT_LENGTH: Int = 65
+  private val UNCOMPRESSED_POINT_TAG: Byte = 0x04
+}
+
 case class PushSubscriptionKeys(p256dh: String, auth: String) {
   def validate: Either[IllegalArgumentException, PushSubscriptionKeys] =
     Try(asHybridEncrypt()).map(_ => this)
@@ -86,7 +92,16 @@ case class PushSubscriptionKeys(p256dh: String, auth: String) {
     .withRecipientPublicKey(asECPublicKey())
     .build()
 
-  private def asECPublicKey(): ECPublicKey = EllipticCurves.getEcPublicKey(Base64.getUrlDecoder.decode(p256dh))
+  // RFC 8291 section 3.1: the key is an uncompressed point (65 bytes), which is what browsers hand out.
+  // Its X.509 encoding, the only form that used to be read, is still accepted.
+  private def asECPublicKey(): ECPublicKey = {
+    val key: Array[Byte] = Base64.getUrlDecoder.decode(p256dh)
+    if (key.length == PushSubscriptionKeys.UNCOMPRESSED_POINT_LENGTH && key(0) == PushSubscriptionKeys.UNCOMPRESSED_POINT_TAG) {
+      EllipticCurves.getEcPublicKey(CurveType.NIST_P256, PointFormatType.UNCOMPRESSED, key)
+    } else {
+      EllipticCurves.getEcPublicKey(key)
+    }
+  }
 }
 
 object PushSubscriptionCreationRequest {
