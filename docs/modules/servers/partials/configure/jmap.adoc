@@ -113,6 +113,24 @@ WebSocket nor EventSource, which do not rely on push subscriptions.
 | webpush.prevent.server.side.request.forgery
 | Optional boolean. Prevent server side request forgery by preventing calls to the private network ranges. Defaults to true, can be disabled for testing.
 
+| webpush.vapid.public.key
+| Optional string. Public key identifying this server to the push services (VAPID,
+https://www.rfc-editor.org/rfc/rfc8292[RFC-8292]): a P-256 public key in its uncompressed form (65 bytes), base64url
+encoded, as Web Push tools generate it. When set, with `webpush.vapid.private.key`, every Web Push request is
+authenticated with it, and the JMAP session advertises it as the `applicationServerKey` of the
+`urn:ietf:params:jmap:webpush-vapid` capability (https://www.rfc-editor.org/rfc/rfc9749[RFC-9749]), which browsers need
+to subscribe. Defaults to no VAPID: requests are not authenticated and the capability is not advertised.
+The key pair is meant to stay: key rotation (RFC-9749 section 5) is not implemented. After a change, push services
+refuse the pushes of the subscriptions created with the former key, until clients subscribe again.
+
+| webpush.vapid.private.key
+| Optional string. Private key matching `webpush.vapid.public.key`: a P-256 private key (32 bytes), base64url encoded.
+Required when the public key is set. Keep it secret.
+
+| webpush.vapid.subject
+| Optional string. Contact of the operator of this server, sent to the push services as the `sub` claim: a `mailto:`
+or an `https:` URI. Recommended when VAPID is configured, as some push services refuse requests without it.
+
 | cassandra.filter.projection.activated
 |Optional boolean. Defaults to false. Casandra backends only. Whether to use or not the Cassandra projection
 for JMAP filters. This projection optimizes reads, but needs to be correctly populated. Turning it on on
