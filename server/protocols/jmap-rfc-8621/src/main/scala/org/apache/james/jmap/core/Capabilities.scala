@@ -36,7 +36,8 @@ object DefaultCapabilities {
     VacationResponseCapabilityFactory,
     SharesCapabilityFactory,
     SubmissionCapabilityFactory(Clock.systemUTC(), configuration.supportsDelaySends),
-    WebSocketCapabilityFactory)
+    WebSocketCapabilityFactory,
+    WebPushVapidCapabilityFactory(configuration))
 }
 
 object Capabilities {
