@@ -25,14 +25,14 @@ import java.nio.charset.StandardCharsets
 import java.security.interfaces.{ECPrivateKey, ECPublicKey}
 import java.security.spec.ECPrivateKeySpec
 import java.security.{KeyFactory, Signature}
-import java.time.{Clock, Duration, Instant}
-import java.util.concurrent.ConcurrentHashMap
+import java.time.{Clock, Duration}
 import java.util.{Base64, Date, Locale}
 
 import com.google.common.base.Preconditions
 import com.google.crypto.tink.subtle.EllipticCurves
 import com.google.crypto.tink.subtle.EllipticCurves.{CurveType, PointFormatType}
 import io.jsonwebtoken.Jwts
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.Try
 
@@ -41,6 +41,7 @@ import scala.util.Try
  * as JMAP servers advertise it (RFC 9749).
  */
 object VapidConfiguration {
+  private val LOGGER: Logger = LoggerFactory.getLogger(classOf[VapidConfiguration])
   private val UNCOMPRESSED_POINT_LENGTH: Int = 65
   private val UNCOMPRESSED_POINT_TAG: Byte = 0x04
   private val COORDINATE_LENGTH: Int = 32
@@ -66,6 +67,9 @@ object VapidConfiguration {
       "The VAPID private key must be a P-256 private key (32 bytes), base64url encoded".asInstanceOf[Object])
     subject.foreach(value => Preconditions.checkArgument(value.startsWith("mailto:") || value.startsWith("https:"),
       "The VAPID subject must be a `mailto:` or an `https:` URI".asInstanceOf[Object]))
+    if (subject.isEmpty) {
+      LOGGER.warn("VAPID is configured without a subject (`webpush.vapid.subject`): some push services, as the one of Apple, refuse such requests")
+    }
 
     // Checks that the point is on the curve, which the JDK key factory does not
     val ecPublicKey: ECPublicKey = Try(EllipticCurves.getEcPublicKey(CurveType.NIST_P256, PointFormatType.UNCOMPRESSED, point))
@@ -110,33 +114,18 @@ case class VapidConfiguration(applicationServerKey: String,
 object VapidSigner {
   // RFC 8292 section 2: a token is valid for 24 hours at most
   val TOKEN_VALIDITY: Duration = Duration.ofHours(12)
-
-  private case class Token(authorization: String, renewAt: Instant)
 }
 
 class VapidSigner(configuration: VapidConfiguration, clock: Clock) {
-  // RFC 8292 section 2: a token can be reused for the requests to a same origin. Signed again halfway through its validity.
-  private val tokens: ConcurrentHashMap[String, VapidSigner.Token] = new ConcurrentHashMap()
-
   /**
    * The `Authorization` header of a request to a push resource: a token signed for the origin of the push service.
    */
   def authorization(pushResource: URL): String = {
-    val now: Instant = clock.instant()
-    tokens.compute(origin(pushResource), (audience, token) =>
-      if (token == null || !now.isBefore(token.renewAt)) {
-        VapidSigner.Token(sign(audience, now), now.plus(VapidSigner.TOKEN_VALIDITY.dividedBy(2)))
-      } else {
-        token
-      }).authorization
-  }
-
-  private def sign(audience: String, now: Instant): String = {
     val token: String = Jwts.builder()
       .header().`type`("JWT").and()
       // A single string, not an array: what push services expect
-      .audience().single(audience)
-      .expiration(Date.from(now.plus(VapidSigner.TOKEN_VALIDITY)))
+      .audience().single(origin(pushResource))
+      .expiration(Date.from(clock.instant().plus(VapidSigner.TOKEN_VALIDITY)))
       .subject(configuration.subject.orNull)
       .signWith(configuration.privateKey, Jwts.SIG.ES256)
       .compact()
