@@ -25,7 +25,7 @@ import jakarta.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{SetError, UuidState}
-import org.apache.james.jmap.mail.{DestroyIds, EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue, UnparsedMessageId}
+import org.apache.james.jmap.mail.{DestroyIds, EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue, UnparsedEmailSubmissionId, UnparsedMessageId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.{JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, Reads, Writes}
 
@@ -44,6 +44,17 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
     case _ => JsError("Expecting messageId to be represented by a JsString")
   }
   private implicit val notCreatedWrites: Writes[Map[EmailSubmissionCreationId, SetError]] = mapWrites[EmailSubmissionCreationId, SetError](_.id.value, setErrorWrites)
+  private implicit val notUpdatedWrites: Writes[Map[UnparsedEmailSubmissionId, SetError]] = mapWrites[UnparsedEmailSubmissionId, SetError](_.id.value, setErrorWrites)
+  private implicit val unparsedEmailSubmissionIdReads: Reads[UnparsedEmailSubmissionId] = {
+    case JsString(string) => refineV[IdConstraint](string)
+      .fold(e => JsError(s"email submission id needs to match id constraints: $e"),
+        id => JsSuccess(UnparsedEmailSubmissionId(id)))
+    case _ => JsError("email submission id needs to be represented by a JsString")
+  }
+  private implicit val emailSubmissionUpdatesMapReads: Reads[Map[UnparsedEmailSubmissionId, JsObject]] =
+    Reads.mapReads[UnparsedEmailSubmissionId, JsObject] {string => refineV[IdConstraint](string)
+      .fold(e => JsError(s"email submission id needs to match id constraints: $e"),
+        id => JsSuccess(UnparsedEmailSubmissionId(id))) }
 
   private implicit val mailAddressReads: Reads[MailAddress] = {
     case JsString(value) => Try(JsSuccess(new MailAddress(value)))

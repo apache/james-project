@@ -2562,4 +2562,128 @@ trait EmailSubmissionSetMethodContract {
       .isObject
       .containsKey("k1490")
   }
+
+  @Test
+  def cancelingAnUnknownSubmissionShouldBeReportedAsNotUpdated(): Unit = {
+    val response = post(
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$bobAccountId",
+         |       "update": {
+         |         "c41d3b57-7d2b-4de1-b0b9-0e4e54fa4b4f": {"undoStatus": "canceled"}
+         |       }
+         |  }, "c1"]]
+         |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(s"""{
+                    |  "accountId": "$bobAccountId",
+                    |  "newState": "${INSTANCE.value}",
+                    |  "notUpdated": {
+                    |    "c41d3b57-7d2b-4de1-b0b9-0e4e54fa4b4f": {
+                    |      "type": "notFound",
+                    |      "description": "EmailSubmission c41d3b57-7d2b-4de1-b0b9-0e4e54fa4b4f was not found"
+                    |    }
+                    |  }
+                    |}""".stripMargin)
+  }
+
+  @Test
+  def cancelingASubmissionCreatedInTheSameCallShouldBeReportedAsCannotUnsend(server: GuiceJamesServer): Unit = {
+    val messageId = appendDraft(server)
+    val response = post(
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$bobAccountId",
+         |       "create": {
+         |         "k1490": {
+         |           "emailId": "${messageId.serialize}",
+         |           "envelope": {
+         |             "mailFrom": {"email": "${bobUsername.asString}"},
+         |             "rcptTo": [{"email": "${andreUsername.asString}"}]
+         |           }
+         |         }
+         |       },
+         |       "update": {
+         |         "#k1490": {"undoStatus": "canceled"}
+         |       }
+         |  }, "c1"]]
+         |}""".stripMargin)
+
+    val submissionId = (Json.parse(response) \ "methodResponses" \ 0 \ 1 \ "created" \ "k1490" \ "id").as[String]
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notUpdated")
+      .isEqualTo(s"""{
+                    |  "$submissionId": {
+                    |    "type": "cannotUnsend",
+                    |    "description": "EmailSubmission $submissionId was already sent and can no longer be canceled"
+                    |  }
+                    |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldBeReportedAsNotDestroyed(): Unit = {
+    val response = post(
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$bobAccountId",
+         |       "destroy": ["c41d3b57-7d2b-4de1-b0b9-0e4e54fa4b4f"]
+         |  }, "c1"]]
+         |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(s"""{
+                    |  "accountId": "$bobAccountId",
+                    |  "newState": "${INSTANCE.value}",
+                    |  "notDestroyed": {
+                    |    "c41d3b57-7d2b-4de1-b0b9-0e4e54fa4b4f": {
+                    |      "type": "notFound",
+                    |      "description": "EmailSubmission c41d3b57-7d2b-4de1-b0b9-0e4e54fa4b4f was not found"
+                    |    }
+                    |  }
+                    |}""".stripMargin)
+  }
+
+  @Test
+  def destroyingASubmissionCreatedInTheSameCallShouldBeForbidden(server: GuiceJamesServer): Unit = {
+    val messageId = appendDraft(server)
+    val response = post(
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$bobAccountId",
+         |       "create": {
+         |         "k1490": {
+         |           "emailId": "${messageId.serialize}",
+         |           "envelope": {
+         |             "mailFrom": {"email": "${bobUsername.asString}"},
+         |             "rcptTo": [{"email": "${andreUsername.asString}"}]
+         |           }
+         |         }
+         |       },
+         |       "destroy": ["#k1490"]
+         |  }, "c1"]]
+         |}""".stripMargin)
+
+    val submissionId = (Json.parse(response) \ "methodResponses" \ 0 \ 1 \ "created" \ "k1490" \ "id").as[String]
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notDestroyed")
+      .isEqualTo(s"""{
+                    |  "$submissionId": {
+                    |    "type": "forbidden",
+                    |    "description": "EmailSubmission $submissionId cannot be destroyed as EmailSubmissions are not stored"
+                    |  }
+                    |}""".stripMargin)
+  }
 }

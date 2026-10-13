@@ -42,9 +42,12 @@ object ParameterName {
   val holdUntil: ParameterName = ParameterName("holdUntil")
 }
 case class EmailSubmissionCreationId(id: Id)
+case class UnparsedEmailSubmissionId(id: Id)
 
 case class EmailSubmissionSetRequest(accountId: AccountId,
                                      create: Option[Map[EmailSubmissionCreationId, JsObject]],
+                                     update: Option[Map[UnparsedEmailSubmissionId, JsObject]],
+                                     destroy: Option[List[UnparsedEmailSubmissionId]],
                                      onSuccessUpdateEmail: Option[Map[EmailSubmissionCreationId, JsObject]],
                                      onSuccessDestroyEmail: Option[List[EmailSubmissionCreationId]]) extends WithAccountId with ValidableRequest {
   def implicitEmailSetRequest(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[EmailSetRequest]] =
@@ -95,7 +98,7 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
   }
 
   private def validateIdCount(configuration: JmapRfc8621Configuration): Either[Exception, EmailSubmissionSetRequest] = {
-    val idCount = create.map(_.size).getOrElse(0)
+    val idCount = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
     if (idCount > configuration.maxObjectsInSet.value.value) {
       Left(RequestTooLargeException(s"Too many items in a set request ${this.getClass}. " +
         s"Got $idCount items instead of maximum ${configuration.maxObjectsInSet.value}."))
@@ -139,7 +142,9 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
 case class EmailSubmissionSetResponse(accountId: AccountId,
                                       newState: UuidState,
                                       created: Option[Map[EmailSubmissionCreationId, EmailSubmissionCreationResponse]],
-                                      notCreated: Option[Map[EmailSubmissionCreationId, SetError]])
+                                      notCreated: Option[Map[EmailSubmissionCreationId, SetError]],
+                                      notUpdated: Option[Map[UnparsedEmailSubmissionId, SetError]] = None,
+                                      notDestroyed: Option[Map[UnparsedEmailSubmissionId, SetError]] = None)
 
 case class EmailSubmissionId(value: Id)
 
