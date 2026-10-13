@@ -39,8 +39,18 @@ class S3BlobStoreConfigurationReaderTest {
     }
 
     @Test
-    void shouldDefaultIfNoneMatchToTrue() throws Exception {
+    void shouldDefaultIfNoneMatchToFalse() throws Exception {
         Configuration configuration = baseConfiguration();
+
+        S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfigurationReader.from(configuration);
+
+        assertThat(s3Configuration.ifNoneMatchEnabled()).isFalse();
+    }
+
+    @Test
+    void shouldRespectIfNoneMatchExplicitlyEnabled() throws Exception {
+        Configuration configuration = baseConfiguration();
+        configuration.addProperty("objectstorage.s3.ifNoneMatch.enable", true);
 
         S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfigurationReader.from(configuration);
 

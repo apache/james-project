@@ -63,7 +63,7 @@ public class S3BlobStoreConfigurationTest {
     }
 
     @Test
-    void shouldDefaultIfNoneMatchToTrue() {
+    void shouldDefaultIfNoneMatchToFalse() {
         S3BlobStoreConfiguration configuration = S3BlobStoreConfiguration.builder()
             .authConfiguration(AwsS3AuthConfiguration.builder()
                 .endpoint(Throwing.supplier(() -> new URI("http://localhost:1234")).get())
@@ -73,6 +73,6 @@ public class S3BlobStoreConfigurationTest {
             .region(Region.of("af-south-1"))
             .build();
 
-        assertThat(configuration.ifNoneMatchEnabled()).isTrue();
+        assertThat(configuration.ifNoneMatchEnabled()).isFalse();
     }
 }
