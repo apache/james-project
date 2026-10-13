@@ -151,8 +151,7 @@ case class WebPushVapidCapabilityFactory(configuration: JmapRfc8621Configuration
   override def createReactive(urlPrefixes: UrlPrefixes, username: Username): Publisher[Capability] =
     capability().map(SMono.just[Capability]).getOrElse(SMono.empty[Capability])
 
-  private def capability(): Option[Capability] = configuration.vapid
-    .filter(_ => configuration.webPushEnabled)
+  private def capability(): Option[Capability] = configuration.advertisedVapid
     .map(vapid => WebPushVapidCapability(WebPushVapidCapabilityProperties(vapid.applicationServerKey)))
 }
 

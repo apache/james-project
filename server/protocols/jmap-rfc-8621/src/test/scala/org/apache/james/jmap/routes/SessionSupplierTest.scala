@@ -21,7 +21,7 @@ package org.apache.james.jmap.routes
 
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.JMAP_WEBPUSH_VAPID
-import org.apache.james.jmap.core.{DefaultCapabilities, JmapRfc8621Configuration, WebPushVapidCapabilityProperties}
+import org.apache.james.jmap.core.{DefaultCapabilities, JmapRfc8621Configuration, UuidState, WebPushVapidCapabilityProperties}
 import org.apache.james.jmap.pushsubscription.VapidTestFixture
 import org.apache.james.jmap.routes.SessionSupplierTest.USERNAME
 import org.scalatest.matchers.should.Matchers
@@ -61,6 +61,33 @@ class SessionSupplierTest extends AnyWordSpec with Matchers {
       new SessionSupplier(DefaultCapabilities.supported(configuration), configuration)
         .generate(USERNAME, Set(), configuration.urlPrefixes()).blockOption().get
         .capabilities.ids should not contain JMAP_WEBPUSH_VAPID
+    }
+
+    "keep the session state when no key pair is configured" in {
+      new SessionSupplier(DefaultCapabilities.supported(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION), JmapRfc8621Configuration.LOCALHOST_CONFIGURATION)
+        .generate(USERNAME, Set(), JmapRfc8621Configuration.LOCALHOST_CONFIGURATION.urlPrefixes()).blockOption().get
+        .state should equal(UuidState.INSTANCE)
+    }
+
+    "keep the session state when Web Push is disabled" in {
+      val configuration = JmapRfc8621Configuration.LOCALHOST_CONFIGURATION.copy(vapid = Some(VapidTestFixture.CONFIGURATION), webPushEnabled = false)
+
+      new SessionSupplier(DefaultCapabilities.supported(configuration), configuration)
+        .generate(USERNAME, Set(), configuration.urlPrefixes()).blockOption().get
+        .state should equal(UuidState.INSTANCE)
+    }
+
+    "change the session state with the VAPID key" in {
+      val configuration = JmapRfc8621Configuration.LOCALHOST_CONFIGURATION.copy(vapid = Some(VapidTestFixture.CONFIGURATION))
+      val rotated = configuration.copy(vapid = Some(VapidTestFixture.CONFIGURATION.copy(applicationServerKey = "another key")))
+
+      def state(configuration: JmapRfc8621Configuration): UuidState =
+        new SessionSupplier(DefaultCapabilities.supported(configuration), configuration)
+          .generate(USERNAME, Set(), configuration.urlPrefixes()).blockOption().get.state
+
+      state(configuration) should not equal UuidState.INSTANCE
+      state(configuration) should equal(state(configuration))
+      state(rotated) should not equal state(configuration)
     }
 
     "return correct account" which {
