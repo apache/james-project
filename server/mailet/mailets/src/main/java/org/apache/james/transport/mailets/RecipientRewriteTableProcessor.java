@@ -81,14 +81,24 @@ public class RecipientRewriteTableProcessor {
     private static class Decision {
         private final MailAddress originalAddress;
         private final RrtExecutionResult executionResult;
+        private final Optional<Mappings> appliedMappings;
 
-        private Decision(MailAddress originalAddress, RrtExecutionResult executionResult) {
+        private Decision(MailAddress originalAddress, RrtExecutionResult executionResult, Optional<Mappings> appliedMappings) {
             this.originalAddress = originalAddress;
             this.executionResult = executionResult;
+            this.appliedMappings = appliedMappings;
+        }
+
+        private Decision(MailAddress originalAddress, RrtExecutionResult executionResult) {
+            this(originalAddress, executionResult, Optional.empty());
         }
 
         MailAddress originalAddress() {
             return originalAddress;
+        }
+
+        Optional<String> describeAppliedMappings() {
+            return appliedMappings.map(mappings -> originalAddress.asString() + "=" + asString(mappings));
         }
 
         RrtExecutionResult executionResult() {
@@ -220,7 +230,8 @@ public class RecipientRewriteTableProcessor {
                     .orElse(""),
                 "sender", mail.getMaybeSender().asString(),
                 "recipientsBeforeRewrite", StringUtils.join(recipientsBeforeRecipientsRewrite),
-                "recipientsAfterRewrite", StringUtils.join(recipientsAfterRecipientsRewrite))))
+                "recipientsAfterRewrite", StringUtils.join(recipientsAfterRecipientsRewrite),
+                "appliedMappings", describeAppliedMappings(decisions))))
             .log("Recipients rewritten.");
 
         processForwards(mail);
@@ -236,7 +247,8 @@ public class RecipientRewriteTableProcessor {
 
         static ForwardDecision sendACopy(MailetContext context,
                                          MailAddress originalRecipient,
-                                         Set<MailAddress> newRecipients) {
+                                         Set<MailAddress> newRecipients,
+                                         Set<Mapping> forwards) {
             return mail -> {
                 MailImpl copy = MailImpl.duplicate(mail);
                 LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
@@ -248,7 +260,7 @@ public class RecipientRewriteTableProcessor {
 
                     context.sendMail(copy);
 
-                    recordInAuditTrail(mail, copy, originalRecipient);
+                    recordInAuditTrail(mail, copy, originalRecipient, forwards);
                 } finally {
                     LifecycleUtil.dispose(copy);
                 }
@@ -271,7 +283,7 @@ public class RecipientRewriteTableProcessor {
             };
         }
 
-        private static void recordInAuditTrail(Mail mail, MailImpl copy, MailAddress originalRecipient) {
+        private static void recordInAuditTrail(Mail mail, MailImpl copy, MailAddress originalRecipient, Set<Mapping> forwards) {
             AuditTrail.entry()
                 .protocol("mailetcontainer")
                 .action("RecipientRewrite")
@@ -282,7 +294,8 @@ public class RecipientRewriteTableProcessor {
                     "sender", mail.getMaybeSender().asString(),
                     "forwardedMailId", copy.getName(),
                     "forwardedMailSender", originalRecipient.asString(),
-                    "forwardedMailRecipient", StringUtils.join(copy.getRecipients()))))
+                    "forwardedMailRecipient", StringUtils.join(copy.getRecipients()),
+                    "forwardMappings", asString(forwards.stream()))))
                 .log("Mail forwarded.");
         }
 
@@ -334,7 +347,7 @@ public class RecipientRewriteTableProcessor {
         ImmutableList.Builder<ForwardDecision> result = ImmutableList.builder();
 
         if (!forwardRecipients.isEmpty()) {
-            result.add(ForwardDecision.sendACopy(mailetContext, originalRecipient, forwardRecipients));
+            result.add(ForwardDecision.sendACopy(mailetContext, originalRecipient, forwardRecipients, forwards));
         }
         boolean localCopy = newRecipients.contains(originalRecipient);
         if (!localCopy) {
@@ -364,6 +377,22 @@ public class RecipientRewriteTableProcessor {
             LOGGER.info("Valid mail address {} could not be converted into a username. Assuming empty mappigns.", recipient.asString(), e);
             return Optional.empty();
         }
+    }
+
+    private static String describeAppliedMappings(List<Decision> decisions) {
+        return decisions.stream()
+            .map(Decision::describeAppliedMappings)
+            .flatMap(Optional::stream)
+            .collect(Collectors.joining(", ", "[", "]"));
+    }
+
+    private static String asString(Mappings mappings) {
+        return asString(mappings.asStream());
+    }
+
+    private static String asString(Stream<Mapping> mappings) {
+        return mappings.map(Mapping::asString)
+            .collect(Collectors.joining(", ", "[", "]"));
     }
 
     private void applyDecisionOnDSNParameters(Mail mail, List<Decision> decisions) {
@@ -418,7 +447,7 @@ public class RecipientRewriteTableProcessor {
 
             if (mappings != null && !mappings.isEmpty()) {
                 List<MailAddress> newMailAddresses = handleMappings(mappings, mail, recipient);
-                return new Decision(recipient, RrtExecutionResult.success(newMailAddresses));
+                return new Decision(recipient, RrtExecutionResult.success(newMailAddresses), Optional.of(mappings));
             }
             return new Decision(recipient, RrtExecutionResult.success(recipient));
         } catch (RecipientRewriteTable.ErrorMappingException e) {
