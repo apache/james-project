@@ -381,6 +381,9 @@ Example configuration:
 
 The {server-name} has optional support for FUTURERELEASE (link:https://www.rfc-editor.org/rfc/rfc4865.html[RFC-4865])
 
+It requires a mail queue supporting delays: the RabbitMQ mail queue does not, and the server refuses to start
+when these hooks are configured on top of it.
+
 [source,xml]
 ....
 <smtpserver enabled="true">
