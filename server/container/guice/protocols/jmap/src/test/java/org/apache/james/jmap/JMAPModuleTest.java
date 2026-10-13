@@ -26,8 +26,10 @@ import static org.mockito.Mockito.when;
 
 import java.util.EnumSet;
 
+import org.apache.james.jmap.JMAPModule.DelaySendsStartUpCheck;
 import org.apache.james.jmap.JMAPModule.RequiredCapabilitiesStartUpCheck;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.queue.api.MailQueueFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -99,6 +101,40 @@ class JMAPModuleTest {
                 .thenReturn(EnumSet.noneOf(MailboxManager.SearchCapabilities.class));
 
             assertThat(testee.check().isBad())
+                .isTrue();
+        }
+    }
+
+    @Nested
+    class DelaySendsStartUpCheckTest {
+        private MailQueueFactory<?> mailQueueFactory;
+
+        @BeforeEach
+        void beforeEach() {
+            mailQueueFactory = mock(MailQueueFactory.class);
+        }
+
+        @Test
+        void checkShouldReturnBadWhenDelaySendsAreEnabledOnAQueueNotSupportingDelays() {
+            when(mailQueueFactory.supportsDelays()).thenReturn(false);
+
+            assertThat(new DelaySendsStartUpCheck(true, mailQueueFactory).check().isBad())
+                .isTrue();
+        }
+
+        @Test
+        void checkShouldReturnGoodWhenDelaySendsAreEnabledOnAQueueSupportingDelays() {
+            when(mailQueueFactory.supportsDelays()).thenReturn(true);
+
+            assertThat(new DelaySendsStartUpCheck(true, mailQueueFactory).check().isGood())
+                .isTrue();
+        }
+
+        @Test
+        void checkShouldReturnGoodWhenDelaySendsAreDisabled() {
+            when(mailQueueFactory.supportsDelays()).thenReturn(false);
+
+            assertThat(new DelaySendsStartUpCheck(false, mailQueueFactory).check().isGood())
                 .isTrue();
         }
     }

@@ -2483,4 +2483,83 @@ trait EmailSubmissionSetMethodContract {
       .isObject
       .containsKey("k1490")
   }
+
+  private def appendDraft(server: GuiceJamesServer): MessageId = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
+    server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
+      .build(message))
+      .getMessageId
+  }
+
+  private def post(request: String): String =
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+  private def creationWithParameters(messageId: MessageId, parameters: String): String =
+    s"""{
+       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+       |  "methodCalls": [
+       |     ["EmailSubmission/set", {
+       |       "accountId": "$bobAccountId",
+       |       "create": {
+       |         "k1490": {
+       |           "emailId": "${messageId.serialize}",
+       |           "envelope": {
+       |             "mailFrom": {"email": "${bobUsername.asString}", "parameters": $parameters},
+       |             "rcptTo": [{"email": "${andreUsername.asString}"}]
+       |           }
+       |         }
+       |    }
+       |  }, "c1"]]
+       |}""".stripMargin
+
+  @Test
+  def holdForShouldBeRejectedWhenDelayedSendsAreNotSupported(server: GuiceJamesServer): Unit = {
+    val response = post(creationWithParameters(appendDraft(server), """{"holdFor": "20"}"""))
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.k1490")
+      .isEqualTo("""{
+                   |  "type": "invalidArguments",
+                   |  "description": "Delayed sends are not supported"
+                   |}""".stripMargin)
+  }
+
+  @Test
+  def holdUntilShouldBeRejectedWhenDelayedSendsAreNotSupported(server: GuiceJamesServer): Unit = {
+    val response = post(creationWithParameters(appendDraft(server), """{"holdUntil": "2100-01-01T00:00:00Z"}"""))
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.k1490.type")
+      .isEqualTo("invalidArguments")
+  }
+
+  @Test
+  def zeroHoldForShouldBeAcceptedWhenDelayedSendsAreNotSupported(server: GuiceJamesServer): Unit = {
+    val response = post(creationWithParameters(appendDraft(server), """{"holdFor": "0"}"""))
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].created")
+      .isObject
+      .containsKey("k1490")
+  }
 }
