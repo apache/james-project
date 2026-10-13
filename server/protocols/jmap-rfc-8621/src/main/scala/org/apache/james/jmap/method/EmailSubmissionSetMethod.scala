@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableMap
 import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
 import jakarta.annotation.PreDestroy
-import jakarta.inject.Inject
+import jakarta.inject.{Inject, Named}
 import jakarta.mail.Address
 import jakarta.mail.Message.RecipientType
 import jakarta.mail.internet.{InternetAddress, MimeMessage}
@@ -182,6 +182,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
                                          emailSetMethod: EmailSetMethod,
                                          clock: Clock,
                                          javaValidations: java.util.Set[EmailSubmissionSetValidation],
+                                         @Named("supportsDelaySends") supportsDelaySends: Boolean,
                                          val metricFactory: MetricFactory,
                                          val sessionSupplier: SessionSupplier,
                                          val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with Startable {
@@ -375,10 +376,12 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
 
   def validateDelay(delay: Duration): Try[Duration] =
-    if (delay.getSeconds >= 0 && delay.getSeconds <= SubmissionCapabilityFactory.maximumDelays.getSeconds) {
-      Success(delay)
-    } else {
+    if (delay.getSeconds < 0 || delay.getSeconds > SubmissionCapabilityFactory.maximumDelays.getSeconds) {
       Failure(new IllegalArgumentException("Invalid delayed time!"))
+    } else if (!delay.isZero && !supportsDelaySends) {
+      Failure(new IllegalArgumentException("Delayed sends are not supported"))
+    } else {
+      Success(delay)
     }
 
   def validateMimeMessages(mimeMessage: MimeMessage) : SMono[MimeMessage] = validateMailAddressHeaderMimeMessage(mimeMessage)
