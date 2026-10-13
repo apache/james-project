@@ -40,7 +40,7 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.core.{ClientId, Invocation, JmapRfc8621Configuration, Properties, ServerId, SessionTranslator, SetError, SubmissionCapabilityFactory, UTCDate, UuidState}
 import org.apache.james.jmap.json.EmailSubmissionSetSerializer
-import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue}
+import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue, UnparsedEmailSubmissionId}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, NO_DELAY, VALID_PARAMETER_NAME_SET, formatter}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
@@ -69,6 +69,7 @@ object EmailSubmissionSetMethod {
   val noRecipients: SetErrorType = "noRecipients"
   val forbiddenFrom: SetErrorType = "forbiddenFrom"
   val forbiddenMailFrom: SetErrorType = "forbiddenMailFrom"
+  val cannotUnsend: SetErrorType = "cannotUnsend"
   val formatter = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("Z"))
   val VALID_PARAMETER_NAME_SET: Set[ParameterName] = Set(ParameterName.holdFor, ParameterName.holdUntil)
   val NO_DELAY: Duration = Duration.ZERO
@@ -135,6 +136,11 @@ object EmailSubmissionSetMethod {
         case _ => None
       }
       .toMap
+
+    def createdSubmission(id: UnparsedEmailSubmissionId): Option[EmailSubmissionId] =
+      created.collectFirst {
+        case success: CreationSuccess if id.id.value.equals("#" + success.emailSubmissionCreationId.id.value) => success.emailSubmissionCreationResponse.id
+      }
 
     def resolveMessageId(creationId: EmailSubmissionCreationId): Either[IllegalArgumentException, Option[MessageId]] = {
       if (creationId.id.startsWith("#")) {
@@ -207,7 +213,9 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
               accountId = request.accountId,
               newState = UuidState.INSTANCE,
               created = Some(createdResults._1.retrieveCreated).filter(_.nonEmpty),
-              notCreated = Some(createdResults._1.retrieveErrors).filter(_.nonEmpty)))
+              notCreated = Some(createdResults._1.retrieveErrors).filter(_.nonEmpty),
+              notUpdated = request.update.map(_.keySet.map(id => notUpdated(id, createdResults._1)).toMap).filter(_.nonEmpty),
+              notDestroyed = request.destroy.map(_.map(id => notDestroyed(id, createdResults._1)).toMap).filter(_.nonEmpty)))
               .as[JsObject]),
             methodCallId = invocation.invocation.methodCallId),
           processingContext = createdResults._2)
@@ -223,6 +231,25 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
         SFlux.concat(SMono.just(explicitInvocation), emailSetCall)
       })
+
+  /**
+   * Sent mails cannot be canceled and EmailSubmission storage is not implemented: neither update nor destroy can succeed.
+   * Submissions created by this very call are known (and already sent); any other id is unknown.
+   */
+  private def notUpdated(id: UnparsedEmailSubmissionId, creationResults: CreationResults): (UnparsedEmailSubmissionId, SetError) =
+    creationResults.createdSubmission(id)
+      .map(submissionId => UnparsedEmailSubmissionId(submissionId.value) -> SetError(EmailSubmissionSetMethod.cannotUnsend,
+        SetErrorDescription(s"EmailSubmission ${submissionId.value.value} was already sent and can no longer be canceled"), None))
+      .getOrElse(id -> notFound(id))
+
+  private def notDestroyed(id: UnparsedEmailSubmissionId, creationResults: CreationResults): (UnparsedEmailSubmissionId, SetError) =
+    creationResults.createdSubmission(id)
+      .map(submissionId => UnparsedEmailSubmissionId(submissionId.value) -> SetError.forbidden(
+        SetErrorDescription(s"EmailSubmission ${submissionId.value.value} cannot be destroyed as EmailSubmissions are not stored")))
+      .getOrElse(id -> notFound(id))
+
+  private def notFound(id: UnparsedEmailSubmissionId): SetError =
+    SetError.notFound(SetErrorDescription(s"EmailSubmission ${id.id.value} was not found"))
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailSubmissionSetRequest] =
     serializer.deserializeEmailSubmissionSetRequest(invocation.arguments.value)
