@@ -156,6 +156,11 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             .collect(ImmutableSet.toImmutableSet());
     }
 
+    @Override
+    public boolean supportsDelays() {
+        return false;
+    }
+
     private RabbitMQMailQueue createQueueIntoRabbitServer(MailQueueName mailQueueName, PrefetchCount prefetchCount) {
         String exchangeName = mailQueueName.toRabbitExchangeName().asString();
         Flux.concat(
