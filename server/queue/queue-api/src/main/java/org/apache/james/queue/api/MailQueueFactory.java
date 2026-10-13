@@ -86,4 +86,13 @@ public interface MailQueueFactory<T extends MailQueue> {
     T createQueue(MailQueueName name, PrefetchCount count);
 
     Set<MailQueueName> listCreatedMailQueues();
+
+    /**
+     * @return false when the {@link MailQueue}s of this factory ignore the delay given upon enqueue.
+     * Protocols allowing users to delay a send (SMTP FUTURERELEASE, JMAP delayed sends) need to
+     * reject such requests rather than sending the mail right away.
+     */
+    default boolean supportsDelays() {
+        return true;
+    }
 }
