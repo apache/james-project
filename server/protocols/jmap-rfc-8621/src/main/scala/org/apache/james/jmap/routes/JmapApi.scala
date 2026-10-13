@@ -53,7 +53,7 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
       _ <- validateMaxCalls(requestObject)
     } yield {
       processSequentiallyAndUpdateContext(requestObject, mailboxSession, processingContext, capabilities)
-        .map(invocations => ResponseObject(ResponseObject.SESSION_STATE, invocations.map(_.invocation)))
+        .map(invocations => ResponseObject(configuration.sessionState, invocations.map(_.invocation)))
     }
     validatedRequestObject.fold(e => SMono.error(e), obj => obj)
   }

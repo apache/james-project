@@ -120,8 +120,8 @@ encoded, as Web Push tools generate it. When set, with `webpush.vapid.private.ke
 authenticated with it, and the JMAP session advertises it as the `applicationServerKey` of the
 `urn:ietf:params:jmap:webpush-vapid` capability (https://www.rfc-editor.org/rfc/rfc9749[RFC-9749]), which browsers need
 to subscribe. Defaults to no VAPID: requests are not authenticated and the capability is not advertised.
-The key pair is meant to stay: key rotation (RFC-9749 section 5) is not implemented. After a change, push services
-refuse the pushes of the subscriptions created with the former key, until clients subscribe again.
+The key pair is meant to stay. After a change the session state changes, which tells clients to subscribe again
+(RFC-9749 section 5), but push services refuse the pushes of the subscriptions created with the former key until they do.
 
 | webpush.vapid.private.key
 | Optional string. Private key matching `webpush.vapid.public.key`: a P-256 private key (32 bytes), base64url encoded.
@@ -295,8 +295,9 @@ copied. The {server-name} refuses to start when the two keys do not match.
 as `mailto:postmaster@domain.tld`, or the `https:` URL of a contact page. It is sent to the push services only, never
 to the users.
  - Use the same key pair on every node of a cluster, and keep it: subscriptions are bound to the key they were created
-with. Key rotation (RFC-9749 section 5) is not implemented, hence after a change push services refuse the pushes of
-existing subscriptions until clients subscribe again.
+with. After a change of key the session state changes, which tells clients to subscribe again (RFC-9749 section 5).
+There is no transitional period: the former key no longer signs, hence push services refuse the pushes of existing
+subscriptions until clients subscribe again, and these subscriptions are kept until they expire.
 
 == Annotated specification
 

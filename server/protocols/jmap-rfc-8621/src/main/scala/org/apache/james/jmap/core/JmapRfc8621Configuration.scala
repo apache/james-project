@@ -20,8 +20,9 @@
 package org.apache.james.jmap.core
 
 import java.net.URI
+import java.nio.charset.StandardCharsets
 import java.time.temporal.ChronoUnit
-import java.util.Optional
+import java.util.{Optional, UUID}
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
@@ -159,6 +160,14 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
     maxConnections = maxConnections,
     preventServerSideRequestForgery = preventServerSideRequestForgery,
     vapid = vapid)
+
+  // The VAPID key clients subscribe with: none when Web Push is disabled
+  val advertisedVapid: Option[VapidConfiguration] = vapid.filter(_ => webPushEnabled)
+
+  // RFC 9749 section 5: the session state changes with the VAPID key, which tells clients to subscribe again
+  val sessionState: UuidState = advertisedVapid
+    .map(vapid => UuidState(UUID.nameUUIDFromBytes(vapid.applicationServerKey.getBytes(StandardCharsets.UTF_8))))
+    .getOrElse(UuidState.INSTANCE)
 
   def urlPrefixes(): UrlPrefixes = UrlPrefixes(new URI(urlPrefixString), new URI(websocketPrefixString))
 

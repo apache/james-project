@@ -23,8 +23,8 @@ import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.KeyPair
 import java.security.interfaces.{ECPrivateKey, ECPublicKey}
-import java.util.Base64
 import java.util.concurrent.TimeUnit
+import java.util.{Base64, UUID}
 
 import com.google.crypto.tink.apps.webpush.WebPushHybridDecrypt
 import com.google.crypto.tink.subtle.EllipticCurves.{CurveType, EcdsaEncoding, PointFormatType}
@@ -156,6 +156,36 @@ trait WebPushVapidContract {
       .get("capabilities.'urn:ietf:params:jmap:webpush-vapid'.applicationServerKey")
 
     assertThat(applicationServerKey).isEqualTo(APPLICATION_SERVER_KEY)
+  }
+
+  @Test
+  def sessionStateShouldDependOnTheApplicationServerKey(): Unit = {
+    val sessionState: String = `given`()
+    .when()
+      .get("/session")
+    .`then`
+      .statusCode(SC_OK)
+      .extract()
+      .jsonPath()
+      .get("state")
+
+    val responseSessionState: String = `given`
+      .body(
+        """{
+          |  "using": ["urn:ietf:params:jmap:core"],
+          |  "methodCalls": [["Core/echo", {}, "c1"]]
+          |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .extract()
+      .jsonPath()
+      .get("sessionState")
+
+    assertThat(sessionState)
+      .isEqualTo(UUID.nameUUIDFromBytes(APPLICATION_SERVER_KEY.getBytes(StandardCharsets.UTF_8)).toString)
+    assertThat(responseSessionState).isEqualTo(sessionState)
   }
 
   @Test
