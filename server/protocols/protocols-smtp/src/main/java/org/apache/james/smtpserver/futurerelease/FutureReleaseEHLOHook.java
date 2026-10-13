@@ -30,18 +30,28 @@ import java.util.Set;
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
+import org.apache.james.queue.api.MailQueueFactory;
 
 import com.google.common.collect.ImmutableSet;
 
 public class FutureReleaseEHLOHook implements HeloHook {
     private final Clock clock;
+    private final MailQueueFactory<?> mailQueueFactory;
 
     @Inject
-    public FutureReleaseEHLOHook(Clock clock) {
+    public FutureReleaseEHLOHook(Clock clock, MailQueueFactory<?> mailQueueFactory) {
         this.clock = clock;
+        this.mailQueueFactory = mailQueueFactory;
+    }
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+        FutureReleaseParameters.checkMailQueueSupportsDelays(mailQueueFactory);
     }
 
     @Override

@@ -184,6 +184,10 @@ class SMTPServerTestSystem {
         smtpServer.setSaslAuthenticator(Optional.of(testSaslAuthenticator(authorizator)));
     }
 
+    protected MemoryMailQueueFactory createMailQueueFactory() {
+        return new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory(), CLOCK);
+    }
+
     protected void setUpFakeLoader(Authorizator authorizator) {
         dnsServer = new SMTPServerTest.AlterableDNSServer();
 
@@ -191,7 +195,7 @@ class SMTPServerTestSystem {
         rewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(rewriteTable);
         CanSendFrom canSendFrom = new CanSendFromImpl(aliasReverseResolver);
-        queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory(), CLOCK);
+        queueFactory = createMailQueueFactory();
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
 
         chain = MockProtocolHandlerLoader.builder()

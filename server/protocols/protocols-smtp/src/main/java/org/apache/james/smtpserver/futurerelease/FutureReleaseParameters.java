@@ -22,6 +22,9 @@ package org.apache.james.smtpserver.futurerelease;
 import java.time.Duration;
 import java.util.Objects;
 
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.queue.api.MailQueueFactory;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
@@ -29,6 +32,15 @@ public class FutureReleaseParameters {
     public static final String HOLDFOR_PARAMETER = "HOLDFOR";
     public static final String HOLDUNTIL_PARAMETER = "HOLDUNTIL";
     public static final Duration MAX_HOLD_FOR_SUPPORTED = Duration.ofDays(1);
+
+    /**
+     * A mail queue ignoring delays would send delayed mails right away: refuse to start instead.
+     */
+    static void checkMailQueueSupportsDelays(MailQueueFactory<?> mailQueueFactory) throws ConfigurationException {
+        if (!mailQueueFactory.supportsDelays()) {
+            throw new ConfigurationException("FUTURERELEASE hooks are configured but the mail queue does not support delays");
+        }
+    }
 
     public static class HoldFor {
         public static HoldFor of(Duration value) {

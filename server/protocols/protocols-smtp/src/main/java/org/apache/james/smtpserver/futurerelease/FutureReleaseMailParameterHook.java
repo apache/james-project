@@ -35,12 +35,15 @@ import java.time.format.DateTimeFormatter;
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
+import org.apache.james.queue.api.MailQueueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,10 +53,17 @@ public class FutureReleaseMailParameterHook implements MailParametersHook {
     public static final ProtocolSession.AttachmentKey<FutureReleaseParameters.HoldFor> FUTURERELEASE_HOLDFOR = ProtocolSession.AttachmentKey.of("FUTURERELEASE_HOLDFOR", FutureReleaseParameters.HoldFor.class);
 
     private final Clock clock;
+    private final MailQueueFactory<?> mailQueueFactory;
 
     @Inject
-    public FutureReleaseMailParameterHook(Clock clock) {
+    public FutureReleaseMailParameterHook(Clock clock, MailQueueFactory<?> mailQueueFactory) {
         this.clock = clock;
+        this.mailQueueFactory = mailQueueFactory;
+    }
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+        FutureReleaseParameters.checkMailQueueSupportsDelays(mailQueueFactory);
     }
 
     @Override
