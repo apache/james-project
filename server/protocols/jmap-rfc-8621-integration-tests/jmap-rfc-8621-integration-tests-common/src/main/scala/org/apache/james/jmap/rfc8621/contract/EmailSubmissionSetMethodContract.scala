@@ -20,6 +20,8 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.time.temporal.ChronoUnit
+import java.time.{Duration, Instant}
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -2540,17 +2542,23 @@ trait EmailSubmissionSetMethodContract {
       .inPath("methodResponses[0][1].notCreated.k1490")
       .isEqualTo("""{
                    |  "type": "invalidArguments",
-                   |  "description": "Delayed sends are not supported"
+                   |  "description": "Delayed sends are not supported",
+                   |  "properties": ["envelope.mailFrom.parameters"]
                    |}""".stripMargin)
   }
 
   @Test
   def holdUntilShouldBeRejectedWhenDelayedSendsAreNotSupported(server: GuiceJamesServer): Unit = {
-    val response = post(creationWithParameters(appendDraft(server), """{"holdUntil": "2100-01-01T00:00:00Z"}"""))
+    val inOneHour = Instant.now().plus(Duration.ofHours(1)).truncatedTo(ChronoUnit.SECONDS)
+    val response = post(creationWithParameters(appendDraft(server), s"""{"holdUntil": "$inOneHour"}"""))
 
     assertThatJson(response)
-      .inPath("methodResponses[0][1].notCreated.k1490.type")
-      .isEqualTo("invalidArguments")
+      .inPath("methodResponses[0][1].notCreated.k1490")
+      .isEqualTo("""{
+                   |  "type": "invalidArguments",
+                   |  "description": "Delayed sends are not supported",
+                   |  "properties": ["envelope.mailFrom.parameters"]
+                   |}""".stripMargin)
   }
 
   @Test

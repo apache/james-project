@@ -530,6 +530,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .statusCode(SC_OK)
       .body("methodResponses[0][1].notCreated.k1490.type", Matchers.is("invalidArguments"))
       .body("methodResponses[0][1].notCreated.k1490.description", Matchers.is("Invalid delayed time!"))
+      .body("methodResponses[0][1].notCreated.k1490.properties", Matchers.contains("envelope.mailFrom.parameters"))
   }
 
   @Test
