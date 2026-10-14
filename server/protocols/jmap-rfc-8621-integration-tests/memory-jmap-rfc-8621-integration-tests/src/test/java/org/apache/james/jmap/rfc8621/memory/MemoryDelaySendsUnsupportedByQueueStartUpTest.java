@@ -29,7 +29,7 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.StartUpChecksPerformer;
-import org.apache.james.jmap.JMAPModule.DelaySendsStartUpCheck;
+import org.apache.james.jmap.DelaySendsStartUpCheck;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
