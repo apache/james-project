@@ -62,8 +62,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.modules.server.MailetContainerModule;
 import org.apache.james.modules.server.MailetContainerModule.ProcessorsCheck;
-import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.transport.mailets.VacationMailet;
@@ -316,44 +314,6 @@ public class JMAPModule extends AbstractModule {
                 return Optional.empty();
             }
             return Optional.ofNullable(expressionFailsDescription);
-        }
-
-        @Override
-        public String checkName() {
-            return CHECK_NAME;
-        }
-    }
-
-    /**
-     * A mail queue ignoring delays would send delayed mails right away: refuse to start rather than
-     * advertising delayed sends we cannot honour.
-     */
-    @Singleton
-    public static class DelaySendsStartUpCheck implements StartUpCheck {
-        public static final String CHECK_NAME = "DelaySendsForJMAP";
-
-        private final boolean supportsDelaySends;
-        private final MailQueueFactory<? extends MailQueue> mailQueueFactory;
-
-        @Inject
-        public DelaySendsStartUpCheck(@Named("supportsDelaySends") boolean supportsDelaySends, MailQueueFactory<? extends MailQueue> mailQueueFactory) {
-            this.supportsDelaySends = supportsDelaySends;
-            this.mailQueueFactory = mailQueueFactory;
-        }
-
-        @Override
-        public CheckResult check() {
-            if (supportsDelaySends && !mailQueueFactory.supportsDelays()) {
-                return CheckResult.builder()
-                    .checkName(checkName())
-                    .resultType(ResultType.BAD)
-                    .description("'delay.sends.enabled' is set in jmap.properties but the mail queue does not support delays")
-                    .build();
-            }
-            return CheckResult.builder()
-                .checkName(checkName())
-                .resultType(ResultType.GOOD)
-                .build();
         }
 
         @Override
