@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.rfc8621.postgres;
+package org.apache.james.jmap.rfc8621.memory;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,51 +26,44 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.PostgresJamesConfiguration;
-import org.apache.james.PostgresJamesServerMain;
-import org.apache.james.SearchConfiguration;
+import org.apache.james.MemoryJamesConfiguration;
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.StartUpChecksPerformer;
-import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.jmap.JMAPModule.DelaySendsStartUpCheck;
-import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags;
-import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.modules.blobstore.BlobStoreConfiguration;
-import org.junit.jupiter.api.Tag;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableMap;
 
-class PostgresDelaySendsOnRabbitMQStartUpTest {
+class MemoryDelaySendsUnsupportedByQueueStartUpTest {
+    private static final MemoryMailQueueFactory QUEUE_NOT_SUPPORTING_DELAYS = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory()) {
+        @Override
+        public boolean supportsDelays() {
+            return false;
+        }
+    };
+
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
-        PostgresJamesConfiguration.builder()
+    static JamesServerExtension testExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
+        MemoryJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.scanning())
             .usersRepository(DEFAULT)
-            .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.RABBITMQ)
-            .blobStore(BlobStoreConfiguration.builder()
-                .postgres()
-                .disableCache()
-                .deduplication()
-                .noCryptoConfig())
             .build())
-        .extension(PostgresExtension.empty())
-        .extension(new RabbitMQExtension())
-        .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule(ImmutableMap.of("delay.sends.enabled", true))))
+        .server(configuration -> MemoryJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJMAPServerModule(ImmutableMap.of("delay.sends.enabled", true)))
+            .overrideWith(binder -> binder.bind(MemoryMailQueueFactory.class).toInstance(QUEUE_NOT_SUPPORTING_DELAYS)))
         .disableAutoStart()
         .build();
 
     @Test
-    @Tag(CategoryTags.BASIC_FEATURE)
-    void serverShouldNotStartWhenDelaySendsAreEnabledOnTheRabbitMQMailQueue(GuiceJamesServer server) {
+    void serverShouldNotStartWhenDelaySendsAreEnabledOnAQueueNotSupportingDelays(GuiceJamesServer server) {
         assertThatThrownBy(server::start)
             .isInstanceOfSatisfying(StartUpChecksPerformer.StartUpChecksException.class,
-                e -> assertThat(e.getBadChecks())
-                    .extracting(check -> check.getName())
+                e -> assertThat(e.badCheckNames())
                     .contains(DelaySendsStartUpCheck.CHECK_NAME));
     }
 }
