@@ -116,6 +116,13 @@ public interface BlobStoreDAO {
         public BlobMetadata withContentEncoding(ContentEncoding contentEncoding) {
             return withMetadata(ContentEncoding.NAME, contentEncoding.asValue());
         }
+
+        public BlobMetadata withTotalObjectSize(long totalObjectSize) {
+            return new BlobMetadata(ImmutableMap.<BlobMetadataName, BlobMetadataValue>builder()
+                .putAll(underlyingMap)
+                .put(TOTAL_OBJECT_SIZE, new BlobMetadataValue(Long.toString(totalObjectSize)))
+                .buildKeepingLast());
+        }
     }
 
 
@@ -341,8 +348,7 @@ public interface BlobStoreDAO {
                 int from = rangeStart(start, totalSize);
                 int toExclusive = rangeEndExclusive(start, end, totalSize);
 
-                BlobMetadata metadata = bytesBlob.metadata()
-                    .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(Long.toString(totalSize)));
+                BlobMetadata metadata = bytesBlob.metadata().withTotalObjectSize(totalSize);
                 return BytesBlob.of(Arrays.copyOfRange(bytesBlob.payload(), from, toExclusive), metadata);
             });
     }
