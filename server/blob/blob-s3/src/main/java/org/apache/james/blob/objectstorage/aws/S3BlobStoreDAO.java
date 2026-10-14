@@ -290,7 +290,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
 
     private BlobMetadata metadataForRange(GetObjectResponse response) {
         return asBlobMetadata(response.metadata())
-            .withMetadata(TOTAL_OBJECT_SIZE, new BlobMetadataValue(Long.toString(extractTotalObjectSize(response))));
+            .withTotalObjectSize(extractTotalObjectSize(response));
     }
 
     private static long extractTotalObjectSize(GetObjectResponse response) {
