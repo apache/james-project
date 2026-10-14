@@ -113,6 +113,9 @@ object EmailSubmissionSetMethod {
       case e: DateTimeParseException =>
         LOGGER.info("Failed to parse date time", e)
         SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e: InvalidDelayException =>
+        LOGGER.info("Invalid delay in EmailSubmission/set: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("envelope.mailFrom.parameters")))
       case e: IllegalArgumentException =>
         LOGGER.info("Illegal argument in EmailSubmission/set", e)
         SetError.invalidArguments(SetErrorDescription(e.getMessage))
@@ -171,6 +174,7 @@ case class NoRecipientException() extends Exception
 case class ForbiddenFromException(from: String) extends Exception
 case class ForbiddenMailFromException(from: List[String]) extends Exception
 case class ForbiddenHeaderFromException() extends Exception
+case class InvalidDelayException(message: String) extends IllegalArgumentException(message)
 
 case class MessageMimeMessageSource(id: String, message: MessageResult) extends MimeMessageSource {
   override def getSourceId: String = id
@@ -404,9 +408,9 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
   def validateDelay(delay: Duration): Try[Duration] =
     if (delay.getSeconds < 0 || delay.getSeconds > SubmissionCapabilityFactory.maximumDelays.getSeconds) {
-      Failure(new IllegalArgumentException("Invalid delayed time!"))
+      Failure(InvalidDelayException("Invalid delayed time!"))
     } else if (!delay.isZero && !supportsDelaySends) {
-      Failure(new IllegalArgumentException("Delayed sends are not supported"))
+      Failure(InvalidDelayException("Delayed sends are not supported"))
     } else {
       Success(delay)
     }
