@@ -183,6 +183,7 @@ public abstract class FastViewProjectionHealthCheckIntegrationContract {
                 "            \"accountId\": \"" + bobCredential.accountId() + "\"," +
                 "            \"create\": {" +
                 "                \"k1490\": {" +
+                "                    \"identityId\": \"" + bobCredential.identityId() + "\"," +
                 "                    \"emailId\": \"#e1526\"," +
                 "                    \"envelope\": {" +
                 "                        \"mailFrom\": {\"email\": \"" + BOB.asString() + "\"}," +

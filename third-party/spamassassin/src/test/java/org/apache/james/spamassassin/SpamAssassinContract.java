@@ -455,6 +455,7 @@ public interface SpamAssassinContract {
                 "            \"accountId\": \"" + bobCredential.accountId() + "\"," +
                 "            \"create\": {" +
                 "                \"k1490\": {" +
+                "                    \"identityId\": \"" + bobCredential.identityId() + "\"," +
                 "                    \"emailId\": \"#e1526\"," +
                 "                    \"envelope\": {" +
                 "                        \"mailFrom\": {\"email\": \"" + BOB + "\"}," +
@@ -523,6 +524,7 @@ public interface SpamAssassinContract {
                 "            \"accountId\": \"" + bobCredential.accountId() + "\"," +
                 "            \"create\": {" +
                 "                \"k1490\": {" +
+                "                    \"identityId\": \"" + bobCredential.identityId() + "\"," +
                 "                    \"emailId\": \"#e1526\"," +
                 "                    \"envelope\": {" +
                 "                        \"mailFrom\": {\"email\": \"" + BOB + "\"}," +

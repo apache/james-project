@@ -39,7 +39,7 @@ import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.EmailSubmissionSetMethodContract.TestContext
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder, identityIdOf}
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
@@ -123,6 +123,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -203,6 +204,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -283,6 +285,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}"
          |         }
          |    }
@@ -357,6 +360,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -435,6 +439,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -513,6 +518,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -591,6 +597,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "bob.alias@${DOMAIN.asString}"},
@@ -670,6 +677,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -773,6 +781,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "#e1526",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -848,6 +857,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -902,8 +912,8 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
-         |           "identityId": "$bobAccountId",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
          |             "rcptTo": [{"email": "${andreUsername.asString}"}]
@@ -957,6 +967,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1065,6 +1076,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1133,6 +1145,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1201,6 +1214,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1298,6 +1312,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1362,6 +1377,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1427,6 +1443,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$otherAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1483,6 +1500,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1527,6 +1545,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${randomMessageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1585,6 +1604,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1622,6 +1642,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${randomMessageId.serialize}",
          |           "extra": true,
          |           "envelope": {
@@ -1681,6 +1702,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1742,6 +1764,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1817,6 +1840,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1875,6 +1899,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1931,6 +1956,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1989,6 +2015,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${andreUsername.asString}"},
@@ -2112,6 +2139,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -2173,6 +2201,7 @@ trait EmailSubmissionSetMethodContract {
            |       "accountId": "$bobAccountId",
            |       "create": {
            |         "k1490": {
+           |           "identityId": "${identityIdOf(bobUsername)}",
            |           "emailId": "${messageId.serialize}",
            |           "envelope": {
            |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -2232,6 +2261,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${randomMessageId.serialize}",
          |           "extra": true,
          |           "envelope": {
@@ -2295,6 +2325,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${randomMessageId.serialize}",
          |           "extra": true,
          |           "envelope": {
@@ -2397,6 +2428,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "#e1526",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -2526,6 +2558,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -2593,6 +2626,7 @@ trait EmailSubmissionSetMethodContract {
        |       "create": {
        |         "k1490": {
        |           "emailId": "${messageId.serialize}",
+       |           "identityId": "${identityIdOf(bobUsername)}",
        |           "envelope": {
        |             "mailFrom": {"email": "${bobUsername.asString}", "parameters": $parameters},
        |             "rcptTo": [{"email": "${andreUsername.asString}"}]
@@ -2679,6 +2713,7 @@ trait EmailSubmissionSetMethodContract {
          |       "create": {
          |         "k1490": {
          |           "emailId": "${messageId.serialize}",
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
          |             "rcptTo": [{"email": "${andreUsername.asString}"}]
@@ -2741,6 +2776,7 @@ trait EmailSubmissionSetMethodContract {
          |       "create": {
          |         "k1490": {
          |           "emailId": "${messageId.serialize}",
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
          |             "rcptTo": [{"email": "${andreUsername.asString}"}]

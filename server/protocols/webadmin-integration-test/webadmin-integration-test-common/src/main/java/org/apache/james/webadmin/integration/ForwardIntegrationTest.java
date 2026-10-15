@@ -213,6 +213,7 @@ public abstract class ForwardIntegrationTest {
                 "             \"accountId\": \"" + cedricCredential.accountId() + "\"," +
                 "             \"create\": {" +
                 "                 \"k1490\": {" +
+                "                     \"identityId\": \"" + cedricCredential.identityId() + "\"," +
                 "                     \"emailId\": \"#e1526\"," +
                 "                     \"envelope\": {" +
                 "                         \"mailFrom\": {\"email\": \"" + CEDRIC.asString() + "\"}," +
