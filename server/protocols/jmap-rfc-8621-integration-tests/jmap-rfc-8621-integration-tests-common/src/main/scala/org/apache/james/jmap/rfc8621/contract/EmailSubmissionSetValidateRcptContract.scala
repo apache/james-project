@@ -34,7 +34,7 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.core.JmapRfc8621Configuration
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.EmailSubmissionSetValidateRcptContract.TestContext
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder, identityIdOf}
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxPath
@@ -160,6 +160,7 @@ trait EmailSubmissionSetValidateRcptContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bob)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bob.asString}"},

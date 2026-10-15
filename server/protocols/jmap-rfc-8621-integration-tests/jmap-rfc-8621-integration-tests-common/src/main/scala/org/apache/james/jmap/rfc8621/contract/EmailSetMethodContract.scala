@@ -45,7 +45,7 @@ import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.EmailSetMethodContract.TestContext
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder, identityIdOf}
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.jmap.{JmapGuiceProbe, MessageIdProbe}
@@ -8815,6 +8815,7 @@ trait EmailSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "#e1526",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
