@@ -1572,8 +1572,52 @@ trait EmailSubmissionSetMethodContract {
       .inPath("methodResponses[0][1].notCreated")
       .isEqualTo("""{
                    |  "k1490": {
-                   |    "type": "invalidArguments",
+                   |    "type": "invalidProperties",
                    |    "description": "The email to be sent cannot be found",
+                   |    "properties": ["emailId"]
+                   |  }
+                   |}""".stripMargin)
+  }
+
+  @Test
+  def setShouldRejectUnparsableEmailId(): Unit = {
+    val requestBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$bobAccountId",
+         |       "create": {
+         |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
+         |           "emailId": "Munknown0000",
+         |           "envelope": {
+         |             "mailFrom": {"email": "${bobUsername.asString}"},
+         |             "rcptTo": [{"email": "${andreUsername.asString}"}]
+         |           }
+         |         }
+         |    }
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestBob)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].notCreated.k1490.description")
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo("""{
+                   |  "k1490": {
+                   |    "type": "invalidProperties",
                    |    "properties": ["emailId"]
                    |  }
                    |}""".stripMargin)
@@ -1729,7 +1773,7 @@ trait EmailSubmissionSetMethodContract {
       .inPath("methodResponses[0][1].notCreated")
       .isEqualTo("""{
                    |  "k1490": {
-                   |    "type": "invalidArguments",
+                   |    "type": "invalidProperties",
                    |    "description": "The email to be sent cannot be found",
                    |    "properties": ["emailId"]
                    |  }
