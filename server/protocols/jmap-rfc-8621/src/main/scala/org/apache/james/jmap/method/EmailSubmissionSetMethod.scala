@@ -107,8 +107,7 @@ object EmailSubmissionSetMethod {
           SetErrorDescription(s"Attempt to send a mail whose MimeMessage From is missing"), None)
       case _: MessageNotFoundException =>
         LOGGER.info(" EmailSubmission/set failed as the underlying email could not be found")
-        SetError(SetError.invalidArgumentValue,
-          SetErrorDescription("The email to be sent cannot be found"),
+        SetError.invalidProperties(SetErrorDescription("The email to be sent cannot be found"),
           Some(Properties("emailId")))
       case e: DateTimeParseException =>
         LOGGER.info("Failed to parse date time", e)
@@ -303,7 +302,11 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       })
 
   private def emailSubmissionSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): SetError =
-    standardError(errors)
+    errors.head match {
+      case (path, _) if path == JsPath \ "emailId" =>
+        SetError.invalidProperties(SetErrorDescription(standardErrorMessage(errors)), Some(Properties("emailId")))
+      case _ => standardError(errors)
+    }
 
   private def sendEmail(mailboxSession: MailboxSession,
                         request: EmailSubmissionCreationRequest): SMono[(EmailSubmissionCreationResponse, MessageId)] =
