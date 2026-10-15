@@ -34,13 +34,14 @@ import jakarta.mail.Message.RecipientType
 import jakarta.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.commons.lang3.StringUtils
 import org.apache.james.core.{MailAddress, Username}
+import org.apache.james.jmap.api.model.Identity
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.core.{ClientId, Invocation, JmapRfc8621Configuration, Properties, ServerId, SessionTranslator, SetError, SubmissionCapabilityFactory, UTCDate, UuidState}
 import org.apache.james.jmap.json.EmailSubmissionSetSerializer
-import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue, UnparsedEmailSubmissionId}
+import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue, UnparsedEmailSubmissionId, UnparsedIdentityId}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, NO_DELAY, VALID_PARAMETER_NAME_SET, formatter}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
@@ -109,6 +110,10 @@ object EmailSubmissionSetMethod {
         LOGGER.info(" EmailSubmission/set failed as the underlying email could not be found")
         SetError.invalidProperties(SetErrorDescription("The email to be sent cannot be found"),
           Some(Properties("emailId")))
+      case e: IdentityNotFoundException =>
+        LOGGER.info("EmailSubmission/set failed: {}", e.description)
+        SetError.invalidProperties(SetErrorDescription(e.description),
+          Some(Properties("identityId")))
       case e: DateTimeParseException =>
         LOGGER.info("Failed to parse date time", e)
         SetError.invalidArguments(SetErrorDescription(e.getMessage))
@@ -174,6 +179,7 @@ case class ForbiddenFromException(from: String) extends Exception
 case class ForbiddenMailFromException(from: List[String]) extends Exception
 case class ForbiddenHeaderFromException() extends Exception
 case class InvalidDelayException(message: String) extends IllegalArgumentException(message)
+case class IdentityNotFoundException(description: String) extends Exception
 
 case class MessageMimeMessageSource(id: String, message: MessageResult) extends MimeMessageSource {
   override def getSourceId: String = id
@@ -189,6 +195,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
                                          mailQueueFactory: MailQueueFactory[_ <: MailQueue],
                                          canSendFrom: CanSendFrom,
                                          emailSetMethod: EmailSetMethod,
+                                         identityResolver: IdentityResolver,
                                          clock: Clock,
                                          javaValidations: java.util.Set[EmailSubmissionSetValidation],
                                          @Named("supportsDelaySends") supportsDelaySends: Boolean,
@@ -311,6 +318,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   private def sendEmail(mailboxSession: MailboxSession,
                         request: EmailSubmissionCreationRequest): SMono[(EmailSubmissionCreationResponse, MessageId)] =
     for {
+      _ <- validateIdentity(mailboxSession, request.identityId)
       message <- SFlux(messageIdManager.getMessagesReactive(List(request.emailId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
         .next
         .switchIfEmpty(SMono.error(MessageNotFoundException(request.emailId)))
@@ -341,6 +349,14 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     } yield {
       EmailSubmissionCreationResponse(submissionId, sendAt) -> request.emailId
     }
+
+  private def validateIdentity(mailboxSession: MailboxSession, maybeIdentityId: Option[Id]): SMono[Identity] =
+    maybeIdentityId
+      .map(id => UnparsedIdentityId(id).validate
+        .fold(_ => SMono.empty[Identity],
+          identityId => identityResolver.resolveIdentityId(identityId, mailboxSession).flatMap(SMono.justOrEmpty(_)))
+        .switchIfEmpty(SMono.error(IdentityNotFoundException("The identity to be used cannot be found"))))
+      .getOrElse(SMono.error(IdentityNotFoundException("Missing 'identityId' property")))
 
   /**
    * Runs the pluggable validations against the mail about to be spooled. The first rejection wins,
