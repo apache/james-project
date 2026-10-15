@@ -37,7 +37,7 @@ import org.apache.james.jmap.JMAPTestingConstants.DOMAIN
 import org.apache.james.jmap.JmapGuiceProbe
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, authScheme, baseRequestSpecBuilder, identityIdOf}
 import org.apache.james.jmap.rfc8621.contract.VacationIntegrationTest.{html_reason, original_message_text_body, reason}
 import org.apache.james.junit.categories.BasicFeature
 import org.apache.james.mailbox.DefaultMailboxes
@@ -360,6 +360,7 @@ trait VacationIntegrationTest {
          |       "accountId": "$andreAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(andreUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${andreUsername.asString}"},

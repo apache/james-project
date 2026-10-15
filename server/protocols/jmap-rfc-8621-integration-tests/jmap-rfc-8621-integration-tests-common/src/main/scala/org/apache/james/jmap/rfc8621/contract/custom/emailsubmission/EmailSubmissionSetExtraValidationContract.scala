@@ -33,7 +33,7 @@ import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.JmapRfc8621Configuration
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder, identityIdOf}
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxPath
@@ -151,6 +151,7 @@ trait EmailSubmissionSetExtraValidationContract {
          |       "accountId": "$ACCOUNT_ID",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(BOB)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${BOB.asString}"},

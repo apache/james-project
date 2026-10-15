@@ -1142,6 +1142,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
                 "            \"accountId\": \"" + bartCredential.accountId() + "\"," +
                 "            \"create\": {" +
                 "                \"k1490\": {" +
+                "                    \"identityId\": \"" + bartCredential.identityId() + "\"," +
                 "                    \"emailId\": \"#e1526\"," +
                 "                    \"envelope\": {" +
                 "                        \"mailFrom\": {\"email\": \"" + bart + "\"}," +
@@ -1202,6 +1203,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
                 "            \"accountId\": \"" + bartCredential.accountId() + "\"," +
                 "            \"create\": {" +
                 "                \"k1490\": {" +
+                "                    \"identityId\": \"" + bartCredential.identityId() + "\"," +
                 "                    \"emailId\": \"#e1526\"," +
                 "                    \"envelope\": {" +
                 "                        \"mailFrom\": {\"email\": \"" + bart + "\"}," +
