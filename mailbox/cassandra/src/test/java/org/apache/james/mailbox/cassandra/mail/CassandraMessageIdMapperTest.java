@@ -282,5 +282,27 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
             assertThat(sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.METADATA))
                 .hasSize(1);
         }
+
+        @Test
+        void deleteShouldRetryReadingImapUidTable(CassandraCluster cassandra) throws Exception {
+            message1.setUid(mapperProvider.generateMessageUid(benwaInboxMailbox));
+            message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
+            sut.save(message1);
+
+            cassandra.getConf()
+                .registerScenario(fail()
+                    .times(2)
+                    .whenQueryStartsWith("SELECT * FROM imapuidtable WHERE messageid=:messageid AND mailboxid=:mailboxid"));
+
+            sut.delete(message1.getMessageId(), ImmutableList.of(benwaInboxMailbox.getMailboxId()));
+
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new PlainBlobId.Factory());
+            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                softly.assertThat(sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.METADATA))
+                    .isEmpty();
+                softly.assertThat(messageIdDAO.retrieveMessages((CassandraId) benwaInboxMailbox.getMailboxId(), MessageRange.all(), Limit.unlimited()).collectList().block())
+                    .isEmpty();
+            }));
+        }
     }
 }

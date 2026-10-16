@@ -19,6 +19,9 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Set;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -29,7 +32,9 @@ import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.extension.PreDeletionHook;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
@@ -71,5 +76,21 @@ class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSi
                 StatementRecorder.Selector.preparedStatement("SELECT * FROM aclv2 WHERE id=:id")))
                 .hasSize(2);
         });
+    }
+
+    @Test
+    void setInMailboxesShouldCompleteMovesWhenReadingImapUidTableTransientlyFails(CassandraCluster cassandra) throws Exception {
+        givenUnlimitedQuota();
+        MessageId messageId = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);
+
+        cassandra.getConf().registerScenario(fail()
+            .times(2)
+            .whenQueryStartsWith("SELECT * FROM imapuidtable WHERE messageid=:messageid AND mailboxid=:mailboxid"));
+
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
+
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, session))
+            .extracting(MessageResult::getMailboxId)
+            .containsOnly(mailbox1.getMailboxId());
     }
 }
