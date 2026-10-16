@@ -30,11 +30,13 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.stream.Stream;
 
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
+import org.apache.james.blob.api.BlobStoreDAORangeReadContract;
 import org.apache.james.blob.api.MetadataAwareBlobStoreDAOContract;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.Test;
@@ -46,7 +48,7 @@ import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
 
-public interface ZstdBlobStoreDAOContract extends BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract {
+public interface ZstdBlobStoreDAOContract extends BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract, BlobStoreDAORangeReadContract {
 
     BlobStoreDAO underlying();
 
@@ -59,6 +61,25 @@ public interface ZstdBlobStoreDAOContract extends BlobStoreDAOContract, Metadata
         return CompressionConfiguration.builder()
             .enabled(true)
             .build();
+    }
+
+    @Test
+    default void readRangeShouldSliceDecompressedContent() throws IOException {
+        ZstdBlobStoreDAO compressedStore = new ZstdBlobStoreDAO(underlying(),
+            CompressionConfiguration.builder()
+                .enabled(true)
+                .threshold(1)
+                .build(),
+            metricFactory());
+        Mono.from(compressedStore.save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(sampleContent()))).block();
+
+        assertThat(Mono.from(underlying().readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().contentEncoding())
+            .contains(BlobStoreDAO.ContentEncoding.ZSTD);
+
+        BlobStoreDAO.Blob slice = compressedStore.readRange(TEST_BUCKET_NAME, TEST_BLOB_ID, 200, 399).block();
+
+        assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(sampleContent(), 200, 400));
+        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(sampleContent().length);
     }
 
     @Override
