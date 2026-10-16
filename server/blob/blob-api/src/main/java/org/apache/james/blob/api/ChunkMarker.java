@@ -38,7 +38,7 @@ public final class ChunkMarker {
         return blobId != null && isChunkId(blobId.asString());
     }
 
-    public static boolean isChunkId(String blobId) {
+    private static boolean isChunkId(String blobId) {
         return blobId != null && CHUNK_ID_PATTERN.matcher(blobId).matches();
     }
 }

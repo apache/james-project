@@ -30,13 +30,13 @@ class ChunkMarkerTest {
     @ParameterizedTest
     @MethodSource("chunkIds")
     void shouldRecognizeChunkIds(String blobId) {
-        assertThat(ChunkMarker.isChunkId(blobId)).isTrue();
+        assertThat(ChunkMarker.isChunkId(new PlainBlobId(blobId))).isTrue();
     }
 
     @ParameterizedTest
     @MethodSource("nonChunkIds")
     void shouldRejectNonChunkIds(String blobId) {
-        assertThat(ChunkMarker.isChunkId(blobId)).isFalse();
+        assertThat(ChunkMarker.isChunkId(new PlainBlobId(blobId))).isFalse();
     }
 
     private static Stream<String> chunkIds() {
