@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutionException;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
+import org.apache.james.blob.api.BlobStoreDAORangeReadContract;
 import org.apache.james.blob.api.MetadataAwareBlobStoreDAOContract;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -39,7 +40,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import reactor.core.publisher.Mono;
 
-class PostgresBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract {
+class PostgresBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract, BlobStoreDAORangeReadContract {
     static Duration CONCURRENT_TEST_DURATION = Duration.ofMinutes(5);
 
     @RegisterExtension
