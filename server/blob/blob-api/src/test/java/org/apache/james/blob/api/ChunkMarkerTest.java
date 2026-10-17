@@ -43,16 +43,27 @@ class ChunkMarkerTest {
         return Stream.of(
             "1_0_chunk0123456789abcdef",
             "12_34_chunk0123456789abcdef_ABC-xyz",
-            "1_0_chunk0123456789abcdef~0~123");
+            "1_0_chunk0123456789abcdef~0~123",
+            "1_690_chunkshort",
+            "1/690/chunkshort",
+            "12/12345/chunk550e8400-e29b-41d4-a716-446655440000",
+            "1_12345_chunk550e8400-e29b-41d4-a716-446655440000",
+            "1/690/chunkidentifier.with+other=characters~0~123",
+            "1_690_chunkidentifier.with+other=characters",
+            "1/690/chunk",
+            "1_690_chunk");
     }
 
     private static Stream<String> nonChunkIds() {
         return Stream.of(
             "0_0_chunk0123456789abcdef",
             "1_-1_chunk0123456789abcdef",
-            "1_0_chunk0123456789abcde",
-            "1_0_chunk0123456789abcdef~1",
-            "1_0_chunk0123456789abcdef~1~-1",
+            "0/690/chunkidentifier",
+            "1/-1/chunkidentifier",
+            "1/690/ordinary-blob",
+            "1/690/hash_chunk_identifier",
+            "1/690_chunkidentifier",
+            "1_690/chunkidentifier",
             "1_0_not-a-chunk0123456789abcdef",
             "a_chunk0123456789abcdef",
             "plain-blob-id");

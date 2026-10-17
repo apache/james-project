@@ -275,6 +275,7 @@ public class BloomFilterGCAlgorithm {
     private Mono<Result> gc(BloomFilter<CharSequence> bloomFilter, BucketName bucketName, Context context, int deletionWindowSize) {
         return Flux.from(blobStoreDAO.listBlobs(bucketName))
             .doOnNext(blobId -> context.incrementBlobCount())
+            .filter(blobId -> !ChunkMarker.isChunkId(blobId))
             .flatMap(blobId -> Mono.fromCallable(() -> blobIdFactory.parse(blobId.asString())))
             .filter(blobId -> {
                 if (blobId instanceof GenerationAware generationAware) {
@@ -282,7 +283,6 @@ public class BloomFilterGCAlgorithm {
                 }
                 return false;
             })
-            .filter(blobId -> !ChunkMarker.isChunkId(blobId))
             .filter(blobId -> !bloomFilter.mightContain(salt + blobId.asString()))
             .window(deletionWindowSize)
             .flatMap(blobIdFlux -> handlePagedDeletion(bucketName, context, blobIdFlux), DEFAULT_CONCURRENCY)

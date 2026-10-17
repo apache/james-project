@@ -23,13 +23,14 @@ import java.util.regex.Pattern;
 /**
  * Identifies physical chunk object identifiers and their virtual slot references.
  *
- * <p>The compacted-object format is {@code <family>_<generation>_chunk<random-part>} for the physical object and
- * {@code <physical-object>~<offset>~<length>} for a virtual slot. This shared marker deliberately contains no
- * chunk-format parsing so storage strategies can recognize chunk IDs without depending on the compaction module.</p>
+ * <p>Physical objects use {@code <family>_<generation>_chunk<identifier>} or the MinIO layout
+ * {@code <family>/<generation>/chunk<identifier>}. The identifier is unrestricted and can also carry a virtual
+ * slot suffix. This only recognizes the chunk marker; parsing and validating a slot reference is the
+ * responsibility of the compaction module.</p>
  */
 public final class ChunkMarker {
     private static final Pattern CHUNK_ID_PATTERN = Pattern.compile(
-        "^[1-9]\\d*_\\d+_chunk[A-Za-z0-9_-]{16,}(?:~\\d+~\\d+)?$");
+        "^[1-9]\\d*(?:_\\d+_chunk|/\\d+/chunk).*$");
 
     private ChunkMarker() {
     }
