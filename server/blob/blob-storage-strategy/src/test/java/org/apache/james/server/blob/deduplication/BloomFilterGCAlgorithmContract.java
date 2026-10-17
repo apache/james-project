@@ -183,6 +183,30 @@ public interface BloomFilterGCAlgorithmContract {
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
+    @Test
+    default void gcShouldPreserveMinIOChunksAndRemoveOrdinaryMinIOBlobs() {
+        BlobStoreDAO store = blobStoreDAO();
+        when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.empty());
+        MinIOGenerationAwareBlobId.Factory minIOFactory = new MinIOGenerationAwareBlobId.Factory(
+            CLOCK, GENERATION_AWARE_BLOB_ID_CONFIGURATION, BLOB_ID_FACTORY);
+        BlobId chunk = minIOFactory.parse("1/12/chunk" + UUID.randomUUID());
+        BlobId ordinary = minIOFactory.parse("1/12/ordinary-blob");
+        Mono.from(store.save(DEFAULT_BUCKET, chunk, BlobStoreDAO.BytesBlob.of("chunk"))).block();
+        Mono.from(store.save(DEFAULT_BUCKET, ordinary, BlobStoreDAO.BytesBlob.of("ordinary"))).block();
+        CLOCK.setInstant(NOW.plusMonths(2).toInstant());
+
+        BloomFilterGCAlgorithm algorithm = new BloomFilterGCAlgorithm(BLOB_REFERENCE_SOURCE, store, minIOFactory,
+            GENERATION_AWARE_BLOB_ID_CONFIGURATION, CLOCK);
+        Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
+
+        assertThat(algorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context).block())
+            .isEqualTo(Task.Result.COMPLETED);
+        assertThat(Mono.from(store.readBytes(DEFAULT_BUCKET, chunk)).block().payload())
+            .isEqualTo("chunk".getBytes());
+        assertThatThrownBy(() -> store.read(DEFAULT_BUCKET, ordinary))
+            .isInstanceOf(ObjectNotFoundException.class);
+    }
+
     @RepeatedTest(10)
     default void gcShouldNotRemoveReferencedBlob() {
         BlobStore blobStore = blobStore();
