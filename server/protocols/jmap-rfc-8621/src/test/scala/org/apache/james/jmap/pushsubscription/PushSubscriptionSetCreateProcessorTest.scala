@@ -76,6 +76,8 @@ class PushSubscriptionSetCreateProcessorTest {
         .withPath("/subscribe")).toSeq
 
     assertThat(requests.size).isEqualTo(1)
+    assertThat(requests.head.containsHeader("Content-Encoding")).isFalse
+    assertThat(requests.head.getFirstHeader("TTL")).isEqualTo("604800")
     assertThatJson(requests.head.getBodyAsString)
       .isEqualTo(
         """{
@@ -101,6 +103,7 @@ class PushSubscriptionSetCreateProcessorTest {
         .withMethod("POST")
         .withPath("/subscribe")).toSeq
     assertThat(requests.size).isEqualTo(1)
+    assertThat(requests.head.getFirstHeader("Content-Encoding")).isEqualTo("aes128gcm")
 
     assertThatJson(requests.head.getBodyAsString)
       .isNotEqualTo(

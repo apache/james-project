@@ -45,6 +45,7 @@ import org.apache.james.jmap.core.QuotaCapabilityFactory$;
 import org.apache.james.jmap.core.SharesCapabilityFactory$;
 import org.apache.james.jmap.core.SubmissionCapabilityFactory;
 import org.apache.james.jmap.core.VacationResponseCapabilityFactory$;
+import org.apache.james.jmap.core.WebPushVapidCapabilityFactory;
 import org.apache.james.jmap.core.WebSocketCapabilityFactory$;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.jmap.rfc8621.RFC8621MethodsModule;
@@ -212,6 +213,11 @@ public class JMAPModule extends AbstractModule {
     @ProvidesIntoSet
     CapabilityFactory webSocketCapability(JmapRfc8621Configuration configuration) {
         return WebSocketCapabilityFactory$.MODULE$;
+    }
+
+    @ProvidesIntoSet
+    CapabilityFactory webPushVapidCapability(JmapRfc8621Configuration configuration) {
+        return new WebPushVapidCapabilityFactory(configuration);
     }
 
     @Provides

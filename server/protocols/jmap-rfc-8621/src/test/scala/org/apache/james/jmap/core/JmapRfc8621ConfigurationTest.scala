@@ -22,6 +22,7 @@ package org.apache.james.jmap.core
 import com.google.common.collect.ImmutableList
 import org.apache.commons.configuration2.PropertiesConfiguration
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
+import org.apache.james.jmap.pushsubscription.VapidTestFixture
 import org.apache.james.rrt.api.RecipientValidator
 import org.apache.james.rrt.api.RecipientValidator.RecipientRewriteTableCheck
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
@@ -61,6 +62,27 @@ class JmapRfc8621ConfigurationTest {
   def shouldThrowOnUnsupportedRecipientRewriteTableCheck(): Unit =
     assertThatThrownBy(() => configurationWith("send.validate.rcpt.recipientRewriteTableCheck" -> "invalid"))
       .hasMessageContaining("unsupported value 'invalid'")
+
+  @Test
+  def vapidShouldBeAbsentByDefault(): Unit =
+    assertThat(configurationWith().vapid.isDefined).isFalse
+
+  @Test
+  def vapidShouldBeReadWhenConfigured(): Unit = {
+    val configuration = configurationWith(
+      "webpush.vapid.public.key" -> VapidTestFixture.PUBLIC_KEY,
+      "webpush.vapid.private.key" -> VapidTestFixture.PRIVATE_KEY,
+      "webpush.vapid.subject" -> "mailto:postmaster@example.com")
+
+    assertThat(configuration.vapid.map(_.applicationServerKey).orNull).isEqualTo(VapidTestFixture.PUBLIC_KEY)
+    assertThat(configuration.webPushConfiguration.vapid.flatMap(_.subject).orNull).isEqualTo("mailto:postmaster@example.com")
+  }
+
+  @Test
+  def shouldThrowWhenOnlyOneVapidKeyIsConfigured(): Unit =
+    assertThatThrownBy(() => configurationWith("webpush.vapid.public.key" -> VapidTestFixture.PUBLIC_KEY))
+      .isInstanceOf(classOf[IllegalArgumentException])
+      .hasMessageContaining("both its public and its private key")
 
   @Test
   def extraValidationsShouldBeEmptyByDefault(): Unit =

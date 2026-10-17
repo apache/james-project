@@ -126,7 +126,7 @@ class PushListenerTest {
     verify(webPushClient).push(ArgumentMatchers.eq(url), argumentCaptor.capture())
 
     SoftAssertions.assertSoftly(softly => {
-      softly.assertThat(argumentCaptor.getValue.ttl).isEqualTo(PushTTL.MAX)
+      softly.assertThat(argumentCaptor.getValue.ttl).isEqualTo(PushTTL.ONE_WEEK)
       softly.assertThat(new String(argumentCaptor.getValue.payload, StandardCharsets.UTF_8))
         .isEqualTo(s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Email":"${state1.value.toString}"}}}""")
     })
@@ -217,7 +217,7 @@ class PushListenerTest {
     verify(webPushClient).push(ArgumentMatchers.eq(url), argumentCaptor.capture())
 
     SoftAssertions.assertSoftly(softly => {
-      softly.assertThat(argumentCaptor.getValue.ttl).isEqualTo(PushTTL.MAX)
+      softly.assertThat(argumentCaptor.getValue.ttl).isEqualTo(PushTTL.ONE_WEEK)
       softly.assertThat(new String(argumentCaptor.getValue.payload, StandardCharsets.UTF_8))
         .isEqualTo(s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Email":"${state1.value.toString}","Mailbox":"${state2.value.toString}"}}}""")
     })

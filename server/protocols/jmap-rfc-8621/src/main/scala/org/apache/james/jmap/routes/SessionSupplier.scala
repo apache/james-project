@@ -57,7 +57,8 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory], configuration
         apiUrl = urlEndpointResolver.apiUrl,
         downloadUrl = urlEndpointResolver.downloadUrl,
         uploadUrl = urlEndpointResolver.uploadUrl,
-        eventSourceUrl = urlEndpointResolver.eventSourceUrl)
+        eventSourceUrl = urlEndpointResolver.eventSourceUrl,
+        state = configuration.sessionState)
     }
   }
 

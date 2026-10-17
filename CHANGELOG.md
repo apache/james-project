@@ -55,6 +55,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - JAMES-4196 Allow CRUD operations on shared folders for JMAP (#2988)
  - [ENHANCEMENT] Implement negative ACL for JMAP
  - JAMES-4157 Implement JMAP `Blob/copy` (#2896)
+ - [ENHANCEMENT] JMAP Web Push: authenticate requests with VAPID and advertise the `urn:ietf:params:jmap:webpush-vapid` capability (RFC-9749), see `webpush.vapid.*` in `jmap.properties`
+ - [ENHANCEMENT] JMAP Web Push: ask push services to retain pushes one week (`TTL`) instead of 68 years
  - JAMES-3728 Implement `MessageIdManager::updateEmail`, allowing `Email/set` update to combine move and setFlags
  - JAMES-4203 Add Identity events, plugged into `CustomIdentityDAO`
  - JAMES-3893 Allow deleting identities via WebAdmin
@@ -89,6 +91,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Fixes
 
  - [FIX] JMAP DownloadRoutes: avoid noisy benign `IllegalStateException` upon mid-stream errors
+ - [FIX] JMAP Web Push: accept the `p256dh` key of browsers, an uncompressed P-256 point (RFC-8291); its X.509 encoding is still accepted
+ - [FIX] JMAP Web Push: an encrypted `PushVerification` now carries `Content-Encoding: aes128gcm`, without which clients cannot read it
  - [FIX] `ICALAttributeDTO` should sanitize invalid dtstamp (#3084)
  - [FIX] Better handle `InterruptedException` in `receiveMessageInTimespan` (#3083)
  - JAMES-4214 Pass message rather than InputStream so that several body parts can be read (#3081)

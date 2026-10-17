@@ -20,15 +20,16 @@
 package org.apache.james.jmap.core
 
 import java.net.URI
+import java.nio.charset.StandardCharsets
 import java.time.temporal.ChronoUnit
-import java.util.Optional
+import java.util.{Optional, UUID}
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.JmapRfc8621Configuration.{JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT, JMAP_MAX_OBJECT_IN_GET, JMAP_MAX_OBJECT_IN_SET, JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT, MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT, UPLOAD_LIMIT_DEFAULT}
-import org.apache.james.jmap.pushsubscription.PushClientConfiguration
+import org.apache.james.jmap.pushsubscription.{PushClientConfiguration, VapidConfiguration}
 import org.apache.james.rrt.api.RecipientValidator
 import org.apache.james.util.{DurationParser, Size}
 
@@ -47,6 +48,9 @@ object JmapConfigProperties {
   val WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY: String = "webpush.maxTimeoutSeconds"
   val WEB_PUSH_MAX_CONNECTIONS_PROPERTY: String = "webpush.maxConnections"
   val WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY: String = "webpush.prevent.server.side.request.forgery"
+  val WEB_PUSH_VAPID_PUBLIC_KEY_PROPERTY: String = "webpush.vapid.public.key"
+  val WEB_PUSH_VAPID_PRIVATE_KEY_PROPERTY: String = "webpush.vapid.private.key"
+  val WEB_PUSH_VAPID_SUBJECT_PROPERTY: String = "webpush.vapid.subject"
   val DYNAMIC_JMAP_PREFIX_RESOLUTION_ENABLED_PROPERTY: String = "dynamic.jmap.prefix.resolution.enabled"
   val DELAY_SENDS_ENABLED: String = "delay.sends.enabled"
   val AUTHENTICATION_STRATEGIES: String = "authentication.strategy.rfc8621"
@@ -116,6 +120,10 @@ object JmapRfc8621Configuration {
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
       maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala,
       preventServerSideRequestForgery = Optional.ofNullable(configuration.getBoolean(WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY, null)).orElse(true),
+      vapid = VapidConfiguration.from(
+        publicKey = Option(configuration.getString(WEB_PUSH_VAPID_PUBLIC_KEY_PROPERTY, null)),
+        privateKey = Option(configuration.getString(WEB_PUSH_VAPID_PRIVATE_KEY_PROPERTY, null)),
+        subject = Option(configuration.getString(WEB_PUSH_VAPID_SUBJECT_PROPERTY, null))),
       authenticationStrategies = Optional.ofNullable(configuration.getList(classOf[String], AUTHENTICATION_STRATEGIES, null)).toScala,
       disabledCapabilities = Optional.ofNullable(configuration.getList(classOf[String], DISABLED_CAPABILITIES, null))
         .orElse(ImmutableList.of())
@@ -144,12 +152,22 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
                                     maxConnections: Option[Int] = None,
                                     authenticationStrategies: Option[java.util.List[String]] = None,
                                     preventServerSideRequestForgery: Boolean = true,
-                                    disabledCapabilities: Set[CapabilityIdentifier] = Set()) {
+                                    disabledCapabilities: Set[CapabilityIdentifier] = Set(),
+                                    vapid: Option[VapidConfiguration] = None) {
 
   val webPushConfiguration: PushClientConfiguration = PushClientConfiguration(
     maxTimeoutSeconds = maxTimeoutSeconds,
     maxConnections = maxConnections,
-    preventServerSideRequestForgery = preventServerSideRequestForgery)
+    preventServerSideRequestForgery = preventServerSideRequestForgery,
+    vapid = vapid)
+
+  // The VAPID key clients subscribe with: none when Web Push is disabled
+  val advertisedVapid: Option[VapidConfiguration] = vapid.filter(_ => webPushEnabled)
+
+  // RFC 9749 section 5: the session state changes with the VAPID key, which tells clients to subscribe again
+  val sessionState: UuidState = advertisedVapid
+    .map(vapid => UuidState(UUID.nameUUIDFromBytes(vapid.applicationServerKey.getBytes(StandardCharsets.UTF_8))))
+    .getOrElse(UuidState.INSTANCE)
 
   def urlPrefixes(): UrlPrefixes = UrlPrefixes(new URI(urlPrefixString), new URI(websocketPrefixString))
 

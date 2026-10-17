@@ -90,7 +90,7 @@ class PushListener @Inject()(pushRepository: PushSubscriptionRepository,
       .fold(SMono.empty[Unit])(stateChange => SMono(webPushClient.push(pushSubscription.url, asPushRequest(stateChange, pushSubscription))))
 
   private def asPushRequest(stateChange: StateChange, pushSubscription: PushSubscription): PushRequest =
-    PushRequest(ttl = PushTTL.MAX,
+    PushRequest(ttl = PushTTL.ONE_WEEK,
       urgency = Some(urgency(stateChange)),
       topic = Some(extractTopic(stateChange)),
       contentCoding = pushSubscription.keys.map(_ => Aes128gcm),

@@ -29,7 +29,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.string.Uri
 import org.apache.james.core.Username
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_DELEGATION, JAMES_IDENTITY_SORTORDER, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_MDN, JMAP_QUOTA, JMAP_VACATION_RESPONSE, JMAP_WEBSOCKET}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_DELEGATION, JAMES_IDENTITY_SORTORDER, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_MDN, JMAP_QUOTA, JMAP_VACATION_RESPONSE, JMAP_WEBPUSH_VAPID, JMAP_WEBSOCKET}
 import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.core.SubmissionCapabilityFactory.maximumDelays
@@ -60,6 +60,7 @@ object CapabilityIdentifier {
   val JMAP_VACATION_RESPONSE: CapabilityIdentifier = "urn:ietf:params:jmap:vacationresponse"
   val EMAIL_SUBMISSION: CapabilityIdentifier = "urn:ietf:params:jmap:submission"
   val JMAP_WEBSOCKET: CapabilityIdentifier = "urn:ietf:params:jmap:websocket"
+  val JMAP_WEBPUSH_VAPID: CapabilityIdentifier = "urn:ietf:params:jmap:webpush-vapid"
   val JAMES_QUOTA: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:quota"
   val JMAP_QUOTA: CapabilityIdentifier = "urn:ietf:params:jmap:quota"
   val JAMES_SHARES: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:shares"
@@ -135,6 +136,25 @@ case object WebSocketCapabilityFactory extends CapabilityFactory {
     WebSocketCapabilityProperties(SupportsPush(true), new URI(urlPrefixes.webSocketURLPrefix.toString + "/jmap/ws")))
 }
 
+case class WebPushVapidCapability(properties: WebPushVapidCapabilityProperties, identifier: CapabilityIdentifier = JMAP_WEBPUSH_VAPID) extends Capability
+
+/**
+ * RFC 9749: tells clients the key that authenticates the Web Push requests of this server. Only advertised when
+ * Web Push is enabled and a VAPID key pair is configured.
+ */
+case class WebPushVapidCapabilityFactory(configuration: JmapRfc8621Configuration) extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = JMAP_WEBPUSH_VAPID
+
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability =
+    capability().getOrElse(throw new IllegalStateException("Web Push is disabled, or no VAPID key pair is configured"))
+
+  override def createReactive(urlPrefixes: UrlPrefixes, username: Username): Publisher[Capability] =
+    capability().map(SMono.just[Capability]).getOrElse(SMono.empty[Capability])
+
+  private def capability(): Option[Capability] = configuration.advertisedVapid
+    .map(vapid => WebPushVapidCapability(WebPushVapidCapabilityProperties(vapid.applicationServerKey)))
+}
+
 object MaxSizeUpload {
   def of(size: Size): Try[MaxSizeUpload] = refined.refineV[UnsignedIntConstraint](size.asBytes()) match {
     case Right(value) => Success(MaxSizeUpload(value))
@@ -176,6 +196,10 @@ final case class CoreCapabilityProperties(maxSizeUpload: MaxSizeUpload,
 final case class WebSocketCapabilityProperties(supportsPush: SupportsPush,
                                                url: URI) extends CapabilityProperties {
   override def jsonify(): JsObject = ResponseSerializer.webSocketPropertiesWrites.writes(this)
+}
+
+final case class WebPushVapidCapabilityProperties(applicationServerKey: String) extends CapabilityProperties {
+  override def jsonify(): JsObject = ResponseSerializer.webPushVapidPropertiesWrites.writes(this)
 }
 
 final case class SupportsPush(value: Boolean) extends AnyVal

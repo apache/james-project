@@ -27,7 +27,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, ClientId, CoreCapabilityProperties, CreatedIds, EhloArg, EhloArgs, EhloName, Invocation, IsPersonal, IsReadOnly, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxDelayedSend, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, ProblemDetails, Properties, RequestObject, ResponseObject, ServerId, Session, SetError, SubmissionProperties, SupportsPush, UuidState, WebSocketCapabilityProperties, URL}
+import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, ClientId, CoreCapabilityProperties, CreatedIds, EhloArg, EhloArgs, EhloName, Invocation, IsPersonal, IsReadOnly, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxDelayedSend, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, ProblemDetails, Properties, RequestObject, ResponseObject, ServerId, Session, SetError, SubmissionProperties, SupportsPush, UuidState, WebPushVapidCapabilityProperties, WebSocketCapabilityProperties, URL}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -94,6 +94,7 @@ object ResponseSerializer {
   private implicit val supportsPushWrites: Writes[SupportsPush] = Json.valueWrites[SupportsPush]
   val submissionPropertiesWrites: OWrites[SubmissionProperties] = Json.writes[SubmissionProperties]
   val webSocketPropertiesWrites: OWrites[WebSocketCapabilityProperties] = Json.writes[WebSocketCapabilityProperties]
+  val webPushVapidPropertiesWrites: OWrites[WebPushVapidCapabilityProperties] = Json.writes[WebPushVapidCapabilityProperties]
 
   private implicit val setCapabilityWrites: Writes[Set[_ <: Capability]] =
     (set: Set[_ <: Capability]) =>

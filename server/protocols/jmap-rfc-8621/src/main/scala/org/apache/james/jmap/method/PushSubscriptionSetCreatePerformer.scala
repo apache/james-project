@@ -10,7 +10,7 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, PushSubscriptionCreation, PushSubscriptionCreationId, PushSubscriptionCreationParseException, PushSubscriptionCreationResponse, PushSubscriptionSetRequest, SetError}
 import org.apache.james.jmap.json.{PushSerializer, PushSubscriptionSerializer}
 import org.apache.james.jmap.method.PushSubscriptionSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
-import org.apache.james.jmap.pushsubscription.{PushRequest, PushTTL, WebPushClient}
+import org.apache.james.jmap.pushsubscription.{Aes128gcm, PushRequest, PushTTL, WebPushClient}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsObject, JsPath, Json, JsonValidationError}
@@ -110,7 +110,11 @@ class PushSubscriptionSetCreateProcessor @Inject()(webPushClient: WebPushClient)
 
     SMono.fromCallable(() => Json.stringify(PushSerializer.serializePushVerification(pushVerification)).getBytes(StandardCharsets.UTF_8))
       .map(clearPayload => keys.map(keysValue => keysValue.encrypt(clearPayload)).getOrElse(clearPayload))
-      .flatMap(payload => SMono.fromPublisher(webPushClient.push(pushSubscriptionServerURL, PushRequest(PushTTL.MAX, payload = payload))))
+      .flatMap(payload => SMono.fromPublisher(webPushClient.push(pushSubscriptionServerURL, PushRequest(
+        ttl = PushTTL.ONE_WEEK,
+        // Without it the client cannot tell that the payload is encrypted, nor read it
+        contentCoding = keys.map(_ => Aes128gcm),
+        payload = payload))))
 }
 
 case class PushVerification(pushSubscriptionId: PushSubscriptionId,

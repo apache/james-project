@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.pushsubscription
 
+import java.time.Duration
+
 import com.google.common.base.CharMatcher
 import eu.timepit.refined
 import eu.timepit.refined.api.{Refined, Validate}
@@ -86,6 +88,8 @@ object PushTTL {
       .map(new IllegalArgumentException(_))
 
   val MAX: PushTTL = validate(MAX_INT).toOption.get
+  // A push that could not be delivered for a week is not worth delivering any more
+  val ONE_WEEK: PushTTL = validate(Duration.ofDays(7).getSeconds).toOption.get
 }
 
 case class PushTopicConstraint()

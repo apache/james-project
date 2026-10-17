@@ -20,15 +20,15 @@
 package org.apache.james.jmap.pushsubscription
 
 import java.nio.charset.StandardCharsets
-import java.time.Duration
 import java.time.temporal.ChronoUnit
+import java.time.{Clock, Duration}
 
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpResponseStatus
 import jakarta.inject.Inject
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
 import org.apache.james.jmap.pushsubscription.DefaultWebPushClient.{PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH, buildHttpClient}
-import org.apache.james.jmap.pushsubscription.WebPushClientHeader.{CONTENT_ENCODING, DEFAULT_TIMEOUT, MESSAGE_URGENCY, TIME_TO_LIVE, TOPIC}
+import org.apache.james.jmap.pushsubscription.WebPushClientHeader.{AUTHORIZATION, CONTENT_ENCODING, DEFAULT_TIMEOUT, MESSAGE_URGENCY, TIME_TO_LIVE, TOPIC}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
@@ -49,13 +49,15 @@ object PushClientConfiguration {
 
 case class PushClientConfiguration(maxTimeoutSeconds: Option[Int],
                                    maxConnections: Option[Int],
-                                   preventServerSideRequestForgery: Boolean = true)
+                                   preventServerSideRequestForgery: Boolean = true,
+                                   vapid: Option[VapidConfiguration] = None)
 
 object WebPushClientHeader {
   val TIME_TO_LIVE: String = "TTL"
   val CONTENT_ENCODING: String = "Content-Encoding"
   val MESSAGE_URGENCY: String = "Urgency"
   val TOPIC: String = "Topic"
+  val AUTHORIZATION: String = "Authorization"
   val DEFAULT_TIMEOUT: Duration = Duration.of(30, ChronoUnit.SECONDS)
 }
 
@@ -96,10 +98,16 @@ object DefaultWebPushClient {
   }
 }
 
-class DefaultWebPushClient(configuration: PushClientConfiguration, ssrfValidator: SSRFValidator) extends WebPushClient {
+class DefaultWebPushClient(configuration: PushClientConfiguration, ssrfValidator: SSRFValidator, clock: Clock) extends WebPushClient {
 
   @Inject
+  def this(configuration: PushClientConfiguration, clock: Clock) = this(configuration, new SSRFValidator(), clock)
+
+  def this(configuration: PushClientConfiguration, ssrfValidator: SSRFValidator) = this(configuration, ssrfValidator, Clock.systemUTC())
+
   def this(configuration: PushClientConfiguration) = this(configuration, new SSRFValidator())
+
+  private val vapidSigner: Option[VapidSigner] = configuration.vapid.map(new VapidSigner(_, clock))
 
   val httpClient: HttpClient = buildHttpClient(configuration, ssrfValidator)
 
@@ -111,6 +119,7 @@ class DefaultWebPushClient(configuration: PushClientConfiguration, ssrfValidator
           builder.add(MESSAGE_URGENCY, request.urgency.getOrElse(PushUrgency.default).value)
           request.topic.foreach(t => builder.add(TOPIC, t.value))
           request.contentCoding.foreach(f => builder.add(CONTENT_ENCODING, f.value))
+          vapidSigner.foreach(signer => builder.add(AUTHORIZATION, signer.authorization(url.value)))
         })
         .post()
         .uri(url.value.toString)

@@ -113,6 +113,26 @@ WebSocket nor EventSource, which do not rely on push subscriptions.
 | webpush.prevent.server.side.request.forgery
 | Optional boolean. Prevent server side request forgery by preventing calls to the private network ranges. Defaults to true, can be disabled for testing.
 
+| webpush.vapid.public.key
+| Optional string. Public key identifying this server to the push services (VAPID,
+https://www.rfc-editor.org/rfc/rfc8292[RFC-8292]): a P-256 public key in its uncompressed form (65 bytes), base64url
+encoded, as Web Push tools generate it. When set, with `webpush.vapid.private.key`, every Web Push request is
+authenticated with it, and the JMAP session advertises it as the `applicationServerKey` of the
+`urn:ietf:params:jmap:webpush-vapid` capability (https://www.rfc-editor.org/rfc/rfc9749[RFC-9749]), which browsers need
+to subscribe. Defaults to no VAPID: requests are not authenticated and the capability is not advertised.
+The key pair is meant to stay. After a change the session state changes, which tells clients to subscribe again
+(RFC-9749 section 5), but push services refuse the pushes of the subscriptions created with the former key until they do.
+
+| webpush.vapid.private.key
+| Optional string. Private key matching `webpush.vapid.public.key`: a P-256 private key (32 bytes), base64url encoded.
+Required when the public key is set. Keep it secret.
+
+| webpush.vapid.subject
+| Optional string. Contact of the operator of this server, sent to the push services as the `sub` claim: a `mailto:`
+or an `https:` URI. Set it whenever VAPID is configured: the push service of Apple (`web.push.apple.com`) refuses
+requests without it, and the {server-name} logs a warning upon start when it is missing.
+See <<_generating_vapid_cryptographic_material,Generating VAPID cryptographic material>>.
+
 | cassandra.filter.projection.activated
 |Optional boolean. Defaults to false. Casandra backends only. Whether to use or not the Cassandra projection
 for JMAP filters. This projection optimizes reads, but needs to be correctly populated. Turning it on on
@@ -245,6 +265,41 @@ This token can then be passed as `Bearer` of the `Authorization` header :
     curl -H "Authorization: Bearer $token" -XPOST http://127.0.0.1:80/jmap -d '...'
 
 The public key can be referenced as `jwt.publickeypem.url` of the `jmap.properties` configuration file.
+
+== Generating VAPID cryptographic material
+
+Browsers only subscribe to Web Push with the public key of the server, and their push services refuse the pushes that
+are not signed with the matching private key (VAPID, link:https://www.rfc-editor.org/rfc/rfc8292[RFC-8292]). The
+{server-name} needs one P-256 key pair for this, set in `jmap.properties`. It advertises the public key in the JMAP
+session, so that clients need no configuration (link:https://www.rfc-editor.org/rfc/rfc9749[RFC-9749]).
+
+One can use OpenSSL to generate the key pair, then print each key in the expected form, base64url without padding:
+
+    # key pair
+    openssl ecparam -name prime256v1 -genkey -noout -out vapid.pem
+    # webpush.vapid.private.key: the private value, 32 bytes
+    openssl ec -in vapid.pem -outform DER 2>/dev/null | tail -c +8 | head -c 32 | base64 | tr '+/' '-_' | tr -d '=\n'
+    # webpush.vapid.public.key: the public key as an uncompressed point, 65 bytes
+    openssl ec -in vapid.pem -pubout -outform DER 2>/dev/null | tail -c 65 | base64 | tr '+/' '-_' | tr -d '=\n'
+
+The keys are 43 and 87 characters long. Tools that generate VAPID keys for Web Push, as
+`npx web-push generate-vapid-keys`, print them in this same form.
+
+    webpush.vapid.public.key=<the public key>
+    webpush.vapid.private.key=<the private key>
+    webpush.vapid.subject=mailto:postmaster@domain.tld
+
+Regarding these values:
+
+ - The private key is a secret: restrict the access to `jmap.properties`, and delete `vapid.pem` once the keys are
+copied. The {server-name} refuses to start when the two keys do not match.
+ - The subject tells the push services whom to contact about the pushes of this server: use an address that is read,
+as `mailto:postmaster@domain.tld`, or the `https:` URL of a contact page. It is sent to the push services only, never
+to the users.
+ - Use the same key pair on every node of a cluster, and keep it: subscriptions are bound to the key they were created
+with. After a change of key the session state changes, which tells clients to subscribe again (RFC-9749 section 5).
+There is no transitional period: the former key no longer signs, hence push services refuse the pushes of existing
+subscriptions until clients subscribe again, and these subscriptions are kept until they expire.
 
 == Annotated specification
 
