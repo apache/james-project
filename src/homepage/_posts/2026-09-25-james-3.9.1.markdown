@@ -11,6 +11,19 @@ Early adopters can [download it][download], any issue can be reported on our iss
 
 The Apache James PMC would like to thank all contributors who made this release possible!
 
+## Security
+
+This release addresses the following CVEs:
+
+ - CVE-2025-66621 SASL OAUTHBEARER do not validate aud in JWT payload if misconfigred
+ - CVE-2026-49939 Negative IMAP ACL administer authorization bypass through JMAP protocol
+ - CVE-2026-74756 WebAdmin exposed without authentication on official Docker default
+ - CVE-2026-76168 ManageSieve file implementation cross-user path traversal
+ - CVE-2026-76171 SSRF filter bypass in the JMAP PushSubscription web-push client
+ - CVE-2026-85111 Denial of service upon MIME parsing
+
+Users are recommended to upgrade to 3.9.1 which addresses those issues.
+
 ## Announcement
 
 This maintenance release brings numerous bug fixes, security enhancements and dependency upgrades to the 3.9.x line.

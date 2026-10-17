@@ -295,3 +295,47 @@ This issue can be mitigated by:
  - Disabling JMX all-together (Guice only)
 
 Read more link:http://james.apache.org//james/update/2017/10/20/james-3.0.1.html[here].
+
+=== CVE-2025-66621 SASL OAUTHBEARER do not validate aud in JWT payload if misconfigred
+
+Apache James SASL OAuthBearer/XOAUTH2 prior versions 3.9.1 fails to validate correctly AUD claim of JWT payloads when introspection is not configured.
+
+This allows an attacker with valid credentials to access the mail server even if they are not authorized to do so.
+
+We recommend users to upgrade to non vulnerable version that forces explicit configuration of aud claims and forces introspection.
+
+=== CVE-2026-49939 Negative IMAP ACL administer authorization bypass through JMAP protocol
+
+In Apache James server prior version 3.9.1 improper Access Control List processing is exposed by the JMAP protocol which do not account for negative rules positionned by IMAP protocol.
+
+This results in users being able to administer folders in JMAP despite having being explicitly denied the right to do so in IMAP.
+
+Users are recommended to upgrade to version 3.9.1 which fixes this issue.
+
+=== CVE-2026-74756 WebAdmin exposed without authentication on official Docker default
+
+Some docker-compose shipped by the project exposes by default Webadmin REST API publically without proper authentication setup.
+
+Version 3.9.1 onward sets a random credential by default on unprotected webadmin endpoints to prevent this while retain convenience.
+
+=== CVE-2026-76168 ManageSieve file implementation cross-user path traversal
+
+In Apache James server prior version 3.9.1 relying on the SieveFileRepository incorect validation of file paths can result in path transversal, allowing to set arbitrary SIEVE scripts for other users.
+
+This allows a logged in attacker to set arbitrary SIEVE scripts for other users, resulting in denial of service or even traffic capture.
+
+Users are recommended to upgrade to version 3.9.1 which fixes this issue.
+
+=== CVE-2026-76171 SSRF filter bypass in the JMAP PushSubscription web-push client
+
+In Apache James server prior version 3.9.1 improper validation in JMAP webPush SSRF validation did lead to the possibility to reach internal addresses.
+
+Users are recommended to upgrade to version 3.9.1 which fixes this issue.
+
+=== CVE-2026-85111 Denial of service upon MIME parsing
+
+Allocation of Resources Without Limits or Throttling in Apache James Mime4J library prior version 0.8.15 allows Denial of Service upon parsing Mime messages.
+
+Users are recommended to upgrade to Apache James server 3.9.1 that relies on fixed MIME4J 0.8.15 which addresses the issue.
+
+See CVE-2026-85108 in Apache James MIME4J library.
