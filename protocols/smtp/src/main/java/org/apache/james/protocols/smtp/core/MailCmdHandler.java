@@ -72,6 +72,13 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
             DSNStatus.getStatus(DSNStatus.PERMANENT,
                     DSNStatus.ADDRESS_SYNTAX_SENDER)
                     + " Syntax error in sender address").immutable();
+    /** RFC 6531 §4.2: 553 5.6.7 when a non-ASCII sender is given without SMTPUTF8. */
+    private static final Response NON_ASCII_SENDER_WITHOUT_SMTPUTF8 = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_MAILBOX,
+            DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.CONTENT_NON_ASCII_ADDR)
+                    + " Non-ASCII addresses not permitted without SMTPUTF8").immutable();
+    private static final Response INVALID_IDN_SENDER = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
+            DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.ADDRESS_SYNTAX_SENDER)
+                    + " Invalid A-label (xn--) in sender domain").immutable();
     /**
      * A map of parameterHooks
      */
@@ -104,11 +111,17 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
     private Response doMAIL(SMTPSession session) {
         StringBuilder responseBuffer = new StringBuilder();
         MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
+        // Echo the sender back in the exact form the client sent it. RFC 6531
+        // §3.7.4.2 restricts server responses to ASCII unless SMTPUTF8 is
+        // asserted, and also lets us preserve the client's choice of
+        // A-label (xn--) vs U-label when they sent ACE form.
+        String echo = session.getAttachment(SMTPSession.RAW_SENDER_STRING, State.Transaction)
+                .orElse(sender.asString());
         responseBuffer.append(
                 DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.ADDRESS_OTHER))
                 .append(" Sender <");
         if (!sender.isNullSender()) {
-            responseBuffer.append(sender.asString());
+            responseBuffer.append(echo);
         }
         responseBuffer.append("> OK");
 
@@ -203,8 +216,21 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                 LOGGER.info("Error parsing sender address: {}: did not start and end with < >", sender);
                 return SYNTAX_ERROR;
             }
+            String senderAddressString = removeBrackets(sender);
+            session.setAttachment(SMTPSession.RAW_SENDER_STRING, senderAddressString, State.Transaction);
+            if (AddressNormalization.containsNonAscii(senderAddressString)
+                    && !session.getAttachment(SMTPSession.SMTPUTF8_REQUESTED, State.Transaction).orElse(Boolean.FALSE)) {
+                LOGGER.info("Rejected non-ASCII sender address without SMTPUTF8: {}", sender);
+                return NON_ASCII_SENDER_WITHOUT_SMTPUTF8;
+            }
             try {
-                MaybeSender senderAddress = toMaybeSender(removeBrackets(sender));
+                senderAddressString = AddressNormalization.aceLabelsToUnicode(senderAddressString);
+            } catch (IllegalArgumentException e) {
+                LOGGER.info("Rejected sender address with invalid A-label: {}", sender);
+                return INVALID_IDN_SENDER;
+            }
+            try {
+                MaybeSender senderAddress = toMaybeSender(senderAddressString);
                 // Store the senderAddress in session map
                 session.setAttachment(SMTPSession.SENDER, senderAddress, State.Transaction);
             } catch (Exception pe) {

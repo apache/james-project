@@ -21,26 +21,14 @@ package org.apache.james.imapserver.netty;
 
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.Properties;
-
-import jakarta.mail.Folder;
-import jakarta.mail.Message;
-import jakarta.mail.Session;
-import jakarta.mail.Store;
-import jakarta.mail.search.AndTerm;
-import jakarta.mail.search.BodyTerm;
-import jakarta.mail.search.FromStringTerm;
-import jakarta.mail.search.RecipientStringTerm;
-import jakarta.mail.search.SearchTerm;
-import jakarta.mail.search.SubjectTerm;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -303,34 +291,27 @@ class IMAPServerSearchTest extends AbstractIMAPServerTest {
 
     @Test
     void searchingShouldSupportMultipleUTF8Criteria() throws Exception {
-        String host = "127.0.0.1";
-        Properties props = new Properties();
-        props.put("mail.debug", "true");
-        Session session = Session.getDefaultInstance(props, null);
-        Store store = session.getStore("imap");
-        store.connect(host, port, USER.asString(), USER_PASS);
-        Folder folder = store.getFolder("INBOX");
-        folder.open(Folder.READ_ONLY);
+        MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+        memoryIntegrationResources.getMailboxManager()
+            .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
-        SearchTerm subjectTerm = new SubjectTerm("java培训");
-        SearchTerm fromTerm = new FromStringTerm("采购");
-        SearchTerm recipientTerm = new RecipientStringTerm(Message.RecipientType.TO, "张三");
-        SearchTerm ccRecipientTerm = new RecipientStringTerm(Message.RecipientType.CC, "李四");
-        SearchTerm bccRecipientTerm = new RecipientStringTerm(Message.RecipientType.BCC, "王五");
-        SearchTerm bodyTerm = new BodyTerm("天天向上");
-        SearchTerm[] searchTerms = new SearchTerm[6];
-        searchTerms[0] = subjectTerm;
-        searchTerms[1] = bodyTerm;
-        searchTerms[2] = fromTerm;
-        searchTerms[3] = recipientTerm;
-        searchTerms[4] = ccRecipientTerm;
-        searchTerms[5] = bccRecipientTerm;
-        SearchTerm andTerm = new AndTerm(searchTerms);
+        enableUtf8AndSelectInbox();
 
-        assertThatCode(() -> folder.search(andTerm)).doesNotThrowAnyException();
+        // Six UTF-8 criteria in one command, each as an RFC 6855 literal of UTF-8
+        // octets. Driven over a raw socket rather than through jakarta.mail: once
+        // the server advertises UTF8=ACCEPT, angus-mail takes its supportsUtf8()
+        // branch and encodes search strings with ASCIIUtility.getBytes(), i.e.
+        // one truncated byte per char, so it never puts UTF-8 on the wire.
+        clientConnection.write(ByteBuffer.wrap(searchCommand("a3",
+            "SUBJECT", "java培训",
+            "BODY", "天天向上",
+            "FROM", "采购",
+            "TO", "张三",
+            "CC", "李四",
+            "BCC", "王五")));
 
-        folder.close(false);
-        store.close();
+        assertThat(String.join("", readStringUntil(clientConnection, s -> s.contains("a3 "))))
+            .contains("a3 OK");
     }
 
     @Test
@@ -353,20 +334,58 @@ class IMAPServerSearchTest extends AbstractIMAPServerTest {
                 "\r\n" +
                 "<p>=E5=A4=A9=E5=A4=A9=E5=90=91=E4=B8=8A<br></p>\r\n"), mailboxSession);
 
-        String host = "127.0.0.1";
-        Properties props = new Properties();
-        props.put("mail.debug", "true");
-        Session session = Session.getDefaultInstance(props, null);
-        Store store = session.getStore("imap");
-        store.connect(host, port, USER.asString(), USER_PASS);
-        Folder folder = store.getFolder("INBOX");
-        folder.open(Folder.READ_ONLY);
+        enableUtf8AndSelectInbox();
 
-        SearchTerm bodyTerm = new BodyTerm("天天向上");
+        clientConnection.write(ByteBuffer.wrap(searchCommand("a3", "BODY", "天天向上")));
 
-        assertThat(folder.search(bodyTerm)).hasSize(1);
+        assertThat(String.join("", readStringUntil(clientConnection, s -> s.contains("a3 "))))
+            .contains("* SEARCH 1")
+            .contains("a3 OK");
+    }
 
-        folder.close(false);
-        store.close();
+    @Test
+    void searchingAUtf8QuotedStringShouldComplete() throws Exception {
+        MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+        memoryIntegrationResources.getMailboxManager()
+            .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+        memoryIntegrationResources.getMailboxManager()
+            .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .appendMessage(MessageManager.AppendCommand.builder().build("Content-Type: text/plain; charset=UTF-8\r\n" +
+                "Subject: Test utf-8 charset\r\n" +
+                "\r\n" +
+                "天天向上\r\n"), mailboxSession);
+
+        enableUtf8AndSelectInbox();
+
+        clientConnection.write(ByteBuffer.wrap("a3 SEARCH BODY \"天天向上\" ALL\r\n".getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(String.join("", readStringUntil(clientConnection, s -> s.contains("a3 "))))
+            .contains("* SEARCH 1")
+            .contains("a3 OK");
+    }
+
+    private void enableUtf8AndSelectInbox() throws IOException {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a0 OK"));
+        clientConnection.write(ByteBuffer.wrap("a1 ENABLE UTF8=ACCEPT\r\n".getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a1 OK"));
+        clientConnection.write(ByteBuffer.wrap("a2 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a2 OK"));
+    }
+
+    /**
+     * Builds {@code <tag> SEARCH <key> {<octets>+}CRLF<utf-8 bytes> ... ALL CRLF},
+     * the wire form a UTF8=ACCEPT client is meant to send for non-ASCII criteria.
+     */
+    private byte[] searchCommand(String tag, String... keysAndValues) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        out.write((tag + " SEARCH").getBytes(StandardCharsets.US_ASCII));
+        for (int i = 0; i < keysAndValues.length; i += 2) {
+            byte[] value = keysAndValues[i + 1].getBytes(StandardCharsets.UTF_8);
+            out.write((" " + keysAndValues[i] + " {" + value.length + "+}\r\n").getBytes(StandardCharsets.US_ASCII));
+            out.write(value);
+        }
+        out.write(" ALL\r\n".getBytes(StandardCharsets.US_ASCII));
+        return out.toByteArray();
     }
 }

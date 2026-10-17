@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -87,6 +88,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     TestableMimeMessageWrapper mw = null;
     TestableMimeMessageWrapper onlyHeader = null;
     final String content = "Subject: foo\r\nContent-Transfer-Encoding2: plain";
+    final String contentUtf8 = "Subject: fée\r\nContent-Transfer-Encoding2: plain";
     final String sep = "\r\n\r\n";
     final String body = "bar\r\n";
 
@@ -274,6 +276,35 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     @Test
     public void testSize() throws MessagingException {
         assertThat(mw.getSize()).isEqualTo(body.length());
+    }
+
+    @Test
+    public void testSizeUtf8() throws Exception {
+        TestableMimeMessageWrapper message = getMessageFromSources(contentUtf8 + sep + body);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        message.writeTo(baos);
+
+        assertThat(message.getMessageSize())
+            .isEqualTo(baos.size());
+    }
+
+    @Test
+    public void testWriteToUtf8() throws Exception {
+        TestableMimeMessageWrapper message = getMessageFromSources(contentUtf8 + sep + body);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        message.writeTo(baos);
+
+        assertThat(baos.toString(StandardCharsets.UTF_8)).isEqualTo(contentUtf8 + sep + body);
+    }
+
+    @Test
+    public void testWriteToUtf8AfterHeaderModification() throws Exception {
+        TestableMimeMessageWrapper message = getMessageFromSources(contentUtf8 + sep + body);
+        message.addHeader("Another", "header");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        message.writeTo(baos);
+
+        assertThat(baos.toString(StandardCharsets.UTF_8)).contains("Subject: fée\r\n");
     }
 
     @Test
