@@ -33,7 +33,7 @@ import org.apache.james.GuiceJamesServer
 import org.apache.james.core.Username
 import org.apache.james.jmap.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder, identityIdOf}
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -451,6 +451,7 @@ trait EventSourceContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},

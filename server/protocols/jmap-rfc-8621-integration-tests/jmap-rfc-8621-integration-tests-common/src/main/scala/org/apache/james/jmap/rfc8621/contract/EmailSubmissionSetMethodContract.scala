@@ -39,7 +39,8 @@ import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.EmailSubmissionSetMethodContract.TestContext
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder, identityIdOf}
+import org.apache.james.junit.categories.BasicFeature
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
@@ -49,6 +50,7 @@ import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
+import org.junit.experimental.categories.Category
 import org.junit.jupiter.api.{BeforeEach, Test}
 import play.api.libs.json.{JsString, Json}
 
@@ -123,6 +125,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -203,6 +206,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -283,6 +287,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}"
          |         }
          |    }
@@ -357,6 +362,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -435,6 +441,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -513,6 +520,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -591,6 +599,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "bob.alias@${DOMAIN.asString}"},
@@ -670,6 +679,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -773,6 +783,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "#e1526",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -848,6 +859,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -902,8 +914,8 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
-         |           "identityId": "$bobAccountId",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
          |             "rcptTo": [{"email": "${andreUsername.asString}"}]
@@ -933,6 +945,224 @@ trait EmailSubmissionSetMethodContract {
   }
 
   @Test
+  def emailSubmissionSetCreateShouldAcceptCustomIdentityId(server: GuiceJamesServer): Unit = {
+    val messageId: MessageId = appendBobDraft(server, "test")
+
+    val identityCreation =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |    ["Identity/set", {
+         |      "accountId": "$bobAccountId",
+         |      "create": {
+         |        "i1": {
+         |          "name": "Bob custom",
+         |          "email": "${bobUsername.asString}"
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val customIdentityId: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(identityCreation)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .jsonPath()
+      .getString("methodResponses[0][1].created.i1.id")
+
+    val response = submit(messageId, Some(customIdentityId))
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].created.k1490")
+      .inPath("methodResponses[0][1].created")
+      .isEqualTo("""{"k1490": {}}""")
+  }
+
+  @Test
+  def setShouldRejectUnparsableIdentityId(server: GuiceJamesServer): Unit = {
+    val messageId: MessageId = appendBobDraft(server, "test")
+
+    val response = submit(messageId, Some("Iunknown0000"))
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo("""{
+                   |  "k1490": {
+                   |    "type": "invalidProperties",
+                   |    "description": "The identity to be used cannot be found",
+                   |    "properties": ["identityId"]
+                   |  }
+                   |}""".stripMargin)
+  }
+
+  @Test
+  def setShouldRejectUnknownIdentityId(server: GuiceJamesServer): Unit = {
+    val messageId: MessageId = appendBobDraft(server, "test")
+
+    val response = submit(messageId, Some(UUID.randomUUID().toString))
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo("""{
+                   |  "k1490": {
+                   |    "type": "invalidProperties",
+                   |    "description": "The identity to be used cannot be found",
+                   |    "properties": ["identityId"]
+                   |  }
+                   |}""".stripMargin)
+  }
+
+  @Test
+  @Category(Array(classOf[BasicFeature]))
+  def setShouldRejectIdentityIdOfOtherUsers(server: GuiceJamesServer): Unit = {
+    val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(andreUsername))
+    val rejectedMessageId: MessageId = appendBobDraft(server, "rejected")
+    val acceptedMessageId: MessageId = appendBobDraft(server, "accepted")
+
+    val response = submit(
+      "rejected" -> (rejectedMessageId, Some(identityIdOf(andreUsername))),
+      "accepted" -> (acceptedMessageId, Some(identityIdOf(bobUsername))))
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo("""{
+                   |  "rejected": {
+                   |    "type": "invalidProperties",
+                   |    "description": "The identity to be used cannot be found",
+                   |    "properties": ["identityId"]
+                   |  }
+                   |}""".stripMargin)
+    andreInboxShouldOnlyContain(server, andreInboxId, "accepted")
+  }
+
+  @Test
+  @Category(Array(classOf[BasicFeature]))
+  def setShouldRejectMissingIdentityId(server: GuiceJamesServer): Unit = {
+    val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(andreUsername))
+    val rejectedMessageId: MessageId = appendBobDraft(server, "rejected")
+    val acceptedMessageId: MessageId = appendBobDraft(server, "accepted")
+
+    val response = submit(
+      "rejected" -> (rejectedMessageId, None),
+      "accepted" -> (acceptedMessageId, Some(identityIdOf(bobUsername))))
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo("""{
+                   |  "rejected": {
+                   |    "type": "invalidProperties",
+                   |    "description": "Missing 'identityId' property",
+                   |    "properties": ["identityId"]
+                   |  }
+                   |}""".stripMargin)
+    andreInboxShouldOnlyContain(server, andreInboxId, "accepted")
+  }
+
+  private def appendBobDraft(server: GuiceJamesServer, subject: String): MessageId = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject(subject)
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    if (!mailboxProbe.listUserMailboxes(bobUsername.asString).contains(DefaultMailboxes.DRAFTS)) {
+      mailboxProbe.createMailbox(bobDraftsPath)
+    }
+    mailboxProbe.appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
+      .build(message))
+      .getMessageId
+  }
+
+  private def submit(messageId: MessageId, identityId: Option[String]): String =
+    submit("k1490" -> (messageId, identityId))
+
+  private def submit(creations: (String, (MessageId, Option[String]))*): String = {
+    val create: String = creations.map {
+      case (creationId, (messageId, identityId)) =>
+        s"""    "$creationId": {
+           |      ${identityId.map(id => s""""identityId": "$id",""").getOrElse("")}
+           |      "emailId": "${messageId.serialize}",
+           |      "envelope": {
+           |        "mailFrom": {"email": "${bobUsername.asString}"},
+           |        "rcptTo": [{"email": "${andreUsername.asString}"}]
+           |      }
+           |    }""".stripMargin
+    }.mkString(",\n")
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$bobAccountId",
+         |       "create": {
+         |$create
+         |       }
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+  }
+
+  private def andreInboxShouldOnlyContain(server: GuiceJamesServer, andreInboxId: MailboxId, subject: String): Unit = {
+    val requestAndre =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/query", {
+         |      "accountId": "$andreAccountId",
+         |      "filter": {"inMailbox": "${andreInboxId.serialize}"}
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "$andreAccountId",
+         |      "#ids": {"resultOf": "c1", "name": "Email/query", "path": "ids/*"},
+         |      "properties": ["subject"]
+         |    }, "c2"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`(
+        baseRequestSpecBuilder(server)
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
+          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+          .setBody(requestAndre)
+          .build, new ResponseSpecBuilder().build)
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .whenIgnoringPaths("methodResponses[1][1].list[*].id")
+        .inPath("methodResponses[1][1].list")
+        .isEqualTo(s"""[{"subject": "$subject"}]""")
+    }
+  }
+
+  @Test
   def onSuccessUpdateEmailShouldTriggerAnImplicitEmailSetCall(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
@@ -957,6 +1187,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1065,6 +1296,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1133,6 +1365,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1201,6 +1434,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1298,6 +1532,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1362,6 +1597,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1427,6 +1663,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$otherAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1483,6 +1720,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1527,6 +1765,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${randomMessageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1553,8 +1792,52 @@ trait EmailSubmissionSetMethodContract {
       .inPath("methodResponses[0][1].notCreated")
       .isEqualTo("""{
                    |  "k1490": {
-                   |    "type": "invalidArguments",
+                   |    "type": "invalidProperties",
                    |    "description": "The email to be sent cannot be found",
+                   |    "properties": ["emailId"]
+                   |  }
+                   |}""".stripMargin)
+  }
+
+  @Test
+  def setShouldRejectUnparsableEmailId(): Unit = {
+    val requestBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$bobAccountId",
+         |       "create": {
+         |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
+         |           "emailId": "Munknown0000",
+         |           "envelope": {
+         |             "mailFrom": {"email": "${bobUsername.asString}"},
+         |             "rcptTo": [{"email": "${andreUsername.asString}"}]
+         |           }
+         |         }
+         |    }
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestBob)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].notCreated.k1490.description")
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo("""{
+                   |  "k1490": {
+                   |    "type": "invalidProperties",
                    |    "properties": ["emailId"]
                    |  }
                    |}""".stripMargin)
@@ -1585,6 +1868,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1622,6 +1906,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${randomMessageId.serialize}",
          |           "extra": true,
          |           "envelope": {
@@ -1681,6 +1966,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1707,7 +1993,7 @@ trait EmailSubmissionSetMethodContract {
       .inPath("methodResponses[0][1].notCreated")
       .isEqualTo("""{
                    |  "k1490": {
-                   |    "type": "invalidArguments",
+                   |    "type": "invalidProperties",
                    |    "description": "The email to be sent cannot be found",
                    |    "properties": ["emailId"]
                    |  }
@@ -1742,6 +2028,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1817,6 +2104,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1874,6 +2162,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1929,6 +2218,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -1986,6 +2276,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${andreUsername.asString}"},
@@ -2044,6 +2335,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -2105,6 +2397,7 @@ trait EmailSubmissionSetMethodContract {
            |       "accountId": "$bobAccountId",
            |       "create": {
            |         "k1490": {
+           |           "identityId": "${identityIdOf(bobUsername)}",
            |           "emailId": "${messageId.serialize}",
            |           "envelope": {
            |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -2164,6 +2457,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${randomMessageId.serialize}",
          |           "extra": true,
          |           "envelope": {
@@ -2227,6 +2521,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${randomMessageId.serialize}",
          |           "extra": true,
          |           "envelope": {
@@ -2329,6 +2624,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "#e1526",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -2458,6 +2754,7 @@ trait EmailSubmissionSetMethodContract {
          |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
@@ -2525,6 +2822,7 @@ trait EmailSubmissionSetMethodContract {
        |       "create": {
        |         "k1490": {
        |           "emailId": "${messageId.serialize}",
+       |           "identityId": "${identityIdOf(bobUsername)}",
        |           "envelope": {
        |             "mailFrom": {"email": "${bobUsername.asString}", "parameters": $parameters},
        |             "rcptTo": [{"email": "${andreUsername.asString}"}]
@@ -2611,6 +2909,7 @@ trait EmailSubmissionSetMethodContract {
          |       "create": {
          |         "k1490": {
          |           "emailId": "${messageId.serialize}",
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
          |             "rcptTo": [{"email": "${andreUsername.asString}"}]
@@ -2673,6 +2972,7 @@ trait EmailSubmissionSetMethodContract {
          |       "create": {
          |         "k1490": {
          |           "emailId": "${messageId.serialize}",
+         |           "identityId": "${identityIdOf(bobUsername)}",
          |           "envelope": {
          |             "mailFrom": {"email": "${bobUsername.asString}"},
          |             "rcptTo": [{"email": "${andreUsername.asString}"}]

@@ -10,8 +10,8 @@ An **EmailSubmission** object represents the submission of an Email for delivery
 - **identityId**: `Id` (immutable)
   The id of the Identity to associate with this submission.
 
-> :warning:
-> Not implemented. Submissions cannot be created with identityId. This field should be omitted.
+> :information_source:
+> James requires this field. A submission whose identityId is missing, or is not one of the user's identities, is rejected with an `invalidProperties` SetError.
 
 - **emailId**: `Id` (immutable)
   The id of the Email to send. The Email being sent does not have to be a draft, for example, when "redirecting" an existing Email to a different address.

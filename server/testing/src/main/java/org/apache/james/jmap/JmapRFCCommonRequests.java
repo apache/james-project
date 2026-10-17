@@ -22,8 +22,10 @@ package org.apache.james.jmap;
 import static io.restassured.RestAssured.with;
 import static io.restassured.http.ContentType.JSON;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.james.core.Username;
@@ -36,6 +38,9 @@ import io.restassured.path.json.JsonPath;
 
 public class JmapRFCCommonRequests {
     public record UserCredential(Username username, String password, String accountId) {
+        public String identityId() {
+            return UUID.nameUUIDFromBytes(username.asString().getBytes(StandardCharsets.UTF_8)).toString();
+        }
     }
     public static final Header ACCEPT_JMAP_RFC_HEADER = new Header("accept", "application/json; jmapVersion=rfc-8621");
 
