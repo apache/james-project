@@ -34,6 +34,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.ChunkMarker;
 import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
 import org.slf4j.Logger;
@@ -274,6 +275,7 @@ public class BloomFilterGCAlgorithm {
     private Mono<Result> gc(BloomFilter<CharSequence> bloomFilter, BucketName bucketName, Context context, int deletionWindowSize) {
         return Flux.from(blobStoreDAO.listBlobs(bucketName))
             .doOnNext(blobId -> context.incrementBlobCount())
+            .filter(blobId -> !ChunkMarker.isChunkId(blobId))
             .flatMap(blobId -> Mono.fromCallable(() -> blobIdFactory.parse(blobId.asString())))
             .filter(blobId -> {
                 if (blobId instanceof GenerationAware generationAware) {
