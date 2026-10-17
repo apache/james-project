@@ -3198,6 +3198,104 @@ Where:
 filter in later runs.
 - *gcedBlobCount* is the count of blobs that were garbage collected.
 
+== Running blob object compaction
+
+NOTE: S3 Object Compaction is available only on the *Distributed Server* deployment using S3/MinIO Object Storage, without client-side encryption or whole-blob compression.
+
+WARNING: Once compaction has created multi-slot chunk objects in S3, enabling client-side encryption (AES) in `blobstore.properties` is unsupported and will render previously compacted chunk blobs unreadable.
+
+In large installations backed by S3 object storage, storing large numbers of small
+blobs can lead to high S3 request billing and slow bucket listings. Object compaction
+allows administrators to pack standalone blobs from historical generations into large
+chunk objects, serving individual blobs via HTTP ranged reads.
+
+=== Initial Compaction
+
+To compact standalone blobs of a completed generation into chunk objects:
+
+....
+curl -XDELETE "http://ip:port/blobs?action=initial-compaction&generation=1"
+....
+
+link:#_endpoints_returning_a_task[More details about endpoints returning a task].
+
+Query parameters:
+
+- *action*: (Compulsory) `initial-compaction`.
+- *generation*: (Compulsory) The integer epoch generation to compact. Must be a completed historical generation strictly less than `currentGeneration - 1` (the active generation and preceding 1-generation grace period are protected against concurrent in-flight writes, and will be rejected with HTTP 400).
+- *family*: (Optional) Storage policy family identifier.
+
+The created task has the following additional information:
+
+....
+{
+  "type": "InitialBlobCompactionTask",
+  "generation": 1,
+  "family": 1,
+  "packedBlobs": 12500,
+  "createdChunks": 5,
+  "freedBytes": 524288000
+}
+....
+
+=== GC Recompaction (Purge & Merge)
+
+When messages are expunged over time, slots within compacted chunks become dead.
+GC recompaction scans existing chunks, purges dead slots by rewriting live slots
+into new compact chunks, and merges undersized chunks:
+
+....
+curl -XDELETE "http://ip:port/blobs?action=re-compaction&generation=1"
+....
+
+Query parameters:
+
+- *action*: (Compulsory) `re-compaction`.
+- *generation*: (Compulsory) The integer epoch generation to recompact.
+- *family*: (Optional) Storage policy family identifier.
+
+The created task has the following additional information:
+
+....
+{
+  "type": "GCBlobCompactionTask",
+  "generation": 1,
+  "family": 1,
+  "deadPurged": 450,
+  "chunksMerged": 2,
+  "freedBytes": 20971520
+}
+....
+
+=== Full Compaction (Initial + GC)
+
+To run both initial compaction and GC recompaction sequentially:
+
+....
+curl -XDELETE "http://ip:port/blobs?action=compaction&generation=1"
+....
+
+Query parameters:
+
+- *action*: (Compulsory) `compaction`.
+- *generation*: (Compulsory) The integer epoch generation to compact.
+- *family*: (Optional) Storage policy family identifier.
+
+The created task has the following additional information:
+
+....
+{
+  "type": "BlobCompactionTask",
+  "generation": 1,
+  "family": 1,
+  "packedBlobs": 12500,
+  "createdChunks": 5,
+  "deadPurged": 450,
+  "chunksMerged": 2,
+  "freedBytes": 545259520
+}
+....
+
 endif::[]
 == Administrating Recipient rewriting
 
