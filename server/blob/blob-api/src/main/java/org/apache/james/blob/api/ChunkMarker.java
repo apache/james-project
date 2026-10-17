@@ -29,8 +29,14 @@ import java.util.regex.Pattern;
  * responsibility of the compaction module.</p>
  */
 public final class ChunkMarker {
+    private static final String FAMILY = "[1-9]\\d*";
+    private static final String GENERATION = "\\d+";
+    private static final String CHUNK_MARKER = "chunk";
+    private static final String REMAINDER = ".*";
+    private static final String UNDERSCORE_LAYOUT = "_" + GENERATION + "_" + CHUNK_MARKER;
+    private static final String MINIO_LAYOUT = "/" + GENERATION + "/" + CHUNK_MARKER;
     private static final Pattern CHUNK_ID_PATTERN = Pattern.compile(
-        "^[1-9]\\d*(?:_\\d+_chunk|/\\d+/chunk).*$");
+        "^" + FAMILY + "(?:" + UNDERSCORE_LAYOUT + "|" + MINIO_LAYOUT + ")" + REMAINDER + "$");
 
     private ChunkMarker() {
     }
