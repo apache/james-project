@@ -828,13 +828,22 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     public Mono<Boolean> tryChannel() {
         return Mono.usingWhen(borrow(),
             channel -> Mono.just(channel.isOpen()),
-            channel -> {
-                if (channel != null) {
-                    PooledRef<? extends Channel> pooledRef = refs.remove(channel.getChannelNumber());
-                    return pooledRef.release();
-                }
-                return Mono.empty();
-            })
+            channel -> releaseChannel(channel),
+            (channel, error) -> releaseChannel(channel),
+            channel -> releaseChannel(channel))
             .onErrorResume(any -> Mono.just(false));
+    }
+
+    private Mono<Void> releaseChannel(Channel channel) {
+        if (channel != null) {
+            PooledRef<? extends Channel> pooledRef = refs.remove(channel.getChannelNumber());
+            if (pooledRef != null) {
+                if (!channel.isOpen()) {
+                    return pooledRef.invalidate();
+                }
+                return pooledRef.release();
+            }
+        }
+        return Mono.empty();
     }
 }
