@@ -412,7 +412,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
   private def validateTextBody(blobResolvers: BlobResolvers, mailboxSession: MailboxSession): SMono[ClientBodyPart] =
     textBody match {
       case None => SMono.empty
-      case Some(text :: Nil) if !text.`type`.value.equals("text/plain") => SMono.error(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
+      case Some(text :: Nil) if !text.`type`.value.equals("text/plain") => SMono.error(new IllegalArgumentException("Expecting textBody type to be text/plain"))
       case Some(text :: Nil) => retrieveCorrespondingBody(text, blobResolvers, mailboxSession)
         .switchIfEmpty(SMono.error(new IllegalArgumentException("Expecting bodyValues to contain the part specified in textBody")))
       case _ => SMono.error(new IllegalArgumentException("Expecting textBody to contains only 1 part"))
