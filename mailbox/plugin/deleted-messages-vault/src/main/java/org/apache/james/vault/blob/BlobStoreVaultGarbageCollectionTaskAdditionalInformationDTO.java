@@ -37,6 +37,7 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
             type,
             additionalInformation.getBeginningOfRetentionPeriod().toString(),
             additionalInformation.getDeletedBuckets(),
+            additionalInformation.getDeletedBlobs(),
             additionalInformation.timestamp()
         );
     }
@@ -61,6 +62,7 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
 
     private final String beginningOfRetentionPeriod;
     private final Collection<String> deletedBuckets;
+    private final int deletedBlobs;
     private final String type;
     private final Instant timestamp;
 
@@ -68,10 +70,12 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
         @JsonProperty("type") String type,
         @JsonProperty("beginningOfRetentionPeriod") String beginningOfRetentionPeriod,
         @JsonProperty("deletedBuckets") Collection<String> deletedBuckets,
+        @JsonProperty("deletedBlobs") int deletedBlobs,
         @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
         this.deletedBuckets = deletedBuckets;
+        this.deletedBlobs = deletedBlobs;
         this.timestamp = timestamp;
     }
 
@@ -82,6 +86,7 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
                 .stream()
                 .map(BucketName::of)
                 .collect(ImmutableSet.toImmutableSet()),
+            deletedBlobs,
             timestamp);
     }
 
@@ -91,6 +96,10 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
 
     public Collection<String> getDeletedBuckets() {
         return deletedBuckets;
+    }
+
+    public int getDeletedBlobs() {
+        return deletedBlobs;
     }
 
     @Override
