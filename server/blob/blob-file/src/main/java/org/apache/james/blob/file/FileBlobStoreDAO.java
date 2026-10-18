@@ -35,10 +35,12 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -121,6 +123,39 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
                 File blob = getBlobFile(bucketName, blobId);
                 return BytesBlob.of(FileUtils.readFileToByteArray(blob), readMetadata(blob.toPath()));
             }).onErrorResume(NoSuchFileException.class, e -> Mono.error(new ObjectNotFoundException(String.format("Cannot locate %s within %s", blobId.asString(), bucketName.asString()), e)))
+            .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @Override
+    public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, Optional<Long> end) {
+        Preconditions.checkArgument(start >= 0, "'start' must be non-negative");
+        end.ifPresent(value -> Preconditions.checkArgument(value >= start,
+            "'end' (%s) must be greater than or equal to 'start' (%s)", value, start));
+
+        return Mono.<Blob>fromCallable(() -> {
+                Path path = getBlobFile(bucketName, blobId).toPath();
+                try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+                    long totalSize = channel.size();
+                    Preconditions.checkArgument(start < totalSize,
+                        "'start' (%s) must be smaller than the object size (%s)", start, totalSize);
+                    long lastByte = end.map(value -> Math.min(value, totalSize - 1)).orElse(totalSize - 1);
+                    long length = lastByte - start + 1;
+                    Preconditions.checkArgument(length <= Integer.MAX_VALUE, "Requested range is too large for an in-memory read: %s", length);
+
+                    BlobMetadata metadata = readMetadata(path).withTotalObjectSize(totalSize);
+                    ByteBuffer buffer = ByteBuffer.allocate((int) length);
+                    channel.position(start);
+                    while (buffer.hasRemaining()) {
+                        if (channel.read(buffer) == -1) {
+                            throw new ObjectStoreIOException("Unexpected end of file while reading range from " + path);
+                        }
+                    }
+                    return BytesBlob.of(buffer.array(), metadata);
+                }
+            })
+            .onErrorMap(NoSuchFileException.class, e -> new ObjectNotFoundException(
+                String.format("Cannot locate %s within %s", blobId.asString(), bucketName.asString()), e))
+            .onErrorMap(IOException.class, e -> new ObjectStoreIOException("IOException occurred while reading blob range", e))
             .subscribeOn(Schedulers.boundedElastic());
     }
 

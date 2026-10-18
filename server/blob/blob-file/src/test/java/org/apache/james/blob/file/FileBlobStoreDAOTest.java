@@ -19,6 +19,17 @@
 
 package org.apache.james.blob.file;
 
+import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Optional;
+
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.BlobStoreDAORangeReadContract;
@@ -36,15 +47,44 @@ import org.junit.jupiter.params.provider.MethodSource;
 class FileBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract, BlobStoreDAORangeReadContract {
 
     private FileBlobStoreDAO blobStore;
+    private FileSystemImpl fileSystem;
 
     @BeforeEach
     void setUp() throws Exception {
-        blobStore = new FileBlobStoreDAO(FileSystemImpl.forTesting(), new PlainBlobId.Factory());
+        fileSystem = FileSystemImpl.forTesting();
+        blobStore = new FileBlobStoreDAO(fileSystem, new PlainBlobId.Factory());
     }
 
     @Override
     public BlobStoreDAO testee() {
         return blobStore;
+    }
+
+    @Test
+    void readRangeShouldSeekBeyondTwoGigabytesWithoutReadingWholeFile() throws Exception {
+        BlobId blobId = new PlainBlobId("large-sparse-blob");
+        Path bucket = fileSystem.getFile("file://var/blob").toPath().resolve(TEST_BUCKET_NAME.asString());
+        Files.createDirectories(bucket);
+        Path file = bucket.resolve(blobId.asString());
+        long offset = (long) Integer.MAX_VALUE + 128;
+        byte[] content = {1, 2, 3, 4};
+
+        try {
+            try (FileChannel channel = FileChannel.open(file, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE, StandardOpenOption.SPARSE)) {
+                channel.position(offset);
+                ByteBuffer buffer = ByteBuffer.wrap(content);
+                while (buffer.hasRemaining()) {
+                    channel.write(buffer);
+                }
+            }
+
+            BlobStoreDAO.Blob slice = blobStore.readRange(TEST_BUCKET_NAME, blobId, offset, Optional.of(offset + 3)).block();
+
+            assertThat(slice.asBytes().payload()).isEqualTo(content);
+            assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(offset + content.length);
+        } finally {
+            Files.deleteIfExists(file);
+        }
     }
 
     @Override
