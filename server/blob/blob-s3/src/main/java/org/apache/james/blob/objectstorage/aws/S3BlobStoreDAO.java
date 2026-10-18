@@ -261,19 +261,12 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     private static void validateRange(long start, long end) {
-        if (start < 0) {
-            Preconditions.checkArgument(start != Long.MIN_VALUE, "'start' must be greater than %s", Long.MIN_VALUE);
-            Preconditions.checkArgument(end == -1, "'end' must be -1 for a suffix range");
-            return;
-        }
+        Preconditions.checkArgument(start >= 0, "'start' must be non-negative");
         Preconditions.checkArgument(end == -1 || end >= start,
             "'end' (%s) must be -1 or greater than or equal to 'start' (%s)", end, start);
     }
 
     private static String formatRangeHeader(long start, long end) {
-        if (start < 0) {
-            return "bytes=" + start;
-        }
         if (end == -1) {
             return "bytes=" + start + "-";
         }

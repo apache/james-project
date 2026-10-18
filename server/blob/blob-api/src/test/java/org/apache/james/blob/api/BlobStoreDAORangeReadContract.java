@@ -69,10 +69,9 @@ public interface BlobStoreDAORangeReadContract {
     }
 
     @Test
-    default void readRangeShouldReturnSuffix() throws IOException {
-        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), -100, -1).block();
-
-        assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(sampleContent(), 900, 1000));
+    default void readRangeShouldRejectNegativeStart() {
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), -1, -1).block())
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -125,11 +124,9 @@ public interface BlobStoreDAORangeReadContract {
     }
 
     @Test
-    default void readRangeShouldCapSuffixAtObjectSize() throws IOException {
-        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), -2000, -1).block();
-
-        assertThat(slice.asBytes().payload()).isEqualTo(sampleContent());
-        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(1000);
+    default void readRangeShouldRejectNegativeStartWithBoundedEnd() {
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), -1, 0).block())
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -164,13 +161,13 @@ public interface BlobStoreDAORangeReadContract {
     }
 
     @Test
-    default void readRangeShouldRejectSuffixWithExplicitEnd() {
-        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), -100, 99).block())
+    default void readRangeShouldRejectNegativeEndOtherThanMinusOne() {
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 0, -2).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    default void readRangeShouldRejectUnrepresentableSuffixLength() {
+    default void readRangeShouldRejectMinimumStart() {
         assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), Long.MIN_VALUE, -1).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
