@@ -246,7 +246,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+    public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, java.util.Optional<Long> end) {
         validateRange(start, end);
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
         String rangeHeader = formatRangeHeader(start, end);
@@ -260,17 +260,14 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause);
     }
 
-    private static void validateRange(long start, long end) {
+    private static void validateRange(long start, java.util.Optional<Long> end) {
         Preconditions.checkArgument(start >= 0, "'start' must be non-negative");
-        Preconditions.checkArgument(end == -1 || end >= start,
-            "'end' (%s) must be -1 or greater than or equal to 'start' (%s)", end, start);
+        end.ifPresent(value -> Preconditions.checkArgument(value >= start,
+            "'end' (%s) must be greater than or equal to 'start' (%s)", value, start));
     }
 
-    private static String formatRangeHeader(long start, long end) {
-        if (end == -1) {
-            return "bytes=" + start + "-";
-        }
-        return "bytes=" + start + "-" + end;
+    private static String formatRangeHeader(long start, java.util.Optional<Long> end) {
+        return "bytes=" + start + "-" + end.map(String::valueOf).orElse("");
     }
 
     private static boolean isRangeNotSatisfiable(Throwable throwable) {

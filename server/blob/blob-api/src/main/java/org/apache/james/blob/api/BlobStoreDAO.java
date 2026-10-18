@@ -331,14 +331,14 @@ public interface BlobStoreDAO {
     /**
      * Reads an inclusive byte range while preserving the blob metadata.
      *
-     * <p>{@code start} must be a non-negative byte offset. {@code end} is either an inclusive byte offset or
-     * {@code -1} to read through the end of the object. Implementations capable of backend range requests should
-     * override this method.</p>
+     * <p>{@code start} must be a non-negative byte offset. {@code end}, when present, is an inclusive byte offset
+     * greater than or equal to {@code start}. An empty {@code end} reads through the end of the object.
+     * Implementations capable of backend range requests should override this method.</p>
      *
      * @return the requested bytes, its original metadata, and {@link #TOTAL_OBJECT_SIZE} metadata
      * @throws IllegalArgumentException when the range is malformed or starts beyond the end of the object
      */
-    default Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, long end) {
+    default Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, Optional<Long> end) {
         validateRange(start, end);
 
         return Mono.from(readBytes(bucketName, blobId))
@@ -352,10 +352,10 @@ public interface BlobStoreDAO {
             });
     }
 
-    private static void validateRange(long start, long end) {
+    private static void validateRange(long start, Optional<Long> end) {
         Preconditions.checkArgument(start >= 0, "'start' must be non-negative");
-        Preconditions.checkArgument(end == -1 || end >= start,
-            "'end' (%s) must be -1 or greater than or equal to 'start' (%s)", end, start);
+        end.ifPresent(value -> Preconditions.checkArgument(value >= start,
+            "'end' (%s) must be greater than or equal to 'start' (%s)", value, start));
     }
 
     private static int rangeStart(long start, long totalSize) {
@@ -365,10 +365,8 @@ public interface BlobStoreDAO {
         return (int) start;
     }
 
-    private static int rangeEndExclusive(long end, long totalSize) {
-        if (end == -1) {
-            return (int) totalSize;
-        }
-        return end >= totalSize - 1 ? (int) totalSize : (int) (end + 1);
+    private static int rangeEndExclusive(Optional<Long> end, long totalSize) {
+        return end.map(value -> value >= totalSize - 1 ? (int) totalSize : (int) (value + 1))
+            .orElse((int) totalSize);
     }
 }
