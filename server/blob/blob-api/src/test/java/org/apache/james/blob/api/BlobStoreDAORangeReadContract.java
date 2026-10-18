@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ public interface BlobStoreDAORangeReadContract {
 
     @Test
     default void readRangeShouldReturnAnInclusivePrefixAndPreserveMetadata() throws IOException {
-        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 0, 99).block();
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 0, Optional.of(99L)).block();
 
         assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(sampleContent(), 0, 100));
         assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(1000);
@@ -63,33 +64,33 @@ public interface BlobStoreDAORangeReadContract {
 
     @Test
     default void readRangeShouldReturnAnInclusiveMiddleRange() throws IOException {
-        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 200, 399).block();
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 200, Optional.of(399L)).block();
 
         assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(sampleContent(), 200, 400));
     }
 
     @Test
     default void readRangeShouldRejectNegativeStart() {
-        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), -1, -1).block())
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), -1, Optional.empty()).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    default void readRangeShouldReadThroughTheEndWhenEndIsMinusOne() throws IOException {
-        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 900, -1).block();
+    default void readRangeShouldReadThroughTheEndWhenEndIsAbsent() throws IOException {
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 900, Optional.empty()).block();
 
         assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(sampleContent(), 900, 1000));
     }
 
     @Test
     default void readRangeShouldFailWhenStartIsBeyondObjectSize() {
-        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 2000, 3000).block())
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 2000, Optional.of(3000L)).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     default void readRangeShouldRejectInvalidRange() {
-        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 300, 299).block())
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 300, Optional.of(299L)).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -101,7 +102,7 @@ public interface BlobStoreDAORangeReadContract {
             .withMetadata(new BlobStoreDAO.BlobMetadataName("custom"), new BlobStoreDAO.BlobMetadataValue("retained"));
         Mono.from(testee().save(TEST_BUCKET_NAME, blobId, BlobStoreDAO.BytesBlob.of(sampleContent(), metadata))).block();
 
-        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, blobId, 0, 9).block();
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, blobId, 0, Optional.of(9L)).block();
 
         assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(1000);
         assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(sampleContent(), 0, 10));
@@ -111,21 +112,21 @@ public interface BlobStoreDAORangeReadContract {
 
     @Test
     default void readRangeShouldReturnSingleByte() throws IOException {
-        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 25, 25).block();
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 25, Optional.of(25L)).block();
 
         assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(sampleContent(), 25, 26));
     }
 
     @Test
     default void readRangeShouldCapEndAtObjectSize() throws IOException {
-        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 900, Long.MAX_VALUE).block();
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 900, Optional.of(Long.MAX_VALUE)).block();
 
         assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(sampleContent(), 900, 1000));
     }
 
     @Test
     default void readRangeShouldRejectNegativeStartWithBoundedEnd() {
-        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), -1, 0).block())
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), -1, Optional.of(0L)).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -134,7 +135,7 @@ public interface BlobStoreDAORangeReadContract {
         BlobId blobId = new TestBlobId.Factory().of(UUID.randomUUID().toString());
         Mono.from(testee().save(TEST_BUCKET_NAME, blobId, BlobStoreDAO.BytesBlob.of(new byte[0]))).block();
 
-        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, blobId, 0, 0).block())
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, blobId, 0, Optional.of(0L)).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -143,32 +144,40 @@ public interface BlobStoreDAORangeReadContract {
         createSampleBlob();
         BlobId blobId = new TestBlobId.Factory().of(UUID.randomUUID().toString());
 
-        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, blobId, 0, 9).block())
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, blobId, 0, Optional.of(9L)).block())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
     @Test
     default void readRangeShouldReturnWholeObject() throws IOException {
-        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 0, 999).block();
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 0, Optional.of(999L)).block();
 
         assertThat(slice.asBytes().payload()).isEqualTo(sampleContent());
     }
 
     @Test
     default void readRangeShouldFailWhenStartEqualsObjectSize() {
-        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 1000, 1000).block())
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 1000, Optional.of(1000L)).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    default void readRangeShouldRejectNegativeEndOtherThanMinusOne() {
-        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 0, -2).block())
+    default void readRangeShouldReturnWholeObjectWhenEndIsAbsent() throws IOException {
+        BlobStoreDAO.Blob slice = testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 0, Optional.empty()).block();
+
+        assertThat(slice.asBytes().payload()).isEqualTo(sampleContent());
+        assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(sampleContent().length);
+    }
+
+    @Test
+    default void readRangeShouldRejectNegativeEnd() {
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), 0, Optional.of(-1L)).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     default void readRangeShouldRejectMinimumStart() {
-        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), Long.MIN_VALUE, -1).block())
+        assertThatThrownBy(() -> testee().readRange(TEST_BUCKET_NAME, createSampleBlob(), Long.MIN_VALUE, Optional.empty()).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -176,7 +185,7 @@ public interface BlobStoreDAORangeReadContract {
     default void readRangeShouldFailForMissingBucket() {
         BlobId blobId = createSampleBlob();
 
-        assertThatThrownBy(() -> testee().readRange(BucketName.of("missing-" + UUID.randomUUID()), blobId, 0, 9).block())
+        assertThatThrownBy(() -> testee().readRange(BucketName.of("missing-" + UUID.randomUUID()), blobId, 0, Optional.of(9L)).block())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 }

@@ -31,6 +31,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Stream;
 
@@ -76,7 +77,7 @@ public interface ZstdBlobStoreDAOContract extends BlobStoreDAOContract, Metadata
         assertThat(Mono.from(underlying().readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().contentEncoding())
             .contains(BlobStoreDAO.ContentEncoding.ZSTD);
 
-        BlobStoreDAO.Blob slice = compressedStore.readRange(TEST_BUCKET_NAME, TEST_BLOB_ID, 200, 399).block();
+        BlobStoreDAO.Blob slice = compressedStore.readRange(TEST_BUCKET_NAME, TEST_BLOB_ID, 200, Optional.of(399L)).block();
 
         assertThat(slice.asBytes().payload()).isEqualTo(Arrays.copyOfRange(sampleContent(), 200, 400));
         assertThat(BlobStoreDAO.totalObjectSize(slice)).isEqualTo(sampleContent().length);
