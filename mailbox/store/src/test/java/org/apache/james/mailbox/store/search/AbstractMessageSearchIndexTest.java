@@ -1544,6 +1544,43 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void deletingConsecutiveUidsShouldKeepOtherMessagesSearchable() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "consecutive");
+        storeMailboxManager.createMailbox(mailboxPath, session);
+
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+        ComposedMessageId message1 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session).getId();
+        ComposedMessageId message2 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session).getId();
+        ComposedMessageId message3 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session).getId();
+        ComposedMessageId message4 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session).getId();
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 17);
+
+        messageManager.delete(ImmutableList.of(message2.getUid(), message3.getUid()), session);
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 15);
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.matchAll(), session)).toStream())
+            .containsExactly(message1.getUid(), message4.getUid());
+    }
+
+    @Test
     void searchShouldOrderBySentDateThenInternalDateWhenSortOnSentDateAndNonHomogeneousCorrespondingHeader() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "sentDate");
         storeMailboxManager.createMailbox(mailboxPath, session);
