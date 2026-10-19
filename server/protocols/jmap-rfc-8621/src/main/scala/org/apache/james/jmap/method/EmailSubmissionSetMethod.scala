@@ -366,13 +366,15 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       EmailSubmissionCreationResponse(submissionId, sendAt) -> request.emailId
     }
 
-  private def validateIdentity(mailboxSession: MailboxSession, maybeIdentityId: Option[Id]): SMono[Identity] =
+  // A missing identityId is tolerated as some clients omit it; a wrong one is rejected
+  private def validateIdentity(mailboxSession: MailboxSession, maybeIdentityId: Option[Id]): SMono[Option[Identity]] =
     maybeIdentityId
       .map(id => UnparsedIdentityId(id).validate
         .fold(_ => SMono.empty[Identity],
           identityId => identityResolver.resolveIdentityId(identityId, mailboxSession).flatMap(SMono.justOrEmpty(_)))
-        .switchIfEmpty(SMono.error(IdentityNotFoundException("The identity to be used cannot be found"))))
-      .getOrElse(SMono.error(IdentityNotFoundException("Missing 'identityId' property")))
+        .switchIfEmpty(SMono.error(IdentityNotFoundException("The identity to be used cannot be found")))
+        .map(Option(_)))
+      .getOrElse(SMono.just(None))
 
   /**
    * Runs the pluggable validations against the mail about to be spooled. The first rejection wins,

@@ -1042,24 +1042,16 @@ trait EmailSubmissionSetMethodContract {
 
   @Test
   @Category(Array(classOf[BasicFeature]))
-  def setShouldRejectMissingIdentityId(server: GuiceJamesServer): Unit = {
+  def setShouldAcceptMissingIdentityId(server: GuiceJamesServer): Unit = {
     val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(andreUsername))
-    val rejectedMessageId: MessageId = appendBobDraft(server, "rejected")
-    val acceptedMessageId: MessageId = appendBobDraft(server, "accepted")
+    val messageId: MessageId = appendBobDraft(server, "accepted")
 
-    val response = submit(
-      "rejected" -> (rejectedMessageId, None),
-      "accepted" -> (acceptedMessageId, Some(identityIdOf(bobUsername))))
+    val response = submit("accepted" -> (messageId, None))
 
     assertThatJson(response)
-      .inPath("methodResponses[0][1].notCreated")
-      .isEqualTo("""{
-                   |  "rejected": {
-                   |    "type": "invalidProperties",
-                   |    "description": "Missing 'identityId' property",
-                   |    "properties": ["identityId"]
-                   |  }
-                   |}""".stripMargin)
+      .whenIgnoringPaths("methodResponses[0][1].created.accepted")
+      .inPath("methodResponses[0][1].created")
+      .isEqualTo("""{"accepted": {}}""")
     andreInboxShouldOnlyContain(server, andreInboxId, "accepted")
   }
 
