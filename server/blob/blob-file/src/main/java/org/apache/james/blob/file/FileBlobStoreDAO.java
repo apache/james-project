@@ -128,9 +128,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Mono<Blob> readRange(BucketName bucketName, BlobId blobId, long start, Optional<Long> end) {
-        Preconditions.checkArgument(start >= 0, "'start' must be non-negative");
-        end.ifPresent(value -> Preconditions.checkArgument(value >= start,
-            "'end' (%s) must be greater than or equal to 'start' (%s)", value, start));
+        BlobStoreDAO.validateRange(start, end);
 
         return Mono.<Blob>fromCallable(() -> {
                 Path path = getBlobFile(bucketName, blobId).toPath();
