@@ -839,7 +839,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             case FROM -> LongPoint.newRangeQuery(UID_FIELD,
                 range.getUidFrom().asLong(),
                 MessageUid.MAX_VALUE.asLong());
-            default -> LongPoint.newRangeQuery(UID_FIELD, MessageUid.MIN_VALUE.asLong(), MessageUid.MAX_VALUE.asLong());
+            case ALL -> LongPoint.newRangeQuery(UID_FIELD, MessageUid.MIN_VALUE.asLong(), MessageUid.MAX_VALUE.asLong());
         };
     }
 
