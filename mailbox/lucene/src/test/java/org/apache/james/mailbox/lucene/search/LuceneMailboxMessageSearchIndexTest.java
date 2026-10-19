@@ -218,6 +218,25 @@ class LuceneMailboxMessageSearchIndexTest {
     }
 
     @Test
+    void deletingConsecutiveUidsShouldKeepOtherMessagesSearchable() throws Exception {
+        TestId draftsId = TestId.of(3);
+        Mailbox drafts = new Mailbox(MailboxPath.forUser(BOB, "drafts"), UidValidity.of(20), draftsId);
+        for (int i = 1; i <= 5; i++) {
+            MessageBuilder builder = new MessageBuilder()
+                .header("Subject", "draft " + i)
+                .uid(MessageUid.of(i))
+                .mailboxId(draftsId);
+            index.add(session, drafts, builder.build(factory.generate())).block();
+        }
+
+        index.delete(session, draftsId, List.of(MessageUid.of(2), MessageUid.of(3))).block();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
+        Stream<MessageUid> result = index.search(session, drafts, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1), MessageUid.of(4), MessageUid.of(5));
+    }
+
+    @Test
     void bodySearchShouldMatchPhraseInBody() throws Exception {
         SearchQuery query = SearchQuery.of(SearchQuery.bodyContains(CUSTARD));
         Stream<MessageUid> result = index.search(session, mailbox3, query).toStream();
