@@ -367,7 +367,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       EmailSubmissionCreationResponse(submissionId, sendAt) -> request.emailId
     }
 
-  // A missing identityId is only tolerated when the compatibility property is enabled, as some clients omit it
+  // A missing identityId is tolerated unless the compatibility property is disabled, as some clients omit it
   private def validateIdentity(mailboxSession: MailboxSession, maybeIdentityId: Option[Id]): SMono[Option[Identity]] =
     maybeIdentityId match {
       case Some(id) => UnparsedIdentityId(id).validate
@@ -380,7 +380,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     }
 
   private def missingIdentityCompatibility: Boolean =
-    Option(System.getProperty(EmailSubmissionSetMethod.MISSING_IDENTITY_COMPATIBILITY_PROPERTY)).exists(_.toBoolean)
+    Option(System.getProperty(EmailSubmissionSetMethod.MISSING_IDENTITY_COMPATIBILITY_PROPERTY)).forall(_.toBoolean)
 
   /**
    * Runs the pluggable validations against the mail about to be spooled. The first rejection wins,
