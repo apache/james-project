@@ -50,7 +50,7 @@ import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Test}
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsObject, JsString, Json}
 
 object EmailSubmissionSetMethodContract {
   case class TestContext(bobUsername: Username, bobAccountId: String,
@@ -1843,7 +1843,8 @@ trait EmailSubmissionSetMethodContract {
       .inPath("methodResponses[0][1].notCreated")
       .isEqualTo(s"""{
                    |  "k1490": {
-                   |    "type": "forbiddenMailFrom",
+                   |    "type": "forbiddenFrom",
+                   |    "properties": ["sender"],
                    |    "description": "Attempt to send a mail whose MimeMessage From and Sender fields not allowed for connected user: List(${andreUsername.asString})"
                    |  }
                    |}""".stripMargin)
@@ -1900,7 +1901,8 @@ trait EmailSubmissionSetMethodContract {
       .inPath("methodResponses[0][1].notCreated")
       .isEqualTo(s"""{
                    |  "k1490": {
-                   |    "type": "forbiddenMailFrom",
+                   |    "type": "forbiddenFrom",
+                   |    "properties": ["from"],
                    |    "description": "Attempt to send a mail whose MimeMessage From and Sender fields not allowed for connected user: List(${andreUsername.asString})"
                    |  }
                    |}""".stripMargin)
@@ -1955,7 +1957,8 @@ trait EmailSubmissionSetMethodContract {
       .inPath("methodResponses[0][1].notCreated")
       .isEqualTo("""{
                    |  "k1490": {
-                   |    "type": "forbiddenFrom",
+                   |    "type": "invalidEmail",
+                   |    "properties": ["from"],
                    |    "description": "Attempt to send a mail whose MimeMessage From is missing"
                    |  }
                    |}""".stripMargin)
@@ -2012,11 +2015,76 @@ trait EmailSubmissionSetMethodContract {
       .inPath("methodResponses[0][1].notCreated")
       .isEqualTo(s"""{
                    |  "k1490": {
-                   |    "type": "forbiddenFrom",
+                   |    "type": "forbiddenMailFrom",
                    |    "description": "Attempt to send a mail whose envelope From not allowed for connected user: ${andreUsername.asString}",
                    |    "properties":["envelope.mailFrom"]
                    |  }
                    |}""".stripMargin)
+  }
+
+  @Test
+  def setShouldRejectMissingFromWithImplicitEnvelope(server: GuiceJamesServer): Unit = {
+    val message = Message.Builder.of.setBody("testmail", StandardCharsets.UTF_8).setTo(andreUsername.asString).setSubject("test").build
+    assertSubmissionRejected(server, message, None, "invalidEmail", Seq("from"))
+  }
+
+  @Test
+  def setShouldRejectMissingFromEvenWhenSenderIsPresent(server: GuiceJamesServer): Unit = {
+    val message = Message.Builder.of.setBody("testmail", StandardCharsets.UTF_8).setSender(bobUsername.asString).setTo(andreUsername.asString).build
+    assertSubmissionRejected(server, message, Some(validSenderEnvelope), "invalidEmail", Seq("from"))
+  }
+
+  @Test
+  def setShouldRejectForbiddenFromWithImplicitEnvelope(server: GuiceJamesServer): Unit = {
+    val message = Message.Builder.of.setBody("testmail", StandardCharsets.UTF_8).setFrom("ghost@domain.tld").setTo(andreUsername.asString).build
+    assertSubmissionRejected(server, message, None, "forbiddenFrom", Seq("from"))
+  }
+
+  @Test
+  def setShouldReportBothForbiddenHeaders(server: GuiceJamesServer): Unit = {
+    val message = Message.Builder.of.setBody("testmail", StandardCharsets.UTF_8).setFrom(andreUsername.asString).setSender("ghost@domain.tld")
+      .setTo(andreUsername.asString).build
+    assertSubmissionRejected(server, message, Some(validSenderEnvelope), "forbiddenFrom", Seq("from", "sender"))
+  }
+
+  @Test
+  def setShouldReportBothHeadersWhenForbiddenAddressIsRepeated(server: GuiceJamesServer): Unit = {
+    val message = Message.Builder.of.setBody("testmail", StandardCharsets.UTF_8).setFrom(andreUsername.asString).setSender(andreUsername.asString)
+      .setTo(andreUsername.asString).build
+    assertSubmissionRejected(server, message, Some(validSenderEnvelope), "forbiddenFrom", Seq("from", "sender"))
+  }
+
+  @Test
+  def setShouldPreferForbiddenHeaderOverForbiddenEnvelope(server: GuiceJamesServer): Unit = {
+    val message = Message.Builder.of.setBody("testmail", StandardCharsets.UTF_8).setFrom("ghost@domain.tld").setTo(andreUsername.asString).build
+    val envelope = validSenderEnvelope ++ Json.obj("mailFrom" -> Json.obj("email" -> andreUsername.asString))
+    assertSubmissionRejected(server, message, Some(envelope), "forbiddenFrom", Seq("from"))
+  }
+
+  private def validSenderEnvelope: JsObject = Json.obj(
+    "mailFrom" -> Json.obj("email" -> bobUsername.asString),
+    "rcptTo" -> Json.arr(Json.obj("email" -> andreUsername.asString)))
+
+  private def assertSubmissionRejected(server: GuiceJamesServer, message: Message, envelope: Option[JsObject],
+                                       errorType: String, properties: Seq[String]): Unit = {
+    val drafts = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(drafts)
+    val messageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, drafts, AppendCommand.builder().build(message)).getMessageId
+    val creation = Json.obj("emailId" -> messageId.serialize) ++ envelope
+      .map(value => Json.obj("envelope" -> value)).getOrElse(Json.obj())
+    val request = Json.obj(
+      "using" -> Json.arr("urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"),
+      "methodCalls" -> Json.arr(Json.arr("EmailSubmission/set", Json.obj(
+        "accountId" -> bobAccountId, "create" -> Json.obj("rejected" -> creation)), "c1")))
+
+    val response = `given`.header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request.toString).when.post.`then`.statusCode(SC_OK).contentType(JSON).extract.asString
+    assertThatJson(response).inPath("methodResponses[0][1].created").isAbsent()
+    assertThatJson(response).inPath("methodResponses[0][1].notCreated.rejected.type").isEqualTo(errorType)
+    assertThatJson(response).when(net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER)
+      .inPath("methodResponses[0][1].notCreated.rejected.properties")
+      .isEqualTo(Json.toJson(properties).toString)
   }
 
   @Test
