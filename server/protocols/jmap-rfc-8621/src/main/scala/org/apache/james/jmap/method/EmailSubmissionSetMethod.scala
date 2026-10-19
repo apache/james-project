@@ -75,6 +75,7 @@ object EmailSubmissionSetMethod {
   val formatter = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("Z"))
   val VALID_PARAMETER_NAME_SET: Set[ParameterName] = Set(ParameterName.holdFor, ParameterName.holdUntil)
   val NO_DELAY: Duration = Duration.ZERO
+  val MISSING_IDENTITY_COMPATIBILITY_PROPERTY: String = "james.jmap.email.submission.missing.identity.compatibility"
 
   def validateFromHeader(mimeMessage: MimeMessage): SMono[MimeMessage] =
     if (mimeMessage.getHeader("From") != null && Option(mimeMessage.getFrom).exists(_.nonEmpty)) {
@@ -366,15 +367,20 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       EmailSubmissionCreationResponse(submissionId, sendAt) -> request.emailId
     }
 
-  // A missing identityId is tolerated as some clients omit it; a wrong one is rejected
+  // A missing identityId is only tolerated when the compatibility property is enabled, as some clients omit it
   private def validateIdentity(mailboxSession: MailboxSession, maybeIdentityId: Option[Id]): SMono[Option[Identity]] =
-    maybeIdentityId
-      .map(id => UnparsedIdentityId(id).validate
+    maybeIdentityId match {
+      case Some(id) => UnparsedIdentityId(id).validate
         .fold(_ => SMono.empty[Identity],
           identityId => identityResolver.resolveIdentityId(identityId, mailboxSession).flatMap(SMono.justOrEmpty(_)))
         .switchIfEmpty(SMono.error(IdentityNotFoundException("The identity to be used cannot be found")))
-        .map(Option(_)))
-      .getOrElse(SMono.just(None))
+        .map(Option(_))
+      case None if missingIdentityCompatibility => SMono.just(None)
+      case None => SMono.error(IdentityNotFoundException("Missing 'identityId' property"))
+    }
+
+  private def missingIdentityCompatibility: Boolean =
+    Option(System.getProperty(EmailSubmissionSetMethod.MISSING_IDENTITY_COMPATIBILITY_PROPERTY)).exists(_.toBoolean)
 
   /**
    * Runs the pluggable validations against the mail about to be spooled. The first rejection wins,
