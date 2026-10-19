@@ -833,6 +833,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             case ONE -> LongPoint.newRangeQuery(UID_FIELD,
                 range.getUidFrom().asLong(),
                 range.getUidTo().asLong());
+            case RANGE -> LongPoint.newRangeQuery(UID_FIELD,
+                range.getUidFrom().asLong(),
+                range.getUidTo().asLong());
             case FROM -> LongPoint.newRangeQuery(UID_FIELD,
                 range.getUidFrom().asLong(),
                 MessageUid.MAX_VALUE.asLong());
