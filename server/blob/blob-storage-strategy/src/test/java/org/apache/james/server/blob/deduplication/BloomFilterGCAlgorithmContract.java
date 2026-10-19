@@ -150,7 +150,7 @@ public interface BloomFilterGCAlgorithmContract {
         when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.empty());
 
         BlobId normalBlob = GENERATION_AWARE_BLOB_ID_FACTORY.of(UUID.randomUUID().toString());
-        BlobId chunkBlob = BLOB_ID_FACTORY.parse("1_1_chunk0123456789abcdef");
+        BlobId chunkBlob = BLOB_ID_FACTORY.parse("1_1_chunk_0123456789abcdef");
 
         Mono.from(blobStoreDAO.save(DEFAULT_BUCKET, normalBlob, BlobStoreDAO.BytesBlob.of("normal".getBytes()))).block();
         Mono.from(blobStoreDAO.save(DEFAULT_BUCKET, chunkBlob, BlobStoreDAO.BytesBlob.of("chunk".getBytes()))).block();
@@ -189,7 +189,7 @@ public interface BloomFilterGCAlgorithmContract {
         when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.empty());
         MinIOGenerationAwareBlobId.Factory minIOFactory = new MinIOGenerationAwareBlobId.Factory(
             CLOCK, GENERATION_AWARE_BLOB_ID_CONFIGURATION, BLOB_ID_FACTORY);
-        BlobId chunk = minIOFactory.parse("1/12/chunk" + UUID.randomUUID());
+        BlobId chunk = minIOFactory.parse("1/12/chunk/" + UUID.randomUUID());
         BlobId ordinary = minIOFactory.parse("1/12/ordinary-blob");
         Mono.from(store.save(DEFAULT_BUCKET, chunk, BlobStoreDAO.BytesBlob.of("chunk"))).block();
         Mono.from(store.save(DEFAULT_BUCKET, ordinary, BlobStoreDAO.BytesBlob.of("ordinary"))).block();
