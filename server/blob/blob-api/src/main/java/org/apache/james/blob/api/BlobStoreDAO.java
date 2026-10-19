@@ -352,7 +352,10 @@ public interface BlobStoreDAO {
             });
     }
 
-    private static void validateRange(long start, Optional<Long> end) {
+    /**
+     * Validates range bounds independently of the object size for default and optimized implementations.
+     */
+    static void validateRange(long start, Optional<Long> end) {
         Preconditions.checkArgument(start >= 0, "'start' must be non-negative");
         end.ifPresent(value -> Preconditions.checkArgument(value >= start,
             "'end' (%s) must be greater than or equal to 'start' (%s)", value, start));
