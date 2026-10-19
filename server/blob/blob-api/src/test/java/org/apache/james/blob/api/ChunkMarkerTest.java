@@ -41,29 +41,33 @@ class ChunkMarkerTest {
 
     private static Stream<String> chunkIds() {
         return Stream.of(
-            "1_0_chunk0123456789abcdef",
-            "12_34_chunk0123456789abcdef_ABC-xyz",
-            "1_0_chunk0123456789abcdef~0~123",
-            "1_690_chunkshort",
-            "1/690/chunkshort",
-            "12/12345/chunk550e8400-e29b-41d4-a716-446655440000",
-            "1_12345_chunk550e8400-e29b-41d4-a716-446655440000",
-            "1/690/chunkidentifier.with+other=characters~0~123",
-            "1_690_chunkidentifier.with+other=characters",
-            "1/690/chunk",
-            "1_690_chunk");
+            "1_0_chunk_0123456789abcdef",
+            "12_34_chunk_0123456789abcdef_ABC-xyz",
+            "1_0_chunk_0123456789abcdef~0~123",
+            "1_690_chunk_short",
+            "1/690/chunk/short",
+            "12/12345/chunk/550e8400-e29b-41d4-a716-446655440000",
+            "1_12345_chunk_550e8400-e29b-41d4-a716-446655440000",
+            "1/690/chunk/identifier.with+other=characters~0~123",
+            "1_690_chunk_identifier.with+other=characters",
+            "1/690/chunk/",
+            "1_690_chunk_");
     }
 
     private static Stream<String> nonChunkIds() {
         return Stream.of(
-            "0_0_chunk0123456789abcdef",
-            "1_-1_chunk0123456789abcdef",
-            "0/690/chunkidentifier",
-            "1/-1/chunkidentifier",
+            "0_0_chunk_0123456789abcdef",
+            "1_-1_chunk_0123456789abcdef",
+            "0/690/chunk/identifier",
+            "1/-1/chunk/identifier",
+            "1_690_chunkidentifier",
+            "1/690/chunkidentifier",
+            "1_690_chunk/identifier",
+            "1/690/chunk_identifier",
             "1/690/ordinary-blob",
             "1/690/hash_chunk_identifier",
-            "1/690_chunkidentifier",
-            "1_690/chunkidentifier",
+            "1/690_chunk_identifier",
+            "1_690/chunk/identifier",
             "1_0_not-a-chunk0123456789abcdef",
             "a_chunk0123456789abcdef",
             "plain-blob-id");

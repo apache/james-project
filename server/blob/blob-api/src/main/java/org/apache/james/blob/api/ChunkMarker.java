@@ -23,8 +23,8 @@ import java.util.regex.Pattern;
 /**
  * Identifies physical chunk object identifiers and their virtual slot references.
  *
- * <p>Physical objects use {@code <family>_<generation>_chunk<identifier>} or the MinIO layout
- * {@code <family>/<generation>/chunk<identifier>}. The identifier is unrestricted and can also carry a virtual
+ * <p>Physical objects use {@code <family>_<generation>_chunk_<identifier>} or the MinIO layout
+ * {@code <family>/<generation>/chunk/<identifier>}. The identifier is unrestricted and can also carry a virtual
  * slot suffix. This only recognizes the chunk marker; parsing and validating a slot reference is the
  * responsibility of the compaction module.</p>
  */
@@ -33,8 +33,8 @@ public final class ChunkMarker {
     private static final String GENERATION = "\\d+";
     private static final String CHUNK_MARKER = "chunk";
     private static final String REMAINDER = ".*";
-    private static final String UNDERSCORE_LAYOUT = "_" + GENERATION + "_" + CHUNK_MARKER;
-    private static final String MINIO_LAYOUT = "/" + GENERATION + "/" + CHUNK_MARKER;
+    private static final String UNDERSCORE_LAYOUT = "_" + GENERATION + "_" + CHUNK_MARKER + "_";
+    private static final String MINIO_LAYOUT = "/" + GENERATION + "/" + CHUNK_MARKER + "/";
     private static final Pattern CHUNK_ID_PATTERN = Pattern.compile(
         "^" + FAMILY + "(?:" + UNDERSCORE_LAYOUT + "|" + MINIO_LAYOUT + ")" + REMAINDER + "$");
 
