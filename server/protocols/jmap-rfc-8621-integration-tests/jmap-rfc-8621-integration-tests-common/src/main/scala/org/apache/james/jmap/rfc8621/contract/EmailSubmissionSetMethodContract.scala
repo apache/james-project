@@ -1043,40 +1043,40 @@ trait EmailSubmissionSetMethodContract {
 
   @Test
   @Category(Array(classOf[BasicFeature]))
-  def setShouldRejectMissingIdentityId(server: GuiceJamesServer): Unit = {
+  def setShouldAcceptMissingIdentityId(server: GuiceJamesServer): Unit = {
     val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(andreUsername))
-    val rejectedMessageId: MessageId = appendBobDraft(server, "rejected")
-    val acceptedMessageId: MessageId = appendBobDraft(server, "accepted")
+    val messageId: MessageId = appendBobDraft(server, "accepted")
 
-    val response = submit(
-      "rejected" -> (rejectedMessageId, None),
-      "accepted" -> (acceptedMessageId, Some(identityIdOf(bobUsername))))
+    val response = submit("accepted" -> (messageId, None))
 
     assertThatJson(response)
-      .inPath("methodResponses[0][1].notCreated")
-      .isEqualTo("""{
-                   |  "rejected": {
-                   |    "type": "invalidProperties",
-                   |    "description": "Missing 'identityId' property",
-                   |    "properties": ["identityId"]
-                   |  }
-                   |}""".stripMargin)
+      .whenIgnoringPaths("methodResponses[0][1].created.accepted")
+      .inPath("methodResponses[0][1].created")
+      .isEqualTo("""{"accepted": {}}""")
     andreInboxShouldOnlyContain(server, andreInboxId, "accepted")
   }
 
   @Test
-  def setShouldAcceptMissingIdentityIdWhenCompatibilityIsEnabled(server: GuiceJamesServer): Unit = {
-    System.setProperty(EmailSubmissionSetMethod.MISSING_IDENTITY_COMPATIBILITY_PROPERTY, "true")
+  def setShouldRejectMissingIdentityIdWhenCompatibilityIsDisabled(server: GuiceJamesServer): Unit = {
+    System.setProperty(EmailSubmissionSetMethod.MISSING_IDENTITY_COMPATIBILITY_PROPERTY, "false")
     try {
       val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(andreUsername))
-      val messageId: MessageId = appendBobDraft(server, "accepted")
+      val rejectedMessageId: MessageId = appendBobDraft(server, "rejected")
+      val acceptedMessageId: MessageId = appendBobDraft(server, "accepted")
 
-      val response = submit("accepted" -> (messageId, None))
+      val response = submit(
+        "rejected" -> (rejectedMessageId, None),
+        "accepted" -> (acceptedMessageId, Some(identityIdOf(bobUsername))))
 
       assertThatJson(response)
-        .whenIgnoringPaths("methodResponses[0][1].created.accepted")
-        .inPath("methodResponses[0][1].created")
-        .isEqualTo("""{"accepted": {}}""")
+        .inPath("methodResponses[0][1].notCreated")
+        .isEqualTo("""{
+                     |  "rejected": {
+                     |    "type": "invalidProperties",
+                     |    "description": "Missing 'identityId' property",
+                     |    "properties": ["identityId"]
+                     |  }
+                     |}""".stripMargin)
       andreInboxShouldOnlyContain(server, andreInboxId, "accepted")
     } finally {
       System.clearProperty(EmailSubmissionSetMethod.MISSING_IDENTITY_COMPATIBILITY_PROPERTY)

@@ -26,21 +26,22 @@ Change list:
  - [Dropping unneeded Cassandra schema columns](#dropping-unneeded-cassandra-schema-columns)
  - [Cassandra schema version 16: mandatory message denormalization migration](#cassandra-schema-version-16-mandatory-message-denormalization-migration)
  - [Migration of embedded mail queue broker from ActiveMQ Classic to ActiveMQ Artemis](#migration-of-embedded-mail-queue-broker-from-activemq-classic-to-activemq-artemis)
- - [JAMES-4236 JMAP EmailSubmission/set requires identityId](#james-4236-jmap-emailsubmissionset-requires-identityid)
+ - [JAMES-4236 JMAP EmailSubmission/set validates identityId](#james-4236-jmap-emailsubmissionset-validates-identityid)
 
-### JAMES-4236 JMAP EmailSubmission/set requires identityId
+### JAMES-4236 JMAP EmailSubmission/set validates identityId
 
 Date: 14/10/2026
 
 Concerned products: all products exposing JMAP (RFC 8621)
 
-`EmailSubmission/set` now validates `identityId`, as required by RFC 8621. A creation without `identityId`, or with
-an id that is not one of the user's identities (see `Identity/get`), is rejected with an `invalidProperties` SetError
-on `identityId`, and the email is not sent.
+`EmailSubmission/set` now validates `identityId`, as required by RFC 8621. A creation with an id that is not one of
+the user's identities (see `Identity/get`) is rejected with an `invalidProperties` SetError on `identityId`, and the
+email is not sent.
 
-JMAP clients must send an `identityId` listed by `Identity/get`. To keep accepting clients that omit it, set
-`james.jmap.email.submission.missing.identity.compatibility=true` in `jvm.properties`. A wrong `identityId` is
-rejected either way.
+JMAP clients that send a stale or foreign `identityId` must be updated to send one listed by `Identity/get`.
+
+A creation without `identityId` is still accepted by default. Set
+`james.jmap.email.submission.missing.identity.compatibility=false` in `jvm.properties` to reject it as well.
 
 ### Migration of embedded mail queue broker from ActiveMQ Classic to ActiveMQ Artemis
 
