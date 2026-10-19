@@ -177,6 +177,20 @@ james.jmap.quota.draft.compatibility=true
 ----
 To enable the compatibility.
 
+== JMAP EmailSubmission without identityId
+
+RFC 8621 requires `EmailSubmission/set` creations to carry an `identityId`, and James rejects those without one. The
+property `james.jmap.email.submission.missing.identity.compatibility` allows to accept them for clients that omit it.
+An `identityId` that is not one of the user's identities is rejected either way.
+
+Optional. Boolean. Default to false.
+
+Ex in `jvm.properties`
+----
+james.jmap.email.submission.missing.identity.compatibility=true
+----
+To accept submissions without identityId.
+
 == Enable Reactor Netty metrics for JMAP server
 
 Allow to enable https://projectreactor.io/docs/netty/1.1.19/reference/index.html#_metrics_4[Reactor Netty metrics] for JMAP server which would provide useful debug information.
