@@ -69,10 +69,18 @@ object EmailSubmissionSetMethod {
   val noRecipients: SetErrorType = "noRecipients"
   val forbiddenFrom: SetErrorType = "forbiddenFrom"
   val forbiddenMailFrom: SetErrorType = "forbiddenMailFrom"
+  val invalidEmail: SetErrorType = "invalidEmail"
   val cannotUnsend: SetErrorType = "cannotUnsend"
   val formatter = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("Z"))
   val VALID_PARAMETER_NAME_SET: Set[ParameterName] = Set(ParameterName.holdFor, ParameterName.holdUntil)
   val NO_DELAY: Duration = Duration.ZERO
+
+  def validateFromHeader(mimeMessage: MimeMessage): SMono[MimeMessage] =
+    if (mimeMessage.getHeader("From") != null && Option(mimeMessage.getFrom).exists(_.nonEmpty)) {
+      SMono.just(mimeMessage)
+    } else {
+      SMono.error(MissingFromHeaderException())
+    }
 
   sealed trait CreationResult {
     def emailSubmissionCreationId: EmailSubmissionCreationId
@@ -88,23 +96,10 @@ object EmailSubmissionSetMethod {
       case e: EmailSubmissionCreationParseException =>
         LOGGER.info("Failed to parse EMailSubmission/set create", e)
         e.setError
-      case _: NoRecipientException =>
-        LOGGER.info("Attempt to send a mail with no recipients")
-        SetError(EmailSubmissionSetMethod.noRecipients,
-          SetErrorDescription("Attempt to send a mail with no recipients"), None)
-      case e: ForbiddenMailFromException =>
-        LOGGER.warn(s"Attempt to send a mail whose MimeMessage From and Sender fields not allowed for connected user: ${e.from}")
-        SetError(EmailSubmissionSetMethod.forbiddenMailFrom,
-          SetErrorDescription(s"Attempt to send a mail whose MimeMessage From and Sender fields not allowed for connected user: ${e.from}"), None)
-      case e: ForbiddenFromException =>
-        LOGGER.warn(s"Attempt to send a mail whose envelope From not allowed for connected user: ${e.from}")
-        SetError(EmailSubmissionSetMethod.forbiddenFrom,
-          SetErrorDescription(s"Attempt to send a mail whose envelope From not allowed for connected user: ${e.from}"),
-          Some(Properties("envelope.mailFrom")))
-      case e: ForbiddenHeaderFromException =>
-        LOGGER.warn(s"Attempt to send a mail whose MimeMessage From is missing")
-        SetError(EmailSubmissionSetMethod.forbiddenFrom,
-          SetErrorDescription(s"Attempt to send a mail whose MimeMessage From is missing"), None)
+      case e: EmailSubmissionException =>
+        val error = e.asSetError
+        LOGGER.warn(error.description.description)
+        error
       case _: MessageNotFoundException =>
         LOGGER.info(" EmailSubmission/set failed as the underlying email could not be found")
         SetError(SetError.invalidArgumentValue,
@@ -170,10 +165,31 @@ object EmailSubmissionSetMethod {
 
 case class EmailSubmissionCreationParseException(setError: SetError) extends Exception
 case class EmailSubmissionSetValidationException(setError: SetError) extends Exception
-case class NoRecipientException() extends Exception
-case class ForbiddenFromException(from: String) extends Exception
-case class ForbiddenMailFromException(from: List[String]) extends Exception
-case class ForbiddenHeaderFromException() extends Exception
+sealed trait EmailSubmissionException extends Exception {
+  def asSetError: SetError
+}
+
+case class NoRecipientException() extends EmailSubmissionException {
+  override def asSetError: SetError = SetError(EmailSubmissionSetMethod.noRecipients,
+    SetErrorDescription("Attempt to send a mail with no recipients"), None)
+}
+
+case class ForbiddenFromException(from: List[String], properties: Properties) extends EmailSubmissionException {
+  override def asSetError: SetError = SetError(EmailSubmissionSetMethod.forbiddenFrom,
+    SetErrorDescription(s"Attempt to send a mail whose MimeMessage From and Sender fields not allowed for connected user: $from"),
+    Some(properties))
+}
+
+case class ForbiddenMailFromException(from: String) extends EmailSubmissionException {
+  override def asSetError: SetError = SetError(EmailSubmissionSetMethod.forbiddenMailFrom,
+    SetErrorDescription(s"Attempt to send a mail whose envelope From not allowed for connected user: $from"),
+    Some(Properties("envelope.mailFrom")))
+}
+
+case class MissingFromHeaderException() extends EmailSubmissionException {
+  override def asSetError: SetError = SetError(EmailSubmissionSetMethod.invalidEmail,
+    SetErrorDescription("Attempt to send a mail whose MimeMessage From is missing"), Some(Properties("from")))
+}
 case class InvalidDelayException(message: String) extends IllegalArgumentException(message)
 
 case class MessageMimeMessageSource(id: String, message: MessageResult) extends MimeMessageSource {
@@ -415,23 +431,21 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       Success(delay)
     }
 
-  def validateMimeMessages(mimeMessage: MimeMessage) : SMono[MimeMessage] = validateMailAddressHeaderMimeMessage(mimeMessage)
+  def validateMimeMessages(mimeMessage: MimeMessage): SMono[MimeMessage] =
+    EmailSubmissionSetMethod.validateFromHeader(mimeMessage)
+      .flatMap(validateMailAddressHeaderMimeMessage)
+
   private def validateMailAddressHeaderMimeMessage(mimeMessage: MimeMessage): SMono[MimeMessage] =
-    Option(mimeMessage.getFrom) match {
-      case Some(from) if from.nonEmpty => SFlux.fromIterable(Map(
-          "to" -> Option(mimeMessage.getRecipients(RecipientType.TO)).toList.flatten,
-          "cc" -> Option(mimeMessage.getRecipients(RecipientType.CC)).toList.flatten,
-          "bcc" -> Option(mimeMessage.getRecipients(RecipientType.BCC)).toList.flatten,
-          "from" -> from.toList,
-          "sender" -> Option(mimeMessage.getSender).toList,
-          "replyTo" -> Option(mimeMessage.getReplyTo).toList.flatten))
-        .doOnNext { case (headerName, addresses) => (headerName, addresses.foreach(address => validateMailAddress(headerName, address))) }
-        .`then`()
-        .`then`(SMono.just(mimeMessage))
-
-      case _ => SMono.error(ForbiddenHeaderFromException())
-    }
-
+    SFlux.fromIterable(Map(
+        "to" -> Option(mimeMessage.getRecipients(RecipientType.TO)).toList.flatten,
+        "cc" -> Option(mimeMessage.getRecipients(RecipientType.CC)).toList.flatten,
+        "bcc" -> Option(mimeMessage.getRecipients(RecipientType.BCC)).toList.flatten,
+        "from" -> mimeMessage.getFrom.toList,
+        "sender" -> Option(mimeMessage.getSender).toList,
+        "replyTo" -> Option(mimeMessage.getReplyTo).toList.flatten))
+      .doOnNext { case (headerName, addresses) => addresses.foreach(address => validateMailAddress(headerName, address)) }
+      .`then`()
+      .`then`(SMono.just(mimeMessage))
 
   private def validateMailAddress(headName: String, address: Address): MailAddress =
     Try(new MailAddress(asString(address))) match {
@@ -493,20 +507,24 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   }
 
   private def validate(session: MailboxSession)(mimeMessage: MimeMessage, envelope: Envelope): SMono[MimeMessage] =
-    SFlux.fromIterable(Option(mimeMessage.getSender).toList ++ Option(mimeMessage.getFrom).toList.flatten)
-      .map(_.asInstanceOf[InternetAddress].getAddress)
-      .filterWhen(addressAsString => SMono.fromPublisher(canSendFrom.userCanSendFromReactive(session.getUser, Username.fromMailAddress(new MailAddress(addressAsString))))
-        .map(Boolean.unbox(_)).map(!_), Queues.SMALL_BUFFER_SIZE)
+    SFlux.fromIterable(Option(mimeMessage.getSender).toList.map("sender" -> _) ++
+        Option(mimeMessage.getFrom).toList.flatten.map("from" -> _))
+      .map { case (header, address) => header -> address.asInstanceOf[InternetAddress].getAddress }
+      .filterWhen({ case (_, address) =>
+        SMono.fromPublisher(canSendFrom.userCanSendFromReactive(session.getUser, Username.fromMailAddress(new MailAddress(address))))
+          .map(Boolean.unbox(_)).map(!_)
+      }, Queues.SMALL_BUFFER_SIZE)
       .collectSeq()
-      .flatMap(forbiddenMailFrom => {
-        if (forbiddenMailFrom.nonEmpty) {
-          SMono.just(Failure(ForbiddenMailFromException(forbiddenMailFrom.toList)))
+      .flatMap(forbiddenHeaders => {
+        if (forbiddenHeaders.nonEmpty) {
+          SMono.just(Failure(ForbiddenFromException(forbiddenHeaders.map(_._2).toList,
+            Properties.toProperties(forbiddenHeaders.map(_._1).toSet))))
         } else if (envelope.rcptTo.isEmpty) {
           SMono.just(Failure(NoRecipientException()))
         } else {
           SMono.fromPublisher(canSendFrom.userCanSendFromReactive(session.getUser, Username.fromMailAddress(envelope.mailFrom.email)))
             .filter(bool => bool.equals(false))
-            .map(_ => Failure(ForbiddenFromException(envelope.mailFrom.email.asString)))
+            .map(_ => Failure(ForbiddenMailFromException(envelope.mailFrom.email.asString)))
             .switchIfEmpty(SMono.just(Success(mimeMessage)))
         }
       })
