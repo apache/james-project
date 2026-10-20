@@ -169,25 +169,11 @@ class JMAPFilteringTest {
                 .valueToMatch(valueToMatch);
         }
 
-        public FilteringArgumentBuilder scrambledSubjectShouldNotMatchCaseSensitive() {
-            return description("normal content (case sensitive)")
-                .field(SUBJECT)
-                .subject(SCRAMBLED_SUBJECT)
-                .valueToMatch(SCRAMBLED_SUBJECT.toUpperCase(Locale.FRENCH));
-        }
-
         public FilteringArgumentBuilder unscrambledSubjectToMatch(String valueToMatch) {
             return description("unscrambled content")
                 .field(SUBJECT)
                 .subject(UNSCRAMBLED_SUBJECT)
                 .valueToMatch(valueToMatch);
-        }
-
-        public FilteringArgumentBuilder unscrambledSubjectShouldNotMatchCaseSensitive() {
-            return description("unscrambled content (case sensitive)")
-                .field(SUBJECT)
-                .subject(UNSCRAMBLED_SUBJECT)
-                .valueToMatch(UNSCRAMBLED_SUBJECT.toUpperCase(Locale.FRENCH));
         }
 
         public FilteringArgumentBuilder testForUpperCase() {
@@ -399,12 +385,15 @@ class JMAPFilteringTest {
                     .valueToMatch(USER_4_FULL_ADDRESS)
                     .build(),
                 argumentBuilder().scrambledSubjectToMatch(UNSCRAMBLED_SUBJECT).build(),
-                argumentBuilder().unscrambledSubjectToMatch(UNSCRAMBLED_SUBJECT).build(),
+                argumentBuilder().unscrambledSubjectToMatch(UNSCRAMBLED_SUBJECT).build()),
+            Stream.of(
+                argumentBuilder().scrambledSubjectToMatch(UNSCRAMBLED_SUBJECT),
+                argumentBuilder().unscrambledSubjectToMatch(UNSCRAMBLED_SUBJECT),
                 argumentBuilder(new Rule.Condition.CustomHeaderField("X-CUSTOM"))
                     .description("X-CUSTOM")
                     .header("X-CUSTOM", "abcdeg")
-                    .valueToMatch("abcdeg")
-                    .build()));
+                    .valueToMatch("abcdeg"))
+                .flatMap(JMAPFilteringTest::forBothCase));
     }
 
     static Stream<Arguments> containsTestSuite() {
@@ -500,9 +489,15 @@ class JMAPFilteringTest {
                     .description("X-CUSTOM")
                     .header("X-CUSTOM", "abcdeg")
                     .valueToMatch("bcde")
-                    .build(),
-                argumentBuilder().scrambledSubjectToMatch("is the subject").build(),
-                argumentBuilder().unscrambledSubjectToMatch("rédéric MART").build()));
+                    .build()),
+            Stream.of(
+                argumentBuilder(new Rule.Condition.CustomHeaderField("X-CUSTOM"))
+                    .description("X-CUSTOM")
+                    .header("X-CUSTOM", "abcdeg")
+                    .valueToMatch("bcde"),
+                argumentBuilder().scrambledSubjectToMatch("is the subject"),
+                argumentBuilder().unscrambledSubjectToMatch("rédéric MART"))
+                .flatMap(JMAPFilteringTest::forBothCase));
     }
 
     static Stream<Arguments> notEqualsTestSuite() {
@@ -591,9 +586,7 @@ class JMAPFilteringTest {
                     .valueToMatch(USER_1_FULL_ADDRESS)
                     .build(),
                 argumentBuilder().scrambledSubjectToMatch(SHOULD_NOT_MATCH).build(),
-                argumentBuilder().scrambledSubjectShouldNotMatchCaseSensitive().build(),
-                argumentBuilder().unscrambledSubjectToMatch(SHOULD_NOT_MATCH).build(),
-                argumentBuilder().unscrambledSubjectShouldNotMatchCaseSensitive().build()),
+                argumentBuilder().unscrambledSubjectToMatch(SHOULD_NOT_MATCH).build()),
             ImmutableList.of(FROM, TO, CC, SUBJECT, RECIPIENT).stream()
                 .map(field -> argumentBuilder()
                     .description("no header")
@@ -1283,6 +1276,19 @@ class JMAPFilteringTest {
     }
 
     @Test
+    void startWithAddressShouldIgnoreCase(JMAPFilteringTestSystem testSystem) throws Exception {
+        testSystem.defineRulesForRecipient1(
+            Rule.Condition.of(FROM, START_WITH, USER_1_ADDRESS.substring(0, 2).toUpperCase(Locale.US))
+        );
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+            .addFrom(USER_1_FULL_ADDRESS));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME)).isNotEmpty();
+    }
+
+    @Test
     void startWithAddressMailNotMatched(JMAPFilteringTestSystem testSystem) throws Exception {
         testSystem.defineRulesForRecipient1(
             // start-with a random text
@@ -1302,6 +1308,19 @@ class JMAPFilteringTest {
     void startWithSubjectMatched(JMAPFilteringTestSystem testSystem) throws Exception {
         testSystem.defineRulesForRecipient1(
             Rule.Condition.of(SUBJECT, START_WITH, SCRAMBLED_SUBJECT.substring(0, 2))
+        );
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+            .addHeader(SUBJECT.asString(), SCRAMBLED_SUBJECT));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME)).isNotEmpty();
+    }
+
+    @Test
+    void startWithSubjectShouldIgnoreCase(JMAPFilteringTestSystem testSystem) throws Exception {
+        testSystem.defineRulesForRecipient1(
+            Rule.Condition.of(SUBJECT, START_WITH, "THIS IS")
         );
 
         FakeMail mail = testSystem.asMail(mimeMessageBuilder()

@@ -31,6 +31,7 @@ import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.mail.Keyword;
 import org.apache.james.mime4j.codec.DecodeMonitor;
@@ -168,7 +169,7 @@ public interface ContentMatcher {
         }
     }
 
-    ContentMatcher STRING_CONTAINS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.contains(content, valueToMatch));
+    ContentMatcher STRING_CONTAINS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> Strings.CI.contains(content, valueToMatch));
     ContentMatcher IS_OLDER_THAN_MATCHER = (contents, valueToMatch) -> {
         Duration duration = DurationParser.parse(valueToMatch);
         Instant horizon = Clock.systemUTC().instant().minus(duration);
@@ -196,9 +197,9 @@ public interface ContentMatcher {
             .noneMatch(flag -> flag.matches(flagToMatch));
     };
     ContentMatcher STRING_NOT_CONTAINS_MATCHER = negate(STRING_CONTAINS_MATCHER);
-    ContentMatcher STRING_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.equals(content, valueToMatch));
+    ContentMatcher STRING_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> Strings.CI.equals(content, valueToMatch));
     ContentMatcher STRING_NOT_EXACTLY_EQUALS_MATCHER = negate(STRING_EXACTLY_EQUALS_MATCHER);
-    ContentMatcher STRING_START_WITH_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> content.startsWith(valueToMatch));
+    ContentMatcher STRING_START_WITH_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> Strings.CI.startsWith(content, valueToMatch));
     ContentMatcher ANY_MATCHER = (contents, valueToMatch) -> contents.anyMatch(StringUtils::isNotBlank);
 
     ContentMatcher ADDRESS_CONTAINS_MATCHER = (contents, valueToMatch) -> contents
@@ -208,7 +209,7 @@ public interface ContentMatcher {
     ContentMatcher ADDRESS_NOT_EXACTLY_EQUALS_MATCHER = negate(new ExactAddressContentMatcher());
     ContentMatcher ADDRESS_START_WITH_MATCHER = (contents, valueToMatch) -> contents
         .map(ContentMatcher::asAddressHeader)
-        .anyMatch(addressHeader -> addressHeader.fullAddress.startsWith(valueToMatch));
+        .anyMatch(addressHeader -> Strings.CI.startsWith(addressHeader.fullAddress, valueToMatch));
 
     Map<Rule.Condition.Comparator, ContentMatcher> DATE_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
         .put(Rule.Condition.Comparator.IS_NEWER_THAN, IS_NEWER_THAN_MATCHER)
