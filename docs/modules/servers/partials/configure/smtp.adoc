@@ -144,22 +144,22 @@ Note that this configures only the **announcement** of authentication capabiliti
 `auth.requireSSL` also has an influence on whether authentication capabilities are announced.
 
 Even if authentication capabilities are not announced, clients can still use the SMTP AUTH command.
-However, if authentication capabilities are not announced, only the mechanisms `PLAIN` and `LOGIN` are available.
+However, if authentication capabilities are not announced, only the mechanisms `PLAIN` and `LOGIN` are available
+(and only over a secure connection when `auth.requireSSL` is `true`).
 `XOAUTH2` and `OAUTHBEARER` are disabled if authentication capabilities are not announced.
 
 | `auth.requireSSL`
-| Configures whether announcing authentication capabilities requires a secure connection (TLS or STARTTLS).
+| Configures whether authentication requires a secure connection (TLS or STARTTLS).
 If this value is `true` and the connection is not secure, authentication capabilities are not announced.
 This always holds, even if `auth.announce` is set to `always`.
+The `PLAIN` and `LOGIN` mechanisms also use this value to reject authentication attempts over an insecure connection.
 ifndef::no-kerberos[]
 The optional `GSSAPI` mechanism also uses this value to reject authentication attempts over an insecure connection.
 endif::[]
 
 It is an optional boolean that defaults to `true`.
 
-For the built-in mechanisms, this configures only the **announcement** of authentication capabilities.
-Even if authentication capabilities are not announced, clients can still use the SMTP AUTH command with `PLAIN` and `LOGIN`.
-However, as the mechanisms `XOAUTH2` and `OAUTHBEARER` are only available if authentication mechanisms are announced, those mechanisms can only be used in secure connections if `auth.requireSSL` is set to `true`.
+As the mechanisms `XOAUTH2` and `OAUTHBEARER` are only available if authentication mechanisms are announced, those mechanisms can only be used in secure connections if `auth.requireSSL` is set to `true`.
 ifndef::no-kerberos[]
 When `GSSAPI` is configured and `auth.requireSSL` is `true`, it is both unannounced and unavailable on insecure connections.
 endif::[]
