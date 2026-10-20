@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import jakarta.mail.Flags;
 
@@ -69,6 +70,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
@@ -90,6 +92,35 @@ class CassandraMessageMapperTest extends MessageMapperTest {
     @Override
     protected UpdatableTickingClock updatableTickingClock() {
         return cassandraMapperProvider.getUpdatableTickingClock();
+    }
+
+    @Test
+    void headersShouldRepairStaleReferencesOnlyOnce(CassandraCluster cassandra) throws Exception {
+        saveMessages();
+        CqlSession session = cassandra.getConf();
+        UUID mailboxId = ((CassandraId) message1.getMailboxId()).asUuid();
+        UUID messageId = ((CassandraMessageId) message1.getMessageId()).get();
+        long uid = message1.getUid().asLong();
+        String currentHeader = session.execute("SELECT headerContent FROM messageV3 WHERE messageId=?", messageId)
+            .one().getString("headerContent");
+        session.execute("UPDATE messageIdTable SET headerContent=? WHERE mailboxId=? AND uid=?", "missing-header", mailboxId, uid);
+        session.execute("UPDATE imapUidTable SET headerContent=? WHERE messageId=? AND mailboxId=? AND uid=?",
+            "missing-header", messageId, mailboxId, uid);
+        StatementRecorder recorder = cassandra.getConf().recordStatements();
+
+        for (int i = 0; i < 2; i++) {
+            MailboxMessage result = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.HEADERS, 1).next();
+            assertThat(result.getHeaderContent().readAllBytes()).isEqualTo(message1.getHeaderContent().readAllBytes());
+            assertThat(result.getMessageId()).isEqualTo(message1.getMessageId());
+            assertThat(result.createFlags()).isEqualTo(message1.createFlags());
+        }
+
+        assertThat(recorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith(
+            "SELECT * FROM messagev3"))).hasSize(1);
+        assertThat(session.execute("SELECT headerContent FROM messageIdTable WHERE mailboxId=? AND uid=?", mailboxId, uid)
+            .one().getString("headerContent")).isEqualTo(currentHeader);
+        assertThat(session.execute("SELECT headerContent FROM imapUidTable WHERE messageId=? AND mailboxId=? AND uid=?",
+            messageId, mailboxId, uid).one().getString("headerContent")).isEqualTo(currentHeader);
     }
 
     @Nested
