@@ -35,6 +35,8 @@ import scala.util.{Failure, Try}
 
 object MDNReportParser {
   private val LOGGER = LoggerFactory.getLogger(classOf[MDNReportParser])
+  // Bounds comment recursion: deeply nested comments would otherwise lead to StackOverflowError
+  val MAX_COMMENT_DEPTH: Int = 10
 
   def parse(is: InputStream, charset: String): Try[MDNReport] = new MDNReportParser(IOUtils.toString(is, charset)).dispositionNotificationContent.run()
 
@@ -302,7 +304,7 @@ class MDNReportParser(val input: ParserInput) extends Parser {
   }
 
   //   CFWS            =   (1*([FWS] comment) [FWS]) / FWS
-  private def cfws: Rule0 = rule { (oneOrMore(fws.? ~ comment) ~ fws) | fws }
+  private def cfws: Rule0 = rule { (oneOrMore(fws.? ~ comment(1)) ~ fws) | fws }
 
   //   FWS             =   ([*WSP CRLF] 1*WSP) /  obs-FWS
   private def fws: Rule0 = rule { ((zeroOrMore(wsp) ~ crlf).? ~ oneOrMore(wsp)) | obsFWS }
@@ -329,10 +331,12 @@ class MDNReportParser(val input: ParserInput) extends Parser {
   private def obsFWS: Rule0 = rule { oneOrMore(wsp) ~ zeroOrMore(crlf ~ oneOrMore(wsp)) }
 
   //   comment         =   "(" *([FWS] ccontent) [FWS] ")"
-  private def comment: Rule[HNil, HNil] = rule { "(" ~ zeroOrMore(fws.? ~ ccontent) ~ fws.? ~ ")" }
+  private def comment(depth: Int): Rule[HNil, HNil] = rule {
+    test(depth <= MDNReportParser.MAX_COMMENT_DEPTH) ~ "(" ~ zeroOrMore(fws.? ~ ccontent(depth)) ~ fws.? ~ ")"
+  }
 
   //   ccontent        =   ctext / quoted-pair / comment
-  private def ccontent: Rule[HNil, HNil] = rule { ctext | quotedPair | comment }
+  private def ccontent(depth: Int): Rule[HNil, HNil] = rule { ctext | quotedPair | comment(depth + 1) }
 
   /*   ctext           =   %d33-39 /          ; Printable US-ASCII
                          %d42-91 /          ;  characters not including
