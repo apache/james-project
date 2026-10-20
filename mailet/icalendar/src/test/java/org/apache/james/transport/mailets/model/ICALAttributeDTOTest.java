@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.ICal4JConfigurator;
@@ -125,7 +126,7 @@ class ICALAttributeDTOTest {
     }
 
     @Test
-    void dtoShouldIgnoreDtStampWithInvalidTzId() throws Exception {
+    void dtoShouldReadDtStampWithInvalidTzId() throws Exception {
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_with_invalid_dtstamp_tzid.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
@@ -138,14 +139,16 @@ class ICALAttributeDTOTest {
             .replyTo(sender);
 
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(ical.getDtstamp()).isEmpty();
+            // iCal4j normalizes UTC properties during relaxed parsing.
+            softly.assertThat(ical.getDtstamp()).contains("20170106T115036Z");
+            softly.assertThat(ical.getIcal()).isEqualTo(new String(ics, StandardCharsets.UTF_8));
             softly.assertThat(ical.getMethod()).contains("REQUEST");
             softly.assertThat(ical.getSequence()).isEqualTo("0");
         });
     }
 
     @Test
-    void dtoShouldIgnoreRecurrenceIdWithInvalidTzId() throws Exception {
+    void dtoShouldReadRecurrenceIdWithInvalidTzId() throws Exception {
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_with_invalid_recurrence_id_tzid.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
@@ -158,7 +161,9 @@ class ICALAttributeDTOTest {
             .replyTo(sender);
 
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(ical.getRecurrenceId()).isEmpty();
+            // Text access preserves the parsed value even when its TZID cannot be resolved.
+            softly.assertThat(ical.getRecurrenceId()).contains("20170111T090000");
+            softly.assertThat(ical.getIcal()).isEqualTo(new String(ics, StandardCharsets.UTF_8));
             softly.assertThat(ical.getDtstamp()).contains("20170106T115036Z");
             softly.assertThat(ical.getMethod()).contains("REQUEST");
             softly.assertThat(ical.getSequence()).isEqualTo("0");
