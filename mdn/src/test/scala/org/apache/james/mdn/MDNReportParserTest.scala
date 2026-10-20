@@ -284,4 +284,27 @@ class MDNReportParserTest {
     assertThat(result.isSuccess).isTrue
     assertThat(result.get).isEqualTo(ExtensionField.builder.fieldName("X-OPENPAAS-IP").rawValue(" 177.177.177.77").build)
   }
+
+  private def mdnWithNestedComments(depth: Int): String =
+    "Final-Recipient: rfc822; final_recipient\r\n" +
+      "Original-Message-ID: " + "(" * depth + ")" * depth + " <original@message.id>\r\n" +
+      "Disposition: automatic-action/MDN-sent-automatically;processed\r\n"
+
+  @Test
+  def parseShouldAcceptNestedCommentsUpToMaxDepth(): Unit = {
+    assertThat(MDNReportParser.parse(mdnWithNestedComments(MDNReportParser.MAX_COMMENT_DEPTH)).isSuccess)
+      .isTrue
+  }
+
+  @Test
+  def parseShouldRejectNestedCommentsAboveMaxDepth(): Unit = {
+    assertThat(MDNReportParser.parse(mdnWithNestedComments(MDNReportParser.MAX_COMMENT_DEPTH + 1)).isFailure)
+      .isTrue
+  }
+
+  @Test
+  def parseShouldRejectDeeplyNestedComments(): Unit = {
+    assertThat(MDNReportParser.parse(mdnWithNestedComments(100000)).isFailure)
+      .isTrue
+  }
 }
