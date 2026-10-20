@@ -96,10 +96,7 @@ public class SMTPServerModule extends AbstractModule {
     @SmtpDefaultSaslMechanismFactories
     ImmutableList<SaslMechanismFactory> provideDefaultSmtpSaslMechanismFactories(OauthBearerSaslMechanismFactory oauthBearer,
                                                                                  XOauth2SaslMechanismFactory xoauth2) {
-        // SMTP historically used auth.requireSSL for capability announcement only: PLAIN/LOGIN remain accepted
-        // when sent explicitly by clients, even over clear-text test/configuration ports.
-        PlainSaslMechanismFactory plain = new PlainSaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT,
-            PlainSaslMechanismFactory.IGNORE_REQUIRE_SSL_CONFIGURATION);
+        PlainSaslMechanismFactory plain = new PlainSaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT);
         return ImmutableList.of(new LoginSaslMechanismFactory(plain), plain, oauthBearer, xoauth2);
     }
 

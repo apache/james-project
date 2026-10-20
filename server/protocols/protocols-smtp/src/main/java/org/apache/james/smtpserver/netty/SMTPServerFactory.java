@@ -58,11 +58,8 @@ public class SMTPServerFactory extends AbstractServerFactory implements Disconne
     @FunctionalInterface
     public interface SmtpSaslMechanismLoader {
         static SmtpSaslMechanismLoader defaultLoader() {
-            PlainSaslMechanismFactory plain = new PlainSaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT,
-                PlainSaslMechanismFactory.IGNORE_REQUIRE_SSL_CONFIGURATION);
+            PlainSaslMechanismFactory plain = new PlainSaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT);
             ImmutableList<SaslMechanismFactory> defaultFactories = ImmutableList.of(
-                // SMTP historically used auth.requireSSL for capability announcement only: PLAIN/LOGIN remain accepted
-                // when sent explicitly by clients, even over clear-text test/configuration ports.
                 new LoginSaslMechanismFactory(plain),
                 plain,
                 new OauthBearerSaslMechanismFactory(),

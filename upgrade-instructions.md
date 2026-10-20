@@ -20,6 +20,7 @@ Change list:
  - [Adding thread_id column to Postgresql email_query_view table](#adding-thread_id-column-to-postgresql-email_query_view-table)
  - [Lucene mailbox index schema update for collapseThreads support](#lucene-mailbox-index-schema-update-for-collapsethreads-support)
  - [JAMES-4210 SMTP AuthHook deprecation](#james-4210-smtp-authhook-deprecation)
+ - [JAMES-4210 SMTP PLAIN/LOGIN authentication honors auth.requireSSL](#james-4210-smtp-plainlogin-authentication-honors-authrequiressl)
  - [JAMES-4210 POP3 USER/PASS requires TLS by default](#james-4210-pop3-userpass-requires-tls-by-default)
  - [JAMES-4210 ManageSieve SASL adoption](#james-4210-managesieve-sasl-adoption)
  - [JAMES-4225 Blob ids default to 128 bits of entropy](#james-4225-blob-ids-default-to-128-bits-of-entropy)
@@ -102,6 +103,26 @@ against its shorter counterpart until it is rewritten. To keep the previous beha
 
 ```
 james.blobid.entropy=256
+```
+
+### JAMES-4210 SMTP PLAIN/LOGIN authentication honors auth.requireSSL
+
+Date: 20/10/2026
+
+Concerned products: SMTP servers configured with `auth.requireSSL` set to `true` on ports accepting clear-text connections
+
+`auth.requireSSL` used to only control the announcement of SMTP authentication capabilities: clients explicitly
+sending `AUTH PLAIN` or `AUTH LOGIN` over a clear-text connection were still authenticated. These mechanisms now
+reject authentication attempts over insecure connections when `auth.requireSSL` is `true`, answering
+`504 Unrecognized Authentication Type`. Clients have to issue `STARTTLS` (or use implicit TLS) prior to authenticating.
+
+Deployments that intentionally allow clear-text SMTP authentication must add the following to each concerned
+`smtpserver.xml` entry:
+
+```xml
+<auth>
+    <requireSSL>false</requireSSL>
+</auth>
 ```
 
 ### JAMES-4210 POP3 USER/PASS requires TLS by default

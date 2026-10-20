@@ -84,7 +84,7 @@
         {{/hasAuthorizedAddresses}}
         <auth>
             <required>{{forbidUnauthenticatedSenders}}</required>
-            <requireSSL>true</requireSSL>
+            <requireSSL>false</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
 {{#hasSaslMechanisms}}
             <saslMechanisms>{{saslMechanisms}}</saslMechanisms>
