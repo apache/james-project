@@ -167,6 +167,34 @@ class AuthAnnounceTest {
     }
 
     @Test
+    void plainAuthShouldFailOnPlainChannelsWhenRequireSSL() throws Exception {
+        configureAndInit("smtpserver-requireSSL.xml");
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("AUTH PLAIN");
+
+        assertThat(smtpProtocol.getReplyString())
+            .isEqualTo("504 Unrecognized Authentication Type\r\n");
+    }
+
+    @Test
+    void loginAuthShouldFailOnPlainChannelsWhenRequireSSL() throws Exception {
+        configureAndInit("smtpserver-requireSSL.xml");
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("AUTH LOGIN");
+
+        assertThat(smtpProtocol.getReplyString())
+            .isEqualTo("504 Unrecognized Authentication Type\r\n");
+    }
+
+    @Test
     void shouldStartWithPreviousConfiguration() throws Exception {
         testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
             ClassLoader.getSystemResourceAsStream("smtpserver-noauth.xml")));

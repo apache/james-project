@@ -167,9 +167,9 @@ public class AuthCmdHandler
                 argument = argument.substring(0,argument.indexOf(" "));
             }
             String authType = argument.toUpperCase(Locale.US);
-            if (authType.equals(AUTH_TYPE_PLAIN) && session.getConfiguration().isPlainAuthEnabled()) {
+            if (authType.equals(AUTH_TYPE_PLAIN) && isPlainAuthAllowed(session)) {
                 return handlePlainContinuation(session, initialResponse);
-            } else if (authType.equals(AUTH_TYPE_LOGIN) && session.getConfiguration().isPlainAuthEnabled()) {
+            } else if (authType.equals(AUTH_TYPE_LOGIN) && isPlainAuthAllowed(session)) {
                 return handleLoginAuthContinuation(session, initialResponse);
             } else if ((authType.equals(AUTH_TYPE_OAUTHBEARER) || authType.equals(AUTH_TYPE_XOAUTH2)) && session.supportsOAuth()) {
                 return handleOauth2Continuation(session, initialResponse);
@@ -177,6 +177,11 @@ public class AuthCmdHandler
                 return doUnknownAuth(authType);
             }
         }
+    }
+
+    private boolean isPlainAuthAllowed(SMTPSession session) {
+        return session.getConfiguration().isPlainAuthEnabled()
+            && (!session.getConfiguration().isAuthRequireSSL() || session.isTLSStarted());
     }
 
     private Response handlePlainContinuation(SMTPSession session, String initialResponse) {

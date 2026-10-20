@@ -94,6 +94,7 @@ regardless of this option.
 | auth.requireSSL
 | This is an optional tag, defaults to true. If true, authentication is not advertised via capabilities on unencrypted
 channels.
+The `PLAIN` and `LOGIN` mechanisms also use this value to reject authentication attempts over an insecure connection.
 
 | auth.plainAuthEnabled
 | This is an optional tag, defaults to true. If false, AUTH PLAIN and AUTH LOGIN will not be exposed. This setting

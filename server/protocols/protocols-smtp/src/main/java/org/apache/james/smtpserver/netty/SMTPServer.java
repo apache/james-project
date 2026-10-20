@@ -340,6 +340,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         }
 
         @Override
+        public boolean isAuthRequireSSL() {
+            return authenticationConfiguration.isRequireSSL();
+        }
+
+        @Override
         public boolean isAuthAnnounced(String remoteIP, boolean tlsStarted) {
             if (authenticationConfiguration.requireSSL && !tlsStarted) {
                 return false;

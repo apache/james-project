@@ -81,7 +81,7 @@
         {{/hasAuthorizedAddresses}}
         <auth>
             <required>{{forbidUnauthenticatedSenders}}</required>
-            <requireSSL>true</requireSSL>
+            <requireSSL>false</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <!-- Trust authenticated users -->

@@ -110,6 +110,15 @@ public interface SMTPConfiguration extends ProtocolConfiguration {
 
     boolean isPlainAuthEnabled();
 
+    /**
+     * Whether authentication requires a secure connection (TLS or STARTTLS).
+     *
+     * When true, PLAIN and LOGIN mechanisms are refused over insecure connections.
+     */
+    default boolean isAuthRequireSSL() {
+        return false;
+    }
+
     Optional<OidcSASLConfiguration> saslConfiguration();
 
     default Set<String> disabledFeatures() {

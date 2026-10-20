@@ -10,7 +10,31 @@ software documentation. Do not follow this guide blindly!
 
 ## Unreleased
 
-No changes yet.
+Changes to apply between 3.9.1 and 3.9.2 will be reported here.
+
+Change list:
+
+ - [JAMES-4210 SMTP PLAIN/LOGIN authentication honors auth.requireSSL](#james-4210-smtp-plainlogin-authentication-honors-authrequiressl)
+
+### JAMES-4210 SMTP PLAIN/LOGIN authentication honors auth.requireSSL
+
+Date: 20/10/2026
+
+Concerned products: SMTP servers configured with `auth.requireSSL` set to `true` on ports accepting clear-text connections
+
+`auth.requireSSL` used to only control the announcement of SMTP authentication capabilities: clients explicitly
+sending `AUTH PLAIN` or `AUTH LOGIN` over a clear-text connection were still authenticated. These mechanisms now
+reject authentication attempts over insecure connections when `auth.requireSSL` is `true`, answering
+`504 Unrecognized Authentication Type`. Clients have to issue `STARTTLS` (or use implicit TLS) prior to authenticating.
+
+Deployments that intentionally allow clear-text SMTP authentication must add the following to each concerned
+`smtpserver.xml` entry:
+
+```xml
+<auth>
+    <requireSSL>false</requireSSL>
+</auth>
+```
 
 ## 3.9.1 version
 
