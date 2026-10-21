@@ -30,7 +30,7 @@ import org.apache.james.mailbox.model.MailboxACL.EntryKey
 import org.apache.james.mailbox.model.{MailboxId, TestId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.Json
+import play.api.libs.json.{JsNull, Json}
 
 object MailboxSerializationTest {
   private val MAILBOX_ID: MailboxId = TestId.of(2)
@@ -87,6 +87,15 @@ object MailboxSerializationTest {
 }
 
 class MailboxSerializationTest extends AnyWordSpec with Matchers {
+  "Serialize nullable mailbox properties" should {
+    "include explicit null for a root mailbox without a role" in {
+      val serializer = new MailboxSerializer(new TestId.Factory)
+      val mailbox = serializer.serialize(MAILBOX.copy(parentId = None, role = None))
+      (mailbox \ "parentId").toOption should equal(Some(JsNull))
+      (mailbox \ "role").toOption should equal(Some(JsNull))
+    }
+  }
+
   "Serialize Mailbox" should {
     "succeed " in {
 

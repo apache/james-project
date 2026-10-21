@@ -115,6 +115,26 @@ trait MailboxGetMethodContract {
   }
 
   @Test
+  def requestedMissingPropertiesShouldBeExplicitNull(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, "without-role")).serialize()
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/get", {
+               |    "accountId": "$bobAccountId", "ids": ["$mailboxId"],
+               |    "properties": ["parentId", "role"]
+               |  }, "c1"]]
+               |}""".stripMargin)
+    .when.post
+    .`then`.statusCode(SC_OK).extract.asString()
+
+    assertThatJson(response).inPath("methodResponses[0][1].list").isEqualTo(
+      s"""[{"id": "$mailboxId", "parentId": null, "role": null}]""")
+  }
+
+  @Test
   def mailboxGetShouldFailWhenWrongAccountId(): Unit = {
     val request =
       s"""{
@@ -196,6 +216,8 @@ trait MailboxGetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
+         |          "parentId": null,
+         |          "role": null,
          |          "id": "${mailboxId}",
          |          "name": "custom",
          |          "sortOrder": 1000,
@@ -266,6 +288,8 @@ trait MailboxGetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
+         |          "parentId": null,
+         |          "role": null,
          |          "id": "${mailboxId}",
          |          "name": "custom",
          |          "sortOrder": 1000,
@@ -341,6 +365,8 @@ trait MailboxGetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
+         |          "parentId": null,
+         |          "role": null,
          |          "id": "${mailboxId}",
          |          "name": "custom",
          |          "sortOrder": 1000,
@@ -417,6 +443,8 @@ trait MailboxGetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
+         |          "parentId": null,
+         |          "role": null,
          |          "id": "${mailboxId}",
          |          "name": "custom",
          |          "sortOrder": 1000,
@@ -1659,6 +1687,8 @@ trait MailboxGetMethodContract {
          |        "accountId": "$bobAccountId",
          |        "list": [
          |          {
+         |            "parentId": null,
+         |            "role": null,
          |            "id": "${mailboxId}",
          |            "name": "custom",
          |            "sortOrder": 1000,
@@ -1734,6 +1764,8 @@ trait MailboxGetMethodContract {
          |        "accountId": "$bobAccountId",
          |        "list": [
          |          {
+         |            "parentId": null,
+         |            "role": null,
          |            "id": "${mailboxId}",
          |            "name": "custom",
          |            "sortOrder": 1000,
