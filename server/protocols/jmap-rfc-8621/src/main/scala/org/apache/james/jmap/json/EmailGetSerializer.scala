@@ -80,9 +80,9 @@ object EmailGetSerializer {
   private implicit val languagesFormat: Format[Languages] = Json.valueFormat[Languages]
   private implicit val locationWrites: Writes[Location] = Json.valueWrites[Location]
   private implicit val emailerNameWrites: Writes[EmailerName] = Json.valueWrites[EmailerName]
-  private implicit val emailAddressWrites: Writes[EmailAddress] = Json.configured(JsonConfiguration(optionHandlers = OptionHandlers.WritesNull)).writes[EmailAddress]
+  private implicit val emailAddressWrites: Writes[EmailAddress] = writesNull.writes[EmailAddress]
   private implicit val uncheckedEmailWrites: Writes[UncheckedEmail] = Json.valueWrites[UncheckedEmail]
-  private implicit val uncheckedEmailAddressWrites: Writes[UncheckedEmailAddress] = Json.configured(JsonConfiguration(optionHandlers = OptionHandlers.WritesNull)).writes[UncheckedEmailAddress]
+  private implicit val uncheckedEmailAddressWrites: Writes[UncheckedEmailAddress] = writesNull.writes[UncheckedEmailAddress]
   private implicit val headerMessageIdWrites: Writes[HeaderMessageId] = Json.valueWrites[HeaderMessageId]
   private implicit val isEncodingProblemWrites: Writes[IsEncodingProblem] = Json.valueWrites[IsEncodingProblem]
   private implicit val isTruncatedWrites: Writes[IsTruncated] = Json.valueWrites[IsTruncated]
@@ -159,7 +159,7 @@ object EmailGetSerializer {
   private implicit val bodyPartWrites: Writes[EmailBodyPart] = part => bodyPartWritesToSerializeWrites.writes(EmailBodyPartToSerialize.from(part))
 
   private implicit val emailMetadataWrites: OWrites[EmailMetadata] = Json.writes[EmailMetadata]
-  private implicit val emailHeadersWrites: Writes[EmailHeaders] = Json.configured(JsonConfiguration(optionHandlers = OptionHandlers.WritesNull)).writes[EmailHeaders]
+  private implicit val emailHeadersWrites: Writes[EmailHeaders] = writesNull.writes[EmailHeaders]
   private implicit val attachmentsMetadataWrites: Writes[AttachmentsMetadata] = Json.writes[AttachmentsMetadata]
   private implicit val emailBodyMetadataWrites: Writes[EmailBodyMetadata] = Json.writes[EmailBodyMetadata]
 

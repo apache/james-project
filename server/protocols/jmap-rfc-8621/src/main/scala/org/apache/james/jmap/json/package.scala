@@ -34,6 +34,8 @@ import scala.annotation.nowarn
 import scala.util.{Failure, Success, Try}
 
 package object json {
+  private[json] val writesNull = Json.configured(JsonConfiguration(optionHandlers = OptionHandlers.WritesNull))
+
   implicit val jsObjectReads: Reads[JsObject] = {
     case o: JsObject => JsSuccess(o)
     case _ => JsError("Expecting a JsObject as a creation entry")
