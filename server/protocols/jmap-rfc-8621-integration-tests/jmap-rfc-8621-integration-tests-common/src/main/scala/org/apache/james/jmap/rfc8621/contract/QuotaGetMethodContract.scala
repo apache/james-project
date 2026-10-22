@@ -238,6 +238,7 @@ trait QuotaGetMethodContract {
          |                "state": "$bobCount100Octets99State",
          |                "list": [
          |                    {
+         |                        "softLimit": null, "description": null,
          |                        "used": 0,
          |                        "name": "$bobCountQuotaName",
          |                        "id": "$bobCountQuotaId",
@@ -250,6 +251,7 @@ trait QuotaGetMethodContract {
          |                        "scope": "account"
          |                    },
          |                    {
+         |                        "softLimit": null, "description": null,
          |                        "used": 0,
          |                        "name": "$bobOctetsQuotaName",
          |                        "id": "$bobOctetsQuotaId",
@@ -314,6 +316,7 @@ trait QuotaGetMethodContract {
          |                "state": "$bobCount100State",
          |                "list": [
          |                    {
+         |                        "softLimit": null, "description": null,
          |                        "used": 0,
          |                        "name": "$bobCountQuotaName",
          |                        "id": "$bobCountQuotaId",
@@ -426,6 +429,7 @@ trait QuotaGetMethodContract {
            |                "state": "$bobCount100Octets99State",
            |                "list": [
            |                    {
+           |                        "softLimit": null, "description": null,
            |                        "used": 0,
            |                        "name": "$bobCountQuotaName",
            |                        "id": "$bobCountQuotaId",
@@ -438,6 +442,7 @@ trait QuotaGetMethodContract {
            |                        "scope": "account"
            |                    },
            |                    {
+           |                        "softLimit": null, "description": null,
            |                        "used": 0,
            |                        "name": "$bobOctetsQuotaName",
            |                        "id": "$bobOctetsQuotaId",
@@ -552,6 +557,7 @@ trait QuotaGetMethodContract {
          |                "state": "$bobCount100Octets900State",
          |                "list": [
          |                    {
+         |                        "softLimit": null, "description": null,
          |                        "used": 0,
          |                        "name": "$bobCountQuotaName",
          |                        "id": "$bobCountQuotaId",
@@ -626,6 +632,7 @@ trait QuotaGetMethodContract {
              |                "state": "$bobCount100Octets900WithUsageState",
              |                "list": [
              |                    {
+             |                        "softLimit": null, "description": null,
              |                        "used": 1,
              |                        "name": "$bobCountQuotaName",
              |                        "id": "$bobCountQuotaId",
@@ -638,6 +645,7 @@ trait QuotaGetMethodContract {
              |                        "scope": "account"
              |                    },
              |                    {
+             |                        "softLimit": null, "description": null,
              |                        "used": 85,
              |                        "name": "$bobOctetsQuotaName",
              |                        "id": "$bobOctetsQuotaId",
@@ -934,7 +942,7 @@ trait QuotaGetMethodContract {
            |    {
            |      "accountId": "$bobAccountId",
            |      "ids": null,
-           |      "properties": ["name","used","hardLimit"]
+           |      "properties": ["name","used","hardLimit","softLimit"]
            |    },
            |    "c1"]]
            |}""".stripMargin)
@@ -960,7 +968,7 @@ trait QuotaGetMethodContract {
          |          "id": "$bobCountQuotaId",
          |          "used": 0,
          |          "name": "$bobCountQuotaName",
-         |          "hardLimit": 100
+         |          "hardLimit": 100, "softLimit": null
          |        }
          |      ],
          |      "notFound": []
@@ -1120,6 +1128,7 @@ trait QuotaGetMethodContract {
              |                "state": "$bobCount100Octets101WithUsageState",
              |                "list": [
              |                    {
+             |                        "softLimit": null, "description": null,
              |                        "used": 1,
              |                        "name": "$bobCountQuotaName",
              |                        "id": "$bobCountQuotaId",
@@ -1132,6 +1141,7 @@ trait QuotaGetMethodContract {
              |                        "scope": "account"
              |                    },
              |                    {
+             |                        "softLimit": null, "description": null,
              |                        "used": 85,
              |                        "name": "$bobOctetsQuotaName",
              |                        "id": "$bobOctetsQuotaId",
@@ -1203,6 +1213,7 @@ trait QuotaGetMethodContract {
          |                "state": "$bobCount100State",
          |                "list": [
          |                    {
+         |                        "softLimit": null, "description": null,
          |                        "used": 0,
          |                        "name": "$bobCountQuotaName",
          |                        "id": "$bobCountQuotaId",
@@ -1275,6 +1286,7 @@ trait QuotaGetMethodContract {
          |                "state": "$bobCount100AndreCount88State",
          |                "list": [
          |                    {
+         |                        "softLimit": null, "description": null,
          |                        "used": 0,
          |                        "name": "$bobCountQuotaName",
          |                        "id": "$bobCountQuotaId",
@@ -1287,6 +1299,7 @@ trait QuotaGetMethodContract {
          |                        "scope": "account"
          |                    },
          |                    {
+         |                        "softLimit": null, "description": null,
          |                        "used": 0,
          |                        "name": "$andreCountQuotaName",
          |                        "warnLimit": 79,
@@ -1357,6 +1370,7 @@ trait QuotaGetMethodContract {
          |                "state": "$bobCount100State",
          |                "list": [
          |                    {
+         |                        "softLimit": null, "description": null,
          |                        "used": 0,
          |                        "name": "$bobCountQuotaName",
          |                        "id": "$bobCountQuotaId",
@@ -1429,6 +1443,7 @@ trait QuotaGetMethodContract {
          |                "state": "$bobCount100AndreCount88State",
          |                "list": [
          |                    {
+         |                        "softLimit": null, "description": null,
          |                        "used": 0,
          |                        "name": "$andreCountQuotaName",
          |                        "warnLimit": 79,
@@ -1495,6 +1510,7 @@ trait QuotaGetMethodContract {
          |                "state": "$bobCount100State",
          |                "list": [
          |                    {
+         |                        "softLimit": null, "description": null,
          |                        "used": 0,
          |                        "name": "$bobCountQuotaName",
          |                        "id": "$bobCountQuotaId",

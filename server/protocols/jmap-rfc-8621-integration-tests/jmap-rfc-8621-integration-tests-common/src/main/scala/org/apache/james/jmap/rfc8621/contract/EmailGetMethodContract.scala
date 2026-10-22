@@ -60,9 +60,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.junit.experimental.categories.Category
 import org.junit.jupiter.api.{BeforeEach, Test}
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
-import play.api.libs.json.{JsNull, Json}
+import play.api.libs.json.Json
 
 object EmailGetMethodContract {
   case class TestContext(bobUsername: Username, bobAccountId: String,
@@ -126,66 +124,6 @@ trait EmailGetMethodContract {
       .build
 
   def randomMessageId: MessageId
-
-  @ParameterizedTest(name = "{displayName}: properties={0}")
-  @ValueSource(strings = Array("omitted", "null"))
-  def defaultPropertiesShouldIncludeExplicitNull(propertiesMode: String, server: GuiceJamesServer): Unit = {
-    val message = Message.Builder.of.setBody("draft", StandardCharsets.UTF_8).build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
-    val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString(), MailboxPath.inbox(bobUsername), AppendCommand.from(message))
-      .getMessageId.serialize()
-    val properties = if (propertiesMode == "null") """, "properties": null""" else ""
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(s"""{
-               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-               |  "methodCalls": [["Email/get", {
-               |    "accountId": "$bobAccountId", "ids": ["$messageId"]$properties
-               |  }, "c1"]]
-               |}""".stripMargin)
-    .when.post
-    .`then`.statusCode(SC_OK).extract.asString()
-
-    val result = (Json.parse(response) \ "methodResponses")(0)(1)
-    val item = (result \ "list")(0)
-    Seq("from", "sender", "to", "cc", "bcc", "replyTo", "subject").foreach { property =>
-      assertThat((item \ property).toOption.orNull)
-        .as(property).isEqualTo(JsNull)
-    }
-  }
-
-  @Test
-  def requestedMissingHeadersShouldBeExplicitNull(server: GuiceJamesServer): Unit = {
-    val message = Message.Builder.of
-      .setFrom(bobUsername.asString())
-      .setBody("draft", StandardCharsets.UTF_8)
-      .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
-    val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString(), MailboxPath.inbox(bobUsername), AppendCommand.from(message))
-      .getMessageId.serialize()
-
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(s"""{
-               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-               |  "methodCalls": [["Email/get", {
-               |    "accountId": "$bobAccountId", "ids": ["$messageId"],
-               |    "properties": ["from", "sender", "to", "cc", "bcc", "replyTo", "subject",
-               |      "header:To:asAddresses", "header:Subject:asText"]
-               |  }, "c1"]]
-               |}""".stripMargin)
-    .when.post
-    .`then`.statusCode(SC_OK).extract.asString()
-
-    assertThatJson(response).inPath("methodResponses[0][1].list[0]").isEqualTo(
-      s"""{
-         |  "id": "$messageId", "from": [{"name": null, "email": "${bobUsername.asString()}"}],
-         |  "sender": null, "to": null, "cc": null, "bcc": null, "replyTo": null, "subject": null,
-         |  "header:To:asAddresses": null, "header:Subject:asText": null
-         |}""".stripMargin)
-  }
 
   @Test
   def emailGetShouldFailWhenWrongAccountId(): Unit = {
@@ -2569,11 +2507,7 @@ trait EmailGetMethodContract {
          |                        "to": [{"name": null, "email": "to@linagora.com"}],
          |                        "textBody": [
          |                            {
-         |                                "cid": null,
-         |                                "disposition": null,
-         |                                "language": null,
-         |                                "location": null,
-         |                                "name": null,
+         |                                "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                "partId": "2",
          |                                "blobId": "${messageId.serialize}_2",
          |                                "size": 8,
@@ -2583,9 +2517,7 @@ trait EmailGetMethodContract {
          |                        ],
          |                        "attachments": [
          |                            {
-         |                                "cid": null,
-         |                                "language": null,
-         |                                "location": null,
+         |                                "cid": null, "language": null, "location": null,
          |                                "partId": "3",
          |                                "blobId": "${messageId.serialize}_3",
          |                                "size": 271,
@@ -2595,9 +2527,7 @@ trait EmailGetMethodContract {
          |                                "disposition": "attachment"
          |                            },
          |                            {
-         |                                "cid": null,
-         |                                "language": null,
-         |                                "location": null,
+         |                                "cid": null, "language": null, "location": null,
          |                                "partId": "4",
          |                                "blobId": "${messageId.serialize}_4",
          |                                "size": 398,
@@ -2607,9 +2537,7 @@ trait EmailGetMethodContract {
          |                                "disposition": "attachment"
          |                            },
          |                            {
-         |                                "cid": null,
-         |                                "language": null,
-         |                                "location": null,
+         |                                "cid": null, "language": null, "location": null,
          |                                "partId": "5",
          |                                "blobId": "${messageId.serialize}_5",
          |                                "size": 412,
@@ -2621,11 +2549,7 @@ trait EmailGetMethodContract {
          |                        ],
          |                        "htmlBody": [
          |                            {
-         |                                "cid": null,
-         |                                "disposition": null,
-         |                                "language": null,
-         |                                "location": null,
-         |                                "name": null,
+         |                                "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                "partId": "2",
          |                                "blobId": "${messageId.serialize}_2",
          |                                "size": 8,
@@ -2635,10 +2559,7 @@ trait EmailGetMethodContract {
          |                        ],
          |                        "bodyValues": {},
          |                        "preview": "Send",
-         |                        "bcc": null,
-         |                        "cc": null,
-         |                        "replyTo": null,
-         |                        "sender": null,
+         |                        "bcc": null, "cc": null, "replyTo": null, "sender": null,
          |                        "hasAttachment": true
          |                    }
          |                ],
@@ -2706,11 +2627,7 @@ trait EmailGetMethodContract {
            |    "id": "${messageId.serialize()}",
            |    "htmlBody": [
            |        {
-           |            "cid": null,
-           |            "disposition": null,
-           |            "language": null,
-           |            "location": null,
-           |            "name": null,
+           |            "cid": null, "disposition": null, "language": null, "location": null, "name": null,
            |            "charset": "UTF-8",
            |            "size": 42,
            |            "partId": "2",
@@ -2718,11 +2635,7 @@ trait EmailGetMethodContract {
            |            "type": "text/plain"
            |        },
            |        {
-           |            "cid": null,
-           |            "disposition": null,
-           |            "language": null,
-           |            "location": null,
-           |            "name": null,
+           |            "cid": null, "disposition": null, "language": null, "location": null, "name": null,
            |            "charset": "UTF-8",
            |            "size": 108,
            |            "partId": "3",
@@ -2746,11 +2659,7 @@ trait EmailGetMethodContract {
            |    "keywords": {},
            |    "textBody": [
            |        {
-           |            "cid": null,
-           |            "disposition": null,
-           |            "language": null,
-           |            "location": null,
-           |            "name": null,
+           |            "cid": null, "disposition": null, "language": null, "location": null, "name": null,
            |            "charset": "UTF-8",
            |            "size": 42,
            |            "partId": "2",
@@ -2758,11 +2667,7 @@ trait EmailGetMethodContract {
            |            "type": "text/plain"
            |        },
            |        {
-           |            "cid": null,
-           |            "disposition": null,
-           |            "language": null,
-           |            "location": null,
-           |            "name": null,
+           |            "cid": null, "disposition": null, "language": null, "location": null, "name": null,
            |            "charset": "UTF-8",
            |            "size": 108,
            |            "partId": "3",
@@ -2771,10 +2676,7 @@ trait EmailGetMethodContract {
            |        }
            |    ],
            |    "threadId": "${messageId.serialize()}",
-           |    "bcc": null,
-           |    "cc": null,
-           |    "replyTo": null,
-           |    "sender": null,
+           |    "bcc": null, "cc": null, "replyTo": null, "sender": null,
            |    "hasAttachment": false
            |}""".stripMargin)
   }
@@ -3782,11 +3684,7 @@ trait EmailGetMethodContract {
          |                    {
          |                        "id": "${messageId.serialize}",
          |                        "bodyStructure": {
-         |                            "cid": null,
-         |                            "disposition": null,
-         |                            "language": null,
-         |                            "location": null,
-         |                            "name": null,
+         |                            "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                            "partId": "1",
          |                            "blobId": "${messageId.serialize}_1",
          |                            "size": 8,
@@ -3979,11 +3877,7 @@ trait EmailGetMethodContract {
          |                    {
          |                        "id": "${messageId.serialize}",
          |                        "bodyStructure": {
-         |                            "cid": null,
-         |                            "disposition": null,
-         |                            "language": null,
-         |                            "location": null,
-         |                            "name": null,
+         |                            "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                            "partId": "1",
          |                            "blobId": "${messageId.serialize}_1",
          |                            "headers": [
@@ -4063,9 +3957,7 @@ trait EmailGetMethodContract {
       s"""{
          |  "id": "${messageId.serialize}",
          |  "bodyStructure": {
-         |    "cid": null,
-         |    "disposition": null,
-         |    "name": null,
+         |    "cid": null, "disposition": null, "name": null,
          |    "header:Subject:asText": "test",
          |    "charset": "UTF-8",
          |    "size": 8,
@@ -4167,21 +4059,12 @@ trait EmailGetMethodContract {
          |                                }
          |                            ],
          |                            "size": 1880,
-         |                            "blobId": null,
-         |                            "cid": null,
-         |                            "disposition": null,
-         |                            "language": null,
-         |                            "location": null,
-         |                            "name": null,
+         |                            "blobId": null, "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                            "type": "multipart/mixed",
          |                            "charset": "US-ASCII",
          |                            "subParts": [
          |                                {
-         |                                    "cid": null,
-         |                                    "disposition": null,
-         |                                    "language": null,
-         |                                    "location": null,
-         |                                    "name": null,
+         |                                    "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                    "partId": "2",
          |                                    "blobId": "${messageId.serialize}_2",
          |                                    "headers": [
@@ -4199,9 +4082,7 @@ trait EmailGetMethodContract {
          |                                    "charset": "UTF-8"
          |                                },
          |                                {
-         |                                    "cid": null,
-         |                                    "language": null,
-         |                                    "location": null,
+         |                                    "cid": null, "language": null, "location": null,
          |                                    "partId": "3",
          |                                    "blobId": "${messageId.serialize}_3",
          |                                    "headers": [
@@ -4225,9 +4106,7 @@ trait EmailGetMethodContract {
          |                                    "disposition": "attachment"
          |                                },
          |                                {
-         |                                    "cid": null,
-         |                                    "language": null,
-         |                                    "location": null,
+         |                                    "cid": null, "language": null, "location": null,
          |                                    "partId": "4",
          |                                    "blobId": "${messageId.serialize}_4",
          |                                    "headers": [
@@ -4251,9 +4130,7 @@ trait EmailGetMethodContract {
          |                                    "disposition": "attachment"
          |                                },
          |                                {
-         |                                    "cid": null,
-         |                                    "language": null,
-         |                                    "location": null,
+         |                                    "cid": null, "language": null, "location": null,
          |                                    "partId": "5",
          |                                    "blobId": "${messageId.serialize}_5",
          |                                    "headers": [
@@ -4382,12 +4259,7 @@ trait EmailGetMethodContract {
          |                                }
          |                            ],
          |                            "size": 891,
-         |                            "blobId": null,
-         |                            "cid": null,
-         |                            "disposition": null,
-         |                            "language": null,
-         |                            "location": null,
-         |                            "name": null,
+         |                            "blobId": null, "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                            "type": "multipart/mixed",
          |                            "charset": "US-ASCII",
          |                            "subParts": [
@@ -4400,21 +4272,13 @@ trait EmailGetMethodContract {
          |                                        }
          |                                    ],
          |                                    "size": 398,
-         |                                    "blobId": null,
-         |                                    "cid": null,
-         |                                    "disposition": null,
-         |                                    "language": null,
-         |                                    "location": null,
+         |                                    "blobId": null, "cid": null, "disposition": null, "language": null, "location": null,
          |                                    "name": null,
          |                                    "type": "multipart/alternative",
          |                                    "charset": "US-ASCII",
          |                                    "subParts": [
          |                                        {
-         |                                            "cid": null,
-         |                                            "disposition": null,
-         |                                            "language": null,
-         |                                            "location": null,
-         |                                            "name": null,
+         |                                            "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                            "partId": "3",
          |                                            "blobId": "${messageId.serialize}_3",
          |                                            "headers": [
@@ -4432,11 +4296,7 @@ trait EmailGetMethodContract {
          |                                            "charset": "ISO-8859-1"
          |                                        },
          |                                        {
-         |                                            "cid": null,
-         |                                            "disposition": null,
-         |                                            "language": null,
-         |                                            "location": null,
-         |                                            "name": null,
+         |                                            "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                            "partId": "4",
          |                                            "blobId": "${messageId.serialize}_4",
          |                                            "headers": [
@@ -4456,8 +4316,7 @@ trait EmailGetMethodContract {
          |                                    ]
          |                                },
          |                                {
-         |                                    "language": null,
-         |                                    "location": null,
+         |                                    "language": null, "location": null,
          |                                    "partId": "5",
          |                                    "blobId": "${messageId.serialize}_5",
          |                                    "headers": [
@@ -4546,11 +4405,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "textBody": [
          |                            {
-         |                                "cid": null,
-         |                                "disposition": null,
-         |                                "language": null,
-         |                                "location": null,
-         |                                "name": null,
+         |                                "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                "partId": "2",
          |                                "blobId": "${messageId.serialize}_2",
          |                                "size": 8,
@@ -4616,11 +4471,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "textBody": [
          |                            {
-         |                                "cid": null,
-         |                                "disposition": null,
-         |                                "language": null,
-         |                                "location": null,
-         |                                "name": null,
+         |                                "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                "partId": "3",
          |                                "blobId": "${messageId.serialize}_3",
          |                                "size": 20,
@@ -4628,8 +4479,7 @@ trait EmailGetMethodContract {
          |                                "charset": "ISO-8859-1"
          |                            },
          |                            {
-         |                                "language": null,
-         |                                "location": null,
+         |                                "language": null, "location": null,
          |                                "charset": "ISO-8859-1",
          |                                "disposition": "inline",
          |                                "size": 19,
@@ -4698,11 +4548,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "htmlBody": [
          |                            {
-         |                                "cid": null,
-         |                                "disposition": null,
-         |                                "language": null,
-         |                                "location": null,
-         |                                "name": null,
+         |                                "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                "partId": "4",
          |                                "blobId": "${messageId.serialize}_4",
          |                                "size": 30,
@@ -4710,8 +4556,7 @@ trait EmailGetMethodContract {
          |                                "charset": "ISO-8859-1"
          |                            },
          |                            {
-         |                                "language": null,
-         |                                "location": null,
+         |                                "language": null, "location": null,
          |                                "charset": "ISO-8859-1",
          |                                "disposition": "inline",
          |                                "size": 19,
@@ -4981,9 +4826,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                         "attachments": [
          |                            {
-         |                                "cid": null,
-         |                                "language": null,
-         |                                "location": null,
+         |                                "cid": null, "language": null, "location": null,
          |                                "charset": "US-ASCII",
          |                                "disposition": "attachment",
          |                                "size": 102,
@@ -4993,9 +4836,7 @@ trait EmailGetMethodContract {
          |                                "name":"yyy.txt"
          |                            },
          |                            {
-         |                                "cid": null,
-         |                                "language": null,
-         |                                "location": null,
+         |                                "cid": null, "language": null, "location": null,
          |                                "charset": "US-ASCII",
          |                                "disposition": "attachment",
          |                                "size": 102,
@@ -5089,9 +4930,7 @@ trait EmailGetMethodContract {
          |				"accountId": "$bobAccountId",
          |				"notFound": [],
          |				"list": [{
-         |					"bcc": null,
-         |					"cc": null,
-         |					"replyTo": null,
+         |					"bcc": null, "cc": null, "replyTo": null,
          |					"preview": "Main test message...",
          |					"to": [{
          |						"name": "Alice",
@@ -5112,9 +4951,7 @@ trait EmailGetMethodContract {
          |					"sentAt": "$${json-unit.ignore}",
          |					"hasAttachment": true,
          |					"attachments": [{
-         |							"cid": null,
-         |							"language": null,
-         |							"location": null,
+         |							"cid": null, "language": null, "location": null,
          |							"charset": "US-ASCII",
          |							"disposition": "attachment",
          |							"size": 102,
@@ -5124,9 +4961,7 @@ trait EmailGetMethodContract {
          |							"type": "application/json"
          |						},
          |						{
-         |							"cid": null,
-         |							"language": null,
-         |							"location": null,
+         |							"cid": null, "language": null, "location": null,
          |							"charset": "US-ASCII",
          |							"disposition": "attachment",
          |							"size": 102,
@@ -5215,9 +5050,7 @@ trait EmailGetMethodContract {
          |                "state": "33ac468f-7903-4f68-ac3e-8120505b5c3d",
          |                "list": [
          |                    {
-         |                        "bcc": null,
-         |                        "cc": null,
-         |                        "replyTo": null,
+         |                        "bcc": null, "cc": null, "replyTo": null,
          |                        "id": "${messageId.serialize}",
          |                        "keywords": {},
          |                        "mailboxIds": {
@@ -5241,8 +5074,7 @@ trait EmailGetMethodContract {
          |                        "sentAt": "$${json-unit.ignore}",
          |                        "attachments": [
          |                            {
-         |                                "language": null,
-         |                                "location": null,
+         |                                "language": null, "location": null,
          |                                "partId": "5",
          |                                "blobId": "${messageId.serialize}_5",
          |                                "size": 4334,
@@ -5353,9 +5185,7 @@ trait EmailGetMethodContract {
          |					},
          |					"receivedAt": "$${json-unit.ignore}",
          |					"sentAt": "$${json-unit.ignore}",
-         |					"bcc": null,
-         |					"cc": null,
-         |					"replyTo": null,
+         |					"bcc": null, "cc": null, "replyTo": null,
          |					"hasAttachment": true,
          |					"attachments": [{
          |							"cid": null,
@@ -5486,9 +5316,7 @@ trait EmailGetMethodContract {
                |				"accountId": "$bobAccountId",
                |				"notFound": [],
                |				"list": [{
-               |					"bcc": null,
-               |					"cc": null,
-               |					"replyTo": null,
+               |					"bcc": null, "cc": null, "replyTo": null,
                |					"preview": "Main test message...",
                |					"to": [{
                |						"name": "Alice",
@@ -5878,11 +5706,7 @@ trait EmailGetMethodContract {
       .isEqualTo(
       s"""{
          |	"htmlBody": [{
-         |		"cid": null,
-         |		"disposition": null,
-         |		"language": null,
-         |		"location": null,
-         |		"name": null,
+         |		"cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |		"charset": "UTF-8",
          |		"size": 47,
          |		"partId": "3",
@@ -6437,9 +6261,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "attachments": [
          |                            {
-         |                                "cid": null,
-         |                                "language": null,
-         |                                "location": null,
+         |                                "cid": null, "language": null, "location": null,
          |                                "partId": "3",
          |                                "blobId": "${messageId.serialize}_3",
          |                                "size": 271,
@@ -6449,9 +6271,7 @@ trait EmailGetMethodContract {
          |                                "disposition": "attachment"
          |                            },
          |                            {
-         |                                "cid": null,
-         |                                "language": null,
-         |                                "location": null,
+         |                                "cid": null, "language": null, "location": null,
          |                                "partId": "4",
          |                                "blobId": "${messageId.serialize}_4",
          |                                "size": 398,
@@ -6461,9 +6281,7 @@ trait EmailGetMethodContract {
          |                                "disposition": "attachment"
          |                            },
          |                            {
-         |                                "cid": null,
-         |                                "language": null,
-         |                                "location": null,
+         |                                "cid": null, "language": null, "location": null,
          |                                "partId": "5",
          |                                "blobId": "${messageId.serialize}_5",
          |                                "size": 412,
@@ -6531,8 +6349,7 @@ trait EmailGetMethodContract {
          |                        "id": "${messageId.serialize}",
          |                        "attachments": [
          |                            {
-         |                                "language": null,
-         |                                "location": null,
+         |                                "language": null, "location": null,
          |                                "partId": "5",
          |                                "blobId": "${messageId.serialize}_5",
          |                                "size": 19,

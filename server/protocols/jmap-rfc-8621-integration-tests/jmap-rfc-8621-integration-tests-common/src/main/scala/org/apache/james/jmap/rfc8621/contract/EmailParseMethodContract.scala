@@ -125,10 +125,7 @@ trait EmailParseMethodContract {
            |                "accountId": "$bobAccountId",
            |                "parsed": {
            |                    "${messageId.serialize()}": {
-           |                        "bcc": null,
-           |                        "cc": null,
-           |                        "replyTo": null,
-           |                        "sender": null,
+           |                        "bcc": null, "cc": null, "replyTo": null, "sender": null,
            |                        "inReplyTo": null,
            |                        "to": [
            |                            {
@@ -139,11 +136,7 @@ trait EmailParseMethodContract {
            |                        "references": null,
            |                        "textBody": [
            |                            {
-           |                                "cid": null,
-           |                                "disposition": null,
-           |                                "language": null,
-           |                                "location": null,
-           |                                "name": null,
+           |                                "cid": null, "disposition": null, "language": null, "location": null, "name": null,
            |                                "charset": "UTF-8",
            |                                "size": 39,
            |                                "partId": "2",
@@ -155,9 +148,7 @@ trait EmailParseMethodContract {
            |                        "hasAttachment": true,
            |                        "attachments": [
            |                            {
-           |                                "cid": null,
-           |                                "language": null,
-           |                                "location": null,
+           |                                "cid": null, "language": null, "location": null,
            |                                "charset": "UTF-8",
            |                                "disposition": "attachment",
            |                                "size": 271,
@@ -167,9 +158,7 @@ trait EmailParseMethodContract {
            |                                "type": "text/plain"
            |                            },
            |                            {
-           |                                "cid": null,
-           |                                "language": null,
-           |                                "location": null,
+           |                                "cid": null, "language": null, "location": null,
            |                                "charset": "US-ASCII",
            |                                "disposition": "attachment",
            |                                "size": 398,
@@ -179,9 +168,7 @@ trait EmailParseMethodContract {
            |                                "type": "application/vnd.ms-publisher"
            |                            },
            |                            {
-           |                                "cid": null,
-           |                                "language": null,
-           |                                "location": null,
+           |                                "cid": null, "language": null, "location": null,
            |                                "charset": "UTF-8",
            |                                "disposition": "attachment",
            |                                "size": 412,
@@ -197,11 +184,7 @@ trait EmailParseMethodContract {
            |                        "preview": "Send concerted from html",
            |                        "htmlBody": [
            |                            {
-           |                                "cid": null,
-           |                                "disposition": null,
-           |                                "language": null,
-           |                                "location": null,
-           |                                "name": null,
+           |                                "cid": null, "disposition": null, "language": null, "location": null, "name": null,
            |                                "charset": "UTF-8",
            |                                "size": 39,
            |                                "partId": "2",
@@ -624,9 +607,7 @@ trait EmailParseMethodContract {
            |           "hasAttachment": true,
            |                        "attachments": [
            |                            {
-           |                                "cid": null,
-           |                                "language": null,
-           |                                "location": null,
+           |                                "cid": null, "language": null, "location": null,
            |                                "partId": "3",
            |                                "blobId": "${messageId.serialize()}_3",
            |                                "headers": [
@@ -650,9 +631,7 @@ trait EmailParseMethodContract {
            |                                "disposition": "attachment"
            |                            },
            |                            {
-           |                                "cid": null,
-           |                                "language": null,
-           |                                "location": null,
+           |                                "cid": null, "language": null, "location": null,
            |                                "partId": "4",
            |                                "blobId": "${messageId.serialize()}_4",
            |                                "headers": [
@@ -676,9 +655,7 @@ trait EmailParseMethodContract {
            |                                "disposition": "attachment"
            |                            },
            |                            {
-           |                                "cid": null,
-           |                                "language": null,
-           |                                "location": null,
+           |                                "cid": null, "language": null, "location": null,
            |                                "partId": "5",
            |                                "blobId": "${messageId.serialize()}_5",
            |                                "headers": [

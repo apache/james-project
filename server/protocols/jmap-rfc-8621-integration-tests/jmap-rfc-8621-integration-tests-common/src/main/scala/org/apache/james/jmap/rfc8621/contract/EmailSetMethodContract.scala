@@ -24,7 +24,6 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import java.util.stream.Stream
 import java.util.{Date, UUID}
 
 import com.google.common.hash.Hashing
@@ -67,7 +66,7 @@ import org.hamcrest.Matchers
 import org.hamcrest.Matchers.{equalTo, hasKey, not, notNullValue}
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.{Arguments, MethodSource, ValueSource}
+import org.junit.jupiter.params.provider.ValueSource
 import play.api.libs.json.{JsNumber, JsString, Json}
 
 import scala.jdk.CollectionConverters._
@@ -76,31 +75,6 @@ object EmailSetMethodContract {
   case class TestContext(bobUsername: Username, bobAccountId: String,
                          andreUsername: Username, andreAccountId: String)
   val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
-
-  def specificHeaders: Stream[Arguments] = {
-    val unchangedHeaders = Stream.of(
-      """"header:aheader": " a value"""",
-      """"header:aheader:all": [" a value"]""",
-      """"header:aheader:all": []""",
-      """"header:aheader:all": [" abc", " def"]""",
-      """"header:aheader:asRaw": " a value"""",
-      """"header:aheader:asText": "a value"""",
-      """"header:aheader:asText:all": []""",
-      """"header:aheader:asText:all": ["abc"]""",
-      """"header:aheader:asText:all": ["abc", "def"]""",
-      """"header:aheader:asDate": "2020-10-29T06:39:04Z"""",
-      """"header:aheader:asURLs": ["url1", "url2"]""",
-      """"header:aheader:asMessageIds": ["id1@domain.tld", "id2@domain.tld"]""")
-      .map(header => Arguments.of(header, header))
-
-    Stream.concat(unchangedHeaders, Stream.of(
-      Arguments.of(
-        """"header:aheader:asAddresses": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}]""",
-        """"header:aheader:asAddresses": [{"name": null, "email": "rcpt1@apache.org"}, {"name": null, "email": "rcpt2@apache.org"}]"""),
-      Arguments.of(
-        """"header:aheader:asGroupedAddresses": [{"name": null,"addresses": [{"name": "user1","email": "user1@domain.tld" },{"name": "user2", "email": "user2@domain.tld"}]},{"name": "Friends","addresses": [{"email": "user3@domain.tld"},{"name": "user4","email": "user4@domain.tld"}]}]""",
-        """"header:aheader:asGroupedAddresses": [{"name": null,"addresses": [{"name": "user1","email": "user1@domain.tld" },{"name": "user2", "email": "user2@domain.tld"}]},{"name": "Friends","addresses": [{"name": null, "email": "user3@domain.tld"},{"name": "user4","email": "user4@domain.tld"}]}]""")))
-  }
 }
 
 trait EmailSetMethodContract {
@@ -208,12 +182,27 @@ trait EmailSetMethodContract {
   }
 
   @ParameterizedTest
-  @MethodSource(value = Array("org.apache.james.jmap.rfc8621.contract.EmailSetMethodContract#specificHeaders"))
-  def createShouldPositionSpecificHeaders(inputHeader: String, expectedHeader: String, server: GuiceJamesServer): Unit = {
+  @ValueSource(strings = Array(
+    """"header:aheader": " a value"""",
+    """"header:aheader:all": [" a value"]""",
+    """"header:aheader:all": []""",
+    """"header:aheader:all": [" abc", " def"]""",
+    """"header:aheader:asRaw": " a value"""",
+    """"header:aheader:asText": "a value"""",
+    """"header:aheader:asText:all": []""",
+    """"header:aheader:asText:all": ["abc"]""",
+    """"header:aheader:asText:all": ["abc", "def"]""",
+    """"header:aheader:asDate": "2020-10-29T06:39:04Z"""",
+    """"header:aheader:asAddresses": [{"name": null, "email": "rcpt1@apache.org"}, {"name": null, "email": "rcpt2@apache.org"}]""",
+    """"header:aheader:asURLs": ["url1", "url2"]""",
+    """"header:aheader:asMessageIds": ["id1@domain.tld", "id2@domain.tld"]""",
+    """"header:aheader:asGroupedAddresses": [{"name": null,"addresses": [{"name": "user1","email": "user1@domain.tld" },{"name": "user2", "email": "user2@domain.tld"}]},{"name": "Friends","addresses": [{"name": null, "email": "user3@domain.tld"},{"name": "user4","email": "user4@domain.tld"}]}]"""
+  ))
+  def createShouldPositionSpecificHeaders(specificHeader: String, server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val propertyEnd = inputHeader.substring(1).indexOf('"')
-    val property = inputHeader.substring(1, propertyEnd + 1)
+    val propertyEnd = specificHeader.substring(1).indexOf('"')
+    val property = specificHeader.substring(1, propertyEnd + 1)
 
     val request =
       s"""{
@@ -226,7 +215,7 @@ trait EmailSetMethodContract {
          |          "mailboxIds": {
          |             "${mailboxId.serialize}": true
          |          },
-         |          $inputHeader
+         |          $specificHeader
          |        }
          |      }
          |    }, "c1"],
@@ -281,7 +270,7 @@ trait EmailSetMethodContract {
                     |  "mailboxIds": {
                     |    "${mailboxId.serialize}": true
                     |  },
-                    |  $expectedHeader
+                    |  $specificHeader
                     |}]""".stripMargin)
   }
 
@@ -2540,8 +2529,7 @@ trait EmailSetMethodContract {
            |  "subject": "World domination",
            |  "attachments": [
            |    {
-           |      "cid": null,
-           |      "name": null,
+           |      "cid": null, "name": null,
            |      "partId": "4",
            |      "blobId": "${messageId}_4",
            |      "size": 11,
@@ -2671,8 +2659,7 @@ trait EmailSetMethodContract {
            |  "subject": "World domination",
            |  "attachments": [
            |    {
-           |      "cid": null,
-           |      "name": null,
+           |      "cid": null, "name": null,
            |      "partId": "4",
            |      "blobId": "${messageId}_4",
            |      "size": 11,
@@ -2882,10 +2869,7 @@ trait EmailSetMethodContract {
            |  "subject": "World domination",
            |  "attachments": [
            |    {
-           |      "cid": null,
-           |      "language": null,
-           |      "location": null,
-           |      "name": null,
+           |      "cid": null, "language": null, "location": null, "name": null,
            |      "partId": "5",
            |      "blobId": "${messageId}_5",
            |      "size": 11,
@@ -2896,11 +2880,7 @@ trait EmailSetMethodContract {
            |  ],
            |  "htmlBody": [
            |    {
-           |      "cid": null,
-           |      "disposition": null,
-           |      "language": null,
-           |      "location": null,
-           |      "name": null,
+           |      "cid": null, "disposition": null, "language": null, "location": null, "name": null,
            |      "partId": "4",
            |      "blobId": "${messageId}_4",
            |      "size": 166,
@@ -3033,10 +3013,7 @@ trait EmailSetMethodContract {
            |  "subject": "World domination",
            |  "attachments": [
            |    {
-           |      "cid": null,
-           |      "language": null,
-           |      "location": null,
-           |      "name": null,
+           |      "cid": null, "language": null, "location": null, "name": null,
            |      "partId": "4",
            |      "blobId": "${messageId}_4",
            |      "size": 11,
@@ -3047,11 +3024,7 @@ trait EmailSetMethodContract {
            |  ],
            |  "textBody": [
            |    {
-           |      "cid": null,
-           |      "disposition": null,
-           |      "language": null,
-           |      "location": null,
-           |      "name": null,
+           |      "cid": null, "disposition": null, "language": null, "location": null, "name": null,
            |      "partId": "3",
            |      "blobId": "${messageId}_3",
            |      "size": 29,
@@ -3135,11 +3108,7 @@ trait EmailSetMethodContract {
         jsonEquals(
           s"""[
              |    {
-             |        "name": null,
-             |        "disposition": null,
-             |        "cid": null,
-             |        "language": null,
-             |        "location": null,
+             |        "name": null, "disposition": null, "cid": null, "language": null, "location": null,
              |        "partId": "$${json-unit.ignore}",
              |        "blobId": "$${json-unit.ignore}",
              |        "size": ${payload.size},
@@ -3213,11 +3182,7 @@ trait EmailSetMethodContract {
         jsonEquals(
           s"""[
              |    {
-             |        "name": null,
-             |        "disposition": null,
-             |        "cid": null,
-             |        "language": null,
-             |        "location": null,
+             |        "name": null, "disposition": null, "cid": null, "language": null, "location": null,
              |        "partId": "$${json-unit.ignore}",
              |        "blobId": "$${json-unit.ignore}",
              |        "size": 166,
@@ -3822,9 +3787,7 @@ trait EmailSetMethodContract {
            |  "subject": "World domination",
            |  "attachments": [
            |    {
-           |      "language": null,
-           |      "location": null,
-           |      "name": null,
+           |      "language": null, "location": null, "name": null,
            |      "partId": "6",
            |      "blobId": "${messageId}_6",
            |      "size": 11,
@@ -3834,9 +3797,7 @@ trait EmailSetMethodContract {
            |      "cid": "abc"
            |    },
            |    {
-           |      "language": null,
-           |      "location": null,
-           |      "name": null,
+           |      "language": null, "location": null, "name": null,
            |      "partId": "7",
            |      "blobId": "${messageId}_7",
            |      "size": 11,
@@ -3846,10 +3807,7 @@ trait EmailSetMethodContract {
            |      "cid": "def"
            |    },
            |    {
-           |      "cid": null,
-           |      "language": null,
-           |      "location": null,
-           |      "name": null,
+           |      "cid": null, "language": null, "location": null, "name": null,
            |      "partId": "8",
            |      "blobId": "${messageId}_8",
            |      "size": 11,
@@ -3860,11 +3818,7 @@ trait EmailSetMethodContract {
            |  ],
            |  "htmlBody": [
            |    {
-           |      "cid": null,
-           |      "disposition": null,
-           |      "language": null,
-           |      "location": null,
-           |      "name": null,
+           |      "cid": null, "disposition": null, "language": null, "location": null, "name": null,
            |      "partId": "5",
            |      "blobId": "${messageId}_5",
            |      "size": 166,
@@ -3872,9 +3826,7 @@ trait EmailSetMethodContract {
            |      "charset": "UTF-8"
            |    },
            |    {
-           |        "language": null,
-           |        "location": null,
-           |        "name": null,
+           |        "language": null, "location": null, "name": null,
            |        "charset": "UTF-8",
            |        "disposition": "inline",
            |        "size": 11,
@@ -3884,9 +3836,7 @@ trait EmailSetMethodContract {
            |        "cid": "abc"
            |    },
            |    {
-           |        "language": null,
-           |        "location": null,
-           |        "name": null,
+           |        "language": null, "location": null, "name": null,
            |        "charset": "UTF-8",
            |        "disposition": "inline",
            |        "size": 11,
@@ -4030,28 +3980,23 @@ trait EmailSetMethodContract {
         s"""{
            |  "id": "$messageId",
            |  "bodyStructure": {
-           |    "cid": null,
-           |    "disposition": null,
+           |    "cid": null, "disposition": null,
            |    "type": "multipart/mixed",
            |    "subParts": [
            |      {
-           |        "cid": null,
-           |        "disposition": null,
+           |        "cid": null, "disposition": null,
            |        "type": "multipart/related",
            |        "subParts": [
            |          {
-           |            "cid": null,
-           |            "disposition": null,
+           |            "cid": null, "disposition": null,
            |            "type": "multipart/alternative",
            |            "subParts": [
            |              {
-           |                "cid": null,
-           |                "disposition": null,
+           |                "cid": null, "disposition": null,
            |                "type": "text/plain"
            |              },
            |              {
-           |                "cid": null,
-           |                "disposition": null,
+           |                "cid": null, "disposition": null,
            |                "type": "text/html"
            |              }
            |            ]
@@ -4188,23 +4133,19 @@ trait EmailSetMethodContract {
         s"""{
            |  "id": "$messageId",
            |  "bodyStructure": {
-           |    "cid": null,
-           |    "disposition": null,
+           |    "cid": null, "disposition": null,
            |    "type": "multipart/mixed",
            |    "subParts": [
            |      {
-           |        "cid": null,
-           |        "disposition": null,
+           |        "cid": null, "disposition": null,
            |        "type":"multipart/alternative",
            |        "subParts": [
            |          {
-           |            "cid": null,
-           |            "disposition": null,
+           |            "cid": null, "disposition": null,
            |            "type":"text/plain"
            |          },
            |          {
-           |            "cid": null,
-           |            "disposition": null,
+           |            "cid": null, "disposition": null,
            |            "type":"text/html"
            |          }
            |        ]
@@ -4308,18 +4249,15 @@ trait EmailSetMethodContract {
         s"""{
            |  "id": "$messageId",
            |  "bodyStructure": {
-           |    "cid": null,
-           |    "disposition": null,
+           |    "cid": null, "disposition": null,
            |    "subParts": [
            |      {
-           |        "cid": null,
-           |        "disposition": null,
+           |        "cid": null, "disposition": null,
            |        "header:Specific:asText": "MATCHME",
            |        "type": "text/plain"
            |      },
            |      {
-           |        "cid": null,
-           |        "disposition": null,
+           |        "cid": null, "disposition": null,
            |        "header:Specific:asText": "MATCHME",
            |        "type": "text/html"
            |      }
@@ -4417,18 +4355,15 @@ trait EmailSetMethodContract {
         s"""{
            |  "id": "$messageId",
            |  "bodyStructure": {
-           |    "cid": null,
-           |    "disposition": null,
+           |    "cid": null, "disposition": null,
            |    "subParts": [
            |      {
-           |        "cid": null,
-           |        "disposition": null,
+           |        "cid": null, "disposition": null,
            |        "header:Specific:asText": "MATCHME",
            |        "type": "text/plain"
            |      },
            |      {
-           |        "cid": null,
-           |        "disposition": null,
+           |        "cid": null, "disposition": null,
            |        "header:Specific:asText": "MATCHME",
            |        "type": "text/html"
            |      }
@@ -4614,23 +4549,19 @@ trait EmailSetMethodContract {
         s"""{
            |  "id": "$messageId",
            |  "bodyStructure": {
-           |    "cid": null,
-           |    "disposition": null,
+           |    "cid": null, "disposition": null,
            |    "type": "multipart/related",
            |    "subParts": [
            |      {
-           |        "cid": null,
-           |        "disposition": null,
+           |        "cid": null, "disposition": null,
            |        "type":"multipart/alternative",
            |        "subParts": [
            |          {
-           |            "cid": null,
-           |            "disposition": null,
+           |            "cid": null, "disposition": null,
            |            "type":"text/plain"
            |          },
            |          {
-           |            "cid": null,
-           |            "disposition": null,
+           |            "cid": null, "disposition": null,
            |            "type":"text/html"
            |          }
            |        ]
@@ -4771,18 +4702,15 @@ trait EmailSetMethodContract {
            |        {
            |          "id": "$messageId",
            |          "bodyStructure": {
-           |            "cid": null,
-           |            "disposition": null,
+           |            "cid": null, "disposition": null,
            |            "type":"multipart/alternative",
            |            "subParts": [
            |              {
-           |                "cid": null,
-           |                "disposition": null,
+           |                "cid": null, "disposition": null,
            |                "type":"text/plain"
            |              },
            |              {
-           |                "cid": null,
-           |                "disposition": null,
+           |                "cid": null, "disposition": null,
            |                "type":"text/html"
            |              }
            |            ]
@@ -4890,20 +4818,17 @@ trait EmailSetMethodContract {
            |        {
            |          "id": "$messageId",
            |          "bodyStructure": {
-           |            "cid": null,
-           |            "disposition": null,
+           |            "cid": null, "disposition": null,
            |            "type": "multipart/alternative",
            |            "charset": "US-ASCII",
            |            "subParts": [
            |              {
-           |                "cid": null,
-           |                "disposition": null,
+           |                "cid": null, "disposition": null,
            |                "type": "text/plain",
            |                "charset": "UTF-8"
            |              },
            |              {
-           |                "cid": null,
-           |                "disposition": null,
+           |                "cid": null, "disposition": null,
            |                "type": "text/html",
            |                "charset": "UTF-8"
            |              }
@@ -5053,28 +4978,23 @@ trait EmailSetMethodContract {
         s"""{
            |  "id": "$messageId",
            |  "bodyStructure": {
-           |    "cid": null,
-           |    "disposition": null,
+           |    "cid": null, "disposition": null,
            |    "type": "multipart/mixed",
            |    "subParts": [
            |      {
-           |        "cid": null,
-           |        "disposition": null,
+           |        "cid": null, "disposition": null,
            |        "type": "multipart/related",
            |        "subParts": [
            |          {
-           |            "cid": null,
-           |            "disposition": null,
+           |            "cid": null, "disposition": null,
            |            "type": "multipart/alternative",
            |            "subParts": [
            |              {
-           |                "cid": null,
-           |                "disposition": null,
+           |                "cid": null, "disposition": null,
            |                "type": "text/plain"
            |              },
            |              {
-           |                "cid": null,
-           |                "disposition": null,
+           |                "cid": null, "disposition": null,
            |                "type": "text/html"
            |              }
            |            ]

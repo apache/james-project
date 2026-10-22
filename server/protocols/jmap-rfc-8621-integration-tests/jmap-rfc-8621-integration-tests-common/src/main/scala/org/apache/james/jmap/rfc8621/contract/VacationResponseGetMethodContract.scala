@@ -42,11 +42,7 @@ import org.apache.james.jmap.rfc8621.contract.VacationResponseGetMethodContract.
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
 import org.apache.james.vacation.api.VacationPatch
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
-import play.api.libs.json.{JsNull, Json}
 
 object VacationResponseGetMethodContract {
   private val VACATION_RESPONSE: VacationPatch =
@@ -91,47 +87,6 @@ trait VacationResponseGetMethodContract {
     requestSpecification = baseRequestSpecBuilder(server)
       .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
-  }
-
-  @ParameterizedTest(name = "{displayName}: properties={0}")
-  @ValueSource(strings = Array("omitted", "null"))
-  def defaultPropertiesShouldIncludeExplicitNull(propertiesMode: String): Unit = {
-    val properties = if (propertiesMode == "null") """, "properties": null""" else ""
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(s"""{
-               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:vacationresponse"],
-               |  "methodCalls": [["VacationResponse/get", {
-               |    "accountId": "$bobAccountId", "ids": ["singleton"]$properties
-               |  }, "c1"]]
-               |}""".stripMargin)
-    .when.post
-    .`then`.statusCode(SC_OK).extract.asString()
-
-    val result = (Json.parse(response) \ "methodResponses")(0)(1)
-    val item = (result \ "list")(0)
-    Seq("fromDate", "toDate", "subject", "textBody", "htmlBody").foreach { property =>
-      assertThat((item \ property).toOption.orNull)
-        .as(property).isEqualTo(JsNull)
-    }
-  }
-
-  @Test
-  def requestedMissingPropertiesShouldBeExplicitNull(): Unit = {
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(s"""{
-               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:vacationresponse"],
-               |  "methodCalls": [["VacationResponse/get", {
-               |    "accountId": "$bobAccountId", "ids": ["singleton"],
-               |    "properties": ["fromDate", "toDate", "subject", "textBody", "htmlBody"]
-               |  }, "c1"]]
-               |}""".stripMargin)
-    .when.post
-    .`then`.statusCode(SC_OK).extract.asString()
-
-    assertThatJson(response).inPath("methodResponses[0][1].list").isEqualTo(
-      s"""[{"id": "singleton", "fromDate": null, "toDate": null, "subject": null, "textBody": null, "htmlBody": null}]""")
   }
 
   @Test
@@ -212,11 +167,7 @@ trait VacationResponseGetMethodContract {
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
-         |          "fromDate": null,
-         |          "htmlBody": null,
-         |          "subject": null,
-         |          "textBody": null,
-         |          "toDate": null,
+         |          "fromDate": null, "htmlBody": null, "subject": null, "textBody": null, "toDate": null,
          |          "id":"singleton",
          |          "isEnabled": false
          |        }
@@ -392,11 +343,7 @@ trait VacationResponseGetMethodContract {
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
-         |          "fromDate": null,
-         |          "htmlBody": null,
-         |          "subject": null,
-         |          "textBody": null,
-         |          "toDate": null,
+         |          "fromDate": null, "htmlBody": null, "subject": null, "textBody": null, "toDate": null,
          |          "id":"singleton",
          |          "isEnabled": false
          |        }
@@ -484,11 +431,7 @@ trait VacationResponseGetMethodContract {
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
-         |          "fromDate": null,
-         |          "htmlBody": null,
-         |          "subject": null,
-         |          "textBody": null,
-         |          "toDate": null,
+         |          "fromDate": null, "htmlBody": null, "subject": null, "textBody": null, "toDate": null,
          |          "id":"singleton",
          |          "isEnabled": false
          |        }

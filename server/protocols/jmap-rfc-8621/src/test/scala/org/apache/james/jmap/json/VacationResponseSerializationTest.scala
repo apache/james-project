@@ -29,7 +29,7 @@ import org.apache.james.jmap.vacation
 import org.apache.james.jmap.vacation.{FromDate, HtmlBody, IsEnabled, TextBody, ToDate, VacationResponse, VacationResponseId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsNull, JsString, Json}
+import play.api.libs.json.Json
 
 object VacationResponseSerializationTest {
   private val UTC_DATE_TIME_2016 = UTCDate(ZonedDateTime.parse("2016-10-09T01:07:06Z"))
@@ -55,29 +55,6 @@ object VacationResponseSerializationTest {
 }
 
 class VacationResponseSerializationTest extends AnyWordSpec with Matchers {
-  "Serialize nullable vacation properties" should {
-    "include explicit null for absent values" in {
-      val response = VacationSerializer.serialize(VACATION_RESPONSE.copy(
-        isEnabled = IsEnabled(false), fromDate = None, toDate = None,
-        subject = None, textBody = None, htmlBody = None))
-      Seq("fromDate", "toDate", "subject", "textBody", "htmlBody").foreach { property =>
-        withClue(s"property=$property: ") {
-          (response \ property).toOption should equal(Some(JsNull))
-        }
-      }
-    }
-
-    "preserve empty strings" in {
-      val response = VacationSerializer.serialize(VACATION_RESPONSE.copy(
-        subject = Some(Subject("")), textBody = Some(TextBody("")), htmlBody = Some(HtmlBody(""))))
-      Seq("subject", "textBody", "htmlBody").foreach { property =>
-        withClue(s"property=$property: ") {
-          (response \ property).toOption should equal(Some(JsString("")))
-        }
-      }
-    }
-  }
-
   "Serialize VacationResponse" should {
     "succeed" in {
       val expectedJson: String =

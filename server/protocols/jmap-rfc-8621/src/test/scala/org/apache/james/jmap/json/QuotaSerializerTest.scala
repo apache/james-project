@@ -141,6 +141,8 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
           |    "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
           |    "list": [
           |        {
+          |            "limit": null,
+          |            "dataTypes": null,
           |            "id": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
           |            "resourceType": "count",
           |            "used": 1,
@@ -240,6 +242,11 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
           |    "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
           |    "list": [
           |        {
+          |            "limit": null,
+          |            "dataTypes": null,
+          |            "warnLimit": null,
+          |            "softLimit": null,
+          |            "description": null,
           |            "id": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
           |            "resourceType": "count",
           |            "used": 1,
@@ -251,6 +258,11 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
           |            ]
           |        },
           |        {
+          |            "limit": null,
+          |            "dataTypes": null,
+          |            "warnLimit": null,
+          |            "softLimit": null,
+          |            "description": null,
           |            "id": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy9",
           |            "resourceType": "octets",
           |            "used": 1,
