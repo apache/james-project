@@ -78,4 +78,18 @@ class CapabilityProcessorTest {
         Set<Capability> supportedCapabilities = testee.getSupportedCapabilities(null);
         assertThat(supportedCapabilities).doesNotContain(ImapConstants.SUPPORTS_CONDSTORE);
     }
+
+    @Test
+    void utf8AcceptShouldBeAdvertised() {
+        testee.configure(ImapConfiguration.builder().build());
+
+        Set<Capability> supportedCapabilities = testee.getSupportedCapabilities(null);
+        assertThat(supportedCapabilities).contains(ImapConstants.SUPPORTS_UTF8_ACCEPT);
+    }
+
+    @Test
+    void utf8AcceptShouldBeEnableable() {
+        assertThat(testee.getPermitEnableCapabilities(null))
+            .contains(ImapConstants.SUPPORTS_UTF8_ACCEPT);
+    }
 }

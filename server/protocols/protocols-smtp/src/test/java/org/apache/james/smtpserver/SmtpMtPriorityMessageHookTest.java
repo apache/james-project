@@ -64,7 +64,7 @@ class SmtpMtPriorityMessageHookTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
-            softly.assertThat(smtpProtocol.getReplyString()).contains("250 MT-PRIORITY");
+            softly.assertThat(smtpProtocol.getReplyString()).contains("250-MT-PRIORITY");
         });
     }
 

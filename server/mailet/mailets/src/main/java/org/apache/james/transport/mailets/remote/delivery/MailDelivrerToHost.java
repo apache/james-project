@@ -68,6 +68,7 @@ public class MailDelivrerToHost {
     public static final String BIT_MIME_8 = "8BITMIME";
     public static final String REQUIRE_TLS = "REQUIRETLS";
     public static final String STARTTLS = "STARTTLS";
+    public static final String SMTPUTF8 = "SMTPUTF8";
     public static final String MT_PRIORITY = "MT-PRIORITY";
     public static final String MAIL_PRIORITY_ATTRIBUTE_NAME = "MAIL_PRIORITY";
     private static final List<String> supportedSmtpExtensionsList = List.of(MT_PRIORITY, STARTTLS);
@@ -126,6 +127,20 @@ public class MailDelivrerToHost {
         // "mail.smtp.dsn.ret"        //default to nothing... appended as RET= after MAIL FROM line.
         // "mail.smtp.dsn.notify"     //default to nothing... appended as NOTIFY= after RCPT TO line.
 
+        // Angus reads mail.mime.allowutf8 in the SMTPTransport constructor, so it
+        // has to be decided here -- before the transport exists, hence before we
+        // can know whether the remote advertises SMTPUTF8. The envelope alone
+        // tells us whether UTF-8 could ever be needed, and that is enough: Angus
+        // only emits the SMTPUTF8 keyword on MAIL FROM when the remote also
+        // advertises it, and SmtpUtf8Strategy below still decides the downgrade.
+        // Left alone for the ASCII envelopes that make up the bulk of the
+        // traffic, so they neither change behaviour nor trip Angus' "allowutf8
+        // set but server doesn't advertise SMTPUTF8" log line. The pool clears
+        // the property again when the session is passivated.
+        if (SmtpUtf8Strategy.envelopeNeedsUtf8(mail.getMaybeSender(), addr)) {
+            props.put("mail.mime.allowutf8", "true");
+        }
+
         SMTPTransport transport = null;
         try {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
@@ -133,6 +148,22 @@ public class MailDelivrerToHost {
             connect(outgoingMailServer, transport);
             if (receiverDoesNotProvideNecessaryStartTls(mail, transport)) {
                 return ExecutionResult.permanentFailure(new SendFailedException("Mail delivery failed; the receiving server does not support STARTTLS"));
+            }
+            // We assume all MXes for a given destination domain advertise
+            // the same set of SMTP extensions; this decision is made once,
+            // on the first MX we reach, and we do not fall back to another
+            // MX hoping it might have different capabilities.
+            SmtpUtf8Strategy.Action utf8Action = SmtpUtf8Strategy.pick(
+                mail.getMaybeSender(), addr, transport.supportsExtension(SMTPUTF8));
+            if (utf8Action == SmtpUtf8Strategy.Action.CANNOT_DOWNGRADE) {
+                return ExecutionResult.permanentFailure(new SendFailedException(
+                    "Remote server does not advertise SMTPUTF8 but the envelope "
+                        + "contains a non-ASCII local part that cannot be downgraded"));
+            }
+            if (utf8Action == SmtpUtf8Strategy.Action.DOWNGRADE_DOMAINS) {
+                addr = toAceDomains(addr);
+                props.put(inContext(session, "mail.smtp.from"),
+                    SmtpUtf8Strategy.aceAddressString(mail.getMaybeSender().asString()));
             }
             if (mail.dsnParameters().isPresent()) {
                 sendDSNAwareEmail(mail, transport, addr);
@@ -234,6 +265,14 @@ public class MailDelivrerToHost {
 
     private static boolean extensionsSupported(SMTPTransport transport) {
         return supportedSmtpExtensionsList.stream().anyMatch(transport::supportsExtension);
+    }
+
+    private static Collection<InternetAddress> toAceDomains(Collection<InternetAddress> addr) throws MessagingException {
+        Collection<InternetAddress> out = new java.util.ArrayList<>(addr.size());
+        for (InternetAddress a : addr) {
+            out.add(SmtpUtf8Strategy.toAceDomain(a));
+        }
+        return out;
     }
 
     private static boolean receiverDoesNotProvideNecessaryStartTls(Mail mail, SMTPTransport transport) {
