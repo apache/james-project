@@ -32,8 +32,8 @@ import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefiniti
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 
@@ -47,15 +47,13 @@ public class StorageInformationDAO {
     private final PreparedStatement addStatement;
     private final PreparedStatement removeStatement;
     private final PreparedStatement readStatement;
-    private final BlobId.Factory blobIdFactory;
 
     @Inject
-    StorageInformationDAO(CqlSession session, BlobId.Factory blobIdFactory) {
+    StorageInformationDAO(CqlSession session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.addStatement = prepareAdd(session);
         this.removeStatement = prepareRemove(session);
         this.readStatement = prepareRead(session);
-        this.blobIdFactory = blobIdFactory;
     }
 
     private PreparedStatement prepareRead(CqlSession session) {
@@ -102,6 +100,6 @@ public class StorageInformationDAO {
             .setString(MESSAGE_ID, messageId.serialize()))
             .map(row -> StorageInformation.builder()
                     .bucketName(BucketName.of(row.getString(BUCKET_NAME)))
-                    .blobId(blobIdFactory.parse(row.getString(BLOB_ID))));
+                    .blobId(new PlainBlobId(row.getString(BLOB_ID))));
     }
 }
