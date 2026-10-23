@@ -43,6 +43,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
@@ -268,9 +269,33 @@ public class CassandraMessageMapper implements MessageMapper {
         }
         if (fetchType == FetchType.HEADERS && metadata.isComplete()) {
             return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), metadata.getHeaderContent().get(), SIZE_BASED))
-                .map(metadata::asMailboxMessage);
+                .map(metadata::asMailboxMessage)
+                .onErrorResume(ObjectNotFoundException.class, e -> {
+                    LOGGER.warn("Header blob {} not found for message {}, falling back to messageDAOV3 and reconciling denormalized tables",
+                        metadata.getHeaderContent().get().asString(),
+                        metadata.getComposedMessageId().getComposedMessageId().getMessageId().serialize());
+                    return retrieveFromDAOV3AndReconcile(metadata, fetchType);
+                });
         }
+        return retrieveFromDAOV3(metadata, fetchType);
+    }
+
+    private Mono<MailboxMessage> retrieveFromDAOV3(CassandraMessageMetadata metadata, FetchType fetchType) {
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)
+            .map(messageRepresentation -> Pair.of(metadata.getComposedMessageId(), messageRepresentation))
+            .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, metadata.getSaveDate(), fetchType));
+    }
+
+    private Mono<MailboxMessage> retrieveFromDAOV3AndReconcile(CassandraMessageMetadata metadata, FetchType fetchType) {
+        ComposedMessageId composedMessageId = metadata.getComposedMessageId().getComposedMessageId();
+        CassandraId mailboxId = (CassandraId) composedMessageId.getMailboxId();
+        MessageUid uid = composedMessageId.getUid();
+        CassandraMessageId messageId = (CassandraMessageId) composedMessageId.getMessageId();
+
+        return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)
+            .flatMap(representation -> CassandraMessageMetadataReconciler.reconcileDenormalizedHeaders(
+                    imapUidDAO, messageIdDAO, mailboxId, uid, messageId, representation)
+                .thenReturn(representation))
             .map(messageRepresentation -> Pair.of(metadata.getComposedMessageId(), messageRepresentation))
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, metadata.getSaveDate(), fetchType));
     }

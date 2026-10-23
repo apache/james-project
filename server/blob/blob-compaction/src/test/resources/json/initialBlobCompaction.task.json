@@ -1,0 +1,8 @@
+{
+  "type": "InitialBlobCompactionTask",
+  "bucketName": "default",
+  "generation": 2,
+  "family": 1,
+  "chunkTargetSize": 104857600,
+  "maxPackableSize": 1048576
+}

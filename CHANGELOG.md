@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### New Features
 
+ - JAMES-4231 S3 object compaction for historical blob generations in Distributed Server. Compacts small standalone blobs into ~100MB chunk objects with virtual slot addressing and byte-range reads via ChunkedBlobStoreDAO. Includes WebAdmin management routes (`/blobs?action=initial-compaction|gc-compaction`) and automatic self-healing for denormalized Cassandra message headers on missing blobs. Note: Compaction requires an S3 blobstore and is incompatible with client-side encryption.
  - JAMES-4210 Protocol neutral SASL SPI, allowing custom IMAP SASL mechanisms to be plugged in
  - JAMES-4195 JMAP OIDC authentication, including a Redis backed token cache and a backchannel logout route
  - ManageSieve now supports OIDC authentication via the XOAUTH2 and OAUTHBEARER mechanisms
