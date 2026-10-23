@@ -269,6 +269,7 @@ trait EmailImportContract {
          |                        "id": "$messageId",
          |                        "htmlBody": [
          |                            {
+         |                                "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                "charset": "UTF-8",
          |                                "size": 39,
          |                                "partId": "2",
@@ -394,6 +395,7 @@ trait EmailImportContract {
          |                        "id": "$messageId",
          |                        "htmlBody": [
          |                            {
+         |                                "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                "charset": "UTF-8",
          |                                "size": 39,
          |                                "partId": "2",
@@ -516,6 +518,7 @@ trait EmailImportContract {
          |                        "id": "$messageId",
          |                        "htmlBody": [
          |                            {
+         |                                "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                "charset": "UTF-8",
          |                                "size": 39,
          |                                "partId": "2",
@@ -636,6 +639,7 @@ trait EmailImportContract {
          |                        "id": "$messageId",
          |                        "htmlBody": [
          |                            {
+         |                                "cid": null, "disposition": null, "language": null, "location": null, "name": null,
          |                                "charset": "UTF-8",
          |                                "size": 39,
          |                                "partId": "2",

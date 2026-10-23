@@ -768,12 +768,14 @@ trait PushSubscriptionSetMethodContract {
            |            {
            |                "list": [
            |                    {
+           |                        "verificationCode": null,
            |                        "id": "${pushSubscription1.id.serialise}",
            |                        "deviceClientId": "12c6d086",
            |                        "expires": "${UTCDate(pushSubscription1.expires.value).asUTC.format(TIME_FORMATTER)}",
            |                        "types": ["Mailbox"]
            |                    },
            |                    {
+           |                        "verificationCode": null,
            |                        "id": "${pushSubscription2.id.serialise}",
            |                        "deviceClientId": "12c6d087",
            |                        "expires": "${UTCDate(pushSubscription2.expires.value).asUTC.format(TIME_FORMATTER)}",
@@ -930,12 +932,14 @@ trait PushSubscriptionSetMethodContract {
            |            {
            |                "list": [
            |                    {
+           |                        "verificationCode": null,
            |                        "id": "${pushSubscription1.id.serialise}",
            |                        "deviceClientId": "12c6d086",
            |                        "expires": "${UTCDate(pushSubscription1.expires.value).asUTC.format(TIME_FORMATTER)}",
            |                        "types": ["Mailbox"]
            |                    },
            |                    {
+           |                        "verificationCode": null,
            |                        "id": "${pushSubscription2.id.serialise}",
            |                        "deviceClientId": "12c6d087",
            |                        "expires": "${UTCDate(pushSubscription2.expires.value).asUTC.format(TIME_FORMATTER)}",
@@ -1048,7 +1052,7 @@ trait PushSubscriptionSetMethodContract {
     val request: String =
       """{
         |    "using": ["urn:ietf:params:jmap:core"],
-        |    "methodCalls": [ [ "PushSubscription/get", { "properties": ["types"] }, "c1" ] ]
+        |    "methodCalls": [ [ "PushSubscription/get", { "properties": ["types", "verificationCode"] }, "c1" ] ]
         |}""".stripMargin
 
     val response: String = `given`
@@ -1074,11 +1078,11 @@ trait PushSubscriptionSetMethodContract {
            |                "list": [
            |                    {
            |                        "id": "${pushSubscription1.id.serialise}",
-           |                        "types": ["Mailbox"]
+           |                        "verificationCode": null, "types": ["Mailbox"]
            |                    },
            |                    {
            |                        "id": "${pushSubscription2.id.serialise}",
-           |                        "types": ["Email"]
+           |                        "verificationCode": null, "types": ["Email"]
            |                    }
            |                ]
            |            },

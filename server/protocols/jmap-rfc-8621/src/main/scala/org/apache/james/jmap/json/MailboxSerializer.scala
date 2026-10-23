@@ -113,7 +113,7 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     mapWrites[QuotaId, Quota](_.getName, quotaWrites)
   private implicit val quotasWrites: Writes[Quotas] = Json.valueWrites[Quotas]
 
-  implicit val mailboxWrites: Writes[Mailbox] = Json.writes[Mailbox]
+  implicit val mailboxWrites: Writes[Mailbox] = writesNull.writes[Mailbox]
 
   implicit val mailboxCreationResponseWrites: Writes[MailboxCreationResponse] = Json.writes[MailboxCreationResponse]
 

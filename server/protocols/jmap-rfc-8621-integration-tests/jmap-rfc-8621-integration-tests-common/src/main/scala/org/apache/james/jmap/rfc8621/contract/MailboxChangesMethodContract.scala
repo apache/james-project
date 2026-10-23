@@ -2491,6 +2491,8 @@ trait MailboxChangesMethodContract {
              |          {
              |            "id": "$mailboxId1",
              |            "name": "mailbox1",
+             |            "parentId": null,
+             |            "role": null,
              |            "sortOrder": 1000,
              |            "totalEmails": 1,
              |            "unreadEmails": 1,

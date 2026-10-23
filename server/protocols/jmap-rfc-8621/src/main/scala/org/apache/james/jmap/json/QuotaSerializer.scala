@@ -68,7 +68,7 @@ object QuotaSerializer {
   private implicit val quotaNameWrites: Writes[QuotaName] = Json.valueWrites[QuotaName]
   private implicit val quotaDescriptionWrites: Writes[QuotaDescription] = Json.valueWrites[QuotaDescription]
 
-  private implicit val jmapQuotaWrites: Writes[JmapQuota] = Json.writes[JmapQuota]
+  private implicit val jmapQuotaWrites: Writes[JmapQuota] = writesNull.writes[JmapQuota]
 
   private implicit val quotaNotFoundWrites: Writes[QuotaNotFound] =
     notFound => JsArray(notFound.value.toList.map(id => JsString(id.id.value)))

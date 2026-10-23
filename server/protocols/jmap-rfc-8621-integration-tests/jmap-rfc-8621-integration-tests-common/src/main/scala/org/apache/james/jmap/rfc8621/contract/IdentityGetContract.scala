@@ -150,6 +150,7 @@ trait IdentityGetContract {
         |  "state": "${INSTANCE.value}",
         |  "list": [
         |      {
+        |          "bcc": null, "replyTo": null,
         |          "id": "$defaultIdentityId",
         |          "name": "${bobUsername.asString}",
         |          "email": "${bobUsername.asString}",
@@ -257,6 +258,7 @@ trait IdentityGetContract {
         |            "id": "$defaultIdentityId",
         |            "name": "${bobUsername.asString}",
         |            "email": "${bobUsername.asString}",
+        |            "replyTo": null, "bcc": null,
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
@@ -265,6 +267,7 @@ trait IdentityGetContract {
         |            "id": "$bobAliasIdentityId",
         |            "name": "${bobAliasLocalPart}@domain.tld",
         |            "email": "${bobAliasLocalPart}@domain.tld",
+        |            "replyTo": null, "bcc": null,
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
@@ -308,6 +311,7 @@ trait IdentityGetContract {
         |    "state": "${INSTANCE.value}",
         |    "list": [
         |        {
+        |            "bcc": null, "replyTo": null,
         |            "id": "$bobAliasIdentityId",
         |            "name": "${bobAliasLocalPart}@domain.tld",
         |            "email": "${bobAliasLocalPart}@domain.tld",
@@ -360,6 +364,7 @@ trait IdentityGetContract {
         |            "id": "$defaultIdentityId",
         |            "name": "${bobUsername.asString}",
         |            "email": "${bobUsername.asString}",
+        |            "replyTo": null, "bcc": null,
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
@@ -368,6 +373,7 @@ trait IdentityGetContract {
         |            "id": "$bobDomainAliasIdentityId",
         |            "name": "${bobLocalPart}@$domainAlias",
         |            "email": "${bobLocalPart}@$domainAlias",
+        |            "replyTo": null, "bcc": null,
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
@@ -376,6 +382,7 @@ trait IdentityGetContract {
         |            "id": "$bobAliasIdentityId",
         |            "name": "${bobAliasLocalPart}@domain.tld",
         |            "email": "${bobAliasLocalPart}@domain.tld",
+        |            "replyTo": null, "bcc": null,
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
@@ -384,6 +391,7 @@ trait IdentityGetContract {
         |            "id": "$bobAliasDomainAliasIdentityId",
         |            "name": "${bobAliasLocalPart}@$domainAlias",
         |            "email": "${bobAliasLocalPart}@$domainAlias",
+        |            "replyTo": null, "bcc": null,
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":""
@@ -432,6 +440,7 @@ trait IdentityGetContract {
         |            "id": "$defaultIdentityId",
         |            "name": "${bobUsername.asString}",
         |            "email": "${bobUsername.asString}",
+        |            "replyTo": null, "bcc": null,
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":"",
@@ -441,6 +450,7 @@ trait IdentityGetContract {
         |            "id": "$bobDomainAliasIdentityId",
         |            "name": "${bobLocalPart}@$domainAlias",
         |            "email": "${bobLocalPart}@$domainAlias",
+        |            "replyTo": null, "bcc": null,
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":"",
@@ -450,6 +460,7 @@ trait IdentityGetContract {
         |            "id": "$bobAliasIdentityId",
         |            "name": "${bobAliasLocalPart}@domain.tld",
         |            "email": "${bobAliasLocalPart}@domain.tld",
+        |            "replyTo": null, "bcc": null,
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":"",
@@ -459,6 +470,7 @@ trait IdentityGetContract {
         |            "id": "$bobAliasDomainAliasIdentityId",
         |            "name": "${bobAliasLocalPart}@$domainAlias",
         |            "email": "${bobAliasLocalPart}@$domainAlias",
+        |            "replyTo": null, "bcc": null,
         |            "mayDelete": false,
         |            "textSignature":"",
         |            "htmlSignature":"",
@@ -504,6 +516,7 @@ trait IdentityGetContract {
           |  "state": "${INSTANCE.value}",
           |  "list": [
           |      {
+          |          "bcc": null, "replyTo": null,
           |          "id": "$defaultIdentityId",
           |          "name": "${bobUsername.asString}",
           |          "email": "${bobUsername.asString}",

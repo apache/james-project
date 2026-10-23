@@ -196,6 +196,7 @@ trait MailboxGetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
+         |          "parentId": null, "role": null,
          |          "id": "${mailboxId}",
          |          "name": "custom",
          |          "sortOrder": 1000,
@@ -266,6 +267,7 @@ trait MailboxGetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
+         |          "parentId": null, "role": null,
          |          "id": "${mailboxId}",
          |          "name": "custom",
          |          "sortOrder": 1000,
@@ -341,6 +343,7 @@ trait MailboxGetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
+         |          "parentId": null, "role": null,
          |          "id": "${mailboxId}",
          |          "name": "custom",
          |          "sortOrder": 1000,
@@ -417,6 +420,7 @@ trait MailboxGetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
+         |          "parentId": null, "role": null,
          |          "id": "${mailboxId}",
          |          "name": "custom",
          |          "sortOrder": 1000,
@@ -1659,6 +1663,7 @@ trait MailboxGetMethodContract {
          |        "accountId": "$bobAccountId",
          |        "list": [
          |          {
+         |            "parentId": null, "role": null,
          |            "id": "${mailboxId}",
          |            "name": "custom",
          |            "sortOrder": 1000,
@@ -1734,6 +1739,7 @@ trait MailboxGetMethodContract {
          |        "accountId": "$bobAccountId",
          |        "list": [
          |          {
+         |            "parentId": null, "role": null,
          |            "id": "${mailboxId}",
          |            "name": "custom",
          |            "sortOrder": 1000,

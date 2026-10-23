@@ -167,6 +167,7 @@ trait VacationResponseGetMethodContract {
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
+         |          "fromDate": null, "htmlBody": null, "subject": null, "textBody": null, "toDate": null,
          |          "id":"singleton",
          |          "isEnabled": false
          |        }
@@ -342,6 +343,7 @@ trait VacationResponseGetMethodContract {
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
+         |          "fromDate": null, "htmlBody": null, "subject": null, "textBody": null, "toDate": null,
          |          "id":"singleton",
          |          "isEnabled": false
          |        }
@@ -429,6 +431,7 @@ trait VacationResponseGetMethodContract {
          |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
+         |          "fromDate": null, "htmlBody": null, "subject": null, "textBody": null, "toDate": null,
          |          "id":"singleton",
          |          "isEnabled": false
          |        }

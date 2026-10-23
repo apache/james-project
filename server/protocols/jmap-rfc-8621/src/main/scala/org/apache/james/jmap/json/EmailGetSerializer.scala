@@ -80,9 +80,9 @@ object EmailGetSerializer {
   private implicit val languagesFormat: Format[Languages] = Json.valueFormat[Languages]
   private implicit val locationWrites: Writes[Location] = Json.valueWrites[Location]
   private implicit val emailerNameWrites: Writes[EmailerName] = Json.valueWrites[EmailerName]
-  private implicit val emailAddressWrites: Writes[EmailAddress] = Json.writes[EmailAddress]
+  private implicit val emailAddressWrites: Writes[EmailAddress] = writesNull.writes[EmailAddress]
   private implicit val uncheckedEmailWrites: Writes[UncheckedEmail] = Json.valueWrites[UncheckedEmail]
-  private implicit val uncheckedEmailAddressWrites: Writes[UncheckedEmailAddress] = Json.writes[UncheckedEmailAddress]
+  private implicit val uncheckedEmailAddressWrites: Writes[UncheckedEmailAddress] = writesNull.writes[UncheckedEmailAddress]
   private implicit val headerMessageIdWrites: Writes[HeaderMessageId] = Json.valueWrites[HeaderMessageId]
   private implicit val isEncodingProblemWrites: Writes[IsEncodingProblem] = Json.valueWrites[IsEncodingProblem]
   private implicit val isTruncatedWrites: Writes[IsTruncated] = Json.valueWrites[IsTruncated]
@@ -142,16 +142,16 @@ object EmailGetSerializer {
 
   private implicit val bodyPartWritesToSerializeWrites: Writes[EmailBodyPartToSerialize] = (
       (__ \ "partId").write[PartId] and
-      (__ \ "blobId").writeNullable[BlobId] and
+      (__ \ "blobId").write[Option[BlobId]] and
       (__ \ "headers").write[List[EmailHeader]] and
       (__ \ "size").write[Size] and
-      (__ \ "name").writeNullable[Name] and
+      (__ \ "name").write[Option[Name]] and
       (__ \ "type").write[Type] and
-      (__ \ "charset").writeNullable[Charset] and
-      (__ \ "disposition").writeNullable[Disposition] and
-      (__ \ "cid").writeNullable[Cid] and
-      (__ \ "language").writeNullable[Languages] and
-      (__ \ "location").writeNullable[Location] and
+      (__ \ "charset").write[Option[Charset]] and
+      (__ \ "disposition").write[Option[Disposition]] and
+      (__ \ "cid").write[Option[Cid]] and
+      (__ \ "language").write[Option[Languages]] and
+      (__ \ "location").write[Option[Location]] and
       (__ \ "subParts").lazyWriteNullable(implicitly[Writes[List[EmailBodyPartToSerialize]]](list => new JsArray(list.map(bodyPartWritesToSerializeWrites.writes).toIndexedSeq) )) and
         JsPath.write[Map[String, Option[EmailHeaderValue]]]
     )(unlift(EmailBodyPartToSerialize.unapply))
@@ -159,7 +159,7 @@ object EmailGetSerializer {
   private implicit val bodyPartWrites: Writes[EmailBodyPart] = part => bodyPartWritesToSerializeWrites.writes(EmailBodyPartToSerialize.from(part))
 
   private implicit val emailMetadataWrites: OWrites[EmailMetadata] = Json.writes[EmailMetadata]
-  private implicit val emailHeadersWrites: Writes[EmailHeaders] = Json.writes[EmailHeaders]
+  private implicit val emailHeadersWrites: Writes[EmailHeaders] = writesNull.writes[EmailHeaders]
   private implicit val attachmentsMetadataWrites: Writes[AttachmentsMetadata] = Json.writes[AttachmentsMetadata]
   private implicit val emailBodyMetadataWrites: Writes[EmailBodyMetadata] = Json.writes[EmailBodyMetadata]
 

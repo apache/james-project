@@ -66,7 +66,7 @@ object VacationSerializer {
   private implicit val textBodyWrites: Writes[TextBody] = Json.valueWrites[TextBody]
   private implicit val htmlBodyWrites: Writes[HtmlBody] = Json.valueWrites[HtmlBody]
 
-  private implicit val vacationResponseWrites: Writes[VacationResponse] = Json.writes[VacationResponse]
+  private implicit val vacationResponseWrites: Writes[VacationResponse] = writesNull.writes[VacationResponse]
 
   private implicit val vacationResponseIdsReads: Reads[VacationResponseIds] = Json.valueReads[VacationResponseIds]
 

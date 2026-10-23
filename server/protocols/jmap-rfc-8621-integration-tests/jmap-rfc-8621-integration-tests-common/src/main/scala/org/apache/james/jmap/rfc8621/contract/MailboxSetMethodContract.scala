@@ -7737,6 +7737,7 @@ trait MailboxSetMethodContract {
          |    ["Mailbox/get", {
          |      "accountId": "$bobAccountId",
          |      "list": [{
+         |        "parentId": null,
          |        "id": "${mailboxId.serialize}",
          |        "name": "mailbox"
          |      }],
@@ -7809,6 +7810,7 @@ trait MailboxSetMethodContract {
          |    ["Mailbox/get", {
          |      "accountId": "$bobAccountId",
          |      "list": [{
+         |        "parentId": null,
          |        "id": "${mailboxId.serialize}",
          |        "name": "newName"
          |      }],
@@ -7882,6 +7884,7 @@ trait MailboxSetMethodContract {
          |    ["Mailbox/get", {
          |      "accountId": "$bobAccountId",
          |      "list": [{
+         |        "parentId": null,
          |        "id": "${mailboxId.serialize}",
          |        "name": "newName"
          |      }],
@@ -7952,6 +7955,7 @@ trait MailboxSetMethodContract {
          |    ["Mailbox/get", {
          |      "accountId": "$bobAccountId",
          |      "list": [{
+         |        "parentId": null,
          |        "id": "${mailboxId.serialize}",
          |        "name": "mailbox"
          |      }],
@@ -8800,6 +8804,7 @@ trait MailboxSetMethodContract {
              |      "state": "$${json-unit.ignore}",
              |      "list": [{
              |        "id": "${parentId.serialize}",
+             |        "parentId": null,
              |        "name": "parent",
              |        "rights": {
              |          "${andreUsername.asString()}": ["l"]

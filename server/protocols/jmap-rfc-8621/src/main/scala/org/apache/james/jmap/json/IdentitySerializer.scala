@@ -47,12 +47,14 @@ object IdentitySerializer {
   }
   private implicit val identityIdUnparsedFormat: Format[UnparsedIdentityId] = Json.valueFormat[UnparsedIdentityId]
   private implicit val identityIdsFormat: Format[IdentityIds] = Json.valueFormat[IdentityIds]
-  private implicit val emailAddressReads: Format[EmailAddress] = Json.format[EmailAddress]
+  private implicit val emailAddressReads: Format[EmailAddress] = Format(
+    Json.reads[EmailAddress],
+    writesNull.writes[EmailAddress])
   private implicit val nameWrites: Format[IdentityName] = Json.valueFormat[IdentityName]
   private implicit val textSignatureWrites: Format[TextSignature] = Json.valueFormat[TextSignature]
   private implicit val htmlSignatureWrites: Format[HtmlSignature] = Json.valueFormat[HtmlSignature]
   private implicit val mayDeleteWrites: Writes[MayDeleteIdentity] = Json.valueWrites[MayDeleteIdentity]
-  private implicit val identityWrites: Writes[Identity] = Json.writes[Identity]
+  private implicit val identityWrites: Writes[Identity] = writesNull.writes[Identity]
   private implicit val identityGetRequestReads: Reads[IdentityGetRequest] = Json.reads[IdentityGetRequest]
   private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
   private implicit val identityGetResponseWrites: OWrites[IdentityGetResponse] = Json.writes[IdentityGetResponse]

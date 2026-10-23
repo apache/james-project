@@ -179,6 +179,7 @@ trait IdentitySetContract {
            |						"mayDelete": true
            |					},
            |					{
+           |						"bcc": null, "replyTo": null,
            |						"id": "${UUID.nameUUIDFromBytes(bobUsername.asString.getBytes(StandardCharsets.UTF_8))}",
            |						"name": "${bobUsername.asString}",
            |						"email": "${bobUsername.asString}",
@@ -1234,6 +1235,7 @@ trait IdentitySetContract {
                     |                        "id": "$identityId",
                     |                        "bcc": [
                     |                            {
+                    |                                "name": null,
                     |                                "email": "david2@domain.tld"
                     |                            }
                     |                        ],
