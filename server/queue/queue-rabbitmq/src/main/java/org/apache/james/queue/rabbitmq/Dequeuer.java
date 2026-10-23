@@ -131,12 +131,13 @@ class Dequeuer {
 
     private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
         return loadMail(response)
+            .timeout(TIMEOUT)
             .map(mailWithEnqueueId -> new RabbitMQMailQueueItem(ack(response, mailWithEnqueueId), mailWithEnqueueId))
             .onErrorResume(e -> {
                 LOGGER.error("Failed to load email, requeue corresponding message", e);
                 response.nack(REQUEUE);
                 return Mono.empty();
-            }).timeout(TIMEOUT);
+            });
     }
 
     private ThrowingConsumer<MailQueue.MailQueueItem.CompletionStatus> ack(AcknowledgableDelivery response, MailWithEnqueueId mailWithEnqueueId) {
