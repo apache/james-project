@@ -114,16 +114,6 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         }
     }
 
-    protected static void closeProducer(MessageProducer producer) {
-        if (producer != null) {
-            try {
-                producer.close();
-            } catch (JMSException e) {
-                // Ignore. See JAMES-2509
-            }
-        }
-    }
-
     protected static void closeConsumer(MessageConsumer consumer) {
         if (consumer != null) {
             try {
@@ -214,10 +204,6 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     protected final MetricFactory metricFactory;
     protected final GaugeRegistry gaugeRegistry;
 
-    protected final Session session;
-    protected final Queue queue;
-    protected final MessageProducer producer;
-
     private final Joiner joiner;
     private final Splitter splitter;
 
@@ -243,13 +229,6 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         this.splitter = Splitter.on(JAMES_MAIL_SEPARATOR)
                 .omitEmptyStrings() // ignore null values. See JAMES-1294
                 .trimResults();
-        try {
-            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            queue = session.createQueue(queueName.asString());
-            producer = session.createProducer(queue);
-        } catch (JMSException e) {
-            throw new RuntimeException(e);
-        }
         flux = Mono.defer(this::deQueueOneItem).repeat();
     }
 
@@ -293,7 +272,13 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
             Message message = consumer.receive(10000);
 
-            if (message != null) {
+            if (message != null && hasNoPayload(message)) {
+                // Can happen when the broker replaced an incomplete large message: drop it so that it does not block the queue
+                LOGGER.error("Discarding message {} from queue {} as it has no payload", message.getJMSMessageID(), queueName.asString());
+                session.commit();
+                closeConsumer(consumer);
+                closeSession(session);
+            } else if (message != null) {
                 dequeuedMailsMetric.increment();
                 return createMailQueueItem(session, consumer, message);
             } else {
@@ -312,6 +297,10 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
             return Mono.error(new MailQueueException("Unable to dequeue next message", e));
         }
         return Mono.empty();
+    }
+
+    private static boolean hasNoPayload(Message message) throws JMSException {
+        return message instanceof ObjectMessage objectMessage && objectMessage.getObject() == null;
     }
 
     private static boolean isInterrupt(Throwable e) {
@@ -378,6 +367,14 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
      * Produce the mail to the JMS Queue
      */
     protected void produceMail(Map<String, Object> props, int msgPrio, Mail mail) throws JMSException, MessagingException, IOException {
+        // JMS sessions are not thread safe: use a dedicated session for each enqueue
+        try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+             MessageProducer producer = session.createProducer(session.createQueue(queueName.asString()))) {
+            produceMail(session, producer, props, msgPrio, mail);
+        }
+    }
+
+    private void produceMail(Session session, MessageProducer producer, Map<String, Object> props, int msgPrio, Mail mail) throws JMSException, MessagingException, IOException {
         ObjectMessage message = session.createObjectMessage();
 
         for (Map.Entry<String, Object> entry : props.entrySet()) {
@@ -600,7 +597,8 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
     @Override
     public long getSize() throws MailQueueException {
-        try (QueueBrowser browser = session.createBrowser(queue)) {
+        try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+             QueueBrowser browser = session.createBrowser(session.createQueue(queueName.asString()))) {
             Enumeration<?> enumeration = browser.getEnumeration();
             return Iterators.size(new EnumerationIterator(enumeration));
         } catch (Exception e) {
@@ -741,13 +739,16 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     @Override
     @SuppressWarnings("unchecked")
     public MailQueueIterator browse() throws MailQueueException {
+        Session session = null;
         QueueBrowser browser = null;
         try {
-            browser = session.createBrowser(queue);
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            browser = session.createBrowser(session.createQueue(queueName.asString()));
             Enumeration<Message> messages = browser.getEnumeration();
-            return new BrowsingMailQueueIterator(browser, messages);
+            return new BrowsingMailQueueIterator(session, browser, messages);
         } catch (Exception e) {
             closeBrowser(browser);
+            closeSession(session);
 
             LOGGER.error("Unable to browse queue {}", queueName, e);
             throw new MailQueueException("Unable to browse queue " + queueName.asString(), e);
@@ -755,10 +756,12 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     }
 
     private final class BrowsingMailQueueIterator implements MailQueueIterator {
+        private final Session session;
         private final QueueBrowser browser;
         private final Enumeration<Message> messages;
 
-        private BrowsingMailQueueIterator(QueueBrowser browser, Enumeration<Message> messages) {
+        private BrowsingMailQueueIterator(Session session, QueueBrowser browser, Enumeration<Message> messages) {
+            this.session = session;
             this.browser = browser;
             this.messages = messages;
         }
@@ -790,6 +793,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         @Override
         public void close() {
             closeBrowser(browser);
+            closeSession(session);
         }
 
         private ZonedDateTime nextDeliveryDate(Message m) throws JMSException {
@@ -801,8 +805,6 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     @Override
     public void dispose() {
         try {
-            closeProducer(producer);
-            closeSession(session);
             connection.close();
         } catch (JMSException e) {
             LOGGER.error("Error while closing session", e);
