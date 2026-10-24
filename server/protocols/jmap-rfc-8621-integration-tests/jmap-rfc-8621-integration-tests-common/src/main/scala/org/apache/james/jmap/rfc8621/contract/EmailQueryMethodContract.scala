@@ -7071,6 +7071,194 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def inMailboxDisjunctionShouldBeSupported(server: GuiceJamesServer): Unit = {
+    val message: Message = buildTestMessage
+    val mailboxId1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
+    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox3"))
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox1"), AppendCommand.from(message))
+      .getMessageId
+
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox2"), AppendCommand.from(message))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox3"), AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "$bobAccountId",
+         |      "filter" : {
+         |        "operator": "OR",
+         |        "conditions": [
+         |          { "inMailbox": "${mailboxId1.serialize()}" }, { "inMailbox": "${mailboxId2.serialize()}" }
+         |        ]
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .withOptions(IGNORING_ARRAY_ORDER)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId1.serialize}","${messageId2.serialize}"]""")
+    }
+  }
+
+  @Test
+  def inMailboxDisjunctionShouldBeSupportedInAnd(server: GuiceJamesServer): Unit = {
+    val message: Message = buildTestMessage
+    val paradiseMessage: Message = Message.Builder
+      .of
+      .setSubject("paradise")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val mailboxId1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
+    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox3"))
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox1"), AppendCommand.from(message))
+      .getMessageId
+
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox1"), AppendCommand.from(paradiseMessage))
+      .getMessageId
+
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox2"), AppendCommand.from(paradiseMessage))
+      .getMessageId
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox3"), AppendCommand.from(paradiseMessage))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "$bobAccountId",
+         |      "filter" : {
+         |        "operator": "AND",
+         |        "conditions": [
+         |          {
+         |            "operator": "OR",
+         |            "conditions": [
+         |              { "inMailbox": "${mailboxId1.serialize()}" }, { "inMailbox": "${mailboxId2.serialize()}" }
+         |            ]
+         |          },
+         |          { "subject": "paradise" }
+         |        ]
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .withOptions(IGNORING_ARRAY_ORDER)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId1.serialize}","${messageId2.serialize}"]""")
+    }
+  }
+
+  @Test
+  def inMailboxDisjunctionShouldBeRejectedWhenCombinedWithAnotherMailboxFilter(server: GuiceJamesServer): Unit = {
+    val mailboxId1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
+    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
+    val mailboxId3 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox3"))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "$bobAccountId",
+         |      "filter" : {
+         |        "operator": "AND",
+         |        "conditions": [
+         |          { "inMailbox": "${mailboxId1.serialize()}" },
+         |          {
+         |            "operator": "OR",
+         |            "conditions": [
+         |              { "inMailbox": "${mailboxId2.serialize()}" }, { "inMailbox": "${mailboxId3.serialize()}" }
+         |            ]
+         |          }
+         |        ]
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                    |    "sessionState": "${SESSION_STATE.value}",
+                    |    "methodResponses": [
+                    |        [
+                    |            "error",
+                    |            {
+                    |                "type": "unsupportedFilter",
+                    |                "description": "Nested inMailbox filters are not supported"
+                    |            },
+                    |            "c1"
+                    |        ]
+                    |    ]
+                    |}""".stripMargin)
+  }
+
+  @Test
   def inMailboxShouldBeRejectedWhenInOperator(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))

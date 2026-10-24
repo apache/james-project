@@ -47,11 +47,19 @@ object FilterQuery {
         scala.Right(filter)
       } else if (nestedCount == 0)  {
         scala.Right(filter)
+      } else if (topLevelCount == 0 && hasSingleInMailboxDisjunction(filterOperator)) {
+        scala.Right(filter)
       } else {
         rejectMailboxFilters(filterOperator)
       }
+    case filterOperator: FilterOperator if filterOperator.inMailboxDisjunction.isDefined => scala.Right(filterOperator)
     case operator: FilterOperator => rejectMailboxFilters(operator)
   }
+
+  // A single OR of inMailbox conditions next to criteria free of mailbox filters
+  private def hasSingleInMailboxDisjunction(filterOperator: FilterOperator): Boolean =
+    filterOperator.inMailboxDisjunctionCondition.exists(disjunction =>
+      filterOperator.countNestedMailboxFilter == disjunction.countNestedMailboxFilter)
 
   private def rejectMailboxFilters(filter: FilterQuery): Either[UnsupportedNestingException, FilterQuery] =
     filter match {
@@ -99,6 +107,30 @@ case class FilterOperator(operator: Operator,
     case condition: FilterCondition => condition.countMailboxFilter
     case _ => 0
   }.sum
+
+  // The mailboxes of an OR made only of inMailbox conditions: matching any of them
+  val inMailboxDisjunction: Option[Seq[MailboxId]] =
+    if (operator == Or && conditions.nonEmpty && conditions.forall(_.inMailboxFilterOnly)) {
+      Some(conditions.flatMap {
+        case condition: FilterCondition => condition.inMailbox
+        case _ => None
+      })
+    } else {
+      None
+    }
+
+  // The inMailbox disjunction among the conditions of an AND, when it holds exactly one
+  def inMailboxDisjunctionCondition: Option[FilterOperator] =
+    if (operator == And) {
+      conditions.collect {
+        case condition: FilterOperator if condition.inMailboxDisjunction.isDefined => condition
+      } match {
+        case Seq(disjunction) => Some(disjunction)
+        case _ => None
+      }
+    } else {
+      None
+    }
 }
 
 case class Text(value: String) extends AnyVal
