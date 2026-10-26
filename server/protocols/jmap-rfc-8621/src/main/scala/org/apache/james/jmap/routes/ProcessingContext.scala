@@ -207,6 +207,6 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
       .getOrElse(Left[IllegalArgumentException, ServerId](new IllegalArgumentException(s"$id was not used in previously defined creationIds")))))
     .getOrElse(Right(ServerId(id.value)))
 
-  private def retrieveServerId(clientId: ClientId): Option[ServerId] = creationIds.get(clientId)
+  def retrieveServerId(clientId: ClientId): Option[ServerId] = creationIds.get(clientId)
 
 }

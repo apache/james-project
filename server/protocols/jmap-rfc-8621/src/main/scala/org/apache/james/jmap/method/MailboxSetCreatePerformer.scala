@@ -24,8 +24,8 @@ import jakarta.inject.Inject
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{ClientId, Id, Properties, ServerId, SetError}
 import org.apache.james.jmap.json.MailboxSerializer
-import org.apache.james.jmap.mail.{IsSubscribed, MailboxCreationId, MailboxCreationRequest, MailboxCreationResponse, MailboxRights, MailboxSetRequest, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads}
-import org.apache.james.jmap.method.MailboxSetCreatePerformer.{MailboxCreationFailure, MailboxCreationResult, MailboxCreationResults, MailboxCreationSuccess}
+import org.apache.james.jmap.mail.{IsSubscribed, MailboxCreationId, MailboxCreationRequest, MailboxCreationResponse, MailboxRights, MailboxSetRequest, SortOrder, TotalEmails, TotalThreads, UnparsedMailboxId, UnreadEmails, UnreadThreads}
+import org.apache.james.jmap.method.MailboxSetCreatePerformer.{MailboxCreationFailure, MailboxCreationResult, MailboxCreationResults, MailboxCreationSuccess, ParsedMailboxCreation, invalidParentId, orderCreations}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.jmap.utils.quotas.QuotaLoaderWithPreloadedDefaultFactory
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
@@ -35,8 +35,9 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.ReactorUtils
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, Json, JsonValidationError}
-import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scala.publisher.SMono
 
+import scala.collection.mutable
 import scala.util.Try
 
 object MailboxSetCreatePerformer {
@@ -49,7 +50,7 @@ object MailboxSetCreatePerformer {
     def asMailboxSetError: SetError = exception match {
       case e: MailboxNotFoundException =>
         LOGGER.info("Can't create mailbox: Mailbox not found: {}", e.getMessage)
-        SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("parentId")))
+        SetError.invalidProperties(SetErrorDescription(e.getMessage), Some(Properties("parentId")))
       case e: MailboxExistsException =>
         LOGGER.info("Mailbox already exists: {}", e.getMailboxName)
         SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("name")))
@@ -67,6 +68,31 @@ object MailboxSetCreatePerformer {
         SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
   }
+  private case class ParsedMailboxCreation(request: MailboxCreationRequest, parentCreationId: Option[MailboxCreationId])
+
+  private[method] case class CreationOrder(ordered: Seq[MailboxCreationId], unresolved: Set[MailboxCreationId])
+
+  private[method] def orderCreations(dependencies: Map[MailboxCreationId, Option[MailboxCreationId]]): CreationOrder = {
+    val children = dependencies.toSeq.flatMap { case (id, parent) =>
+      parent.filter(dependencies.contains).map(_ -> id)
+    }.groupMap(_._1)(_._2)
+    val waiting = mutable.Set.from(children.valuesIterator.flatten)
+    val ready = mutable.Queue.from(dependencies.keysIterator.filterNot(waiting.contains))
+    val ordered = Vector.newBuilder[MailboxCreationId]
+    while (ready.nonEmpty) {
+      val id = ready.dequeue()
+      ordered += id
+      children.getOrElse(id, Seq.empty).foreach { child =>
+        waiting.remove(child)
+        ready.enqueue(child)
+      }
+    }
+    CreationOrder(ordered.result(), waiting.toSet)
+  }
+
+  private def invalidParentId(description: String): MailboxCreationParseException =
+    MailboxCreationParseException(SetError.invalidProperties(SetErrorDescription(description), Some(Properties("parentId"))))
+
   case class MailboxCreationResults(created: Seq[MailboxCreationResult]) {
     def retrieveCreated: Map[MailboxCreationId, MailboxCreationResponse] = created
       .flatMap(result => result match {
@@ -97,61 +123,89 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
                       mailboxSetRequest: MailboxSetRequest,
                       processingContext: ProcessingContext,
                       supportSharedMailbox: Boolean): SMono[(MailboxCreationResults, ProcessingContext)] =
-    SFlux.fromIterable(mailboxSetRequest.create
-        .getOrElse(Map.empty)
-        .view)
-      .fold((MailboxCreationResults(Nil), processingContext)) {
-        (acc: (MailboxCreationResults, ProcessingContext), elem: (MailboxCreationId, JsObject)) => {
-          val (mailboxCreationId, jsObject) = elem
-          val (creationResult, updatedProcessingContext) = createMailbox(mailboxSession, mailboxCreationId, jsObject, acc._2, supportSharedMailbox)
-          (MailboxCreationResults(acc._1.created :+ creationResult), updatedProcessingContext)
-        }
+    SMono.fromCallable(() => {
+      val creations = mailboxSetRequest.create.getOrElse(Map.empty)
+        .map { case (id, json) => id -> parseCreate(json) }
+      val dependencies = creations.map { case (id, creation) =>
+        val parent = creation.toOption.flatMap(_.parentCreationId)
+          .filter(parent => processingContext.retrieveServerId(ClientId(parent.id)).isEmpty)
+        id -> parent
       }
+      val order = orderCreations(dependencies)
+      val (results, context) = order.ordered.foldLeft((Vector.empty[MailboxCreationResult], processingContext)) {
+        case ((results, context), id) =>
+          val (result, updatedContext) = createMailbox(mailboxSession, id, creations(id), context, supportSharedMailbox)
+          (results :+ result, updatedContext)
+      }
+      val unresolved = order.unresolved.toSeq.map(id => MailboxCreationFailure(id,
+        invalidParentId("parentId refers to a cyclic mailbox creation dependency")))
+      (MailboxCreationResults(results ++ unresolved), context)
+    })
       .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 
   private def createMailbox(mailboxSession: MailboxSession,
                             mailboxCreationId: MailboxCreationId,
-                            jsObject: JsObject,
+                            creationRequest: Either[MailboxCreationParseException, ParsedMailboxCreation],
                             processingContext: ProcessingContext,
                             supportSharedMailbox: Boolean): (MailboxCreationResult, ProcessingContext) = {
-    parseCreate(jsObject)
-      .flatMap(mailboxCreationRequest => resolvePath(mailboxSession, mailboxCreationRequest, supportSharedMailbox)
-        .flatMap(path => createMailbox(mailboxSession = mailboxSession,
-          path = path,
-          mailboxCreationRequest = mailboxCreationRequest)))
-      .flatMap(creationResponse => recordCreationIdInProcessingContext(mailboxCreationId, processingContext, creationResponse.id)
-        .map(context => (creationResponse, context)))
-      .fold(e => (MailboxCreationFailure(mailboxCreationId, e), processingContext),
-        creationResponseWithUpdatedContext => {
-          (MailboxCreationSuccess(mailboxCreationId, creationResponseWithUpdatedContext._1), creationResponseWithUpdatedContext._2)
-        })
+    val creation = for {
+      parsed <- creationRequest
+      path <- resolvePath(mailboxSession, parsed, processingContext, supportSharedMailbox)
+      response <- createMailbox(mailboxSession, path, parsed.request)
+      context <- recordCreationIdInProcessingContext(mailboxCreationId, processingContext, response.id)
+    } yield (response, context)
+
+    creation.fold(e => (MailboxCreationFailure(mailboxCreationId, e), processingContext),
+      { case (response, context) => (MailboxCreationSuccess(mailboxCreationId, response), context) })
   }
 
-  private def parseCreate(jsObject: JsObject): Either[MailboxCreationParseException, MailboxCreationRequest] =
+  private def parseCreate(jsObject: JsObject): Either[MailboxCreationParseException, ParsedMailboxCreation] =
     MailboxCreationRequest.validateProperties(jsObject)
-      .flatMap(validJsObject => Json.fromJson(validJsObject)(serializer.mailboxCreationRequest) match {
-        case JsSuccess(creationRequest, _) => Right(creationRequest)
-        case JsError(errors) => Left(MailboxCreationParseException(mailboxSetError(errors)))
+      .flatMap(validJsObject => (validJsObject \ "parentId").asOpt[String].filter(_.startsWith("#")) match {
+        case Some(reference) =>
+          for {
+            id <- Id.validate(reference.substring(1)).left.map(_ => invalidParentId("Invalid parentId"))
+            request <- parseCreationRequest(validJsObject - "parentId")
+          } yield ParsedMailboxCreation(request, Some(MailboxCreationId(id)))
+        case None => parseCreationRequest(validJsObject).map(request => ParsedMailboxCreation(request, None))
       })
 
-  private def resolvePath(mailboxSession: MailboxSession,
-                          mailboxCreationRequest: MailboxCreationRequest,
-                          supportSharedMailbox: Boolean): Either[Exception, MailboxPath] = {
-    if (mailboxCreationRequest.name.value.contains(mailboxSession.getPathDelimiter)) {
-      return Left(new MailboxNameException(s"The mailbox '${mailboxCreationRequest.name.value}' contains an illegal character: '${mailboxSession.getPathDelimiter}'"))
+  private def parseCreationRequest(jsObject: JsObject): Either[MailboxCreationParseException, MailboxCreationRequest] =
+    Json.fromJson(jsObject)(serializer.mailboxCreationRequest) match {
+      case JsSuccess(request, _) => Right(request)
+      case JsError(errors) if errors.forall(_._1 == (JsPath \ "parentId")) => Left(invalidParentId("Invalid parentId"))
+      case JsError(errors) => Left(MailboxCreationParseException(mailboxSetError(errors)))
     }
-    mailboxCreationRequest.parentId
+
+  private def resolveParentId(creation: ParsedMailboxCreation,
+                              processingContext: ProcessingContext): Either[MailboxCreationParseException, Option[UnparsedMailboxId]] =
+    creation.parentCreationId match {
+      case Some(parent) => processingContext.retrieveServerId(ClientId(parent.id))
+        .toRight(invalidParentId(s"Unable to resolve parentId: #${parent.id.value}"))
+        .map(id => Some(UnparsedMailboxId(id.value)))
+      case None => Right(creation.request.parentId)
+    }
+
+  private def resolvePath(mailboxSession: MailboxSession,
+                          creation: ParsedMailboxCreation,
+                          processingContext: ProcessingContext,
+                          supportSharedMailbox: Boolean): Either[Exception, MailboxPath] = {
+    val request = creation.request
+    if (request.name.value.contains(mailboxSession.getPathDelimiter)) {
+      return Left(new MailboxNameException(s"The mailbox '${request.name.value}' contains an illegal character: '${mailboxSession.getPathDelimiter}'"))
+    }
+    resolveParentId(creation, processingContext).flatMap(parentId => parentId
       .map(maybeParentId => for {
         parentId <- Try(mailboxIdFactory.fromString(maybeParentId.id))
           .toEither
           .left
-          .map(e => new IllegalArgumentException(e.getMessage, e))
+          .map(_ => invalidParentId(s"Invalid parentId: ${maybeParentId.id.value}"))
         parentPathPreAssert <- retrievePath(parentId, mailboxSession)
         parentPath <- validateCapabilityIfSharedMailbox(mailboxSession, parentId, supportSharedMailbox).apply(parentPathPreAssert)
       } yield {
-        parentPath.child(mailboxCreationRequest.name, mailboxSession.getPathDelimiter)
+        parentPath.child(request.name, mailboxSession.getPathDelimiter)
       })
-      .getOrElse(Right(MailboxPath.forUser(mailboxSession.getUser, mailboxCreationRequest.name)))
+      .getOrElse(Right(MailboxPath.forUser(mailboxSession.getUser, request.name))))
   }
 
   private def retrievePath(mailboxId: MailboxId, mailboxSession: MailboxSession): Either[Exception, MailboxPath] = try {
