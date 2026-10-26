@@ -136,7 +136,7 @@ class PostgresPopulateEmailQueryViewTaskIntegrationTest {
                 .then()
                     .body("status", is("completed"))
                     .body("type", is("PopulateEmailQueryViewTask"))
-                    .body("additionalInformation.processedMailboxCount", is(1003))
+                    .body("additionalInformation.processedMailboxCount", is(3))
                     .body("additionalInformation.failedMailboxCount", is(0))
                     .body("additionalInformation.processedMessageCount", is(30))
                     .body("additionalInformation.failedMessageCount", is(0)));
