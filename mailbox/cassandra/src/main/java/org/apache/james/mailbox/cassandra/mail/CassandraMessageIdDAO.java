@@ -396,7 +396,7 @@ public class CassandraMessageIdDAO {
             .setString(HEADER_CONTENT, headerContent.asString()));
     }
 
-    Mono<Void> replaceHeaderContent(ComposedMessageId id, BlobId oldId, BlobId newId) {
+    public Mono<Void> replaceHeaderContent(ComposedMessageId id, BlobId oldId, BlobId newId) {
         return cassandraAsyncExecutor.executeReturnApplied(replaceHeaderContent.bind()
                 .setUuid(MAILBOX_ID, ((CassandraId) id.getMailboxId()).asUuid())
                 .setLong(IMAP_UID, id.getUid().asLong())

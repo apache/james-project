@@ -20,7 +20,9 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.apache.james.backends.cassandra.Scenario.Builder.returnEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +34,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.core.Username;
 import org.apache.james.junit.categories.Unstable;
@@ -142,6 +145,32 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
         assertThat(statementRecorder.listExecutedStatements(
             StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM imapuidtable")))
             .hasSize(1);
+    }
+
+    @Test
+    void fullFetchShouldRetryMissingBlobAndKeepBody(CassandraCluster cassandra) throws Exception {
+        saveMessages();
+        cassandra.getConf().registerScenario(returnEmpty().times(1).whenQueryStartsWith("SELECT * FROM blobs WHERE"));
+        StatementRecorder recorder = cassandra.getConf().recordStatements();
+
+        MailboxMessage result = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.FULL).getFirst();
+
+        assertThat(result.getFullContent().readAllBytes()).isEqualTo(message1.getFullContent().readAllBytes());
+        assertThat(result.getBodyContent().readAllBytes()).isEqualTo(message1.getBodyContent().readAllBytes());
+        assertThat(recorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith(
+            "SELECT * FROM messagev3"))).hasSize(2);
+    }
+
+    @Test
+    void fullFetchShouldPropagateMissingBlobAfterOneRetry(CassandraCluster cassandra) throws Exception {
+        saveMessages();
+        cassandra.getConf().registerScenario(returnEmpty().forever().whenQueryStartsWith("SELECT * FROM blobs WHERE"));
+        StatementRecorder recorder = cassandra.getConf().recordStatements();
+
+        assertThatThrownBy(() -> sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.FULL).getFirst()).isInstanceOf(ObjectNotFoundException.class);
+
+        assertThat(recorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith(
+            "SELECT * FROM messagev3"))).hasSize(2);
     }
 
     @Test

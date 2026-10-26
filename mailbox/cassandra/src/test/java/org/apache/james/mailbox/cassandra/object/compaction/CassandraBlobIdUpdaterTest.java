@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail;
+package org.apache.james.mailbox.cassandra.object.compaction;
 
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,7 +38,6 @@ import org.apache.james.blob.api.BlobIdUpdater;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentDataDefinition;
-import org.apache.james.mailbox.cassandra.modules.CassandraBlobReferenceIndexDataDefinition;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageDataDefinition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

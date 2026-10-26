@@ -17,14 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.table;
+package org.apache.james.mailbox.cassandra.object.compaction;
 
-import com.datastax.oss.driver.api.core.CqlIdentifier;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
-public interface CassandraBlobReferenceIndexTable {
-    String TABLE_NAME = "blobReferenceIndex";
-    CqlIdentifier RUN_ID = CqlIdentifier.fromCql("run_id");
-    CqlIdentifier BLOB_ID = CqlIdentifier.fromCql("blob_id");
-    CqlIdentifier REFERENCE_TYPE = CqlIdentifier.fromCql("reference_type");
-    CqlIdentifier REFERENCE_ID = CqlIdentifier.fromCql("reference_id");
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+
+class RunIdTest {
+    @Test
+    void shouldPreserveUuidAtStorageBoundary() {
+        UUID value = UUID.randomUUID();
+        RunId runId = new RunId(value);
+
+        assertThat(runId.value()).isEqualTo(value);
+        assertThat(runId).isEqualTo(new RunId(value));
+        assertThat(runId.toString()).isEqualTo(value.toString());
+    }
+
+    @Test
+    void shouldGenerateDistinctRunIds() {
+        assertThat(RunId.generate()).isNotEqualTo(RunId.generate());
+    }
+
+    @Test
+    void shouldRejectNullUuid() {
+        assertThatNullPointerException().isThrownBy(() -> new RunId(null));
+    }
 }
