@@ -1084,7 +1084,8 @@ curl -XPOST /mailboxes?task=populateEmailQueryView
 ```
 
 Will schedule a task for recomputing the fast message view projection
-for all mailboxes.
+for all mailboxes, whoever owns them. The projection of each mailbox is
+cleared, then rebuilt from its messages.
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
@@ -1107,15 +1108,20 @@ The scheduled task will have the following type
 ```
 {
   "type":"PopulateEmailQueryViewTask",
-  "processedUserCount": 3,
+  "processedMailboxCount": 3,
   "processedMessageCount": 3,
-  "failedUserCount": 2,
+  "failedMailboxCount": 2,
   "failedMessageCount": 1,
   "runningOptions": {
     "messagesPerSecond":20
   }
 }
 ```
+
+`processedMailboxCount` and `failedMailboxCount` count the mailboxes
+whose messages were, or could not be, listed. A mailbox that could not
+be read makes the task end as `failed`, the other mailboxes are still
+processed.
 
 Response codes:
 

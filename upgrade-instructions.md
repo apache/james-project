@@ -27,6 +27,18 @@ Change list:
  - [Cassandra schema version 16: mandatory message denormalization migration](#cassandra-schema-version-16-mandatory-message-denormalization-migration)
  - [Migration of embedded mail queue broker from ActiveMQ Classic to ActiveMQ Artemis](#migration-of-embedded-mail-queue-broker-from-activemq-classic-to-activemq-artemis)
  - [JAMES-4236 JMAP EmailSubmission/set validates identityId](#james-4236-jmap-emailsubmissionset-validates-identityid)
+ - [JAMES-4236 populateEmailQueryView task reports mailbox counters](#james-4236-populateemailqueryview-task-reports-mailbox-counters)
+
+### JAMES-4236 populateEmailQueryView task reports mailbox counters
+
+Date: 26/10/2026
+
+Concerned products: all products exposing the WebAdmin JMAP tasks
+
+`POST /mailboxes?task=populateEmailQueryView` now walks every mailbox rather than every user, so mailboxes whose owner
+is not a registered user are populated too. The `additionalInformation` of the `PopulateEmailQueryViewTask` replaces
+`processedUserCount` and `failedUserCount` with `processedMailboxCount` and `failedMailboxCount`. Tools reading these
+details need to be updated. Details of tasks run before the upgrade are still readable, but report 0 mailboxes.
 
 ### JAMES-4236 JMAP EmailSubmission/set validates identityId
 
