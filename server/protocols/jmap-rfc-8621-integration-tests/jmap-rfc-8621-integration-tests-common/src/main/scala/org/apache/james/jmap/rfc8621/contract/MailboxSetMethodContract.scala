@@ -57,6 +57,9 @@ import org.assertj.core.api.{Assertions, SoftAssertions, ThrowingConsumer}
 import org.awaitility.Awaitility
 import org.hamcrest.Matchers.{equalTo, hasEntry, hasKey, hasSize, not, notNullValue}
 import org.junit.jupiter.api.{BeforeEach, RepeatedTest, Tag, Test}
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
+import play.api.libs.json.{JsArray, JsNull, JsObject, JsValue, Json}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.client.HttpClient
@@ -1109,8 +1112,9 @@ trait MailboxSetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
-         |          "type": "invalidArguments",
-         |          "description": "'/parentId' property is not valid: mailboxId does not match Id constraints: Predicate failed: '' contains some invalid characters. Should be [#a-zA-Z0-9-_] and no longer than 255 chars."
+         |          "type": "invalidProperties",
+         |          "description": "Invalid parentId",
+         |          "properties": ["parentId"]
          |        }
          |      }
          |    },
@@ -2014,7 +2018,7 @@ trait MailboxSetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
-         |          "type": "invalidArguments",
+         |          "type": "invalidProperties",
          |          "description": "${mailboxId.serialize} can not be found",
          |          "properties":["parentId"]
          |        }
@@ -2986,6 +2990,189 @@ trait MailboxSetMethodContract {
         // We need to limit ourself to simple body assertions in order not to infer id allocation
         .body("methodResponses[0][1].created.C42.totalThreads", equalTo(0))
         .body("methodResponses[1][1].destroyed", hasSize(1))
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = Array(true, false))
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def createParentIdShouldAcceptCreationIdsWithinTheSameCall(parentFirst: Boolean, server: GuiceJamesServer): Unit = {
+    val entries = Seq(
+      "parent" -> Json.obj("name" -> "parent"),
+      "child" -> Json.obj("name" -> "child", "parentId" -> "#parent"))
+    assertCreatedMailboxTree(server, if (parentFirst) entries else entries.reverse,
+      Map("parent" -> "parent", "child" -> "parent.child"))
+  }
+
+  @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def createParentIdShouldOrderMultipleLevelsAndIndependentTrees(server: GuiceJamesServer): Unit = {
+    assertCreatedMailboxTree(server, Seq(
+      "grandchild" -> Json.obj("name" -> "grandchild", "parentId" -> "#child"),
+      "sibling" -> Json.obj("name" -> "sibling", "parentId" -> "#parent"),
+      "otherChild" -> Json.obj("name" -> "otherChild", "parentId" -> "#other"),
+      "child" -> Json.obj("name" -> "child", "parentId" -> "#parent"),
+      "other" -> Json.obj("name" -> "other", "parentId" -> JsNull),
+      "parent" -> Json.obj("name" -> "parent")),
+      Map("parent" -> "parent", "child" -> "parent.child", "grandchild" -> "parent.child.grandchild",
+        "sibling" -> "parent.sibling", "other" -> "other", "otherChild" -> "other.otherChild"))
+  }
+
+  private def assertCreatedMailboxTree(server: GuiceJamesServer, entries: Seq[(String, JsObject)], paths: Map[String, String]): Unit = {
+    val response = mailboxCreationResponse(JsObject(entries), entries.map(_._1))
+    val created = (response \ "methodResponses")(0)(1) \ "created"
+    assertThat(created.as[JsObject].keys == paths.keySet).isTrue
+    assertThat(((response \ "methodResponses")(0)(1) \ "notCreated").toOption.isEmpty).isTrue
+    val retrieved = ((response \ "methodResponses")(1)(1) \ "list").as[Seq[JsObject]]
+    assertThat(retrieved.size).isEqualTo(paths.size)
+    assertThatJson(((response \ "methodResponses")(1)(1) \ "notFound").get.toString).isEqualTo("[]")
+    paths.foreach { case (creationId, path) =>
+      val id = server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", bobUsername.asString(), path).serialize
+      assertThat((created \ creationId \ "id").as[String]).isEqualTo(id)
+      val mailbox = retrieved.find(mailbox => (mailbox \ "id").as[String] == id).get
+      assertThat((mailbox \ "name").as[String]).isEqualTo(path.split('.').last)
+      val parentPath = path.lastIndexOf('.')
+      if (parentPath < 0) {
+        assertThat((mailbox \ "parentId").asOpt[String].isEmpty).isTrue
+      } else {
+        val parentId = server.getProbe(classOf[MailboxProbeImpl])
+          .getMailboxId("#private", bobUsername.asString(), path.substring(0, parentPath)).serialize
+        assertThat((mailbox \ "parentId").as[String]).isEqualTo(parentId)
+      }
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array("#missing", "#", "invalid", ""))
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def createParentIdShouldRejectInvalidReferencesAndIds(parentId: String): Unit = {
+    val response = mailboxCreationResponse(Json.obj(
+      "child" -> Json.obj("name" -> "child", "parentId" -> parentId),
+      "descendant" -> Json.obj("name" -> "descendant", "parentId" -> "#child"),
+      "independent" -> Json.obj("name" -> "independent")))
+    assertMailboxParentErrors(response, Set("child", "descendant"))
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array("[]", "42", "{}", "true"))
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def createParentIdShouldRejectInvalidTypes(parentIdJson: String): Unit = {
+    val response = mailboxCreationResponse(Json.obj(
+      "child" -> Json.obj("name" -> "child", "parentId" -> Json.parse(parentIdJson)),
+      "independent" -> Json.obj("name" -> "independent")))
+    assertMailboxParentErrors(response, Set("child"))
+  }
+
+  @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def createParentIdShouldRejectCyclesAndTheirDescendants(): Unit = {
+    val response = mailboxCreationResponse(Json.obj(
+      "self" -> Json.obj("name" -> "self", "parentId" -> "#self"),
+      "a" -> Json.obj("name" -> "a", "parentId" -> "#b"),
+      "b" -> Json.obj("name" -> "b", "parentId" -> "#a"),
+      "descendant" -> Json.obj("name" -> "descendant", "parentId" -> "#a"),
+      "independent" -> Json.obj("name" -> "independent")))
+    assertMailboxParentErrors(response, Set("self", "a", "b", "descendant"))
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array("", "existing"))
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def createParentIdShouldFailWhenParentCreationFails(parentName: String, server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "existing"))
+    val response = mailboxCreationResponse(Json.obj(
+      "child" -> Json.obj("name" -> "child", "parentId" -> "#parent"),
+      "parent" -> Json.obj("name" -> parentName),
+      "independent" -> Json.obj("name" -> "independent")))
+    val result = (response \ "methodResponses")(0)(1)
+    assertThat(((result \ "notCreated").as[JsObject].keys == Set("parent", "child"))).isTrue
+    assertThat((result \ "notCreated" \ "parent" \ "type").as[String]).isEqualTo("invalidArguments")
+    assertThatJson((result \ "notCreated" \ "child").get.toString)
+      .whenIgnoringPaths("description")
+      .isEqualTo("""{"type":"invalidProperties","properties":["parentId"]}""")
+    assertThat((result \ "created").as[JsObject].keys == Set("independent")).isTrue
+  }
+
+  @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def createShouldValidateLiteralNameWithInitialCreatedIds(): Unit = {
+    val create = Json.obj("literal" -> Json.obj("name" -> "#parent"))
+    val baseline = mailboxCreationResponse(create)
+    val response = mailboxCreationResponse(create, createdIds = Json.obj("parent" -> "server123"))
+    val result = (response \ "methodResponses")(0)(1)
+    val error = result \ "notCreated" \ "literal"
+    assertThatJson(error.get.toString)
+      .isEqualTo(((baseline \ "methodResponses")(0)(1) \ "notCreated" \ "literal").get.toString)
+    assertThat(error.as[JsObject].value("type").as[String]).isEqualTo("invalidArguments")
+    assertThatJson((error \ "properties").get.toString).isEqualTo("[\"name\"]")
+    assertThat((error \ "description").as[String]).contains("#parent").doesNotContain("server123")
+    assertThat((result \ "created").toOption.isEmpty).isTrue
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = Array(254, 255))
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def createParentIdShouldAcceptMaximumLengthCreationReference(length: Int, server: GuiceJamesServer): Unit = {
+    val parentCreationId = "p" * length
+    val response = mailboxCreationResponse(Json.obj(
+      "child" -> Json.obj("name" -> "child", "parentId" -> ("#" + parentCreationId)),
+      parentCreationId -> Json.obj("name" -> "parent")), Seq("child"))
+    val result = (response \ "methodResponses")(0)(1)
+    assertThat((result \ "created").as[JsObject].keys == Set("child", parentCreationId)).isTrue
+    assertThat((result \ "notCreated").toOption.isEmpty).isTrue
+    val parentId = (result \ "created" \ parentCreationId \ "id").as[String]
+    val childId = server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", bobUsername.asString(), "parent.child").serialize
+    assertThatJson(((response \ "methodResponses")(1)(1) \ "list")(0).toString)
+      .isEqualTo(Json.obj("id" -> childId, "name" -> "child", "parentId" -> parentId).toString)
+  }
+
+  @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def createParentIdShouldRejectOverlongCreationReference(): Unit = {
+    val response = mailboxCreationResponse(Json.obj(
+      "child" -> Json.obj("name" -> "child", "parentId" -> ("#" + "p" * 256)),
+      "independent" -> Json.obj("name" -> "independent")))
+    assertMailboxParentErrors(response, Set("child"))
+  }
+
+  @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def createShouldValidateNameBeforeResolvingParentReference(): Unit = {
+    val response = mailboxCreationResponse(Json.obj("child" -> Json.obj(
+      "name" -> "invalid.name", "parentId" -> "#missing")))
+    val result = (response \ "methodResponses")(0)(1)
+    assertThat((result \ "notCreated" \ "child" \ "type").as[String]).isEqualTo("invalidArguments")
+    assertThatJson((result \ "notCreated" \ "child" \ "properties").get.toString).isEqualTo("[\"name\"]")
+    assertThat((result \ "created").toOption.isEmpty).isTrue
+  }
+
+  private def assertMailboxParentErrors(response: JsValue, failedIds: Set[String]): Unit = {
+    val result = (response \ "methodResponses")(0)(1)
+    val errors = (result \ "notCreated").as[JsObject]
+    assertThat(errors.keys == failedIds).isTrue
+    errors.values.foreach(error => assertThatJson(error.toString)
+      .whenIgnoringPaths("description")
+      .isEqualTo("""{"type":"invalidProperties","properties":["parentId"]}"""))
+    assertThat((result \ "created").as[JsObject].keys == Set("independent")).isTrue
+  }
+
+  private def mailboxCreationResponse(create: JsObject, ids: Seq[String] = Seq.empty, createdIds: JsObject = Json.obj()): JsValue = {
+    val request = Json.obj(
+      "using" -> Json.arr("urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"),
+      "createdIds" -> createdIds,
+      "methodCalls" -> JsArray(Seq(
+        Json.arr("Mailbox/set", Json.obj("accountId" -> bobAccountId, "create" -> create), "set")) ++
+        (if (ids.isEmpty) Seq.empty else Seq(Json.arr("Mailbox/get", Json.obj(
+          "accountId" -> bobAccountId, "ids" -> ids.map("#" + _), "properties" -> Seq("id", "name", "parentId")), "get")))))
+    Json.parse(`given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request.toString)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract().asString())
   }
 
   @Test
