@@ -30,6 +30,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.projections.EmailQueryView;
+import org.apache.james.jmap.api.projections.EmailQueryViewManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -104,39 +105,44 @@ public class EmailQueryViewPopulator {
         }
     }
 
+    private record MessageWithOwnerView(EmailQueryView ownerView, MessageResult messageResult) {
+    }
+
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxManager mailboxManager;
-    private final EmailQueryView emailQueryView;
+    private final EmailQueryViewManager emailQueryViewManager;
 
     @Inject
     EmailQueryViewPopulator(MailboxSessionMapperFactory mailboxSessionMapperFactory,
                             MailboxManager mailboxManager,
-                            EmailQueryView emailQueryView) {
+                            EmailQueryViewManager emailQueryViewManager) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.mailboxManager = mailboxManager;
-        this.emailQueryView = emailQueryView;
+        this.emailQueryViewManager = emailQueryViewManager;
     }
 
     Mono<Result> populateView(Progress progress, RunningOptions runningOptions) {
         MailboxSession session = mailboxManager.createSystemSession(POPULATOR_USER);
 
-        return correctProjection(listAllMailboxMessages(progress, session), runningOptions, progress)
+        return correctProjection(listAllMessageWithOwnerViews(progress, session), runningOptions, progress)
             .map(result -> progress.getFailedMailboxCount() > 0 ? Result.PARTIAL : result)
             .doFinally(any -> mailboxManager.endProcessingRequest(session));
     }
 
-    private Flux<MessageResult> listAllMailboxMessages(Progress progress, MailboxSession session) {
+    private Flux<MessageWithOwnerView> listAllMessageWithOwnerViews(Progress progress, MailboxSession session) {
         return mailboxSessionMapperFactory.getMailboxMapper(session).list()
-            .flatMap(mailbox -> listMailboxMessages(progress, mailbox), MAILBOX_CONCURRENCY)
-            .filter(messageResult -> !messageResult.getFlags().contains(DELETED));
+            .flatMap(mailbox -> listMessageWithOwnerViews(progress, mailbox), MAILBOX_CONCURRENCY)
+            .filter(messageWithOwnerView -> !messageWithOwnerView.messageResult().getFlags().contains(DELETED));
     }
 
-    private Flux<MessageResult> listMailboxMessages(Progress progress, Mailbox mailbox) {
+    private Flux<MessageWithOwnerView> listMessageWithOwnerViews(Progress progress, Mailbox mailbox) {
         MailboxSession ownerSession = mailboxManager.createSystemSession(mailbox.getUser());
+        EmailQueryView ownerView = emailQueryViewManager.getEmailQueryView(mailbox.getUser());
 
         return Mono.from(mailboxManager.getMailboxReactive(mailbox.getMailboxId(), ownerSession))
-            .flatMap(messageManager -> emailQueryView.delete(mailbox.getMailboxId()).thenReturn(messageManager))
+            .flatMap(messageManager -> ownerView.delete(mailbox.getMailboxId()).thenReturn(messageManager))
             .flatMapMany(messageManager -> listAllMessages(messageManager, ownerSession))
+            .map(messageResult -> new MessageWithOwnerView(ownerView, messageResult))
             .doOnComplete(progress::incrementProcessedMailboxCount)
             .onErrorResume(MailboxNotFoundException.class, e -> {
                 LOGGER.info("Mailbox {} was deleted before its JMAP emailQuery view could be re-computed", mailbox.getMailboxId());
@@ -150,7 +156,8 @@ public class EmailQueryViewPopulator {
             .doFinally(any -> mailboxManager.endProcessingRequest(ownerSession));
     }
 
-    private Mono<Result> correctProjection(MessageResult messageResult, Progress progress) {
+    private Mono<Result> correctProjection(MessageWithOwnerView messageWithOwnerView, Progress progress) {
+        MessageResult messageResult = messageWithOwnerView.messageResult();
         return Mono.fromCallable(() -> {
             MailboxId mailboxId = messageResult.getMailboxId();
             MessageId messageId = messageResult.getMessageId();
@@ -158,7 +165,7 @@ public class EmailQueryViewPopulator {
             ZonedDateTime receivedAt = ZonedDateTime.ofInstant(messageResult.getInternalDate().toInstant(), ZoneOffset.UTC);
             return new EmailQueryView.Entry(mailboxId, messageId, receivedAt, threadId);
         })
-            .flatMap(entry -> emailQueryView.save(entry.getMailboxId(), entry.getReceivedAt(), entry.getMessageId(), entry.getThreadId()))
+            .flatMap(entry -> messageWithOwnerView.ownerView().save(entry.getMailboxId(), entry.getReceivedAt(), entry.getMessageId(), entry.getThreadId()))
             .thenReturn(Result.COMPLETED)
             .doOnSuccess(any -> progress.incrementProcessedMessageCount())
             .onErrorResume(e -> {
@@ -171,8 +178,8 @@ public class EmailQueryViewPopulator {
             });
     }
 
-    private Mono<Result> correctProjection(Flux<MessageResult> entries, RunningOptions runningOptions, Progress progress) {
-        return entries.transform(ReactorUtils.<MessageResult, Result>throttle()
+    private Mono<Result> correctProjection(Flux<MessageWithOwnerView> entries, RunningOptions runningOptions, Progress progress) {
+        return entries.transform(ReactorUtils.<MessageWithOwnerView, Result>throttle()
                 .elements(runningOptions.getMessagesPerSecond())
                 .per(PERIOD)
                 .forOperation(entry -> correctProjection(entry, progress)))
