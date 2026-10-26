@@ -84,7 +84,7 @@ public class PostgresMailboxManagerAttachmentTest extends AbstractMailboxManager
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
         PostgresConfiguration postgresConfiguration = PostgresConfiguration.builder().username("a").password("a").build();
-        mapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, blobIdFactory,
+        mapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), postgresExtension.getByPassRLSPostgresExecutor(), Clock.systemUTC(), blobStore, blobIdFactory,
             postgresExtension.getPostgresConfiguration(),
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
 

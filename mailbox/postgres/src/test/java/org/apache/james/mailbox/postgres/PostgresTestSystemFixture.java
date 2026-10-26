@@ -70,7 +70,7 @@ public class PostgresTestSystemFixture {
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
 
-        return new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, blobIdFactory,
+        return new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), postgresExtension.getByPassRLSPostgresExecutor(), Clock.systemUTC(), blobStore, blobIdFactory,
             postgresExtension.getPostgresConfiguration(),
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
     }
