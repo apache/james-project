@@ -34,6 +34,7 @@ import static org.mockito.Mockito.spy;
 import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
+import org.apache.james.jmap.api.projections.DefaultEmailQueryViewManager;
 import org.apache.james.jmap.memory.projections.MemoryEmailQueryView;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxManager;
@@ -121,7 +122,7 @@ class PopulateEmailQueryViewRequestToTaskTest {
             new TasksRoutes(taskManager, jsonTransformer,
                 DTOConverter.of(PopulateEmailQueryViewTaskAdditionalInformationDTO.module())),
             new JMAPRoutes(
-                new EmailQueryViewPopulator(mailboxManager.getMapperFactory(), spiedMailboxManager, view),
+                new EmailQueryViewPopulator(mailboxManager.getMapperFactory(), spiedMailboxManager, new DefaultEmailQueryViewManager(view)),
                 taskManager))
             .start();
 
