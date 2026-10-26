@@ -45,7 +45,6 @@ import net.fortuna.ical4j.data.CalendarParserFactory;
 import net.fortuna.ical4j.data.ContentHandlerContext;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 
 /**
  * <p>
@@ -137,7 +136,7 @@ public class ICalendarParser extends GenericMailet {
         CalendarBuilder builder = new CalendarBuilder(
             CalendarParserFactory.getInstance().get(),
             new ContentHandlerContext().withSuppressInvalidProperties(true),
-            TimeZoneRegistryFactory.getInstance().createRegistry());
+            new ICal4JTimeZoneRegistry());
         try {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(icsContent);
             return Stream.of(Pair.of(key, builder.build(inputStream)));
