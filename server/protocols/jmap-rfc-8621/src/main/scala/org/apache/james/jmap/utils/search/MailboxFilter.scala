@@ -28,7 +28,7 @@ import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery.{AccessibleNamespace, Namespace, PersonalNamespace}
 import org.apache.james.mailbox.model.SearchQuery.DateResolution.Second
 import org.apache.james.mailbox.model.SearchQuery.{AddressType, Criterion, DateComparator, DateOperator, DateResolution, InternalDateCriterion}
-import org.apache.james.mailbox.model.{MultimailboxesSearchQuery, SearchQuery}
+import org.apache.james.mailbox.model.{MailboxId, MultimailboxesSearchQuery, SearchQuery}
 
 import scala.jdk.CollectionConverters._
 
@@ -50,7 +50,19 @@ case object InMailboxFilter extends MailboxFilter {
       case _ => None
     }.flatMap(_.inMailbox) match {
       case Some(mailboxId) => builder.inMailboxes(mailboxId)
-      case None => builder
+      case None => inMailboxDisjunction(request)
+        .map(mailboxIds => builder.inMailboxes(mailboxIds.asJava))
+        .getOrElse(builder)
+    }
+
+  // Extract mailbox conditions from an OR of inMailbox, alone or in a simple AND
+  private def inMailboxDisjunction(request: EmailQueryRequest): Option[Seq[MailboxId]] =
+    request.filter.flatMap {
+      case filterOperator: FilterOperator if filterOperator.inMailboxDisjunction.isDefined =>
+        filterOperator.inMailboxDisjunction
+      case filterOperator: FilterOperator if filterOperator.countMailboxFilter == 0 =>
+        filterOperator.inMailboxDisjunctionCondition.flatMap(_.inMailboxDisjunction)
+      case _ => None
     }
 }
 
@@ -105,6 +117,8 @@ object MailboxFilter {
                 converter: List[Criterion] => Criterion,
                 operator: Operator): Either[UnsupportedFilterException, List[Criterion]] =
       filterQuery match {
+        // Already applied as the mailboxes of the MultimailboxesSearchQuery
+        case filterOperator: FilterOperator if filterOperator.inMailboxDisjunction.isDefined => Right(Nil)
         case filterOperator: FilterOperator if filterOperator.operator.equals(operator) =>
           filterOperator.conditions
             .map(QueryFilter.toCriterion)
