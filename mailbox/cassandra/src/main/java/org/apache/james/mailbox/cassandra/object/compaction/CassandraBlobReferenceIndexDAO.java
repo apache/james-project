@@ -17,27 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail;
+package org.apache.james.mailbox.cassandra.object.compaction;
 
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
-import static org.apache.james.mailbox.cassandra.table.CassandraBlobReferenceIndexTable.BLOB_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraBlobReferenceIndexTable.REFERENCE_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraBlobReferenceIndexTable.REFERENCE_TYPE;
-import static org.apache.james.mailbox.cassandra.table.CassandraBlobReferenceIndexTable.RUN_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraBlobReferenceIndexTable.TABLE_NAME;
-
-import java.util.UUID;
+import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.BLOB_ID;
+import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.REFERENCE_ID;
+import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.REFERENCE_TYPE;
+import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.RUN_ID;
+import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.TABLE_NAME;
 
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.mailbox.cassandra.mail.CassandraBlobReferenceDAO.Reference;
-import org.apache.james.mailbox.cassandra.mail.CassandraBlobReferenceDAO.Type;
+import org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceDAO.Reference;
+import org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceDAO.Type;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
@@ -78,25 +76,25 @@ public class CassandraBlobReferenceIndexDAO {
             .where(column(RUN_ID).isEqualTo(bindMarker(RUN_ID)), column(BLOB_ID).isEqualTo(bindMarker(BLOB_ID))).build());
     }
 
-    Mono<Void> store(UUID runId, Reference reference) {
+    Mono<Void> store(RunId runId, Reference reference) {
         return executor.executeVoid(insert.bind()
-            .setUuid(RUN_ID, runId).setString(BLOB_ID, reference.blobId().asString())
+            .setUuid(RUN_ID, runId.value()).setString(BLOB_ID, reference.blobId().asString())
             .setString(REFERENCE_TYPE, reference.type().name()).setUuid(REFERENCE_ID, reference.referenceId()));
     }
 
-    Flux<Reference> retrieve(UUID runId, BlobId blobId) {
+    Flux<Reference> retrieve(RunId runId, BlobId blobId) {
         return executor.executeRows(select.bind()
-                .setUuid(RUN_ID, runId).setString(BLOB_ID, blobId.asString()).setPageSize(pageSize))
+                .setUuid(RUN_ID, runId.value()).setString(BLOB_ID, blobId.asString()).setPageSize(pageSize))
             .map(row -> new Reference(blobId, Type.valueOf(row.getString(REFERENCE_TYPE)), row.getUuid(REFERENCE_ID)));
     }
 
-    public Mono<Void> cleanup(UUID runId) {
+    public Mono<Void> cleanup(RunId runId) {
         // One paged scan of index partition keys, never another scan of authoritative mailbox tables.
         // Do not collect keys in memory, and never delete partitions belonging to other runs.
         return executor.executeRows(partitions.bind().setPageSize(pageSize))
-            .filter(row -> runId.equals(row.getUuid(RUN_ID)))
+            .filter(row -> runId.equals(new RunId(row.getUuid(RUN_ID))))
             .concatMap(row -> executor.executeVoid(delete.bind()
-                .setUuid(RUN_ID, runId).setString(BLOB_ID, row.getString(BLOB_ID))))
+                .setUuid(RUN_ID, runId.value()).setString(BLOB_ID, row.getString(BLOB_ID))))
             .then();
     }
 }

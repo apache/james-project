@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail;
+package org.apache.james.mailbox.cassandra.object.compaction;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
@@ -45,10 +45,16 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageMetadata;
+import org.apache.james.mailbox.cassandra.mail.MessageRepresentation;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageDataDefinition;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.HeaderAndBodyByteContent;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.junit.jupiter.api.BeforeEach;
@@ -97,7 +103,7 @@ class CassandraMessageMetadataReconcilerTest {
 
     @Test
     void shouldReturnCanonicalMessageAndRepairBothIndexesWithoutChangingOtherMetadata() {
-        MessageRepresentation result = testee.reconcile(stale).block();
+        MessageRepresentation result = testee.reconcile(stale, FetchType.HEADERS).block();
 
         assertThat(result).isSameAs(canonical);
         assertThat(messageIds.retrieve(mailboxId, uid).block()).contains(metadata(messageId, NEW));
@@ -108,7 +114,7 @@ class CassandraMessageMetadataReconcilerTest {
     void shouldRepairOneStaleIndexWhenTheOtherIsAlreadyCurrent() {
         messageIds.replaceHeaderContent(stale.getComposedMessageId().getComposedMessageId(), OLD, NEW).block();
 
-        testee.reconcile(stale).block();
+        testee.reconcile(stale, FetchType.HEADERS).block();
 
         assertThat(messageIds.retrieve(mailboxId, uid).block()).contains(metadata(messageId, NEW));
         assertThat(imapUids.retrieve(messageId, Optional.of(mailboxId)).single().block()).isEqualTo(metadata(messageId, NEW));
@@ -119,7 +125,7 @@ class CassandraMessageMetadataReconcilerTest {
         messageIds.delete(mailboxId, uid).block();
         imapUids.delete(messageId, mailboxId).block();
 
-        testee.reconcile(stale).block();
+        testee.reconcile(stale, FetchType.HEADERS).block();
 
         assertThat(messageIds.retrieve(mailboxId, uid).block()).isEmpty();
         assertThat(imapUids.retrieve(messageId, Optional.of(mailboxId)).collectList().block()).isEmpty();
@@ -131,7 +137,7 @@ class CassandraMessageMetadataReconcilerTest {
         messageIds.replaceHeaderContent(id, OLD, OTHER).block();
         imapUids.replaceHeaderContent(id, OLD, OTHER).block();
 
-        testee.reconcile(stale).block();
+        testee.reconcile(stale, FetchType.HEADERS).block();
 
         assertThat(messageIds.retrieve(mailboxId, uid).block()).contains(metadata(messageId, OTHER));
         assertThat(imapUids.retrieve(messageId, Optional.of(mailboxId)).single().block()).isEqualTo(metadata(messageId, OTHER));
@@ -143,7 +149,7 @@ class CassandraMessageMetadataReconcilerTest {
         messageIds.delete(mailboxId, uid).block();
         messageIds.insert(metadata(replacement, OLD)).block();
 
-        testee.reconcile(stale).block();
+        testee.reconcile(stale, FetchType.HEADERS).block();
 
         assertThat(messageIds.retrieve(mailboxId, uid).block()).contains(metadata(replacement, OLD));
     }
@@ -153,7 +159,43 @@ class CassandraMessageMetadataReconcilerTest {
         ObjectNotFoundException failure = new ObjectNotFoundException("canonical header missing");
         when(messages.retrieveMessage(stale.getComposedMessageId(), FetchType.HEADERS)).thenReturn(Mono.error(failure));
 
-        assertThatThrownBy(() -> testee.reconcile(stale).block()).isSameAs(failure);
+        assertThatThrownBy(() -> testee.reconcile(stale, FetchType.HEADERS).block()).isSameAs(failure);
+
+        assertThat(messageIds.retrieve(mailboxId, uid).block()).contains(stale);
+        assertThat(imapUids.retrieve(messageId, Optional.of(mailboxId)).single().block()).isEqualTo(stale);
+    }
+
+    @Test
+    void fullFetchShouldReturnBothHeadersAndBody() throws Exception {
+        MessageRepresentation full = new MessageRepresentation(messageId, INTERNAL_DATE, 20L, 10,
+            new HeaderAndBodyByteContent("headers".getBytes(UTF_8), "body".getBytes(UTF_8)),
+            List.of(), NEW, new PlainBlobId.Factory().of("body"));
+        when(messages.retrieveMessage(stale.getComposedMessageId(), FetchType.FULL)).thenReturn(Mono.just(full));
+
+        MessageRepresentation result = testee.reconcile(stale, FetchType.FULL).block();
+
+        assertThat(result.getContent().getInputStream().readAllBytes()).isEqualTo("headersbody".getBytes(UTF_8));
+        assertThat(messageIds.retrieve(mailboxId, uid).block()).contains(metadata(messageId, NEW));
+        assertThat(imapUids.retrieve(messageId, Optional.of(mailboxId)).single().block()).isEqualTo(metadata(messageId, NEW));
+    }
+
+    @Test
+    void fullFetchShouldPropagateMissingBodyAndLeaveIndexesUnchanged() {
+        ObjectNotFoundException failure = new ObjectNotFoundException("canonical body missing");
+        when(messages.retrieveMessage(stale.getComposedMessageId(), FetchType.FULL)).thenReturn(Mono.error(failure));
+
+        assertThatThrownBy(() -> testee.reconcile(stale, FetchType.FULL).block()).isSameAs(failure);
+
+        assertThat(messageIds.retrieve(mailboxId, uid).block()).contains(stale);
+        assertThat(imapUids.retrieve(messageId, Optional.of(mailboxId)).single().block()).isEqualTo(stale);
+    }
+
+    @Test
+    void missingHistoricalHeaderShouldNotPreventCanonicalRecovery() {
+        CassandraMessageMetadata incomplete = CassandraMessageMetadata.builder()
+            .ids(stale.getComposedMessageId()).build();
+
+        assertThat(testee.reconcile(incomplete, FetchType.HEADERS).block()).isSameAs(canonical);
 
         assertThat(messageIds.retrieve(mailboxId, uid).block()).contains(stale);
         assertThat(imapUids.retrieve(messageId, Optional.of(mailboxId)).single().block()).isEqualTo(stale);
@@ -163,11 +205,11 @@ class CassandraMessageMetadataReconcilerTest {
     void repairFailureShouldPropagateAndAllowRetry(CassandraCluster cassandra) {
         cassandra.getConf().registerScenario(fail().times(1).whenQueryStartsWith("UPDATE imapuidtable SET headercontent"));
 
-        assertThatThrownBy(() -> testee.reconcile(stale).block()).hasRootCauseMessage("Injected failure");
+        assertThatThrownBy(() -> testee.reconcile(stale, FetchType.HEADERS).block()).hasRootCauseMessage("Injected failure");
 
         assertThat(messageIds.retrieve(mailboxId, uid).block()).contains(metadata(messageId, NEW));
         assertThat(imapUids.retrieve(messageId, Optional.of(mailboxId)).single().block()).isEqualTo(stale);
-        testee.reconcile(stale).block();
+        testee.reconcile(stale, FetchType.HEADERS).block();
         assertThat(imapUids.retrieve(messageId, Optional.of(mailboxId)).single().block()).isEqualTo(metadata(messageId, NEW));
     }
 

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail;
+package org.apache.james.mailbox.cassandra.object.compaction;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -34,8 +34,8 @@ import java.util.UUID;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobIdUpdater;
 import org.apache.james.blob.api.PlainBlobId;
-import org.apache.james.mailbox.cassandra.mail.CassandraBlobReferenceDAO.Reference;
-import org.apache.james.mailbox.cassandra.mail.CassandraBlobReferenceDAO.Type;
+import org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceDAO.Reference;
+import org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceDAO.Type;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -117,7 +117,7 @@ class CassandraBlobIdUpdaterFactoryTest {
         BlobIdUpdater first = preparation.block();
         BlobIdUpdater second = preparation.block();
 
-        ArgumentCaptor<UUID> runIds = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<RunId> runIds = ArgumentCaptor.forClass(RunId.class);
         verify(index, times(2)).store(runIds.capture(), eq(REFERENCE));
         assertThat(runIds.getAllValues().get(0)).isNotEqualTo(runIds.getAllValues().get(1));
         verify(index, never()).cleanup(any());

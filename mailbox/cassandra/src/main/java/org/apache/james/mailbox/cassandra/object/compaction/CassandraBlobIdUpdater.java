@@ -17,10 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail;
+package org.apache.james.mailbox.cassandra.object.compaction;
 
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -55,7 +54,7 @@ public class CassandraBlobIdUpdater implements BlobIdUpdater {
             Objects.requireNonNull(generationCondition);
             Objects.requireNonNull(referencedBlobIdObserver);
             return Mono.usingWhen(
-                Mono.fromSupplier(() -> new CassandraBlobIdUpdater(UUID.randomUUID(), references, index)),
+                Mono.fromSupplier(() -> new CassandraBlobIdUpdater(RunId.generate(), references, index)),
                 updater -> references.listReferences()
                     .doOnNext(reference -> referencedBlobIdObserver.accept(reference.blobId()))
                     .filter(reference -> generationCondition.test(reference.blobId()))
@@ -67,12 +66,12 @@ public class CassandraBlobIdUpdater implements BlobIdUpdater {
         }
     }
 
-    private final UUID runId;
+    private final RunId runId;
     private final CassandraBlobReferenceDAO references;
     private final CassandraBlobReferenceIndexDAO index;
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    private CassandraBlobIdUpdater(UUID runId, CassandraBlobReferenceDAO references, CassandraBlobReferenceIndexDAO index) {
+    private CassandraBlobIdUpdater(RunId runId, CassandraBlobReferenceDAO references, CassandraBlobReferenceIndexDAO index) {
         this.runId = runId;
         this.references = references;
         this.index = index;

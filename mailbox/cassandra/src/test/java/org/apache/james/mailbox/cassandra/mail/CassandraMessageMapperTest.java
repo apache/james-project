@@ -20,7 +20,9 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.apache.james.backends.cassandra.Scenario.Builder.returnEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Durations.ONE_SECOND;
 
 import java.io.IOException;
@@ -39,6 +41,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.StatementRecorder.Selector;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MessageManager;
@@ -92,6 +95,32 @@ class CassandraMessageMapperTest extends MessageMapperTest {
     @Override
     protected UpdatableTickingClock updatableTickingClock() {
         return cassandraMapperProvider.getUpdatableTickingClock();
+    }
+
+    @Test
+    void fullFetchShouldRetryMissingBlobAndKeepBody(CassandraCluster cassandra) throws Exception {
+        saveMessages();
+        cassandra.getConf().registerScenario(returnEmpty().times(1).whenQueryStartsWith("SELECT * FROM blobs WHERE"));
+        StatementRecorder recorder = cassandra.getConf().recordStatements();
+
+        MailboxMessage result = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.FULL, 1).next();
+
+        assertThat(result.getFullContent().readAllBytes()).isEqualTo(message1.getFullContent().readAllBytes());
+        assertThat(result.getBodyContent().readAllBytes()).isEqualTo(message1.getBodyContent().readAllBytes());
+        assertThat(recorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith(
+            "SELECT * FROM messagev3"))).hasSize(2);
+    }
+
+    @Test
+    void fullFetchShouldPropagateMissingBlobAfterOneRetry(CassandraCluster cassandra) throws Exception {
+        saveMessages();
+        cassandra.getConf().registerScenario(returnEmpty().forever().whenQueryStartsWith("SELECT * FROM blobs WHERE"));
+        StatementRecorder recorder = cassandra.getConf().recordStatements();
+
+        assertThatThrownBy(() -> messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.FULL, 1).next()).isInstanceOf(ObjectNotFoundException.class);
+
+        assertThat(recorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith(
+            "SELECT * FROM messagev3"))).hasSize(2);
     }
 
     @Test

@@ -17,15 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.modules;
+package org.apache.james.mailbox.cassandra.object.compaction;
 
 import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
 import static com.datastax.oss.driver.api.core.type.DataTypes.UUID;
-import static org.apache.james.mailbox.cassandra.table.CassandraBlobReferenceIndexTable.BLOB_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraBlobReferenceIndexTable.REFERENCE_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraBlobReferenceIndexTable.REFERENCE_TYPE;
-import static org.apache.james.mailbox.cassandra.table.CassandraBlobReferenceIndexTable.RUN_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraBlobReferenceIndexTable.TABLE_NAME;
+import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.BLOB_ID;
+import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.REFERENCE_ID;
+import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.REFERENCE_TYPE;
+import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.RUN_ID;
+import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.TABLE_NAME;
 
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 
