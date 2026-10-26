@@ -39,39 +39,39 @@ public class PopulateEmailQueryViewTask implements Task {
         private static AdditionalInformation from(EmailQueryViewPopulator.Progress progress,
                                                   RunningOptions runningOptions) {
             return new AdditionalInformation(runningOptions,
-                progress.getProcessedUserCount(),
+                progress.getProcessedMailboxCount(),
                 progress.getProcessedMessageCount(),
-                progress.getFailedUserCount(),
+                progress.getFailedMailboxCount(),
                 progress.getFailedMessageCount(),
                 Clock.systemUTC().instant());
         }
 
         private final RunningOptions runningOptions;
-        private final long processedUserCount;
+        private final long processedMailboxCount;
         private final long processedMessageCount;
-        private final long failedUserCount;
+        private final long failedMailboxCount;
         private final long failedMessageCount;
         private final Instant timestamp;
 
-        public AdditionalInformation(RunningOptions runningOptions, long processedUserCount, long processedMessageCount, long failedUserCount, long failedMessageCount, Instant timestamp) {
+        public AdditionalInformation(RunningOptions runningOptions, long processedMailboxCount, long processedMessageCount, long failedMailboxCount, long failedMessageCount, Instant timestamp) {
             this.runningOptions = runningOptions;
-            this.processedUserCount = processedUserCount;
+            this.processedMailboxCount = processedMailboxCount;
             this.processedMessageCount = processedMessageCount;
-            this.failedUserCount = failedUserCount;
+            this.failedMailboxCount = failedMailboxCount;
             this.failedMessageCount = failedMessageCount;
             this.timestamp = timestamp;
         }
 
-        public long getProcessedUserCount() {
-            return processedUserCount;
+        public long getProcessedMailboxCount() {
+            return processedMailboxCount;
         }
 
         public long getProcessedMessageCount() {
             return processedMessageCount;
         }
 
-        public long getFailedUserCount() {
-            return failedUserCount;
+        public long getFailedMailboxCount() {
+            return failedMailboxCount;
         }
 
         public long getFailedMessageCount() {
