@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.data.jmap;
 
 import static jakarta.mail.Flags.Flag.DELETED;
-import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
 
 import java.time.Duration;
 import java.time.ZoneOffset;
@@ -29,27 +28,26 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -57,7 +55,7 @@ import reactor.core.publisher.Mono;
 public class EmailQueryViewPopulator {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailQueryViewPopulator.class);
     private static final Duration PERIOD = Duration.ofSeconds(1);
-    public static final int USER_CONCURRENCY = 1;
+    private static final Username POPULATOR_USER = Username.of("email-query-view-populator");
     public static final int MAILBOX_CONCURRENCY = 1;
 
     static class Progress {
@@ -106,41 +104,50 @@ public class EmailQueryViewPopulator {
         }
     }
 
-    private final UsersRepository usersRepository;
+    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxManager mailboxManager;
     private final EmailQueryView emailQueryView;
 
     @Inject
-    EmailQueryViewPopulator(UsersRepository usersRepository,
+    EmailQueryViewPopulator(MailboxSessionMapperFactory mailboxSessionMapperFactory,
                             MailboxManager mailboxManager,
                             EmailQueryView emailQueryView) {
-        this.usersRepository = usersRepository;
+        this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.mailboxManager = mailboxManager;
         this.emailQueryView = emailQueryView;
     }
 
     Mono<Result> populateView(Progress progress, RunningOptions runningOptions) {
-        return correctProjection(listAllMailboxMessages(progress), runningOptions, progress);
+        MailboxSession session = mailboxManager.createSystemSession(POPULATOR_USER);
+
+        return correctProjection(listAllMailboxMessages(progress, session), runningOptions, progress)
+            .map(result -> progress.getFailedMailboxCount() > 0 ? Result.PARTIAL : result)
+            .doFinally(any -> mailboxManager.endProcessingRequest(session));
     }
 
-    private Flux<MessageResult> listAllMailboxMessages(Progress progress) {
-        return Flux.from(usersRepository.listReactive())
-            .map(mailboxManager::createSystemSession)
-            .doOnNext(any -> progress.incrementProcessedMailboxCount())
-            .flatMap(session -> listUserMailboxMessages(progress, session), USER_CONCURRENCY)
+    private Flux<MessageResult> listAllMailboxMessages(Progress progress, MailboxSession session) {
+        return mailboxSessionMapperFactory.getMailboxMapper(session).list()
+            .flatMap(mailbox -> listMailboxMessages(progress, mailbox), MAILBOX_CONCURRENCY)
             .filter(messageResult -> !messageResult.getFlags().contains(DELETED));
     }
 
-    private Flux<MessageResult> listUserMailboxMessages(Progress progress, MailboxSession session) {
-        return listUsersMailboxes(session)
-            .flatMap(mailboxMetadata -> retrieveMailbox(session, mailboxMetadata), MAILBOX_CONCURRENCY)
-            .concatMap(mailbox -> emailQueryView.delete(mailbox.getId()).thenReturn(mailbox))
-            .flatMap(Throwing.function(messageManager -> listAllMessages(messageManager, session)), MAILBOX_CONCURRENCY)
+    private Flux<MessageResult> listMailboxMessages(Progress progress, Mailbox mailbox) {
+        MailboxSession ownerSession = mailboxManager.createSystemSession(mailbox.getUser());
+
+        return Mono.from(mailboxManager.getMailboxReactive(mailbox.getMailboxId(), ownerSession))
+            .flatMap(messageManager -> emailQueryView.delete(mailbox.getMailboxId()).thenReturn(messageManager))
+            .flatMapMany(messageManager -> listAllMessages(messageManager, ownerSession))
+            .doOnComplete(progress::incrementProcessedMailboxCount)
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                LOGGER.info("Mailbox {} was deleted before its JMAP emailQuery view could be re-computed", mailbox.getMailboxId());
+                return Flux.empty();
+            })
             .onErrorResume(MailboxException.class, e -> {
-                LOGGER.error("JMAP emailQuery view re-computation aborted for {} as we failed listing user mailboxes", session.getUser(), e);
+                LOGGER.error("JMAP emailQuery view re-computation aborted for mailbox {} as we failed listing its messages", mailbox.getMailboxId(), e);
                 progress.incrementFailedMailboxCount();
                 return Flux.empty();
-            });
+            })
+            .doFinally(any -> mailboxManager.endProcessingRequest(ownerSession));
     }
 
     private Mono<Result> correctProjection(MessageResult messageResult, Progress progress) {
@@ -171,14 +178,6 @@ public class EmailQueryViewPopulator {
                 .forOperation(entry -> correctProjection(entry, progress)))
             .reduce(Task::combine)
             .switchIfEmpty(Mono.just(Result.COMPLETED));
-    }
-
-    private Flux<MailboxMetaData> listUsersMailboxes(MailboxSession session) {
-        return mailboxManager.search(MailboxQuery.privateMailboxesBuilder(session).build(), Minimal, session);
-    }
-
-    private Mono<MessageManager> retrieveMailbox(MailboxSession session, MailboxMetaData mailboxMetadata) {
-        return Mono.from(mailboxManager.getMailboxReactive(mailboxMetadata.getId(), session));
     }
 
     private Flux<MessageResult> listAllMessages(MessageManager messageManager, MailboxSession session) {
