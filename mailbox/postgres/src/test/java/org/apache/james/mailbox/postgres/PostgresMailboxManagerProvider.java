@@ -97,6 +97,7 @@ public class PostgresMailboxManagerProvider {
                                                                                  DeDuplicationBlobStore blobStore) {
         return new PostgresMailboxSessionMapperFactory(
             postgresExtension.getExecutorFactory(),
+            postgresExtension.getByPassRLSPostgresExecutor(),
             Clock.systemUTC(),
             blobStore,
             blobIdFactory,
