@@ -38,10 +38,12 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.object.compaction.CassandraMessageMetadataReconciler;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -88,6 +90,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final CassandraIndexTableHandler indexTableHandler;
     private final ModSeqProvider modSeqProvider;
     private final AttachmentLoader attachmentLoader;
+    private final CassandraMessageMetadataReconciler metadataReconciler;
     private final BlobStore blobStore;
     private final CassandraConfiguration cassandraConfiguration;
     private final BatchSizes batchSizes;
@@ -106,6 +109,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         this.indexTableHandler = indexTableHandler;
         this.modSeqProvider = modSeqProvider;
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
+        this.metadataReconciler = new CassandraMessageMetadataReconciler(messageDAOV3, messageIdDAO, imapUidDAO);
         this.blobStore = blobStore;
         this.cassandraConfiguration = cassandraConfiguration;
         this.batchSizes = batchSizes;
@@ -136,9 +140,13 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         }
         if (fetchType == FetchType.HEADERS && metadata.isComplete()) {
             return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), metadata.getHeaderContent().get(), SIZE_BASED))
-                .map(metadata::asMailboxMessage);
+                .map(metadata::asMailboxMessage)
+                .onErrorResume(ObjectNotFoundException.class, error -> metadataReconciler.reconcile(metadata, fetchType)
+                    .flatMap(message -> attachmentLoader.addAttachmentToMessage(
+                        Pair.of(metadata.getComposedMessageId(), message), metadata.getSaveDate(), fetchType)));
         }
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)
+            .onErrorResume(ObjectNotFoundException.class, error -> metadataReconciler.reconcile(metadata, fetchType))
             .map(messageRepresentation -> Pair.of(metadata.getComposedMessageId(), messageRepresentation))
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, metadata.getSaveDate(), fetchType));
     }

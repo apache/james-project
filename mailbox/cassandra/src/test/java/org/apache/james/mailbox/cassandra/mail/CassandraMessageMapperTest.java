@@ -20,7 +20,9 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.apache.james.backends.cassandra.Scenario.Builder.returnEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Durations.ONE_SECOND;
 
 import java.io.IOException;
@@ -30,6 +32,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import jakarta.mail.Flags;
 
@@ -38,6 +41,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.StatementRecorder.Selector;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MessageManager;
@@ -69,6 +73,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
@@ -90,6 +95,61 @@ class CassandraMessageMapperTest extends MessageMapperTest {
     @Override
     protected UpdatableTickingClock updatableTickingClock() {
         return cassandraMapperProvider.getUpdatableTickingClock();
+    }
+
+    @Test
+    void fullFetchShouldRetryMissingBlobAndKeepBody(CassandraCluster cassandra) throws Exception {
+        saveMessages();
+        cassandra.getConf().registerScenario(returnEmpty().times(1).whenQueryStartsWith("SELECT * FROM blobs WHERE"));
+        StatementRecorder recorder = cassandra.getConf().recordStatements();
+
+        MailboxMessage result = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.FULL, 1).next();
+
+        assertThat(result.getFullContent().readAllBytes()).isEqualTo(message1.getFullContent().readAllBytes());
+        assertThat(result.getBodyContent().readAllBytes()).isEqualTo(message1.getBodyContent().readAllBytes());
+        assertThat(recorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith(
+            "SELECT * FROM messagev3"))).hasSize(2);
+    }
+
+    @Test
+    void fullFetchShouldPropagateMissingBlobAfterOneRetry(CassandraCluster cassandra) throws Exception {
+        saveMessages();
+        cassandra.getConf().registerScenario(returnEmpty().forever().whenQueryStartsWith("SELECT * FROM blobs WHERE"));
+        StatementRecorder recorder = cassandra.getConf().recordStatements();
+
+        assertThatThrownBy(() -> messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.FULL, 1).next()).isInstanceOf(ObjectNotFoundException.class);
+
+        assertThat(recorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith(
+            "SELECT * FROM messagev3"))).hasSize(2);
+    }
+
+    @Test
+    void headersShouldRepairStaleReferencesOnlyOnce(CassandraCluster cassandra) throws Exception {
+        saveMessages();
+        CqlSession session = cassandra.getConf();
+        UUID mailboxId = ((CassandraId) message1.getMailboxId()).asUuid();
+        UUID messageId = ((CassandraMessageId) message1.getMessageId()).get();
+        long uid = message1.getUid().asLong();
+        String currentHeader = session.execute("SELECT headerContent FROM messageV3 WHERE messageId=?", messageId)
+            .one().getString("headerContent");
+        session.execute("UPDATE messageIdTable SET headerContent=? WHERE mailboxId=? AND uid=?", "missing-header", mailboxId, uid);
+        session.execute("UPDATE imapUidTable SET headerContent=? WHERE messageId=? AND mailboxId=? AND uid=?",
+            "missing-header", messageId, mailboxId, uid);
+        StatementRecorder recorder = cassandra.getConf().recordStatements();
+
+        for (int i = 0; i < 2; i++) {
+            MailboxMessage result = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.HEADERS, 1).next();
+            assertThat(result.getHeaderContent().readAllBytes()).isEqualTo(message1.getHeaderContent().readAllBytes());
+            assertThat(result.getMessageId()).isEqualTo(message1.getMessageId());
+            assertThat(result.createFlags()).isEqualTo(message1.createFlags());
+        }
+
+        assertThat(recorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith(
+            "SELECT * FROM messagev3"))).hasSize(1);
+        assertThat(session.execute("SELECT headerContent FROM messageIdTable WHERE mailboxId=? AND uid=?", mailboxId, uid)
+            .one().getString("headerContent")).isEqualTo(currentHeader);
+        assertThat(session.execute("SELECT headerContent FROM imapUidTable WHERE messageId=? AND mailboxId=? AND uid=?",
+            messageId, mailboxId, uid).one().getString("headerContent")).isEqualTo(currentHeader);
     }
 
     @Nested

@@ -117,6 +117,7 @@ public class CassandraMessageIdDAO {
     private final PreparedStatement delete;
     private final PreparedStatement insert;
     private final PreparedStatement updateDenormalizedFields;
+    private final PreparedStatement replaceHeaderContent;
     private final PreparedStatement select;
     private final PreparedStatement selectAll;
     private final PreparedStatement selectAllUids;
@@ -145,6 +146,13 @@ public class CassandraMessageIdDAO {
         this.insert = prepareInsert(session);
         this.update = prepareUpdate(session);
         this.updateDenormalizedFields = prepareUpdateDenormalizedFields(session);
+        this.replaceHeaderContent = session.prepare(update(TABLE_NAME)
+            .setColumn(HEADER_CONTENT, bindMarker("new_header"))
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(IMAP_UID).isEqualTo(bindMarker(IMAP_UID)))
+            .ifColumn(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID))
+            .ifColumn(HEADER_CONTENT).isEqualTo(bindMarker("old_header"))
+            .build());
         this.select = prepareSelect(session);
         this.selectAll = prepareSelectAll(session);
         this.selectAllUids = prepareSelectAllUids(session);
@@ -386,6 +394,16 @@ public class CassandraMessageIdDAO {
             .setInt(BODY_START_OCTET, bodyStartOctet)
             .setLong(FULL_CONTENT_OCTETS, size)
             .setString(HEADER_CONTENT, headerContent.asString()));
+    }
+
+    public Mono<Void> replaceHeaderContent(ComposedMessageId id, BlobId oldId, BlobId newId) {
+        return cassandraAsyncExecutor.executeReturnApplied(replaceHeaderContent.bind()
+                .setUuid(MAILBOX_ID, ((CassandraId) id.getMailboxId()).asUuid())
+                .setLong(IMAP_UID, id.getUid().asLong())
+                .setUuid(MESSAGE_ID, ((CassandraMessageId) id.getMessageId()).get())
+                .setString("old_header", oldId.asString())
+                .setString("new_header", newId.asString()))
+            .then();
     }
 
     public Mono<Void> updateMetadata(ComposedMessageId composedMessageId, UpdatedFlags updatedFlags) {
