@@ -61,44 +61,44 @@ public class EmailQueryViewPopulator {
     public static final int MAILBOX_CONCURRENCY = 1;
 
     static class Progress {
-        private final AtomicLong processedUserCount;
+        private final AtomicLong processedMailboxCount;
         private final AtomicLong processedMessageCount;
-        private final AtomicLong failedUserCount;
+        private final AtomicLong failedMailboxCount;
         private final AtomicLong failedMessageCount;
 
         Progress() {
-            failedUserCount = new AtomicLong();
+            failedMailboxCount = new AtomicLong();
             processedMessageCount = new AtomicLong();
-            processedUserCount = new AtomicLong();
+            processedMailboxCount = new AtomicLong();
             failedMessageCount = new AtomicLong();
         }
 
-        private void incrementProcessedUserCount() {
-            processedUserCount.incrementAndGet();
+        private void incrementProcessedMailboxCount() {
+            processedMailboxCount.incrementAndGet();
         }
 
         private void incrementProcessedMessageCount() {
             processedMessageCount.incrementAndGet();
         }
 
-        private void incrementFailedUserCount() {
-            failedUserCount.incrementAndGet();
+        private void incrementFailedMailboxCount() {
+            failedMailboxCount.incrementAndGet();
         }
 
         private void incrementFailedMessageCount() {
             failedMessageCount.incrementAndGet();
         }
 
-        long getProcessedUserCount() {
-            return processedUserCount.get();
+        long getProcessedMailboxCount() {
+            return processedMailboxCount.get();
         }
 
         long getProcessedMessageCount() {
             return processedMessageCount.get();
         }
 
-        long getFailedUserCount() {
-            return failedUserCount.get();
+        long getFailedMailboxCount() {
+            return failedMailboxCount.get();
         }
 
         long getFailedMessageCount() {
@@ -126,7 +126,7 @@ public class EmailQueryViewPopulator {
     private Flux<MessageResult> listAllMailboxMessages(Progress progress) {
         return Flux.from(usersRepository.listReactive())
             .map(mailboxManager::createSystemSession)
-            .doOnNext(any -> progress.incrementProcessedUserCount())
+            .doOnNext(any -> progress.incrementProcessedMailboxCount())
             .flatMap(session -> listUserMailboxMessages(progress, session), USER_CONCURRENCY)
             .filter(messageResult -> !messageResult.getFlags().contains(DELETED));
     }
@@ -138,7 +138,7 @@ public class EmailQueryViewPopulator {
             .flatMap(Throwing.function(messageManager -> listAllMessages(messageManager, session)), MAILBOX_CONCURRENCY)
             .onErrorResume(MailboxException.class, e -> {
                 LOGGER.error("JMAP emailQuery view re-computation aborted for {} as we failed listing user mailboxes", session.getUser(), e);
-                progress.incrementFailedUserCount();
+                progress.incrementFailedMailboxCount();
                 return Flux.empty();
             });
     }

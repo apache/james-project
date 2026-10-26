@@ -19,9 +19,13 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.time.Instant;
 
 import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
@@ -41,5 +45,24 @@ class PopulateEmailQueryViewProjectionItemsTaskAdditionalInformationDTOTest {
             .bean(DOMAIN_OBJECT)
             .json(ClassLoaderUtils.getSystemResourceAsString("json/populateAll.additionalInformation.json"))
             .verify();
+    }
+
+    @Test
+    void shouldDeserializeLegacyUserCounters() throws Exception {
+        PopulateEmailQueryViewTask.AdditionalInformation legacyDetails = JsonGenericSerializer.forModules(PopulateEmailQueryViewTaskAdditionalInformationDTO.module())
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/populateAll.additionalInformation.legacy.json"));
+
+        PopulateEmailQueryViewTask.AdditionalInformation expected = new PopulateEmailQueryViewTask.AdditionalInformation(
+            RunningOptions.withMessageRatePerSecond(20),
+            0,
+            2,
+            0,
+            4,
+            INSTANT);
+
+        assertThat(legacyDetails)
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(expected);
     }
 }
