@@ -29,11 +29,16 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import jakarta.mail.Flags;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.jmap.api.projections.DefaultEmailQueryViewManager;
 import org.apache.james.jmap.memory.projections.MemoryEmailQueryView;
 import org.apache.james.json.DTOConverter;
@@ -48,7 +53,9 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
+import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.WebAdminServer;
@@ -105,11 +112,18 @@ class PopulateEmailQueryViewRequestToTaskTest {
     private MailboxId bobInboxboxId;
     private MailboxSession bobSession;
     private MemoryEmailQueryView view;
+    private MemoryDomainList domainList;
 
     @BeforeEach
     void setUp() throws Exception {
         JsonTransformer jsonTransformer = new JsonTransformer();
         taskManager = new MemoryTaskManager(new Hostname("foo"));
+
+        domainList = new MemoryDomainList(mock(DNSService.class));
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .build());
 
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         spiedMailboxManager = spy(mailboxManager);
@@ -120,9 +134,11 @@ class PopulateEmailQueryViewRequestToTaskTest {
         view = new MemoryEmailQueryView();
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new TasksRoutes(taskManager, jsonTransformer,
-                DTOConverter.of(PopulateEmailQueryViewTaskAdditionalInformationDTO.module())),
+                DTOConverter.of(PopulateEmailQueryViewTaskAdditionalInformationDTO.module(),
+                    PopulateEmailQueryViewTaskAdditionalInformationDTOV1.module())),
             new JMAPRoutes(
-                new EmailQueryViewPopulator(mailboxManager.getMapperFactory(), spiedMailboxManager, new DefaultEmailQueryViewManager(view)),
+                new EmailQueryViewPopulator(mailboxManager.getMapperFactory(), spiedMailboxManager, new DefaultEmailQueryViewManager(view),
+                    MemoryUsersRepository.withoutVirtualHosting(domainList), domainList),
                 taskManager))
             .start();
 
@@ -380,5 +396,46 @@ class PopulateEmailQueryViewRequestToTaskTest {
 
         assertThat(view.listMailboxContentSortedByReceivedAt(messageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
             .containsOnly(messageId.getMessageId());
+    }
+
+    @Test
+    void populateShouldUpdateProjectionOfTheMailboxesOfEveryDomainOnce() throws Exception {
+        Domain domain1 = Domain.of("domain1.tld");
+        Domain domain2 = Domain.of("domain2.tld");
+        domainList.addDomain(domain1);
+        domainList.addDomain(domain2);
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
+        Username alice = Username.fromLocalPartWithDomain("alice", domain1);
+        Username bob = Username.fromLocalPartWithDomain("bob", domain2);
+        Username notAUser = Username.fromLocalPartWithDomain("carol", domain1);
+        usersRepository.addUser(alice, "password");
+        usersRepository.addUser(bob, "password");
+        ComposedMessageId aliceMessageId = appendMessageInInbox(alice);
+        ComposedMessageId bobMessageId = appendMessageInInbox(bob);
+        ComposedMessageId notAUserMessageId = appendMessageInInbox(notAUser);
+        EmailQueryViewPopulator populator = new EmailQueryViewPopulator(mailboxManager.getMapperFactory(), mailboxManager,
+            new DefaultEmailQueryViewManager(view), usersRepository, domainList);
+        EmailQueryViewPopulator.Progress progress = new EmailQueryViewPopulator.Progress();
+
+        Task.Result result = populator.populateView(progress, RunningOptions.DEFAULT).block();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+        assertThat(progress.getProcessedMailboxCount()).isEqualTo(3);
+        assertThat(progress.getProcessedMessageCount()).isEqualTo(3);
+        assertThat(view.listMailboxContentSortedByReceivedAt(aliceMessageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
+            .containsOnly(aliceMessageId.getMessageId());
+        assertThat(view.listMailboxContentSortedByReceivedAt(bobMessageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
+            .containsOnly(bobMessageId.getMessageId());
+        assertThat(view.listMailboxContentSortedByReceivedAt(notAUserMessageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
+            .containsOnly(notAUserMessageId.getMessageId());
+    }
+
+    private ComposedMessageId appendMessageInInbox(Username owner) throws Exception {
+        MailboxSession session = mailboxManager.createSystemSession(owner);
+        MailboxId inboxId = mailboxManager.createMailbox(MailboxPath.inbox(owner), session)
+            .get();
+        return mailboxManager.getMailbox(inboxId, session).appendMessage(
+            MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+            session).getId();
     }
 }

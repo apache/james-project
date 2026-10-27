@@ -21,7 +21,6 @@ package org.apache.james.mailbox.postgres;
 import java.time.Clock;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.RowLevelSecurity;
@@ -61,7 +60,6 @@ import com.google.common.annotations.VisibleForTesting;
 public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
 
     private final PostgresExecutor.Factory executorFactory;
-    private final PostgresExecutor byPassRLSPostgresExecutor;
     private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
     private final Clock clock;
@@ -72,14 +70,12 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
 
     @Inject
     public PostgresMailboxSessionMapperFactory(PostgresExecutor.Factory executorFactory,
-                                               @Named(PostgresExecutor.BY_PASS_RLS_INJECT) PostgresExecutor byPassRLSPostgresExecutor,
                                                Clock clock,
                                                BlobStore blobStore,
                                                BlobId.Factory blobIdFactory,
                                                PostgresConfiguration postgresConfiguration,
                                                AttachmentIdAssignationStrategy attachmentIdAssignationStrategy) {
         this.executorFactory = executorFactory;
-        this.byPassRLSPostgresExecutor = byPassRLSPostgresExecutor;
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
         this.clock = clock;
@@ -94,8 +90,7 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(executorFactory.create(session.getUser().getDomainPart()));
         if (rowLevelSecurity.isRowLevelSecurityEnabled()) {
             return new RLSSupportPostgresMailboxMapper(mailboxDAO,
-                new PostgresMailboxMemberDAO(executorFactory.create(session.getUser().getDomainPart())),
-                new PostgresMailboxDAO(byPassRLSPostgresExecutor));
+                new PostgresMailboxMemberDAO(executorFactory.create(session.getUser().getDomainPart())));
         } else {
             return new PostgresMailboxMapper(mailboxDAO);
         }

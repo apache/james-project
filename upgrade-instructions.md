@@ -36,9 +36,18 @@ Date: 26/10/2026
 Concerned products: all products exposing the WebAdmin JMAP tasks
 
 `POST /mailboxes?task=populateEmailQueryView` now walks every mailbox rather than every user, so mailboxes whose owner
-is not a registered user are populated too. The `additionalInformation` of the `PopulateEmailQueryViewTask` replaces
-`processedUserCount` and `failedUserCount` with `processedMailboxCount` and `failedMailboxCount`. Tools reading these
-details need to be updated. Details of tasks run before the upgrade are still readable, but report 0 mailboxes.
+is not a registered user are populated too. With virtual hosting, mailboxes are listed domain by domain, so only the
+mailboxes of the domains registered in the domain list are processed.
+
+The details of new runs use a new format: `additionalInformation.type` is `PopulateEmailQueryViewTask-v2`, and
+`processedUserCount` and `failedUserCount` are replaced by `processedMailboxCount` and `failedMailboxCount`. Tools
+reading these details need to be updated. The task type itself, `PopulateEmailQueryViewTask`, does not change.
+
+Details of tasks run before the upgrade keep their former format (`additionalInformation.type` is
+`PopulateEmailQueryViewTask`) and stay readable with their user counters.
+
+During a rolling upgrade, nodes not yet upgraded cannot read the details of a task run by an upgraded node. Upgrade
+every node before running this task.
 
 ### JAMES-4236 JMAP EmailSubmission/set validates identityId
 

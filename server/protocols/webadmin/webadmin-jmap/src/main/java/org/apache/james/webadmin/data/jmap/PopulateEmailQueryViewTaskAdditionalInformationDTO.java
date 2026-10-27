@@ -26,19 +26,18 @@ import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 
-// The task used to walk users: details stored by previous versions carry user counters
-@JsonIgnoreProperties({"processedUserCount", "failedUserCount"})
 public class PopulateEmailQueryViewTaskAdditionalInformationDTO implements AdditionalInformationDTO {
+    public static final String TYPE = "PopulateEmailQueryViewTask-v2";
+
     public static AdditionalInformationDTOModule<PopulateEmailQueryViewTask.AdditionalInformation, PopulateEmailQueryViewTaskAdditionalInformationDTO> module() {
         return DTOModule.forDomainObject(PopulateEmailQueryViewTask.AdditionalInformation.class)
             .convertToDTO(PopulateEmailQueryViewTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(PopulateEmailQueryViewTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(PopulateEmailQueryViewTaskAdditionalInformationDTO::toDTO)
-            .typeName(PopulateEmailQueryViewTask.TASK_TYPE.asString())
+            .typeName(TYPE)
             .withFactory(AdditionalInformationDTOModule::new);
     }
 

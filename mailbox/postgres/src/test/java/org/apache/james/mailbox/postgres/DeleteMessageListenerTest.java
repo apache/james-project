@@ -68,7 +68,6 @@ public class DeleteMessageListenerTest extends DeleteMessageListenerContract {
 
         PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(
             postgresExtension.getExecutorFactory(),
-            postgresExtension.getByPassRLSPostgresExecutor(),
             Clock.systemUTC(),
             blobStore,
             BLOB_ID_FACTORY,
