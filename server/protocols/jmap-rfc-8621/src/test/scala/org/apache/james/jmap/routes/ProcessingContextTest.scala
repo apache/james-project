@@ -183,6 +183,21 @@ class ProcessingContextTest extends AnyWordSpec with Matchers {
         "ids" -> Json.arr("server-first", "server-second")))))
     }
 
+    "retain recorded responses when adding a creation ID" in {
+      val response = Invocation(MethodName("Email/get"), Arguments(Json.obj(
+        "list" -> Json.arr(Json.obj("id" -> "previous-email")))), MethodCallId("get"))
+      val context = ProcessingContext(Map.empty, Map.empty)
+        .recordInvocation(response)
+        .recordCreatedId(ClientId("email"), ServerId("new-email"))
+      val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
+        "created" -> "#email",
+        "#ids" -> Json.obj("resultOf" -> "get", "name" -> "Email/get", "path" -> "/list/*/id"))), MethodCallId("echo"))
+
+      context.resolveBackReferences(invocation) shouldBe Right(invocation.copy(arguments = Arguments(Json.obj(
+        "created" -> "new-email",
+        "ids" -> Json.arr("previous-email")))))
+    }
+
     "replace a mapping when a creation ID is recorded again" in {
       val context = ProcessingContext(Map(ClientId("email") -> ServerId("old-email")), Map.empty)
         .recordCreatedId(ClientId("email"), ServerId("new-email"))
