@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_DELEGATION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, JmapRfc8621Configuration, ServerId, SessionTranslator, UuidState}
+import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, SessionTranslator, UuidState}
 import org.apache.james.jmap.delegation.{DelegateSetRequest, DelegateSetResponse, ForbiddenAccountManagementException}
 import org.apache.james.jmap.json.DelegationSerializer
 import org.apache.james.jmap.routes.SessionSupplier
@@ -48,8 +48,9 @@ class DelegateSetMethod @Inject()(createPerformer: DelegateSetCreatePerformer,
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: DelegateSetRequest): SMono[InvocationWithContext] =
     if (isPrimaryAccount(mailboxSession)) {
       for {
-        creationResults <- createPerformer.create(request, mailboxSession)
-        destroyed <- deletePerformer.delete(request, mailboxSession)
+        creationResults <- createPerformer.create(request, mailboxSession, invocation.processingContext)
+        resolvedRequest <- creationResults.processingContext.resolveSetRequest(invocation.invocation)(getRequest(mailboxSession, _))
+        destroyed <- deletePerformer.delete(resolvedRequest, mailboxSession)
       } yield InvocationWithContext(
         invocation = Invocation(
           methodName = methodName,
@@ -57,18 +58,12 @@ class DelegateSetMethod @Inject()(createPerformer: DelegateSetCreatePerformer,
             accountId = request.accountId,
             oldState = None,
             newState = UuidState.INSTANCE,
-            created = creationResults.created.filter(_.nonEmpty),
-            notCreated = creationResults.notCreated.filter(_.nonEmpty),
+            created = Some(creationResults.created).filter(_.nonEmpty),
+            notCreated = Some(creationResults.notCreated).filter(_.nonEmpty),
             destroyed =  Some(destroyed.destroyed).filter(_.nonEmpty),
             notDestroyed = Some(destroyed.retrieveErrors).filter(_.nonEmpty)))),
           methodCallId = invocation.invocation.methodCallId),
-        processingContext = creationResults.created.getOrElse(Map())
-          .foldLeft(invocation.processingContext)({
-            case (processingContext, (clientId, response)) =>
-              Id.validate(response.id.serialize)
-                .fold(_ => processingContext,
-                  serverId => processingContext.recordCreatedId(ClientId(clientId.id), ServerId(serverId)))
-          }))
+        processingContext = creationResults.processingContext)
     } else {
       SMono.error(ForbiddenAccountManagementException())
     }

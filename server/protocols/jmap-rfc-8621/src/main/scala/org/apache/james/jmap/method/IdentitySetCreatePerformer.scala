@@ -27,32 +27,16 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.json.IdentitySerializer
 import org.apache.james.jmap.mail.IdentityCreation.{knownProperties, serverSetProperty}
 import org.apache.james.jmap.mail.{IdentityCreationId, IdentityCreationResponse, IdentitySet, IdentitySetParseException, IdentitySetRequest}
-import org.apache.james.jmap.method.IdentitySetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
+import org.apache.james.jmap.method.IdentitySetCreatePerformer.{CreationFailure, CreationResult, CreationSuccess}
+import org.apache.james.jmap.routes.{CreationResults, ProcessingContext}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.util.ReactorUtils
 import org.slf4j.LoggerFactory
 import play.api.libs.json.JsObject
-import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scala.publisher.SMono
 
 object IdentitySetCreatePerformer {
   private val LOGGER = LoggerFactory.getLogger(classOf[IdentitySetCreatePerformer])
-  case class CreationResults(results: Seq[CreationResult]) {
-    def created: Option[Map[IdentityCreationId, IdentityCreationResponse]] =
-      Option(results.flatMap {
-        case result: CreationSuccess => Some((result.clientId, result.response))
-        case _ => None
-      }.toMap)
-        .filter(_.nonEmpty)
-
-    def notCreated: Option[Map[IdentityCreationId, SetError]] =
-      Option(results.flatMap {
-        case failure: CreationFailure => Some((failure.clientId, failure.asMessageSetError))
-        case _ => None
-      }
-        .toMap)
-        .filter(_.nonEmpty)
-  }
-
   trait CreationResult
 
   case class CreationSuccess(clientId: IdentityCreationId, response: IdentityCreationResponse) extends CreationResult
@@ -76,14 +60,18 @@ object IdentitySetCreatePerformer {
 }
 
 class IdentitySetCreatePerformer @Inject()(identityRepository: IdentityRepository) {
-  def create(request: IdentitySetRequest, mailboxSession: MailboxSession): SMono[CreationResults] =
-    SFlux.fromIterable(request.create.getOrElse(Map()))
-      .concatMap {
-        case (clientId, json) => parseCreate(json)
-          .fold(e => SMono.just[CreationResult](CreationFailure(clientId, e)),
-            creationRequest => create(clientId, creationRequest, mailboxSession))
-      }.collectSeq()
-      .map(CreationResults)
+  def create(request: IdentitySetRequest, mailboxSession: MailboxSession,
+             processingContext: ProcessingContext): SMono[CreationResults[IdentityCreationId, IdentityCreationResponse]] =
+    processingContext.processCreations[IdentityCreationId, IdentityCreationResponse](request.create.getOrElse(Map.empty))(
+      _.id, _.id.serialize) { (clientId, json) =>
+      parseCreate(json)
+        .fold(e => SMono.just[CreationResult](CreationFailure(clientId, e)),
+          creationRequest => create(clientId, creationRequest, mailboxSession))
+        .map {
+          case CreationSuccess(_, response) => Right(response)
+          case failure: CreationFailure => Left(failure.asMessageSetError)
+        }
+    }
 
   private def parseCreate(jsObject: JsObject): Either[Exception, IdentityCreationRequest] = for {
     validJsObject <- IdentitySet.validateProperties(serverSetProperty, knownProperties, jsObject)

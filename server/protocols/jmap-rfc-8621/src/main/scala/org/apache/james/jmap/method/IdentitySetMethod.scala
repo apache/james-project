@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, JmapRfc8621Configuration, ServerId, SessionTranslator, UuidState}
+import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.IdentitySerializer
 import org.apache.james.jmap.mail.{IdentitySetRequest, IdentitySetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -47,9 +47,10 @@ class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: IdentitySetRequest): SMono[InvocationWithContext] =
     for {
-      creationResults <- createPerformer.create(request, mailboxSession)
-      updatedResults <- updatePerformer.update(request, mailboxSession)
-      destroyResults <- deletePerformer.destroy(request, mailboxSession)
+      creationResults <- createPerformer.create(request, mailboxSession, invocation.processingContext)
+      resolvedRequest <- creationResults.processingContext.resolveSetRequest(invocation.invocation)(getRequest(mailboxSession, _))
+      updatedResults <- updatePerformer.update(resolvedRequest, mailboxSession)
+      destroyResults <- deletePerformer.destroy(resolvedRequest, mailboxSession)
     } yield InvocationWithContext(
       invocation = Invocation(
         methodName = methodName,
@@ -57,18 +58,12 @@ class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
           accountId = request.accountId,
           oldState = None,
           newState = UuidState.INSTANCE,
-          created = creationResults.created.filter(_.nonEmpty),
-          notCreated = creationResults.notCreated.filter(_.nonEmpty),
+          created = Some(creationResults.created).filter(_.nonEmpty),
+          notCreated = Some(creationResults.notCreated).filter(_.nonEmpty),
           updated = Some(updatedResults.updated).filter(_.nonEmpty),
           notUpdated = Some(updatedResults.notUpdated).filter(_.nonEmpty),
           destroyed = Some(destroyResults.destroyed).filter(_.nonEmpty),
           notDestroyed = Some(destroyResults.retrieveErrors).filter(_.nonEmpty)))),
         methodCallId = invocation.invocation.methodCallId),
-      processingContext = creationResults.created.getOrElse(Map())
-        .foldLeft(invocation.processingContext)({
-          case (processingContext, (clientId, response)) =>
-            Id.validate(response.id.serialize)
-              .fold(_ => processingContext,
-                serverId => processingContext.recordCreatedId(ClientId(clientId.id), ServerId(serverId)))
-        }))
+      processingContext = creationResults.processingContext)
 }

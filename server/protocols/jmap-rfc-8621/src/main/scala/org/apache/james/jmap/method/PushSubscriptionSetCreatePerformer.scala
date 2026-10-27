@@ -9,12 +9,13 @@ import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, PushSubscriptionCreation, PushSubscriptionCreationId, PushSubscriptionCreationParseException, PushSubscriptionCreationResponse, PushSubscriptionSetRequest, SetError}
 import org.apache.james.jmap.json.{PushSerializer, PushSubscriptionSerializer}
-import org.apache.james.jmap.method.PushSubscriptionSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
+import org.apache.james.jmap.method.PushSubscriptionSetCreatePerformer.{CreationFailure, CreationResult, CreationSuccess}
 import org.apache.james.jmap.pushsubscription.{Aes128gcm, PushRequest, PushTTL, WebPushClient}
+import org.apache.james.jmap.routes.{CreationResults, ProcessingContext}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsObject, JsPath, Json, JsonValidationError}
-import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scala.publisher.SMono
 
 object PushSubscriptionSetCreatePerformer {
   private val LOGGER = LoggerFactory.getLogger(classOf[PushSubscriptionSetCreatePerformer])
@@ -42,36 +43,24 @@ object PushSubscriptionSetCreatePerformer {
     }
   }
 
-  case class CreationResults(results: Seq[CreationResult]) {
-    def created: Option[Map[PushSubscriptionCreationId, PushSubscriptionCreationResponse]] =
-      Option(results.flatMap {
-        case result: CreationSuccess => Some((result.clientId, result.response))
-        case _ => None
-      }.toMap)
-        .filter(_.nonEmpty)
 
-    def notCreated: Option[Map[PushSubscriptionCreationId, SetError]] = {
-      Option(results.flatMap {
-        case failure: CreationFailure => Some((failure.clientId, failure.asMessageSetError))
-        case _ => None
-      }
-        .toMap)
-        .filter(_.nonEmpty)
-    }
-  }
 }
 
 class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: PushSubscriptionRepository,
                                                    pushSubscriptionSerializer: PushSubscriptionSerializer,
                                                    verificationCreateProcessor: PushSubscriptionSetCreateProcessor) {
-  def create(request: PushSubscriptionSetRequest, mailboxSession: MailboxSession): SMono[CreationResults] =
-    SFlux.fromIterable(request.create.getOrElse(Map()))
-      .concatMap {
-        case (clientId, json) => parseCreate(json)
-          .fold(e => SMono.just[CreationResult](CreationFailure(clientId, e)),
-            creationRequest => create(clientId, creationRequest, mailboxSession))
-      }.collectSeq()
-      .map(CreationResults)
+  def create(request: PushSubscriptionSetRequest, mailboxSession: MailboxSession,
+             processingContext: ProcessingContext): SMono[CreationResults[PushSubscriptionCreationId, PushSubscriptionCreationResponse]] =
+    processingContext.processCreations[PushSubscriptionCreationId, PushSubscriptionCreationResponse](request.create.getOrElse(Map.empty))(
+      _.id, _.id.value.toString) { (clientId, json) =>
+      parseCreate(json)
+        .fold(e => SMono.just[CreationResult](CreationFailure(clientId, e)),
+          creationRequest => create(clientId, creationRequest, mailboxSession))
+        .map {
+          case CreationSuccess(_, response) => Right(response)
+          case failure: CreationFailure => Left(failure.asMessageSetError)
+        }
+    }
 
   private def parseCreate(jsObject: JsObject): Either[Exception, PushSubscriptionCreationRequest] = for {
       validJsObject <- PushSubscriptionCreation.validateProperties(jsObject)
