@@ -39,7 +39,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EM
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
-import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, Properties, SessionTranslator, SetError, SubmissionCapabilityFactory, UTCDate, UuidState}
+import org.apache.james.jmap.core.{ClientId, Invocation, JmapRfc8621Configuration, Properties, ServerId, SessionTranslator, SetError, SubmissionCapabilityFactory, UTCDate, UuidState}
 import org.apache.james.jmap.json.EmailSubmissionSetSerializer
 import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue, UnparsedEmailSubmissionId, UnparsedIdentityId}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, NO_DELAY, VALID_PARAMETER_NAME_SET, formatter}
@@ -286,15 +286,37 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   private def create(request: EmailSubmissionSetRequest,
                      session: MailboxSession,
                      processingContext: ProcessingContext): SMono[(CreationResults, ProcessingContext)] =
-    processingContext.processCreations[EmailSubmissionCreationId, CreationSuccess](
-      request.create.getOrElse(Map.empty), Set("emailId", "identityId"))(
-      _.id, _.emailSubmissionCreationResponse.id.value.value) { (id, json) =>
-      parseCreate(json).fold(e => SMono.error(e), sendEmail(session, _))
-        .map { case (response, messageId) => Right(CreationSuccess(id, response, messageId)): Either[SetError, CreationSuccess] }
-        .onErrorResume(error => SMono.just(Left(CreationFailure(id, error).asSetError)))
-    }.map(results => CreationResults(results.created.values.toSeq ++ results.notCreated.toSeq.map {
-      case (id, error) => CreationFailure(id, EmailSubmissionCreationParseException(error))
-    }) -> results.processingContext)
+    SFlux.fromIterable(
+      request.create
+        .getOrElse(Map.empty)
+        .view)
+      .fold[SMono[(CreationResults, ProcessingContext)]](SMono.just((CreationResults(Nil), processingContext))) {
+        (acc: SMono[(CreationResults, ProcessingContext)], elem: (EmailSubmissionCreationId, JsObject)) => {
+          val (emailSubmissionCreationId, jsObject) = elem
+          acc.flatMap {
+            case (creationResults, processingContext) =>
+              createSubmission(session, emailSubmissionCreationId, jsObject, processingContext)
+                .map {
+                  case (created, updatedProcessingContext) => CreationResults(creationResults.created :+ created) -> updatedProcessingContext
+                }
+              .switchIfEmpty(SMono.error(new RuntimeException("I should not be empty")))
+          }.cache()
+        }
+      }
+      .flatMap(x => x)
+
+  private def createSubmission(mailboxSession: MailboxSession,
+                            emailSubmissionCreationId: EmailSubmissionCreationId,
+                            jsObject: JsObject,
+                            processingContext: ProcessingContext): SMono[(CreationResult, ProcessingContext)] =
+    parseCreate(jsObject)
+      .fold(e => SMono.error(e), sendEmail(mailboxSession, _))
+      .map {
+        case (creationResponse, messageId) =>
+          CreationSuccess(emailSubmissionCreationId, creationResponse, messageId) ->
+            recordCreationIdInProcessingContext(emailSubmissionCreationId, processingContext, creationResponse.id)
+      }
+      .onErrorResume(e => SMono.just((CreationFailure(emailSubmissionCreationId, e), processingContext)))
 
   private def parseCreate(jsObject: JsObject): Either[EmailSubmissionCreationParseException, EmailSubmissionCreationRequest] =
     EmailSubmissionCreationRequest.validateProperties(jsObject)
@@ -562,4 +584,9 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       Envelope(mailFrom, rcptTo.map(EmailSubmissionAddress(_)))
     }
   }
+
+  private def recordCreationIdInProcessingContext(emailSubmissionCreationId: EmailSubmissionCreationId,
+                                                  processingContext: ProcessingContext,
+                                                  emailSubmissionId: EmailSubmissionId): ProcessingContext =
+    processingContext.recordCreatedId(ClientId(emailSubmissionCreationId.id), ServerId(emailSubmissionId.value))
 }

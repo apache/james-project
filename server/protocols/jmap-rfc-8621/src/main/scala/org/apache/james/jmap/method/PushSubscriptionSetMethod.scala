@@ -59,20 +59,19 @@ class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCr
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: PushSubscriptionSetRequest): SMono[InvocationWithContext] =
     for {
-      created <- createPerformer.create(request, mailboxSession, invocation.processingContext)
-      resolvedRequest <- created.processingContext.resolveSetRequest(invocation.invocation)(getRequest)
-      updated <- updatePerformer.update(resolvedRequest, mailboxSession)
-      destroyed <- deletePerformer.deletePushSubscriptions(resolvedRequest, mailboxSession)
+      created <- createPerformer.create(request, mailboxSession)
+      updated <- updatePerformer.update(request, mailboxSession)
+      destroyed <- deletePerformer.deletePushSubscriptions(request, mailboxSession)
     } yield InvocationWithContext(
       invocation = Invocation(
         methodName = methodName,
         arguments = Arguments(pushSubscriptionSerializer.serialize(PushSubscriptionSetResponse(
-          created = Some(created.created).filter(_.nonEmpty),
-          notCreated = Some(created.notCreated).filter(_.nonEmpty),
+          created = created.created.filter(_.nonEmpty),
+          notCreated = created.notCreated.filter(_.nonEmpty),
           updated = Some(updated.updated).filter(_.nonEmpty),
           notUpdated = Some(updated.notUpdated).filter(_.nonEmpty),
           destroyed = Some(destroyed.destroyed).filter(_.nonEmpty),
           notDestroyed = Some(destroyed.retrieveErrors).filter(_.nonEmpty)))),
         methodCallId = invocation.invocation.methodCallId),
-      processingContext = created.processingContext)
+      processingContext = invocation.processingContext)
 }

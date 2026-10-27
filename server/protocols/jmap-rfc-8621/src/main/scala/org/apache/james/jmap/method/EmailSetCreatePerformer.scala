@@ -31,8 +31,8 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.{AttachmentNotFoundException, BlobId, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, InvalidEmailCreationPropertiesException, ThreadId}
-import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationSuccess}
-import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers, CreationResults, ProcessingContext}
+import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
+import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaException}
 import org.apache.james.mailbox.model.MailboxId
@@ -40,13 +40,30 @@ import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.util.html.HtmlTextExtractor
 import org.slf4j.LoggerFactory
-import reactor.core.scala.publisher.SMono
+import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.OptionConverters._
 
 object EmailSetCreatePerformer {
   private val LOGGER = LoggerFactory.getLogger(classOf[EmailSetCreatePerformer])
 
+  case class CreationResults(results: Seq[CreationResult]) {
+    def created: Option[Map[EmailCreationId, EmailCreationResponse]] =
+      Option(results.flatMap{
+        case result: CreationSuccess => Some((result.clientId, result.response))
+        case _ => None
+      }.toMap)
+        .filter(_.nonEmpty)
+
+    def notCreated: Option[Map[EmailCreationId, SetError]] = {
+      Option(results.flatMap{
+        case failure: CreationFailure => Some((failure.clientId, failure.asMessageSetError))
+        case _ => None
+      }
+        .toMap)
+        .filter(_.nonEmpty)
+    }
+  }
   trait CreationResult
   case class CreationSuccess(clientId: EmailCreationId, response: EmailCreationResponse) extends CreationResult
   case class CreationFailure(clientId: EmailCreationId, e: Throwable) extends CreationResult {
@@ -87,21 +104,17 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
                                         mailboxManager: MailboxManager,
                                         configuration: JMAPConfiguration) {
 
-  def create(request: EmailSetRequest, mailboxSession: MailboxSession,
-             processingContext: ProcessingContext): SMono[CreationResults[EmailCreationId, EmailCreationResponse]] =
-    processingContext.processCreations[EmailCreationId, EmailCreationResponse](request.create.getOrElse(Map.empty), Set("mailboxIds"))(
-      _.id, _.id.serialize) { (clientId, json) =>
-      serializer.deserializeCreationRequest(json)
-        .fold(e => SMono.just[CreationResult](CreationFailure(clientId, new IllegalArgumentException(e.toString))),
-          creationRequest => EmailCreationRequest.validateProperties(json)
-            .flatMap(_ => creationRequest.validateRequest)
-            .fold(e => SMono.just[CreationResult](CreationFailure(clientId, e)),
-              _ => create(clientId, creationRequest, mailboxSession)))
-        .map {
-          case CreationSuccess(_, response) => Right(response)
-          case failure: CreationFailure => Left(failure.asMessageSetError)
-        }
-    }
+  def create(request: EmailSetRequest, mailboxSession: MailboxSession): SMono[CreationResults] =
+    SFlux.fromIterable(request.create.getOrElse(Map()))
+      .concatMap {
+        case (clientId, json) => serializer.deserializeCreationRequest(json)
+          .fold(e => SMono.just[CreationResult](CreationFailure(clientId, new IllegalArgumentException(e.toString))),
+            creationRequest => EmailCreationRequest.validateProperties(json)
+              .flatMap(_ => creationRequest.validateRequest)
+              .fold(e => SMono.just[CreationResult](CreationFailure(clientId, e)),
+                _ => create(clientId, creationRequest, mailboxSession)))
+      }.collectSeq()
+      .map(CreationResults)
 
   private def create(clientId: EmailCreationId, request: EmailCreationRequest, mailboxSession: MailboxSession): SMono[CreationResult] = {
     val mailboxIds: List[MailboxId] = request.mailboxIds.value
