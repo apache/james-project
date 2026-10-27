@@ -88,6 +88,50 @@ public class PopulateEmailQueryViewTask implements Task {
         }
     }
 
+    // Details of the runs that walked users rather than mailboxes, kept readable after the upgrade
+    public static class LegacyAdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
+        private final RunningOptions runningOptions;
+        private final long processedUserCount;
+        private final long processedMessageCount;
+        private final long failedUserCount;
+        private final long failedMessageCount;
+        private final Instant timestamp;
+
+        public LegacyAdditionalInformation(RunningOptions runningOptions, long processedUserCount, long processedMessageCount, long failedUserCount, long failedMessageCount, Instant timestamp) {
+            this.runningOptions = runningOptions;
+            this.processedUserCount = processedUserCount;
+            this.processedMessageCount = processedMessageCount;
+            this.failedUserCount = failedUserCount;
+            this.failedMessageCount = failedMessageCount;
+            this.timestamp = timestamp;
+        }
+
+        public long getProcessedUserCount() {
+            return processedUserCount;
+        }
+
+        public long getProcessedMessageCount() {
+            return processedMessageCount;
+        }
+
+        public long getFailedUserCount() {
+            return failedUserCount;
+        }
+
+        public long getFailedMessageCount() {
+            return failedMessageCount;
+        }
+
+        public RunningOptions getRunningOptions() {
+            return runningOptions;
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
+        }
+    }
+
     public static class PopulateEmailQueryViewTaskDTO implements TaskDTO {
         private final String type;
         private final Optional<RunningOptionsDTO> runningOptions;

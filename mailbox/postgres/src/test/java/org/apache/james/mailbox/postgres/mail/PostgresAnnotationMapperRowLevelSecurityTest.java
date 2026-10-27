@@ -72,7 +72,6 @@ public class PostgresAnnotationMapperRowLevelSecurityTest {
     public void setUp() {
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(),
-            postgresExtension.getByPassRLSPostgresExecutor(),
             new UpdatableTickingClock(Instant.now()),
             new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
             blobIdFactory,

@@ -1086,6 +1086,9 @@ curl -XPOST /mailboxes?task=populateEmailQueryView
 Will schedule a task for recomputing the fast message view projection
 for all mailboxes, whoever owns them. The projection of each mailbox is
 cleared, then rebuilt from its messages.
+When virtual hosting is enabled, the mailboxes are listed domain by
+domain: only the mailboxes of the domains registered in the domain list
+are processed.
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
@@ -1107,7 +1110,7 @@ The scheduled task will have the following type
 
 ```
 {
-  "type":"PopulateEmailQueryViewTask",
+  "type":"PopulateEmailQueryViewTask-v2",
   "processedMailboxCount": 3,
   "processedMessageCount": 3,
   "failedMailboxCount": 2,
@@ -1122,6 +1125,10 @@ The scheduled task will have the following type
 whose messages were, or could not be, listed. A mailbox that could not
 be read makes the task end as `failed`, the other mailboxes are still
 processed.
+
+Tasks run before James 3.10 report `processedUserCount` and
+`failedUserCount` instead, and their `additionalInformation` type is
+`PopulateEmailQueryViewTask`.
 
 Response codes:
 

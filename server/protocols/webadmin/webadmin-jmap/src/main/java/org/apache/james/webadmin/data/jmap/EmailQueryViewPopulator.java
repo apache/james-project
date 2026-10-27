@@ -24,11 +24,15 @@ import static jakarta.mail.Flags.Flag.DELETED;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.EmailQueryViewManager;
 import org.apache.james.mailbox.MailboxManager;
@@ -46,17 +50,19 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class EmailQueryViewPopulator {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailQueryViewPopulator.class);
     private static final Duration PERIOD = Duration.ofSeconds(1);
-    private static final Username POPULATOR_USER = Username.of("email-query-view-populator");
+    private static final String POPULATOR_LOCAL_PART = "email-query-view-populator";
     public static final int MAILBOX_CONCURRENCY = 1;
 
     static class Progress {
@@ -111,28 +117,55 @@ public class EmailQueryViewPopulator {
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxManager mailboxManager;
     private final EmailQueryViewManager emailQueryViewManager;
+    private final UsersRepository usersRepository;
+    private final DomainList domainList;
 
     @Inject
     EmailQueryViewPopulator(MailboxSessionMapperFactory mailboxSessionMapperFactory,
                             MailboxManager mailboxManager,
-                            EmailQueryViewManager emailQueryViewManager) {
+                            EmailQueryViewManager emailQueryViewManager,
+                            UsersRepository usersRepository,
+                            DomainList domainList) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.mailboxManager = mailboxManager;
         this.emailQueryViewManager = emailQueryViewManager;
+        this.usersRepository = usersRepository;
+        this.domainList = domainList;
     }
 
     Mono<Result> populateView(Progress progress, RunningOptions runningOptions) {
-        MailboxSession session = mailboxManager.createSystemSession(POPULATOR_USER);
-
-        return correctProjection(listAllMessageWithOwnerViews(progress, session), runningOptions, progress)
-            .map(result -> progress.getFailedMailboxCount() > 0 ? Result.PARTIAL : result)
-            .doFinally(any -> mailboxManager.endProcessingRequest(session));
+        return correctProjection(listAllMessageWithOwnerViews(progress), runningOptions, progress)
+            .map(result -> progress.getFailedMailboxCount() > 0 ? Result.PARTIAL : result);
     }
 
-    private Flux<MessageWithOwnerView> listAllMessageWithOwnerViews(Progress progress, MailboxSession session) {
-        return mailboxSessionMapperFactory.getMailboxMapper(session).list()
+    private Flux<MessageWithOwnerView> listAllMessageWithOwnerViews(Progress progress) {
+        return listAllMailboxes()
             .flatMap(mailbox -> listMessageWithOwnerViews(progress, mailbox), MAILBOX_CONCURRENCY)
             .filter(messageWithOwnerView -> !messageWithOwnerView.messageResult().getFlags().contains(DELETED));
+    }
+
+    private Flux<Mailbox> listAllMailboxes() {
+        if (usersRepository.supportVirtualHosting()) {
+            // Row level security scopes the mailbox listing to the domain of the session, hence we list domain by domain
+            return Mono.fromCallable(domainList::getDomains)
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMapIterable(domains -> domains)
+                .concatMap(this::listMailboxes);
+        }
+        return listMailboxes(Username.of(POPULATOR_LOCAL_PART), mailbox -> true);
+    }
+
+    private Flux<Mailbox> listMailboxes(Domain domain) {
+        // Without row level security the listing spans all domains: keep only the mailboxes of this domain to process each mailbox once
+        return listMailboxes(Username.fromLocalPartWithDomain(POPULATOR_LOCAL_PART, domain),
+            mailbox -> mailbox.getUser().getDomainPart().equals(Optional.of(domain)));
+    }
+
+    private Flux<Mailbox> listMailboxes(Username populatorUser, Predicate<Mailbox> filter) {
+        return Flux.using(() -> mailboxManager.createSystemSession(populatorUser),
+            session -> mailboxSessionMapperFactory.getMailboxMapper(session).list()
+                .filter(filter),
+            mailboxManager::endProcessingRequest);
     }
 
     private Flux<MessageWithOwnerView> listMessageWithOwnerViews(Progress progress, Mailbox mailbox) {

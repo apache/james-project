@@ -47,7 +47,6 @@ class RLSSupportPostgresMailboxMapperACLTest extends MailboxMapperACLTest {
     protected MailboxMapper createMailboxMapper() {
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         PostgresMailboxSessionMapperFactory postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(),
-            postgresExtension.getByPassRLSPostgresExecutor(),
             new UpdatableTickingClock(Instant.now()),
             new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
             blobIdFactory,
