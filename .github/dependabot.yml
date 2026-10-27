@@ -1,0 +1,91 @@
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "[BUILD]"
+    groups:
+      # Netty, and the libraries shipping their own Netty-based transport, need to be upgraded
+      # together so that a single Netty version is resolved at runtime.
+      netty-stack:
+        patterns:
+          - "io.netty*"
+          - "software.amazon.awssdk*"
+          - "org.apache.cassandra*"
+          - "io.projectreactor*"
+          - "io.lettuce*"
+      jackson:
+        patterns:
+          - "com.fasterxml.jackson*"
+      logging:
+        patterns:
+          - "org.slf4j*"
+          - "ch.qos.logback*"
+          - "org.apache.logging.log4j*"
+      scala:
+        patterns:
+          - "org.scala-lang*"
+      circe:
+        patterns:
+          - "io.circe*"
+      pekko:
+        patterns:
+          - "org.apache.pekko*"
+      lucene:
+        patterns:
+          - "org.apache.lucene*"
+      artemis:
+        patterns:
+          - "org.apache.artemis*"
+      angus-mail:
+        patterns:
+          - "org.eclipse.angus*"
+      bouncycastle:
+        patterns:
+          - "org.bouncycastle*"
+      micrometer:
+        patterns:
+          - "io.micrometer*"
+      metrics:
+        patterns:
+          - "io.dropwizard.metrics*"
+      spring:
+        patterns:
+          - "org.springframework*"
+      feign:
+        patterns:
+          - "io.github.openfeign*"
+      jjwt:
+        patterns:
+          - "io.jsonwebtoken*"
+      test-frameworks:
+        patterns:
+          - "org.junit*"
+          - "org.testcontainers*"
+          - "io.cucumber*"
+          - "org.mockito*"
+          - "org.assertj*"
+      maven-plugins:
+        patterns:
+          - "org.apache.maven*"
+          - "org.codehaus.mojo*"
