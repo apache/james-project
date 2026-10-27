@@ -24,7 +24,7 @@ import org.apache.james.jmap.api.change.EmailChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, SessionTranslator, UuidState}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, JmapRfc8621Configuration, ServerId, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.{EmailSetRequest, EmailSetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -50,11 +50,9 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailSetRequest): SMono[InvocationWithContext] = {
     for {
       oldState <- retrieveState(capabilities, mailboxSession)
-      created <- createPerformer.create(request, mailboxSession, invocation.processingContext)
-      resolvedRequest <- created.processingContext.resolveSetRequest(
-        invocation.invocation.copy(arguments = Arguments(serializer.serialize(request))), Set("mailboxIds"))(getRequest(mailboxSession, _))
-      updateResults <- updatePerformer.update(resolvedRequest, mailboxSession)
-      destroyResults <- deletePerformer.destroy(resolvedRequest, mailboxSession)
+      created <- createPerformer.create(request, mailboxSession)
+      updateResults <- updatePerformer.update(request, mailboxSession)
+      destroyResults <- deletePerformer.destroy(request, mailboxSession)
       newState <- retrieveState(capabilities, mailboxSession)
     } yield InvocationWithContext(
       invocation = Invocation(
@@ -63,14 +61,20 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
           accountId = request.accountId,
           oldState = Some(oldState),
           newState = newState,
-          created = Some(created.created).filter(_.nonEmpty),
-          notCreated = Some(created.notCreated).filter(_.nonEmpty),
+          created = created.created,
+          notCreated = created.notCreated,
           updated = updateResults.updated,
           notUpdated = updateResults.notUpdated,
           destroyed = destroyResults.destroyed,
           notDestroyed = destroyResults.notDestroyed))),
         methodCallId = invocation.invocation.methodCallId),
-      processingContext = created.processingContext)
+      processingContext = created.created.getOrElse(Map())
+        .foldLeft(invocation.processingContext)({
+          case (processingContext, (clientId, response)) =>
+            Id.validate(response.id.serialize)
+              .fold(_ => processingContext,
+                serverId => processingContext.recordCreatedId(ClientId(clientId.id), ServerId(serverId)))
+        }))
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailSetRequest] =

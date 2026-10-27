@@ -341,35 +341,6 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     assertThatJson(response).isEqualTo(RESPONSE_OBJECT)
   }
 
-  "RFC-8621 version, POST, with initial createdIds" should "preserve literal strings in Core/echo" in {
-    val headers = Headers.headers(
-      new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
-      new Header("Authorization", s"Basic ${userBase64String}"))
-    val response = RestAssured
-      .`given`()
-        .headers(headers)
-        .body("""{
-          |  "using": ["urn:ietf:params:jmap:core"],
-          |  "createdIds": {"parent": "server123"},
-          |  "methodCalls": [["Core/echo", {
-          |    "name": "#parent", "nested": {"text": "#parent"}, "values": ["#parent"]
-          |  }, "echo"]]
-          |}""".stripMargin)
-      .when()
-        .post()
-      .`then`
-        .statusCode(HttpStatus.SC_OK)
-        .contentType(ContentType.JSON)
-      .extract().asString()
-
-    assertThatJson(response).isEqualTo(s"""{
-      |  "sessionState": "${SESSION_STATE.value}",
-      |  "methodResponses": [["Core/echo", {
-      |    "name": "#parent", "nested": {"text": "#parent"}, "values": ["#parent"]
-      |  }, "echo"]]
-      |}""".stripMargin)
-  }
-
   "RFC-8621 version, POST, with methods" should "return OK status, ResponseObject depend on method" in {
 
     val headers: Headers = Headers.headers(

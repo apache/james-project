@@ -23,10 +23,9 @@ import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.numeric.NonNegInt
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SetError}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId}
 import org.apache.james.jmap.json.BackReferenceDeserializer
 import play.api.libs.json.{JsArray, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Reads}
-import reactor.core.scala.publisher.SMono
 
 import scala.collection.IndexedSeq
 import scala.collection.Map
@@ -126,44 +125,8 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
 
   def recordInvocation(invocation: Invocation): ProcessingContext = ProcessingContext(creationIds, invocations + (invocation.methodCallId -> invocation))
 
-  /**
-   * Order /set creates by their declared reference properties and record each success before processing its dependants.
-   * The properties describe ID fields (including ID-keyed maps); other JSON values remain literal.
-   */
-  def processCreations[C, R](creations: ImmutableMap[C, JsObject],
-                             referenceProperties: Set[String] = Set.empty,
-                             validate: JsObject => Either[SetError, Unit] = _ => Right(()))
-                            (clientId: C => Id.Id, serverId: R => String)
-                            (create: (C, JsObject) => SMono[Either[SetError, R]]): SMono[CreationResults[C, R]] =
-    CreationProcessor.process(this, creations, referenceProperties, validate)(clientId, serverId)(create)
-
-  /** Resolve only IDs in the remaining /set operations, keeping literal patch values intact. */
-  def resolveSetReferences(arguments: JsObject, referenceProperties: Set[String] = Set.empty): JsObject = {
-    val updated = (arguments \ "update").asOpt[JsObject].map(updates =>
-      JsObject(updates.fields.map { case (id, patch) =>
-        val resolvedPatch = patch.asOpt[JsObject]
-          .flatMap(value => CreationProcessor.resolveReferences(value, referenceProperties, this).toOption)
-          .getOrElse(patch)
-        resolveIdOrOriginal(id) -> resolvedPatch
-      }))
-    val destroyed = (arguments \ "destroy").asOpt[JsArray].map(ids =>
-      JsArray(ids.value.map {
-        case JsString(id) => JsString(resolveIdOrOriginal(id))
-        case other => other
-      }))
-    arguments ++ JsObject(updated.map("update" -> _).toSeq ++ destroyed.map("destroy" -> _).toSeq)
-  }
-
-  private def resolveIdOrOriginal(id: String): String =
-    resolveCreationId(id).map(_.value.value).getOrElse(id)
-
-  def resolveSetRequest[T](invocation: Invocation, referenceProperties: Set[String] = Set.empty)
-                          (parse: Invocation => Either[Exception, T]): SMono[T] =
-    SMono.defer(() => parse(invocation.copy(arguments = Arguments(resolveSetReferences(invocation.arguments.value, referenceProperties))))
-      .fold(SMono.error(_), SMono.just(_)))
-
   def resolveBackReferences(invocation: Invocation): Either[InvalidResultReferenceException, Invocation] =
-    resolveValue(invocation.arguments.value, None) match {
+    backReferenceResolver.reads(invocation.arguments.value) match {
       case JsError(e) => Left(InvalidResultReferenceException(e.toString()))
       case JsSuccess(JsObject(underlying), _) => Right(Invocation(methodName = invocation.methodName,
         methodCallId = invocation.methodCallId,
@@ -171,30 +134,23 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
       case others: JsSuccess[JsValue] => Left(InvalidResultReferenceException(s"Unexpected value $others"))
     }
 
-  private val creationReferenceProperties: Set[String] = Set(
-    "id", "ids", "parentId", "emailId", "forEmailId", "identityId",
-    "inMailbox", "inMailboxOtherThan", "onSuccessDestroyEmail", "destroy")
-
-  private val creationReferenceKeyedProperties: Set[String] = Set("update", "mailboxIds", "onSuccessUpdateEmail")
-
-  private def resolveValue(value: JsValue, property: Option[String]): JsResult[JsValue] = value match {
-    case JsArray(values) => resolveBackReferences(values, property)
-    case JsObject(underlying) => resolveBackReference(underlying, property)
-    case JsString(id) if id.startsWith("#") && property.exists(creationReferenceProperties.contains) =>
-      resolveCreationId(id)
-        .fold(_ => JsSuccess(JsString(id)),
+  private val backReferenceResolver: Reads[JsValue] = {
+    case JsArray(value) => resolveBackReferences(value)
+    case JsObject(underlying) => resolveBackReference(underlying)
+    case JsString(value) if value.startsWith("#") => resolveCreationId(value)
+        .fold(_ => JsSuccess(JsString(value)),
           serverId => JsSuccess(JsString(serverId.value.value)))
     case others: JsValue => JsSuccess(others)
   }
 
-  private def resolveBackReferences(array: IndexedSeq[JsValue], property: Option[String]): JsResult[JsValue] = {
-    val results: IndexedSeq[JsResult[JsValue]] = array.map(value => resolveValue(value, property))
+  private def resolveBackReferences(array: IndexedSeq[JsValue]): JsResult[JsValue] = {
+    val results: IndexedSeq[JsResult[JsValue]] = array.map(backReferenceResolver.reads)
     results.find(_.isError)
       .getOrElse(JsSuccess(JsArray(results.map(_.get))))
   }
 
-  private def resolveBackReference(underlying: Map[String, JsValue], parentProperty: Option[String]): JsResult[JsObject] = {
-    val resolutions = underlying.map(entry => resolveBackReference(entry, parentProperty))
+  private def resolveBackReference(underlying: Map[String, JsValue]): JsResult[JsObject] = {
+    val resolutions = underlying.map(resolveBackReference)
 
     val firstError = resolutions.flatMap(_.left.toOption).headOption
 
@@ -203,27 +159,22 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
     firstError.getOrElse(JsSuccess(JsObject(transformedMap)))
   }
 
-  private def resolveBackReference(entry: (String, JsValue), parentProperty: Option[String]): Either[JsError, (String, JsValue)] = {
+  private def resolveBackReference(entry: (String, JsValue)): Either[JsError, (String, JsValue)] = {
     if (entry._1.startsWith("#")) {
       val newEntry: String = entry._1.substring(1)
 
       BackReferenceDeserializer.deserializeBackReference(entry._2) match {
         case JsSuccess(backReference, _) => resolveBackReference(newEntry, backReference)
-        // If the JSON object is not a back-reference it could be a creation id used as a map key.
+        // If the JSON object is not a back-reference continue parsing (it could be a creationId)
         case _: JsError =>
-          resolveValue(entry._2, parentProperty)
+          backReferenceResolver.reads(entry._2)
             .fold(e => Left(JsError(e)),
-              json => if (parentProperty.exists(creationReferenceKeyedProperties.contains)) {
-                resolveCreationId(entry._1)
-                  .fold(_ => Right((entry._1, json)),
-                    serverId => Right((serverId.value.value, json)))
-              } else {
-                Right((entry._1, json))
-              })
+              json => resolveCreationId(entry._1)
+                .fold(_ => Right((entry._1, json)),
+                  serverId => Right((serverId.value.value, json))))
       }
     } else {
-      resolveValue(entry._2, Some(entry._1))
-        .fold(e => Left(JsError(e)), json => Right((entry._1, json)))
+      propagateBackReferenceResolution(entry)
     }
   }
 
@@ -233,6 +184,12 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
       case JsSuccess(resolvedBackReference, _) => Right((newEntry, resolvedBackReference))
     }
 
+  private def propagateBackReferenceResolution(entry: (String, JsValue)): Either[JsError, (String, JsValue)] =
+    backReferenceResolver.reads(entry._2) match {
+      case e: JsError => Left(e)
+      case JsSuccess(newValue, _) => Right((entry._1, newValue))
+    }
+
   private def retrieveInvocation(callId: MethodCallId): Option[Invocation] = invocations.get(callId)
 
   private def resolve(backReference: BackReference): JsResult[JsValue] = retrieveInvocation(backReference.resultOf)
@@ -240,13 +197,16 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
     .getOrElse(JsError("Back reference could not be resolved"))
 
   private def resolveCreationId(creationId: String): Either[IllegalArgumentException, ServerId] =
-    if (creationId.startsWith("#")) {
-      Id.validate(creationId.substring(1)).flatMap(id => retrieveServerId(ClientId(id))
-        .toRight(new IllegalArgumentException(s"$creationId was not used in previously defined creationIds")))
-    } else {
-      Id.validate(creationId).map(ServerId)
-    }
+    Id.validate(creationId)
+      .flatMap(id => resolveServerId(ClientId(id)))
 
-  def retrieveServerId(clientId: ClientId): Option[ServerId] = creationIds.get(clientId)
+ private def resolveServerId(id: ClientId): Either[IllegalArgumentException, ServerId] =
+  id.retrieveOriginalClientId
+    .map(maybePreviousClientId => maybePreviousClientId.flatMap(previousClientId => retrieveServerId(previousClientId)
+      .map(Right(_))
+      .getOrElse(Left[IllegalArgumentException, ServerId](new IllegalArgumentException(s"$id was not used in previously defined creationIds")))))
+    .getOrElse(Right(ServerId(id.value)))
+
+  private def retrieveServerId(clientId: ClientId): Option[ServerId] = creationIds.get(clientId)
 
 }

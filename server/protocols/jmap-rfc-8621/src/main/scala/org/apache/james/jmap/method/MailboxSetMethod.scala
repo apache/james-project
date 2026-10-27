@@ -27,10 +27,11 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JA
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, SessionTranslator, SetError, UuidState}
 import org.apache.james.jmap.json.MailboxSerializer
-import org.apache.james.jmap.mail.{MailboxCreationId, MailboxCreationResponse, MailboxSetRequest, MailboxSetResponse}
+import org.apache.james.jmap.mail.{MailboxSetRequest, MailboxSetResponse}
+import org.apache.james.jmap.method.MailboxSetCreatePerformer.MailboxCreationResults
 import org.apache.james.jmap.method.MailboxSetDeletePerformer.MailboxDeletionResults
 import org.apache.james.jmap.method.MailboxSetUpdatePerformer.MailboxUpdateResults
-import org.apache.james.jmap.routes.{CreationResults, SessionSupplier}
+import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.MailboxId
 import org.apache.james.mailbox.{MailboxSession, MessageManager}
@@ -67,12 +68,11 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
     oldState <- retrieveState(capabilities, mailboxSession)
     supportSharedMailbox = capabilities.contains(JAMES_SHARES)
     creationResults <- createPerformer.createMailboxes(mailboxSession, request, invocation.processingContext, supportSharedMailbox)
-    resolvedRequest <- creationResults.processingContext.resolveSetRequest(invocation.invocation, Set("parentId"))(getRequest(mailboxSession, _))
-    updateResults <- updatePerformer.updateMailboxes(mailboxSession, resolvedRequest, capabilities)
-    deletionResults <- deletePerformer.deleteMailboxes(mailboxSession, resolvedRequest, supportSharedMailbox)
+    updateResults <- updatePerformer.updateMailboxes(mailboxSession, request, capabilities)
+    deletionResults <- deletePerformer.deleteMailboxes(mailboxSession, request, supportSharedMailbox)
     newState <- retrieveState(capabilities, mailboxSession)
-    response = createResponse(capabilities, invocation.invocation, request, creationResults, deletionResults, updateResults, oldState, newState)
-  } yield InvocationWithContext(response, creationResults.processingContext)
+    response = createResponse(capabilities, invocation.invocation, request, creationResults._1, deletionResults, updateResults, oldState, newState)
+  } yield InvocationWithContext(response, creationResults._2)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, MailboxSetRequest] =
     serializer.deserializeMailboxSetRequest(invocation.arguments.value).asEitherRequest
@@ -81,7 +81,7 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
   private def createResponse(capabilities: Set[CapabilityIdentifier],
                              invocation: Invocation,
                              mailboxSetRequest: MailboxSetRequest,
-                             creationResults: CreationResults[MailboxCreationId, MailboxCreationResponse],
+                             creationResults: MailboxCreationResults,
                              deletionResults: MailboxDeletionResults,
                              updateResults: MailboxUpdateResults,
                              oldState: UuidState,
@@ -91,8 +91,8 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
       oldState = Some(oldState),
       newState = newState,
       destroyed = Some(deletionResults.destroyed).filter(_.nonEmpty),
-      created = Some(creationResults.created).filter(_.nonEmpty),
-      notCreated = Some(creationResults.notCreated).filter(_.nonEmpty),
+      created = Some(creationResults.retrieveCreated).filter(_.nonEmpty),
+      notCreated = Some(creationResults.retrieveErrors).filter(_.nonEmpty),
       updated = Some(updateResults.updated).filter(_.nonEmpty),
       notUpdated = Some(updateResults.notUpdated).filter(_.nonEmpty),
       notDestroyed = Some(deletionResults.retrieveErrors).filter(_.nonEmpty))

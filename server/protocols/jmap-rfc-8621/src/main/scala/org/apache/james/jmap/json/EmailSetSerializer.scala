@@ -463,12 +463,6 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
 
   def serialize(response: EmailSetResponse): JsObject = Json.toJsObject(response)
 
-  def serialize(request: EmailSetRequest): JsObject = Json.obj(
-    "accountId" -> request.accountId,
-    "create" -> request.create.map(values => JsObject(values.toSeq.map { case (id, json) => id.id.value -> json })),
-    "update" -> request.update.map(values => JsObject(values.toSeq.map { case (id, json) => id.id.value -> json })),
-    "destroy" -> request.destroy)
-
   def deserializeEmailImportRequest(input: JsValue): JsResult[EmailImportRequest] = Json.fromJson[EmailImportRequest](input)
 
   def serializeEmailImportResponse(response: EmailImportResponse): JsObject = Json.toJsObject(response)
