@@ -45,7 +45,8 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
 
   def process(requestObject: RequestObject,
               mailboxSession: MailboxSession): SMono[ResponseObject] = {
-    val processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)
+    val processingContext: ProcessingContext = ProcessingContext(
+      requestObject.createdIds.map(_.value).getOrElse(Map.empty), Map.empty)
     val capabilities: Set[CapabilityIdentifier] = requestObject.using
 
     val validatedRequestObject = for {

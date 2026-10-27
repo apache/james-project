@@ -891,6 +891,67 @@ trait IdentitySetContract {
   }
 
   @Test
+  def updateShouldAcceptIdentityCreatedInTheSameCall(): Unit = {
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |    ["Identity/set", {
+         |      "accountId": "$bobAccountId",
+         |      "create": {
+         |        "custom": {
+         |          "name": "Original name",
+         |          "email": "${bobUsername.asString}",
+         |          "textSignature": "",
+         |          "htmlSignature": ""
+         |        }
+         |      },
+         |      "update": {"#custom": {"name": "Updated name"}}
+         |    }, "set"],
+         |    ["Identity/get", {"accountId": "$bobAccountId", "ids": ["#custom"]}, "get"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract().asString()
+
+    val identityId = new io.restassured.path.json.JsonPath(response).getString("methodResponses[0][1].created.custom.id")
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "${SESSION_STATE.value}",
+         |  "methodResponses": [
+         |    ["Identity/set", {
+         |      "accountId": "$bobAccountId",
+         |      "newState": "${INSTANCE.value}",
+         |      "created": {"custom": {"id": "$identityId", "mayDelete": true}},
+         |      "updated": {"$identityId": {}}
+         |    }, "set"],
+         |    ["Identity/get", {
+         |      "accountId": "$bobAccountId",
+         |      "state": "${INSTANCE.value}",
+         |      "list": [{
+         |        "id": "$identityId",
+         |        "name": "Updated name",
+         |        "email": "${bobUsername.asString}",
+         |        "replyTo": null,
+         |        "bcc": null,
+         |        "textSignature": "",
+         |        "htmlSignature": "",
+         |        "mayDelete": true
+         |      }]
+         |    }, "get"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
   def updateShouldSucceed(): Unit = {
     val identityId: String = createNewIdentity()
     val response: String = `given`

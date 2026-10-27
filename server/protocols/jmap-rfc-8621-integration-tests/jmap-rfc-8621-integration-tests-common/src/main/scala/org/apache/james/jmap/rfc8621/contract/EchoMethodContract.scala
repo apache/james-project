@@ -27,13 +27,16 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_OK}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.Username
+import org.apache.james.jmap.core.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.EchoMethodContract._
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
+import play.api.libs.json.Json
 
 object EchoMethodContractContext {
   val currentUsername: java.util.concurrent.atomic.AtomicReference[Username] = new java.util.concurrent.atomic.AtomicReference[Username]()
@@ -185,6 +188,37 @@ trait EchoMethodContract {
         .asString()
 
     assertThatJson(response).isEqualTo(RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD)
+  }
+
+  @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def echoShouldPreserveLiteralCreationReferencesRecordedByPreviousCall(): Unit = {
+    val accountId = AccountId.from(bobUsername).toOption.get.id.value
+    val request = Json.obj(
+      "using" -> Json.arr("urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"),
+      "methodCalls" -> Json.arr(
+        Json.arr("Mailbox/set", Json.obj("accountId" -> accountId,
+          "create" -> Json.obj("parent" -> Json.obj("name" -> "parent"))), "create"),
+        Json.arr("Core/echo", Json.obj(
+          "name" -> "#parent",
+          "nested" -> Json.obj("text" -> "#parent"),
+          "values" -> Json.arr("#parent")), "echo")))
+
+    val response = Json.parse(`given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request.toString)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract().body().asString())
+
+    val parentId = ((response \ "methodResponses")(0)(1) \ "created" \ "parent" \ "id").as[String]
+    assertThat(parentId).isNotBlank
+    assertThatJson(((response \ "methodResponses")(1)(1)).toString)
+      .isEqualTo("""{"name":"#parent","nested":{"text":"#parent"},"values":["#parent"]}""")
   }
 
   @Test

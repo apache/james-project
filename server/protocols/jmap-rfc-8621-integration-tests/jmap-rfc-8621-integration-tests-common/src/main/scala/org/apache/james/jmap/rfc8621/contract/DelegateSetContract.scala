@@ -612,6 +612,48 @@ trait DelegateSetContract {
   }
 
   @Test
+  def destroyShouldAcceptDelegateCreatedInTheSameCall(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:apache:james:params:jmap:delegation"],
+         |  "methodCalls": [
+         |    ["Delegate/set", {
+         |      "accountId": "$bobAccountId",
+         |      "create": {"delegate": {"username": "${andreUsername.asString}"}},
+         |      "destroy": ["#delegate"]
+         |    }, "set"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract().asString()
+
+    val delegationId = DelegationId.from(bobUsername, andreUsername).serialize
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState": "${SESSION_STATE.value}",
+         |  "methodResponses": [
+         |    ["Delegate/set", {
+         |      "accountId": "$bobAccountId",
+         |      "newState": "${SESSION_STATE.value}",
+         |      "created": {"delegate": {"id": "$delegationId"}},
+         |      "destroyed": ["$delegationId"]
+         |    }, "set"]
+         |  ]
+         |}""".stripMargin)
+
+    awaitAtMostTenSeconds.untilAsserted(() =>
+      assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(bobUsername).asJavaCollection).isEmpty())
+  }
+
+  @Test
   def destroyShouldSucceed(server: GuiceJamesServer) : Unit = {
     server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(bobUsername, andreUsername)

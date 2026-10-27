@@ -45,4 +45,22 @@ object Id {
     refined.refineV[IdConstraint](string)
       .left
       .map(new IllegalArgumentException(_))
+
+  /**
+   * Parse a value that can either be a plain Id or a creation reference.
+   * RFC 8620 §5.3: the "#" prefix of a creation reference is not part of the
+   * referenced creation Id, thus creation references can be 256 characters long.
+   */
+  def validateIdOrCreationReference(string: String): Either[IllegalArgumentException, String] =
+    if (string.startsWith("#")) {
+      val creationId = string.substring(1)
+      if (creationId.isEmpty) {
+        // Keep a bare "#" syntactically acceptable so it can be reported as an unresolved reference.
+        Right(string)
+      } else {
+        validate(creationId).map(_ => string)
+      }
+    } else {
+      validate(string).map(_ => string)
+    }
 }
