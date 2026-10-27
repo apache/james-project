@@ -642,7 +642,7 @@
         <angus-mail.version>2.0.5</angus-mail.version>
         <angus-activation.version>2.0.2</angus-activation.version><!-- Align with EE10 Activation 2.1: https://eclipse-ee4j.github.io/angus-activation/ -->
         <slf4j.version>2.0.17</slf4j.version>
-        <circe.version>0.14.14</circe.version>
+        <circe.version>0.14.17</circe.version>
         <dnsjava.version>3.6.3</dnsjava.version>
         <junit.jupiter.version>5.13.1</junit.jupiter.version>
         <junit.platform.version>1.13.1</junit.platform.version>
