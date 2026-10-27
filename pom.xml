@@ -675,7 +675,7 @@
 
         <qdox.version>2.2.0</qdox.version>
         <jaxb.version>4.0.5</jaxb.version>
-        <lucene.version>10.2.1</lucene.version>
+        <lucene.version>10.5.2</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>7.0.0</guice.version>
         <logback.version>1.6.5</logback.version>
