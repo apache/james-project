@@ -50,7 +50,7 @@ class PopulateEmailQueryViewProjectionItemsTaskAdditionalInformationDTOTest {
 
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(PopulateEmailQueryViewTaskAdditionalInformationDTO.module())
+        JsonSerializationVerifier.dtoModule(PopulateEmailQueryViewTaskAdditionalInformationDTOV2.module())
             .bean(DOMAIN_OBJECT)
             .json(ClassLoaderUtils.getSystemResourceAsString("json/populateAll.additionalInformation.json"))
             .verify();
@@ -58,7 +58,7 @@ class PopulateEmailQueryViewProjectionItemsTaskAdditionalInformationDTOTest {
 
     @Test
     void legacyShouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(PopulateEmailQueryViewTaskAdditionalInformationDTOV1.module())
+        JsonSerializationVerifier.dtoModule(PopulateEmailQueryViewTaskAdditionalInformationDTO.module())
             .bean(LEGACY_DOMAIN_OBJECT)
             .json(ClassLoaderUtils.getSystemResourceAsString("json/populateAll.additionalInformation.legacy.json"))
             .verify();
@@ -67,7 +67,7 @@ class PopulateEmailQueryViewProjectionItemsTaskAdditionalInformationDTOTest {
     @Test
     void bothFormatsShouldBeReadableWhenBothModulesAreRegistered() throws Exception {
         JsonGenericSerializer<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> serializer = JsonGenericSerializer
-            .<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO>forModules(PopulateEmailQueryViewTaskAdditionalInformationDTO.module(), PopulateEmailQueryViewTaskAdditionalInformationDTOV1.module())
+            .<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO>forModules(PopulateEmailQueryViewTaskAdditionalInformationDTOV2.module(), PopulateEmailQueryViewTaskAdditionalInformationDTO.module())
             .withoutNestedType();
 
         assertThat(serializer.deserialize(ClassLoaderUtils.getSystemResourceAsString("json/populateAll.additionalInformation.legacy.json")))

@@ -39,7 +39,7 @@ Concerned products: all products exposing the WebAdmin JMAP tasks
 is not a registered user are populated too. With virtual hosting, mailboxes are listed domain by domain, so only the
 mailboxes of the domains registered in the domain list are processed.
 
-The details of new runs use a new format: `additionalInformation.type` is `PopulateEmailQueryViewTask-v2`, and
+The details of new runs use a new format: `additionalInformation.type` is `PopulateEmailQueryViewTaskV2`, and
 `processedUserCount` and `failedUserCount` are replaced by `processedMailboxCount` and `failedMailboxCount`. Tools
 reading these details need to be updated. The task type itself, `PopulateEmailQueryViewTask`, does not change.
 

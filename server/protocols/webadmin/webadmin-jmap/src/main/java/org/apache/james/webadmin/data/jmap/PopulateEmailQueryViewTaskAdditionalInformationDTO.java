@@ -30,61 +30,59 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 
 public class PopulateEmailQueryViewTaskAdditionalInformationDTO implements AdditionalInformationDTO {
-    public static final String TYPE = "PopulateEmailQueryViewTask-v2";
-
-    public static AdditionalInformationDTOModule<PopulateEmailQueryViewTask.AdditionalInformation, PopulateEmailQueryViewTaskAdditionalInformationDTO> module() {
-        return DTOModule.forDomainObject(PopulateEmailQueryViewTask.AdditionalInformation.class)
+    public static AdditionalInformationDTOModule<PopulateEmailQueryViewTask.LegacyAdditionalInformation, PopulateEmailQueryViewTaskAdditionalInformationDTO> module() {
+        return DTOModule.forDomainObject(PopulateEmailQueryViewTask.LegacyAdditionalInformation.class)
             .convertToDTO(PopulateEmailQueryViewTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(PopulateEmailQueryViewTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(PopulateEmailQueryViewTaskAdditionalInformationDTO::toDTO)
-            .typeName(TYPE)
+            .typeName(PopulateEmailQueryViewTask.TASK_TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
     }
 
-    private static PopulateEmailQueryViewTask.AdditionalInformation toDomainObject(PopulateEmailQueryViewTaskAdditionalInformationDTO dto) {
-        return new PopulateEmailQueryViewTask.AdditionalInformation(
+    private static PopulateEmailQueryViewTask.LegacyAdditionalInformation toDomainObject(PopulateEmailQueryViewTaskAdditionalInformationDTO dto) {
+        return new PopulateEmailQueryViewTask.LegacyAdditionalInformation(
             dto.getRunningOptions()
                 .map(RunningOptionsDTO::asDomainObject)
                 .orElse(RunningOptions.DEFAULT),
-            dto.getProcessedMailboxCount(),
+            dto.getProcessedUserCount(),
             dto.getProcessedMessageCount(),
-            dto.getFailedMailboxCount(),
+            dto.getFailedUserCount(),
             dto.getFailedMessageCount(),
             dto.timestamp);
     }
 
-    private static PopulateEmailQueryViewTaskAdditionalInformationDTO toDTO(PopulateEmailQueryViewTask.AdditionalInformation details, String type) {
+    private static PopulateEmailQueryViewTaskAdditionalInformationDTO toDTO(PopulateEmailQueryViewTask.LegacyAdditionalInformation details, String type) {
         return new PopulateEmailQueryViewTaskAdditionalInformationDTO(
             type,
             details.timestamp(),
-            details.getProcessedMailboxCount(),
+            details.getProcessedUserCount(),
             details.getProcessedMessageCount(),
-            details.getFailedMailboxCount(),
+            details.getFailedUserCount(),
             details.getFailedMessageCount(),
             Optional.of(RunningOptionsDTO.asDTO(details.getRunningOptions())));
     }
 
     private final String type;
     private final Instant timestamp;
-    private final long processedMailboxCount;
+    private final long processedUserCount;
     private final long processedMessageCount;
-    private final long failedMailboxCount;
+    private final long failedUserCount;
     private final long failedMessageCount;
     private final Optional<RunningOptionsDTO> runningOptions;
 
     @VisibleForTesting
     PopulateEmailQueryViewTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                        @JsonProperty("timestamp") Instant timestamp,
-                                                       @JsonProperty("processedMailboxCount") long processedMailboxCount,
+                                                       @JsonProperty("processedUserCount") long processedUserCount,
                                                        @JsonProperty("processedMessageCount") long processedMessageCount,
-                                                       @JsonProperty("failedMailboxCount") long failedMailboxCount,
+                                                       @JsonProperty("failedUserCount") long failedUserCount,
                                                        @JsonProperty("failedMessageCount") long failedMessageCount,
                                                        @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions) {
         this.type = type;
         this.timestamp = timestamp;
-        this.processedMailboxCount = processedMailboxCount;
+        this.processedUserCount = processedUserCount;
         this.processedMessageCount = processedMessageCount;
-        this.failedMailboxCount = failedMailboxCount;
+        this.failedUserCount = failedUserCount;
         this.failedMessageCount = failedMessageCount;
         this.runningOptions = runningOptions;
     }
@@ -99,16 +97,16 @@ public class PopulateEmailQueryViewTaskAdditionalInformationDTO implements Addit
         return timestamp;
     }
 
-    public long getProcessedMailboxCount() {
-        return processedMailboxCount;
+    public long getProcessedUserCount() {
+        return processedUserCount;
     }
 
     public long getProcessedMessageCount() {
         return processedMessageCount;
     }
 
-    public long getFailedMailboxCount() {
-        return failedMailboxCount;
+    public long getFailedUserCount() {
+        return failedUserCount;
     }
 
     public long getFailedMessageCount() {

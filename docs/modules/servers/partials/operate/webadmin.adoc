@@ -1227,7 +1227,7 @@ The scheduled task will have the following type
 
 ....
 {
-  "type":"PopulateEmailQueryViewTask-v2",
+  "type":"PopulateEmailQueryViewTaskV2",
   "processedMailboxCount": 3,
   "processedMessageCount": 3,
   "failedMailboxCount": 2,
