@@ -64,6 +64,10 @@ public class Role {
         this.comparator = NON_CASE_SENSITIVE_COMPARATOR;
     }
 
+    public static List<Role> predefinedRoles() {
+        return ROLES;
+    }
+
     public static Optional<Role> from(String name) {
         Optional<Role> predefinedRole = predefinedRole(name);
         if (predefinedRole.isPresent()) {
