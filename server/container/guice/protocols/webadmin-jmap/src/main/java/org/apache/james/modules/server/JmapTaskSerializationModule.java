@@ -32,7 +32,6 @@ import org.apache.james.webadmin.data.jmap.EmailQueryViewPopulator;
 import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector;
 import org.apache.james.webadmin.data.jmap.PopulateEmailQueryViewTask;
 import org.apache.james.webadmin.data.jmap.PopulateEmailQueryViewTaskAdditionalInformationDTO;
-import org.apache.james.webadmin.data.jmap.PopulateEmailQueryViewTaskAdditionalInformationDTOV2;
 import org.apache.james.webadmin.data.jmap.PopulateFilteringProjectionTask;
 import org.apache.james.webadmin.data.jmap.PopulateFilteringProjectionTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.data.jmap.RecomputeAllFastViewProjectionItemsTask;
@@ -94,17 +93,6 @@ public class JmapTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminRecomputeAllJmapPreviewsAdditionalInformation() {
         return RecomputeAllFastViewTaskAdditionalInformationDTO.module();
-    }
-
-    @ProvidesIntoSet
-    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> populateEmailQueryViewAdditionalInformationV2() {
-        return PopulateEmailQueryViewTaskAdditionalInformationDTOV2.module();
-    }
-
-    @Named(DTOModuleInjections.WEBADMIN_DTO)
-    @ProvidesIntoSet
-    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminPopulateEmailQueryViewAdditionalInformationV2() {
-        return PopulateEmailQueryViewTaskAdditionalInformationDTOV2.module();
     }
 
     @ProvidesIntoSet

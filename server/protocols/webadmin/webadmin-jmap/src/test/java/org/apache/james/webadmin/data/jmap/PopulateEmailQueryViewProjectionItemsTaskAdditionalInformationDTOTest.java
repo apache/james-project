@@ -26,8 +26,6 @@ import java.time.Instant;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.json.JsonGenericSerializer;
-import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
-import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
@@ -40,41 +38,29 @@ class PopulateEmailQueryViewProjectionItemsTaskAdditionalInformationDTOTest {
         3,
         4,
         INSTANT);
-    private static final PopulateEmailQueryViewTask.LegacyAdditionalInformation LEGACY_DOMAIN_OBJECT = new PopulateEmailQueryViewTask.LegacyAdditionalInformation(
-        RunningOptions.withMessageRatePerSecond(20),
-        1,
-        2,
-        3,
-        4,
-        INSTANT);
 
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(PopulateEmailQueryViewTaskAdditionalInformationDTOV2.module())
+        JsonSerializationVerifier.dtoModule(PopulateEmailQueryViewTaskAdditionalInformationDTO.module())
             .bean(DOMAIN_OBJECT)
             .json(ClassLoaderUtils.getSystemResourceAsString("json/populateAll.additionalInformation.json"))
             .verify();
     }
 
     @Test
-    void legacyShouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(PopulateEmailQueryViewTaskAdditionalInformationDTO.module())
-            .bean(LEGACY_DOMAIN_OBJECT)
-            .json(ClassLoaderUtils.getSystemResourceAsString("json/populateAll.additionalInformation.legacy.json"))
-            .verify();
-    }
+    void shouldReadLegacyJsonWithoutMailboxCounters() throws Exception {
+        PopulateEmailQueryViewTask.AdditionalInformation expected = new PopulateEmailQueryViewTask.AdditionalInformation(
+            RunningOptions.withMessageRatePerSecond(20),
+            0,
+            2,
+            0,
+            4,
+            INSTANT);
 
-    @Test
-    void bothFormatsShouldBeReadableWhenBothModulesAreRegistered() throws Exception {
-        JsonGenericSerializer<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> serializer = JsonGenericSerializer
-            .<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO>forModules(PopulateEmailQueryViewTaskAdditionalInformationDTOV2.module(), PopulateEmailQueryViewTaskAdditionalInformationDTO.module())
-            .withoutNestedType();
-
-        assertThat(serializer.deserialize(ClassLoaderUtils.getSystemResourceAsString("json/populateAll.additionalInformation.legacy.json")))
+        assertThat(JsonGenericSerializer.forModules(PopulateEmailQueryViewTaskAdditionalInformationDTO.module())
+                .withoutNestedType()
+                .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/populateAll.additionalInformation.legacy.json")))
             .usingRecursiveComparison(recursiveComparisonConfiguration)
-            .isEqualTo(LEGACY_DOMAIN_OBJECT);
-        assertThat(serializer.deserialize(ClassLoaderUtils.getSystemResourceAsString("json/populateAll.additionalInformation.json")))
-            .usingRecursiveComparison(recursiveComparisonConfiguration)
-            .isEqualTo(DOMAIN_OBJECT);
+            .isEqualTo(expected);
     }
 }

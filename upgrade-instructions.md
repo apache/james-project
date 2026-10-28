@@ -39,12 +39,12 @@ Concerned products: all products exposing the WebAdmin JMAP tasks
 is not a registered user are populated too. With virtual hosting, mailboxes are listed domain by domain, so only the
 mailboxes of the domains registered in the domain list are processed.
 
-The details of new runs use a new format: `additionalInformation.type` is `PopulateEmailQueryViewTaskV2`, and
-`processedUserCount` and `failedUserCount` are replaced by `processedMailboxCount` and `failedMailboxCount`. Tools
-reading these details need to be updated. The task type itself, `PopulateEmailQueryViewTask`, does not change.
+The `additionalInformation` type stays `PopulateEmailQueryViewTask`, but new runs report `processedMailboxCount` and
+`failedMailboxCount` instead of `processedUserCount` and `failedUserCount`. Tools reading these details need to be
+updated.
 
-Details of tasks run before the upgrade keep their former format (`additionalInformation.type` is
-`PopulateEmailQueryViewTask`) and stay readable with their user counters.
+Details of tasks run before the upgrade stay readable: they report `processedMailboxCount` and `failedMailboxCount` as
+0, and their user counters are dropped.
 
 During a rolling upgrade, nodes not yet upgraded cannot read the details of a task run by an upgraded node. Upgrade
 every node before running this task.
