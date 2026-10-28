@@ -24,7 +24,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JM
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{CanCalculateChanges, ErrorCode, Invocation, Limit, Position, QueryState, SessionTranslator}
 import org.apache.james.jmap.json.MailboxQuerySerializer
-import org.apache.james.jmap.mail.{MailboxQueryRequest, MailboxQueryResponse}
+import org.apache.james.jmap.mail.{MailboxFilter, MailboxQueryRequest, MailboxQueryResponse}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.{MailboxSession, SystemMailboxesProvider}
 import org.apache.james.metrics.api.MetricFactory
@@ -54,7 +54,8 @@ class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvi
     MailboxQuerySerializer.deserialize(invocation.arguments.value).asEitherRequest
 
   private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: MailboxQueryRequest): SMono[Invocation] =
-    SFlux.fromPublisher(systemMailboxesProvider.getMailboxByRole(request.filter.role, mailboxSession.getUser))
+    SFlux.fromIterable(MailboxFilter.resolveRole(request.filter.role).toList)
+      .flatMap(role => SFlux.fromPublisher(systemMailboxesProvider.getMailboxByRole(role, mailboxSession.getUser)))
       .map(_.getId)
       .collectSeq()
       .map(ids => MailboxQueryResponse(accountId = request.accountId,

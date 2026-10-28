@@ -28,10 +28,18 @@ import org.apache.james.mailbox.model.MailboxId
 
 case class MailboxQueryRequest(accountId: AccountId, filter: MailboxFilter) extends WithAccountId
 
-object MailboxFilter{
+object MailboxFilter {
   val SUPPORTED: Set[String] = Set("role")
+
+  private val supportedQueryRoles: Seq[Role] = Seq(Role.INBOX, Role.DRAFTS, Role.OUTBOX, Role.SENT,
+    Role.TRASH, Role.ARCHIVE, Role.SPAM, Role.TEMPLATES, Role.RESTORED_MESSAGES)
+
+  def resolveRole(value: String): Option[Role] = supportedQueryRoles.find(role => {
+    val canonical = if (role == Role.SPAM) "junk" else role.serialize()
+    value == canonical || value == role.getDefaultMailbox || (role == Role.INBOX && value.equalsIgnoreCase("inbox"))
+  })
 }
-case class MailboxFilter(role: Role)
+case class MailboxFilter(role: String)
 
 case class MailboxQueryResponse(accountId: AccountId,
                               queryState: QueryState,
