@@ -35,7 +35,9 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Property;
@@ -75,6 +77,8 @@ public class ICALToHeader extends GenericMailet {
     public static final String X_MEETING_RECURRENCE_ID_HEADER = "X-MEETING-RECURRENCE-ID";
     public static final String X_MEETING_SEQUENCE_HEADER = "X-MEETING-SEQUENCE";
     public static final String X_MEETING_DTSTAMP_HEADER = "X-MEETING-DTSTAMP";
+
+    private static final CharMatcher LINE_BREAKS = CharMatcher.anyOf("\r\n");
 
     static {
         ICal4JConfigurator.configure();
@@ -128,11 +132,22 @@ public class ICALToHeader extends GenericMailet {
         MimeMessage mimeMessage = mail.getMessage();
         VEvent vevent = (VEvent) calendar.getComponent("VEVENT")
             .orElseThrow(() -> new MessagingException("Failed to get VEVENT component"));
-        addIfPresent(mimeMessage, X_MEETING_METHOD_HEADER, optionalOf(calendar.getMethod()));
-        addIfPresent(mimeMessage, X_MEETING_UID_HEADER, vevent.getUid());
-        addIfPresent(mimeMessage, X_MEETING_RECURRENCE_ID_HEADER, optionalOf(vevent.getRecurrenceId()));
-        addIfPresent(mimeMessage, X_MEETING_SEQUENCE_HEADER, optionalOf(vevent.getSequence()));
-        addIfPresent(mimeMessage, X_MEETING_DTSTAMP_HEADER, vevent.getDateStamp());
+        Map<String, Optional<? extends Property>> headers = ImmutableMap.of(
+            X_MEETING_METHOD_HEADER, optionalOf(calendar.getMethod()),
+            X_MEETING_UID_HEADER, vevent.getUid(),
+            X_MEETING_RECURRENCE_ID_HEADER, optionalOf(vevent.getRecurrenceId()),
+            X_MEETING_SEQUENCE_HEADER, optionalOf(vevent.getSequence()),
+            X_MEETING_DTSTAMP_HEADER, vevent.getDateStamp());
+
+        boolean containsLineBreaks = headers.values().stream()
+            .flatMap(Optional::stream)
+            .map(Property::getValue)
+            .anyMatch(LINE_BREAKS::matchesAnyOf);
+        if (containsLineBreaks) {
+            LOGGER.warn("Omitting meeting headers for mail {} as its calendar values contain line breaks", mail.getName());
+            return;
+        }
+        headers.forEach((headerName, property) -> addIfPresent(mimeMessage, headerName, property));
     }
 
     public static Optional<? extends Property> optionalOf(Property property) {

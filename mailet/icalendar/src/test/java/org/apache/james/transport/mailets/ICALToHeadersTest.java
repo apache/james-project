@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.StringReader;
 import java.util.Map;
 
 import jakarta.mail.MessagingException;
@@ -219,6 +220,29 @@ class ICALToHeadersTest {
         testee.service(mail);
 
         assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_UID_HEADER)).isNull();
+    }
+
+    @Test
+    void serviceShouldNotAddMeetingHeadersWhenUidContainsLineBreaks() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+        Calendar calendar = new CalendarBuilder().build(new StringReader(String.join("\r\n",
+            "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//x//y//EN", "METHOD:REQUEST",
+            "BEGIN:VEVENT", "UID:abc\\nX-Injected: 1", "DTSTAMP:20261027T120000Z", "END:VEVENT",
+            "END:VCALENDAR", "")));
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .attribute(makeAttribute(ImmutableMap.of("key", AttributeValue.ofUnserializable(calendar))))
+            .build();
+
+        testee.service(mail);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_UID_HEADER)).isNull();
+            softly.assertThat(mail.getMessage().getHeader("X-Injected")).isNull();
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_METHOD_HEADER)).isNull();
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_DTSTAMP_HEADER)).isNull();
+        }));
     }
 
     private Attribute makeAttribute(Map<String, AttributeValue<?>> icals) {
