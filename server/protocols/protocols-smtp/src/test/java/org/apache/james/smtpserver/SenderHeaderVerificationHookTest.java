@@ -209,6 +209,72 @@ class SenderHeaderVerificationHookTest {
     }
 
     @Test
+    void groupNamedLikeAHeaderInSenderShouldBeRejected() throws Exception {
+        start("smtpserver-sender-header-verification.xml");
+        SMTPClient smtpProtocol = authenticateAsBob();
+
+        send(smtpProtocol, BOB.asString(), "rcpt@example.com",
+            "From: " + BOB.asString() + "\r\nSender: To: " + BOB.asString() + ";\r\n");
+
+        assertRejected(smtpProtocol);
+    }
+
+    @Test
+    void unterminatedCommentInSenderShouldBeRejected() throws Exception {
+        start("smtpserver-sender-header-verification.xml");
+        SMTPClient smtpProtocol = authenticateAsBob();
+
+        send(smtpProtocol, BOB.asString(), "rcpt@example.com",
+            "From: " + BOB.asString() + "\r\nSender: " + BOB.asString() + " (\r\n");
+
+        assertRejected(smtpProtocol);
+    }
+
+    @Test
+    void trailingCommentInSenderShouldBeAccepted() throws Exception {
+        start("smtpserver-sender-header-verification.xml");
+        SMTPClient smtpProtocol = authenticateAsBob();
+
+        send(smtpProtocol, BOB.asString(), "rcpt@example.com",
+            "From: " + BOB.asString() + "\r\nSender: " + BOB.asString() + " (Bob)\r\n");
+
+        assertAccepted(smtpProtocol);
+    }
+
+    @Test
+    void addressAfterAnAngleAddressInSenderShouldBeRejected() throws Exception {
+        start("smtpserver-sender-header-verification.xml");
+        SMTPClient smtpProtocol = authenticateAsBob();
+
+        send(smtpProtocol, BOB.asString(), "rcpt@example.com",
+            "From: " + BOB.asString() + "\r\nSender: <" + BOB.asString() + "> " + ALICE.asString() + "\r\n");
+
+        assertRejected(smtpProtocol);
+    }
+
+    @Test
+    void addressAfterACommentInSenderShouldBeRejected() throws Exception {
+        start("smtpserver-sender-header-verification.xml");
+        SMTPClient smtpProtocol = authenticateAsBob();
+
+        send(smtpProtocol, BOB.asString(), "rcpt@example.com",
+            "From: " + BOB.asString() + "\r\nSender: " + BOB.asString() + " (comment) " + ALICE.asString() + "\r\n");
+
+        assertRejected(smtpProtocol);
+    }
+
+    @Test
+    void commentWithinTheDomainOfSenderShouldBeRejected() throws Exception {
+        start("smtpserver-sender-header-verification.xml");
+        SMTPClient smtpProtocol = authenticateAsBob();
+
+        send(smtpProtocol, BOB.asString(), "rcpt@example.com",
+            "From: " + BOB.asString() + "\r\nSender: " + BOB.asString() + "(comment).evil\r\n");
+
+        assertRejected(smtpProtocol);
+    }
+
+    @Test
     void quotedLocalPartHoldingAnAtShouldBeRejected() throws Exception {
         start("smtpserver-sender-header-verification.xml");
         SMTPClient smtpProtocol = authenticateAsBob();

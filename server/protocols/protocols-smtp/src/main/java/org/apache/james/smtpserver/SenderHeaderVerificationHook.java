@@ -29,6 +29,8 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.mime4j.field.address.DefaultAddressParser;
+import org.apache.james.mime4j.field.address.ParseException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.sasl.SaslFailure;
 import org.apache.james.protocols.api.sasl.SaslIdentity;
@@ -125,8 +127,10 @@ public class SenderHeaderVerificationHook implements JamesMessageHook, SaslAuthR
 
     private boolean disclosesOnly(String senderField, Username loggedInUser) throws UsersRepositoryException, DomainListException {
         try {
-            InternetAddress[] addresses = InternetAddress.parseHeader(senderField, false);
-            if (addresses.length != 1 || addresses[0].isGroup()) {
+            String field = MimeUtility.unfold(senderField);
+            // Strict: the lenient parser turns eg 'To: bob@domain.tld;' into a plain address
+            InternetAddress[] addresses = InternetAddress.parseHeader(field, true);
+            if (addresses.length != 1 || addresses[0].isGroup() || !readsTheSameMailbox(field, addresses[0])) {
                 return false;
             }
             MailAddress sender = new MailAddress(addresses[0].getAddress());
@@ -134,6 +138,17 @@ public class SenderHeaderVerificationHook implements JamesMessageHook, SaslAuthR
                 && usersRepository.getUsername(sender).equals(loggedInUser);
         } catch (AddressException | IllegalArgumentException e) {
             // IllegalArgumentException: eg a quoted local part holding a '@' cannot be turned into a username
+            return false;
+        }
+    }
+
+    // InternetAddress.parseHeader ignores what follows the first mailbox, eg '<bob@domain.tld> alice@domain.tld', and
+    // stops at comments, eg 'bob@domain.tld(comment).evil' reads as bob@domain.tld: mime4j must read the whole field
+    // as the same single mailbox
+    private boolean readsTheSameMailbox(String field, InternetAddress address) {
+        try {
+            return DefaultAddressParser.DEFAULT.parseMailbox(field).getAddress().equals(address.getAddress());
+        } catch (ParseException e) {
             return false;
         }
     }
