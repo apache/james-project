@@ -19,26 +19,28 @@
 
 package org.apache.james.jmap.routes
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 import play.api.libs.json.{JsError, JsSuccess, Json}
 
-class JsonPathEdgeCasesTest extends AnyWordSpec with Matchers {
-  "JsonPath wildcard evaluation" should {
-    "return an empty array when no elements need child resolution" in {
-      JsonPath.parse("list/*/id").evaluate(Json.obj("list" -> Json.arr())) shouldBe JsSuccess(Json.arr())
-    }
+class JsonPathEdgeCasesTest {
+  @Test
+  def wildcardEvaluationShouldReturnAnEmptyArrayWhenNoElementsNeedChildResolution(): Unit = {
+    assertThat(JsonPath.parse("list/*/id").evaluate(Json.obj("list" -> Json.arr())))
+      .isEqualTo(JsSuccess(Json.arr()))
+  }
 
-    "propagate a missing child from one wildcard element" in {
-      val json = Json.obj("list" -> Json.arr(Json.obj("id" -> "first"), Json.obj("name" -> "missing id")))
+  @Test
+  def wildcardEvaluationShouldPropagateAMissingChildFromOneWildcardElement(): Unit = {
+    val json = Json.obj("list" -> Json.arr(Json.obj("id" -> "first"), Json.obj("name" -> "missing id")))
 
-      JsonPath.parse("list/*/id").evaluate(json) shouldBe a[JsError]
-    }
+    assertThat(JsonPath.parse("list/*/id").evaluate(json)).isInstanceOf(classOf[JsError])
+  }
 
-    "reject an object where a nested array index is requested" in {
-      val json = Json.obj("list" -> Json.arr(Json.obj("children" -> Json.obj("id" -> "first"))))
+  @Test
+  def wildcardEvaluationShouldRejectAnObjectWhereANestedArrayIndexIsRequested(): Unit = {
+    val json = Json.obj("list" -> Json.arr(Json.obj("children" -> Json.obj("id" -> "first"))))
 
-      JsonPath.parse("list/*/children/0/id").evaluate(json) shouldBe a[JsError]
-    }
+    assertThat(JsonPath.parse("list/*/children/0/id").evaluate(json)).isInstanceOf(classOf[JsError])
   }
 }
