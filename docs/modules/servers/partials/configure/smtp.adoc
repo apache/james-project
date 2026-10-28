@@ -250,6 +250,8 @@ Spoofing is the assumption of the identity of another person without authorizati
 
 For emails from local addresses, spoofing can be prevented by requiring authentication for a user with authorization for the sender address.
 This can be configured with `verifyIdentity` as described above.
+The optional `SenderHeaderVerificationHook` (see xref:{pages-path}/configure/smtp-hooks.adoc[SMTP hooks]) additionally
+requires the `Sender` header, when present, to disclose the authenticated user.
 
 Sender verification does not work for emails sent by an external address.
 As external users can not authenticate, James has to trust the sender address.
