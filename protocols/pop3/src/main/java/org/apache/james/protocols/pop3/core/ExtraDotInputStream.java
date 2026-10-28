@@ -42,16 +42,17 @@ public class ExtraDotInputStream extends InputStream {
     @Override
     public int read() throws IOException {
        int i = in.read();
-       if (startLine) {
-           startLine = false;
-           if (i == '.') {
-                in.unread(i);
-               return '.';
-           }
-           
+       // A line starts after CRLF, but also after a bare LF or a bare CR: lenient clients
+       // split lines on any of them, so an unstuffed '.' there would end the response early
+       boolean lineStart = startLine || (last == '\r' && i != '\n');
+       startLine = false;
+       if (lineStart && i == '.') {
+           in.unread(i);
+           last = '.';
+           return '.';
        }
-      
-       if (last == '\r' && i == '\n') {
+
+       if (i == '\n') {
            startLine = true;
        }
        last = i;
