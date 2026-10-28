@@ -22,520 +22,541 @@ package org.apache.james.jmap.routes
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.{ClientId, Invocation, ServerId}
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 import play.api.libs.json.{JsObject, Json}
 
-class ProcessingContextFailurePropagationTest extends AnyWordSpec with Matchers {
-  "Result reference failure propagation" should {
-    "reject a reference to a method call that was not recorded" in {
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#ids": {
-              |    "resultOf": "missing",
-              |    "name": "Email/get",
-              |    "path": "/list/*/id"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+class ProcessingContextFailurePropagationTest {
+  @Test
+  def resolveBackReferencesShouldRejectAReferenceToAMethodCallThatWasNotRecorded(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#ids": {
+            |    "resultOf": "missing",
+            |    "name": "Email/get",
+            |    "path": "/list/*/id"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Back reference could not be resolved")
-    }
-
-    "reject a reference whose method name does not match the recorded invocation" in {
-      val previous = Invocation(
-        methodName = MethodName("Email/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "list": [
-              |    {
-              |      "id": "message0"
-              |    },
-              |    {
-              |      "id": "message1"
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("get"))
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map(MethodCallId("get") -> previous))
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#ids": {
-              |    "resultOf": "get",
-              |    "name": "Mailbox/get",
-              |    "path": "/list/*/id"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
-
-      val result = context.resolveBackReferences(invocation)
-
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("references a")
-    }
-
-    "reject a reference to a missing property in the result" in {
-      val previous = Invocation(
-        methodName = MethodName("Email/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "list": [
-              |    {
-              |      "id": "message0"
-              |    },
-              |    {
-              |      "id": "message1"
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("get"))
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map(MethodCallId("get") -> previous))
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#ids": {
-              |    "resultOf": "get",
-              |    "name": "Email/get",
-              |    "path": "/missing"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
-
-      val result = context.resolveBackReferences(invocation)
-
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Expected path missing was missing")
-    }
-
-    "reject a reference to an array element outside the result" in {
-      val previous = Invocation(
-        methodName = MethodName("Email/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "list": [
-              |    {
-              |      "id": "message0"
-              |    },
-              |    {
-              |      "id": "message1"
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("get"))
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map(MethodCallId("get") -> previous))
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#id": {
-              |    "resultOf": "get",
-              |    "name": "Email/get",
-              |    "path": "/list/9/id"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
-
-      val result = context.resolveBackReferences(invocation)
-
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Supplied array have no")
-    }
-
-    "reject an object property path applied to an array" in {
-      val previous = Invocation(
-        methodName = MethodName("Email/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "list": [
-              |    {
-              |      "id": "message0"
-              |    },
-              |    {
-              |      "id": "message1"
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("get"))
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map(MethodCallId("get") -> previous))
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#id": {
-              |    "resultOf": "get",
-              |    "name": "Email/get",
-              |    "path": "/list/id"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
-
-      val result = context.resolveBackReferences(invocation)
-
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Expecting a JsObject")
-    }
-
-    "propagate a failed reference from a nested object" in {
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "outer": {
-              |    "inner": {
-              |      "#ids": {
-              |        "resultOf": "missing",
-              |        "name": "Email/get",
-              |        "path": "/list/*/id"
-              |      }
-              |    }
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
-
-      val result = context.resolveBackReferences(invocation)
-
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Back reference could not be resolved")
-    }
-
-    "propagate a failed reference from an object inside an array" in {
-      val previous = Invocation(
-        methodName = MethodName("Email/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "list": [
-              |    {
-              |      "id": "message0"
-              |    },
-              |    {
-              |      "id": "message1"
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("get"))
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map(MethodCallId("get") -> previous))
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "values": [
-              |    "literal",
-              |    {
-              |      "#ids": {
-              |        "resultOf": "get",
-              |        "name": "Email/get",
-              |        "path": "/missing"
-              |      }
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
-
-      val result = context.resolveBackReferences(invocation)
-
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Expected path missing was missing")
-    }
-
-    "propagate a failed reference through nested arrays" in {
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "values": [
-              |    [
-              |      {
-              |        "#ids": {
-              |          "resultOf": "missing",
-              |          "name": "Email/get",
-              |          "path": "/list/*/id"
-              |        }
-              |      }
-              |    ]
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
-
-      val result = context.resolveBackReferences(invocation)
-
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Back reference could not be resolved")
-    }
-
-    "reject the entire invocation when a valid sibling accompanies a failed nested reference" in {
-      val previous = Invocation(
-        methodName = MethodName("Email/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "list": [
-              |    {
-              |      "id": "message0"
-              |    },
-              |    {
-              |      "id": "message1"
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("get"))
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map(MethodCallId("get") -> previous))
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "valid": {
-              |    "#ids": {
-              |      "resultOf": "get",
-              |      "name": "Email/get",
-              |      "path": "/list/*/id"
-              |    }
-              |  },
-              |  "invalid": {
-              |    "#id": {
-              |      "resultOf": "get",
-              |      "name": "Email/get",
-              |      "path": "/list/8/id"
-              |    }
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
-
-      val result = context.resolveBackReferences(invocation)
-
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Supplied array have no")
-    }
-
-    "propagate a failure from one element evaluated by a wildcard path" in {
-      val previous = Invocation(
-        methodName = MethodName("Email/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "list": [
-              |    {
-              |      "id": "message0"
-              |    },
-              |    {
-              |      "subject": "no id"
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("get"))
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map(MethodCallId("get") -> previous))
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#ids": {
-              |    "resultOf": "get",
-              |    "name": "Email/get",
-              |    "path": "/list/*/id"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
-
-      val result = context.resolveBackReferences(invocation)
-
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Expected path id was missing")
-    }
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Back reference could not be resolved")
   }
 
-  "Malformed result reference fallback" should {
-    "preserve an unknown hash key when resultOf is missing" in {
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#ids": {
-              |    "name": "Email/get",
-              |    "path": "/list/*/id"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldRejectAReferenceWhoseMethodNameDoesNotMatchTheRecordedInvocation(): Unit = {
+    val previous = Invocation(
+      methodName = MethodName("Email/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "list": [
+            |    {
+            |      "id": "message0"
+            |    },
+            |    {
+            |      "id": "message1"
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("get"))
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map(MethodCallId("get") -> previous))
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#ids": {
+            |    "resultOf": "get",
+            |    "name": "Mailbox/get",
+            |    "path": "/list/*/id"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result shouldBe Right(invocation)
-    }
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("references a")
+  }
 
-    "preserve an unknown hash key when name is missing" in {
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#ids": {
-              |    "resultOf": "get",
-              |    "path": "/list/*/id"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldRejectAReferenceToAMissingPropertyInTheResult(): Unit = {
+    val previous = Invocation(
+      methodName = MethodName("Email/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "list": [
+            |    {
+            |      "id": "message0"
+            |    },
+            |    {
+            |      "id": "message1"
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("get"))
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map(MethodCallId("get") -> previous))
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#ids": {
+            |    "resultOf": "get",
+            |    "name": "Email/get",
+            |    "path": "/missing"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result shouldBe Right(invocation)
-    }
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Expected path missing was missing")
+  }
 
-    "preserve an unknown hash key when path is missing" in {
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#ids": {
-              |    "resultOf": "get",
-              |    "name": "Email/get"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldRejectAReferenceToAnArrayElementOutsideTheResult(): Unit = {
+    val previous = Invocation(
+      methodName = MethodName("Email/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "list": [
+            |    {
+            |      "id": "message0"
+            |    },
+            |    {
+            |      "id": "message1"
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("get"))
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map(MethodCallId("get") -> previous))
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#id": {
+            |    "resultOf": "get",
+            |    "name": "Email/get",
+            |    "path": "/list/9/id"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result shouldBe Right(invocation)
-    }
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Supplied array have no")
+  }
 
-    "preserve an unknown hash key when resultOf has the wrong JSON type" in {
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#ids": {
-              |    "resultOf": 42,
-              |    "name": "Email/get",
-              |    "path": "/list"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldRejectAnObjectPropertyPathAppliedToAnArray(): Unit = {
+    val previous = Invocation(
+      methodName = MethodName("Email/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "list": [
+            |    {
+            |      "id": "message0"
+            |    },
+            |    {
+            |      "id": "message1"
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("get"))
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map(MethodCallId("get") -> previous))
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#id": {
+            |    "resultOf": "get",
+            |    "name": "Email/get",
+            |    "path": "/list/id"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result shouldBe Right(invocation)
-    }
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Expecting a JsObject")
+  }
 
-    "preserve an unknown hash key when name has the wrong JSON type" in {
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#ids": {
-              |    "resultOf": "get",
-              |    "name": 42,
-              |    "path": "/list"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldPropagateAFailedReferenceFromANestedObject(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "outer": {
+            |    "inner": {
+            |      "#ids": {
+            |        "resultOf": "missing",
+            |        "name": "Email/get",
+            |        "path": "/list/*/id"
+            |      }
+            |    }
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result shouldBe Right(invocation)
-    }
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Back reference could not be resolved")
+  }
 
-    "preserve an unknown hash key when path has the wrong JSON type" in {
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#ids": {
-              |    "resultOf": "get",
-              |    "name": "Email/get",
-              |    "path": [
-              |      "list"
-              |    ]
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldPropagateAFailedReferenceFromAnObjectInsideAnArray(): Unit = {
+    val previous = Invocation(
+      methodName = MethodName("Email/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "list": [
+            |    {
+            |      "id": "message0"
+            |    },
+            |    {
+            |      "id": "message1"
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("get"))
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map(MethodCallId("get") -> previous))
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "values": [
+            |    "literal",
+            |    {
+            |      "#ids": {
+            |        "resultOf": "get",
+            |        "name": "Email/get",
+            |        "path": "/missing"
+            |      }
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result shouldBe Right(invocation)
-    }
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Expected path missing was missing")
+  }
 
-    "continue traversing nested references inside a malformed result reference object" in {
-      val previous = Invocation(
-        methodName = MethodName("Email/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "list": [
-              |    {
-              |      "id": "message0"
-              |    },
-              |    {
-              |      "id": "message1"
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("get"))
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map(MethodCallId("get") -> previous))
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#unknown": {
-              |    "resultOf": 42,
-              |    "nested": {
-              |      "#ids": {
-              |        "resultOf": "get",
-              |        "name": "Email/get",
-              |        "path": "/list/*/id"
-              |      }
-              |    }
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldPropagateAFailedReferenceThroughNestedArrays(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "values": [
+            |    [
+            |      {
+            |        "#ids": {
+            |          "resultOf": "missing",
+            |          "name": "Email/get",
+            |          "path": "/list/*/id"
+            |        }
+            |      }
+            |    ]
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result.isRight shouldBe true
-      result.toOption.get.arguments.value shouldBe Json.parse(
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Back reference could not be resolved")
+  }
+
+  @Test
+  def resolveBackReferencesShouldRejectTheEntireInvocationWhenAValidSiblingAccompaniesAFailedNestedReference(): Unit = {
+    val previous = Invocation(
+      methodName = MethodName("Email/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "list": [
+            |    {
+            |      "id": "message0"
+            |    },
+            |    {
+            |      "id": "message1"
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("get"))
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map(MethodCallId("get") -> previous))
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "valid": {
+            |    "#ids": {
+            |      "resultOf": "get",
+            |      "name": "Email/get",
+            |      "path": "/list/*/id"
+            |    }
+            |  },
+            |  "invalid": {
+            |    "#id": {
+            |      "resultOf": "get",
+            |      "name": "Email/get",
+            |      "path": "/list/8/id"
+            |    }
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
+
+    val result = context.resolveBackReferences(invocation)
+
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Supplied array have no")
+  }
+
+  @Test
+  def resolveBackReferencesShouldPropagateAFailureFromOneElementEvaluatedByAWildcardPath(): Unit = {
+    val previous = Invocation(
+      methodName = MethodName("Email/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "list": [
+            |    {
+            |      "id": "message0"
+            |    },
+            |    {
+            |      "subject": "no id"
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("get"))
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map(MethodCallId("get") -> previous))
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#ids": {
+            |    "resultOf": "get",
+            |    "name": "Email/get",
+            |    "path": "/list/*/id"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
+
+    val result = context.resolveBackReferences(invocation)
+
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Expected path id was missing")
+  }
+
+  @Test
+  def resolveBackReferencesShouldPreserveAnUnknownHashKeyWhenResultOfIsMissing(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#ids": {
+            |    "name": "Email/get",
+            |    "path": "/list/*/id"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
+
+    val result = context.resolveBackReferences(invocation)
+
+    assertThat(result)
+      .isEqualTo(Right(invocation))
+  }
+
+  @Test
+  def resolveBackReferencesShouldPreserveAnUnknownHashKeyWhenNameIsMissing(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#ids": {
+            |    "resultOf": "get",
+            |    "path": "/list/*/id"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
+
+    val result = context.resolveBackReferences(invocation)
+
+    assertThat(result)
+      .isEqualTo(Right(invocation))
+  }
+
+  @Test
+  def resolveBackReferencesShouldPreserveAnUnknownHashKeyWhenPathIsMissing(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#ids": {
+            |    "resultOf": "get",
+            |    "name": "Email/get"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
+
+    val result = context.resolveBackReferences(invocation)
+
+    assertThat(result)
+      .isEqualTo(Right(invocation))
+  }
+
+  @Test
+  def resolveBackReferencesShouldPreserveAnUnknownHashKeyWhenResultOfHasTheWrongJSONType(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#ids": {
+            |    "resultOf": 42,
+            |    "name": "Email/get",
+            |    "path": "/list"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
+
+    val result = context.resolveBackReferences(invocation)
+
+    assertThat(result)
+      .isEqualTo(Right(invocation))
+  }
+
+  @Test
+  def resolveBackReferencesShouldPreserveAnUnknownHashKeyWhenNameHasTheWrongJSONType(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#ids": {
+            |    "resultOf": "get",
+            |    "name": 42,
+            |    "path": "/list"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
+
+    val result = context.resolveBackReferences(invocation)
+
+    assertThat(result)
+      .isEqualTo(Right(invocation))
+  }
+
+  @Test
+  def resolveBackReferencesShouldPreserveAnUnknownHashKeyWhenPathHasTheWrongJSONType(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#ids": {
+            |    "resultOf": "get",
+            |    "name": "Email/get",
+            |    "path": [
+            |      "list"
+            |    ]
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
+
+    val result = context.resolveBackReferences(invocation)
+
+    assertThat(result)
+      .isEqualTo(Right(invocation))
+  }
+
+  @Test
+  def resolveBackReferencesShouldContinueTraversingNestedReferencesInsideAMalformedResultReferenceObject(): Unit = {
+    val previous = Invocation(
+      methodName = MethodName("Email/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "list": [
+            |    {
+            |      "id": "message0"
+            |    },
+            |    {
+            |      "id": "message1"
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("get"))
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map(MethodCallId("get") -> previous))
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#unknown": {
+            |    "resultOf": 42,
+            |    "nested": {
+            |      "#ids": {
+            |        "resultOf": "get",
+            |        "name": "Email/get",
+            |        "path": "/list/*/id"
+            |      }
+            |    }
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
+
+    val result = context.resolveBackReferences(invocation)
+
+    assertThat(result.isRight).isTrue()
+    assertThat(result.toOption.get.arguments.value)
+      .isEqualTo(Json.parse(
         """{
           |  "#unknown": {
           |    "resultOf": 42,
@@ -546,105 +567,108 @@ class ProcessingContextFailurePropagationTest extends AnyWordSpec with Matchers 
           |      ]
           |    }
           |  }
-          |}""".stripMargin).as[JsObject]
-    }
-
-    "propagate a nested failure while falling back from a malformed result reference" in {
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#unknown": {
-              |    "resultOf": 42,
-              |    "nested": {
-              |      "#ids": {
-              |        "resultOf": "missing",
-              |        "name": "Email/get",
-              |        "path": "/list/*/id"
-              |      }
-              |    }
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
-
-      val result = context.resolveBackReferences(invocation)
-
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Back reference could not be resolved")
-    }
+          |}""".stripMargin).as[JsObject])
   }
 
-  "Creation ID map keys" should {
-    "resolve a known creation ID key when its value is not a result reference" in {
-      val context = ProcessingContext(
-        creationIds = Map(ClientId("created") -> ServerId("server123")),
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "update": {
-              |    "#created": {
-              |      "name": "child"
-              |    }
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldPropagateANestedFailureWhileFallingBackFromAMalformedResultReference(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#unknown": {
+            |    "resultOf": 42,
+            |    "nested": {
+            |      "#ids": {
+            |        "resultOf": "missing",
+            |        "name": "Email/get",
+            |        "path": "/list/*/id"
+            |      }
+            |    }
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result.isRight shouldBe true
-      result.toOption.get.arguments.value shouldBe Json.parse(
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Back reference could not be resolved")
+  }
+
+  @Test
+  def resolveBackReferencesShouldResolveAKnownCreationIDKeyWhenItsValueIsNotAResultReference(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map(ClientId("created") -> ServerId("server123")),
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "update": {
+            |    "#created": {
+            |      "name": "child"
+            |    }
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
+
+    val result = context.resolveBackReferences(invocation)
+
+    assertThat(result.isRight).isTrue()
+    assertThat(result.toOption.get.arguments.value)
+      .isEqualTo(Json.parse(
         """{
           |  "update": {
           |    "server123": {
           |      "name": "child"
           |    }
           |  }
-          |}""".stripMargin).as[JsObject]
-    }
+          |}""".stripMargin).as[JsObject])
+  }
 
-    "preserve an unknown creation ID key while resolving its nested result reference" in {
-      val previous = Invocation(
-        methodName = MethodName("Email/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "list": [
-              |    {
-              |      "id": "message0"
-              |    },
-              |    {
-              |      "id": "message1"
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("get"))
-      val context = ProcessingContext(
-        creationIds = Map.empty,
-        invocations = Map(MethodCallId("get") -> previous))
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "update": {
-              |    "#unknown": {
-              |      "#ids": {
-              |        "resultOf": "get",
-              |        "name": "Email/get",
-              |        "path": "/list/*/id"
-              |      }
-              |    }
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldPreserveAnUnknownCreationIDKeyWhileResolvingItsNestedResultReference(): Unit = {
+    val previous = Invocation(
+      methodName = MethodName("Email/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "list": [
+            |    {
+            |      "id": "message0"
+            |    },
+            |    {
+            |      "id": "message1"
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("get"))
+    val context = ProcessingContext(
+      creationIds = Map.empty,
+      invocations = Map(MethodCallId("get") -> previous))
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "update": {
+            |    "#unknown": {
+            |      "#ids": {
+            |        "resultOf": "get",
+            |        "name": "Email/get",
+            |        "path": "/list/*/id"
+            |      }
+            |    }
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result.isRight shouldBe true
-      result.toOption.get.arguments.value shouldBe Json.parse(
+    assertThat(result.isRight).isTrue()
+    assertThat(result.toOption.get.arguments.value)
+      .isEqualTo(Json.parse(
         """{
           |  "update": {
           |    "#unknown": {
@@ -654,31 +678,33 @@ class ProcessingContextFailurePropagationTest extends AnyWordSpec with Matchers 
           |      ]
           |    }
           |  }
-          |}""".stripMargin).as[JsObject]
-    }
+          |}""".stripMargin).as[JsObject])
+  }
 
-    "fall back to a known creation ID key when result reference deserialization fails" in {
-      val context = ProcessingContext(
-        creationIds = Map(ClientId("created") -> ServerId("server123")),
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "update": {
-              |    "#created": {
-              |      "resultOf": 42,
-              |      "name": "Email/get",
-              |      "path": "/list/*/id"
-              |    }
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldFallBackToAKnownCreationIDKeyWhenResultReferenceDeserializationFails(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map(ClientId("created") -> ServerId("server123")),
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "update": {
+            |    "#created": {
+            |      "resultOf": 42,
+            |      "name": "Email/get",
+            |      "path": "/list/*/id"
+            |    }
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result.isRight shouldBe true
-      result.toOption.get.arguments.value shouldBe Json.parse(
+    assertThat(result.isRight).isTrue()
+    assertThat(result.toOption.get.arguments.value)
+      .isEqualTo(Json.parse(
         """{
           |  "update": {
           |    "server123": {
@@ -687,108 +713,111 @@ class ProcessingContextFailurePropagationTest extends AnyWordSpec with Matchers 
           |      "path": "/list/*/id"
           |    }
           |  }
-          |}""".stripMargin).as[JsObject]
-    }
+          |}""".stripMargin).as[JsObject])
+  }
 
-    "prefer a well formed result reference over a matching creation ID map key" in {
-      val previous = Invocation(
-        methodName = MethodName("Email/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "list": [
-              |    {
-              |      "id": "message0"
-              |    },
-              |    {
-              |      "id": "message1"
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("get"))
-      val context = ProcessingContext(
-        creationIds = Map(ClientId("created") -> ServerId("server123")),
-        invocations = Map(MethodCallId("get") -> previous))
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#created": {
-              |    "resultOf": "get",
-              |    "name": "Email/get",
-              |    "path": "/list/0/id"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldPreferAWellFormedResultReferenceOverAMatchingCreationIDMapKey(): Unit = {
+    val previous = Invocation(
+      methodName = MethodName("Email/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "list": [
+            |    {
+            |      "id": "message0"
+            |    },
+            |    {
+            |      "id": "message1"
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("get"))
+    val context = ProcessingContext(
+      creationIds = Map(ClientId("created") -> ServerId("server123")),
+      invocations = Map(MethodCallId("get") -> previous))
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#created": {
+            |    "resultOf": "get",
+            |    "name": "Email/get",
+            |    "path": "/list/0/id"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result.isRight shouldBe true
-      result.toOption.get.arguments.value shouldBe Json.parse(
+    assertThat(result.isRight).isTrue()
+    assertThat(result.toOption.get.arguments.value)
+      .isEqualTo(Json.parse(
         """{
           |  "created": "message0"
-          |}""".stripMargin).as[JsObject]
-    }
+          |}""".stripMargin).as[JsObject])
+  }
 
-    "return a result reference failure instead of falling back to a matching creation ID key" in {
-      val context = ProcessingContext(
-        creationIds = Map(ClientId("created") -> ServerId("server123")),
-        invocations = Map.empty)
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#created": {
-              |    "resultOf": "missing",
-              |    "name": "Email/get",
-              |    "path": "/list/*/id"
-              |  }
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldReturnAResultReferenceFailureInsteadOfFallingBackToAMatchingCreationIDKey(): Unit = {
+    val context = ProcessingContext(
+      creationIds = Map(ClientId("created") -> ServerId("server123")),
+      invocations = Map.empty)
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#created": {
+            |    "resultOf": "missing",
+            |    "name": "Email/get",
+            |    "path": "/list/*/id"
+            |  }
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Back reference could not be resolved")
-    }
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Back reference could not be resolved")
+  }
 
-    "propagate an array element failure before replacing a known creation ID key" in {
-      val previous = Invocation(
-        methodName = MethodName("Email/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "list": [
-              |    {
-              |      "id": "message0"
-              |    },
-              |    {
-              |      "id": "message1"
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("get"))
-      val context = ProcessingContext(
-        creationIds = Map(ClientId("created") -> ServerId("server123")),
-        invocations = Map(MethodCallId("get") -> previous))
-      val invocation = Invocation(
-        methodName = MethodName("Mailbox/get"),
-        arguments = Arguments(Json.parse(
-            """{
-              |  "#created": [
-              |    {
-              |      "#ids": {
-              |        "resultOf": "get",
-              |        "name": "Email/get",
-              |        "path": "/missing"
-              |      }
-              |    }
-              |  ]
-              |}""".stripMargin).as[JsObject]),
-        methodCallId = MethodCallId("current"))
+  @Test
+  def resolveBackReferencesShouldPropagateAnArrayElementFailureBeforeReplacingAKnownCreationIDKey(): Unit = {
+    val previous = Invocation(
+      methodName = MethodName("Email/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "list": [
+            |    {
+            |      "id": "message0"
+            |    },
+            |    {
+            |      "id": "message1"
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("get"))
+    val context = ProcessingContext(
+      creationIds = Map(ClientId("created") -> ServerId("server123")),
+      invocations = Map(MethodCallId("get") -> previous))
+    val invocation = Invocation(
+      methodName = MethodName("Mailbox/get"),
+      arguments = Arguments(Json.parse(
+          """{
+            |  "#created": [
+            |    {
+            |      "#ids": {
+            |        "resultOf": "get",
+            |        "name": "Email/get",
+            |        "path": "/missing"
+            |      }
+            |    }
+            |  ]
+            |}""".stripMargin).as[JsObject]),
+      methodCallId = MethodCallId("current"))
 
-      val result = context.resolveBackReferences(invocation)
+    val result = context.resolveBackReferences(invocation)
 
-      result.isLeft shouldBe true
-      result.left.toOption.get.message should include("Expected path missing was missing")
-    }
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Expected path missing was missing")
   }
 }
