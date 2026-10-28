@@ -45,4 +45,23 @@ class ImapResponseComposerImplTest {
 
         assertThat(writer.getString()).isEqualTo(" \"?\"\r\n");
     }
+
+    @Test
+    void quoteUpperCaseAsciiShouldEscapeQuoteAndBackslash() throws Exception {
+        composer.quoteUpperCaseAscii("pl\"a\\in");
+        composer.end();
+        composer.flush();
+
+        assertThat(writer.getString()).isEqualTo(" \"PL\\\"A\\\\IN\"\r\n");
+    }
+
+    @Test
+    void quoteUpperCaseAsciiShouldReplaceNonAsciiCharacters() throws Exception {
+        composer.quoteUpperCaseAscii("pl" + (char) 233 + "in");
+        composer.end();
+        composer.flush();
+
+        assertThat(writer.getString()).isEqualTo(" \"PL?IN\"\r\n");
+    }
+
 }
