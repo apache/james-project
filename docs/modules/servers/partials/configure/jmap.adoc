@@ -166,7 +166,13 @@ accepts any recipient having a mapping, `anyMappingValid` requires at least one 
 against every mail submitted through `EmailSubmission/set`, before it reaches the queue. Each entry is a fully
 qualified class name (the `org.apache.james.jmap.method` package can be omitted), instantiated through Guice, and
 returning a SetError turns the creation into a `notCreated` entry. Validations run until the first rejection, in
-an unspecified order.
+an unspecified order. `validate(mail, mailboxSession)` gets the session of the submission: upon delegation, its user
+is the account owner while its logged in user is the one who authenticated.
+{server-name} ships `SenderHeaderEmailSubmissionSetValidation`. When the email has a `Sender` header, each `Sender`
+field must hold exactly one mailbox, of a local domain, resolving to the logged in user: aliases, other addresses
+the user can send from and, upon delegation, the account owner do not count. Otherwise the creation is rejected
+with `forbiddenFrom` and `properties: ["sender"]`. Without it, `Sender` may name any address the account owner can
+send from or, upon delegation, the user who authenticated. Its SMTP counterpart is the `SenderHeaderVerificationHook`.
 
 | disabled.capabilities
 | Optional, defaults to empty. Coma separated list of JMAP capabilities to reject.

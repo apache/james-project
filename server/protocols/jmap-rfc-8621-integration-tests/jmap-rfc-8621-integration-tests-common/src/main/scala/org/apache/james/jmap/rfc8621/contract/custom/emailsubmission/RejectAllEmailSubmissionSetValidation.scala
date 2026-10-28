@@ -23,6 +23,7 @@ import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.method.EmailSubmissionSetValidation
+import org.apache.james.mailbox.MailboxSession
 import org.apache.mailet.Mail
 import reactor.core.scala.publisher.SMono
 
@@ -32,7 +33,7 @@ object RejectAllEmailSubmissionSetValidation {
 }
 
 case class RejectAllEmailSubmissionSetValidation() extends EmailSubmissionSetValidation {
-  override def validate(mail: Mail): SMono[Option[SetError]] =
+  override def validate(mail: Mail, mailboxSession: MailboxSession): SMono[Option[SetError]] =
     SMono.just(Some(SetError(RejectAllEmailSubmissionSetValidation.REJECTED,
       SetErrorDescription(RejectAllEmailSubmissionSetValidation.DESCRIPTION), None)))
 }

@@ -20,6 +20,7 @@
 package org.apache.james.jmap.method
 
 import org.apache.james.jmap.core.SetError
+import org.apache.james.mailbox.MailboxSession
 import org.apache.mailet.Mail
 import reactor.core.scala.publisher.SMono
 
@@ -31,8 +32,11 @@ import reactor.core.scala.publisher.SMono
  * synchronously rather than through an asynchronous bounce.
  *
  * Implementations are expected to emit `None` when the mail is accepted, and `Some(setError)` 
- * when it is rejected. 
+ * when it is rejected.
+ *
+ * The session is the one of the submission: upon delegation, its user is the account owner while its
+ * logged in user is the one who authenticated.
  */
 trait EmailSubmissionSetValidation {
-  def validate(mail: Mail): SMono[Option[SetError]]
+  def validate(mail: Mail, mailboxSession: MailboxSession): SMono[Option[SetError]]
 }

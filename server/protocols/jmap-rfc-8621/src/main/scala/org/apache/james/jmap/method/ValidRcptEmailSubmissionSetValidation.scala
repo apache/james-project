@@ -25,6 +25,7 @@ import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError}
 import org.apache.james.jmap.method.ValidRcptEmailSubmissionSetValidation.LOGGER
+import org.apache.james.mailbox.MailboxSession
 import org.apache.james.rrt.api.RecipientValidator
 import org.apache.james.util.ReactorUtils
 import org.apache.mailet.Mail
@@ -51,7 +52,7 @@ class ValidRcptEmailSubmissionSetValidation(recipientValidator: RecipientValidat
   @Inject
   def this(recipientValidator: RecipientValidator) = this(recipientValidator, RecipientValidator.Policy.DEFAULT)
 
-  override def validate(mail: Mail): SMono[Option[SetError]] =
+  override def validate(mail: Mail, mailboxSession: MailboxSession): SMono[Option[SetError]] =
     SFlux.fromIterable(mail.getRecipients.asScala.toSeq)
       .filterWhen(recipient => isValid(recipient).map(!_), ReactorUtils.DEFAULT_CONCURRENCY)
       .collectSeq()

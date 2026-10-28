@@ -359,7 +359,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         mailImpl.setMessageNoCopy(message)
         mailImpl
       }
-      _ <- applyValidations(mail)
+      _ <- applyValidations(mail, mailboxSession)
       _ <- enqueue(mail, delay, mailboxSession)
         .`then`(SMono.just(submissionId))
       sendAt = UTCDate(ZonedDateTime.now(clock).plus(delay))
@@ -387,9 +387,9 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
    * subsequent validations are not evaluated. As the mail holds the message content, it needs
    * disposing whenever it does not reach the queue.
    */
-  private def applyValidations(mail: Mail): SMono[Mail] =
+  private def applyValidations(mail: Mail, mailboxSession: MailboxSession): SMono[Mail] =
     SFlux.fromIterable(validations)
-      .concatMap(_.validate(mail))
+      .concatMap(_.validate(mail, mailboxSession))
       .filter(_.isDefined)
       .map(_.get)
       .next()
@@ -537,9 +537,11 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     SFlux.fromIterable(Option(mimeMessage.getSender).toList.map("sender" -> _) ++
         Option(mimeMessage.getFrom).toList.flatten.map("from" -> _))
       .map { case (header, address) => header -> address.asInstanceOf[InternetAddress].getAddress }
-      .filterWhen({ case (_, address) =>
-        SMono.fromPublisher(canSendFrom.userCanSendFromReactive(session.getUser, Username.fromMailAddress(new MailAddress(address))))
-          .map(Boolean.unbox(_)).map(!_)
+      .filterWhen({
+        case ("sender", address) if isLoggedInUser(session, address) => SMono.just(false)
+        case (_, address) =>
+          SMono.fromPublisher(canSendFrom.userCanSendFromReactive(session.getUser, Username.fromMailAddress(new MailAddress(address))))
+            .map(Boolean.unbox(_)).map(!_)
       }, Queues.SMALL_BUFFER_SIZE)
       .collectSeq()
       .flatMap(forbiddenHeaders => {
@@ -561,6 +563,10 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
           case Failure(ex) => sink.error(ex)
         }
       })
+
+  // Upon delegation, the user who authenticated may disclose itself in Sender (RFC 5322 section 3.6.2)
+  private def isLoggedInUser(session: MailboxSession, address: String): Boolean =
+    session.getLoggedInUser.toScala.contains(Username.fromMailAddress(new MailAddress(address)))
 
   private def resolveEnvelope(mimeMessage: MimeMessage, maybeEnvelope: Option[Envelope]): Try[Envelope] =
     maybeEnvelope.map(Success(_)).getOrElse(extractEnvelope(mimeMessage))
