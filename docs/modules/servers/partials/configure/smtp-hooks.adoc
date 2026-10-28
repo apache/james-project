@@ -239,6 +239,37 @@ Example configuration:
 </handlerchain>
 ....
 
+== SenderHeaderVerificationHook
+
+Optional. For authenticated sessions, rejects messages whose `Sender` header field does not disclose the logged
+in user. `Sender` names whoever actually transmits the message (RFC 5322 section 3.6.2), so this check is
+stricter than `verifyIdentity`: aliases, group mappings and other identities the user is allowed to send from do
+not count.
+
+* Each `Sender` field must hold exactly one mailbox, of a local domain, resolving to the logged in user like the
+`From` check does: the `+detail` part of the address is ignored, as is the domain when virtual hosting is disabled.
+The comparison is case insensitive.
+* The logged in user is the SASL authentication identity. When a user authenticates on behalf of another one (SASL
+authorization identity), `Sender` must name the user who authenticated, while `MAIL FROM` and `From` are verified
+against the account the session acts as. With the deprecated `AuthHook` handlers, the authentication identity is
+the login as the client typed it.
+* Messages without `Sender`, unauthenticated sessions and accounts allowed to use other identities
+(`allowUseOtherIdentity`, see `ConfigurationAuthHook`) are not checked.
+* Rejected messages get `550 5.7.1 Sender header must match the authenticated user`.
+
+This hook only checks `Sender`: use it alongside `verifyIdentity` set to `strict` or `relaxed`, which checks
+`MAIL FROM` and `From`.
+
+Example configuration:
+
+[source,xml]
+....
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.SenderHeaderVerificationHook"/>
+</handlerchain>
+....
+
 == SetMimeHeaderHandler
 
 This handler allows you to add mime headers to the processed mails.
