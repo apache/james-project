@@ -35,11 +35,10 @@ import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
-import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
-import org.junit.jupiter.api.{BeforeEach, Tag, Test}
+import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{CsvSource, ValueSource}
 import play.api.libs.json.{JsString, Json}
@@ -330,7 +329,6 @@ trait MailboxQueryMethodContract {
            |}""".stripMargin)
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @ValueSource(strings = Array("x-custom", "x-", "X-custom", "Invalid", "", "ordinary", "x-parent.child", "DRAFTS", " drafts "))
   def unknownRoleShouldReturnEmptyResults(role: String, server: GuiceJamesServer): Unit = {
@@ -364,7 +362,6 @@ trait MailboxQueryMethodContract {
       |  },"q1"]]
       |}""".stripMargin)
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @CsvSource(Array("INBOX,inbox", "Drafts,drafts", "Outbox,outbox", "Sent,sent", "Trash,trash", "Archive,archive", "Spam,junk", "Templates,templates", "Restored-Messages,restored messages"))
   def getRoleShouldRoundTripThroughQuery(mailboxName: String, expectedRole: String, server: GuiceJamesServer): Unit = {
@@ -388,7 +385,6 @@ trait MailboxQueryMethodContract {
       |},"q1"]""".stripMargin)
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @ValueSource(strings = Array("INBOX", "Drafts", "Outbox", "Sent", "Trash", "Archive", "Spam", "Templates", "Restored-Messages", "Inbox", "InBoX"))
   def legacyRoleAliasShouldStillResolve(alias: String, server: GuiceJamesServer): Unit = {
@@ -397,7 +393,6 @@ trait MailboxQueryMethodContract {
     assertThatJson(queryRole(alias, bobAccountId)).inPath("methodResponses[0][1].ids").isEqualTo(s"""["$mailboxId"]""")
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @Test
   def knownRoleWithoutMailboxShouldReturnEmptyResults(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[MailboxProbeImpl])
@@ -407,14 +402,12 @@ trait MailboxQueryMethodContract {
     assertEmptyQuery("templates")
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @Test
   def unknownRoleShouldStillValidateAccount(): Unit = {
     assertThatJson(queryRole("x-custom", "unknown-account")).inPath("methodResponses[0]")
       .isEqualTo("""["error",{"type":"accountNotFound"},"q1"]""")
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @ValueSource(strings = Array("123", "true", "{}", "[]", "null"))
   def roleShouldBeAString(value: String): Unit = {

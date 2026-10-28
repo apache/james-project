@@ -1442,7 +1442,6 @@ trait MailboxGetMethodContract {
       .body(s"$FIRST_MAILBOX.sortOrder", equalTo(1000))
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @ValueSource(strings = Array("x-custom", "x-", "X-custom", "ordinary", "x-parent.child", "ordinary.x-child"))
   def getMailboxesShouldNotInferCustomRoleFromName(mailboxName: String, server: GuiceJamesServer): Unit = {
@@ -1469,7 +1468,6 @@ trait MailboxGetMethodContract {
     })
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @CsvSource(Array("INBOX,inbox,10", "Templates,templates,80"))
   def getMailboxesShouldReturnCorrectMailboxRole(mailboxName: String, role: String, sortOrder: Int, server: GuiceJamesServer): Unit = {

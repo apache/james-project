@@ -2612,7 +2612,6 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @ValueSource(strings = Array("mailbox1", "x-custom"))
   def deleteShouldFailWhenMailboxIsNotEmpty(mailboxName: String, server: GuiceJamesServer): Unit = {
@@ -2676,7 +2675,6 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @CsvSource(Array("mailbox1,false", "x-custom,false", "x-custom,true"))
   def deleteShouldFailWhenMailboxHasChild(mailboxName: String, removeEmails: Boolean, server: GuiceJamesServer): Unit = {
@@ -4101,7 +4099,6 @@ trait MailboxSetMethodContract {
            |}""".stripMargin)
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @CsvSource(Array("x-custom,x-custom2", "x-custom,ordinary", "ordinary,x-custom", "x-parent.child,renamed", "ordinary.x-child,renamed"))
   def updateShouldRenameCustomRoleMailboxes(mailboxName: String, newName: String, server: GuiceJamesServer): Unit = {
@@ -4128,7 +4125,6 @@ trait MailboxSetMethodContract {
     })
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @Test
   def updateShouldMoveCustomRoleMailbox(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[MailboxProbeImpl])
@@ -4153,7 +4149,6 @@ trait MailboxSetMethodContract {
       .isEqualTo(s"""[{"id":"$mailboxId", "name":"x-custom", "parentId":"$parentId", "role":null}]""")
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @ValueSource(strings = Array("x-custom", "x-parent.child", "ordinary.x-child"))
   def destroyShouldRemoveCustomRoleMailbox(mailboxName: String, server: GuiceJamesServer): Unit = {
@@ -4178,7 +4173,6 @@ trait MailboxSetMethodContract {
     assertThatJson(response).inPath("methodResponses[1][1].list").isEqualTo("[]")
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @Test
   def customRoleMailboxShouldSupportCreateGetRenameAndDestroy(server: GuiceJamesServer): Unit = {
     val response = `given`
@@ -4207,7 +4201,6 @@ trait MailboxSetMethodContract {
     assertThatJson(response).inPath("methodResponses[5][1].notFound").isEqualTo(s"""["$mailboxId"]""")
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @ValueSource(strings = Array("Drafts", "Sent", "Trash", "Templates"))
   def updateShouldNotRenameSystemMailboxes(mailboxName: String, server: GuiceJamesServer): Unit = {
@@ -4528,7 +4521,6 @@ trait MailboxSetMethodContract {
            |}""".stripMargin)
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @CsvSource(Array("INBOX,false", "Drafts,false", "Sent,false", "Trash,false", "Templates,false", "Templates,true"))
   def destroyShouldNotRemoveSystemMailboxes(mailboxName: String, removeEmails: Boolean, server: GuiceJamesServer): Unit = {
@@ -4726,7 +4718,6 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @ValueSource(strings = Array("mailbox", "x-custom"))
   def deleteShouldSucceedWhenOnDestroyRemoveEmails(mailboxName: String, server: GuiceJamesServer): Unit = {
@@ -4786,7 +4777,6 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @ValueSource(strings = Array("mailbox", "x-custom"))
   def deleteShouldRemoveMailboxWhenOnDestroyRemoveEmails(mailboxName: String, server: GuiceJamesServer): Unit = {
@@ -4922,7 +4912,6 @@ trait MailboxSetMethodContract {
     })
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @ValueSource(strings = Array("mailbox", "x-custom"))
   def deleteShouldFailWhenMailboxIsNotEmptyAndOnDestroyRemoveEmailsIsFalse(mailboxName: String, server: GuiceJamesServer): Unit = {
@@ -5884,7 +5873,6 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @Tag(CategoryTags.BASIC_FEATURE)
   @ParameterizedTest
   @ValueSource(strings = Array("mailbox", "x-custom"))
   def deleteShouldNotRemoveMessageWhenMailboxIsNotEmptyAndOnDestroyRemoveEmailsIsFalse(mailboxName: String, server: GuiceJamesServer): Unit = {
