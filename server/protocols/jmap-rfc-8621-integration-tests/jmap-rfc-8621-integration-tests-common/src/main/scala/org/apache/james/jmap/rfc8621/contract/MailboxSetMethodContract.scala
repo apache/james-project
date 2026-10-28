@@ -57,6 +57,8 @@ import org.assertj.core.api.{Assertions, SoftAssertions, ThrowingConsumer}
 import org.awaitility.Awaitility
 import org.hamcrest.Matchers.{equalTo, hasEntry, hasKey, hasSize, not, notNullValue}
 import org.junit.jupiter.api.{BeforeEach, RepeatedTest, Tag, Test}
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.{CsvSource, ValueSource}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.client.HttpClient
@@ -2610,17 +2612,19 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @Test
-  def deleteShouldFailWhenMailboxIsNotEmpty(server: GuiceJamesServer): Unit = {
+  @Tag(CategoryTags.BASIC_FEATURE)
+  @ParameterizedTest
+  @ValueSource(strings = Array("mailbox1", "x-custom"))
+  def deleteShouldFailWhenMailboxIsNotEmpty(mailboxName: String, server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox1"), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, mailboxName), AppendCommand.from(message))
 
     val request =
       s"""
@@ -2672,10 +2676,12 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @Test
-  def deleteShouldFailWhenMailboxHasChild(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1.mailbox2"))
+  @Tag(CategoryTags.BASIC_FEATURE)
+  @ParameterizedTest
+  @CsvSource(Array("mailbox1,false", "x-custom,false", "x-custom,true"))
+  def deleteShouldFailWhenMailboxHasChild(mailboxName: String, removeEmails: Boolean, server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, s"$mailboxName.mailbox2"))
 
     val request =
       s"""
@@ -2686,7 +2692,8 @@ trait MailboxSetMethodContract {
         |           "Mailbox/set",
         |           {
         |                "accountId": "$bobAccountId",
-        |                "destroy": ["${mailboxId.serialize}"]
+        |                "destroy": ["${mailboxId.serialize}"],
+        |                "onDestroyRemoveEmails": $removeEmails
         |           },
         |    "c1"
         |       ]
@@ -4094,10 +4101,118 @@ trait MailboxSetMethodContract {
            |}""".stripMargin)
   }
 
+  @Tag(CategoryTags.BASIC_FEATURE)
+  @ParameterizedTest
+  @CsvSource(Array("x-custom,x-custom2", "x-custom,ordinary", "ordinary,x-custom", "x-parent.child,renamed", "ordinary.x-child,renamed"))
+  def updateShouldRenameCustomRoleMailboxes(mailboxName: String, newName: String, server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, mailboxName)).serialize
+
+    Seq(newName, "renamed-again").foreach(name => {
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(s"""{
+                 |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                 |  "methodCalls": [
+                 |    ["Mailbox/set", {"accountId":"$bobAccountId", "update":{"$mailboxId":{"name":"$name"}}}, "s"],
+                 |    ["Mailbox/get", {"accountId":"$bobAccountId", "ids":["$mailboxId"], "properties":["id","name","role"]}, "g"]
+                 |  ]
+                 |}""".stripMargin)
+        .when.post
+        .`then`.statusCode(SC_OK).extract.asString
+
+      assertThatJson(response).inPath("methodResponses[0][1].updated").isEqualTo(s"""{"$mailboxId":{}}""")
+      assertThatJson(response).inPath("methodResponses[0][1]").isObject.doesNotContainKey("notUpdated")
+      assertThatJson(response).inPath("methodResponses[1][1].list")
+        .isEqualTo(s"""[{"id":"$mailboxId", "name":"$name", "role":null}]""")
+    })
+  }
+
+  @Tag(CategoryTags.BASIC_FEATURE)
   @Test
-  def updateShouldNotRenameSystemMailboxes(server: GuiceJamesServer): Unit = {
+  def updateShouldMoveCustomRoleMailbox(server: GuiceJamesServer): Unit = {
+    val probe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId = probe.createMailbox(MailboxPath.forUser(bobUsername, "x-custom")).serialize
+    val parentId = probe.createMailbox(MailboxPath.forUser(bobUsername, "parent")).serialize
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [
+               |    ["Mailbox/set", {"accountId":"$bobAccountId", "update":{"$mailboxId":{"parentId":"$parentId"}}}, "s"],
+               |    ["Mailbox/get", {"accountId":"$bobAccountId", "ids":["$mailboxId"], "properties":["id","name","parentId","role"]}, "g"]
+               |  ]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].updated").isEqualTo(s"""{"$mailboxId":{}}""")
+    assertThatJson(response).inPath("methodResponses[0][1]").isObject.doesNotContainKey("notUpdated")
+    assertThatJson(response).inPath("methodResponses[1][1].list")
+      .isEqualTo(s"""[{"id":"$mailboxId", "name":"x-custom", "parentId":"$parentId", "role":null}]""")
+  }
+
+  @Tag(CategoryTags.BASIC_FEATURE)
+  @ParameterizedTest
+  @ValueSource(strings = Array("x-custom", "x-parent.child", "ordinary.x-child"))
+  def destroyShouldRemoveCustomRoleMailbox(mailboxName: String, server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, mailboxName)).serialize
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [
+               |    ["Mailbox/set", {"accountId":"$bobAccountId", "destroy":["$mailboxId"]}, "s"],
+               |    ["Mailbox/get", {"accountId":"$bobAccountId", "ids":["$mailboxId"]}, "g"]
+               |  ]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].destroyed").isEqualTo(s"""["$mailboxId"]""")
+    assertThatJson(response).inPath("methodResponses[0][1]").isObject.doesNotContainKey("notDestroyed")
+    assertThatJson(response).inPath("methodResponses[1][1].notFound").isEqualTo(s"""["$mailboxId"]""")
+    assertThatJson(response).inPath("methodResponses[1][1].list").isEqualTo("[]")
+  }
+
+  @Tag(CategoryTags.BASIC_FEATURE)
+  @Test
+  def customRoleMailboxShouldSupportCreateGetRenameAndDestroy(server: GuiceJamesServer): Unit = {
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [
+               |    ["Mailbox/set", {"accountId":"$bobAccountId", "create":{"c":{"name":"x-custom"}}}, "c"],
+               |    ["Mailbox/get", {"accountId":"$bobAccountId", "ids":["#c"], "properties":["name","role"]}, "g"],
+               |    ["Mailbox/set", {"accountId":"$bobAccountId", "update":{"#c":{"name":"x-custom2"}}}, "u"],
+               |    ["Mailbox/get", {"accountId":"$bobAccountId", "ids":["#c"], "properties":["name","role"]}, "g2"],
+               |    ["Mailbox/set", {"accountId":"$bobAccountId", "destroy":["#c"]}, "d"],
+               |    ["Mailbox/get", {"accountId":"$bobAccountId", "ids":["#c"]}, "g3"]
+               |  ]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    val mailboxId = io.restassured.path.json.JsonPath.from(response).getString("methodResponses[0][1].created.c.id")
+    assertThatJson(response).inPath("methodResponses[1][1].list")
+      .isEqualTo(s"""[{"id":"$mailboxId", "name":"x-custom", "role":null}]""")
+    assertThatJson(response).inPath("methodResponses[2][1].updated").isEqualTo(s"""{"$mailboxId":{}}""")
+    assertThatJson(response).inPath("methodResponses[3][1].list")
+      .isEqualTo(s"""[{"id":"$mailboxId", "name":"x-custom2", "role":null}]""")
+    assertThatJson(response).inPath("methodResponses[4][1].destroyed").isEqualTo(s"""["$mailboxId"]""")
+    assertThatJson(response).inPath("methodResponses[5][1].notFound").isEqualTo(s"""["$mailboxId"]""")
+  }
+
+  @Tag(CategoryTags.BASIC_FEATURE)
+  @ParameterizedTest
+  @ValueSource(strings = Array("Drafts", "Sent", "Trash", "Templates"))
+  def updateShouldNotRenameSystemMailboxes(mailboxName: String, server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS))
+      .createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
     val request =
       s"""
         |{
@@ -4413,10 +4528,12 @@ trait MailboxSetMethodContract {
            |}""".stripMargin)
   }
 
-  @Test
-  def destroyShouldNotRemoveSystemMailboxes(server: GuiceJamesServer): Unit = {
+  @Tag(CategoryTags.BASIC_FEATURE)
+  @ParameterizedTest
+  @CsvSource(Array("INBOX,false", "Drafts,false", "Sent,false", "Trash,false", "Templates,false", "Templates,true"))
+  def destroyShouldNotRemoveSystemMailboxes(mailboxName: String, removeEmails: Boolean, server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
     val request =
       s"""
         |{
@@ -4425,7 +4542,8 @@ trait MailboxSetMethodContract {
         |       ["Mailbox/set",
         |           {
         |                "accountId": "$bobAccountId",
-        |                "destroy": ["${mailboxId.serialize}"]
+        |                "destroy": ["${mailboxId.serialize}"],
+        |                "onDestroyRemoveEmails": $removeEmails
         |           },
         |    "c1"]]
         |}
@@ -4608,9 +4726,11 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @Test
-  def deleteShouldSucceedWhenOnDestroyRemoveEmails(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
+  @Tag(CategoryTags.BASIC_FEATURE)
+  @ParameterizedTest
+  @ValueSource(strings = Array("mailbox", "x-custom"))
+  def deleteShouldSucceedWhenOnDestroyRemoveEmails(mailboxName: String, server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
     val message: Message = Message.Builder
       .of
       .setSubject("test")
@@ -4618,7 +4738,7 @@ trait MailboxSetMethodContract {
       .build
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox"), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, mailboxName), AppendCommand.from(message))
 
     val request =
       s"""
@@ -4666,9 +4786,11 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @Test
-  def deleteShouldRemoveMailboxWhenOnDestroyRemoveEmails(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
+  @Tag(CategoryTags.BASIC_FEATURE)
+  @ParameterizedTest
+  @ValueSource(strings = Array("mailbox", "x-custom"))
+  def deleteShouldRemoveMailboxWhenOnDestroyRemoveEmails(mailboxName: String, server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
     val message: Message = Message.Builder
       .of
       .setSubject("test")
@@ -4676,7 +4798,7 @@ trait MailboxSetMethodContract {
       .build
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox"), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, mailboxName), AppendCommand.from(message))
 
     val request =
       s"""
@@ -4800,17 +4922,19 @@ trait MailboxSetMethodContract {
     })
   }
 
-  @Test
-  def deleteShouldFailWhenMailboxIsNotEmptyAndOnDestroyRemoveEmailsIsFalse(server: GuiceJamesServer): Unit = {
+  @Tag(CategoryTags.BASIC_FEATURE)
+  @ParameterizedTest
+  @ValueSource(strings = Array("mailbox", "x-custom"))
+  def deleteShouldFailWhenMailboxIsNotEmptyAndOnDestroyRemoveEmailsIsFalse(mailboxName: String, server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox"), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, mailboxName), AppendCommand.from(message))
 
     val request =
       s"""
@@ -5760,17 +5884,19 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @Test
-  def deleteShouldNotRemoveMessageWhenMailboxIsNotEmptyAndOnDestroyRemoveEmailsIsFalse(server: GuiceJamesServer): Unit = {
+  @Tag(CategoryTags.BASIC_FEATURE)
+  @ParameterizedTest
+  @ValueSource(strings = Array("mailbox", "x-custom"))
+  def deleteShouldNotRemoveMessageWhenMailboxIsNotEmptyAndOnDestroyRemoveEmailsIsFalse(mailboxName: String, server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox"), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, mailboxName), AppendCommand.from(message))
 
     val request =
       s"""

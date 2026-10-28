@@ -79,6 +79,7 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
                                 sortOrderProvider: SortOrderProvider) {
 
   private def getRole(mailboxPath: MailboxPath, mailboxSession: MailboxSession): Option[Role] = Role.from(mailboxPath.getName)
+    .filter(_.isSystemRole)
     .filter(_ => mailboxPath.belongsTo(mailboxSession)).toScala
 
   private def getSortOrder(role: Option[Role]): SortOrder = role.map(sortOrderProvider.retrieveSortOrder).getOrElse(SortOrder.defaultSortOrder)

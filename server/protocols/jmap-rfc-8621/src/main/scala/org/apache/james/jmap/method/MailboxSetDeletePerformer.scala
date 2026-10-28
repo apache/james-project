@@ -145,5 +145,5 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
     }
   }
 
-  private def isASystemMailbox(mailbox: MessageManager): Boolean = Role.from(mailbox.getMailboxPath.getName).isPresent
+  private def isASystemMailbox(mailbox: MessageManager): Boolean = Role.from(mailbox.getMailboxPath.getName).filter(_.isSystemRole).isPresent
 }
