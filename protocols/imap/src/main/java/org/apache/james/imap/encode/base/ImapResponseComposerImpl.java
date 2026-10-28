@@ -242,7 +242,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         if (message == null) {
             nil();
         } else {
-            upperCaseAscii(message, true);
+            quote(upperCaseAscii(message));
         }
         return this;
     }
@@ -367,23 +367,18 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         return this;
     }
 
-    private void upperCaseAscii(String message, boolean quote) throws IOException {
-        space();
+    private static String upperCaseAscii(String message) {
         final int length = message.length();
-        if (quote) {
-            buffer.write(BYTE_DQUOTE);
-        }
+        final StringBuilder builder = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
             final char next = message.charAt(i);
             if (next >= 'a' && next <= 'z') {
-                buffer.write((byte) (next - LOWER_CASE_OFFSET));
+                builder.append((char) (next - LOWER_CASE_OFFSET));
             } else {
-                buffer.write((byte) (next));
+                builder.append(next);
             }
         }
-        if (quote) {
-            buffer.write(BYTE_DQUOTE);
-        }
+        return builder.toString();
     }
 
     @Override
