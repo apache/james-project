@@ -626,7 +626,7 @@
         <apache.openjpa.version>4.1.1</apache.openjpa.version>
         <!-- Align with EE10 Persistence 3.1 & Transactions 2.0: https://openjpa.apache.org/ -->
         <h2.version>2.3.232</h2.version>
-        <log4j2.version>2.25.5</log4j2.version>
+        <log4j2.version>2.26.1</log4j2.version>
 
         <!-- Align with Jakarta EE 10
              https://jakarta.ee/release/10/ -->
@@ -641,7 +641,7 @@
         <apache-jspf-resolver.version>1.0.5</apache-jspf-resolver.version>
         <angus-mail.version>2.0.5</angus-mail.version>
         <angus-activation.version>2.0.2</angus-activation.version><!-- Align with EE10 Activation 2.1: https://eclipse-ee4j.github.io/angus-activation/ -->
-        <slf4j.version>2.0.17</slf4j.version>
+        <slf4j.version>2.0.20</slf4j.version>
         <circe.version>0.14.17</circe.version>
         <dnsjava.version>3.6.3</dnsjava.version>
         <junit.jupiter.version>5.13.1</junit.jupiter.version>
@@ -678,7 +678,7 @@
         <lucene.version>10.2.1</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>7.0.0</guice.version>
-        <logback.version>1.5.38</logback.version>
+        <logback.version>1.6.5</logback.version>
         <tink.version>1.17.0</tink.version>
         <zstd-jni.version>1.5.7-7</zstd-jni.version>
         <lettuce.core.version>6.8.2.RELEASE</lettuce.core.version>
