@@ -21,9 +21,10 @@ package org.apache.james.jmap.rfc8621.contract.custom.emailsubmission
 
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.method.EmailSubmissionSetValidation
+import org.apache.james.mailbox.MailboxSession
 import org.apache.mailet.Mail
 import reactor.core.scala.publisher.SMono
 
 case class AcceptAllEmailSubmissionSetValidation() extends EmailSubmissionSetValidation {
-  override def validate(mail: Mail): SMono[Option[SetError]] = SMono.just(None)
+  override def validate(mail: Mail, mailboxSession: MailboxSession): SMono[Option[SetError]] = SMono.just(None)
 }
