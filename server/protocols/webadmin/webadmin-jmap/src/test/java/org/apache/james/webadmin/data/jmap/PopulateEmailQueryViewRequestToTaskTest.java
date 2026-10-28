@@ -134,8 +134,7 @@ class PopulateEmailQueryViewRequestToTaskTest {
         view = new MemoryEmailQueryView();
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new TasksRoutes(taskManager, jsonTransformer,
-                DTOConverter.of(PopulateEmailQueryViewTaskAdditionalInformationDTOV2.module(),
-                    PopulateEmailQueryViewTaskAdditionalInformationDTO.module())),
+                DTOConverter.of(PopulateEmailQueryViewTaskAdditionalInformationDTO.module())),
             new JMAPRoutes(
                 new EmailQueryViewPopulator(mailboxManager.getMapperFactory(), spiedMailboxManager, new DefaultEmailQueryViewManager(view),
                     MemoryUsersRepository.withoutVirtualHosting(domainList), domainList),

@@ -1,5 +1,5 @@
 {
-  "type":"PopulateEmailQueryViewTaskV2",
+  "type":"PopulateEmailQueryViewTask",
   "timestamp":"2007-12-03T10:15:30Z",
   "processedMailboxCount":1,
   "processedMessageCount":2,
