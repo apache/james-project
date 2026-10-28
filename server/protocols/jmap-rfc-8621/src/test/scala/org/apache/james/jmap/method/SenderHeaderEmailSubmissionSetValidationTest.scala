@@ -144,6 +144,38 @@ class SenderHeaderEmailSubmissionSetValidationTest {
     assertRejected(validateAsBob("team: bob@domain.tld;"))
 
   @Test
+  def shouldRejectAGroupNamedLikeAHeader(): Unit =
+    assertRejected(validateAsBob("To: bob@domain.tld;"))
+
+  @Test
+  def shouldRejectAnUnterminatedComment(): Unit =
+    assertRejected(validateAsBob("bob@domain.tld ("))
+
+  @Test
+  def shouldAcceptATrailingComment(): Unit =
+    assertAccepted(validateAsBob("bob@domain.tld (Bob)"))
+
+  @Test
+  def shouldRejectAnAddressAfterAnAngleAddress(): Unit =
+    assertRejected(validateAsBob("<bob@domain.tld> alice@domain.tld"))
+
+  @Test
+  def shouldRejectAnAddressAfterADisplayNameAndAngleAddress(): Unit =
+    assertRejected(validateAsBob("Bob <bob@domain.tld> alice@domain.tld"))
+
+  @Test
+  def shouldRejectAnAddressAfterAComment(): Unit =
+    assertRejected(validateAsBob("bob@domain.tld (comment) alice@domain.tld"))
+
+  @Test
+  def shouldRejectATrailingComma(): Unit =
+    assertRejected(validateAsBob("Bob <bob@domain.tld>,"))
+
+  @Test
+  def shouldRejectACommentWithinTheDomain(): Unit =
+    assertRejected(validateAsBob("bob@domain.tld(comment).evil"))
+
+  @Test
   def shouldRejectAnEmptyGroup(): Unit =
     assertRejected(validateAsBob("undisclosed-recipients:;"))
 
