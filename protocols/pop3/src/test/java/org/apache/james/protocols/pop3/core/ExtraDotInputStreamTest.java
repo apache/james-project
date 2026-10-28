@@ -56,6 +56,33 @@ public class ExtraDotInputStreamTest extends AbstractInputStreamTest {
     }
 
     @Test
+    void testExtraDotAfterBareLineFeed() throws IOException {
+        String data = "This\n.\r\nThis.\r\n";
+        String expectedOutput = "This\n..\r\nThis.\r\n";
+
+        checkRead(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), expectedOutput);
+        checkReadViaArray(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), expectedOutput);
+    }
+
+    @Test
+    void testExtraDotAfterBareCarriageReturn() throws IOException {
+        String data = "This\r.\r\nThis.\r\n";
+        String expectedOutput = "This\r..\r\nThis.\r\n";
+
+        checkRead(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), expectedOutput);
+        checkReadViaArray(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), expectedOutput);
+    }
+
+    @Test
+    void testExtraDotOnDoubleDotAfterBareLineFeed() throws IOException {
+        String data = "This\n..USER x\r\n";
+        String expectedOutput = "This\n...USER x\r\n";
+
+        checkRead(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), expectedOutput);
+        checkReadViaArray(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), expectedOutput);
+    }
+
+    @Test
     void testNoDotCLRF() throws IOException {
         String data = "ABCD\r\n";
         checkRead(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), data);
