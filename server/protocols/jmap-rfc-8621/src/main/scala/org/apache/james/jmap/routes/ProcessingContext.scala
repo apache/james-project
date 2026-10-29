@@ -39,6 +39,9 @@ case object WildcardPart extends JsonPathPart
 case class PlainPart(name: String) extends JsonPathPart {
   def read(jsValue: JsValue): JsResult[JsValue] = jsValue match {
     case JsObject(underlying) => underlying.get(name).map(JsSuccess(_)).getOrElse(JsError(s"Expected path $name was missing"))
+    case array: JsArray => ArrayElementPart.parse(name)
+      .map(_.read(array))
+      .getOrElse(JsError("Expecting a JsObject but got a different structure"))
     case _ => JsError("Expecting a JsObject but got a different structure")
   }
 }
@@ -73,8 +76,7 @@ object JsonPath {
     .flatMap {
       case "" => Nil
       case "*" => List(WildcardPart)
-      case part: String => ArrayElementPart.parse(part)
-        .orElse(Some(PlainPart(part)))
+      case part: String => List(PlainPart(part.replace("~1", "/").replace("~0", "~")))
     })
 }
 
@@ -197,15 +199,9 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
     .getOrElse(JsError("Back reference could not be resolved"))
 
   private def resolveCreationId(creationId: String): Either[IllegalArgumentException, ServerId] =
-    Id.validate(creationId)
-      .flatMap(id => resolveServerId(ClientId(id)))
-
- private def resolveServerId(id: ClientId): Either[IllegalArgumentException, ServerId] =
-  id.retrieveOriginalClientId
-    .map(maybePreviousClientId => maybePreviousClientId.flatMap(previousClientId => retrieveServerId(previousClientId)
-      .map(Right(_))
-      .getOrElse(Left[IllegalArgumentException, ServerId](new IllegalArgumentException(s"$id was not used in previously defined creationIds")))))
-    .getOrElse(Right(ServerId(id.value)))
+    Id.validate(creationId.substring(1))
+      .flatMap(id => retrieveServerId(ClientId(id))
+        .toRight(new IllegalArgumentException(s"$creationId was not used in previously defined creationIds")))
 
   private def retrieveServerId(clientId: ClientId): Option[ServerId] = creationIds.get(clientId)
 

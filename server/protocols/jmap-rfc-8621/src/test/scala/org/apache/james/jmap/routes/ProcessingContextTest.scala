@@ -143,7 +143,9 @@ class ProcessingContextTest {
 
   @Test
   def resolveBackReferencesShouldPreserveReferencesExceedingTheExistingIDLengthLimit(): Unit = {
-    val reference = "#" + "x" * 256
+    val creationId = "x" * 256
+    assertThat(Id.validate(creationId).isLeft).isTrue()
+    val reference = "#" + creationId
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
       "value" -> reference, reference -> true)), MethodCallId("echo"))
     val context = ProcessingContext(Map.empty, Map.empty)
@@ -309,5 +311,92 @@ class ProcessingContextTest {
     assertThat(context.resolveBackReferences(invocation))
       .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
         "state" -> "#email")))))
+  }
+
+  @Test
+  def resolveBackReferencesShouldResolveA255CharacterCreationIDInAnObjectKeyAndNestedValues(): Unit = {
+    val creationId = "c" * 255
+    val context = ProcessingContext(Map(ClientId(Id.validate(creationId).toOption.get) -> ServerId("server-id")), Map.empty)
+    val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
+      ("#" + creationId) -> Json.obj("nested" -> Json.arr("#" + creationId)))), MethodCallId("echo"))
+
+    assertThat(context.resolveBackReferences(invocation))
+      .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
+        "server-id" -> Json.obj("nested" -> Json.arr("server-id")))))))
+  }
+
+  @Test
+  def resolveBackReferencesShouldPreserveAnUnknown255CharacterCreationIDInKeysAndValues(): Unit = {
+    val reference = "#" + "u" * 255
+    val context = ProcessingContext(Map(ClientId("known") -> ServerId("server-id")), Map.empty)
+    val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
+      reference -> Json.arr(reference))), MethodCallId("echo"))
+
+    assertThat(context.resolveBackReferences(invocation)).isEqualTo(Right(invocation))
+  }
+
+  @Test
+  def resolveBackReferencesShouldRemoveExactlyOneHashBeforeLookingUpACreationID(): Unit = {
+    val context = ProcessingContext(Map(
+      ClientId("created") -> ServerId("plain-id"),
+      ClientId("#created") -> ServerId("hash-id")), Map.empty)
+    val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
+      "##created" -> "##created")), MethodCallId("echo"))
+
+    assertThat(context.resolveBackReferences(invocation))
+      .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj("hash-id" -> "hash-id")))))
+  }
+
+  @Test
+  def resolveBackReferencesShouldPreferAResultReferenceOverA255CharacterCreationIDKey(): Unit = {
+    val creationId = "c" * 255
+    val response = Invocation(MethodName("Email/get"), Arguments(Json.obj("state" -> "result-state")), MethodCallId("get"))
+    val context = ProcessingContext(Map(ClientId(Id.validate(creationId).toOption.get) -> ServerId("server-id")), Map.empty)
+      .recordInvocation(response)
+    val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
+      ("#" + creationId) -> Json.obj("resultOf" -> "get", "name" -> "Email/get", "path" -> "/state"))), MethodCallId("echo"))
+
+    assertThat(context.resolveBackReferences(invocation))
+      .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(creationId -> "result-state")))))
+  }
+
+  @Test
+  def resolveBackReferencesShouldFallBackToA255CharacterCreationIDKeyForAMalformedResultReference(): Unit = {
+    val creationId = "c" * 255
+    val context = ProcessingContext(Map(ClientId(Id.validate(creationId).toOption.get) -> ServerId("server-id")), Map.empty)
+    val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
+      ("#" + creationId) -> Json.obj("resultOf" -> 42, "nested" -> ("#" + creationId)))), MethodCallId("echo"))
+
+    assertThat(context.resolveBackReferences(invocation))
+      .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
+        "server-id" -> Json.obj("resultOf" -> 42, "nested" -> "server-id"))))))
+  }
+
+  @Test
+  def resolveBackReferencesShouldReadEscapedAndNumericObjectKeysFromARecordedResponse(): Unit = {
+    val response = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
+      "a/b" -> Json.obj("01" -> Json.obj("a~b" -> "value"), "1" -> Json.obj("a~b" -> "wrong")))), MethodCallId("previous"))
+    val context = ProcessingContext(Map.empty, Map.empty).recordInvocation(response)
+    val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
+      "#value" -> Json.obj("resultOf" -> "previous", "name" -> "Core/echo", "path" -> "/a~1b/01/a~0b"))), MethodCallId("echo"))
+
+    assertThat(context.resolveBackReferences(invocation))
+      .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj("value" -> "value")))))
+  }
+
+  @Test
+  def resolveBackReferencesShouldRejectANestedInvocationWhenAWildcardElementLacksTheDecodedKey(): Unit = {
+    val response = Invocation(MethodName("Core/echo"), Arguments(Json.obj("list" -> Json.arr(
+      Json.obj("a/b" -> Json.obj("0" -> "first")),
+      Json.obj("a~1b" -> Json.obj("0" -> "encoded"))))), MethodCallId("previous"))
+    val context = ProcessingContext(Map.empty, Map.empty).recordInvocation(response)
+    val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
+      "nested" -> Json.obj("#values" -> Json.obj(
+        "resultOf" -> "previous", "name" -> "Core/echo", "path" -> "/list/*/a~1b/0")))), MethodCallId("echo"))
+
+    val result = context.resolveBackReferences(invocation)
+
+    assertThat(result.isLeft).isTrue()
+    assertThat(result.left.toOption.get.message).contains("Expected path a/b was missing")
   }
 }

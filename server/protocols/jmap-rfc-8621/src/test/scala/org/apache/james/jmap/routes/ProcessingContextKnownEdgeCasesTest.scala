@@ -28,7 +28,6 @@ import play.api.libs.json.{JsString, JsSuccess, Json}
 
 class ProcessingContextKnownEdgeCasesTest {
   @Test
-  @Disabled("Baseline validates the prefix too, leaving the 256-character reference unresolved; the fix is deferred.")
   def resolveBackReferencesShouldResolveAReferenceToA255CharacterCreationID(): Unit = {
     val creationId = "c" * 255
     val context = ProcessingContext(Map(ClientId(Id.validate(creationId).toOption.get) -> ServerId("server-id")), Map.empty)
@@ -63,21 +62,18 @@ class ProcessingContextKnownEdgeCasesTest {
   }
 
   @Test
-  @Disabled("Baseline looks up 'a~0b' literally instead of decoding '~0'; JSON Pointer support is deferred.")
   def jsonPathShouldDecodeAnEscapedTildeInAnObjectProperty(): Unit = {
     assertThat(JsonPath.parse("/a~0b").evaluate(Json.obj("a~b" -> "value")))
       .isEqualTo(JsSuccess(JsString("value")))
   }
 
   @Test
-  @Disabled("Baseline looks up 'a~1b' literally instead of decoding '~1'; JSON Pointer support is deferred.")
   def jsonPathShouldDecodeAnEscapedSlashInAnObjectProperty(): Unit = {
     assertThat(JsonPath.parse("/a~1b").evaluate(Json.obj("a/b" -> "value")))
       .isEqualTo(JsSuccess(JsString("value")))
   }
 
   @Test
-  @Disabled("Baseline treats every numeric path part as an array index, even for an object; the fix is deferred.")
   def jsonPathShouldReadANumericObjectProperty(): Unit = {
     assertThat(JsonPath.parse("/objects/0").evaluate(Json.obj("objects" -> Json.obj("0" -> "value"))))
       .isEqualTo(JsSuccess(JsString("value")))
