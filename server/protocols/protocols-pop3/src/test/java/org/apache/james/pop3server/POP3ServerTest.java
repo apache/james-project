@@ -684,6 +684,31 @@ public class POP3ServerTest {
     }
 
     @Test
+    void topWithNegativeLinesShouldBeRejected() throws Exception {
+        finishSetUp(pop3Configuration);
+
+        pop3Client = new POP3Client();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        Username username = Username.of("topnegative");
+        usersRepository.addUser(username, "password");
+
+        MailboxPath mailboxPath = MailboxPath.inbox(username);
+        MailboxSession session = mailboxManager.authenticate(username, "password").withoutDelegation();
+        mailboxManager.createMailbox(mailboxPath, session);
+        setupTestMails(session, mailboxManager.getMailbox(mailboxPath, session));
+
+        pop3Client.login("topnegative", "password");
+
+        // commons-net retrieveMessageTop refuses negative counts client side, hence the raw command
+        assertThat(pop3Client.sendCommand("TOP", "1 -1")).isEqualTo(POP3Reply.ERROR);
+        assertThat(pop3Client.sendCommand("TOP", "1 -5")).isEqualTo(POP3Reply.ERROR);
+
+        mailboxManager.deleteMailbox(mailboxPath, session);
+    }
+
+    @Test
     void pop3SessionShouldTolerateConcurrentDeletes() throws Exception {
         finishSetUp(pop3Configuration);
 
