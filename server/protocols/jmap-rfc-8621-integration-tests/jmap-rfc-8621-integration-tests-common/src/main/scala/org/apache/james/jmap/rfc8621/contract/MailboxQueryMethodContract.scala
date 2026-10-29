@@ -39,6 +39,8 @@ import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 object MailboxQueryMethodContract {
   case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username)
@@ -553,6 +555,26 @@ trait MailboxQueryMethodContract {
            |    ]
            |}
            |""".stripMargin)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array("x-custom", "x-", "X-custom"))
+  def xPrefixedRoleShouldBeRejected(role: String, server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, role))
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{"role":"$role"}}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0]").isEqualTo(s"""["error",{
+      |  "type":"invalidArguments",
+      |  "description":"'/filter/role' property is not valid: $role is not a valid role"
+      |},"q1"]""".stripMargin)
   }
 
   private def generateQueryState(ids: MailboxId*): String =

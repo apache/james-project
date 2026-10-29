@@ -24,6 +24,8 @@ import java.util.Locale;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class RoleTest {
 
@@ -32,14 +34,15 @@ class RoleTest {
         assertThat(Role.from("jjjj")).isEqualTo(Optional.empty());
     }
 
-    @Test
-    void fromShouldReturnSomethingWhenXPrefixedRole() {
-        assertThat(Role.from("x-client-specific-role")).isEqualTo(Optional.of(new Role("x-client-specific-role")));
+    @ParameterizedTest
+    @ValueSource(strings = {"x-client-specific-role", "x-custom", "x-", "X-custom"})
+    void fromShouldReturnEmptyWhenXPrefixedMailbox(String name) {
+        assertThat(Role.from(name)).isEmpty();
     }
 
     @Test
     void isSystemRoleShouldReturnFalseWhenXPrefixedRole() {
-        Role role = Role.from("x-client-specific-role").get();
+        Role role = new Role("x-client-specific-role");
         assertThat(role.isSystemRole()).isFalse();
     }
 
@@ -101,7 +104,7 @@ class RoleTest {
 
     @Test
     void isSystemRoleShouldBeFalseWhenUserDefinedRole() {
-        Role userRole = Role.from(Role.USER_DEFINED_ROLE_PREFIX + "myRole").get();
+        Role userRole = new Role(Role.USER_DEFINED_ROLE_PREFIX + "myRole");
         assertThat(userRole.isSystemRole()).isFalse();
     }
 

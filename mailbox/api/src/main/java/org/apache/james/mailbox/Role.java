@@ -65,25 +65,13 @@ public class Role {
     }
 
     public static Optional<Role> from(String name) {
-        Optional<Role> predefinedRole = predefinedRole(name);
-        if (predefinedRole.isPresent()) {
-            return predefinedRole;
-        } else {
-            return tryBuildCustomRole(name);
-        }
+        return predefinedRole(name);
     }
 
     private static Optional<Role> predefinedRole(String name) {
         return ROLES.stream()
                 .filter(role -> role.comparator.apply(role.defaultMailbox, name))
                 .findFirst();
-    }
-
-    private static Optional<Role> tryBuildCustomRole(String name) {
-        if (name.startsWith(USER_DEFINED_ROLE_PREFIX)) {
-            return Optional.of(new Role(name));
-        }
-        return Optional.empty();
     }
 
     public boolean isSystemRole() {
