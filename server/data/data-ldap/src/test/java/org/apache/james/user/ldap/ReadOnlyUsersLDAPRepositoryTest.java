@@ -42,9 +42,11 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.UsernamePredicate;
 import org.apache.james.user.lib.UsersRepositoryContract;
 import org.apache.james.user.lib.UsersRepositoryImpl;
+import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -57,6 +59,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 
 import reactor.core.publisher.Flux;
@@ -92,6 +95,27 @@ class ReadOnlyUsersLDAPRepositoryTest {
 
         assertThatThrownBy(usersLDAPRepository::init)
             .isInstanceOf(LDAPException.class);
+    }
+
+    @Test
+    void emptyPasswordShouldBeRejectedWithoutQueryingLDAP() throws Exception {
+        HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
+        LdapRepositoryConfiguration ldapConfiguration = LdapRepositoryConfiguration.from(configuration);
+        LDAPConnectionPool ldapConnectionPool = new LDAPConnectionFactory(ldapConfiguration).getLdapConnectionPool();
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry(),
+            ldapConnectionPool, ldapConfiguration);
+        usersLDAPRepository.configure(configuration);
+        usersLDAPRepository.init();
+
+        // Any LDAP operation now fails
+        ldapConnectionPool.close();
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThatCode(() -> assertThat(usersLDAPRepository.test(JAMES_USER, "")).isEmpty())
+                .doesNotThrowAnyException();
+            softly.assertThatThrownBy(() -> usersLDAPRepository.test(JAMES_USER, BAD_PASSWORD))
+                .isInstanceOf(UsersRepositoryException.class);
+        });
     }
 
     @Nested

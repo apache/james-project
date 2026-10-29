@@ -19,6 +19,8 @@
 
 package org.apache.james.user.ldap;
 
+import java.util.Optional;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 
@@ -32,8 +34,11 @@ import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.UsersRepositoryImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Strings;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 
@@ -162,6 +167,8 @@ import reactor.core.publisher.Mono;
  *
  */
 public class ReadOnlyUsersLDAPRepository extends UsersRepositoryImpl<ReadOnlyLDAPUsersDAO> implements Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyUsersLDAPRepository.class);
+
     private final LdapRepositoryConfiguration ldapConfiguration;
 
     @Inject
@@ -234,6 +241,19 @@ public class ReadOnlyUsersLDAPRepository extends UsersRepositoryImpl<ReadOnlyLDA
         return ldapConfiguration.getAdministratorId()
             .map(ldapAdministratorAttribute -> ldapAdministratorAttribute.equals(username))
             .orElseGet(Throwing.supplier(() -> super.isAdministrator(username)));
+    }
+
+    /**
+     * An empty password is rejected without querying the LDAP server: a simple bind with an empty
+     * password is an unauthenticated bind (RFC 4513 5.1.2) that many directories accept.
+     */
+    @Override
+    public Optional<Username> test(Username name, String password) throws UsersRepositoryException {
+        if (Strings.isNullOrEmpty(password)) {
+            LOGGER.info("Rejecting authentication of {}: empty password", name.asString());
+            return Optional.empty();
+        }
+        return super.test(name, password);
     }
 
     @Override
