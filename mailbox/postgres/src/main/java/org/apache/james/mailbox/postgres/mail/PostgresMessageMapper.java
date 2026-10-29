@@ -44,6 +44,7 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Mailbox;
@@ -372,7 +373,7 @@ public class PostgresMessageMapper implements MessageMapper {
 
     private Mono<Void> setNewUidAndModSeq(MailboxMessage mailboxMessage) {
         return mailboxDAO.incrementAndGetLastUidAndModSeq(mailboxMessage.getMailboxId())
-            .defaultIfEmpty(Pair.of(MessageUid.MIN_VALUE, ModSeq.first()))
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxMessage.getMailboxId())))
             .map(pair -> {
                 mailboxMessage.setUid(pair.getLeft());
                 mailboxMessage.setModSeq(pair.getRight());
