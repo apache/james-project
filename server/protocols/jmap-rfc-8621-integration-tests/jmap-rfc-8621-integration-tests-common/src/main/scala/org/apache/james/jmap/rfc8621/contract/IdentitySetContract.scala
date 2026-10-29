@@ -1258,6 +1258,308 @@ trait IdentitySetContract {
   }
 
   @Test
+  def updateWithNullReplyToAndBccShouldResetThem(): Unit = {
+    val identityId: String = createNewIdentity()
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [
+           |        "urn:ietf:params:jmap:core",
+           |        "urn:ietf:params:jmap:submission"
+           |    ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "replyTo": null,
+           |                        "bcc": null
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "ids": [
+           |                    "$identityId"
+           |                ]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                    |    "sessionState": "${SESSION_STATE.value}",
+                    |    "methodResponses": [
+                    |        [
+                    |            "Identity/set",
+                    |            {
+                    |                "accountId": "$bobAccountId",
+                    |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                    |                "updated": {
+                    |                    "$identityId": { }
+                    |                }
+                    |            },
+                    |            "c1"
+                    |        ],
+                    |        [
+                    |            "Identity/get",
+                    |            {
+                    |                "accountId": "$bobAccountId",
+                    |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                    |                "list": [
+                    |                    {
+                    |                        "name": "Bob",
+                    |                        "htmlSignature": "<p>Some html signature</p>",
+                    |                        "id": "$identityId",
+                    |                        "bcc": null,
+                    |                        "textSignature": "Some text signature",
+                    |                        "mayDelete": true,
+                    |                        "email": "${bobUsername.asString}",
+                    |                        "replyTo": null
+                    |                    }
+                    |                ]
+                    |            },
+                    |            "c2"
+                    |        ]
+                    |    ]
+                    |}""".stripMargin)
+  }
+
+  @Test
+  def updateWithNullNameAndSignaturesShouldResetThemToEmpty(): Unit = {
+    val identityId: String = createNewIdentity()
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [
+           |        "urn:ietf:params:jmap:core",
+           |        "urn:ietf:params:jmap:submission"
+           |    ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "name": null,
+           |                        "textSignature": null,
+           |                        "htmlSignature": null
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "ids": [
+           |                    "$identityId"
+           |                ]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                    |    "sessionState": "${SESSION_STATE.value}",
+                    |    "methodResponses": [
+                    |        [
+                    |            "Identity/set",
+                    |            {
+                    |                "accountId": "$bobAccountId",
+                    |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                    |                "updated": {
+                    |                    "$identityId": { }
+                    |                }
+                    |            },
+                    |            "c1"
+                    |        ],
+                    |        [
+                    |            "Identity/get",
+                    |            {
+                    |                "accountId": "$bobAccountId",
+                    |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                    |                "list": [
+                    |                    {
+                    |                        "name": "",
+                    |                        "htmlSignature": "",
+                    |                        "id": "$identityId",
+                    |                        "bcc": [
+                    |                            {
+                    |                                "name": "David",
+                    |                                "email": "david@domain.tld"
+                    |                            }
+                    |                        ],
+                    |                        "textSignature": "",
+                    |                        "mayDelete": true,
+                    |                        "email": "${bobUsername.asString}",
+                    |                        "replyTo": [
+                    |                            {
+                    |                                "name": "Alice",
+                    |                                "email": "alice@domain.tld"
+                    |                            }
+                    |                        ]
+                    |                    }
+                    |                ]
+                    |            },
+                    |            "c2"
+                    |        ]
+                    |    ]
+                    |}""".stripMargin)
+  }
+
+  @Test
+  def updateWithNullSortOrderShouldResetItToDefault(): Unit = {
+    val identityId: String = createNewIdentity()
+    `given`
+      .body(
+        s"""{
+           |    "using": [
+           |        "urn:ietf:params:jmap:core",
+           |        "urn:ietf:params:jmap:submission",
+           |        "urn:apache:james:params:jmap:mail:identity:sortorder"
+           |    ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "sortOrder": 125
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [
+           |        "urn:ietf:params:jmap:core",
+           |        "urn:ietf:params:jmap:submission",
+           |        "urn:apache:james:params:jmap:mail:identity:sortorder"
+           |    ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "sortOrder": null
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "ids": [
+           |                    "$identityId"
+           |                ]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                    |    "sessionState": "${SESSION_STATE.value}",
+                    |    "methodResponses": [
+                    |        [
+                    |            "Identity/set",
+                    |            {
+                    |                "accountId": "$bobAccountId",
+                    |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                    |                "updated": {
+                    |                    "$identityId": { }
+                    |                }
+                    |            },
+                    |            "c1"
+                    |        ],
+                    |        [
+                    |            "Identity/get",
+                    |            {
+                    |                "accountId": "$bobAccountId",
+                    |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                    |                "list": [
+                    |                    {
+                    |                        "name": "Bob",
+                    |                        "htmlSignature": "<p>Some html signature</p>",
+                    |                        "id": "$identityId",
+                    |                        "bcc": [
+                    |                            {
+                    |                                "name": "David",
+                    |                                "email": "david@domain.tld"
+                    |                            }
+                    |                        ],
+                    |                        "textSignature": "Some text signature",
+                    |                        "mayDelete": true,
+                    |                        "email": "${bobUsername.asString}",
+                    |                        "replyTo": [
+                    |                            {
+                    |                                "name": "Alice",
+                    |                                "email": "alice@domain.tld"
+                    |                            }
+                    |                        ],
+                    |                        "sortOrder": 100
+                    |                    }
+                    |                ]
+                    |            },
+                    |            "c2"
+                    |        ]
+                    |    ]
+                    |}""".stripMargin)
+  }
+
+  @Test
   def updateShouldNotUpdatedWhenIdNotfound(): Unit = {
     val notfoundIdentityId: String = UUID.randomUUID().toString
     val response: String = `given`
