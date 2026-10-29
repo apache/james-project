@@ -223,6 +223,28 @@ class IdentityRepositoryTest {
   }
 
   @Test
+  def firstPartialUpdateOfServerSetIdentityShouldKeepUnpatchedProperties(): Unit = {
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.just(IDENTITY1))
+    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
+
+    SMono(testee.update(BOB, IDENTITY1.id, IdentityUpdateRequest(textSignature = Some(IdentityTextSignatureUpdate(TextSignature("text 2 signature")))))).block()
+
+    assertThat(SFlux(testee.list(BOB)).collectSeq().block().asJava)
+      .containsExactly(IDENTITY1.copy(textSignature = TextSignature("text 2 signature")))
+  }
+
+  @Test
+  def firstSortOrderUpdateOfServerSetIdentityShouldApply(): Unit = {
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.just(IDENTITY1))
+    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
+
+    SMono(testee.update(BOB, IDENTITY1.id, IdentityUpdateRequest(sortOrder = Some(IdentitySortOrderUpdate(5))))).block()
+
+    assertThat(SFlux(testee.list(BOB)).collectSeq().block().asJava)
+      .containsExactly(IDENTITY1.copy(sortOrder = 5))
+  }
+
+  @Test
   def updateShouldFailWhenAliasNotExists(): Unit = {
     when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
 
