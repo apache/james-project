@@ -2,6 +2,7 @@
 :navtitle: jmap.properties
 
 :sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration
+:pages-path: distributed
 :server-name: Distributed James Server
 :backend-name: Cassandra
 include::partial$configure/jmap.adoc[]
