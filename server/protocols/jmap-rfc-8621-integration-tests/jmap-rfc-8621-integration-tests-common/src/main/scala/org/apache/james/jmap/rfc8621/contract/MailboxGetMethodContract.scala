@@ -1469,7 +1469,7 @@ trait MailboxGetMethodContract {
   }
 
   @ParameterizedTest
-  @CsvSource(Array("INBOX,inbox,10", "Templates,templates,80"))
+  @CsvSource(Array("INBOX,inbox,10", "Templates,templates,80", "Restored-Messages,restored messages,90"))
   def getMailboxesShouldReturnCorrectMailboxRole(mailboxName: String, role: String, sortOrder: Int, server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
