@@ -138,16 +138,6 @@ case class IdentityUpdateRequest(name: Option[IdentityNameUpdate] = None,
     List(name, replyTo, bcc, textSignature, htmlSignature, sortOrder)
       .flatten
       .foldLeft(identity)((acc, update) => update.update(acc))
-
-  def asCreationRequest(email: MailAddress, mayDelete: Boolean): IdentityCreationRequest =
-    IdentityCreationRequest(
-      name = name.map(_.name),
-      email = email,
-      replyTo = replyTo.flatMap(_.replyTo),
-      bcc = bcc.flatMap(_.bcc),
-      textSignature = textSignature.map(_.textSignature),
-      htmlSignature = htmlSignature.map(_.htmlSignature),
-      mayDeleteIdentity = MayDeleteIdentity(mayDelete))
 }
 
 trait CustomIdentityDAO {
@@ -237,7 +227,7 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
       .flatMap {
         case (None, None) => SMono.error(IdentityNotFoundException(identityId))
         case (Some(_), Some(customIdentity)) => customIdentityDao.upsert(user, identityUpdateRequest.update(customIdentity))
-        case (Some(serverSetIdentity), None) => SMono(customIdentityDao.save(user, identityId, identityUpdateRequest.asCreationRequest(serverSetIdentity.email, mayDelete = false)))
+        case (Some(serverSetIdentity), None) => customIdentityDao.upsert(user, identityUpdateRequest.update(serverSetIdentity))
         case (None, Some(customIdentity)) =>
           identityFactory.userCanSendFrom(user, customIdentity.email)
             .filter(bool => bool)
