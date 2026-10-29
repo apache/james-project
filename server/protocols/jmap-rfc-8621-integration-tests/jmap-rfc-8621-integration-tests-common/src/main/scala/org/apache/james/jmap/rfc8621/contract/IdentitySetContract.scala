@@ -1725,6 +1725,60 @@ trait IdentitySetContract {
   }
 
   @Test
+  def updateShouldNotUpdatedWhenInvalidPropertyValue(): Unit = {
+    val identityId: String = createNewIdentity()
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission" ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "name": 123
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "notUpdated": {
+           |                    "$identityId": {
+           |                        "type": "invalidArguments",
+           |                        "description": "'/name' property is not valid: error.expected.jsstring"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
   def updateShouldSuccessWhenMixed(): Unit = {
     val updateIdentityId1: String = createNewIdentity()
     val updateIdentityId2: String = createNewIdentity()
