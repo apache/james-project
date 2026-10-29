@@ -1,0 +1,35 @@
+This documentation page lists the validations the {server-name} ships for JMAP `EmailSubmission/set`. They run
+against every mail submitted through JMAP, before it reaches the mail queue: a rejected submission becomes a
+`notCreated` entry carrying a SetError, so that the client is told synchronously rather than through an
+asynchronous bounce.
+
+Validations run until the first rejection, in an unspecified order. Except `ValidRcptEmailSubmissionSetValidation`,
+they are enabled by listing them in the `send.extra.validations` property of
+xref:{pages-path}/configure/jmap.adoc[jmap.properties], for example:
+
+....
+send.extra.validations=SenderHeaderEmailSubmissionSetValidation
+....
+
+Custom validations implement `EmailSubmissionSetValidation` and are listed the same way, by their fully qualified
+class name.
+
+== ValidRcptEmailSubmissionSetValidation
+
+Rejects recipients the {server-name} knows it cannot deliver to with an `invalidRecipients` SetError. The JMAP
+counterpart of the SMTP `ValidRcptHandler`.
+
+Enabled through `send.validate.rcpt` rather than `send.extra.validations`, and tuned by the other
+`send.validate.rcpt.*` properties of xref:{pages-path}/configure/jmap.adoc[jmap.properties].
+
+== SenderHeaderEmailSubmissionSetValidation
+
+Based on https://www.rfc-editor.org/rfc/rfc5322#section-3.6.2[RFC-5322 section 3.6.2]: `Sender` names the agent
+responsible for the actual transmission of the message, that is the user who authenticated.
+
+When the email has a `Sender` header, each `Sender` field must hold exactly one mailbox, of a local domain, resolving
+to the logged in user: aliases, other addresses the user can send from and, upon delegation, the account owner do not
+count. Otherwise the submission is rejected with `forbiddenFrom` and `properties: ["sender"]`.
+
+Without it, `Sender` may name any address the account owner can send from or, upon delegation, the user who
+authenticated.
