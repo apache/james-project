@@ -294,5 +294,5 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
   }
 
   private def isASystemMailbox(mailbox: MessageManager): Boolean =
-    Role.from(mailbox.getMailboxPath.getName).filter(_.isSystemRole).isPresent
+    Role.from(mailbox.getMailboxPath.getName).isPresent
 }

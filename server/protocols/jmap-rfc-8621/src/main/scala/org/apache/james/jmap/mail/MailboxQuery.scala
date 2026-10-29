@@ -26,19 +26,12 @@ import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 
-import scala.jdk.CollectionConverters._
-
 case class MailboxQueryRequest(accountId: AccountId, filter: MailboxFilter) extends WithAccountId
 
-object MailboxFilter {
+object MailboxFilter{
   val SUPPORTED: Set[String] = Set("role")
-
-  def resolveRole(value: String): Option[Role] = Role.predefinedRoles().asScala.find(role => {
-    val canonical = if (role == Role.SPAM) "junk" else role.serialize()
-    value == canonical || value == role.getDefaultMailbox || (role == Role.INBOX && value.equalsIgnoreCase("inbox"))
-  })
 }
-case class MailboxFilter(role: String)
+case class MailboxFilter(role: Role)
 
 case class MailboxQueryResponse(accountId: AccountId,
                               queryState: QueryState,

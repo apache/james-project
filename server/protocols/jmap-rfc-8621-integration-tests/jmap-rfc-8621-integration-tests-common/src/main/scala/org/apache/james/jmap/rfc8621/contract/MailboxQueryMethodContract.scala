@@ -39,9 +39,6 @@ import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.{CsvSource, ValueSource}
-import play.api.libs.json.{JsString, Json}
 
 object MailboxQueryMethodContract {
   case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username)
@@ -329,88 +326,8 @@ trait MailboxQueryMethodContract {
            |}""".stripMargin)
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = Array("x-custom", "x-", "X-custom", "Invalid", "", "ordinary", "x-parent.child", "DRAFTS", " drafts "))
-  def unknownRoleShouldReturnEmptyResults(role: String, server: GuiceJamesServer): Unit = {
-    // Exercise both absence and presence of a same-named mailbox.
-    assertEmptyQuery(role)
-    if (role.nonEmpty && role.trim == role) {
-      val path = MailboxPath.forUser(bobUsername, role)
-      val probe = server.getProbe(classOf[MailboxProbeImpl])
-      val mailboxId = probe.createMailbox(path)
-      org.assertj.core.api.Assertions.assertThat(probe.getMailboxId(path.getNamespace, bobUsername.asString, role)).isEqualTo(mailboxId)
-      assertEmptyQuery(role)
-    }
-  }
-
-  private def queryRole(role: String, accountId: String): String =
-    `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(s"""{
-               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-               |  "methodCalls": [["Mailbox/query", {"accountId":"$accountId", "filter":{"role":${Json.stringify(JsString(role))}}}, "q1"]]
-               |}""".stripMargin)
-      .when.post
-      .`then`.statusCode(SC_OK).extract.asString
-
-  private def assertEmptyQuery(role: String): Unit =
-    assertThatJson(queryRole(role, bobAccountId)).isEqualTo(s"""{
-      |  "sessionState":"${SESSION_STATE.value}",
-      |  "methodResponses":[["Mailbox/query",{
-      |    "accountId":"$bobAccountId", "queryState":"${generateQueryState()}",
-      |    "canCalculateChanges":false, "ids":[], "position":0, "limit":256
-      |  },"q1"]]
-      |}""".stripMargin)
-
-  @ParameterizedTest
-  @CsvSource(Array("INBOX,inbox", "Drafts,drafts", "Outbox,outbox", "Sent,sent", "Trash,trash", "Archive,archive", "Spam,junk", "Templates,templates", "Restored-Messages,restored messages"))
-  def getRoleShouldRoundTripThroughQuery(mailboxName: String, expectedRole: String, server: GuiceJamesServer): Unit = {
-    val id = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
-    val mailboxId = id.serialize
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(s"""{
-               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-               |  "methodCalls": [["Mailbox/get", {"accountId":"$bobAccountId", "ids":["$mailboxId"], "properties":["id","role"]}, "g1"]]
-               |}""".stripMargin)
-      .when.post
-      .`then`.statusCode(SC_OK).extract.asString
-    assertThatJson(response).inPath("methodResponses[0][1].list")
-      .isEqualTo(s"""[{"id":"$mailboxId", "role":"$expectedRole"}]""")
-    val role = io.restassured.path.json.JsonPath.from(response).getString("methodResponses[0][1].list[0].role")
-    assertThatJson(queryRole(role, bobAccountId)).inPath("methodResponses[0]").isEqualTo(s"""["Mailbox/query",{
-      |  "accountId":"$bobAccountId", "queryState":"${generateQueryState(id)}",
-      |  "canCalculateChanges":false, "ids":["$mailboxId"], "position":0, "limit":256
-      |},"q1"]""".stripMargin)
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = Array("INBOX", "Drafts", "Outbox", "Sent", "Trash", "Archive", "Spam", "Templates", "Restored-Messages", "Inbox", "InBoX"))
-  def legacyRoleAliasShouldStillResolve(alias: String, server: GuiceJamesServer): Unit = {
-    val mailboxName = if (alias.equalsIgnoreCase("inbox")) "INBOX" else alias
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, mailboxName)).serialize
-    assertThatJson(queryRole(alias, bobAccountId)).inPath("methodResponses[0][1].ids").isEqualTo(s"""["$mailboxId"]""")
-  }
-
   @Test
-  def knownRoleWithoutMailboxShouldReturnEmptyResults(server: GuiceJamesServer): Unit = {
-    val probe = server.getProbe(classOf[MailboxProbeImpl])
-    probe.createMailbox(MailboxPath.forUser(bobUsername, "ordinary"))
-    org.assertj.core.api.Assertions.assertThatThrownBy(() => probe.getMailboxId("#private", bobUsername.asString, "Templates"))
-      .hasCauseInstanceOf(classOf[org.apache.james.mailbox.exception.MailboxNotFoundException])
-    assertEmptyQuery("templates")
-  }
-
-  @Test
-  def unknownRoleShouldStillValidateAccount(): Unit = {
-    assertThatJson(queryRole("x-custom", "unknown-account")).inPath("methodResponses[0]")
-      .isEqualTo("""["error",{"type":"accountNotFound"},"q1"]""")
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = Array("123", "true", "{}", "[]", "null"))
-  def roleShouldBeAString(value: String): Unit = {
+  def invalidRoleShouldBeRejected(): Unit = {
     val request =
       s"""{
          |  "using": [
@@ -420,7 +337,52 @@ trait MailboxQueryMethodContract {
          |    "Mailbox/query",
          |    {
            |      "accountId": "$bobAccountId",
-         |      "filter": {"role":$value}
+         |      "filter": {"role":"Invalid"}
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "error",
+           |            {
+           |                "type": "invalidArguments",
+           |                "description": "'/filter/role' property is not valid: Invalid is not a valid role"
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def roleShouldBeAString(): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Mailbox/query",
+         |    {
+           |      "accountId": "$bobAccountId",
+         |      "filter": {"role":123}
          |    },
          |    "c1"]]
          |}""".stripMargin

@@ -21,9 +21,11 @@ package org.apache.james.jmap.json
 
 import org.apache.james.jmap.core.{CanCalculateChanges, QueryState}
 import org.apache.james.jmap.mail.{MailboxFilter, MailboxQueryChangesRequest, MailboxQueryRequest, MailboxQueryResponse}
+import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json._
 
+import scala.jdk.OptionConverters._
 import scala.language.implicitConversions
 
 object MailboxQuerySerializer {
@@ -31,8 +33,9 @@ object MailboxQuerySerializer {
 
   private implicit val mailboxIdWrites: Writes[MailboxId] = mailboxId => JsString(mailboxId.serialize)
 
-  private implicit val roleReads: Reads[String] = {
-    case JsString(value) => JsSuccess(value)
+  private implicit val roleReads: Reads[Role] = {
+    case JsString(value) => Role.from(value).toScala.map(JsSuccess(_))
+      .getOrElse(JsError(s"$value is not a valid role"))
     case _ => JsError("Expecting a JsString to be representing a role")
   }
 
