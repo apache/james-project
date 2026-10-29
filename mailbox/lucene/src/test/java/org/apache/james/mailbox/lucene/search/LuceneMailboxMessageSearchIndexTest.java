@@ -293,6 +293,81 @@ class LuceneMailboxMessageSearchIndexTest {
     }
 
     @Test
+    void subjectSearchShouldMatchMoreThanFourWords() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", "Quarterly budget review meeting notes"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void subjectSearchShouldNotMatchMoreThanFourWordsWhenLastWordDiffers() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", "Quarterly budget review meeting minutes"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void subjectSearchShouldNotMatchMoreThanFourWordsWhenReordered() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", "budget Quarterly review meeting notes"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void subjectSearchShouldIgnoreRepeatedWhitespace() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", "budget  review"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void subjectSearchShouldMatchEmptyValue() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", ""));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void bodySearchShouldMatchMoreThanFourWords() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.bodyContains("brown fox jumps over the"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void textSearchShouldMatchMoreThanFourWords() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.mailContains("brown fox jumps over the"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    private Mailbox longTextMailbox() throws Exception {
+        TestId longTextId = TestId.of(4);
+        Mailbox longText = new Mailbox(MailboxPath.forUser(BOB, "longText"), UidValidity.of(21), longTextId);
+        MessageBuilder builder = new MessageBuilder()
+            .header("Subject", "Quarterly budget review meeting notes")
+            .body("The quick brown fox jumps over the lazy dog".getBytes(UTF_8))
+            .uid(MessageUid.of(1))
+            .mailboxId(longTextId);
+        index.add(session, longText, builder.build(factory.generate())).block();
+        return longText;
+    }
+
+    @Test
     void addressSearchShouldMatchToFullAddress() throws Exception {
         SearchQuery query = SearchQuery.of(SearchQuery.address(AddressType.To,FROM_ADDRESS));
         Stream<MessageUid> result = index.search(session, mailbox3, query).toStream();
