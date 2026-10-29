@@ -57,7 +57,7 @@ public class TopCmdHandler extends AbstractPOP3CommandHandler implements CapaCap
         this.commandDelegate = new POP3MessageCommandDelegate(COMMANDS) {
             @Override
             protected Response handleMessageExists(POP3Session session, MessageMetaData data, POP3MessageCommandArguments args) throws IOException {
-                if (args.getLineCount().isEmpty()) {
+                if (args.getLineCount().isEmpty() || args.getLineCount().get() < 0) {
                     return handleSyntaxError();
                 }
                 int lineCount = args.getLineCount().get();
