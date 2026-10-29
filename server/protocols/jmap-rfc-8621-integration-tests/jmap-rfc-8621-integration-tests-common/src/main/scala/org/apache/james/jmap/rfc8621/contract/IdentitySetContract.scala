@@ -1998,6 +1998,111 @@ trait IdentitySetContract {
   }
 
   @Test
+  def firstUpdateOfServerSetIdentityShouldKeepUnpatchedProperties(): Unit = {
+    val identityId: String = `given`
+      .body(
+        s"""{
+           |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+           |	"methodCalls": [
+           |		["Identity/get",
+           |			{
+           |				"accountId": "$bobAccountId",
+           |				"ids": null
+           |			}, "c2"
+           |		]
+           |
+           |	]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .extract()
+      .jsonPath()
+      .get("methodResponses[0][1].list[0].id")
+
+    val response: String = `given`
+      .body(
+        s"""{
+           |    "using": [
+           |        "urn:ietf:params:jmap:core",
+           |        "urn:ietf:params:jmap:submission"
+           |    ],
+           |    "methodCalls": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "update": {
+           |                    "$identityId": {
+           |                        "textSignature": "Bob"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "ids": [
+           |                    "$identityId"
+           |                ]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Identity/set",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "updated": {
+           |                    "$identityId": { }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Identity/get",
+           |            {
+           |                "accountId": "$bobAccountId",
+           |                "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "list": [
+           |                    {
+           |                        "id": "$identityId",
+           |                        "name": "${bobUsername.asString}",
+           |                        "email": "${bobUsername.asString}",
+           |                        "replyTo": null,
+           |                        "bcc": null,
+           |                        "textSignature": "Bob",
+           |                        "htmlSignature": "",
+           |                        "mayDelete": false
+           |                    }
+           |                ]
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
   def givenUpdatedServerSetIdentityWhenAdminRemoveThatIdentityThenDestroyThatIdentityShouldSucceed(server: GuiceJamesServer): Unit = {
     // server create a alias for Bob
     server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(bobAliasLocalPart, DOMAIN.asString, bobUsername.asString)
