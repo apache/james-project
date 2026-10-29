@@ -1054,4 +1054,47 @@ class StripAttachmentTest {
 
         assertThat(filename).isNotNull();
     }
+
+    @Test
+    void getFilenameShouldUseTheContentTypeNameParameterWhenNoContentDispositionFilename() throws Exception {
+        StripAttachment mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("pattern", ".*\\.exe")
+            .build());
+        MimeBodyPart part = new MimeBodyPart();
+        part.setText("content");
+        part.setHeader("Content-Type", "application/octet-stream; name=\"virus.exe\"");
+
+        assertThat(mailet.getFilename(part)).isEqualTo("virus.exe");
+    }
+
+    @Test
+    void getFilenameShouldUseTheContentTypeNameParameterWhenContentDispositionHasNoFilename() throws Exception {
+        StripAttachment mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("pattern", ".*\\.exe")
+            .build());
+        MimeBodyPart part = new MimeBodyPart();
+        part.setText("content");
+        part.setHeader("Content-Type", "application/octet-stream; name=\"virus.exe\"");
+        part.setHeader("Content-Disposition", "attachment");
+
+        assertThat(mailet.getFilename(part)).isEqualTo("virus.exe");
+    }
+
+    @Test
+    void getFilenameShouldNotReturnTheHeaderNameWhenThereIsNoName() throws Exception {
+        StripAttachment mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("pattern", ".*\\.exe")
+            .build());
+        MimeBodyPart part = new MimeBodyPart();
+        part.setText("content");
+        part.setHeader("Content-Type", "text/calendar; method=REQUEST");
+
+        assertThat(mailet.getFilename(part)).isNotEqualTo("Content-Type");
+    }
 }

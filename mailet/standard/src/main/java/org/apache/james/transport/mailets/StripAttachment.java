@@ -53,7 +53,6 @@ import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.field.ContentDispositionField;
 import org.apache.james.mime4j.field.ContentDispositionFieldLenientImpl;
 import org.apache.james.mime4j.field.ContentTypeFieldLenientImpl;
-import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.RawField;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -399,7 +398,7 @@ public class StripAttachment extends GenericMailet {
                     .map(h -> h[0])
                     .map(h -> new RawField("Content-Type", h))
                     .map(h -> ContentTypeFieldLenientImpl.PARSER.parse(h, DecodeMonitor.SILENT))
-                    .map(Field::getName)).sneakyThrow())
+                    .map(field -> field.getParameter("name"))).sneakyThrow())
                 .orElse(null);
 
             if (fileName != null) {
