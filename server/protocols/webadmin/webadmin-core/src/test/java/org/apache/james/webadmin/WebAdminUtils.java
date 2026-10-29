@@ -99,6 +99,12 @@ public class WebAdminUtils {
         return buildRequestSpecification(webAdminServer.getPort());
     }
 
+    public static RequestSpecBuilder buildHttpsRequestSpecification(WebAdminServer webAdminServer) {
+        return buildRequestSpecification(webAdminServer.getPort())
+            .setBaseUri("https://localhost")
+            .setRelaxedHTTPSValidation();
+    }
+
     public static RequestSpecBuilder buildRequestSpecification(Port port) {
         return new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
