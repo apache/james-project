@@ -50,12 +50,12 @@ public class XListProcessor extends ListProcessor<XListRequest> implements Capab
 
     private static final List<Capability> XLIST_CAPS = ImmutableList.of(SUPPORTS_XLIST);
 
-    @Inject
     public XListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory,
                           SubscriptionManager subscriptionManager, PathConverter.Factory pathConverterFactory) {
         this(mailboxManager, factory, null, metricFactory, subscriptionManager, pathConverterFactory);
     }
 
+    @Inject
     public XListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MailboxTyper mailboxTyper,
                           MetricFactory metricFactory, SubscriptionManager subscriptionManager, PathConverter.Factory pathConverterFactory) {
         super(XListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, null, mailboxTyper, pathConverterFactory);

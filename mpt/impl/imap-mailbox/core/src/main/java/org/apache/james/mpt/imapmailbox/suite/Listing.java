@@ -92,4 +92,11 @@ public abstract class Listing implements ImapTestConstants {
             .withLocale(Locale.ITALY)
             .run("XList");
     }
+
+    @Test
+    public void testXPrefixedMailboxesHaveNoSpecialUseAttributes() throws Exception {
+        simpleScriptedTestProtocol
+            .run("XPrefixedSpecialUse");
+    }
+
 }
