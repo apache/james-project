@@ -73,6 +73,38 @@ public class TopCmdHandlerTest {
     }
 
     @Test
+    void onCommandRejectsNegativeLinesNumber() {
+        POP3Session session = mock(POP3Session.class);
+        when(session.getHandlerState()).thenReturn(POP3Session.TRANSACTION);
+
+        Request request = mock(Request.class);
+        when(request.getArgument()).thenReturn("1 -1");
+
+        MessageMetaData data = new MessageMetaData("1234", 567);
+        when(session.getAttachment(POP3Session.UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.of(List.of(data)));
+
+        Response response = new TopCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
+        assertThat(response.getRetCode()).isEqualTo(POP3Response.ERR_RESPONSE);
+        assertThat(response.getLines().get(0)).contains("Usage:");
+    }
+
+    @Test
+    void onCommandRejectsLargeNegativeLinesNumber() {
+        POP3Session session = mock(POP3Session.class);
+        when(session.getHandlerState()).thenReturn(POP3Session.TRANSACTION);
+
+        Request request = mock(Request.class);
+        when(request.getArgument()).thenReturn("1 -5");
+
+        MessageMetaData data = new MessageMetaData("1234", 567);
+        when(session.getAttachment(POP3Session.UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.of(List.of(data)));
+
+        Response response = new TopCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
+        assertThat(response.getRetCode()).isEqualTo(POP3Response.ERR_RESPONSE);
+        assertThat(response.getLines().get(0)).contains("Usage:");
+    }
+
+    @Test
     void onCommandHandlesMissingContent() throws IOException {
         POP3Session session = mock(POP3Session.class);
         when(session.getHandlerState()).thenReturn(POP3Session.TRANSACTION);
