@@ -75,7 +75,7 @@ class SmtpSaslMechanismIntegrationTest {
 
     @Test
     void explicitlyConfiguredLoginSaslMechanismShouldAuthenticate(@TempDir File temporaryFolder) throws Exception {
-        startJamesServer(temporaryFolder, "LoginSaslMechanismFactory");
+        startJamesServer(temporaryFolder, "LoginSaslMechanismFactory", false);
 
         SMTPClient smtpClient = new SMTPClient();
         try {
@@ -100,9 +100,8 @@ class SmtpSaslMechanismIntegrationTest {
     }
 
     @Test
-    void explicitlyConfiguredPlainSaslMechanismShouldAuthenticateOverClearTextWhenRequireSSLIsTrue(@TempDir File temporaryFolder) throws Exception {
-        // SMTP keeps accepting AUTH PLAIN on clear-text connections even when auth.requireSSL controls capability announcement.
-        startJamesServer(temporaryFolder, "PlainSaslMechanismFactory");
+    void explicitlyConfiguredPlainSaslMechanismShouldAuthenticateOverClearTextWhenRequireSSLIsFalse(@TempDir File temporaryFolder) throws Exception {
+        startJamesServer(temporaryFolder, "PlainSaslMechanismFactory", false);
 
         SMTPClient smtpClient = new SMTPClient();
         try {
@@ -120,13 +119,33 @@ class SmtpSaslMechanismIntegrationTest {
         }
     }
 
-    private void startJamesServer(File temporaryFolder, String saslMechanisms) throws Exception {
+    @Test
+    void explicitlyConfiguredPlainSaslMechanismShouldBeRejectedOverClearTextWhenRequireSSLIsTrue(@TempDir File temporaryFolder) throws Exception {
+        startJamesServer(temporaryFolder, "PlainSaslMechanismFactory", true);
+
+        SMTPClient smtpClient = new SMTPClient();
+        try {
+            smtpClient.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
+
+            smtpClient.sendCommand("EHLO", "localhost");
+            assertThat(smtpClient.getReplyCode()).isEqualTo(250);
+
+            smtpClient.sendCommand("AUTH", "PLAIN " + plainInitialResponse(USER, PASSWORD));
+            assertThat(smtpClient.getReplyCode()).isEqualTo(504);
+        } finally {
+            if (smtpClient.isConnected()) {
+                smtpClient.disconnect();
+            }
+        }
+    }
+
+    private void startJamesServer(File temporaryFolder, String saslMechanisms, boolean requireSSL) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_ONLY_MODULE)
             .withMailetContainer(minimalMailetContainer())
             .withSmtpConfiguration(SmtpConfiguration.builder()
                 .doNotVerifyIdentity()
-                .requireSSLForAuth(true)
+                .requireSSLForAuth(requireSSL)
                 .withSaslMechanisms(saslMechanisms)
                 .build())
             .build(temporaryFolder);
