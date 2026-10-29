@@ -19,8 +19,11 @@
 package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.time.Duration;
 
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -97,6 +100,30 @@ class SearchUtilTest {
     @Test
     void testComplexExtraction() {
         assertThat(SearchUtil.getBaseSubject("Re: re:re: fwd:[fwd: \t  Test]  (fwd)  (fwd)(fwd) ")).isEqualTo("Test");
+    }
+
+    @Test
+    void getBaseSubjectShouldBeFastOnManyLeaders() {
+        String subject = "Re:" + "Re: re:re: fwd:".repeat(4_000) + "[";
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("["));
+    }
+
+    @Test
+    void getBaseSubjectShouldBeFastOnManyBlobs() {
+        String subject = "ed: " + "_ +w*][`]w".repeat(6_000);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("w"));
+    }
+
+    @Test
+    void getBaseSubjectShouldBeFastOnManyTrailers() {
+        String subject = "x" + " (fwd)".repeat(10_000);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("x"));
     }
     
     @Test
