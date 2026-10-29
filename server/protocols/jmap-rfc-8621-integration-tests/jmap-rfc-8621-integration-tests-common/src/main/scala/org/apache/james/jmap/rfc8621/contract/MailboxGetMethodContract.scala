@@ -47,6 +47,8 @@ import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl, QuotaProbesImpl
 import org.apache.james.utils.DataProbeImpl
 import org.hamcrest.Matchers._
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.{CsvSource, ValueSource}
 
 import scala.jdk.CollectionConverters._
 
@@ -1440,10 +1442,37 @@ trait MailboxGetMethodContract {
       .body(s"$FIRST_MAILBOX.sortOrder", equalTo(1000))
   }
 
-  @Test
-  def getMailboxesShouldReturnCorrectMailboxRole(server: GuiceJamesServer): Unit = {
+  @ParameterizedTest
+  @ValueSource(strings = Array("x-custom", "x-", "X-custom", "ordinary", "x-parent.child", "ordinary.x-child"))
+  def getMailboxesShouldNotInferCustomRoleFromName(mailboxName: String, server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, mailboxName)).serialize
+
+    Seq(s"\"ids\": [\"$mailboxId\"],", "").foreach(ids => {
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(s"""{
+                 |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                 |  "methodCalls": [["Mailbox/get", {
+                 |    "accountId": "$bobAccountId", $ids
+                 |    "properties": ["id", "name", "role", "sortOrder"]
+                 |  }, "c1"]]
+                 |}""".stripMargin)
+        .when.post
+        .`then`
+        .statusCode(SC_OK)
+        .extract.asString
+
+      assertThatJson(response).inPath(s"methodResponses[0][1].list[?(@.id == '$mailboxId')]")
+        .isEqualTo(s"""[{"id":"$mailboxId", "name":"${mailboxName.split("\\.").last}", "role":null, "sortOrder":1000}]""")
+    })
+  }
+
+  @ParameterizedTest
+  @CsvSource(Array("INBOX,inbox,10", "Templates,templates,80", "Restored-Messages,restored messages,90"))
+  def getMailboxesShouldReturnCorrectMailboxRole(mailboxName: String, role: String, sortOrder: Int, server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(bobUsername, DefaultMailboxes.INBOX))
+      .createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
       .serialize
 
     `given`
@@ -1466,9 +1495,9 @@ trait MailboxGetMethodContract {
     .`then`
       .statusCode(SC_OK)
       .body(s"$ARGUMENTS.list", hasSize(1))
-      .body(s"$FIRST_MAILBOX.name", equalTo(DefaultMailboxes.INBOX))
-      .body(s"$FIRST_MAILBOX.role", equalTo(Role.INBOX.serialize))
-      .body(s"$FIRST_MAILBOX.sortOrder", equalTo(10))
+      .body(s"$FIRST_MAILBOX.name", equalTo(mailboxName))
+      .body(s"$FIRST_MAILBOX.role", equalTo(role))
+      .body(s"$FIRST_MAILBOX.sortOrder", equalTo(sortOrder))
   }
 
   @Test
