@@ -142,7 +142,7 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
     }
     mailboxCreationRequest.parentId
       .map(maybeParentId => for {
-        parentId <- Try(mailboxIdFactory.fromString(maybeParentId.id))
+        parentId <- Try(mailboxIdFactory.fromString(maybeParentId.id.value))
           .toEither
           .left
           .map(e => new IllegalArgumentException(e.getMessage, e))

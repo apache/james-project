@@ -120,7 +120,7 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
           retrieveSubscriptions(mailboxSession))
           .flatMapMany {
             case (quotaLoader, subscriptions) => SFlux.fromIterable(ids.value)
-              .flatMap(id => Try(mailboxIdFactory.fromString(id.id))
+              .flatMap(id => Try(mailboxIdFactory.fromString(id.id.value))
                 .fold(e => SMono.just(MailboxGetResults.notFound(id)),
                   mailboxId => getMailboxResultById(capabilities, mailboxId, subscriptions, quotaLoader, mailboxSession)),
                 maxConcurrency = 5)

@@ -22,7 +22,7 @@ package org.apache.james.jmap.mail
 import eu.timepit.refined
 import org.apache.james.jmap.api.change.{EmailChanges, Limit, MailboxChanges}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
-import org.apache.james.jmap.core.{AccountId, Properties, UuidState}
+import org.apache.james.jmap.core.{AccountId, IdOrCreationReference, Properties, UuidState}
 import org.apache.james.jmap.method.{GetRequest, WithAccountId}
 import org.apache.james.mailbox.model.MailboxId
 
@@ -45,7 +45,15 @@ object MailboxGet {
     }
 }
 
-case class UnparsedMailboxId(id: Id)
+object UnparsedMailboxId {
+  // Keep callers with an already validated Id source-compatible.
+  def apply(id: Id): UnparsedMailboxId = new UnparsedMailboxId(IdOrCreationReference.fromId(id))
+
+  def validate(value: String): Either[IllegalArgumentException, UnparsedMailboxId] =
+    IdOrCreationReference.validate(value).map(new UnparsedMailboxId(_))
+}
+
+case class UnparsedMailboxId(id: IdOrCreationReference)
 
 object Ids {
   val EMPTY = Ids(List())

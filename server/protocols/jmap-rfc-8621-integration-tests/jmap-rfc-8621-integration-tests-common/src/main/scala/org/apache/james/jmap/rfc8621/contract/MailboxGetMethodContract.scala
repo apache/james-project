@@ -1863,6 +1863,34 @@ trait MailboxGetMethodContract {
       .body(s"$ARGUMENTS.notFound", contains(randomId))
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = Array(false, true))
+  def getMailboxesByIdsShouldPreserveFoundMailboxesAlongsideABareHash(hashFirst: Boolean, server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
+      .serialize
+    val ids = if (hashFirst) s"\"#\", \"$mailboxId\"" else s"\"$mailboxId\", \"#\""
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/get", {
+               |    "accountId": "$bobAccountId",
+               |    "ids": [$ids],
+               |    "properties": ["id"]
+               |  }, "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body("methodResponses[0][0]", equalTo("Mailbox/get"))
+      .body(s"$ARGUMENTS.list", hasSize(1))
+      .body(s"$FIRST_MAILBOX.id", equalTo(mailboxId))
+      .body(s"$ARGUMENTS.notFound", contains("#"))
+  }
+
   @Test
   def getMailboxesByIdsShouldReturnNotFoundWhenMailboxDoesNotExist(): Unit = {
     val randomId = randomMailboxId.serialize()
