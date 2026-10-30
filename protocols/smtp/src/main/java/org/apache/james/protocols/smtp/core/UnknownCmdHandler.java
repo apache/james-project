@@ -39,6 +39,7 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.UnknownHook;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -66,7 +67,7 @@ public class UnknownCmdHandler extends AbstractHookableCmdHandler<UnknownHook> {
     @Override
     protected Response doCoreCmd(SMTPSession session, String command, String parameters) {
         StringBuilder result = new StringBuilder();
-        result.append(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_CMD)).append(" Command ").append(command).append(" unrecognized.");
+        result.append(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_CMD)).append(" Command ").append(CharMatcher.javaIsoControl().replaceFrom(command, '?')).append(" unrecognized.");
         return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, result);
     }
 
