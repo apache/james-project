@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -50,6 +49,7 @@ public class SearchUtil {
     private static final String FWD = "fwd";
     private static final String FW = "fw";
     private static final char WS = ' ';
+    private static final char NO_BREAK_SPACE = (char) 0xA0;
     private static final char OPEN_SQUARE_BRACKED = '[';
     private static final char CLOSE_SQUARE_BRACKED = ']';
     private static final char COLON = ':';
@@ -239,11 +239,33 @@ public class SearchUtil {
         //    Convert all tabs and continuations to space.  Convert all
         //    multiple spaces to a single space.
         // replace all tabs with spaces and replace multiple spaces with one space
-        String decodedSubject = StringUtils.normalizeSpace(
+        String decodedSubject = normalizeSpace(
             MimeUtil.unfold(
                 DecoderUtil.decodeEncodedWords(subject, DecodeMonitor.SILENT)));
 
         return new BaseSubjectExtractor(decodedSubject).extract();
+    }
+
+    /**
+     * Unlike StringUtils::normalizeSpace, control characters are kept at both ends: they could otherwise
+     * only be trimmed at the very start of the subject and not once a leader, a blob or a forward wrapper is removed.
+     */
+    private static String normalizeSpace(String subject) {
+        StringBuilder result = new StringBuilder(subject.length());
+        boolean pendingSpace = false;
+        for (int i = 0; i < subject.length(); i++) {
+            char c = subject.charAt(i);
+            if (Character.isWhitespace(c) || c == NO_BREAK_SPACE) {
+                pendingSpace = result.length() > 0;
+            } else {
+                if (pendingSpace) {
+                    result.append(WS);
+                    pendingSpace = false;
+                }
+                result.append(c);
+            }
+        }
+        return result.toString();
     }
 
     /**
