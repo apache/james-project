@@ -88,6 +88,7 @@ public class IDCommandParser extends AbstractImapCommandParser {
 
         request.consumeChar(')');
         request.eol();
-        return new IDRequest(tag, Optional.of(parameters.build()));
+        // RFC2971 mandates unique field names: be lenient with clients repeating one
+        return new IDRequest(tag, Optional.of(parameters.buildKeepingLast()));
     }
 }
