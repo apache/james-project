@@ -55,7 +55,7 @@ trait Method {
 }
 
 trait DeferredCreationReferences {
-  /** Creation reference values at these paths are resolved by the method after ordering its creates. */
+  /** Creation reference values and object keys at these paths are resolved by the method after its creates. */
   def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath]
 }
 

@@ -74,4 +74,13 @@ class DeferredCreationReferenceTest {
 
     assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = expectedArguments)))
   }
+  @Test
+  def shouldDeferUpdateKeysAndValuesWithoutLosingAliases(): Unit = {
+    val arguments = Json.obj("update" -> Json.obj("#parent" -> Json.obj("parentId" -> "#parent"),
+      "old-parent" -> Json.obj("name" -> "other")), "destroy" -> Json.arr("#parent"))
+    val invocation = Invocation(MethodName("Mailbox/set"), Arguments(arguments), MethodCallId("set"))
+    assertThat(context.resolveBackReferences(invocation, Set(JsPath \ "update" \ "#parent",
+      JsPath \ "update" \ "#parent" \ "parentId", (JsPath \ "destroy")(0))))
+      .isEqualTo(Right(invocation))
+  }
 }
