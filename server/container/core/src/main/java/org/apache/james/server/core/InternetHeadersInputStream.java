@@ -37,6 +37,7 @@ public class InternetHeadersInputStream extends InputStream {
     private final Enumeration<String> headerLines;
     private byte[] currLine;
     private int pos = 0;
+    private boolean separatorWritten = false;
 
     public InternetHeadersInputStream(InternetHeaders headers) {
         this(headers.getAllHeaderLines());
@@ -68,8 +69,15 @@ public class InternetHeadersInputStream extends InputStream {
             // Add seperator to show that headers are complete
             if (!headerLines.hasMoreElements()) {
                 line += LINE_SEPERATOR;
+                separatorWritten = true;
             }
             currLine = line.getBytes(StandardCharsets.UTF_8);
+            return true;
+        } else if (!separatorWritten) {
+            // No header at all: still end the (empty) header block so that the body stays a body
+            pos = 0;
+            separatorWritten = true;
+            currLine = LINE_SEPERATOR.getBytes(StandardCharsets.US_ASCII);
             return true;
         } else {
             return false;
