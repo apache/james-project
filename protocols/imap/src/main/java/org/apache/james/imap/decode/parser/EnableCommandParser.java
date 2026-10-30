@@ -26,6 +26,7 @@ import jakarta.inject.Inject;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -44,13 +45,21 @@ public class EnableCommandParser extends AbstractImapCommandParser {
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         List<Capability> caps = new ArrayList<>();
-        caps.add(Capability.of(request.astring()));
+        caps.add(capability(request));
         while (request.nextChar() == ' ') {
             request.consume();
-            caps.add(Capability.of(request.astring()));
+            caps.add(capability(request));
         }
         request.eol();
         return new EnableRequest(tag, caps);
+    }
+
+    private Capability capability(ImapRequestLineReader request) throws DecodingException {
+        String capability = request.astring();
+        if (capability.isEmpty()) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Capability must not be empty");
+        }
+        return Capability.of(capability);
     }
 
 }
