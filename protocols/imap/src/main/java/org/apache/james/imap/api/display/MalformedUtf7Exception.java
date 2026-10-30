@@ -25,6 +25,10 @@ package org.apache.james.imap.api.display;
  * to be treated as an internal error.
  */
 public class MalformedUtf7Exception extends RuntimeException {
+    public MalformedUtf7Exception(String input) {
+        super("'" + input + "' is not a valid modified UTF-7 value");
+    }
+
     public MalformedUtf7Exception(String input, Throwable cause) {
         super("'" + input + "' is not a valid modified UTF-7 value", cause);
     }
