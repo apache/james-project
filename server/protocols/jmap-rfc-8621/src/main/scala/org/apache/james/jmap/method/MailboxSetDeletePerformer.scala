@@ -24,9 +24,10 @@ import jakarta.inject.Inject
 import org.apache.commons.lang3.StringUtils
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.mail.{MailboxGet, MailboxSetError, MailboxSetRequest, RemoveEmailsOnDestroy, UnparsedMailboxId}
+import org.apache.james.jmap.mail.{MailboxSetError, MailboxSetRequest, RemoveEmailsOnDestroy, UnparsedMailboxId}
 import org.apache.james.jmap.method.MailboxSetDeletePerformer.{MailboxDeletionFailure, MailboxDeletionResult, MailboxDeletionResults, MailboxDeletionSuccess}
 import org.apache.james.jmap.method.MailboxSetMethod.assertCapabilityIfSharedMailbox
+import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
@@ -86,20 +87,22 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
                                           subscriptionManager: SubscriptionManager,
                                           mailboxIdFactory: MailboxId.Factory) {
 
-  def deleteMailboxes(mailboxSession: MailboxSession, mailboxSetRequest: MailboxSetRequest, supportSharedMailbox: Boolean): SMono[MailboxDeletionResults] =
-    SFlux.fromIterable(mailboxSetRequest.destroy.getOrElse(Seq()).toSet)
-      .flatMap(id => delete(mailboxSession, id, mailboxSetRequest.onDestroyRemoveEmails.getOrElse(RemoveEmailsOnDestroy(false)), supportSharedMailbox)
-        .onErrorRecover(e => MailboxDeletionFailure(id, e)),
-        maxConcurrency = 5)
+  def deleteMailboxes(mailboxSession: MailboxSession, mailboxSetRequest: MailboxSetRequest, supportSharedMailbox: Boolean,
+                      processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)): SMono[MailboxDeletionResults] =
+    SFlux.fromIterable(MailboxSetReferenceResolver.deletions(mailboxSetRequest, processingContext, mailboxIdFactory))
+      .flatMap({ case (originals, resolved) =>
+        resolved.fold(SMono.error[MailboxDeletionResult], id => delete(mailboxSession, id,
+          mailboxSetRequest.onDestroyRemoveEmails.getOrElse(RemoveEmailsOnDestroy(false)), supportSharedMailbox))
+          .map(result => Seq(result))
+          .onErrorRecover(e => originals.map(id => MailboxDeletionFailure(id, e)))
+      }, maxConcurrency = 5)
       .collectSeq()
-      .map(MailboxDeletionResults)
+      .map(results => MailboxDeletionResults(results.flatten))
       .doOnSuccess(auditTrail(mailboxSession, _))
 
-  private def delete(mailboxSession: MailboxSession, id: UnparsedMailboxId, onDestroy: RemoveEmailsOnDestroy, supportSharedMailbox: Boolean): SMono[MailboxDeletionResult] =
-    MailboxGet.parse(mailboxIdFactory)(id)
-      .fold(e => SMono.error(e),
-        id => doDelete(mailboxSession, id, onDestroy, supportSharedMailbox)
-          .`then`(SMono.just[MailboxDeletionResult](MailboxDeletionSuccess(id))))
+  private def delete(mailboxSession: MailboxSession, id: MailboxId, onDestroy: RemoveEmailsOnDestroy, supportSharedMailbox: Boolean): SMono[MailboxDeletionResult] =
+    doDelete(mailboxSession, id, onDestroy, supportSharedMailbox)
+      .`then`(SMono.just[MailboxDeletionResult](MailboxDeletionSuccess(id)))
 
   private def doDelete(mailboxSession: MailboxSession, id: MailboxId, onDestroy: RemoveEmailsOnDestroy, supportSharedMailbox: Boolean): SMono[Unit] =
     SMono(mailboxManager.getMailboxReactive(id, mailboxSession))
