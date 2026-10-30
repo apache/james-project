@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -334,7 +335,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             sink = Pair.of(Sinks.many().unicast().onBackpressureBuffer(), new AtomicInteger(0));
             attachment.put(SINK, sink);
 
-            FileChunkConsumer fileChunkConsumer = new FileChunkConsumer(size + pending.stream().mapToInt(b -> b.length).sum());
+            FileChunkConsumer fileChunkConsumer = new FileChunkConsumer();
             Disposable subscribe = sink.getLeft().asFlux()
                 .publishOn(Schedulers.boundedElastic())
                 .subscribe(fileChunkConsumer,
@@ -379,10 +380,32 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         int readableBytes = in.readableBytes();
         byte[] bytes = new byte[readableBytes];
         in.readBytes(bytes);
-        sink.getLeft().emitNext(bytes, FAIL_FAST);
-        if (sink.getRight().addAndGet(readableBytes) >= size) {
+        int accepted = literalLineLength(bytes, sink.getRight().get(), size);
+        sink.getLeft().emitNext(accepted == readableBytes ? bytes : Arrays.copyOf(bytes, accepted), FAIL_FAST);
+        boolean endOfLineReached = accepted < readableBytes || bytes[accepted - 1] == '\n';
+        if (sink.getRight().addAndGet(accepted) >= size && endOfLineReached) {
             sink.getLeft().tryEmitComplete();
         }
+    }
+
+    /**
+     * How many of {@code bytes} belong to the literal and to the end of its line, {@code received}
+     * bytes out of {@code size} having already been spooled. {@code size} counts the CRLF ending the
+     * line, but {@link ImapRequestLineReader#eol()} tolerates spaces before it: keep spooling them,
+     * and the CRLF, rather than cutting the line short.
+     */
+    private static int literalLineLength(byte[] bytes, int received, int size) {
+        int length = Math.min(bytes.length, Math.max(0, size - received));
+        if (received + length < size || (length > 0 && bytes[length - 1] == '\n')) {
+            return length;
+        }
+        while (length < bytes.length && (bytes[length] == ' ' || bytes[length] == '\r')) {
+            length++;
+        }
+        if (length < bytes.length && bytes[length] == '\n') {
+            length++;
+        }
+        return length;
     }
 
     public static class FileHolderInner extends LeakAware.Resource {
@@ -421,15 +444,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     }
 
     static class FileChunkConsumer implements Consumer<byte[]> {
-        private final int size;
-        private final AtomicInteger written = new AtomicInteger(0);
         private final AtomicBoolean initialized = new AtomicBoolean(false);
         private OutputStream outputStream;
         private FileHolder file;
-
-        FileChunkConsumer(int size) {
-            this.size = size;
-        }
 
         public FileHolder getFile() {
             return file;
@@ -456,9 +473,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
         private void writeChunk(byte[] next) {
             try {
-                int amount = Math.min(next.length, size - written.get());
-                outputStream.write(next, 0, amount);
-                written.addAndGet(amount);
+                outputStream.write(next);
             } catch (Exception e) {
                 try {
                     outputStream.close();

@@ -23,6 +23,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -107,6 +108,50 @@ class IMAPServerAppendNonSynchronizedLitteralsTest extends AbstractIMAPServerTes
             readStringUntil(clientConnection, s -> s.contains("FETCH completed."));
         }
 
+    }
+
+    @Test
+    void appendWithTrailingSpacesAfterAFileBackedLiteralShouldSucceed() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+
+        // imapServerNoLimits.xml sets inMemorySizeLimit to 64 KB: this literal is spooled to a file
+        String msg = fileBackedMessage();
+        write("A004 APPEND INBOX {" + msg.length() + "+}\r\n" + msg + "  \r\n");
+
+        assertThat(readStringUntil(clientConnection, s -> s.contains("A004 ")))
+            .last().asString().startsWith("A004 OK");
+    }
+
+    @Test
+    void appendWithTrailingSpacesInALaterSegmentAfterAFileBackedLiteralShouldSucceed() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+
+        String msg = fileBackedMessage();
+        write("A004 APPEND INBOX {" + msg.length() + "+}\r\n" + msg);
+        Thread.sleep(100);
+        write("  ");
+        Thread.sleep(100);
+        write("\r\n");
+
+        assertThat(readStringUntil(clientConnection, s -> s.contains("A004 ")))
+            .last().asString().startsWith("A004 OK");
+    }
+
+    private static String fileBackedMessage() {
+        StringBuilder message = new StringBuilder("From: " + USER.asString() + "\r\nSubject: large\r\n\r\n");
+        while (message.length() < 70 * 1024) {
+            message.append("0123456789012345678901234567890123456789012345678901234567890123456789\r\n");
+        }
+        return message.toString();
+    }
+
+    private void write(String payload) throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(payload.getBytes(StandardCharsets.US_ASCII));
+        while (buffer.hasRemaining()) {
+            clientConnection.write(buffer);
+        }
     }
 
     @Test
