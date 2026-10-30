@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -74,6 +75,14 @@ class ImapRequestFrameDecoderTest {
             .toList();
     }
 
+    private static List<byte[]> byteByByte(byte[] stream) {
+        List<byte[]> chunks = new ArrayList<>();
+        for (byte b : stream) {
+            chunks.add(new byte[] {b});
+        }
+        return chunks;
+    }
+
     @Test
     void decodeShouldNotFailWhenARetriedLiteralCommandEndsBeforeTheLastChunk() {
         List<byte[]> chunks = List.of(
@@ -95,5 +104,45 @@ class ImapRequestFrameDecoderTest {
 
         assertThatCode(() -> decode(true, 32, 5504, 3008, chunks))
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void decodedCommandsShouldNotDependOnSegmentation() {
+        byte[] stream = "a LOGIN {3}\r\nOGIN {bo\r\n".getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(false, 16, 0, 2304, List.of(stream));
+        List<String> chunked = decode(false, 16, 0, 2304, List.of(
+            Arrays.copyOfRange(stream, 0, 14), Arrays.copyOfRange(stream, 14, 18), Arrays.copyOfRange(stream, 18, 23)));
+
+        assertThat(chunked).isEqualTo(whole);
+    }
+
+    @Test
+    void decodedCommandsShouldNotDependOnSegmentationWhenAnAppendLiteralIsRejected() {
+        byte[] stream = "a  OO,\r\nb APPEND INBOX {/L{\n}\rO4T0U=A\n".getBytes(StandardCharsets.ISO_8859_1);
+
+        assertThat(decode(true, 32, 5504, 3008, byteByByte(stream)))
+            .isEqualTo(decode(true, 32, 5504, 3008, List.of(stream)));
+    }
+
+    @Test
+    void decodedCommandsShouldNotDependOnSegmentationWhenALiteralSizeIsInvalid() {
+        byte[] stream = "a NOOP\r\nb APPEND INBOX {\0\0\0\0\0\0\0\0\r\n\u0004\t@\0 }\r\n~b SELEa N\r\n".getBytes(StandardCharsets.ISO_8859_1);
+
+        assertThat(decode(true, 32, 5504, 3008, byteByByte(stream)))
+            .isEqualTo(decode(true, 32, 5504, 3008, List.of(stream)));
+    }
+
+    @Test
+    void restOfARejectedLiteralLineShouldNotBeDecodedAsACommand() {
+        List<byte[]> chunks = List.of(
+            "b APPEND INBOX {5}\r\n".getBytes(StandardCharsets.US_ASCII),
+            "helloX".getBytes(StandardCharsets.US_ASCII),
+            " c NOOP\r\n".getBytes(StandardCharsets.US_ASCII),
+            "d NOOP\r\n".getBytes(StandardCharsets.US_ASCII));
+
+        assertThat(decode(true, 32, 5504, 3008, chunks))
+            .hasSize(2)
+            .last().asString().contains("tag=d, command=NOOP");
     }
 }
