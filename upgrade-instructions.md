@@ -29,6 +29,23 @@ Change list:
  - [Migration of embedded mail queue broker from ActiveMQ Classic to ActiveMQ Artemis](#migration-of-embedded-mail-queue-broker-from-activemq-classic-to-activemq-artemis)
  - [JAMES-4236 JMAP EmailSubmission/set validates identityId](#james-4236-jmap-emailsubmissionset-validates-identityid)
  - [JAMES-4236 populateEmailQueryView task reports mailbox counters](#james-4236-populateemailqueryview-task-reports-mailbox-counters)
+ - [JAMES-4235 Lucene ignores punctuation around words](#james-4235-lucene-ignores-punctuation-around-words)
+
+### JAMES-4235 Lucene ignores punctuation around words
+
+Date: 30/10/2026
+
+Concerned products: James apps relying on Lucene as the search index
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-4235
+
+The Lucene mailbox index now removes punctuation at the start and at the end of each word, so a subject `<Team sync>` is
+found when searching `Team`. Punctuation inside a word, as in an email address, is kept.
+
+Messages indexed before the upgrade keep words glued to their punctuation until they are reindexed. To apply the change
+to existing messages, [reindex all mails](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails).
+Until then, searches that include punctuation around words, such as `<bob@example.com>`, may miss those messages.
+In-memory Lucene indexes need nothing.
 
 ### JAMES-4236 populateEmailQueryView task reports mailbox counters
 
