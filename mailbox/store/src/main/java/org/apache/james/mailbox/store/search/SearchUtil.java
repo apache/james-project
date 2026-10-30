@@ -415,15 +415,12 @@ public class SearchUtil {
          *     BLOBCHAR = %x01-5a / %x5c / %x5e-7f
          *     ; any CHAR except '[' and ']'
          *
-         * @return the position following the first ']' if it comes before any '[' (other than the first char),
-         * from otherwise
+         * @return the position following the first ']' if the subject starts with '[' at from and no other '['
+         * comes before that ']', from otherwise
          */
         private int removeBlob(int from) {
-            if (from >= end) {
+            if (from >= end || subject.charAt(from) != OPEN_SQUARE_BRACKED) {
                 return from;
-            }
-            if (subject.charAt(from) == CLOSE_SQUARE_BRACKED) {
-                return from + 1;
             }
             int bracket = nextBracket(from + 1);
             if (bracket < end && subject.charAt(bracket) == CLOSE_SQUARE_BRACKED) {
