@@ -22,6 +22,7 @@ package org.apache.james.smtpserver.dsn;
 import static org.apache.james.protocols.api.ProtocolSession.State.Transaction;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -32,6 +33,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
+import org.apache.mailet.DsnParameters;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -142,5 +144,18 @@ class DSNRcptParameterHookTest {
         hook.doRcpt(session, MaybeSender.nullSender(), rcpt, ImmutableMap.of("NOTIFY", "BOGUS"));
 
         assertThat(session.getAttachment(DSNRcptParameterHook.DSN_RCPT_PARAMETERS, Transaction)).isEmpty();
+    }
+
+    @Test
+    void parametersShouldKeepTheLastValueWhenTheSameRecipientIsGivenTwice() throws Exception {
+        DSNRcptParameterHook hook = new DSNRcptParameterHook();
+        SMTPSession session = newSession();
+
+        hook.doRcpt(session, MaybeSender.nullSender(), new MailAddress("rcpt@localhost"), ImmutableMap.of("NOTIFY", "DELAY"));
+        hook.doRcpt(session, MaybeSender.nullSender(), new MailAddress("RCPT@localhost"), ImmutableMap.of("NOTIFY", "FAILURE"));
+
+        assertThat(session.getAttachment(DSNRcptParameterHook.DSN_RCPT_PARAMETERS, Transaction).get().build())
+            .containsOnly(Map.entry(new MailAddress("rcpt@localhost"),
+                DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.FAILURE))));
     }
 }
