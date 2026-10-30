@@ -135,8 +135,19 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             return;
         }
 
-        parseImapMessage(ctx, in, attachment, attempt, readerIndex)
-            .ifPresent(out::add);
+        int readableBytes = in.readableBytes();
+        Optional<ImapMessage> message = parseImapMessage(ctx, in, attachment, attempt, readerIndex);
+        if (message.isPresent() && in.readableBytes() == readableBytes) {
+            // The command ended within `pending`, before reaching `in`. Netty forbids decoding a
+            // message without reading anything, so hand it over directly, then decode what follows:
+            // the rest of `pending` first, then `in`.
+            ctx.fireChannelRead(message.get());
+            if (!ctx.isRemoved()) {
+                decode(ctx, in, out);
+            }
+            return;
+        }
+        message.ifPresent(out::add);
     }
 
     /**
@@ -169,13 +180,10 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                     }
                 }
 
-                commitConsumedBytes(in, attempt);
                 enableFraming(ctx);
 
                 attachment.clear();
-                if (!pending.isEmpty()) {
-                    pending.clear();
-                }
+                commitConsumedBytes(in, attempt);
                 return Optional.of(message);
             } catch (NettyImapRequestLineReader.NotEnoughDataException e) {
                 // this exception was thrown because we don't have enough data yet
@@ -195,10 +203,22 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
      * The command may not have used everything it was offered: the tail can already be the next
      * pipelined command. Advance Netty's cumulation past what was actually consumed only, so the
      * remainder is decoded as a command of its own instead of being dropped (see #3144).
+     *
+     * The command can also end within {@link #pending}: what it did not use from there is kept,
+     * to be decoded before `in`.
      */
     private void commitConsumedBytes(ByteBuf in, ParseAttempt attempt) {
         if (in != null && attempt.buffer() != null) {
-            in.skipBytes(Math.max(0, attempt.buffer().readerIndex() - attempt.pendingSize()));
+            int consumed = attempt.buffer().readerIndex();
+            in.skipBytes(Math.max(0, consumed - attempt.pendingSize()));
+            pending.clear();
+            if (consumed < attempt.pendingSize()) {
+                byte[] leftover = new byte[attempt.pendingSize() - consumed];
+                attempt.buffer().getBytes(consumed, leftover);
+                pending.add(leftover);
+            }
+        } else {
+            pending.clear();
         }
     }
 
