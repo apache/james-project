@@ -21,6 +21,7 @@ package org.apache.james.protocols.smtp.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -191,7 +192,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         }
 
 
-        ImmutableMap.Builder<String, String> parameters = ImmutableMap.builder();
+        Map<String, String> parameters = new LinkedHashMap<>();
         if (rcptOptionString != null) {
 
             StringTokenizer optionTokenizer = new StringTokenizer(
@@ -210,11 +211,19 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
                         "Unrecognized or unsupported option: "
                             + parameter.getKey());
                 }
-                parameters.put(parameter.getKey(), parameter.getValue());
+                if (parameters.putIfAbsent(parameter.getKey(), parameter.getValue()) != null) {
+                    LOGGER.debug("RCPT command had duplicated option {}{}",
+                        parameter.getKey(), getContext(session, recipientAddress, recipient));
+
+                    return new SMTPResponse(
+                        SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
+                        DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG)
+                            + " Duplicated parameter " + parameter.getKey());
+                }
             }
             optionTokenizer = null;
         }
-        session.setAttachment(CURRENT_RECIPIENT_PARAMETERS, parameters.build(), State.Transaction);
+        session.setAttachment(CURRENT_RECIPIENT_PARAMETERS, ImmutableMap.copyOf(parameters), State.Transaction);
 
         session.setAttachment(CURRENT_RECIPIENT, recipientAddress, State.Transaction);
 
