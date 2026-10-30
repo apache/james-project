@@ -40,8 +40,8 @@ public class ModifiedUtf7 {
      * 
      * @param input utf7-encoded value
      * @return decoded value
-     * @throws MalformedUtf7Exception when the input holds an invalid modified UTF-7 sequence, or non ASCII
-     * characters alongside a shift sequence
+     * @throws MalformedUtf7Exception when the input holds an invalid modified UTF-7 sequence, non ASCII
+     * characters alongside a shift sequence, or is not the canonical encoding of the value it decodes to
      */
     public static String decodeModifiedUTF7(String input) {
         if (UNENCODED_CHAR_MATCHER.matchesAllOf(input)) {
@@ -52,6 +52,16 @@ public class ModifiedUtf7 {
             // the bytes it is given and would fail with a java.lang.Error, or garble 8-bit characters.
             throw new MalformedUtf7Exception(input);
         }
+        String decoded = decode(input);
+        // The jutf7 decoder is lenient (RFC2152) and accepts eg printable US-ASCII within a shift sequence
+        // ("&AGE-" for "a"), which RFC3501 section 5.1.3 forbids. Each value needs a single wire form.
+        if (!encodeModifiedUTF7(decoded).equals(input)) {
+            throw new MalformedUtf7Exception(input);
+        }
+        return decoded;
+    }
+
+    private static String decode(String input) {
         try {
             // Charset::decode would report an unterminated shift sequence as a java.lang.Error, which
             // callers can hardly handle: decode by hand in order to turn it into a regular exception.
