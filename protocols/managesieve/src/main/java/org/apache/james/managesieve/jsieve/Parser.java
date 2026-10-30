@@ -57,7 +57,10 @@ public class Parser implements SieveParser {
     public List<String> parse(String content) throws SyntaxException {
         try {
             sieveFactory.parse(new ByteArrayInputStream(content.getBytes()));
-        } catch (ParseException ex) {
+        } catch (VirtualMachineError ex) {
+            throw ex;
+        } catch (ParseException | RuntimeException | Error ex) {
+            // jSieve also reports invalid scripts as unchecked exceptions (number overflow) or errors (lexical errors, invalid escapes)
             throw new SyntaxException(ex);
         }
         return EMPTY_WARNINGS;
