@@ -404,4 +404,28 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
             IOUtils.consume(wrapper.getMessageInputStream()));
         LifecycleUtil.dispose(wrapper);
     }
+
+    @Test
+    void writeToShouldKeepTheBlankLineOfAnEmptyHeaderBlock() throws Exception {
+        String raw = "\r\nBody text\r\n";
+        MimeMessageWrapper wrapper = getMessageFromSources(raw);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        wrapper.writeTo(out);
+
+        assertThat(out.toString(StandardCharsets.US_ASCII)).isEqualTo(raw);
+        LifecycleUtil.dispose(wrapper);
+    }
+
+    @Test
+    void writeToShouldKeepTheBlankLineOfAnEmptyHeaderBlockWhenFilteringHeaders() throws Exception {
+        String raw = "\r\nBody text\r\n";
+        MimeMessageWrapper wrapper = getMessageFromSources(raw);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        wrapper.writeTo(out, new String[] {"Bcc"});
+
+        assertThat(out.toString(StandardCharsets.US_ASCII)).isEqualTo(raw);
+        LifecycleUtil.dispose(wrapper);
+    }
 }
