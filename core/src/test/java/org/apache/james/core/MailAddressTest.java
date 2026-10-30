@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -360,6 +361,23 @@ class MailAddressTest {
     void stripDetailsShouldBePreciseWithMultipleCharacterDelimiter() throws AddressException {
         MailAddress mailAddress = new MailAddress("localpart---details@example.com");
         assertThat(mailAddress.stripDetails("--")).isEqualTo("localpart@example.com");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"\\-@domain.tld", "a\\-b@domain.tld", "\"a-b\"@domain.tld"})
+    void stripDetailsShouldIgnoreEscapedOrQuotedSeparator(String address) throws AddressException {
+        MailAddress mailAddress = new MailAddress(address);
+
+        assertThat(mailAddress.stripDetails("-").asString()).isEqualTo(address);
+        assertThat(mailAddress.getLocalPartDetails("-")).isEmpty();
+    }
+
+    @Test
+    void stripDetailsShouldStripAfterAnEscapedSeparator() throws AddressException {
+        MailAddress mailAddress = new MailAddress("a\\-b-details@domain.tld");
+
+        assertThat(mailAddress.stripDetails("-").asString()).isEqualTo("a\\-b@domain.tld");
+        assertThat(mailAddress.getLocalPartDetails("-")).contains("details");
     }
 
     // RFC 6532 §3.1 — NFC normalisation
