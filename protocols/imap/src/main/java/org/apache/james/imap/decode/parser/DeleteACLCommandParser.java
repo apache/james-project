@@ -45,7 +45,7 @@ public class DeleteACLCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        MailboxName mailboxName = new MailboxName(request.mailbox());
+        MailboxName mailboxName = mailboxName(request);
         MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.deserialize(request.astring());
         request.eol();
         return new DeleteACLRequest(tag, mailboxName, entryKey);
