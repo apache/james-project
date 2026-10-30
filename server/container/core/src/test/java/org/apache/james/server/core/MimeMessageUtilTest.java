@@ -19,15 +19,20 @@
 
 package org.apache.james.server.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.junit.jupiter.api.Test;
 
 public class MimeMessageUtilTest {
@@ -61,6 +66,20 @@ public class MimeMessageUtilTest {
         ByteArrayOutputStream headerOut = new ByteArrayOutputStream();
         ByteArrayOutputStream bodyOut = new ByteArrayOutputStream();
         MimeMessageUtil.writeTo(mimeMessage, headerOut, bodyOut);
+    }
+
+    @Test
+    void writeToShouldSplitUnmodifiedWrapperBetweenHeaderAndBodyStreams() throws Exception {
+        MimeMessageWrapper wrapper = new MimeMessageWrapper(MimeMessageInputStreamSource.create("test",
+            new SharedByteArrayInputStream("Subject: foo\r\n\r\nbar\r\n".getBytes(StandardCharsets.US_ASCII))));
+        ByteArrayOutputStream headerOut = new ByteArrayOutputStream();
+        ByteArrayOutputStream bodyOut = new ByteArrayOutputStream();
+
+        MimeMessageUtil.writeTo(wrapper, headerOut, bodyOut);
+
+        assertThat(headerOut.toString(StandardCharsets.US_ASCII)).isEqualTo("Subject: foo\r\n\r\n");
+        assertThat(bodyOut.toString(StandardCharsets.US_ASCII)).isEqualTo("bar\r\n");
+        LifecycleUtil.dispose(wrapper);
     }
 
 }
