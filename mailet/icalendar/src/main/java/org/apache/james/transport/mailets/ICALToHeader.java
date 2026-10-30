@@ -139,27 +139,40 @@ public class ICALToHeader extends GenericMailet {
             X_MEETING_SEQUENCE_HEADER, optionalOf(vevent.getSequence()),
             X_MEETING_DTSTAMP_HEADER, vevent.getDateStamp());
 
-        boolean containsLineBreaks = headers.values().stream()
+        Map<String, Optional<String>> values = headers.entrySet().stream()
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey,
+                entry -> entry.getValue().flatMap(property -> valueOf(entry.getKey(), property, mail))));
+
+        boolean containsLineBreaks = values.values().stream()
             .flatMap(Optional::stream)
-            .map(Property::getValue)
             .anyMatch(LINE_BREAKS::matchesAnyOf);
         if (containsLineBreaks) {
             LOGGER.warn("Omitting meeting headers for mail {} as its calendar values contain line breaks", mail.getName());
             return;
         }
-        headers.forEach((headerName, property) -> addIfPresent(mimeMessage, headerName, property));
+        values.forEach((headerName, value) -> addIfPresent(mimeMessage, headerName, value));
+    }
+
+    private Optional<String> valueOf(String headerName, Property property, Mail mail) {
+        try {
+            return Optional.ofNullable(property.getValue());
+        } catch (RuntimeException e) {
+            // Relaxed parsing keeps invalid properties, e.g. a DTSTAMP without a parseable date
+            LOGGER.warn("Omitting header {} for mail {} as its calendar value {} is invalid", headerName, mail.getName(), property.getName(), e);
+            return Optional.empty();
+        }
     }
 
     public static Optional<? extends Property> optionalOf(Property property) {
         return Optional.ofNullable(property);
     }
 
-    private void addIfPresent(MimeMessage mimeMessage, String headerName, Optional<? extends Property> property) {
-        if (property.isPresent()) {
+    private void addIfPresent(MimeMessage mimeMessage, String headerName, Optional<String> value) {
+        if (value.isPresent()) {
             try {
-                mimeMessage.addHeader(headerName, property.get().getValue());
+                mimeMessage.addHeader(headerName, value.get());
             } catch (MessagingException e) {
-                LOGGER.error("Could not add header {} with value {}", headerName, property.get().getValue(), e);
+                LOGGER.error("Could not add header {} with value {}", headerName, value.get(), e);
             }
         }
     }
