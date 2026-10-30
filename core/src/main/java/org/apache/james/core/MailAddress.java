@@ -525,9 +525,9 @@ public class MailAddress implements java.io.Serializable {
             if (address.charAt(pos) == '\\') {
                 lpSB.append('\\');
                 pos++;
-                //<x> ::= any one of the 128 ASCII characters (no exceptions)
+                //<x> ::= %d32-126 (RFC 5321 quoted-pairSMTP: no control characters)
                 char x = address.charAt(pos);
-                if (x < 0 || x > 127) {
+                if (x < 32 || x > 126) {
                     throw new AddressException("Invalid \\ syntaxed character at position " +
                             (pos + 1) + " in '" + address + "'", address, pos + 1);
                 }
@@ -576,9 +576,9 @@ public class MailAddress implements java.io.Serializable {
             if (address.charAt(pos) == '\\') {
                 lpSB.append('\\');
                 pos++;
-                //<x> ::= any one of the 128 ASCII characters (no exceptions)
+                //<x> ::= %d32-126 (RFC 5321 quoted-pairSMTP: no control characters)
                 char x = address.charAt(pos);
-                if (x < 0 || x > 127) {
+                if (x < 32 || x > 126) {
                     throw new AddressException("Invalid \\ syntaxed character at position " + (pos + 1) +
                             " in '" + address + "'", address, pos + 1);
                 }
