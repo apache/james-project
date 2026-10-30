@@ -115,8 +115,11 @@ public class ManageSieveSaslCodec {
     }
 
     private static byte[] legacyPlainData(String suppliedData) throws SyntaxException {
-        String separator = suppliedData.indexOf('\0') >= 0 ? "\0" : "\\s+";
-        List<String> tokens = Arrays.stream(suppliedData.split(separator, -1))
+        if (suppliedData.indexOf('\0') >= 0) {
+            // Already in RFC 4616 form: let the PLAIN mechanism parse it, authorization identity included
+            return suppliedData.getBytes(StandardCharsets.UTF_8);
+        }
+        List<String> tokens = Arrays.stream(suppliedData.split("\\s+", -1))
             .filter(token -> !token.isEmpty())
             .limit(2)
             .toList();
