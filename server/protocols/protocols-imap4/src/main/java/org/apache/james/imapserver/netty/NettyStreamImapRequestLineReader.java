@@ -110,7 +110,8 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
      *         cannot be determine at the token level; this char is not accurate
      *         reported; should be an octet
      * @throws DecodingException
-     *             If the end-of-stream is reached.
+     *             If the end-of-stream is reached: the file holds the whole command, there is no
+     *             more data to wait for.
      */
     @Override
     public char nextChar() throws DecodingException {
@@ -126,7 +127,7 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
                 throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Error reading from stream.", e);
             }
             if (next == -1) {
-                throw new NettyImapRequestLineReader.NotEnoughDataException(1);
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unexpected end of command.");
             }
             read++;
             nextSeen = true;
