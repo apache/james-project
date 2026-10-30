@@ -406,13 +406,12 @@ public class MailboxACL {
 
             boolean negative = serialized.charAt(0) == DEFAULT_NEGATIVE_MARKER;
             int nameStart = negative ? 1 : 0;
+            Preconditions.checkArgument(serialized.length() > nameStart, "Cannot parse a string with empty name");
             boolean isGroup = serialized.charAt(nameStart) == DEFAULT_GROUP_MARKER;
             Optional<NameType> explicitNameType = isGroup ? Optional.of(NameType.group) : Optional.empty();
             String name = isGroup ? serialized.substring(nameStart + 1) : serialized.substring(nameStart);
 
-            if (name.isEmpty()) {
-                throw new IllegalStateException("Cannot parse a string with empty name");
-            }
+            Preconditions.checkArgument(!name.isEmpty(), "Cannot parse a string with empty name");
             NameType nameType = explicitNameType.orElseGet(() -> computeImplicitNameType(name));
 
             return new EntryKey(name, nameType, negative);

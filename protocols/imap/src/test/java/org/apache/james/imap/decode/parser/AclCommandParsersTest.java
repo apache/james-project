@@ -60,6 +60,21 @@ class AclCommandParsersTest {
             .isInstanceOf(DecodingException.class);
     }
 
+    static Stream<Arguments> malformedIdentifiers() {
+        return Stream.of("\"\"", "\"-\"", "$", "-$")
+            .flatMap(identifier -> Stream.of(
+                Arguments.of((Decoder) request -> new SetACLCommandParser(STATUS_RESPONSE_FACTORY).decode(request, TAG, null), "INBOX " + identifier + " lr\r\n"),
+                Arguments.of((Decoder) request -> new DeleteACLCommandParser(STATUS_RESPONSE_FACTORY).decode(request, TAG, null), "INBOX " + identifier + "\r\n"),
+                Arguments.of((Decoder) request -> new ListRightsCommandParser(STATUS_RESPONSE_FACTORY).decode(request, TAG, null), "INBOX " + identifier + "\r\n")));
+    }
+
+    @ParameterizedTest
+    @MethodSource("malformedIdentifiers")
+    void malformedIdentifierShouldBeADecodingException(Decoder decoder, String arguments) {
+        assertThatThrownBy(() -> decoder.decode(lineReader(arguments)))
+            .isInstanceOf(DecodingException.class);
+    }
+
     private ImapRequestStreamLineReader lineReader(String arguments) {
         return new ImapRequestStreamLineReader(
             new ByteArrayInputStream(arguments.getBytes(StandardCharsets.US_ASCII)), new ByteArrayOutputStream());

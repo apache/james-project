@@ -80,7 +80,7 @@ class ACLDiffTest {
         @Test
         void deSerializeShouldThrowWhenNotIncludedNameInEntryKey() {
             assertThatThrownBy(() -> DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("$")))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -92,7 +92,7 @@ class ACLDiffTest {
         @Test
         void deSerializeShouldThrowWhenNameInEntryKeyIsNotWellFormatted() {
             assertThatThrownBy(() -> DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("-")))
-                .isInstanceOf(StringIndexOutOfBoundsException.class);
+                .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
