@@ -181,4 +181,10 @@ class SieveFileRepositoryTest implements SieveRepositoryContract {
         assertThatThrownBy(() -> sieveRepository().getActive(Username.of("test")))
             .isInstanceOf(StorageException.class);
     }
+
+    @Test
+    void putScriptShouldRejectANameContainingNul() {
+        assertThatThrownBy(() -> sieveRepository().putScript(Username.of("test"), new ScriptName("a\0b"), SCRIPT_CONTENT))
+            .isInstanceOf(StorageException.class);
+    }
 }

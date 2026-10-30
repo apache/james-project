@@ -25,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.managesieve.api.ArgumentException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ParserUtilsTest {
     @Test
@@ -220,5 +222,11 @@ class ParserUtilsTest {
     @Test
     void unquoteShouldWorkWithSingleQuotes() {
         assertThat(ParserUtils.unquote("'a'")).isEqualTo("a");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"\"", "'"})
+    void unquoteShouldNotFailOnALoneQuoteCharacter(String quoted) {
+        assertThat(ParserUtils.unquote(quoted)).isEqualTo(quoted);
     }
 }

@@ -109,6 +109,12 @@ class ManageSieveSaslCodecTest {
     }
 
     @Test
+    void parseClientResponseShouldKeepTheThreeFieldsOfLegacyRawPlainData() throws Exception {
+        assertThat(ManageSieveSaslCodec.parseClientResponse("PLAIN", "authzid\0user\0password"))
+            .containsExactly(bytes("authzid\0user\0password"));
+    }
+
+    @Test
     void parseClientResponseShouldRejectRawDataForOtherMechanisms() {
         assertThatThrownBy(() -> ManageSieveSaslCodec.parseClientResponse("CUSTOM", "not base64 data"))
             .isInstanceOf(SyntaxException.class)
