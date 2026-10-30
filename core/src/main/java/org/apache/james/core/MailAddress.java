@@ -382,7 +382,7 @@ public class MailAddress implements java.io.Serializable {
     }
 
     public Optional<String> getLocalPartDetails(String separatorDelimiterSequence) {
-        int separatorPosition = localPart.indexOf(separatorDelimiterSequence);
+        int separatorPosition = detailsSeparatorPosition(separatorDelimiterSequence);
         if (separatorPosition <= 0) {
             //after the interpretation of details, localPart cannot be empty
             return Optional.empty();
@@ -391,12 +391,31 @@ public class MailAddress implements java.io.Serializable {
     }
 
     public String getLocalPartWithoutDetails(String separatorDelimiterSequence) {
-        int separatorPosition = localPart.indexOf(separatorDelimiterSequence);
+        int separatorPosition = detailsSeparatorPosition(separatorDelimiterSequence);
         if (separatorPosition <= 0) {
             //after the interpretation of details, localPart cannot be empty
             return localPart;
         }
         return localPart.substring(0, separatorPosition);
+    }
+
+    /**
+     * An escaped (quoted-pair) or quoted separator is part of the local part, not a details delimiter:
+     * cutting there would yield an unparseable address.
+     */
+    private int detailsSeparatorPosition(String separatorDelimiterSequence) {
+        boolean quoted = false;
+        for (int i = 0; i < localPart.length(); i++) {
+            char c = localPart.charAt(i);
+            if (c == '\\') {
+                i++;
+            } else if (c == '\"') {
+                quoted = !quoted;
+            } else if (!quoted && localPart.startsWith(separatorDelimiterSequence, i)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public MailAddress stripDetails(String separatorDelimiterSequence) {
