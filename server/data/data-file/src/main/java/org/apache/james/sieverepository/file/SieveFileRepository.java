@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -325,8 +326,12 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     private void enforceRoot(File file) throws StorageException {
-        if (!file.toPath().normalize().startsWith(root.toPath().normalize())) {
-            throw new StorageException(new IllegalStateException("Path traversal attempted"));
+        try {
+            if (!file.toPath().normalize().startsWith(root.toPath().normalize())) {
+                throw new StorageException(new IllegalStateException("Path traversal attempted"));
+            }
+        } catch (InvalidPathException e) {
+            throw new StorageException(e);
         }
     }
 
@@ -340,6 +345,9 @@ public class SieveFileRepository implements SieveRepository {
     private File resolveInUserDirectory(File userDirectory, String name) throws StorageException {
         if (name == null || name.trim().isEmpty()) {
             throw new StorageException(new IllegalArgumentException("Script name should not be empty"));
+        }
+        if (name.indexOf('\0') >= 0) {
+            throw new StorageException(new IllegalArgumentException("Script name should not contain NUL characters"));
         }
         if (SYSTEM_FILES.contains(name)) {
             throw new StorageException(new IllegalArgumentException("Script name should not collide with system file '" + name + "'"));
