@@ -120,6 +120,14 @@ class SearchUtilTest {
     }
 
     @Test
+    void getBaseSubjectShouldBeFastOnManyForwardHeaders() {
+        String subject = "[fwd: ".repeat(4_000) + "Test" + "]".repeat(4_000);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("Test"));
+    }
+
+    @Test
     void getBaseSubjectShouldBeIdempotentWhenAControlCharacterFollowsAForwardWrapper() {
         String base = SearchUtil.getBaseSubject("[fwd: \u0001abc]");
 
