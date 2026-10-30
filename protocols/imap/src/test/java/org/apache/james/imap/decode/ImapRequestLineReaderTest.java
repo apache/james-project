@@ -28,6 +28,8 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ImapRequestLineReaderTest {
     private final OutputStream outputStream = null;
@@ -103,5 +105,14 @@ class ImapRequestLineReaderTest {
         lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
         assertThat(lineReader.astring()).isEqualTo("grå");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"1: ", ":1 ", "-:1 ", "1:1:3 ", "--0:5 ", "-00:3 "})
+    void parsePartialRangeShouldRejectMalformedRanges(String range) {
+        inputStream = new ByteArrayInputStream(range.getBytes(StandardCharsets.US_ASCII));
+        lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> lineReader.parsePartialRange()).isInstanceOf(DecodingException.class);
     }
 }
