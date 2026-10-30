@@ -21,11 +21,14 @@
 package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.NameType;
 import org.apache.james.mailbox.model.MailboxACL.SpecialName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class MailboxACLEntryKeyTest {
     private static final String GROUP_1 = "group1";
@@ -149,5 +152,12 @@ class MailboxACLEntryKeyTest {
     void testSerializeNegativeAuthenticated() {
         assertThat(new EntryKey(SpecialName.authenticated.toString(), NameType.special, true).serialize())
             .isEqualTo(MailboxACL.DEFAULT_NEGATIVE_MARKER + SpecialName.authenticated.toString());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "-", "$", "-$"})
+    void deserializeShouldRejectMalformedKeys(String serialized) {
+        assertThatThrownBy(() -> EntryKey.deserialize(serialized))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }

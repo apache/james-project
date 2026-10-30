@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 
 import com.beetstra.jutf7.CharsetProvider;
 import com.google.common.base.CharMatcher;
@@ -39,19 +40,35 @@ public class ModifiedUtf7 {
      * 
      * @param input utf7-encoded value
      * @return decoded value
-     * @throws MalformedUtf7Exception when the input holds an invalid modified UTF-7 sequence
+     * @throws MalformedUtf7Exception when the input holds an invalid modified UTF-7 sequence, non ASCII
+     * characters alongside a shift sequence, or is not the canonical encoding of the value it decodes to
      */
     public static String decodeModifiedUTF7(String input) {
         if (UNENCODED_CHAR_MATCHER.matchesAllOf(input)) {
             return input;
         }
+        if (!CharMatcher.ascii().matchesAllOf(input)) {
+            // Modified UTF-7 is 7-bit only (RFC3501 section 5.1.3). The jutf7 decoder does not range check
+            // the bytes it is given and would fail with a java.lang.Error, or garble 8-bit characters.
+            throw new MalformedUtf7Exception(input);
+        }
+        String decoded = decode(input);
+        // The jutf7 decoder is lenient (RFC2152) and accepts eg printable US-ASCII within a shift sequence
+        // ("&AGE-" for "a"), which RFC3501 section 5.1.3 forbids. Each value needs a single wire form.
+        if (!encodeModifiedUTF7(decoded).equals(input)) {
+            throw new MalformedUtf7Exception(input);
+        }
+        return decoded;
+    }
+
+    private static String decode(String input) {
         try {
             // Charset::decode would report an unterminated shift sequence as a java.lang.Error, which
             // callers can hardly handle: decode by hand in order to turn it into a regular exception.
             return X_MODIFIED_UTF_7_CHARSET.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPLACE)
                 .onUnmappableCharacter(CodingErrorAction.REPLACE)
-                .decode(ByteBuffer.wrap(input.getBytes()))
+                .decode(ByteBuffer.wrap(input.getBytes(StandardCharsets.US_ASCII)))
                 .toString();
         } catch (CharacterCodingException e) {
             throw new MalformedUtf7Exception(input, e);

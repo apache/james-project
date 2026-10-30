@@ -3231,6 +3231,16 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void appendMessageShouldAcceptAContentTypeWithoutSubtype() throws Exception {
+            inboxManager.appendMessage(AppendCommand.builder()
+                .build("From: a@b.c\r\nContent-Type: text\r\n\r\nhello\r\n"), session);
+
+            assertThat(Flux.from(inboxManager.listMessagesMetadata(MessageRange.all(), session))
+                    .collectList().block())
+                .hasSize(1);
+        }
+
+        @Test
         void shouldBeAbleToAccessThreadIdOfAMessageAndThatThreadIdShouldWrapsMessageId() throws Exception {
             ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session).getId();
             MessageResult messageResult = inboxManager.getMessages(MessageRange.one(composeId1.getUid()), FetchGroup.MINIMAL, session).next();

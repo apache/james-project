@@ -978,8 +978,12 @@ public abstract class ImapRequestLineReader {
         String lowValString = nextWord.substring(0, nextWord.indexOf(':'));
         String upValString = nextWord.substring(nextWord.indexOf(':') + 1);
 
-        return new PartialRange(Long.parseLong(lowValString),
-            Long.parseLong(upValString));
+        try {
+            return new PartialRange(Long.parseLong(lowValString),
+                Long.parseLong(upValString));
+        } catch (NumberFormatException e) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid partial range " + nextWord, e);
+        }
     }
     
     /**

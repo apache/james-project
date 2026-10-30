@@ -29,6 +29,8 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapCommandParser;
 import org.apache.james.imap.decode.ImapRequestLineReader;
+import org.apache.james.imap.message.MailboxName;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +58,29 @@ public abstract class AbstractImapCommandParser implements ImapCommandParser {
 
     protected StatusResponse taggedNo(Tag tag, ImapCommand command, HumanReadableText displayTextKey, StatusResponse.ResponseCode code) {
         return statusResponseFactory.taggedNo(tag, command, displayTextKey, code);
+    }
+
+    /**
+     * Reads a mailbox name, rejecting an empty one as a protocol error.
+     */
+    protected MailboxName mailboxName(ImapRequestLineReader request) throws DecodingException {
+        String mailboxName = request.mailbox();
+        if (mailboxName.isEmpty()) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Mailbox name must not be empty");
+        }
+        return new MailboxName(mailboxName);
+    }
+
+    /**
+     * Reads an ACL identifier, rejecting a malformed one as a protocol error.
+     */
+    protected MailboxACL.EntryKey entryKey(ImapRequestLineReader request) throws DecodingException {
+        String identifier = request.astring();
+        try {
+            return MailboxACL.EntryKey.deserialize(identifier);
+        } catch (IllegalArgumentException e) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid ACL identifier " + identifier, e);
+        }
     }
 
     /**

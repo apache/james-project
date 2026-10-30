@@ -50,8 +50,8 @@ public class SetACLCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        MailboxName mailboxName = new MailboxName(request.mailbox());
-        MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.deserialize(request.astring());
+        MailboxName mailboxName = mailboxName(request);
+        MailboxACL.EntryKey entryKey = entryKey(request);
         String editModeAndRights = request.astring();
         request.eol();
 

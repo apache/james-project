@@ -115,11 +115,20 @@ public interface PathConverter {
                 String username = mailboxPathParts.get(USER);
                 String unescapedUsername = username.replace("__", String.valueOf(MailboxConstants.FOLDER_DELIMITER))
                     .replace("_-", "_");
-                Username user = Username.from(unescapedUsername, session.getUser().getDomainPart().map(Domain::asString));
+                Username user = parseUsername(unescapedUsername, session);
                 String mailboxName = Joiner.on(session.getPathDelimiter()).join(Iterables.skip(mailboxPathParts, 2));
                 return new MailboxPath(MailboxConstants.USER_NAMESPACE, user, sanitizeMailboxName(mailboxName));
 
             } else {
+                throw new DeniedAccessOnSharedMailboxException();
+            }
+        }
+
+        private Username parseUsername(String unescapedUsername, MailboxSession session) {
+            try {
+                return Username.from(unescapedUsername, session.getUser().getDomainPart().map(Domain::asString));
+            } catch (IllegalArgumentException e) {
+                // The user segment is client supplied: reject invalid usernames like an unknown namespace
                 throw new DeniedAccessOnSharedMailboxException();
             }
         }
