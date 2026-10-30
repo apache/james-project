@@ -37,10 +37,12 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.EventLoop;
 import io.netty.handler.codec.compression.ZlibEncoder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedNioFile;
 import io.netty.handler.stream.ChunkedStream;
+import io.netty.util.ReferenceCountUtil;
 
 /**
  * {@link ImapResponseWriter} implementation which writes the data to a
@@ -89,7 +91,7 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
             }
         }
         if (channel.isActive()) {
-            channel.writeAndFlush(Unpooled.wrappedBuffer(buffer));
+            writeInOrder(List.of(Unpooled.wrappedBuffer(buffer)));
         }
     }
 
@@ -97,28 +99,57 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
     public void write(Literal literal) throws IOException {
         flushCallback.run();
         if (channel.isActive()) {
-            if (literal.asBytesSequence().isPresent()) {
-                channel.writeAndFlush(Unpooled.wrappedBuffer(literal.asBytesSequence().get()));
-                return;
-            }
-            InputStream in = literal.getInputStream();
-            if (in instanceof FileInputStream) {
-                FileChannel fc = ((FileInputStream) in).getChannel();
-                // Zero-copy is only possible if no SSL/TLS  and no COMPRESS is in place
-                //
-                // See JAMES-1305 and JAMES-1306
-                ChannelPipeline cp = channel.pipeline();
-                if (zeroCopy && cp.get(SslHandler.class) == null && cp.get(ZlibEncoder.class) == null) {
-                    channel.writeAndFlush(new DefaultFileRegion(fc, fc.position(), literal.size()));
-                } else {
-                    channel.writeAndFlush(new ChunkedNioFile(fc, 8192));
-                }
-            } else {
-                channel.writeAndFlush(new ChunkedStream(in));
-            }
+            writeInOrder(List.of(asMessage(literal)));
         }
     }
-    
+
+    /**
+     * Netty keeps the order of the writes issued by a given thread only: a write issued outside of the
+     * event loop is queued as a task, that a write issued later from the event loop overtakes. The tagged
+     * response of a command completing on the event loop could then reach the client before the untagged
+     * responses written while processing it.
+     *
+     * Outside of the event loop, wait for the write to have entered the pipeline, so that nothing written
+     * afterwards, whatever the thread and the path, can overtake it.
+     */
+    private void writeInOrder(List<Object> messages) {
+        EventLoop eventLoop = channel.eventLoop();
+        if (eventLoop.inEventLoop()) {
+            writeAndFlush(messages);
+            return;
+        }
+        try {
+            eventLoop.submit(() -> writeAndFlush(messages)).syncUninterruptibly();
+        } catch (RejectedExecutionException e) {
+            messages.forEach(ReferenceCountUtil::release);
+        }
+    }
+
+    private void writeAndFlush(List<Object> messages) {
+        messages.forEach(channel::write);
+        channel.flush();
+    }
+
+    private Object asMessage(Literal literal) throws IOException {
+        Optional<byte[][]> bytesSequence = literal.asBytesSequence();
+        if (bytesSequence.isPresent()) {
+            return Unpooled.wrappedBuffer(bytesSequence.get());
+        }
+        InputStream in = literal.getInputStream();
+        if (in instanceof FileInputStream) {
+            FileChannel fc = ((FileInputStream) in).getChannel();
+            // Zero-copy is only possible if no SSL/TLS  and no COMPRESS is in place
+            //
+            // See JAMES-1305 and JAMES-1306
+            ChannelPipeline cp = channel.pipeline();
+            if (zeroCopy && cp.get(SslHandler.class) == null && cp.get(ZlibEncoder.class) == null) {
+                return new DefaultFileRegion(fc, fc.position(), literal.size());
+            }
+            return new ChunkedNioFile(fc, 8192);
+        }
+        return new ChunkedStream(in);
+    }
+
     public void flush() throws IOException {
         flushCallback.run();
         channel.flush();
