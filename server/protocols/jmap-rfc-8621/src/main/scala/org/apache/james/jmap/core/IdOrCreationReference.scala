@@ -28,16 +28,22 @@ import play.api.libs.json.{Format, JsError, JsString, JsSuccess}
 sealed trait IdOrCreationReference {
   def value: String
 
+  def creationId: Option[ClientId]
+
   final override def toString: String = value
 }
 
 object IdOrCreationReference {
   private case class ExistingId(id: Id) extends IdOrCreationReference {
     override def value: String = id.value
+
+    override def creationId: Option[ClientId] = None
   }
 
-  private case class CreationReference(creationId: Id) extends IdOrCreationReference {
-    override def value: String = "#" + creationId.value
+  private case class CreationReference(id: Id) extends IdOrCreationReference {
+    override def value: String = "#" + id.value
+
+    override def creationId: Option[ClientId] = Some(ClientId(id))
   }
 
   def validate(value: String): Either[IllegalArgumentException, IdOrCreationReference] =

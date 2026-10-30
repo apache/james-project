@@ -37,7 +37,7 @@ import org.apache.james.domainlist.lib.DomainListConfiguration
 import org.apache.james.domainlist.memory.MemoryDomainList
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
-import org.apache.james.jmap.core.Invocation.MethodName
+import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.{DefaultCapabilities, JmapRfc8621Configuration, RequestLevelErrorType}
 import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, UserProvisioning}
@@ -55,6 +55,7 @@ import org.mockito.Mockito.{doReturn, mock, when}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.SFlux
 
 object JMAPApiRoutesTest {
@@ -428,6 +429,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
 
     when(mockCoreEchoMethod.methodName).thenReturn(MethodName("Core/echo"))
     when(mockCoreEchoMethod.requiredCapabilities).thenReturn(Set(JMAP_CORE))
+    when(mockCoreEchoMethod.deferredCreationReferencePaths(Arguments(any[JsObject]))).thenCallRealMethod()
 
     val methods: Set[Method] = Set(mockCoreEchoMethod)
     val jmapRfc8621Configuration = JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")
