@@ -71,6 +71,16 @@ class ModifiedUtf7Test {
             .isInstanceOf(MalformedUtf7Exception.class);
     }
 
+    /**
+     * See https://github.com/linagora/james-project/issues/5647
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {"&AGE-", "z&AGE-", "&AGE--", "&AC8-", "&ACM-private", "&ACY-", "&AOE-&AOE-"})
+    void decodeShouldRejectNonCanonicalEncoding(String input) {
+        assertThatThrownBy(() -> ModifiedUtf7.decodeModifiedUTF7(input))
+            .isInstanceOf(MalformedUtf7Exception.class);
+    }
+
     @Test
     void decodeShouldReturnNonAsciiValueWithoutShiftAsIs() {
         assertThat(ModifiedUtf7.decodeModifiedUTF7("é")).isEqualTo("é");
