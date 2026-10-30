@@ -19,7 +19,6 @@
 package org.apache.james.mailbox.store.search;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -514,10 +513,15 @@ public class SearchUtil {
         }
 
         byte[] subjectAsBytes = subject.getBytes(StandardCharsets.UTF_8);
-        if (subjectAsBytes.length < MAX_RAW_BYTES) {
+        if (subjectAsBytes.length <= MAX_RAW_BYTES) {
             return subject;
         }
 
-        return new String(Arrays.copyOf(subjectAsBytes, MAX_RAW_BYTES), StandardCharsets.UTF_8);
+        // Do not cut inside a character: back off over UTF-8 continuation bytes
+        int length = MAX_RAW_BYTES;
+        while (length > 0 && (subjectAsBytes[length] & 0xC0) == 0x80) {
+            length--;
+        }
+        return new String(subjectAsBytes, 0, length, StandardCharsets.UTF_8);
     }
 }
