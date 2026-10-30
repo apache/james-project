@@ -666,12 +666,12 @@
 
         <!-- maven-mailetdocs-plugin artifacts -->
         <maven-artifact.version>3.0-alpha-1</maven-artifact.version>
-        <maven-plugin-annotations.version>3.15.1</maven-plugin-annotations.version>
-        <maven-plugin-api.version>3.9.10</maven-plugin-api.version>
-        <maven-reporting-impl.version>3.1.0</maven-reporting-impl.version>
-        <maven-reporting-api.version>3.1.1</maven-reporting-api.version>
-        <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
-        <maven-enforcer-plugin.version>3.5.0</maven-enforcer-plugin.version>
+        <maven-plugin-annotations.version>3.16.0</maven-plugin-annotations.version>
+        <maven-plugin-api.version>3.10.0</maven-plugin-api.version>
+        <maven-reporting-impl.version>4.0.0</maven-reporting-impl.version>
+        <maven-reporting-api.version>4.1.0</maven-reporting-api.version>
+        <maven-surefire-plugin.version>3.6.1</maven-surefire-plugin.version>
+        <maven-enforcer-plugin.version>3.7.0</maven-enforcer-plugin.version>
 
         <qdox.version>2.2.0</qdox.version>
         <jaxb.version>4.0.5</jaxb.version>
@@ -3728,12 +3728,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-antrun-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>3.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>3.7.1</version>
+                    <version>3.8.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -3754,7 +3754,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.14.0</version>
+                    <version>3.16.0</version>
                     <configuration>
                         <parameters>true</parameters>
                         <source>${target.jdk}</source>
@@ -3765,12 +3765,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <version>3.11.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
-                    <version>3.1.4</version>
+                    <version>3.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -3817,7 +3817,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.4.2</version>
+                    <version>3.5.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -3864,7 +3864,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-plugin-plugin</artifactId>
-                    <version>3.15.1</version>
+                    <version>3.16.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -3889,7 +3889,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>3.1.1</version>
+                    <version>3.3.1</version>
                     <configuration>
                         <useReleaseProfile>false</useReleaseProfile>
                         <goals>deploy</goals>
@@ -3900,27 +3900,27 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.3.1</version>
+                    <version>3.5.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-scm-plugin</artifactId>
-                    <version>2.1.0</version>
+                    <version>2.2.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>3.3.1</version>
+                    <version>3.4.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.6.0</version>
+                    <version>3.6.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.21.0</version>
+                    <version>3.22.0</version>
                     <dependencies>
                         <dependency>
                             <groupId>org.apache.maven.wagon</groupId>
@@ -3968,7 +3968,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-report-plugin</artifactId>
-                    <version>3.5.3</version>
+                    <version>3.6.1</version>
                     <configuration>
                         <aggregate>true</aggregate>
                     </configuration>
@@ -3976,7 +3976,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
-                    <version>3.4.0</version>
+                    <version>3.5.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.rat</groupId>
@@ -3986,12 +3986,12 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>3.6.1</version>
+                    <version>3.6.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
-                    <version>3.5.1</version>
+                    <version>3.6.4</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -4008,12 +4008,12 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>javacc-maven-plugin</artifactId>
-                    <version>3.1.1</version>
+                    <version>3.2.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.21.0</version>
+                    <version>2.23.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.eclipse.m2e</groupId>
@@ -4184,7 +4184,7 @@
                     <dependency>
                         <groupId>org.apache.maven.doxia</groupId>
                         <artifactId>doxia-module-markdown</artifactId>
-                        <version>2.0.0</version>
+                        <version>2.2.0</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -4269,7 +4269,7 @@
                 <!-- Adding a Protocol to Deploy the Site (support for ssh/scp) -->
                 <groupId>org.apache.maven.wagon</groupId>
                 <artifactId>wagon-ssh-external</artifactId>
-                <version>3.4.2</version>
+                <version>3.5.3</version>
             </extension>
         </extensions>
     </build>

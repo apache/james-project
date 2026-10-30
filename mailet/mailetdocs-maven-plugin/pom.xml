@@ -35,7 +35,7 @@
     <url>http://james.apache.org/mailet/maven-mailetdocs-plugin/</url>
     <inceptionYear>2008</inceptionYear>
     <properties>
-        <doxia.version>1.12.0</doxia.version>
+        <doxia.version>2.2.0</doxia.version>
     </properties>
     <dependencies>
         <dependency>
