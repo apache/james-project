@@ -112,10 +112,21 @@ class SearchUtilTest {
 
     @Test
     void getBaseSubjectShouldBeFastOnManyBlobs() {
-        String subject = "ed: " + "_ +w*][`]w".repeat(6_000);
+        String subject = "[_ +w*][`]".repeat(6_000) + "w";
 
         assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
             assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("w"));
+    }
+
+    @Test
+    void getBaseSubjectShouldNotCutAtAClosingBracketWithoutOpeningBracket() {
+        assertThat(SearchUtil.getBaseSubject("bc] Ree")).isEqualTo("bc] Ree");
+    }
+
+    @Test
+    void getBaseSubjectShouldOnlyRemoveALeadingBlob() {
+        assertThat(SearchUtil.getBaseSubject("[]wd]]re")).isEqualTo("wd]]re");
+        assertThat(SearchUtil.getBaseSubject("[R:]] R:]] [x(fwd)")).isEqualTo("] R:]] [x");
     }
 
     @Test
