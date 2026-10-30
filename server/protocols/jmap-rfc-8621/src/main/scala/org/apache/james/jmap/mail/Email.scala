@@ -76,6 +76,10 @@ object Email {
       .map(list => list.reduce(_ ++ _))
   }
 
+  // RFC 8621 sec.4.1: Deterministically pick representative message copy across multiple mailboxes
+  def pickFirstMessage(messages: Seq[MessageResult]): Option[MessageResult] =
+    messages.sortBy(m => (m.getInternalDate.getTime, m.getMailboxId.serialize())).headOption
+
   val defaultCharset = Option(System.getenv("james.jmap.default.charset"))
     .map(value => java.nio.charset.Charset.forName(value))
     .getOrElse(StandardCharsets.US_ASCII)
@@ -505,8 +509,7 @@ private class EmailMetadataViewFactory @Inject()(zoneIdProvider: ZoneIdProvider)
     val threadId: ThreadId = ThreadId(message._2.head.getThreadId.serialize())
 
     for {
-      firstMessage <- message._2
-        .headOption
+      firstMessage <- Email.pickFirstMessage(message._2)
         .map(Success(_))
         .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
       blobId <- BlobId.of(messageId)
@@ -534,8 +537,7 @@ private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) e
     val threadId: ThreadId = ThreadId(message._2.head.getThreadId.serialize())
 
     for {
-      firstMessage <- message._2
-        .headOption
+      firstMessage <- Email.pickFirstMessage(message._2)
         .map(Success(_))
         .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
       mime4JMessage <- Email.parseAsMime4JMessage(firstMessage)
@@ -608,8 +610,7 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
     val threadId: ThreadId = ThreadId(message._2.head.getThreadId.serialize())
 
     for {
-      firstMessage <- message._2
-        .headOption
+      firstMessage <- Email.pickFirstMessage(message._2)
         .map(Success(_))
         .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
       mime4JMessage <- Email.parseAsMime4JMessage(firstMessage)
@@ -758,8 +759,7 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
     val threadId: ThreadId = ThreadId(message._2.head.getThreadId.serialize())
 
     for {
-      firstMessage <- message._2
-        .headOption
+      firstMessage <- Email.pickFirstMessage(message._2)
         .map(Success(_))
         .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
       mime4JMessage <- Email.parseAsMime4JMessage(firstMessage)
@@ -849,8 +849,7 @@ private class EmailFastViewWithAttachmentsMetadataReader @Inject()(messageIdMana
     val threadId: ThreadId = ThreadId(message._2.head.getThreadId.serialize())
 
     for {
-      firstMessage <- message._2
-        .headOption
+      firstMessage <- Email.pickFirstMessage(message._2)
         .map(Success(_))
         .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
       mime4JMessage <- Email.parseAsMime4JMessage(firstMessage)
