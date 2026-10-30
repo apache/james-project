@@ -138,7 +138,7 @@ public interface MessageStorer {
             Field rawContentType = headers.getField("Content-Type");
             if (rawContentType != null) {
                 ContentTypeField contentTypeField = ContentTypeFieldLenientImpl.PARSER.parse(rawContentType, DecodeMonitor.SILENT);
-                if (contentTypeField.getMediaType().equalsIgnoreCase("multipart")) {
+                if ("multipart".equalsIgnoreCase(contentTypeField.getMediaType())) {
                     return true;
                 }
             }
