@@ -23,7 +23,7 @@ import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.numeric.NonNegInt
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId}
+import org.apache.james.jmap.core.{ClientId, Id, IdOrCreationReference, Invocation, ServerId}
 import org.apache.james.jmap.json.BackReferenceDeserializer
 import play.api.libs.json.{JsArray, JsError, JsObject, JsPath, JsResult, JsString, JsSuccess, JsValue, Reads}
 
@@ -177,7 +177,8 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
         case _: JsError =>
           backReferenceResolver(path \ entry._1, deferred).reads(entry._2)
             .fold(e => Left(JsError(e)),
-              json => resolveCreationId(entry._1)
+              json => if (deferred.contains(path \ entry._1)) Right((entry._1, json))
+              else resolveCreationId(entry._1)
                 .fold(_ => Right((entry._1, json)),
                   serverId => Right((serverId.value.value, json))))
       }
@@ -208,6 +209,13 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
     Id.validate(creationId.substring(1))
       .flatMap(id => retrieveServerId(ClientId(id))
         .toRight(new IllegalArgumentException(s"$creationId was not used in previously defined creationIds")))
+
+  def resolveId(reference: IdOrCreationReference): Either[IllegalArgumentException, ServerId] =
+    reference.creationId match {
+      case Some(clientId) => retrieveServerId(clientId)
+        .toRight(new IllegalArgumentException(s"$reference was not used in previously defined creationIds"))
+      case None => Id.validate(reference.value).map(ServerId)
+    }
 
   def retrieveServerId(clientId: ClientId): Option[ServerId] = creationIds.get(clientId)
 

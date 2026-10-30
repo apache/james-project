@@ -81,7 +81,7 @@ object MailboxSetMethodContract {
   val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
 }
 
-trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
+trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with MailboxSetPostCreateContract {
   def bobUsername: Username = MailboxSetMethodContract.currentContext.get().bobUsername
   def bobAccountId: String = MailboxSetMethodContract.currentContext.get().bobAccountId
   def andreUsername: Username = MailboxSetMethodContract.currentContext.get().andreUsername
@@ -3169,8 +3169,8 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
          |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "#C42": {
-         |          "type": "invalidArguments",
-         |          "description": "#C42 is not a mailboxId: #C42 was not used in previously defined creationIds"
+         |          "type": "notFound",
+         |          "description": "#C42"
          |        }
          |      }
          |    }, "c2"],
@@ -3243,8 +3243,8 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
          |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "#C42": {
-         |          "type": "invalidArguments",
-         |          "description": "#C42 is not a mailboxId: #C42 was not used in previously defined creationIds"
+         |          "type": "notFound",
+         |          "description": "#C42"
          |        }
          |      }
          |    }, "c2"]
@@ -3330,8 +3330,8 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
            |    "accountId": "$bobAccountId",
            |    "notDestroyed": {
            |      "$reference": {
-           |        "type": "invalidArguments",
-           |        "description": "$reference is not a mailboxId: $reference was not used in previously defined creationIds"
+           |        "type": "notFound",
+           |        "description": "$reference"
            |      }
            |    }
            |  }, "c1"]]
@@ -9150,8 +9150,8 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
          |                "accountId": "$bobAccountId",
          |                "notUpdated": {
          |                    "#invalid": {
-         |                        "type": "invalidArguments",
-         |                        "description": "#invalid was not used in previously defined creationIds"
+         |                        "type": "notFound",
+         |                        "description": "#invalid"
          |                    }
          |                }
          |            },
