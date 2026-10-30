@@ -99,6 +99,14 @@ class MailAddressTest {
                 "\"a..b\"@domain.com", // jakarta.mail is unable to handle this so we better reject it
                 "server-dev\\.@james.apache.org", // jakarta.mail is unable to handle this so we better reject it
                 "a..b@domain.com",
+                // Escaped control characters: a quoted-pair only allows %d32-126
+                // (RFC 5321 quoted-pairSMTP), in both the dot-string and the quoted-string.
+                "\\\r@domain.tld",
+                "\\\n@domain.tld",
+                "\\" + (char) 0 + "@domain.tld",
+                "\\" + (char) 0x12 + "@domain.tld",
+                "\\" + (char) 0x7F + "@domain.tld",
+                "\"a\\\r\\\nb\"@domain.tld",
                 // According to wikipedia these addresses are valid but as jakarta.mail is unable
                 // to work with them we shall rather reject them (note that this is not breaking retro-compatibility)
                 "Loïc.Accentué@voilà.fr8",
