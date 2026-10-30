@@ -63,4 +63,16 @@ class ModifiedUtf7Test {
             .isInstanceOf(MalformedUtf7Exception.class)
             .hasCauseInstanceOf(MalformedInputException.class);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"&�-", "&é-", "&é", "a&®", "&AOE-é", "é&-"})
+    void decodeShouldThrowMalformedUtf7ExceptionOnNonAsciiInputContainingAShift(String input) {
+        assertThatThrownBy(() -> ModifiedUtf7.decodeModifiedUTF7(input))
+            .isInstanceOf(MalformedUtf7Exception.class);
+    }
+
+    @Test
+    void decodeShouldReturnNonAsciiValueWithoutShiftAsIs() {
+        assertThat(ModifiedUtf7.decodeModifiedUTF7("é")).isEqualTo("é");
+    }
 }
