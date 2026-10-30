@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 import org.apache.james.mailbox.model.MessageId;
@@ -152,6 +153,35 @@ class SearchUtilTest {
             assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("x"));
     }
     
+    @Test
+    void truncateSubjectFieldShouldNotExceedTheLimitWhenCuttingInsideACharacter() {
+        // byte 32766 is the first byte of an e acute
+        String subject = "a" + String.valueOf((char) 0xE9).repeat(20_000);
+
+        String truncated = SearchUtil.truncateSubjectField(subject);
+
+        assertThat(truncated.getBytes(StandardCharsets.UTF_8).length).isLessThanOrEqualTo(32766);
+        assertThat(subject).startsWith(truncated);
+    }
+
+    @Test
+    void truncateSubjectFieldShouldNotSplitASurrogatePair() {
+        // 4-byte characters: byte 32766 cuts one after its first byte
+        String subject = "a" + new String(Character.toChars(0x1F600)).repeat(10_000);
+
+        String truncated = SearchUtil.truncateSubjectField(subject);
+
+        assertThat(subject).startsWith(truncated);
+        assertThat(truncated.getBytes(StandardCharsets.UTF_8).length).isLessThanOrEqualTo(32766);
+    }
+
+    @Test
+    void truncateSubjectFieldShouldKeepASubjectOfExactlyTheLimit() {
+        String subject = "a".repeat(32766);
+
+        assertThat(SearchUtil.truncateSubjectField(subject)).isEqualTo(subject);
+    }
+
     @Test
     void getMessageIdIfSupportedByUnderlyingStorageOrNullForNullMessageIdShouldReturnNull() {
         //given
