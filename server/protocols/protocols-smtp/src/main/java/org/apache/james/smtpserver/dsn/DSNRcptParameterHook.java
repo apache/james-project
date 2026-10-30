@@ -59,7 +59,7 @@ public class DSNRcptParameterHook implements RcptHook {
         }
 
         public ImmutableMap<MailAddress, RecipientDsnParameters> build() {
-            return entries.build();
+            return entries.buildKeepingLast();
         }
     }
 
