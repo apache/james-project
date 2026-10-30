@@ -498,10 +498,12 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * Return a {@link Query} for a value searched in a field indexed with {@link LenientImapSearchAnalyzer}.
      * Shingles are at most {@link LenientImapSearchAnalyzer#DEFAULT_MAX_TOKEN_LENGTH} tokens long, so a longer
      * value is split into overlapping windows of that size. The windows are ANDed per document, so this is
-     * not a strict phrase match.
+     * not a strict phrase match. Punctuation around words is removed like the analyzer does at index time;
+     * a value made only of punctuation is searched as is.
      */
     private Query createTextTermQuery(String fieldName, String value) {
-        List<String> tokens = Splitter.on(CharMatcher.forPredicate(Character::isWhitespace)).omitEmptyStrings().splitToList(value);
+        List<String> tokens = Splitter.on(CharMatcher.forPredicate(Character::isWhitespace)).omitEmptyStrings()
+            .splitToList(LenientImapSearchAnalyzer.removePunctuationAroundWords(value));
         if (tokens.isEmpty()) {
             return createTermQuery(fieldName, value);
         }
@@ -530,7 +532,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             case ContainsOperator cop -> createTextTermQuery(fieldName, cop.getValue().toUpperCase(Locale.US));
             case SearchQuery.ExistsOperator existsOperator -> new PrefixQuery(new Term(fieldName, StringUtils.EMPTY));
             case DateOperator dop -> createQuery(toSentDateField(dop.getDateResultion()), dop);
-            case SearchQuery.AddressOperator addressOperator -> createTermQuery(name.toLowerCase(Locale.US), addressOperator.getAddress().toUpperCase(Locale.US));
+            case SearchQuery.AddressOperator addressOperator -> createTextTermQuery(name.toLowerCase(Locale.US), addressOperator.getAddress().toUpperCase(Locale.US));
             default -> throw new UnsupportedSearchException();
         };
     }
