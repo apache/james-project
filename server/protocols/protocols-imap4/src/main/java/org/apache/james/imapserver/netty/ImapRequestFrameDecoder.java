@@ -42,6 +42,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
+import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapDecoder;
@@ -83,6 +84,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private final int maxFrameLength;
     private final AtomicBoolean framingEnabled = new AtomicBoolean(true);
     private ArrayList<byte[]> pending = new ArrayList<>();
+    private boolean discardUntilEndOfLine = false;
 
     public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength) {
         this.decoder = decoder;
@@ -123,6 +125,11 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         ChannelInboundHandlerAdapter override = behaviourOverrides.peekFirst();
         if (override != null) {
             override.channelRead(ctx, in);
+            return;
+        }
+
+        if (discardUntilEndOfLine) {
+            discardRestOfRejectedLine(in);
             return;
         }
 
@@ -172,12 +179,10 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 // if size is != -1 the case was a literal. if thats the case we
                 // should not consume the line
                 // See JAMES-1199
-                if (attempt.size() == -1) {
-                    try {
-                        attempt.reader().consumeLine();
-                    } catch (DecodingException | NettyImapRequestLineReader.NotEnoughDataException e) {
-                        // Silent
-                    }
+                // A rejected command is the exception: whatever is left of its line is not a
+                // command of its own, wherever the parse stopped.
+                if (attempt.size() == -1 || message instanceof StatusResponse) {
+                    consumeRestOfLine(attempt);
                 }
 
                 enableFraming(ctx);
@@ -197,6 +202,36 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             }
         }
         return Optional.empty();
+    }
+
+    private void consumeRestOfLine(ParseAttempt attempt) {
+        ByteBuf buffer = attempt.buffer();
+        if (buffer == null || endOfLineReached(buffer)) {
+            return;
+        }
+        try {
+            attempt.reader().consumeLine();
+        } catch (NettyImapRequestLineReader.NotEnoughDataException e) {
+            // The end of the line is still to come: drop it when it arrives, so that the commands
+            // decoded do not depend on how the stream was split into segments.
+            discardUntilEndOfLine = true;
+        } catch (DecodingException e) {
+            // Silent
+        }
+    }
+
+    private boolean endOfLineReached(ByteBuf buffer) {
+        return buffer.readerIndex() > 0 && buffer.getByte(buffer.readerIndex() - 1) == '\n';
+    }
+
+    private void discardRestOfRejectedLine(ByteBuf in) {
+        int endOfLine = in.bytesBefore((byte) '\n');
+        if (endOfLine < 0) {
+            in.skipBytes(in.readableBytes());
+        } else {
+            in.skipBytes(endOfLine + 1);
+            discardUntilEndOfLine = false;
+        }
     }
 
     /**
