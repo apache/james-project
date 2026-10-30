@@ -20,11 +20,13 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -143,6 +145,71 @@ class StripAttachmentTest {
                 String attachmentFilename = attachments.iterator().next().value();
                 assertThat(new File(temporaryFolder.getFolderPath() + attachmentFilename)).hasContent(expectedAttachmentContent);
             });
+    }
+
+    @Test
+    void serviceShouldLeaveAWritableMessageWhenAllPartsAreRemoved() throws Exception {
+        Mailet mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("remove", "all")
+            .setProperty("pattern", ".*")
+            .build());
+
+        Mail mail = FakeMail.fromMessage(MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder().data("simple text"),
+                createAttachmentBodyPart("content", "virus.exe", TEXT_HEADERS)));
+
+        mailet.service(mail);
+
+        assertThatCode(() -> mail.getMessage().writeTo(new ByteArrayOutputStream()))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void serviceShouldRemoveNestedMultipartWhenAllItsPartsAreRemoved() throws Exception {
+        Mailet mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("remove", "matched")
+            .setProperty("mimeType", "text/html")
+            .setProperty("pattern", ".*\\.txt")
+            .build());
+
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString("From: sender@example.com\r\n" +
+            "MIME-Version: 1.0\r\n" +
+            "Content-Type: multipart/mixed; boundary=\"outer\"\r\n" +
+            "\r\n" +
+            "--outer\r\n" +
+            "Content-Type: multipart/alternative; boundary=\"inner\"\r\n" +
+            "\r\n" +
+            "--inner\r\n" +
+            "Content-Type: text/plain\r\n" +
+            "Content-Disposition: attachment; filename=\"hello.txt\"\r\n" +
+            "\r\n" +
+            "hello\r\n" +
+            "--inner\r\n" +
+            "Content-Type: text/html\r\n" +
+            "\r\n" +
+            "<p>hello</p>\r\n" +
+            "--inner--\r\n" +
+            "--outer\r\n" +
+            "Content-Type: application/octet-stream\r\n" +
+            "Content-Disposition: attachment; filename=\"kept.pdf\"\r\n" +
+            "\r\n" +
+            "kept\r\n" +
+            "--outer--\r\n");
+        Mail mail = FakeMail.from(message);
+
+        mailet.service(mail);
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        assertThatCode(() -> mail.getMessage().writeTo(output))
+            .doesNotThrowAnyException();
+        assertThat(output.toString(StandardCharsets.UTF_8))
+            .doesNotContain("multipart/alternative")
+            .contains("kept");
     }
 
     @Test
@@ -816,9 +883,8 @@ class StripAttachmentTest {
         //When
         mailet.processMultipartPartMessage(mimeMessage, mail);
         //Then
-        assertThat(mimeMessage.getContent()).isInstanceOf(MimeMultipart.class);
-        MimeMultipart multipart = (MimeMultipart) mimeMessage.getContent();
-        assertThat(multipart.getCount()).isZero();
+        assertThat(mimeMessage.isMimeType("text/plain")).isTrue();
+        assertThat(mimeMessage.getContent()).isEqualTo("");
     }
 
     @Test
