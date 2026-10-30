@@ -245,6 +245,68 @@ class ICALToHeadersTest {
         }));
     }
 
+    @Test
+    void serviceShouldSkipAnInvalidDtStamp() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+        Calendar calendar = new CalendarBuilder().build(new StringReader(String.join("\r\n",
+            "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//x//y//EN", "METHOD:REQUEST",
+            "BEGIN:VEVENT", "UID:abc", "DTSTAMP: ", "END:VEVENT", "END:VCALENDAR", "")));
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .attribute(makeAttribute(ImmutableMap.of("key", AttributeValue.ofUnserializable(calendar))))
+            .build();
+
+        testee.service(mail);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_UID_HEADER)).containsExactly("abc");
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_METHOD_HEADER)).containsExactly("REQUEST");
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_DTSTAMP_HEADER)).isNull();
+        }));
+    }
+
+    @Test
+    void serviceShouldSkipAnEmptyDtStampWithTimezone() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+        Calendar calendar = new CalendarBuilder().build(new StringReader(String.join("\r\n",
+            "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//x//y//EN", "METHOD:REQUEST",
+            "BEGIN:VEVENT", "UID:abc", "DTSTAMP;TZID=Europe/Paris:", "END:VEVENT", "END:VCALENDAR", "")));
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .attribute(makeAttribute(ImmutableMap.of("key", AttributeValue.ofUnserializable(calendar))))
+            .build();
+
+        testee.service(mail);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_UID_HEADER)).containsExactly("abc");
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_METHOD_HEADER)).containsExactly("REQUEST");
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_DTSTAMP_HEADER)).isNull();
+        }));
+    }
+
+    @Test
+    void serviceShouldSkipAMissingDtStamp() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+        Calendar calendar = new CalendarBuilder().build(new StringReader(String.join("\r\n",
+            "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//x//y//EN", "METHOD:REQUEST",
+            "BEGIN:VEVENT", "UID:abc", "END:VEVENT", "END:VCALENDAR", "")));
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .attribute(makeAttribute(ImmutableMap.of("key", AttributeValue.ofUnserializable(calendar))))
+            .build();
+
+        testee.service(mail);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_UID_HEADER)).containsExactly("abc");
+            softly.assertThat(mail.getMessage().getHeader(ICALToHeader.X_MEETING_DTSTAMP_HEADER)).isNull();
+        }));
+    }
+
     private Attribute makeAttribute(Map<String, AttributeValue<?>> icals) {
         return new Attribute(ICALToHeader.ATTRIBUTE_DEFAULT, AttributeValue.of(icals));
     }
