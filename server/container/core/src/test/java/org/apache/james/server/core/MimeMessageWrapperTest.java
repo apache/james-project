@@ -43,6 +43,8 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Test the subject folding issue.
@@ -567,5 +569,28 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
         assertThat(out.toString(StandardCharsets.US_ASCII)).isEqualTo(raw);
         LifecycleUtil.dispose(wrapper);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"a", "Subject: x\nTo: y\n\nbody\n", "Subject: x\r\nTo: y\r\n"})
+    void getMessageSizeShouldMatchWriteToWhenUnmodified(String raw) throws Exception {
+        MimeMessageWrapper wrapper = getMessageFromSources(raw);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        wrapper.writeTo(out);
+
+        assertThat(wrapper.getMessageSize()).isEqualTo(out.size());
+        assertThat(out.toString(StandardCharsets.US_ASCII)).isEqualTo(raw);
+        LifecycleUtil.dispose(wrapper);
+    }
+
+    @Test
+    void writeToShouldSplitUnmodifiedSourceBetweenHeaderAndBodyStreams() throws Exception {
+        ByteArrayOutputStream headerOut = new ByteArrayOutputStream();
+        ByteArrayOutputStream bodyOut = new ByteArrayOutputStream();
+        mw.writeTo(headerOut, bodyOut);
+
+        assertThat(headerOut.toString(StandardCharsets.US_ASCII)).isEqualTo(content + sep);
+        assertThat(bodyOut.toString(StandardCharsets.US_ASCII)).isEqualTo(body);
     }
 }
