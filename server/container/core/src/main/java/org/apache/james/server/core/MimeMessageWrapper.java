@@ -322,7 +322,11 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
 
     public void writeTo(OutputStream headerOs, OutputStream bodyOs, String[] ignoreList, boolean preLoad) throws IOException, MessagingException {
         
-        if (!preLoad && source != null && !isBodyModified()) {
+        if (!preLoad && source != null && !isModified() && ignoreList.length == 0) {
+            // Unmodified message: relay the source bytes as they are, so that the
+            // written size matches getMessageSize()
+            writeSourceTo(headerOs, bodyOs);
+        } else if (!preLoad && source != null && !isBodyModified()) {
             // We do not want to instantiate the message... just read from
             // source
             // and write to this outputstream
@@ -372,6 +376,28 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 loadMessage();
             }
             MimeMessageUtil.writeMessageBodyTo(this, bodyOs);
+        }
+    }
+
+    private void writeSourceTo(OutputStream headerOs, OutputStream bodyOs) throws IOException, MessagingException {
+        if (headerOs == bodyOs) {
+            try (InputStream in = source.getInputStream()) {
+                in.transferTo(headerOs);
+            }
+            return;
+        }
+        long headerLength = countSourceHeaderBytes();
+        try (InputStream in = source.getInputStream()) {
+            IOUtils.copyLarge(in, headerOs, 0, headerLength);
+            in.transferTo(bodyOs);
+        }
+    }
+
+    private long countSourceHeaderBytes() throws IOException, MessagingException {
+        try (InputStream in = source.getInputStream()) {
+            CountingInputStream countingInputStream = new CountingInputStream(in);
+            new MailHeaders(countingInputStream);
+            return countingInputStream.getCount();
         }
     }
 
@@ -445,10 +471,8 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 throw new MessagingException("Error retrieving message size", ioe);
             }
         } else if (source != null && !bodyModified) {
-            try (InputStream in = source.getInputStream()) {
-                CountingInputStream countingInputStream = new CountingInputStream(in);
-                new MailHeaders(countingInputStream);
-                long previousHeaderLength = countingInputStream.getCount();
+            try {
+                long previousHeaderLength = countSourceHeaderBytes();
                 return source.getMessageSize() - previousHeaderLength + IOUtils.consume(new InternetHeadersInputStream(getAllHeaderLines()));
             } catch (IOException e) {
                 throw new MessagingException("Error retrieving message size", e);
