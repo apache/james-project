@@ -119,6 +119,21 @@ class SearchUtilTest {
     }
 
     @Test
+    void getBaseSubjectShouldBeIdempotentWhenAControlCharacterFollowsAForwardWrapper() {
+        String base = SearchUtil.getBaseSubject("[fwd: \u0001abc]");
+
+        assertThat(SearchUtil.getBaseSubject(base)).isEqualTo(base);
+        assertThat(base).isEqualTo(SearchUtil.getBaseSubject("\u0001abc"));
+    }
+
+    @Test
+    void getBaseSubjectShouldBeIdempotentOnFuzzerInput() {
+        String base = SearchUtil.getBaseSubject("[fwd: " + (char) 0x01 + (char) 0x00 + (char) 0x7f + (char) 0xfffe + "\r\n ]");
+
+        assertThat(SearchUtil.getBaseSubject(base)).isEqualTo(base);
+    }
+
+    @Test
     void getBaseSubjectShouldNotCutAtAClosingBracketWithoutOpeningBracket() {
         assertThat(SearchUtil.getBaseSubject("bc] Ree")).isEqualTo("bc] Ree");
     }
