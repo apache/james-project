@@ -687,7 +687,7 @@
 
         <bouncycastle.version>1.85</bouncycastle.version>
         <scala.base>2.13</scala.base>
-        <scala.version>${scala.base}.16</scala.version>
+        <scala.version>3.10.0</scala.version>
         <doclint>none</doclint>
         <mockito.version>5.18.0</mockito.version>
         <ical4j.version>4.4.0</ical4j.version>
