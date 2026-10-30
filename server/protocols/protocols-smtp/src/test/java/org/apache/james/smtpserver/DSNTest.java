@@ -143,6 +143,24 @@ class DSNTest {
     }
 
     @Test
+    void rcptWithADuplicatedParameterShouldBeRejectedAsASyntaxError() throws Exception {
+        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
+        testSystem.smtpServer.init();
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        authenticate(smtpProtocol);
+
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost>");
+        smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=NEVER NOTIFY=SUCCESS");
+
+        assertThat(smtpProtocol.getReplyString()).startsWith("501 5.5.4 Duplicated parameter NOTIFY");
+    }
+
+    @Test
     void notifyCanBeOmitted() throws Exception {
         testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
             ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
