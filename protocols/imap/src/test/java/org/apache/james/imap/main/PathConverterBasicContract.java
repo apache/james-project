@@ -122,6 +122,12 @@ public abstract class PathConverterBasicContract extends MailboxFolderDelimiterA
     }
 
     @Test
+    public void buildFullPathShouldDenyUserSegmentWithDomainDelimiter() {
+        assertThatThrownBy(() -> pathConverter().buildFullPath("#user" + folderDelimiter() + "a@b" + folderDelimiter() + "INBOX"))
+            .isInstanceOf(DeniedAccessOnSharedMailboxException.class);
+    }
+
+    @Test
     public void buildFullPathShouldDenyMailboxPathNotBelongingToTheUser() {
         assertThatThrownBy(() -> pathConverter().buildFullPath("#any"))
             .isInstanceOf(DeniedAccessOnSharedMailboxException.class);
