@@ -81,7 +81,7 @@ object MailboxSetMethodContract {
   val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
 }
 
-trait MailboxSetMethodContract {
+trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
   def bobUsername: Username = MailboxSetMethodContract.currentContext.get().bobUsername
   def bobAccountId: String = MailboxSetMethodContract.currentContext.get().bobAccountId
   def andreUsername: Username = MailboxSetMethodContract.currentContext.get().andreUsername

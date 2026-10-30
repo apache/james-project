@@ -90,7 +90,9 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
 
   private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, invocation: InvocationWithContext) : SFlux[InvocationWithContext] =
     SFlux.fromPublisher(
-      invocation.processingContext.resolveBackReferences(invocation.invocation) match {
+      invocation.processingContext.resolveBackReferences(invocation.invocation,
+        methodsByName.get(invocation.invocation.methodName)
+          .map(_.deferredCreationReferencePaths(invocation.invocation.arguments)).getOrElse(Set.empty)) match {
         case Left(e) => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(
           errorCode = ErrorCode.InvalidResultReference,
           description = s"Failed resolving back-reference: ${e.message}",
