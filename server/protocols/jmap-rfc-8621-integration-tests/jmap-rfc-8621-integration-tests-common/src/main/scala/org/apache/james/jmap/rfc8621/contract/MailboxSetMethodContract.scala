@@ -81,7 +81,7 @@ object MailboxSetMethodContract {
   val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
 }
 
-trait MailboxSetMethodContract {
+trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with MailboxSetPostCreateContract {
   def bobUsername: Username = MailboxSetMethodContract.currentContext.get().bobUsername
   def bobAccountId: String = MailboxSetMethodContract.currentContext.get().bobAccountId
   def andreUsername: Username = MailboxSetMethodContract.currentContext.get().andreUsername
@@ -3169,8 +3169,8 @@ trait MailboxSetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "#C42": {
-         |          "type": "invalidArguments",
-         |          "description": "#C42 is not a mailboxId: #C42 was not used in previously defined creationIds"
+         |          "type": "notFound",
+         |          "description": "#C42"
          |        }
          |      }
          |    }, "c2"],
@@ -3243,8 +3243,8 @@ trait MailboxSetMethodContract {
          |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "#C42": {
-         |          "type": "invalidArguments",
-         |          "description": "#C42 is not a mailboxId: #C42 was not used in previously defined creationIds"
+         |          "type": "notFound",
+         |          "description": "#C42"
          |        }
          |      }
          |    }, "c2"]
@@ -3253,7 +3253,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
-  def emptyCreationIdReferencesShouldFail(): Unit = {
+  def emptyCreationIdReferencesShouldFailDuringRequestParsing(): Unit = {
     val request =
       s"""
         |{
@@ -3282,24 +3282,60 @@ trait MailboxSetMethodContract {
       .body
       .asString
 
-    val message = "# is not a mailboxId: # was not used in previously defined creationIds"
+    val message = "'/destroy(0)' property is not valid: mailboxId does not match Id constraints: Predicate failed: '' contains some invalid characters. Should be [#a-zA-Z0-9-_] and no longer than 255 chars."
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
       .isEqualTo(
       s"""{
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
-         |    ["Mailbox/set", {
-         |      "accountId": "$bobAccountId",
-         |      "notDestroyed": {
-         |        "#": {
-         |          "type": "invalidArguments",
-         |          "description": "$message"
-         |        }
-         |      }
+         |    ["error", {
+         |      "type": "invalidArguments",
+         |      "description": "$message"
          |    }, "c2"]
          |  ]
          |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldPreserveAnUnknownMaximumLengthCreationReference(): Unit = {
+    val reference = "#" + "c" * 255
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [["Mailbox/set", {
+         |    "accountId": "$bobAccountId",
+         |    "destroy": ["$reference"]
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
+      .isEqualTo(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [["Mailbox/set", {
+           |    "accountId": "$bobAccountId",
+           |    "notDestroyed": {
+           |      "$reference": {
+           |        "type": "notFound",
+           |        "description": "$reference"
+           |      }
+           |    }
+           |  }, "c1"]]
+           |}""".stripMargin)
   }
 
   @Test
@@ -9114,8 +9150,8 @@ trait MailboxSetMethodContract {
          |                "accountId": "$bobAccountId",
          |                "notUpdated": {
          |                    "#invalid": {
-         |                        "type": "invalidArguments",
-         |                        "description": "#invalid was not used in previously defined creationIds"
+         |                        "type": "notFound",
+         |                        "description": "#invalid"
          |                    }
          |                }
          |            },
