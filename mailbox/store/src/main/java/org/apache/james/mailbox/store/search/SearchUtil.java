@@ -19,13 +19,10 @@
 package org.apache.james.mailbox.store.search;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -51,6 +48,7 @@ public class SearchUtil {
     private static final String FWD = "fwd";
     private static final String FW = "fw";
     private static final char WS = ' ';
+    private static final char NO_BREAK_SPACE = (char) 0xA0;
     private static final char OPEN_SQUARE_BRACKED = '[';
     private static final char CLOSE_SQUARE_BRACKED = ']';
     private static final char COLON = ':';
@@ -235,234 +233,248 @@ public class SearchUtil {
      * @return baseSubject
      */
     public static String getBaseSubject(String subject) {
-            
-            //   (1) Convert any RFC 2047 encoded-words in the subject to [UTF-8]
-            //    as described in "Internationalization Considerations".
-            //    Convert all tabs and continuations to space.  Convert all
-            //    multiple spaces to a single space.
-            // replace all tabs with spaces and replace multiple spaces with one space
-            String decodedSubject = StringUtils.normalizeSpace(
-                MimeUtil.unfold(
-                    DecoderUtil.decodeEncodedWords(subject, DecodeMonitor.SILENT)));
-            
-            
-            while (true) {
-                int decodedSubjectLength = decodedSubject.length();
-                while (true) {
-                    //    (2) Remove all trailing text of the subject that matches the
-                    //    subj-trailer ABNF; repeat until no more matches are possible.
-                    String subj = removeSubTrailers(decodedSubject);
-                    if (decodedSubjectLength > subj.length()) {
-                        decodedSubject = subj;
-                        decodedSubjectLength = decodedSubject.length();
-                    } else {
-                        break;
-                    }
+        //   (1) Convert any RFC 2047 encoded-words in the subject to [UTF-8]
+        //    as described in "Internationalization Considerations".
+        //    Convert all tabs and continuations to space.  Convert all
+        //    multiple spaces to a single space.
+        // replace all tabs with spaces and replace multiple spaces with one space
+        String decodedSubject = normalizeSpace(
+            MimeUtil.unfold(
+                DecoderUtil.decodeEncodedWords(subject, DecodeMonitor.SILENT)));
 
+        return new BaseSubjectExtractor(decodedSubject).extract();
+    }
+
+    /**
+     * Unlike StringUtils::normalizeSpace, control characters are kept at both ends: they could otherwise
+     * only be trimmed at the very start of the subject and not once a leader, a blob or a forward wrapper is removed.
+     */
+    private static String normalizeSpace(String subject) {
+        StringBuilder result = new StringBuilder(subject.length());
+        boolean pendingSpace = false;
+        for (int i = 0; i < subject.length(); i++) {
+            char c = subject.charAt(i);
+            if (Character.isWhitespace(c) || c == NO_BREAK_SPACE) {
+                pendingSpace = result.length() > 0;
+            } else {
+                if (pendingSpace) {
+                    result.append(WS);
+                    pendingSpace = false;
                 }
-                
+                result.append(c);
+            }
+        }
+        return result.toString();
+    }
+
+    /**
+     * Works on the [start, end) window of the decoded subject and only copies the result once in order to
+     * stay linear on subjects made of many leaders, blobs or trailers.
+     */
+    private static class BaseSubjectExtractor {
+        private final String subject;
+        private int start;
+        private int end;
+        // No bracket in [bracketSearchFrom, nextBracket), and nextBracket is a bracket or the subject length
+        private int bracketSearchFrom = -1;
+        private int nextBracket = -1;
+
+        BaseSubjectExtractor(String subject) {
+            this.subject = subject;
+            this.start = 0;
+            this.end = subject.length();
+        }
+
+        String extract() {
+            while (true) {
+                //    (2) Remove all trailing text of the subject that matches the
+                //    subj-trailer ABNF; repeat until no more matches are possible.
+                removeSubTrailers();
+
                 while (true) {
                     boolean matchedInner = false;
 
                     //    (3) Remove all prefix text of the subject that matches the subj-
                     //    leader ABNF.
-                    decodedSubjectLength = decodedSubject.length();
-                    decodedSubject = removeSubjLeaders(decodedSubject);
-                    if (decodedSubjectLength > decodedSubject.length()) {
+                    int afterLeaders = removeSubjLeaders();
+                    if (afterLeaders > start) {
                         matchedInner = true;
-                        decodedSubjectLength = decodedSubject.length();
-
+                        start = afterLeaders;
                     }
 
                     //    (4) If there is prefix text of the subject that matches the subj-
                     //    blob ABNF, and removing that prefix leaves a non-empty subj-
                     //    base, then remove the prefix text.
-                    decodedSubjectLength = decodedSubject.length();
-                    String subj = removeBlob(decodedSubject);
-
+                    int afterBlob = removeBlob(start);
                     // check if it will leave a non-empty subject
-                    if (subj.length() > 0) {
-                        decodedSubject = subj;
-                        if (decodedSubjectLength > decodedSubject.length()) {
-                            matchedInner = true;
-                            decodedSubjectLength = decodedSubject.length();
-
-                        }
-
+                    if (afterBlob < end && afterBlob > start) {
+                        matchedInner = true;
+                        start = afterBlob;
                     }
+
                     // (5) Repeat (3) and (4) until no matches remain.
                     if (!matchedInner) {
-                        // no more matches so break the loop 
+                        // no more matches so break the loop
                         break;
-                    } 
+                    }
                 }
-                String lowcaseSubject = decodedSubject.toLowerCase(Locale.US);
-                
-                if (lowcaseSubject.startsWith(SUBJ_FWD_HDR) && lowcaseSubject.endsWith(SUBJ_FWD_TRL)) {
+
+                if (startsWithIgnoreCase(start, SUBJ_FWD_HDR) && endsWithIgnoreCase(SUBJ_FWD_TRL)) {
                     //    (6) If the resulting text begins with the subj-fwd-hdr ABNF and
                     //    ends with the subj-fwd-trl ABNF, remove the subj-fwd-hdr and
                     //    subj-fwd-trl and repeat from step (2).
-                    decodedSubject = decodedSubject.substring(SUBJ_FWD_HDR.length(), decodedSubject.length() - SUBJ_FWD_TRL.length());
-                    decodedSubjectLength = decodedSubject.length();
+                    start += SUBJ_FWD_HDR.length();
+                    end -= SUBJ_FWD_TRL.length();
                 } else {
                     break;
                 }
-               
             }
             // (7) The resulting text is the "base subject" used in the SORT.
-            return decodedSubject;
-    }
- 
-    /**
-     * Remove the subj-blob
-     * 
-     *     subj-blob = "[" *BLOBCHAR "]" *WSP
-     *     subj-refwd = ("re" / ("fw" ["d"])) *WSP [subj-blob] ":"
-     * 
-     *     BLOBCHAR = %x01-5a / %x5c / %x5e-7f
-     *     ; any CHAR except '[' and ']' 
-     *
-     * @return sub
-     */
-    private static String removeSubjectBlob(String subject) {
-        if (subject.isEmpty()) {
-            return subject;
+            return subject.substring(start, end);
         }
-        String subj = subject;
-        while (!subj.isEmpty() && subj.charAt(0) == OPEN_SQUARE_BRACKED) {
-            int length = subj.length();
-            subj = removeBlob(subject);
-            int i = 0;
-            if (subj.length() > 0 && subj.charAt(i) == CLOSE_SQUARE_BRACKED) {
-                i++;
+
+        private boolean startsWithIgnoreCase(int from, String prefix) {
+            return end - from >= prefix.length() && subject.regionMatches(true, from, prefix, 0, prefix.length());
+        }
+
+        private boolean endsWithIgnoreCase(String suffix) {
+            return end - start >= suffix.length() && subject.regionMatches(true, end - suffix.length(), suffix, 0, suffix.length());
+        }
+
+        private void removeSubTrailers() {
+            boolean removed = true;
+            while (removed) {
+                removed = removeSubTrailer();
+            }
+        }
+
+        /**
+         * Remove one subj-trailer
+         *
+         *    subj-trailer    = "(fwd)" / WSP
+         *
+         * @return true if a trailer was removed
+         */
+        private boolean removeSubTrailer() {
+            if (end - start >= 2 && subject.charAt(end - 1) == WS) {
+                while (end - 1 > start && subject.charAt(end - 1) == WS) {
+                    end--;
+                }
+                return true;
+            }
+            if (end - start > FWD_PARENS.length() && subject.startsWith(FWD_PARENS, end - FWD_PARENS.length())) {
+                end -= FWD_PARENS.length();
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Remove the subj-leader
+         *
+         *     subj-leader = (*subj-blob subj-refwd) / WSP
+         *     subj-blob = "[" *BLOBCHAR "]" *WSP
+         *     subj-refwd = ("re" / ("fw" ["d"])) *WSP [subj-blob] ":"
+         *
+         *     BLOBCHAR = %x01-5a / %x5c / %x5e-7f
+         *     ; any CHAR except '[' and ']'
+         *
+         * @return the start of the subject once the leader is removed
+         */
+        private int removeSubjLeaders() {
+            int position = skipWhiteSpaces(start);
+            if (position > start) {
+                // check if we have matched WSP
+                return position;
+            }
+
+            position = removeSubjectBlob();
+            if (startsWithIgnoreCase(position, RE)) {
+                position += RE.length();
+            } else if (startsWithIgnoreCase(position, FWD)) {
+                position += FWD.length();
+            } else if (startsWithIgnoreCase(position, FW)) {
+                position += FW.length();
             } else {
-                return subject;
+                return start;
             }
-            while (i < subj.length() && subj.charAt(i) == WS) {
-                i++;
-            }
-            subj = subj.substring(i);
-            if (length == subj.length()) {
-                return subj;
-            }
-        }
-        return subj;
-    }
+            position = skipWhiteSpaces(position);
 
-    /**
-     * Remove the subj-leader
-     * 
-     *     subj-leader = (*subj-blob subj-refwd) / WSP
-     *     subj-blob = "[" *BLOBCHAR "]" *WSP
-     *     subj-refwd = ("re" / ("fw" ["d"])) *WSP [subj-blob] ":"
-     * 
-     *     BLOBCHAR = %x01-5a / %x5c / %x5e-7f
-     *     ; any CHAR except '[' and ']' 
-     *
-     * @return sub
-     */
-    private static String removeSubjLeaders(String subject) {
-        int subString = 0;
-        while (subString < subject.length() && subject.charAt(subString) == WS) {
-            subString++;
-        }
-        if (subString > 0) {
-            // check if we have matched WSP
-            return subject.substring(subString);
-        } else {
-
-            String subj = removeSubjectBlob(subject);
-
-            String lowCaseSubj = subj.toLowerCase(Locale.US);
-            if (lowCaseSubj.startsWith(RE)) {
-                subString = RE.length();
-            } else if (lowCaseSubj.startsWith(FWD)) {
-                subString = FWD.length();
-            } else if (lowCaseSubj.startsWith(FW)) {
-                subString = FW.length();
+            if (position < end && subject.charAt(position) == COLON) {
+                position++;
             } else {
-                return subject;
+                return start;
             }
-            while (subString < subj.length() && subj.charAt(subString) == WS) {
-                subString++;
-            }
-
-            /*
-             * subj = removeSubjectBlob(subj.substring(subString)); if
-             * (subj.endsWith(String.valueOf(CLOSE_SQUARE_BRACKED))) { subString
-             * = 1; } else { subString = 0; }
-             */
-
-            if (subString < subj.length() && subj.charAt(subString) == COLON) {
-                subString++;
-            } else {
-                return subject;
-            }
-
-            while (subString < subj.length() && subj.charAt(subString) == WS) {
-                subString++;
-            }
-            return subj.substring(subString);
-        }
-    }
-
-    
-    /**
-     * remove the remove_subj_trailers
-     * 
-     *    subj-trailer    = "(fwd)" / WSP
-     *
-     * @return sub
-     */
-    private static String removeSubTrailers(String decodedSubject) {
-        int subStringStart = 0;
-        int subStringEnd = decodedSubject.length();
-
-        int originalSize = decodedSubject.length();
-        int curPos = originalSize - 1;
-        while (curPos > 0) {
-            char c = decodedSubject.charAt(curPos--);
-            if (c == WS) {
-                subStringEnd--;
-            } else {
-                if (subStringEnd > FWD_PARENS.length() && decodedSubject.endsWith(FWD_PARENS)) {
-                    subStringEnd -= FWD_PARENS.length();
-                } 
-                break;
-            }
-        }
-        decodedSubject = decodedSubject.substring(subStringStart, subStringEnd);
-        return decodedSubject;
-    }
-    
-    /**
-     * Remove all blobchars
-     * 
-     *     BLOBCHAR = %x01-5a / %x5c / %x5e-7f
-     *     ; any CHAR except '[' and ']' 
-     *
-     * @return subj
-     */
-    private static String removeBlob(String subject) {
-        int i = 0;
-        char lastChar = Character.UNASSIGNED;
-        for (int a = 0; a < subject.length(); a++) {
-            char c = subject.charAt(a);
-            lastChar = c;
-            if ((a != 0  && c == OPEN_SQUARE_BRACKED) || c == CLOSE_SQUARE_BRACKED) {
-                break;
-            }
-            i++;
+            return skipWhiteSpaces(position);
         }
 
-        if (lastChar != CLOSE_SQUARE_BRACKED) {
-            return subject;
-        } else {
-            // the lastChar was a ] so increase the count before substring
-            i++;
-            return subject.substring(i);
+        /**
+         * Remove the subj-blob
+         *
+         *     subj-blob = "[" *BLOBCHAR "]" *WSP
+         *     subj-refwd = ("re" / ("fw" ["d"])) *WSP [subj-blob] ":"
+         *
+         *     BLOBCHAR = %x01-5a / %x5c / %x5e-7f
+         *     ; any CHAR except '[' and ']'
+         *
+         * @return the start of the subject once the blob is removed
+         */
+        private int removeSubjectBlob() {
+            if (start >= end || subject.charAt(start) != OPEN_SQUARE_BRACKED) {
+                return start;
+            }
+            int afterBlob = removeBlob(start);
+            if (afterBlob < end && subject.charAt(afterBlob) == CLOSE_SQUARE_BRACKED) {
+                return skipWhiteSpaces(afterBlob + 1);
+            }
+            return start;
         }
 
+        /**
+         * Remove all blobchars
+         *
+         *     BLOBCHAR = %x01-5a / %x5c / %x5e-7f
+         *     ; any CHAR except '[' and ']'
+         *
+         * @return the position following the first ']' if the subject starts with '[' at from and no other '['
+         * comes before that ']', from otherwise
+         */
+        private int removeBlob(int from) {
+            if (from >= end || subject.charAt(from) != OPEN_SQUARE_BRACKED) {
+                return from;
+            }
+            int bracket = nextBracket(from + 1);
+            if (bracket < end && subject.charAt(bracket) == CLOSE_SQUARE_BRACKED) {
+                return bracket + 1;
+            }
+            return from;
+        }
+
+        /**
+         * Positions only grow, so caching the last lookup keeps the overall scan linear.
+         */
+        private int nextBracket(int from) {
+            if (from >= bracketSearchFrom && from <= nextBracket) {
+                return nextBracket;
+            }
+            int position = from;
+            while (position < subject.length()
+                && subject.charAt(position) != OPEN_SQUARE_BRACKED
+                && subject.charAt(position) != CLOSE_SQUARE_BRACKED) {
+                position++;
+            }
+            bracketSearchFrom = from;
+            nextBracket = position;
+            return position;
+        }
+
+        private int skipWhiteSpaces(int from) {
+            int position = from;
+            while (position < end && subject.charAt(position) == WS) {
+                position++;
+            }
+            return position;
+        }
     }
 
     public static Predicate<MessageId> distinct() {
@@ -501,10 +513,15 @@ public class SearchUtil {
         }
 
         byte[] subjectAsBytes = subject.getBytes(StandardCharsets.UTF_8);
-        if (subjectAsBytes.length < MAX_RAW_BYTES) {
+        if (subjectAsBytes.length <= MAX_RAW_BYTES) {
             return subject;
         }
 
-        return new String(Arrays.copyOf(subjectAsBytes, MAX_RAW_BYTES), StandardCharsets.UTF_8);
+        // Do not cut inside a character: back off over UTF-8 continuation bytes
+        int length = MAX_RAW_BYTES;
+        while (length > 0 && (subjectAsBytes[length] & 0xC0) == 0x80) {
+            length--;
+        }
+        return new String(subjectAsBytes, 0, length, StandardCharsets.UTF_8);
     }
 }

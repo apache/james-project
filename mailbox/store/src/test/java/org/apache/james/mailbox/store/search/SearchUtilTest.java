@@ -19,8 +19,12 @@
 package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -98,7 +102,94 @@ class SearchUtilTest {
     void testComplexExtraction() {
         assertThat(SearchUtil.getBaseSubject("Re: re:re: fwd:[fwd: \t  Test]  (fwd)  (fwd)(fwd) ")).isEqualTo("Test");
     }
+
+    @Test
+    void getBaseSubjectShouldBeFastOnManyLeaders() {
+        String subject = "Re:" + "Re: re:re: fwd:".repeat(4_000) + "[";
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("["));
+    }
+
+    @Test
+    void getBaseSubjectShouldBeFastOnManyBlobs() {
+        String subject = "[_ +w*][`]".repeat(6_000) + "w";
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("w"));
+    }
+
+    @Test
+    void getBaseSubjectShouldBeFastOnManyForwardHeaders() {
+        String subject = "[fwd: ".repeat(4_000) + "Test" + "]".repeat(4_000);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("Test"));
+    }
+
+    @Test
+    void getBaseSubjectShouldBeIdempotentWhenAControlCharacterFollowsAForwardWrapper() {
+        String base = SearchUtil.getBaseSubject("[fwd: \u0001abc]");
+
+        assertThat(SearchUtil.getBaseSubject(base)).isEqualTo(base);
+        assertThat(base).isEqualTo(SearchUtil.getBaseSubject("\u0001abc"));
+    }
+
+    @Test
+    void getBaseSubjectShouldBeIdempotentOnFuzzerInput() {
+        String base = SearchUtil.getBaseSubject("[fwd: " + (char) 0x01 + (char) 0x00 + (char) 0x7f + (char) 0xfffe + "\r\n ]");
+
+        assertThat(SearchUtil.getBaseSubject(base)).isEqualTo(base);
+    }
+
+    @Test
+    void getBaseSubjectShouldNotCutAtAClosingBracketWithoutOpeningBracket() {
+        assertThat(SearchUtil.getBaseSubject("bc] Ree")).isEqualTo("bc] Ree");
+    }
+
+    @Test
+    void getBaseSubjectShouldOnlyRemoveALeadingBlob() {
+        assertThat(SearchUtil.getBaseSubject("[]wd]]re")).isEqualTo("wd]]re");
+        assertThat(SearchUtil.getBaseSubject("[R:]] R:]] [x(fwd)")).isEqualTo("] R:]] [x");
+    }
+
+    @Test
+    void getBaseSubjectShouldBeFastOnManyTrailers() {
+        String subject = "x" + " (fwd)".repeat(10_000);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("x"));
+    }
     
+    @Test
+    void truncateSubjectFieldShouldNotExceedTheLimitWhenCuttingInsideACharacter() {
+        // byte 32766 is the first byte of an e acute
+        String subject = "a" + String.valueOf((char) 0xE9).repeat(20_000);
+
+        String truncated = SearchUtil.truncateSubjectField(subject);
+
+        assertThat(truncated.getBytes(StandardCharsets.UTF_8).length).isLessThanOrEqualTo(32766);
+        assertThat(subject).startsWith(truncated);
+    }
+
+    @Test
+    void truncateSubjectFieldShouldNotSplitASurrogatePair() {
+        // 4-byte characters: byte 32766 cuts one after its first byte
+        String subject = "a" + new String(Character.toChars(0x1F600)).repeat(10_000);
+
+        String truncated = SearchUtil.truncateSubjectField(subject);
+
+        assertThat(subject).startsWith(truncated);
+        assertThat(truncated.getBytes(StandardCharsets.UTF_8).length).isLessThanOrEqualTo(32766);
+    }
+
+    @Test
+    void truncateSubjectFieldShouldKeepASubjectOfExactlyTheLimit() {
+        String subject = "a".repeat(32766);
+
+        assertThat(SearchUtil.truncateSubjectField(subject)).isEqualTo(subject);
+    }
+
     @Test
     void getMessageIdIfSupportedByUnderlyingStorageOrNullForNullMessageIdShouldReturnNull() {
         //given
