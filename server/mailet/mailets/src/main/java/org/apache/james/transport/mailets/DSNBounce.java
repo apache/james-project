@@ -78,6 +78,7 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -501,8 +502,12 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         }
 
         MimeBodyPart bodyPart = new MimeBodyPart();
-        bodyPart.setContent(buffer.toString(), "text/plain");
+        String text = buffer.toString();
+        bodyPart.setContent(text, "text/plain");
         bodyPart.setHeader("Content-Type", "message/delivery-status");
+        // jakarta.mail would label a non-ASCII text quoted-printable or base64 but
+        // writes message/* parts unencoded: declare the encoding actually written.
+        bodyPart.setHeader("Content-Transfer-Encoding", CharMatcher.ascii().matchesAllOf(text) ? "7bit" : "8bit");
         bodyPart.setDescription("Delivery Status Notification");
         bodyPart.setFileName("status.dat");
         return bodyPart;
