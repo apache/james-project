@@ -309,22 +309,30 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     }
 
     private Mono<Void> doFetch(SelectedMailbox selected, FetchRequest request, Responder responder, FetchData fetch, MailboxSession mailboxSession, MessageManager mailbox, ImapSession session) throws MailboxException {
+        List<MessageRange> requestedRanges = new ArrayList<>();
         List<MessageRange> ranges = new ArrayList<>();
 
         for (IdRange range : request.getIdSet()) {
             messageRange(session.getSelected(), range, request.isUseUids())
-                .flatMap(messageSet -> normalizeMessageRange(selected, messageSet))
-                .map(normalizedMessageSet -> MessageRange.range(normalizedMessageSet.getUidFrom(), normalizedMessageSet.getUidTo()))
-                .ifPresent(ranges::add);
+                .ifPresent(messageSet -> {
+                    requestedRanges.add(messageSet);
+                    normalizeMessageRange(selected, messageSet)
+                        .map(normalizedMessageSet -> MessageRange.range(normalizedMessageSet.getUidFrom(), normalizedMessageSet.getUidTo()))
+                        .ifPresent(ranges::add);
+                });
         }
 
+        // TODO: From the QRESYNC RFC it seems ok to send the VANISHED responses after the FETCH Responses.
+        //       If we do so we could prolly save one mailbox access which should give use some more speed up
+        Mono<Void> vanishedResponses = Mono.empty();
         if (fetch.getVanished()) {
-            // TODO: From the QRESYNC RFC it seems ok to send the VANISHED responses after the FETCH Responses.
-            //       If we do so we could prolly save one mailbox access which should give use some more speed up
-            respondVanished(selected, ranges, responder);
+            vanishedResponses = mailbox.getMetaDataReactive(IGNORE, mailboxSession, EnumSet.of(MailboxMetaData.Item.NextUid))
+                .doOnNext(metaData -> respondVanished(selected, requestedRanges, metaData.getUidNext(), responder))
+                .then();
         }
         boolean omitExpunged = (!request.isUseUids());
-        return processMessageRanges(selected, mailbox, ranges, fetch, mailboxSession, responder, session)
+        return vanishedResponses
+            .then(Mono.defer(() -> processMessageRanges(selected, mailbox, ranges, fetch, mailboxSession, responder, session)))
             // Don't send expunge responses if FETCH is used to trigger this
             // processor. See IMAP-284
             .then(unsolicitedResponses(session, responder, omitExpunged, request.isUseUids()))
