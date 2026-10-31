@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.json
 
-import eu.timepit.refined
 import eu.timepit.refined._
 import jakarta.inject.Inject
 import org.apache.james.core.Domain
@@ -44,10 +43,11 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val unparsedMailboxIdWrites: Writes[UnparsedMailboxId] = Json.valueWrites[UnparsedMailboxId]
   private implicit val unparsedMailboxIdReads: Reads[UnparsedMailboxId] = {
     case JsString(string) =>
-      refined.refineV[IdConstraint](string)
+      org.apache.james.jmap.core.Id.validate(string)
+        .map(id => UnparsedMailboxId(id))
         .fold(
-          e => JsError(s"mailboxId does not match Id constraints: $e"),
-          id => JsSuccess(UnparsedMailboxId(id)))
+          e => JsError(s"mailboxId does not match Id constraints: ${e.getMessage}"),
+          id => JsSuccess(id))
     case _ => JsError("mailboxId needs to be represented by a JsString")
   }
 
@@ -124,20 +124,30 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val mailboxChangesRequest: Reads[MailboxChangesRequest] = Json.reads[MailboxChangesRequest]
 
   private implicit val mailboxRemoveEmailsOnDestroy: Reads[RemoveEmailsOnDestroy] = Json.valueFormat[RemoveEmailsOnDestroy]
-  implicit val mailboxCreationRequest: Reads[MailboxCreationRequest] = Json.reads[MailboxCreationRequest]
+  private val mailboxReferenceReads: Reads[UnparsedMailboxId] = {
+    case JsString(string) => UnparsedMailboxId.validate(string)
+      .fold(e => JsError(s"mailboxId does not match Id constraints: ${e.getMessage}"), JsSuccess(_))
+    case _ => JsError("mailboxId needs to be represented by a JsString")
+  }
+  implicit val mailboxCreationRequest: Reads[MailboxCreationRequest] = {
+    implicit val unparsedMailboxIdReads: Reads[UnparsedMailboxId] = mailboxReferenceReads
+    Json.reads[MailboxCreationRequest]
+  }
   private implicit val mailboxPatchObject: Reads[MailboxPatchObject] = Json.valueReads[MailboxPatchObject]
 
   private implicit val mapPatchObjectByMailboxIdReads: Reads[Map[UnparsedMailboxId, MailboxPatchObject]] =
-    Reads.mapReads[UnparsedMailboxId, MailboxPatchObject] {string =>refineV[IdConstraint](string)
-      .fold(e => JsError(s"mailboxId needs to match id contraints: $e"),
-        id => JsSuccess(UnparsedMailboxId(id))) }
+    Reads.mapReads[UnparsedMailboxId, MailboxPatchObject](string => UnparsedMailboxId.validate(string)
+      .fold(e => JsError(s"mailboxId needs to match id constraints: ${e.getMessage}"), JsSuccess(_)))
 
   private implicit val mapCreationRequestByMailBoxCreationId: Reads[Map[MailboxCreationId, JsObject]] =
     Reads.mapReads[MailboxCreationId, JsObject] {string => refineV[IdConstraint](string)
       .fold(e => JsError(s"mailbox creationId needs to match id contraints: $e"),
         id => JsSuccess(MailboxCreationId(id))) }
 
-  private implicit val mailboxSetRequestReads: Reads[MailboxSetRequest] = Json.reads[MailboxSetRequest]
+  private implicit val mailboxSetRequestReads: Reads[MailboxSetRequest] = {
+    implicit val unparsedMailboxIdReads: Reads[UnparsedMailboxId] = mailboxReferenceReads
+    Json.reads[MailboxSetRequest]
+  }
 
   private implicit val notFoundWrites: Writes[NotFound] = Json.valueWrites[NotFound]
 

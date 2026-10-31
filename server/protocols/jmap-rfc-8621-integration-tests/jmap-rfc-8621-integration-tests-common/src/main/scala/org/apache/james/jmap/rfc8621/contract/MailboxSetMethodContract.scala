@@ -81,7 +81,7 @@ object MailboxSetMethodContract {
   val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
 }
 
-trait MailboxSetMethodContract {
+trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
   def bobUsername: Username = MailboxSetMethodContract.currentContext.get().bobUsername
   def bobAccountId: String = MailboxSetMethodContract.currentContext.get().bobAccountId
   def andreUsername: Username = MailboxSetMethodContract.currentContext.get().andreUsername
@@ -3253,7 +3253,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
-  def emptyCreationIdReferencesShouldFail(): Unit = {
+  def emptyCreationIdReferencesShouldFailDuringRequestParsing(): Unit = {
     val request =
       s"""
         |{
@@ -3282,24 +3282,60 @@ trait MailboxSetMethodContract {
       .body
       .asString
 
-    val message = "# is not a mailboxId: # was not used in previously defined creationIds"
+    val message = "'/destroy(0)' property is not valid: mailboxId does not match Id constraints: Predicate failed: '' contains some invalid characters. Should be [#a-zA-Z0-9-_] and no longer than 255 chars."
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
       .isEqualTo(
       s"""{
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
-         |    ["Mailbox/set", {
-         |      "accountId": "$bobAccountId",
-         |      "notDestroyed": {
-         |        "#": {
-         |          "type": "invalidArguments",
-         |          "description": "$message"
-         |        }
-         |      }
+         |    ["error", {
+         |      "type": "invalidArguments",
+         |      "description": "$message"
          |    }, "c2"]
          |  ]
          |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldPreserveAnUnknownMaximumLengthCreationReference(): Unit = {
+    val reference = "#" + "c" * 255
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [["Mailbox/set", {
+         |    "accountId": "$bobAccountId",
+         |    "destroy": ["$reference"]
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
+      .isEqualTo(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [["Mailbox/set", {
+           |    "accountId": "$bobAccountId",
+           |    "notDestroyed": {
+           |      "$reference": {
+           |        "type": "invalidArguments",
+           |        "description": "$reference is not a mailboxId: $reference was not used in previously defined creationIds"
+           |      }
+           |    }
+           |  }, "c1"]]
+           |}""".stripMargin)
   }
 
   @Test
