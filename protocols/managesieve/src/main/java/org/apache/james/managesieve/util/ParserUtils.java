@@ -140,9 +140,9 @@ public class ParserUtils {
     public static String unquote(String quoted) {
         String result = quoted;
         if (quoted != null) {
-            if (quoted.startsWith("\"") && quoted.endsWith("\"")) {
+            if (quoted.length() >= 2 && quoted.startsWith("\"") && quoted.endsWith("\"")) {
                 result = quoted.substring(1, quoted.length() - 1);
-            } else if (quoted.startsWith("'") && quoted.endsWith("'")) {
+            } else if (quoted.length() >= 2 && quoted.startsWith("'") && quoted.endsWith("'")) {
                 result = quoted.substring(1, quoted.length() - 1);
             }
         }
