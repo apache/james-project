@@ -148,7 +148,11 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
         // wait for a CRLF.CRLF to be sent by the client.
         if (failed) {
             if (isDataTerminated(line)) {
-                next.onLine(session, line);
+                Response downstream = next.onLine(session, line);
+                if (downstream != null && downstream.isEndSession()) {
+                    // Downstream rejected the line (eg. not CRLF terminated): honor the session closure
+                    return downstream;
+                }
                 return new SMTPResponse(SMTPRetCode.QUOTA_EXCEEDED, quotaExceededDescription(session));
             } else {
                 return null;
