@@ -68,6 +68,11 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
             session.setAttachment(headersSuffixAdded, Boolean.TRUE, State.Transaction);
             return addHeaders(session, line, next);
         }
+        if (getLocation() == Location.PREFIX && !session.getAttachment(headersPrefixAdded, State.Transaction).isPresent()) {
+            // Empty header block: the separator is the first line, headers still need to be added
+            session.setAttachment(headersPrefixAdded, Boolean.TRUE, State.Transaction);
+            return addHeaders(session, line, next);
+        }
         return super.onSeparatorLine(session, line, next);
     }
 

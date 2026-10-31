@@ -1840,6 +1840,23 @@ public class SMTPServerTest {
     }
 
     @Test
+    void messageWithEmptyHeaderBlockShouldGetAReceivedHeader() throws Exception {
+        init(smtpConfiguration);
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.setSender("mail@localhost");
+        smtpProtocol.addRecipient("mail@localhost");
+        smtpProtocol.sendShortMessageData("\r\nbody\r\n");
+        smtpProtocol.quit();
+
+        assertThat(testSystem.queue.getLastMail().getMessage().getHeader("Received"))
+            .isNotNull()
+            .hasSize(1);
+    }
+
+    @Test
     void dotLineWithoutCrlfShouldCloseTheSessionEvenWhenSizeLimitIsExceeded() throws Exception {
         smtpConfiguration.setMaxMessageSize(1); // set message limit to 1kb
         init(smtpConfiguration);
