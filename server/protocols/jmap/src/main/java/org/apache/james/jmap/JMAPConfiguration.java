@@ -38,6 +38,11 @@ public class JMAPConfiguration {
         private Optional<Port> port = Optional.empty();
         private Optional<Version> defaultVersion = Optional.empty();
         private Optional<Long> maximumSendSize = Optional.empty();
+        private Optional<String> keystore = Optional.empty();
+        private Optional<String> keystoreType = Optional.empty();
+        private Optional<String> privateKey = Optional.empty();
+        private Optional<String> certificates = Optional.empty();
+        private Optional<String> secret = Optional.empty();
 
         private Builder() {
 
@@ -114,11 +119,62 @@ public class JMAPConfiguration {
             return this;
         }
 
+        public Builder keystore(String keystore) {
+            this.keystore = Optional.ofNullable(keystore).filter(s -> !s.isEmpty());
+            return this;
+        }
+
+        public Builder keystore(Optional<String> keystore) {
+            this.keystore = keystore.filter(s -> !s.isEmpty());
+            return this;
+        }
+
+        public Builder keystoreType(String keystoreType) {
+            this.keystoreType = Optional.ofNullable(keystoreType).filter(s -> !s.isEmpty());
+            return this;
+        }
+
+        public Builder keystoreType(Optional<String> keystoreType) {
+            this.keystoreType = keystoreType.filter(s -> !s.isEmpty());
+            return this;
+        }
+
+        public Builder privateKey(String privateKey) {
+            this.privateKey = Optional.ofNullable(privateKey).filter(s -> !s.isEmpty());
+            return this;
+        }
+
+        public Builder privateKey(Optional<String> privateKey) {
+            this.privateKey = privateKey.filter(s -> !s.isEmpty());
+            return this;
+        }
+
+        public Builder certificates(String certificates) {
+            this.certificates = Optional.ofNullable(certificates).filter(s -> !s.isEmpty());
+            return this;
+        }
+
+        public Builder certificates(Optional<String> certificates) {
+            this.certificates = certificates.filter(s -> !s.isEmpty());
+            return this;
+        }
+
+        public Builder secret(String secret) {
+            this.secret = Optional.ofNullable(secret).filter(s -> !s.isEmpty());
+            return this;
+        }
+
+        public Builder secret(Optional<String> secret) {
+            this.secret = secret.filter(s -> !s.isEmpty());
+            return this;
+        }
+
         public JMAPConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You should specify if JMAP server should be started");
             return new JMAPConfiguration(enabled.get(), port, emailQueryViewEnabled.orElse(false),
                 userProvisioningEnabled.orElse(true),
-                defaultVersion.orElse(Version.RFC8621), maximumSendSize);
+                defaultVersion.orElse(Version.RFC8621), maximumSendSize,
+                keystore, keystoreType.orElse("JKS"), privateKey, certificates, secret);
         }
     }
 
@@ -130,15 +186,34 @@ public class JMAPConfiguration {
     private final boolean userProvisioningEnabled;
     private final Version defaultVersion;
     private final Optional<Long> maximumSendSize;
+    private final Optional<String> keystore;
+    private final String keystoreType;
+    private final Optional<String> privateKey;
+    private final Optional<String> certificates;
+    private final Optional<String> secret;
 
     @VisibleForTesting
-    JMAPConfiguration(boolean enabled, Optional<Port> port, boolean emailQueryViewEnabled, boolean userProvisioningEnabled, Version defaultVersion, Optional<Long> maximumSendSize) {
+    JMAPConfiguration(boolean enabled, Optional<Port> port, boolean emailQueryViewEnabled, boolean userProvisioningEnabled,
+                      Version defaultVersion, Optional<Long> maximumSendSize,
+                      Optional<String> keystore, String keystoreType,
+                      Optional<String> privateKey, Optional<String> certificates, Optional<String> secret) {
         this.enabled = enabled;
         this.port = port;
         this.emailQueryViewEnabled = emailQueryViewEnabled;
         this.userProvisioningEnabled = userProvisioningEnabled;
         this.defaultVersion = defaultVersion;
         this.maximumSendSize = maximumSendSize;
+        this.keystore = keystore;
+        this.keystoreType = keystoreType;
+        this.privateKey = privateKey;
+        this.certificates = certificates;
+        this.secret = secret;
+    }
+
+    @VisibleForTesting
+    JMAPConfiguration(boolean enabled, Optional<Port> port, boolean emailQueryViewEnabled, boolean userProvisioningEnabled, Version defaultVersion, Optional<Long> maximumSendSize) {
+        this(enabled, port, emailQueryViewEnabled, userProvisioningEnabled, defaultVersion, maximumSendSize,
+            Optional.empty(), "JKS", Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     public boolean isEnabled() {
@@ -163,5 +238,29 @@ public class JMAPConfiguration {
 
     public Optional<Long> getMaximumSendSize() {
         return maximumSendSize;
+    }
+
+    public Optional<String> getKeystore() {
+        return keystore;
+    }
+
+    public String getKeystoreType() {
+        return keystoreType;
+    }
+
+    public Optional<String> getPrivateKey() {
+        return privateKey;
+    }
+
+    public Optional<String> getCertificates() {
+        return certificates;
+    }
+
+    public Optional<String> getSecret() {
+        return secret;
+    }
+
+    public boolean isTlsEnabled() {
+        return keystore.isPresent() || (privateKey.isPresent() && certificates.isPresent());
     }
 }

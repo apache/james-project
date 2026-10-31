@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Java6Assertions.assertThat;
 
 import java.util.Optional;
 
@@ -75,5 +75,40 @@ class JMAPConfigurationTest {
             .disableUserProvisioning()
             .build();
         assertThat(jmapConfiguration).isEqualToComparingFieldByField(expectedJMAPConfiguration);
+    }
+
+    @Test
+    void buildShouldWorkWithPemTls() {
+        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
+            .enable()
+            .randomPort()
+            .certificates("file://conf/cert.pem")
+            .privateKey("file://conf/private.key")
+            .secret("secret")
+            .build();
+
+        assertThat(jmapConfiguration.isTlsEnabled()).isTrue();
+        assertThat(jmapConfiguration.getCertificates()).contains("file://conf/cert.pem");
+        assertThat(jmapConfiguration.getPrivateKey()).contains("file://conf/private.key");
+        assertThat(jmapConfiguration.getSecret()).contains("secret");
+        assertThat(jmapConfiguration.getKeystore()).isEmpty();
+    }
+
+    @Test
+    void buildShouldWorkWithKeystoreTls() {
+        JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
+            .enable()
+            .randomPort()
+            .keystore("file://conf/keystore")
+            .keystoreType("PKCS12")
+            .secret("secret")
+            .build();
+
+        assertThat(jmapConfiguration.isTlsEnabled()).isTrue();
+        assertThat(jmapConfiguration.getKeystore()).contains("file://conf/keystore");
+        assertThat(jmapConfiguration.getKeystoreType()).contains("PKCS12");
+        assertThat(jmapConfiguration.getSecret()).contains("secret");
+        assertThat(jmapConfiguration.getCertificates()).isEmpty();
+        assertThat(jmapConfiguration.getPrivateKey()).isEmpty();
     }
 }
