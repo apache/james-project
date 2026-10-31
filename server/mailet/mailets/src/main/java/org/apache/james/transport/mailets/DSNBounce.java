@@ -78,6 +78,7 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -510,10 +511,14 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         // the storage Content-Type with charset=UTF-8 first makes
         // jakarta.mail serialise the body as UTF-8 octets; the second
         // setHeader overrides only the type label.
-        bodyPart.setContent(buffer.toString(), "text/plain; charset=UTF-8");
+        String text = buffer.toString();
+        bodyPart.setContent(text, "text/plain; charset=UTF-8");
         bodyPart.setHeader("Content-Type", anyNonAsciiAddress
             ? "message/global-delivery-status; charset=UTF-8"
             : "message/delivery-status");
+        // jakarta.mail would label a non-ASCII text quoted-printable or base64 but
+        // writes message/* parts unencoded: declare the encoding actually written.
+        bodyPart.setHeader("Content-Transfer-Encoding", CharMatcher.ascii().matchesAllOf(text) ? "7bit" : "8bit");
         bodyPart.setDescription("Delivery Status Notification");
         bodyPart.setFileName("status.dat");
         return bodyPart;

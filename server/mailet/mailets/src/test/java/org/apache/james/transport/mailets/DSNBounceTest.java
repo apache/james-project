@@ -25,6 +25,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -32,11 +35,15 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 import jakarta.mail.BodyPart;
 import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.internet.MimeUtility;
 import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
@@ -1614,5 +1621,40 @@ public class DSNBounceTest {
         assertThat(body.lines().filter(line -> !line.isEmpty()))
             .allMatch(line -> line.matches("[A-Za-z-]+: .*"));
         assertThat(body.lines().filter(line -> line.startsWith("Final-Recipient:"))).hasSize(1);
+    }
+
+    @Test
+    void statusPartShouldBeDecodableWithItsDeclaredTransferEncoding() throws Exception {
+        dsnBounce.init(FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .build());
+
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(new MailAddress("sender@domain.com"))
+            .attribute(DELIVERY_ERROR_ATTRIBUTE)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().setText("body"))
+            .recipients(new MailAddress("SRS0=abcd=xy=example.org=user@domain.com"), new MailAddress("grå@example.com"))
+            .lastUpdated(Date.from(Instant.parse("2026-04-27T10:00:00.000Z")))
+            .remoteAddr("remoteHost")
+            .build();
+
+        dsnBounce.service(mail);
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        fakeMailContext.getSentMails().get(0).getMsg().writeTo(bytes);
+        MimeMessage written = new MimeMessage(Session.getDefaultInstance(new Properties()),
+            new ByteArrayInputStream(bytes.toByteArray()));
+        MimeBodyPart dsnPart = (MimeBodyPart) ((MimeMultipart) written.getContent()).getBodyPart(1);
+        String encoding = dsnPart.getHeader("Content-Transfer-Encoding", null);
+        InputStream decoded = encoding == null
+            ? dsnPart.getRawInputStream()
+            : MimeUtility.decode(dsnPart.getRawInputStream(), encoding);
+        String body = new String(decoded.readAllBytes(), StandardCharsets.UTF_8);
+
+        assertThat(body)
+            .contains("Final-Recipient: rfc822; SRS0=abcd=xy=example.org=user@domain.com")
+            .contains("Final-Recipient: utf-8; grå@example.com");
     }
 }
