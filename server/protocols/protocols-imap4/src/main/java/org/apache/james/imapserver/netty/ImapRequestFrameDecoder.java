@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
+import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapDecoder;
@@ -83,6 +85,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private final int maxFrameLength;
     private final AtomicBoolean framingEnabled = new AtomicBoolean(true);
     private ArrayList<byte[]> pending = new ArrayList<>();
+    private boolean discardUntilEndOfLine = false;
 
     public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength) {
         this.decoder = decoder;
@@ -126,6 +129,11 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             return;
         }
 
+        if (discardUntilEndOfLine) {
+            discardRestOfRejectedLine(in);
+            return;
+        }
+
         int readerIndex = in.readerIndex();
 
         Map<String, Object> attachment = ctx.channel().attr(FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).get();
@@ -135,8 +143,19 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             return;
         }
 
-        parseImapMessage(ctx, in, attachment, attempt, readerIndex)
-            .ifPresent(out::add);
+        int readableBytes = in.readableBytes();
+        Optional<ImapMessage> message = parseImapMessage(ctx, in, attachment, attempt, readerIndex);
+        if (message.isPresent() && in.readableBytes() == readableBytes) {
+            // The command ended within `pending`, before reaching `in`. Netty forbids decoding a
+            // message without reading anything, so hand it over directly, then decode what follows:
+            // the rest of `pending` first, then `in`.
+            ctx.fireChannelRead(message.get());
+            if (!ctx.isRemoved()) {
+                decode(ctx, in, out);
+            }
+            return;
+        }
+        message.ifPresent(out::add);
     }
 
     /**
@@ -161,21 +180,16 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 // if size is != -1 the case was a literal. if thats the case we
                 // should not consume the line
                 // See JAMES-1199
-                if (attempt.size() == -1) {
-                    try {
-                        attempt.reader().consumeLine();
-                    } catch (DecodingException | NettyImapRequestLineReader.NotEnoughDataException e) {
-                        // Silent
-                    }
+                // A rejected command is the exception: whatever is left of its line is not a
+                // command of its own, wherever the parse stopped.
+                if (attempt.size() == -1 || message instanceof StatusResponse) {
+                    consumeRestOfLine(attempt);
                 }
 
-                commitConsumedBytes(in, attempt);
                 enableFraming(ctx);
 
                 attachment.clear();
-                if (!pending.isEmpty()) {
-                    pending.clear();
-                }
+                commitConsumedBytes(in, attempt);
                 return Optional.of(message);
             } catch (NettyImapRequestLineReader.NotEnoughDataException e) {
                 // this exception was thrown because we don't have enough data yet
@@ -191,14 +205,56 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         return Optional.empty();
     }
 
+    private void consumeRestOfLine(ParseAttempt attempt) {
+        ByteBuf buffer = attempt.buffer();
+        if (buffer == null || endOfLineReached(buffer)) {
+            return;
+        }
+        try {
+            attempt.reader().consumeLine();
+        } catch (NettyImapRequestLineReader.NotEnoughDataException e) {
+            // The end of the line is still to come: drop it when it arrives, so that the commands
+            // decoded do not depend on how the stream was split into segments.
+            discardUntilEndOfLine = true;
+        } catch (DecodingException e) {
+            // Silent
+        }
+    }
+
+    private boolean endOfLineReached(ByteBuf buffer) {
+        return buffer.readerIndex() > 0 && buffer.getByte(buffer.readerIndex() - 1) == '\n';
+    }
+
+    private void discardRestOfRejectedLine(ByteBuf in) {
+        int endOfLine = in.bytesBefore((byte) '\n');
+        if (endOfLine < 0) {
+            in.skipBytes(in.readableBytes());
+        } else {
+            in.skipBytes(endOfLine + 1);
+            discardUntilEndOfLine = false;
+        }
+    }
+
     /**
      * The command may not have used everything it was offered: the tail can already be the next
      * pipelined command. Advance Netty's cumulation past what was actually consumed only, so the
      * remainder is decoded as a command of its own instead of being dropped (see #3144).
+     *
+     * The command can also end within {@link #pending}: what it did not use from there is kept,
+     * to be decoded before `in`.
      */
     private void commitConsumedBytes(ByteBuf in, ParseAttempt attempt) {
         if (in != null && attempt.buffer() != null) {
-            in.skipBytes(Math.max(0, attempt.buffer().readerIndex() - attempt.pendingSize()));
+            int consumed = attempt.buffer().readerIndex();
+            in.skipBytes(Math.max(0, consumed - attempt.pendingSize()));
+            pending.clear();
+            if (consumed < attempt.pendingSize()) {
+                byte[] leftover = new byte[attempt.pendingSize() - consumed];
+                attempt.buffer().getBytes(consumed, leftover);
+                pending.add(leftover);
+            }
+        } else {
+            pending.clear();
         }
     }
 
@@ -279,7 +335,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             sink = Pair.of(Sinks.many().unicast().onBackpressureBuffer(), new AtomicInteger(0));
             attachment.put(SINK, sink);
 
-            FileChunkConsumer fileChunkConsumer = new FileChunkConsumer(size + pending.stream().mapToInt(b -> b.length).sum());
+            FileChunkConsumer fileChunkConsumer = new FileChunkConsumer();
             Disposable subscribe = sink.getLeft().asFlux()
                 .publishOn(Schedulers.boundedElastic())
                 .subscribe(fileChunkConsumer,
@@ -324,10 +380,32 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         int readableBytes = in.readableBytes();
         byte[] bytes = new byte[readableBytes];
         in.readBytes(bytes);
-        sink.getLeft().emitNext(bytes, FAIL_FAST);
-        if (sink.getRight().addAndGet(readableBytes) >= size) {
+        int accepted = literalLineLength(bytes, sink.getRight().get(), size);
+        sink.getLeft().emitNext(accepted == readableBytes ? bytes : Arrays.copyOf(bytes, accepted), FAIL_FAST);
+        boolean endOfLineReached = accepted < readableBytes || bytes[accepted - 1] == '\n';
+        if (sink.getRight().addAndGet(accepted) >= size && endOfLineReached) {
             sink.getLeft().tryEmitComplete();
         }
+    }
+
+    /**
+     * How many of {@code bytes} belong to the literal and to the end of its line, {@code received}
+     * bytes out of {@code size} having already been spooled. {@code size} counts the CRLF ending the
+     * line, but {@link ImapRequestLineReader#eol()} tolerates spaces before it: keep spooling them,
+     * and the CRLF, rather than cutting the line short.
+     */
+    private static int literalLineLength(byte[] bytes, int received, int size) {
+        int length = Math.min(bytes.length, Math.max(0, size - received));
+        if (received + length < size || (length > 0 && bytes[length - 1] == '\n')) {
+            return length;
+        }
+        while (length < bytes.length && (bytes[length] == ' ' || bytes[length] == '\r')) {
+            length++;
+        }
+        if (length < bytes.length && bytes[length] == '\n') {
+            length++;
+        }
+        return length;
     }
 
     public static class FileHolderInner extends LeakAware.Resource {
@@ -366,15 +444,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     }
 
     static class FileChunkConsumer implements Consumer<byte[]> {
-        private final int size;
-        private final AtomicInteger written = new AtomicInteger(0);
         private final AtomicBoolean initialized = new AtomicBoolean(false);
         private OutputStream outputStream;
         private FileHolder file;
-
-        FileChunkConsumer(int size) {
-            this.size = size;
-        }
 
         public FileHolder getFile() {
             return file;
@@ -401,9 +473,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
         private void writeChunk(byte[] next) {
             try {
-                int amount = Math.min(next.length, size - written.get());
-                outputStream.write(next, 0, amount);
-                written.addAndGet(amount);
+                outputStream.write(next);
             } catch (Exception e) {
                 try {
                     outputStream.close();
