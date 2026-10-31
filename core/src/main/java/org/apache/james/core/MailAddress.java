@@ -807,6 +807,14 @@ public class MailAddress implements java.io.Serializable {
             } catch (IllegalArgumentException e) {
                 throw new AddressException("Domain invalid according to IDNA", address);
             }
+            // IDNA mapping (NFKC) can produce ASCII characters refused above, eg U+FE4E becomes '_'
+            if (!result.chars().allMatch(c -> (c >= '0' && c <= '9')
+                    || (c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || c == '-'
+                    || c == '.')) {
+                throw new AddressException("Domain invalid according to IDNA: mapped to a forbidden character", address);
+            }
         }
         String lowerCaseResult = result.toLowerCase(Locale.US);
         if (lowerCaseResult.startsWith("xn--") || lowerCaseResult.contains(".xn--")) {
