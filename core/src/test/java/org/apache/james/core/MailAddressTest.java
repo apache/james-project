@@ -446,4 +446,10 @@ class MailAddressTest {
         Assertions.assertThatThrownBy(() -> new MailAddress("r@xN--r")).isInstanceOf(AddressException.class);
         Assertions.assertThatThrownBy(() -> Domain.of("XN--r")).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"a@d﹎ς", "a@d＿e.com"})
+    void domainMappedToANonLdhCharacterShouldBeRejected(String address) {
+        Assertions.assertThatThrownBy(() -> new MailAddress(address)).isInstanceOf(AddressException.class);
+    }
 }
