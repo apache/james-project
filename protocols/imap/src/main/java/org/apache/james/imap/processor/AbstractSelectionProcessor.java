@@ -176,7 +176,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
                         uidSet(request, metaData)
                             .ifPresent(Throwing.<UidRange[]>consumer(
-                                uidSet -> respondVanished(session, responder, knownSequences, knownUids, selected, uidSet))
+                                uidSet -> respondVanished(responder, knownSequences, knownUids, selected, metaData.getUidNext(), uidSet))
                                 .sneakyThrow());
 
                         taggedOk(responder, request, metaData, HumanReadableText.SELECT);
@@ -234,7 +234,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             });
     }
 
-    private void respondVanished(ImapSession session, Responder responder, IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, UidRange[] uidSet) {
+    private void respondVanished(Responder responder, IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, MessageUid uidNext, UidRange[] uidSet) {
         // RFC5162 3.1. QRESYNC Parameter to SELECT/EXAMINE
         //
         // Message sequence match data:
@@ -271,8 +271,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         for (UidRange range : uidSet) {
             MessageRange messageSet = range.toMessageRange();
             if (messageSet != null) {
-                normalizeMessageRange(session.getSelected(), messageSet)
-                    .ifPresent(ranges::add);
+                ranges.add(messageSet);
             }
         }
 
@@ -295,7 +294,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         //          expunges have not happened, or happen only toward the end of the
         //          mailbox.
         //
-        respondVanished(selected, ranges, responder);
+        respondVanished(selected, ranges, uidNext, responder);
     }
 
     @VisibleForTesting
