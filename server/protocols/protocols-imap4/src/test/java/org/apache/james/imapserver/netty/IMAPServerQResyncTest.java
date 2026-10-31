@@ -292,8 +292,9 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
         readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
         clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
+        // Mod-sequences of expunged messages are not stored: every expunged UID of 1:UIDNEXT-1 is reported
         assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
-            .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
+            .filteredOn(s -> s.contains("* VANISHED (EARLIER) 1,10"))
             .hasSize(1);
     }
 
@@ -355,6 +356,45 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
         assertTimeoutPreemptively(Duration.ofSeconds(5), () ->
             assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK FETCH completed.")))
                 .noneMatch(s -> s.contains("VANISHED")));
+    }
+
+    @Test
+    void selectShouldReturnExpungedMessagesOutsideOfTheRemainingUids() throws Exception {
+        MessageManager mailbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
+        ModSeq highestModSeq = mailbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
+        UidValidity uidValidity = mailbox.getMailboxEntity().getUidValidity();
+        mailbox.delete(ImmutableList.of(MessageUid.of(1), MessageUid.of(37)), mailboxSession);
+
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+        clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+        clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 1:37))\r\n",
+            uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+            .filteredOn(s -> s.contains("* VANISHED (EARLIER) 1,37"))
+            .hasSize(1);
+    }
+
+    @Test
+    void uidFetchVanishedShouldReturnExpungedMessagesOutsideOfTheRemainingUids() throws Exception {
+        MessageManager mailbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
+        ModSeq highestModSeq = mailbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
+        mailbox.delete(ImmutableList.of(MessageUid.of(1), MessageUid.of(37)), mailboxSession);
+
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+        clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+        clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+        clientConnection.write(ByteBuffer.wrap(String.format("a3 UID FETCH 1:37 (FLAGS) (CHANGEDSINCE %d VANISHED)\r\n",
+            highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK FETCH completed.")))
+            .filteredOn(s -> s.contains("* VANISHED (EARLIER) 1,37"))
+            .hasSize(1);
     }
 
     @Test

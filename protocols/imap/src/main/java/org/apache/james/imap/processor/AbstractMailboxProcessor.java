@@ -527,14 +527,19 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     }
     
     /**
-     * Send VANISHED responses if needed. 
+     * Send VANISHED responses if needed.
+     *
+     * @param requestedRanges UID ranges supplied by the client, not restricted to the UIDs of the selected mailbox:
+     *                        expunged UIDs lower than the first remaining UID or higher than the last one must be reported.
+     * @param uidNext UIDNEXT of the selected mailbox: UIDs greater or equal were never assigned, thus never expunged.
      */
-    protected void respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> ranges, Responder responder) {
+    protected void respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> requestedRanges, MessageUid uidNext, Responder responder) {
         // Work on ranges so that the cost depends on the mailbox content and not on the span of the requested UIDs.
         // Closed-open ranges keep the range set canonical over the discrete UID domain.
         RangeSet<Long> vanishedUids = TreeRangeSet.create();
-        ranges.forEach(range -> vanishedUids.add(Range.closedOpen(range.getUidFrom().asLong(),
-            Math.min(range.getUidTo().asLong(), MessageUid.MAX_VALUE.asLong() - 1) + 1)));
+        requestedRanges.stream()
+            .flatMap(range -> vanishedCandidates(range, uidNext).stream())
+            .forEach(vanishedUids::add);
         if (vanishedUids.isEmpty()) {
             return;
         }
@@ -548,6 +553,18 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         if (vanishedIdRanges.length > 0) {
             responder.respond(new VanishedResponse(vanishedIdRanges, true));
         }
+    }
+
+    private Optional<Range<Long>> vanishedCandidates(MessageRange range, MessageUid uidNext) {
+        if (range.getType() == Type.ONE) {
+            return Optional.of(Range.closedOpen(range.getUidFrom().asLong(), range.getUidFrom().asLong() + 1));
+        }
+        long lowerBound = range.getUidFrom().asLong();
+        long upperBound = Math.min(range.getUidTo().asLong(), uidNext.asLong() - 1);
+        if (lowerBound > upperBound) {
+            return Optional.empty();
+        }
+        return Optional.of(Range.closedOpen(lowerBound, upperBound + 1));
     }
 
     protected UidRange[] uidRanges(Collection<MessageRange> mRanges) {
