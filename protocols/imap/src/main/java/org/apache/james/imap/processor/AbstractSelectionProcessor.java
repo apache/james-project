@@ -272,8 +272,8 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         for (UidRange range : uidSet) {
             MessageRange messageSet = range.toMessageRange();
             if (messageSet != null) {
-                MessageRange normalizedMessageSet = normalizeMessageRange(session.getSelected(), messageSet);
-                ranges.add(normalizedMessageSet);
+                normalizeMessageRange(session.getSelected(), messageSet)
+                    .ifPresent(ranges::add);
             }
         }
 
