@@ -60,6 +60,8 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class DSNBounceTest {
 
@@ -1579,5 +1581,38 @@ public class DSNBounceTest {
             String body = IOUtils.toString((SharedByteArrayInputStream) dsnPart.getContent(), StandardCharsets.UTF_8);
             assertThat(body).contains("Final-Recipient: utf-8; arnt@grå.org");
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "550-5.1.1 first line\n550 5.1.1 second line",
+        "550 5.1.1 first line\r\n\r\nFinal-Recipient: rfc822; other@example.com",
+        "550 5.1.1 first line\rsecond line"})
+    void lineBreaksInTheDeliveryErrorShouldNotCreateFieldsOrBlocks(String deliveryError) throws Exception {
+        dsnBounce.init(FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .build());
+
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(new MailAddress("sender@domain.com"))
+            .attribute(new Attribute(AttributeName.of("delivery-error"), AttributeValue.of(deliveryError)))
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().setText("body"))
+            .recipient("recipient@domain.com")
+            .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+            .remoteAddr("remoteHost")
+            .build();
+
+        dsnBounce.service(mail);
+
+        BodyPart dsnPart = (BodyPart) ((MimeMultipart) fakeMailContext.getSentMails()
+            .get(0).getMsg().getContent()).getBodyPart(1);
+        String body = IOUtils.toString((SharedByteArrayInputStream) dsnPart.getContent(), StandardCharsets.UTF_8);
+        // one per-message block and one recipient block, every line is a field
+        assertThat(body.split("\r?\n\r?\n")).hasSize(2);
+        assertThat(body.lines().filter(line -> !line.isEmpty()))
+            .allMatch(line -> line.matches("[A-Za-z-]+: .*"));
+        assertThat(body.lines().filter(line -> line.startsWith("Final-Recipient:"))).hasSize(1);
     }
 }
