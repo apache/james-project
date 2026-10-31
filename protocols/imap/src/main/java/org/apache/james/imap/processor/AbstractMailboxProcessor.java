@@ -556,9 +556,6 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     }
 
     private Optional<Range<Long>> vanishedCandidates(MessageRange range, MessageUid uidNext) {
-        if (range.getType() == Type.ONE) {
-            return Optional.of(Range.closedOpen(range.getUidFrom().asLong(), range.getUidFrom().asLong() + 1));
-        }
         long lowerBound = range.getUidFrom().asLong();
         long upperBound = Math.min(range.getUidTo().asLong(), uidNext.asLong() - 1);
         if (lowerBound > upperBound) {
