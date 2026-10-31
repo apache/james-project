@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -70,6 +69,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.Range;
+import com.google.common.collect.RangeSet;
+import com.google.common.collect.TreeRangeSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -479,20 +481,20 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
      *            currently selected mailbox
      * @param range
      *            input range
-     * @return normalized message range
+     * @return normalized message range, empty when no message of the selected folder can match it
      */
-    protected MessageRange normalizeMessageRange(SelectedMailbox selected, MessageRange range) {
+    protected Optional<MessageRange> normalizeMessageRange(SelectedMailbox selected, MessageRange range) {
         Type rangeType = range.getType();
         MessageUid start;
         MessageUid end;
 
         switch (rangeType) {
         case ONE:
-            return range;
+            return Optional.of(range);
         case ALL:
             start = selected.getFirstUid().orElse(MessageUid.MIN_VALUE);
             end = selected.getLastUid().orElse(MessageUid.MAX_VALUE);
-            return MessageRange.range(start, end);
+            return Optional.of(MessageRange.range(start, end));
         case RANGE:
             start = range.getUidFrom();
             if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().orElse(MessageUid.MIN_VALUE)) < 0) {
@@ -502,7 +504,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             if (end.equals(MessageUid.MAX_VALUE) || end.compareTo(selected.getLastUid().orElse(MessageUid.MAX_VALUE)) > 0) {
                 end = selected.getLastUid().orElse(MessageUid.MAX_VALUE);
             }
-            return MessageRange.range(start, end);
+            return normalizedRange(start, end);
         case FROM:
             start = range.getUidFrom();
             if (start.equals(MessageUid.MAX_VALUE) || start.compareTo(selected.getFirstUid().orElse(MessageUid.MIN_VALUE)) < 0) {
@@ -510,34 +512,39 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             }
             
             end = selected.getLastUid().orElse(MessageUid.MAX_VALUE);
-            return MessageRange.range(start, end);
+            return normalizedRange(start, end);
         default:
             throw new RuntimeException("Unknown message range type: " + rangeType);
         }
     }
-    
+
+    private Optional<MessageRange> normalizedRange(MessageUid start, MessageUid end) {
+        if (start.compareTo(end) > 0) {
+            // MessageRange.range would turn an inverted range into an open ended one
+            return Optional.empty();
+        }
+        return Optional.of(MessageRange.range(start, end));
+    }
     
     /**
      * Send VANISHED responses if needed. 
      */
     protected void respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> ranges, Responder responder) {
-        Set<MessageUid> vanishedUids = new HashSet<>();
-        for (MessageRange range : ranges) {
-            MessageUid from = range.getUidFrom();
-            MessageUid to = range.getUidTo();
-            while (from.compareTo(to) <= 0) {
-                MessageUid copy = from;
-                selectedMailbox.msn(from).foldSilent(
-                    () -> vanishedUids.add(copy),
-                    msn -> {
-                        // ignore still there
-                        return true;
-                    });
-                from = from.next();
-            }
-
+        // Work on ranges so that the cost depends on the mailbox content and not on the span of the requested UIDs.
+        // Closed-open ranges keep the range set canonical over the discrete UID domain.
+        RangeSet<Long> vanishedUids = TreeRangeSet.create();
+        ranges.forEach(range -> vanishedUids.add(Range.closedOpen(range.getUidFrom().asLong(),
+            Math.min(range.getUidTo().asLong(), MessageUid.MAX_VALUE.asLong() - 1) + 1)));
+        if (vanishedUids.isEmpty()) {
+            return;
         }
-        UidRange[] vanishedIdRanges = uidRanges(MessageRange.toRanges(vanishedUids));
+        selectedMailbox.allUids()
+            .forEach(uid -> vanishedUids.remove(Range.closedOpen(uid.asLong(), uid.asLong() + 1)));
+
+        UidRange[] vanishedIdRanges = vanishedUids.asRanges()
+            .stream()
+            .map(range -> new UidRange(MessageUid.of(range.lowerEndpoint()), MessageUid.of(range.upperEndpoint() - 1)))
+            .toArray(UidRange[]::new);
         if (vanishedIdRanges.length > 0) {
             responder.respond(new VanishedResponse(vanishedIdRanges, true));
         }

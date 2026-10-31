@@ -312,12 +312,10 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         List<MessageRange> ranges = new ArrayList<>();
 
         for (IdRange range : request.getIdSet()) {
-            Optional<MessageRange> messageSet = messageRange(session.getSelected(), range, request.isUseUids());
-            if (messageSet.isPresent()) {
-                MessageRange normalizedMessageSet = normalizeMessageRange(selected, messageSet.orElse(null));
-                MessageRange batchedMessageSet = MessageRange.range(normalizedMessageSet.getUidFrom(), normalizedMessageSet.getUidTo());
-                ranges.add(batchedMessageSet);
-            }
+            messageRange(session.getSelected(), range, request.isUseUids())
+                .flatMap(messageSet -> normalizeMessageRange(selected, messageSet))
+                .map(normalizedMessageSet -> MessageRange.range(normalizedMessageSet.getUidFrom(), normalizedMessageSet.getUidTo()))
+                .ifPresent(ranges::add);
         }
 
         if (fetch.getVanished()) {

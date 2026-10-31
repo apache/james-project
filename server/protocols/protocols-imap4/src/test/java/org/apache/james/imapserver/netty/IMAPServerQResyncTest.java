@@ -25,11 +25,13 @@ import static org.apache.james.mailbox.MessageManager.FlagsUpdateMode.REPLACE;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup.NO_COUNT;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -320,6 +322,39 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
         assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
             .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10:12,25:26,32"))
             .hasSize(1);
+    }
+
+    @Test
+    void selectShouldNotHangWhenKnownUidRangeIsAboveTheLastUid() throws Exception {
+        MessageManager mailbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
+        ModSeq highestModSeq = mailbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
+        UidValidity uidValidity = mailbox.getMailboxEntity().getUidValidity();
+
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+        clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+        clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 100:200))\r\n",
+            uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () ->
+            assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+                .noneMatch(s -> s.contains("VANISHED")));
+    }
+
+    @Test
+    void uidFetchVanishedShouldNotHangWhenRangeIsAboveTheLastUid() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+        clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+        clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+        clientConnection.write(ByteBuffer.wrap(("a3 UID FETCH 100:200 (FLAGS) (CHANGEDSINCE 1 VANISHED)\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () ->
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK FETCH completed.")))
+                .noneMatch(s -> s.contains("VANISHED")));
     }
 
     @Test
