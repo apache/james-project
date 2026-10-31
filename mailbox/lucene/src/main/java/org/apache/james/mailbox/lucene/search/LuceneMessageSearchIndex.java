@@ -142,7 +142,9 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -493,6 +495,30 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     /**
+     * Return a {@link Query} for a value searched in a field indexed with {@link LenientImapSearchAnalyzer}.
+     * Shingles are at most {@link LenientImapSearchAnalyzer#DEFAULT_MAX_TOKEN_LENGTH} tokens long, so a longer
+     * value is split into overlapping windows of that size. The windows are ANDed per document, so this is
+     * not a strict phrase match. Punctuation around words is removed like the analyzer does at index time;
+     * a value made only of punctuation is searched as is.
+     */
+    private Query createTextTermQuery(String fieldName, String value) {
+        List<String> tokens = Splitter.on(CharMatcher.forPredicate(Character::isWhitespace)).omitEmptyStrings()
+            .splitToList(LenientImapSearchAnalyzer.removePunctuationAroundWords(value));
+        if (tokens.isEmpty()) {
+            return createTermQuery(fieldName, value);
+        }
+        int windowSize = LenientImapSearchAnalyzer.DEFAULT_MAX_TOKEN_LENGTH;
+        if (tokens.size() <= windowSize) {
+            return createTermQuery(fieldName, String.join(" ", tokens));
+        }
+        BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
+        for (int start = 0; start + windowSize <= tokens.size(); start++) {
+            queryBuilder.add(createTermQuery(fieldName, String.join(" ", tokens.subList(start, start + windowSize))), BooleanClause.Occur.MUST);
+        }
+        return queryBuilder.build();
+    }
+
+    /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.HeaderCriterion}
      */
     private Query createHeaderQuery(SearchQuery.HeaderCriterion crit) throws UnsupportedSearchException {
@@ -503,10 +529,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         String name = crit.getHeaderName().toUpperCase(Locale.US);
         String fieldName = PREFIX_HEADER_FIELD + name;
         return switch (crit.getOperator()) {
-            case ContainsOperator cop -> createTermQuery(fieldName, cop.getValue().toUpperCase(Locale.US));
+            case ContainsOperator cop -> createTextTermQuery(fieldName, cop.getValue().toUpperCase(Locale.US));
             case SearchQuery.ExistsOperator existsOperator -> new PrefixQuery(new Term(fieldName, StringUtils.EMPTY));
             case DateOperator dop -> createQuery(toSentDateField(dop.getDateResultion()), dop);
-            case SearchQuery.AddressOperator addressOperator -> createTermQuery(name.toLowerCase(Locale.US), addressOperator.getAddress().toUpperCase(Locale.US));
+            case SearchQuery.AddressOperator addressOperator -> createTextTermQuery(name.toLowerCase(Locale.US), addressOperator.getAddress().toUpperCase(Locale.US));
             default -> throw new UnsupportedSearchException();
         };
     }
@@ -701,14 +727,14 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private Query createTextQuery(SearchQuery.TextCriterion crit) {
         String value = crit.getOperator().getValue().toUpperCase(Locale.US);
         return switch (crit.getType()) {
-            case BODY -> createTermQuery(BODY_FIELD, value);
-            case ATTACHMENTS -> createTermQuery(ATTACHMENT_TEXT_CONTENT_FIELD, value);
+            case BODY -> createTextTermQuery(BODY_FIELD, value);
+            case ATTACHMENTS -> createTextTermQuery(ATTACHMENT_TEXT_CONTENT_FIELD, value);
             case ATTACHMENT_FILE_NAME -> createTermQuery(ATTACHMENT_FILE_NAME_FIELD, value);
             case FULL -> {
                 BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-                queryBuilder.add(createTermQuery(BODY_FIELD, value), BooleanClause.Occur.SHOULD);
-                queryBuilder.add(createTermQuery(HEADERS_FIELD, value), BooleanClause.Occur.SHOULD);
-                queryBuilder.add(createTermQuery(ATTACHMENT_TEXT_CONTENT_FIELD, value), BooleanClause.Occur.SHOULD);
+                queryBuilder.add(createTextTermQuery(BODY_FIELD, value), BooleanClause.Occur.SHOULD);
+                queryBuilder.add(createTextTermQuery(HEADERS_FIELD, value), BooleanClause.Occur.SHOULD);
+                queryBuilder.add(createTextTermQuery(ATTACHMENT_TEXT_CONTENT_FIELD, value), BooleanClause.Occur.SHOULD);
                 yield queryBuilder.build();
             }
         };

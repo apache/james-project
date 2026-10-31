@@ -293,6 +293,160 @@ class LuceneMailboxMessageSearchIndexTest {
     }
 
     @Test
+    void subjectSearchShouldMatchMoreThanFourWords() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", "Quarterly budget review meeting notes"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void subjectSearchShouldNotMatchMoreThanFourWordsWhenLastWordDiffers() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", "Quarterly budget review meeting minutes"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void subjectSearchShouldNotMatchMoreThanFourWordsWhenReordered() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", "budget Quarterly review meeting notes"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void subjectSearchShouldIgnoreRepeatedWhitespace() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", "budget  review"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void subjectSearchShouldMatchEmptyValue() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", ""));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void bodySearchShouldMatchMoreThanFourWords() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.bodyContains("brown fox jumps over the"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void textSearchShouldMatchMoreThanFourWords() throws Exception {
+        Mailbox longText = longTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.mailContains("brown fox jumps over the"));
+        Stream<MessageUid> result = index.search(session, longText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    private Mailbox longTextMailbox() throws Exception {
+        TestId longTextId = TestId.of(4);
+        Mailbox longText = new Mailbox(MailboxPath.forUser(BOB, "longText"), UidValidity.of(21), longTextId);
+        MessageBuilder builder = new MessageBuilder()
+            .header("Subject", "Quarterly budget review meeting notes")
+            .body("The quick brown fox jumps over the lazy dog".getBytes(UTF_8))
+            .uid(MessageUid.of(1))
+            .mailboxId(longTextId);
+        index.add(session, longText, builder.build(factory.generate())).block();
+        return longText;
+    }
+
+    @Test
+    void subjectSearchShouldMatchWordGluedToPunctuationWithPrefixMatch() throws Exception {
+        Mailbox punctuation = punctuationMailbox();
+        index.setEnableSuffixMatch(false);
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", "Team"));
+        Stream<MessageUid> result = index.search(session, punctuation, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void subjectSearchShouldMatchWordsGluedToPunctuationWithPrefixMatch() throws Exception {
+        Mailbox punctuation = punctuationMailbox();
+        index.setEnableSuffixMatch(false);
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", "Team sync"));
+        Stream<MessageUid> result = index.search(session, punctuation, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void subjectSearchShouldMatchWhenQueryHasPunctuationWithPrefixMatch() throws Exception {
+        Mailbox punctuation = punctuationMailbox();
+        index.setEnableSuffixMatch(false);
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", "<Team sync>"));
+        Stream<MessageUid> result = index.search(session, punctuation, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void bodySearchShouldIgnoreLonePunctuation() throws Exception {
+        Mailbox punctuation = punctuationMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.bodyContains("budget review"));
+        Stream<MessageUid> result = index.search(session, punctuation, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void addressSearchShouldMatchEmailWithAngleBracketsWithPrefixMatch() throws Exception {
+        index.setEnableSuffixMatch(false);
+
+        SearchQuery query = SearchQuery.of(SearchQuery.address(AddressType.To, "<harry@example.org>"));
+        Stream<MessageUid> result = index.search(session, mailbox3, query).toStream();
+        assertThat(result).containsExactly(uid5);
+    }
+
+    @Test
+    void bodySearchShouldIgnoreLonePunctuationWithPrefixMatch() throws Exception {
+        Mailbox punctuation = punctuationMailbox();
+        index.setEnableSuffixMatch(false);
+
+        SearchQuery query = SearchQuery.of(SearchQuery.bodyContains("budget review"));
+        Stream<MessageUid> result = index.search(session, punctuation, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void addressSearchShouldMatchToFullAddressWithPrefixMatch() throws Exception {
+        index.setEnableSuffixMatch(false);
+
+        SearchQuery query = SearchQuery.of(SearchQuery.address(AddressType.To, FROM_ADDRESS));
+        Stream<MessageUid> result = index.search(session, mailbox3, query).toStream();
+        assertThat(result).containsExactly(uid5);
+    }
+
+    private Mailbox punctuationMailbox() throws Exception {
+        TestId punctuationId = TestId.of(5);
+        Mailbox punctuation = new Mailbox(MailboxPath.forUser(BOB, "punctuation"), UidValidity.of(22), punctuationId);
+        MessageBuilder builder = new MessageBuilder()
+            .header("Subject", "Invitation <Team sync> tomorrow")
+            .body("Agenda: budget - review".getBytes(UTF_8))
+            .uid(MessageUid.of(1))
+            .mailboxId(punctuationId);
+        index.add(session, punctuation, builder.build(factory.generate())).block();
+        return punctuation;
+    }
+
+    @Test
     void addressSearchShouldMatchToFullAddress() throws Exception {
         SearchQuery query = SearchQuery.of(SearchQuery.address(AddressType.To,FROM_ADDRESS));
         Stream<MessageUid> result = index.search(session, mailbox3, query).toStream();
