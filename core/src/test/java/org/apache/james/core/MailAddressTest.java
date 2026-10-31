@@ -434,4 +434,16 @@ class MailAddressTest {
         assertThat(nfc).isEqualTo(nfd);
     }
 
+    @Test
+    void acePrefixShouldBeCaseInsensitive() throws AddressException {
+        assertThat(new MailAddress("n@XN--4LR")).isEqualTo(new MailAddress("n@xn--4lr"));
+        assertThat(new MailAddress("n@xN--4lr").getDomain()).isEqualTo(Domain.of("卸"));
+        assertThat(Domain.of("XN--4LR")).isEqualTo(Domain.of("xn--4lr"));
+    }
+
+    @Test
+    void mixedCaseUndecodableAceLabelShouldBeRejected() {
+        Assertions.assertThatThrownBy(() -> new MailAddress("r@xN--r")).isInstanceOf(AddressException.class);
+        Assertions.assertThatThrownBy(() -> Domain.of("XN--r")).isInstanceOf(IllegalArgumentException.class);
+    }
 }
