@@ -64,13 +64,11 @@ S: 19 NO CREATE failed. Mailbox already exists.
 
 #
 # When creating a mailbox which name contains the hierarchical separator UTF-7 encoded
-# The creation should succeed as if trying to create a folder and its subfolder
+# The creation should be rejected: RFC3501 section 5.1.3 forbids encoding printable US-ASCII
 #
 C: 20 CREATE "one&AC4-two"
-S: 20 OK \[MAILBOXID \(.+\)\] CREATE completed.
+S: 20 BAD CREATE failed. Illegal arguments.
 C: 21 LIST "" one*
-S: \* LIST \(\\HasChildren\) "." "one"
-S: \* LIST \(\\HasNoChildren\) "." "one.two"
 S: 21 OK LIST completed.
 
 C: 22 CREATE #user
@@ -97,7 +95,3 @@ C: a11 DELETE another.test
 S: a11 OK DELETE completed.
 C: a11 DELETE another
 S: a11 OK DELETE completed.
-C: a12 DELETE one.two
-S: a12 OK DELETE completed.
-C: a12 DELETE one
-S: a12 OK DELETE completed.
