@@ -808,8 +808,9 @@ public class MailAddress implements java.io.Serializable {
                 throw new AddressException("Domain invalid according to IDNA", address);
             }
         }
-        if (result.startsWith("xn--") || result.contains(".xn--")) {
-            result = IDN.toUnicode(result);
+        String lowerCaseResult = result.toLowerCase(Locale.US);
+        if (lowerCaseResult.startsWith("xn--") || lowerCaseResult.contains(".xn--")) {
+            result = IDN.toUnicode(lowerCaseResult);
             if (result.startsWith("xn--") || result.contains(".xn--")) {
                 throw new AddressException("Domain invalid according to IDNA", address);
             }

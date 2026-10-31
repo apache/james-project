@@ -95,9 +95,10 @@ public class Domain implements Serializable {
         Preconditions.checkArgument(PART_CHAR_MATCHER.matchesAllOf(domainWithoutBrackets),
                                     "Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in %s", domain);
 
-        if (domainWithoutBrackets.startsWith("xn--") ||
-            domainWithoutBrackets.contains(".xn--")) {
-            domainWithoutBrackets = IDN.toUnicode(domainWithoutBrackets);
+        String lowerCaseDomain = domainWithoutBrackets.toLowerCase(Locale.US);
+        if (lowerCaseDomain.startsWith("xn--") ||
+            lowerCaseDomain.contains(".xn--")) {
+            domainWithoutBrackets = IDN.toUnicode(lowerCaseDomain);
             Preconditions.checkArgument(!domainWithoutBrackets.startsWith("xn--") &&
                                         !domainWithoutBrackets.contains(".xn--"),
                                         "A-label could not be decoded to Unicode in %s", domain);
