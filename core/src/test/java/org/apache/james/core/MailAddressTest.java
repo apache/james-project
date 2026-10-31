@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -136,6 +137,14 @@ class MailAddressTest {
                 "abc\u0080def@example.com",
                 "abc\u0085def@example.com",
                 "abc\u009Fdef@example.com",
+                // Escaped control characters: a quoted-pair only allows %d32-126
+                // (RFC 5321 quoted-pairSMTP), in both the dot-string and the quoted-string.
+                "\\\r@domain.tld",
+                "\\\n@domain.tld",
+                "\\" + (char) 0 + "@domain.tld",
+                "\\" + (char) 0x12 + "@domain.tld",
+                "\\" + (char) 0x7F + "@domain.tld",
+                "\"a\\\r\\\nb\"@domain.tld",
                 // According to wikipedia this address is valid but as jakarta.mail is unable
                 // to work with it we shall rather reject them (note that this is not breaking retro-compatibility)
                 "mail.allow\\,d@james.apache.org")
@@ -354,6 +363,23 @@ class MailAddressTest {
         assertThat(mailAddress.stripDetails("--")).isEqualTo("localpart@example.com");
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"\\-@domain.tld", "a\\-b@domain.tld", "\"a-b\"@domain.tld"})
+    void stripDetailsShouldIgnoreEscapedOrQuotedSeparator(String address) throws AddressException {
+        MailAddress mailAddress = new MailAddress(address);
+
+        assertThat(mailAddress.stripDetails("-").asString()).isEqualTo(address);
+        assertThat(mailAddress.getLocalPartDetails("-")).isEmpty();
+    }
+
+    @Test
+    void stripDetailsShouldStripAfterAnEscapedSeparator() throws AddressException {
+        MailAddress mailAddress = new MailAddress("a\\-b-details@domain.tld");
+
+        assertThat(mailAddress.stripDetails("-").asString()).isEqualTo("a\\-b@domain.tld");
+        assertThat(mailAddress.getLocalPartDetails("-")).contains("details");
+    }
+
     // RFC 6532 §3.1 — NFC normalisation
 
     @Test
@@ -408,4 +434,22 @@ class MailAddressTest {
         assertThat(nfc).isEqualTo(nfd);
     }
 
+    @Test
+    void acePrefixShouldBeCaseInsensitive() throws AddressException {
+        assertThat(new MailAddress("n@XN--4LR")).isEqualTo(new MailAddress("n@xn--4lr"));
+        assertThat(new MailAddress("n@xN--4lr").getDomain()).isEqualTo(Domain.of("卸"));
+        assertThat(Domain.of("XN--4LR")).isEqualTo(Domain.of("xn--4lr"));
+    }
+
+    @Test
+    void mixedCaseUndecodableAceLabelShouldBeRejected() {
+        Assertions.assertThatThrownBy(() -> new MailAddress("r@xN--r")).isInstanceOf(AddressException.class);
+        Assertions.assertThatThrownBy(() -> Domain.of("XN--r")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"a@d﹎ς", "a@d＿e.com"})
+    void domainMappedToANonLdhCharacterShouldBeRejected(String address) {
+        Assertions.assertThatThrownBy(() -> new MailAddress(address)).isInstanceOf(AddressException.class);
+    }
 }

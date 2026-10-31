@@ -382,7 +382,7 @@ public class MailAddress implements java.io.Serializable {
     }
 
     public Optional<String> getLocalPartDetails(String separatorDelimiterSequence) {
-        int separatorPosition = localPart.indexOf(separatorDelimiterSequence);
+        int separatorPosition = detailsSeparatorPosition(separatorDelimiterSequence);
         if (separatorPosition <= 0) {
             //after the interpretation of details, localPart cannot be empty
             return Optional.empty();
@@ -391,12 +391,31 @@ public class MailAddress implements java.io.Serializable {
     }
 
     public String getLocalPartWithoutDetails(String separatorDelimiterSequence) {
-        int separatorPosition = localPart.indexOf(separatorDelimiterSequence);
+        int separatorPosition = detailsSeparatorPosition(separatorDelimiterSequence);
         if (separatorPosition <= 0) {
             //after the interpretation of details, localPart cannot be empty
             return localPart;
         }
         return localPart.substring(0, separatorPosition);
+    }
+
+    /**
+     * An escaped (quoted-pair) or quoted separator is part of the local part, not a details delimiter:
+     * cutting there would yield an unparseable address.
+     */
+    private int detailsSeparatorPosition(String separatorDelimiterSequence) {
+        boolean quoted = false;
+        for (int i = 0; i < localPart.length(); i++) {
+            char c = localPart.charAt(i);
+            if (c == '\\') {
+                i++;
+            } else if (c == '\"') {
+                quoted = !quoted;
+            } else if (!quoted && localPart.startsWith(separatorDelimiterSequence, i)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public MailAddress stripDetails(String separatorDelimiterSequence) {
@@ -525,9 +544,9 @@ public class MailAddress implements java.io.Serializable {
             if (address.charAt(pos) == '\\') {
                 lpSB.append('\\');
                 pos++;
-                //<x> ::= any one of the 128 ASCII characters (no exceptions)
+                //<x> ::= %d32-126 (RFC 5321 quoted-pairSMTP: no control characters)
                 char x = address.charAt(pos);
-                if (x < 0 || x > 127) {
+                if (x < 32 || x > 126) {
                     throw new AddressException("Invalid \\ syntaxed character at position " +
                             (pos + 1) + " in '" + address + "'", address, pos + 1);
                 }
@@ -576,9 +595,9 @@ public class MailAddress implements java.io.Serializable {
             if (address.charAt(pos) == '\\') {
                 lpSB.append('\\');
                 pos++;
-                //<x> ::= any one of the 128 ASCII characters (no exceptions)
+                //<x> ::= %d32-126 (RFC 5321 quoted-pairSMTP: no control characters)
                 char x = address.charAt(pos);
-                if (x < 0 || x > 127) {
+                if (x < 32 || x > 126) {
                     throw new AddressException("Invalid \\ syntaxed character at position " + (pos + 1) +
                             " in '" + address + "'", address, pos + 1);
                 }
@@ -788,9 +807,18 @@ public class MailAddress implements java.io.Serializable {
             } catch (IllegalArgumentException e) {
                 throw new AddressException("Domain invalid according to IDNA", address);
             }
+            // IDNA mapping (NFKC) can produce ASCII characters refused above, eg U+FE4E becomes '_'
+            if (!result.chars().allMatch(c -> (c >= '0' && c <= '9')
+                    || (c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || c == '-'
+                    || c == '.')) {
+                throw new AddressException("Domain invalid according to IDNA: mapped to a forbidden character", address);
+            }
         }
-        if (result.startsWith("xn--") || result.contains(".xn--")) {
-            result = IDN.toUnicode(result);
+        String lowerCaseResult = result.toLowerCase(Locale.US);
+        if (lowerCaseResult.startsWith("xn--") || lowerCaseResult.contains(".xn--")) {
+            result = IDN.toUnicode(lowerCaseResult);
             if (result.startsWith("xn--") || result.contains(".xn--")) {
                 throw new AddressException("Domain invalid according to IDNA", address);
             }
