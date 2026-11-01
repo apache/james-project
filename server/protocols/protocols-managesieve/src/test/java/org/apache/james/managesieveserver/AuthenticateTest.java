@@ -47,7 +47,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 
 class AuthenticateTest {
-    private static final SaslIdentity IDENTITY = new SaslIdentity(Username.of("authenticated"), Username.of("authorized"));
+    private static final SaslIdentity IDENTITY = new SaslIdentity(Username.of("authenticated-user"), Username.of("authorized"));
 
     private static byte[] bytes(String value) {
         return value.getBytes(StandardCharsets.UTF_8);
