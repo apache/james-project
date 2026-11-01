@@ -55,6 +55,7 @@ public class AddFooter extends GenericMailet {
     private static final String HTML_BR_TAG = "<br />";
     private static final String CARRIAGE_RETURN = "\r\n";
     private static final String CHARSET = "charset";
+    private static final int MAX_MIME_DEPTH = 16;
     private static final Pattern BODY_CLOSING_TAG = Pattern.compile("((?i:</body>))");
     private String plainTextFooter;
     
@@ -73,7 +74,12 @@ public class AddFooter extends GenericMailet {
         try {
             MimeMessage message = mail.getMessage();
 
-            if (attachFooter(message)) {
+            if (exceedsMaxMimeDepth(message, 0)) {
+                // Adding the footer implies saving the changes, that walks the whole MIME tree recursively
+                LOGGER.info("Unable to add footer to mail {}: MIME structure deeper than {} levels", mail.getName(), MAX_MIME_DEPTH);
+                return;
+            }
+            if (attachFooter(message, 0)) {
                 message.saveChanges();
             } else {
                 LOGGER.info("Unable to add footer to mail {}", mail.getName());
@@ -85,7 +91,12 @@ public class AddFooter extends GenericMailet {
         }
     }
     
-    private boolean attachFooter(MimePart part) throws MessagingException, IOException {
+    private boolean attachFooter(MimePart part, int depth) throws MessagingException, IOException {
+        if (depth > MAX_MIME_DEPTH) {
+            // A footer target is never that deep in real mails: bound the recursion, and the parsing of each level
+            LOGGER.debug("Not looking for a part to add a footer to deeper than {} MIME levels", MAX_MIME_DEPTH);
+            return false;
+        }
         String contentType = part.getContentType();
         if (!isParsable(contentType)) {
             // Content handlers fail with unchecked exceptions on such parts (eg the charset of text parts is null)
@@ -106,7 +117,7 @@ public class AddFooter extends GenericMailet {
         if (part.isMimeType("multipart/mixed")
                 || part.isMimeType("multipart/related")) {
             MimeMultipart multipart = (MimeMultipart) part.getContent();
-            boolean added = attachFooterToFirstPart(multipart);
+            boolean added = attachFooterToFirstPart(multipart, depth + 1);
             if (added) {
                 part.setContent(multipart);
             }
@@ -114,7 +125,7 @@ public class AddFooter extends GenericMailet {
 
         } else if (part.isMimeType("multipart/alternative")) {
             MimeMultipart multipart = (MimeMultipart) part.getContent();
-            boolean added = attachFooterToAllSubparts(multipart);
+            boolean added = attachFooterToAllSubparts(multipart, depth + 1);
             if (added) {
                 part.setContent(multipart);
             }
@@ -122,6 +133,25 @@ public class AddFooter extends GenericMailet {
         }
         //Give up... we won't attach the footer to this MimePart
         return false;
+    }
+
+    private boolean exceedsMaxMimeDepth(MimePart part, int depth) {
+        if (depth > MAX_MIME_DEPTH) {
+            return true;
+        }
+        try {
+            if (part.isMimeType("multipart/*") && part.getContent() instanceof MimeMultipart multipart) {
+                for (int index = 0; index < multipart.getCount(); index++) {
+                    if (exceedsMaxMimeDepth((MimeBodyPart) multipart.getBodyPart(index), depth + 1)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } catch (MessagingException | IOException | RuntimeException e) {
+            // Unreadable parts are handled while adding the footer
+            return false;
+        }
     }
 
     private boolean isParsable(String contentType) {
@@ -224,21 +254,21 @@ public class AddFooter extends GenericMailet {
         return Optional.empty();
     }
     
-    private boolean attachFooterToFirstPart(MimeMultipart multipart) throws MessagingException, IOException {
+    private boolean attachFooterToFirstPart(MimeMultipart multipart, int depth) throws MessagingException, IOException {
         if (multipart.getCount() == 0) {
             // A malformed multipart can be parsed without any body part
             return false;
         }
         MimeBodyPart firstPart = (MimeBodyPart) multipart.getBodyPart(0);
-        return attachFooter(firstPart);
+        return attachFooter(firstPart, depth);
     }
 
-    private boolean attachFooterToAllSubparts(MimeMultipart multipart) throws MessagingException, IOException {
+    private boolean attachFooterToAllSubparts(MimeMultipart multipart, int depth) throws MessagingException, IOException {
         int count = multipart.getCount();
         boolean isFooterAttached = false;
         for (int index = 0; index < count; index++) {
             MimeBodyPart mimeBodyPart = (MimeBodyPart) multipart.getBodyPart(index);
-            isFooterAttached |= attachFooter(mimeBodyPart);
+            isFooterAttached |= attachFooter(mimeBodyPart, depth);
         }
         return isFooterAttached;
     }
