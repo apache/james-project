@@ -282,6 +282,22 @@ class AttributeValueTest {
             assertThatIllegalStateException()
                 .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"FloatSerializer\",\"value\": 1}"));
         }
+
+        @ParameterizedTest
+        @ValueSource(floats = {Float.NaN, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY})
+        void nonFiniteFloatShouldBeSerializedAndBackThroughJsonText(float value) throws Exception {
+            AttributeValue<Float> expected = AttributeValue.of(value);
+
+            AttributeValue<?> actual = AttributeValue.fromJsonString(expected.toJson().get().toString());
+
+            assertThat(actual).isEqualTo(expected);
+        }
+
+        @Test
+        void fromJsonStringShouldThrowOnArbitraryText() {
+            assertThatIllegalStateException()
+                .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"FloatSerializer\",\"value\": \"1.0\"}"));
+        }
     }
 
     @Nested
@@ -331,6 +347,22 @@ class AttributeValueTest {
         void fromJsonStringShouldThrowOnIntNode() {
             assertThatIllegalStateException()
                 .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"DoubleSerializer\",\"value\": 1}"));
+        }
+
+        @ParameterizedTest
+        @ValueSource(doubles = {Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY})
+        void nonFiniteDoubleShouldBeSerializedAndBackThroughJsonText(double value) throws Exception {
+            AttributeValue<Double> expected = AttributeValue.of(value);
+
+            AttributeValue<?> actual = AttributeValue.fromJsonString(expected.toJson().get().toString());
+
+            assertThat(actual).isEqualTo(expected);
+        }
+
+        @Test
+        void fromJsonStringShouldThrowOnArbitraryText() {
+            assertThatIllegalStateException()
+                .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"DoubleSerializer\",\"value\": \"1.0\"}"));
         }
     }
 
