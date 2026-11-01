@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 
 class DomainTest {
@@ -108,5 +109,20 @@ class DomainTest {
     void aLabelOfADeviationCharacterShouldNotBeMappedToAnotherDomain() {
         assertThatThrownBy(() -> Domain.of("xn--fa-hia.de"))
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Ӏ", "wFӀ", "Ⴀx.org", "ᎠᎡ.org"})
+    void domainWhoseLowerCaseIsNotValidAccordingToIdnaShouldBeRejected(String domain) {
+        assertThatThrownBy(() -> Domain.of(domain))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void storedFormOfAnUpperCaseUnicodeDomainShouldParseBack() {
+        Domain domain = Domain.of("GRÅ.example");
+
+        assertThat(Domain.of(domain.asString())).isEqualTo(domain);
+        assertThat(domain.asString()).isEqualTo("grå.example");
     }
 }
