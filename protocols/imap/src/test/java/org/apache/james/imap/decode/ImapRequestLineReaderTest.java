@@ -115,4 +115,56 @@ class ImapRequestLineReaderTest {
 
         assertThatThrownBy(() -> lineReader.parsePartialRange()).isInstanceOf(DecodingException.class);
     }
+
+    private ImapRequestStreamLineReader reader(String input) {
+        return new ImapRequestStreamLineReader(new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)), outputStream);
+    }
+
+    @Test
+    void numberShouldBeRead() throws Exception {
+        assertThat(reader("1234 ").number()).isEqualTo(1234L);
+    }
+
+    @Test
+    void numberShouldAcceptLongMaxValue() throws Exception {
+        assertThat(reader(Long.MAX_VALUE + " ").number()).isEqualTo(Long.MAX_VALUE);
+    }
+
+    @Test
+    void numberShouldRejectValuesExceedingLongMaxValue() {
+        assertThatThrownBy(() -> reader("9223372036854775808 ").number())
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void numberShouldRejectValuesWhoseMultiplicationOverflows() {
+        assertThatThrownBy(() -> reader("99999999999999999999 ").number())
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void numberWithManyDigitsShouldBeReadWithoutStackOverflow() throws Exception {
+        assertThat(reader("0".repeat(60000) + "1 ").number()).isEqualTo(1L);
+    }
+
+    @Test
+    void numberShouldStopOnClosingParenthesisWhenAsked() throws Exception {
+        ImapRequestStreamLineReader reader = reader("12)");
+
+        assertThat(reader.number(true)).isEqualTo(12L);
+        assertThat(reader.nextChar()).isEqualTo(')');
+    }
+
+    @Test
+    void numberShouldRejectClosingParenthesisByDefault() {
+        assertThatThrownBy(() -> reader("12)").number())
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void numberShouldRejectNonDigits() {
+        assertThatThrownBy(() -> reader("12a ").number())
+            .isInstanceOf(DecodingException.class);
+>>>>>>> 252432fc5a ([FIX] IMAP: read numbers iteratively and reject overflowing values)
+    }
 }

@@ -834,55 +834,51 @@ public abstract class ImapRequestLineReader {
      * @return number
      */
     public long number(boolean stopOnParen) throws DecodingException {
-        return readDigits(0, 0, true, stopOnParen);
+        return readDigits(stopOnParen);
     }
     
-    private long readDigits(int add, long total, boolean first, boolean stopOnParen
-            ) throws DecodingException {
-        final char next;
-        if (first) {
-            next = nextWordChar();
-        } else {
-            consume();
-            next = nextChar();
-        }
-        final long currentTotal = (10 * total) + add;
-        switch (next) {
-        case '0':
-            return readDigits(0, currentTotal, false, stopOnParen);
-        case '1':
-            return readDigits(1, currentTotal, false, stopOnParen);
-        case '2':
-            return readDigits(2, currentTotal, false, stopOnParen);
-        case '3':
-            return readDigits(3, currentTotal, false, stopOnParen);
-        case '4':
-            return readDigits(4, currentTotal, false, stopOnParen);
-        case '5':
-            return readDigits(5, currentTotal, false, stopOnParen);
-        case '6':
-            return readDigits(6, currentTotal, false, stopOnParen);
-        case '7':
-            return readDigits(7, currentTotal, false, stopOnParen);
-        case '8':
-            return readDigits(8, currentTotal, false, stopOnParen);
-        case '9':
-            return readDigits(9, currentTotal, false, stopOnParen);
-        case '.':
-        case ' ':
-        case '>':
-        case '\r':
-        case '\n':
-        case '\t':
-            return currentTotal;
-        case ')':
-            if (stopOnParen && !first) {
-                return currentTotal;
+    private long readDigits(boolean stopOnParen) throws DecodingException {
+        // Iterate rather than recurse: the number of digits is only bounded by the line length
+        long total = 0;
+        boolean first = true;
+        while (true) {
+            final char next;
+            if (first) {
+                next = nextWordChar();
             } else {
+                consume();
+                next = nextChar();
+            }
+            if (next >= '0' && next <= '9') {
+                total = appendDigit(total, next);
+                first = false;
+                continue;
+            }
+            switch (next) {
+            case '.':
+            case ' ':
+            case '>':
+            case '\r':
+            case '\n':
+            case '\t':
+                return total;
+            case ')':
+                if (stopOnParen && !first) {
+                    return total;
+                } else {
+                    throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a digit but was " + next);
+                }
+            default:
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a digit but was " + next);
             }
-        default:
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a digit but was " + next);
+        }
+    }
+
+    private long appendDigit(long total, char digit) throws DecodingException {
+        try {
+            return Math.addExact(Math.multiplyExact(total, 10), digit - '0');
+        } catch (ArithmeticException e) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Number exceeds " + Long.MAX_VALUE);
         }
     }
 
