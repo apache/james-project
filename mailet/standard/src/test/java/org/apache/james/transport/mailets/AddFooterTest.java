@@ -21,10 +21,12 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Stream;
@@ -47,6 +49,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -583,5 +586,73 @@ class AddFooterTest {
 
         assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException();
         assertThat(MailUtil.toString(mail, "UTF-8")).doesNotContain(MY_FOOTER);
+    }
+
+    private static String nestedMessage(String multipartType, int depth) {
+        StringBuilder message = new StringBuilder("Subject: deep\r\nMIME-Version: 1.0\r\n");
+        for (int i = 0; i < depth; i++) {
+            message.append("Content-Type: multipart/").append(multipartType).append("; boundary=b").append(i)
+                .append("\r\n\r\n--b").append(i).append("\r\n");
+        }
+        message.append("Content-Type: text/plain\r\n\r\nhello\r\n");
+        for (int i = depth - 1; i >= 0; i--) {
+            message.append("--b").append(i).append("--\r\n");
+        }
+        return message.toString();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"alternative", "mixed", "related"})
+    void shouldNotOverflowOnDeeplyNestedMultipart(String multipartType) throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+
+        Mail mail = FakeMail.fromMime(nestedMessage(multipartType, 10_000), "UTF-8", "UTF-8");
+
+        assertTimeoutPreemptively(Duration.ofSeconds(10),
+            () -> assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException());
+        assertThat(MailUtil.toString(mail, "UTF-8")).doesNotContain(MY_FOOTER);
+    }
+
+    @Test
+    void shouldStillAddFooterToAReasonablyNestedPart() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+
+        Mail mail = FakeMail.fromMime(nestedMessage("mixed", 10), "UTF-8", "UTF-8");
+
+        mailet.service(mail);
+
+        assertThat(MailUtil.toString(mail, "UTF-8")).contains(MY_FOOTER);
+    }
+
+    @Test
+    void shouldNotOverflowWhenADeeplyNestedMultipartIsASiblingOfTheFooterTarget() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+
+        String deepMessage = nestedMessage("mixed", 10_000);
+        String message = Joiner.on("\r\n").join(
+            "Subject: test",
+            "MIME-Version: 1.0",
+            "Content-Type: multipart/alternative; boundary=top",
+            "",
+            "--top",
+            "Content-Type: text/plain",
+            "",
+            "hello",
+            "--top",
+            deepMessage.substring(deepMessage.indexOf("Content-Type")) + "--top--",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        assertTimeoutPreemptively(Duration.ofSeconds(10),
+            () -> assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException());
     }
 }
