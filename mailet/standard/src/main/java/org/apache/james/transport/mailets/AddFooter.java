@@ -87,6 +87,11 @@ public class AddFooter extends GenericMailet {
     
     private boolean attachFooter(MimePart part) throws MessagingException, IOException {
         String contentType = part.getContentType();
+        if (!isParsable(contentType)) {
+            // Content handlers fail with unchecked exceptions on such parts (eg the charset of text parts is null)
+            LOGGER.debug("Could not parse content type {}, not adding the footer to this part", contentType);
+            return false;
+        }
 
         if (part.getContent() instanceof String) {
             Optional<String> content = attachFooterToTextPart(part);
@@ -117,6 +122,19 @@ public class AddFooter extends GenericMailet {
         }
         //Give up... we won't attach the footer to this MimePart
         return false;
+    }
+
+    private boolean isParsable(String contentType) {
+        if (contentType == null) {
+            // Defaults to text/plain
+            return true;
+        }
+        try {
+            new ContentType(contentType);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
     }
 
     /**
