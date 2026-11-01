@@ -68,6 +68,29 @@ public class SearchCommandParser extends AbstractUidCommandParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchCommandParser.class);
     private static final int MAX_NESTING_DEPTH = 32;
+    // Bounds the recursion of the parser (and of the evaluation of the resulting SearchKey tree) whatever the
+    // combination of parentheses, OR and NOT
+    private static final int MAX_KEY_DEPTH = 256;
+
+    private record Depth(int parentheses, int keys) {
+        static final Depth ROOT = new Depth(0, 0);
+
+        Depth enterParentheses() throws DecodingException {
+            if (parentheses + 1 > MAX_NESTING_DEPTH) {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS,
+                    "Maximum SEARCH nesting depth of " + MAX_NESTING_DEPTH + " exceeded");
+            }
+            return new Depth(parentheses + 1, keys).enterKey();
+        }
+
+        Depth enterKey() throws DecodingException {
+            if (keys + 1 > MAX_KEY_DEPTH) {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS,
+                    "Maximum SEARCH key nesting depth of " + MAX_KEY_DEPTH + " exceeded");
+            }
+            return new Depth(parentheses, keys + 1);
+        }
+    }
 
     @Inject
     public SearchCommandParser(StatusResponseFactory statusResponseFactory) {
@@ -85,16 +108,16 @@ public class SearchCommandParser extends AbstractUidCommandParser {
      *            true when this is the first token read, false otherwise
      */
     protected SearchKey searchKey(ImapSession session, ImapRequestLineReader request, Context context, boolean isFirstToken) throws DecodingException, IllegalCharsetNameException, UnsupportedCharsetException {
-        return searchKey(session, request, context, isFirstToken, 0);
+        return searchKey(session, request, context, isFirstToken, Depth.ROOT);
     }
 
-    private SearchKey searchKey(ImapSession session, ImapRequestLineReader request, Context context, boolean isFirstToken, int depth) throws DecodingException, IllegalCharsetNameException, UnsupportedCharsetException {
+    private SearchKey searchKey(ImapSession session, ImapRequestLineReader request, Context context, boolean isFirstToken, Depth depth) throws DecodingException, IllegalCharsetNameException, UnsupportedCharsetException {
         final char next = request.nextChar();
 
         if (next >= '0' && next <= '9' || next == '*' || next == '$') {
             return sequenceSet(session, request);
         } else if (next == '(') {
-            return paren(session, request, context, depth + 1);
+            return paren(session, request, context, depth.enterParentheses());
         } else {
             final int cap = consumeAndCap(request);
             switch (cap) {
@@ -169,26 +192,19 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    private SearchKey paren(ImapSession session, ImapRequestLineReader request, Context context, int depth) throws DecodingException {
-        if (depth > MAX_NESTING_DEPTH) {
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS,
-                "Maximum SEARCH nesting depth of " + MAX_NESTING_DEPTH + " exceeded");
-        }
+    private SearchKey paren(ImapSession session, ImapRequestLineReader request, Context context, Depth depth) throws DecodingException {
         request.consume();
         List<SearchKey> keys = new ArrayList<>();
         addUntilParen(session, request, keys, context, depth);
         return SearchKey.buildAnd(keys);
     }
 
-    private void addUntilParen(ImapSession session, ImapRequestLineReader request, List<SearchKey> keys, Context context, int depth) throws DecodingException {
-        final char next = request.nextWordChar();
-        if (next == ')') {
-            request.consume();
-        } else {
-            final SearchKey key = searchKey(session, request, context, false, depth);
-            keys.add(key);
-            addUntilParen(session, request, keys, context, depth);
+    private void addUntilParen(ImapSession session, ImapRequestLineReader request, List<SearchKey> keys, Context context, Depth depth) throws DecodingException {
+        // Iterate rather than recurse: the number of keys between parentheses is only bounded by the line length
+        while (request.nextWordChar() != ')') {
+            keys.add(searchKey(session, request, context, false, depth));
         }
+        request.consume();
     }
 
     private int consumeAndCap(ImapRequestLineReader request) throws DecodingException {
@@ -204,7 +220,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return result;
     }
 
-    private SearchKey c(ImapSession session, ImapRequestLineReader request, boolean isFirstToken, Context context, int depth) throws DecodingException, IllegalCharsetNameException, UnsupportedCharsetException {
+    private SearchKey c(ImapSession session, ImapRequestLineReader request, boolean isFirstToken, Context context, Depth depth) throws DecodingException, IllegalCharsetNameException, UnsupportedCharsetException {
         final int next = consumeAndCap(request);
         switch (next) {
         case 'C':
@@ -216,7 +232,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    private SearchKey charset(ImapSession session, ImapRequestLineReader request, boolean isFirstToken, Context context, int depth) throws DecodingException, IllegalCharsetNameException, UnsupportedCharsetException {
+    private SearchKey charset(ImapSession session, ImapRequestLineReader request, boolean isFirstToken, Context context, Depth depth) throws DecodingException, IllegalCharsetNameException, UnsupportedCharsetException {
         final SearchKey result;
         nextIsA(request);
         nextIsR(request);
@@ -365,7 +381,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    private SearchKey o(ImapSession session, ImapRequestLineReader request, Context context, int depth) throws DecodingException {
+    private SearchKey o(ImapSession session, ImapRequestLineReader request, Context context, Depth depth) throws DecodingException {
         final int next = consumeAndCap(request);
         switch (next) {
         case 'L':
@@ -390,7 +406,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         }
     }
     
-    private SearchKey n(ImapSession session, ImapRequestLineReader request, Context context, int depth) throws DecodingException {
+    private SearchKey n(ImapSession session, ImapRequestLineReader request, Context context, Depth depth) throws DecodingException {
         final int next = consumeAndCap(request);
         switch (next) {
         case 'E':
@@ -592,21 +608,22 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return result;
     }
 
-    private SearchKey or(ImapSession session, ImapRequestLineReader request, Context context, int depth) throws DecodingException {
+    private SearchKey or(ImapSession session, ImapRequestLineReader request, Context context, Depth depth) throws DecodingException {
         final SearchKey result;
         nextIsSpace(request);
-        final SearchKey firstKey = searchKey(session, request, context, false, depth);
+        final Depth operandDepth = depth.enterKey();
+        final SearchKey firstKey = searchKey(session, request, context, false, operandDepth);
         nextIsSpace(request);
-        final SearchKey secondKey = searchKey(session, request, context, false, depth);
+        final SearchKey secondKey = searchKey(session, request, context, false, operandDepth);
         result = SearchKey.buildOr(firstKey, secondKey);
         return result;
     }
 
-    private SearchKey not(ImapSession session, ImapRequestLineReader request, Context context, int depth) throws DecodingException {
+    private SearchKey not(ImapSession session, ImapRequestLineReader request, Context context, Depth depth) throws DecodingException {
         final SearchKey result;
         nextIsT(request);
         nextIsSpace(request);
-        final SearchKey nextKey = searchKey(session, request, context, false, depth);
+        final SearchKey nextKey = searchKey(session, request, context, false, depth.enterKey());
         result = SearchKey.buildNot(nextKey);
         return result;
     }
