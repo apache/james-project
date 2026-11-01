@@ -23,15 +23,20 @@ package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.ContentType;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimePart;
+import jakarta.mail.internet.MimeUtility;
+import jakarta.mail.internet.ParseException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -49,6 +54,7 @@ public class AddFooter extends GenericMailet {
 
     private static final String HTML_BR_TAG = "<br />";
     private static final String CARRIAGE_RETURN = "\r\n";
+    private static final String CHARSET = "charset";
     private static final Pattern BODY_CLOSING_TAG = Pattern.compile("((?i:</body>))");
     private String plainTextFooter;
     
@@ -85,8 +91,9 @@ public class AddFooter extends GenericMailet {
         if (part.getContent() instanceof String) {
             Optional<String> content = attachFooterToTextPart(part);
             if (content.isPresent()) {
-                part.setContent(content.get(), contentType);
-                part.setHeader(RFC2822Headers.CONTENT_TYPE, contentType);
+                String updatedContentType = contentTypeAbleToEncode(contentType, content.get());
+                part.setContent(content.get(), updatedContentType);
+                part.setHeader(RFC2822Headers.CONTENT_TYPE, updatedContentType);
                 return true;
             }
         }
@@ -110,6 +117,38 @@ public class AddFooter extends GenericMailet {
         }
         //Give up... we won't attach the footer to this MimePart
         return false;
+    }
+
+    /**
+     * The footer may hold characters that the charset of the part can not represent, and that would be replaced by
+     * '?' when encoding. In such a case, switch the part to UTF-8: the original text is already decoded at this stage.
+     */
+    private String contentTypeAbleToEncode(String contentType, String content) {
+        ContentType parsedContentType;
+        try {
+            parsedContentType = new ContentType(contentType);
+        } catch (ParseException e) {
+            LOGGER.debug("Could not parse content type {}, keeping it", contentType, e);
+            return contentType;
+        }
+        String charset = Optional.ofNullable(parsedContentType.getParameter(CHARSET))
+            .orElse(StandardCharsets.US_ASCII.name());
+        if (canEncode(charset, content)) {
+            return contentType;
+        }
+        parsedContentType.setParameter(CHARSET, StandardCharsets.UTF_8.name());
+        return parsedContentType.toString();
+    }
+
+    private boolean canEncode(String charset, String content) {
+        try {
+            return Charset.forName(MimeUtility.javaCharset(charset))
+                .newEncoder()
+                .canEncode(content);
+        } catch (IllegalArgumentException e) {
+            // Illegal or unsupported charset name
+            return false;
+        }
     }
 
     /**

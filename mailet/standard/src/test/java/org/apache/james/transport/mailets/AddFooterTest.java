@@ -21,11 +21,18 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Stream;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.internet.ContentType;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
@@ -33,6 +40,7 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -363,4 +371,85 @@ class AddFooterTest {
         assertThat(MailUtil.toString(mail, javaCharset)).endsWith(expectedFooter);
     }
     
+
+    private MimeMessage reparse(Mail mail) throws Exception {
+        return new MimeMessage(Session.getDefaultInstance(new Properties()),
+            new ByteArrayInputStream(MailUtil.toString(mail, "UTF-8").getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    void shouldKeepFooterCharactersThatThePartCharsetCannotRepresent() throws Exception {
+        String footer = "------ " + MY_FOOTER + " à/€ ------";
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", footer)
+            .build());
+
+        String message = Joiner.on("\r\n").join(
+            "Subject: test",
+            "MIME-Version: 1.0",
+            "Content-Type: text/plain",
+            "",
+            "hello",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        mailet.service(mail);
+
+        MimeMessage reparsed = reparse(mail);
+        assertThat((String) reparsed.getContent()).isEqualTo("hello\r\n" + footer);
+        assertThat(new ContentType(reparsed.getContentType()).getParameter("charset")).isEqualTo("UTF-8");
+    }
+
+    @Test
+    void shouldKeepFooterCharactersThatAnIso88591PartCannotRepresent() throws Exception {
+        String footer = "日本語 ✓ €";
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", footer)
+            .build());
+
+        String message = Joiner.on("\r\n").join(
+            "Subject: test",
+            "MIME-Version: 1.0",
+            "Content-Type: multipart/mixed; boundary=\"BOUNDARY\"",
+            "",
+            "--BOUNDARY",
+            "Content-Type: text/plain; charset=ISO-8859-1",
+            "Content-Transfer-Encoding: quoted-printable",
+            "",
+            "caf=E9",
+            "--BOUNDARY--",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        mailet.service(mail);
+
+        MimeMultipart multipart = (MimeMultipart) reparse(mail).getContent();
+        assertThat((String) multipart.getBodyPart(0).getContent()).isEqualTo("café\r\n" + footer);
+    }
+
+    @Test
+    void shouldKeepThePartCharsetWhenItCanRepresentTheFooter() throws Exception {
+        String footer = "------ " + MY_FOOTER + " à ------";
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", footer)
+            .build());
+
+        String message = Joiner.on("\r\n").join(
+            "Subject: test",
+            "MIME-Version: 1.0",
+            "Content-Type: text/plain; charset=ISO-8859-1",
+            "",
+            "hello",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        mailet.service(mail);
+
+        MimeMessage reparsed = reparse(mail);
+        assertThat((String) reparsed.getContent()).isEqualTo("hello\r\n" + footer);
+        assertThat(new ContentType(reparsed.getContentType()).getParameter("charset")).isEqualTo("ISO-8859-1");
+    }
 }
