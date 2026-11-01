@@ -26,6 +26,8 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -279,5 +281,23 @@ class UsernameTest {
     void equalsShouldReturnTrueWhenSameIdWithDifferentCase() {
         assertThat(Username.of("user").equals(Username.of("uSEr")))
             .isTrue();
+    }
+    @ParameterizedTest
+    @ValueSource(strings = {"-bob@domain.tld", "$bob@domain.tld", "-", "$", "-bob", "$bob", "anyone", "owner", "authenticated", "ANYONE"})
+    void ofShouldRejectUsernamesThatCanNotBeGrantedMailboxRights(String username) {
+        assertThatThrownBy(() -> Username.of(username))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void fromLocalPartWithDomainShouldRejectLocalPartStartingWithAnACLMarker() {
+        assertThatThrownBy(() -> Username.fromLocalPartWithDomain("-bob", "domain.tld"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"anyone@domain.tld", "owner@domain.tld", "bob-@domain.tld", "b$ob@domain.tld", "b-ob", "anyone2"})
+    void ofShouldAcceptUsernamesThatCanBeGrantedMailboxRights(String username) {
+        assertThat(Username.of(username).asString()).isEqualTo(username);
     }
 }

@@ -85,6 +85,10 @@ public class MailboxACL {
     /**
      * Special name literals.
      */
+    /**
+     * Names must match {@link Username#ACL_ANYONE}, {@link Username#ACL_AUTHENTICATED} and {@link Username#ACL_OWNER},
+     * that usernames can not take.
+     */
     public enum SpecialName {
         anyone, authenticated, owner
     }
@@ -99,14 +103,14 @@ public class MailboxACL {
      *
      * @see MailboxACL.EntryKey#serialize()
      */
-    public static final char DEFAULT_GROUP_MARKER = '$';
+    public static final char DEFAULT_GROUP_MARKER = Username.ACL_GROUP_MARKER;
 
     /**
      * Marks negative when (de)serializing {@link MailboxACL.EntryKey}s.
      *
      * @see MailboxACL.EntryKey#serialize()
      */
-    public static final char DEFAULT_NEGATIVE_MARKER = '-';
+    public static final char DEFAULT_NEGATIVE_MARKER = Username.ACL_NEGATIVE_MARKER;
 
     /**
      * SETACL third argument prefix

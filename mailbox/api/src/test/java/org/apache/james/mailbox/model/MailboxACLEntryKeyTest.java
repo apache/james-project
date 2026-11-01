@@ -23,6 +23,8 @@ package org.apache.james.mailbox.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Arrays;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.NameType;
@@ -165,14 +167,14 @@ class MailboxACLEntryKeyTest {
     @ParameterizedTest
     @ValueSource(strings = {"-bob@domain.tld", "$bob@domain.tld", "anyone", "owner", "authenticated", "-", "$"})
     void createUserEntryKeyShouldRejectNamesThatSerializeCanNotRepresent(String name) {
-        assertThatThrownBy(() -> EntryKey.createUserEntryKey(Username.of(name)))
+        assertThatThrownBy(() -> EntryKey.createUserEntryKey(name))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"$bob@domain.tld", "anyone", "owner", "authenticated", "$"})
     void createNegativeUserEntryKeyShouldRejectNamesThatSerializeCanNotRepresent(String name) {
-        assertThatThrownBy(() -> EntryKey.createUserEntryKey(Username.of(name), MailboxACL.NEGATIVE_KEY))
+        assertThatThrownBy(() -> EntryKey.createUserEntryKey(name, MailboxACL.NEGATIVE_KEY))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -187,7 +189,7 @@ class MailboxACLEntryKeyTest {
     @ParameterizedTest
     @ValueSource(strings = {"-bob@domain.tld", "-", "bob@domain.tld"})
     void negativeUserEntryKeyShouldSurviveSerialization(String name) {
-        EntryKey key = EntryKey.createUserEntryKey(Username.of(name), MailboxACL.NEGATIVE_KEY);
+        EntryKey key = EntryKey.createUserEntryKey(name, MailboxACL.NEGATIVE_KEY);
 
         assertThat(EntryKey.deserialize(key.serialize())).isEqualTo(key);
     }
@@ -210,5 +212,10 @@ class MailboxACLEntryKeyTest {
         assertThatThrownBy(() -> EntryKey.deserialize("-"))
             .isInstanceOf(IllegalStateException.class);
     }
->>>>>>> 600e1751ac (MailboxACL.EntryKey: refuse user names that serialize can not represent)
+
+    @Test
+    void specialNamesShouldMatchTheNamesUsernamesCanNotTake() {
+        assertThat(Arrays.stream(SpecialName.values()).map(SpecialName::name))
+            .containsExactlyInAnyOrder(Username.ACL_ANYONE, Username.ACL_AUTHENTICATED, Username.ACL_OWNER);
+    }
 }

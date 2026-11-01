@@ -43,7 +43,7 @@ import com.google.common.io.ByteSource;
 
 public abstract class AttachmentMapperTest {
     private static final StringBackedAttachmentId UNKNOWN_ATTACHMENT_ID = StringBackedAttachmentId.from("unknown");
-    private static final Username OWNER = Username.of("owner");
+    private static final Username OWNER = Username.of("owner1");
     private static final Username ADDITIONAL_OWNER = Username.of("additionalOwner");
 
     protected AttachmentMapper attachmentMapper;

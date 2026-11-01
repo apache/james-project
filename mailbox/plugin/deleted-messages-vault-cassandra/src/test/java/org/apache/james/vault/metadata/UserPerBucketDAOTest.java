@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class UserPerBucketDAOTest {
     private static final BucketName BUCKET_NAME = BucketName.of("deletedMessages-2019-06-01");
     private static final BucketName BUCKET_NAME_2 = BucketName.of("deletedMessages-2019-07-01");
-    private static final Username OWNER = Username.of("owner");
+    private static final Username OWNER = Username.of("owner1");
     private static final Username OWNER_2 = Username.of("owner2");
 
     @RegisterExtension
