@@ -23,8 +23,6 @@ import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
 
 import java.io.Serializable;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.Base64;
@@ -486,8 +484,12 @@ public interface Serializer<T> {
         public Optional<URL> deserialize(JsonNode json) {
             return STRING_SERIALIZER.deserialize(json).flatMap(url -> {
                 try {
-                    return Optional.of(new URI(url).toURL());
-                } catch (MalformedURLException | URISyntaxException e) {
+                    // Parse with the same (lenient) parser as the one that built the URL, URI would reject
+                    // some URLs that URL accepts (e.g. "http:" or a space in the path)
+                    @SuppressWarnings("deprecation")
+                    URL result = new URL(url);
+                    return Optional.of(result);
+                } catch (MalformedURLException e) {
                     return Optional.empty();
                 }
             });
