@@ -95,7 +95,10 @@ public class Domain implements Serializable {
             Preconditions.checkArgument(!containsIdnaDeviation(withoutBrackets),
                 "Domain '%s' holds a character that IDNA2003 and IDNA2008 resolve to different domains", domain);
             try {
-                domainWithoutBrackets = IDN.toASCII(withoutBrackets, IDN.ALLOW_UNASSIGNED);
+                // Lower-case before IDNA: asString() is lower-cased with the current Unicode tables, which know
+                // more case mappings than IDNA2003 does (eg U+04C0 -> U+04CF). Validating the lower-cased form
+                // ensures that asString() parses back.
+                domainWithoutBrackets = IDN.toASCII(withoutBrackets.toLowerCase(Locale.US), IDN.ALLOW_UNASSIGNED);
             } catch (IllegalArgumentException e) {
                 // IDN.toASCII's own message can be cryptic ("Empty label is
                 // not a legal name", "A prohibited code point was found in

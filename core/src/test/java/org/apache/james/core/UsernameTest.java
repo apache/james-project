@@ -280,4 +280,18 @@ class UsernameTest {
         assertThat(Username.of("user").equals(Username.of("uSEr")))
             .isTrue();
     }
+
+    @Test
+    void ofShouldRejectDomainWhoseLowerCaseIsNotValidAccordingToIdna() {
+        // Cherokee capitals: their lower case (U+AB70...) is not part of Unicode 3.2
+        assertThatThrownBy(() -> Username.of("user@ᎠᎡ.org"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void asStringOfAUnicodeUsernameShouldParseBack() {
+        Username username = Username.of("user@GRÅ.example");
+
+        assertThat(Username.of(username.asString())).isEqualTo(username);
+    }
 }

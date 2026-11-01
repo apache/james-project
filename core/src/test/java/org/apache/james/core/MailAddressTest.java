@@ -483,4 +483,34 @@ class MailAddressTest {
         assertThat(new MailAddress("u@grå.org").getDomain().asString())
             .isEqualTo("grå.org");
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "1@Ӏ", // CYRILLIC LETTER PALOCHKA, lower case U+04CF is not in Unicode 3.2
+        "F@wFӀ",
+        "a@Ⴀx.org", // GEORGIAN CAPITAL LETTER AN, lower case U+2D00 is not in Unicode 3.2
+        "a@ᎠᎡ.org", // CHEROKEE LETTERS, lower case U+AB70 and U+AB71 are not in Unicode 3.2
+        "info@GRÅ.org"})
+    void acceptedAddressShouldParseBackFromItsStoredForm(String input) throws Exception {
+        MailAddress address;
+        try {
+            address = new MailAddress(input);
+        } catch (AddressException e) {
+            // Refusing the address is fine, accepting an address that can not be read back is not
+            return;
+        }
+
+        assertThat(new MailAddress(address.asString())).isEqualTo(address);
+    }
+
+    @Test
+    void domainWhoseLowerCaseIsNotValidAccordingToIdnaShouldBeRejected() {
+        assertThatThrownBy(() -> new MailAddress("1@Ӏ"))
+            .isInstanceOf(AddressException.class);
+    }
+
+    @Test
+    void upperCaseUnicodeDomainShouldBeEqualToItsLowerCaseForm() throws AddressException {
+        assertThat(new MailAddress("info@GRÅ.org")).isEqualTo(new MailAddress("info@grå.org"));
+    }
 }
