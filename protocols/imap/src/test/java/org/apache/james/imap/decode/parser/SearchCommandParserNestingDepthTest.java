@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 class SearchCommandParserNestingDepthTest {
 
     private static final int MAX_NESTING_DEPTH = 32;
+    private static final int MAX_KEY_DEPTH = 256;
 
     private SearchCommandParser parser;
 
@@ -128,5 +129,64 @@ class SearchCommandParserNestingDepthTest {
             parser.searchKey(null, reader(payload), new Context(), false))
             .isInstanceOf(DecodingException.class)
             .hasMessageContaining("nesting depth");
+    }
+
+    @Test
+    void deepOrChainShouldBeRejectedWithoutStackOverflow() {
+        String payload = "OR ALL ".repeat(9000) + "ALL\r\n";
+        assertThatThrownBy(() ->
+            parser.searchKey(null, reader(payload), new Context(), false))
+            .isInstanceOf(DecodingException.class)
+            .hasMessageContaining("key nesting depth");
+    }
+
+    @Test
+    void deepNotChainShouldBeRejectedWithoutStackOverflow() {
+        String payload = "NOT ".repeat(16000) + "ALL\r\n";
+        assertThatThrownBy(() ->
+            parser.searchKey(null, reader(payload), new Context(), false))
+            .isInstanceOf(DecodingException.class)
+            .hasMessageContaining("key nesting depth");
+    }
+
+    @Test
+    void mixedOrNotAndParenthesesChainShouldBeRejectedWithoutStackOverflow() {
+        String payload = "NOT (OR ALL ".repeat(5000) + "ALL" + "))".repeat(5000) + "\r\n";
+        assertThatThrownBy(() ->
+            parser.searchKey(null, reader(payload), new Context(), false))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void notChainAtMaxKeyDepthShouldBeAccepted() {
+        String payload = "NOT ".repeat(MAX_KEY_DEPTH) + "ALL\r\n";
+        assertThatCode(() ->
+            parser.searchKey(null, reader(payload), new Context(), false))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void notChainAboveMaxKeyDepthShouldBeRejected() {
+        String payload = "NOT ".repeat(MAX_KEY_DEPTH + 1) + "ALL\r\n";
+        assertThatThrownBy(() ->
+            parser.searchKey(null, reader(payload), new Context(), false))
+            .isInstanceOf(DecodingException.class)
+            .hasMessageContaining("key nesting depth");
+    }
+
+    @Test
+    void orChainAtMaxKeyDepthShouldBeAccepted() {
+        String payload = "OR ALL ".repeat(MAX_KEY_DEPTH) + "ALL\r\n";
+        assertThatCode(() ->
+            parser.searchKey(null, reader(payload), new Context(), false))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void manyKeysBetweenParenthesesShouldBeAcceptedWithoutStackOverflow() {
+        String payload = "(" + "ALL ".repeat(16000) + "ALL)\r\n";
+        assertThatCode(() ->
+            parser.searchKey(null, reader(payload), new Context(), false))
+            .doesNotThrowAnyException();
     }
 }
