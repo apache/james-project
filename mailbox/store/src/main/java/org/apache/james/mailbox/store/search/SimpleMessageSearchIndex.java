@@ -97,7 +97,11 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     }
 
     /**
-     * Walks down the query tree's conjunctions to find a UidCriterion
+     * Walks down the query tree's AND conjunctions to find a UidCriterion that every result has to match.
+     *
+     * A UidCriterion below an OR or a NOT (NOR) conjunction does not restrict the results, and can not be used to
+     * restrict the scanned messages.
+     *
      * @param crits - list of Criterion to search from
      * @return
      *      first UidCriterion found
@@ -105,11 +109,14 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
      */
     private static UidCriterion findConjugatedUidCriterion(List<Criterion> crits) {
         for (Criterion crit : crits) {
-            if (crit instanceof UidCriterion) {
-                return (UidCriterion) crit;
-            } else if (crit instanceof ConjunctionCriterion) {
-                return findConjugatedUidCriterion(((ConjunctionCriterion) crit)
-                        .getCriteria());
+            if (crit instanceof UidCriterion uidCriterion) {
+                return uidCriterion;
+            } else if (crit instanceof ConjunctionCriterion conjunctionCriterion
+                && conjunctionCriterion.getType() == SearchQuery.Conjunction.AND) {
+                UidCriterion found = findConjugatedUidCriterion(conjunctionCriterion.getCriteria());
+                if (found != null) {
+                    return found;
+                }
             }
         }
         return null;
