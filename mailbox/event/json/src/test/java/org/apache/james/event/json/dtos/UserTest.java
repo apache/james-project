@@ -21,7 +21,6 @@ package org.apache.james.event.json.dtos;
 
 import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Username;
 import org.junit.jupiter.api.Test;
@@ -70,14 +69,14 @@ class UserTest {
     }
 
     @Test
-    void userDeserializationShouldThrowWhenBadUsername() {
-        assertThatThrownBy(() -> DTO_JSON_SERIALIZE.userReads().reads(new JsString("bob@bad@bad")))
-            .isInstanceOf(IllegalArgumentException.class);
+    void userDeserializationShouldFailWhenBadUsername() {
+        assertThat(DTO_JSON_SERIALIZE.userReads().reads(new JsString("bob@bad@bad")).isError())
+            .isTrue();
     }
 
     @Test
-    void userDeserializationShouldThrowWhenEmpty() {
-        assertThatThrownBy(() -> DTO_JSON_SERIALIZE.userReads().reads(new JsString("")))
-            .isInstanceOf(IllegalArgumentException.class);
+    void userDeserializationShouldFailWhenEmpty() {
+        assertThat(DTO_JSON_SERIALIZE.userReads().reads(new JsString("")).isError())
+            .isTrue();
     }
 }

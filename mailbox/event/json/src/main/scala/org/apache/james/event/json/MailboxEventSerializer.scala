@@ -309,66 +309,71 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
 
   implicit val systemFlagsReads: Reads[SystemFlag] = Reads.enumNameReads(SystemFlag)
 
+  // Factories throw on invalid values: turn these exceptions into a JsError, as Play does not
+  private def safely[T](value: => T): JsResult[T] = Try(value).fold(
+    e => JsError(Option(e.getMessage).getOrElse(e.getClass.getName)),
+    JsSuccess(_))
+
   implicit val aclEntryKeyReads: Reads[JavaMailboxACL.EntryKey] = {
-    case JsString(keyAsString) => JsSuccess(JavaMailboxACL.EntryKey.deserialize(keyAsString))
+    case JsString(keyAsString) => safely(JavaMailboxACL.EntryKey.deserialize(keyAsString))
     case _ => JsError()
   }
   implicit val aclRightsReads: Reads[JavaMailboxACL.Rfc4314Rights] = {
-    case JsString(rightsAsString) => JsSuccess(JavaMailboxACL.Rfc4314Rights.deserialize(rightsAsString))
+    case JsString(rightsAsString) => safely(JavaMailboxACL.Rfc4314Rights.deserialize(rightsAsString))
     case _ => JsError()
   }
   implicit val mailboxIdReads: Reads[MailboxId] = {
-    case JsString(serializedMailboxId) => JsSuccess(mailboxIdFactory.fromString(serializedMailboxId))
+    case JsString(serializedMailboxId) => safely(mailboxIdFactory.fromString(serializedMailboxId))
     case _ => JsError()
   }
   implicit val quotaCountLimitReads: Reads[QuotaCountLimit] = {
-    case JsNumber(count) => JsSuccess(QuotaCountLimit.count(count.toLong))
+    case JsNumber(count) => safely(QuotaCountLimit.count(count.toLong))
     case JsNull => JsSuccess(QuotaCountLimit.unlimited())
     case _ => JsError()
   }
   implicit val quotaCountUsageReads: Reads[QuotaCountUsage] = {
-    case JsNumber(count) => JsSuccess(QuotaCountUsage.count(count.toLong))
+    case JsNumber(count) => safely(QuotaCountUsage.count(count.toLong))
     case _ => JsError()
   }
   implicit val quotaRootReads: Reads[QuotaRoot] = {
-    case JsString(quotaRoot) => JsSuccess(quotaRootDeserializer.fromString(quotaRoot))
+    case JsString(quotaRoot) => safely(quotaRootDeserializer.fromString(quotaRoot))
     case _ => JsError()
   }
   implicit val quotaScopeReads: Reads[JavaQuota.Scope] = {
-    case JsString(value) => JsSuccess(JavaQuota.Scope.valueOf(value))
+    case JsString(value) => safely(JavaQuota.Scope.valueOf(value))
     case _ => JsError()
   }
   implicit val quotaSizeLimitReads: Reads[QuotaSizeLimit] = {
-    case JsNumber(size) => JsSuccess(QuotaSizeLimit.size(size.toLong))
+    case JsNumber(size) => safely(QuotaSizeLimit.size(size.toLong))
     case JsNull => JsSuccess(QuotaSizeLimit.unlimited())
     case _ => JsError()
   }
   implicit val quotaSizeUsageReads: Reads[QuotaSizeUsage] = {
-    case JsNumber(size) => JsSuccess(QuotaSizeUsage.size(size.toLong))
+    case JsNumber(size) => safely(QuotaSizeUsage.size(size.toLong))
     case _ => JsError()
   }
   implicit val sessionIdReads: Reads[SessionId] = {
-    case JsNumber(id) => JsSuccess(SessionId.of(id.longValue))
+    case JsNumber(id) => safely(SessionId.of(id.longValue))
     case _ => JsError()
   }
   implicit val userReads: Reads[Username] = {
-    case JsString(userAsString) => JsSuccess(Username.of(userAsString))
+    case JsString(userAsString) => safely(Username.of(userAsString))
     case _ => JsError()
   }
   implicit val threadIdReads: Reads[ThreadId] = {
-    case JsString(value) => JsSuccess(ThreadId.fromBaseMessageId(messageIdFactory.fromString(value)))
+    case JsString(value) => safely(ThreadId.fromBaseMessageId(messageIdFactory.fromString(value)))
     case _ => JsError()
   }
   implicit val messageIdReads: Reads[MessageId] = {
-    case JsString(value) => JsSuccess(messageIdFactory.fromString(value))
+    case JsString(value) => safely(messageIdFactory.fromString(value))
     case _ => JsError()
   }
   implicit val messageUidReads: Reads[MessageUid] = {
-    case JsNumber(value) if value.isValidLong => JsSuccess(MessageUid.of(value.toLong))
+    case JsNumber(value) if value.isValidLong => safely(MessageUid.of(value.toLong))
     case _ => JsError()
   }
   implicit val modSeqReads: Reads[ModSeq] = {
-    case JsNumber(value) if value.isValidLong => JsSuccess(ModSeq.of(value.toLong))
+    case JsNumber(value) if value.isValidLong => safely(ModSeq.of(value.toLong))
     case _ => JsError()
   }
   implicit val userFlagsReads: Reads[UserFlag] = {
@@ -380,7 +385,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     case _ => JsError()
   }
   implicit val eventIdReads: Reads[EventId] = {
-    case JsString(x) => JsSuccess(EventId.of(x))
+    case JsString(x) => safely(EventId.of(x))
     case _ => JsError()
   }
   implicit val isAppendedReads: Reads[IsAppended] = {
@@ -411,7 +416,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
 
   implicit def scopeMessageUidMapReads[V](implicit vr: Reads[V]): Reads[Map[MessageUid, V]] =
     Reads.mapReads[MessageUid, V] { str =>
-      JsSuccess(MessageUid.of(str.toLong))
+      safely(MessageUid.of(str.toLong))
     }
 
   implicit def scopeMessageUidMapWrite[V](implicit vr: Writes[V]): Writes[Map[MessageUid, V]] =
@@ -435,11 +440,11 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     def toJson(event: Iterable[Event]): String = Json.toJson(event).toString()
     def toJsonBytes(event: Event): Array[Byte] = Json.toBytes(Json.toJson(event))
     def toJsonBytes(event: Iterable[Event]): Array[Byte] = Json.toBytes(Json.toJson(event))
-    def fromJson(json: String): JsResult[Event] = Json.fromJson[Event](Json.parse(json))
+    def fromJson(json: String): JsResult[Event] = safely(Json.parse(json)).flatMap(Json.fromJson[Event](_))
     def fromJsonAsEvents(json: String): JsResult[List[Event]] = if (json.startsWith("{")) {
-      Json.fromJson[Event](Json.parse(json)).map(event => List(event))
+      fromJson(json).map(event => List(event))
     } else {
-      Json.fromJson[List[Event]](Json.parse(json))
+      safely(Json.parse(json)).flatMap(Json.fromJson[List[Event]](_))
     }
   }
 
@@ -449,9 +454,9 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   def toJsonBytes(event: JavaEvent): Array[Byte] = eventSerializerPrivateWrapper.toJsonBytes(ScalaConverter.toScala(event))
   def toJsonBytes(event: util.Collection[JavaEvent]): Array[Byte] = eventSerializerPrivateWrapper.toJsonBytes(event.asScala.map(ScalaConverter.toScala))
   def fromJson(json: String): JsResult[JavaEvent] = eventSerializerPrivateWrapper.fromJson(json)
-    .map(event => event.toJava)
+    .flatMap(event => safely(event.toJava))
   def fromJsonAsEvents(json: String): JsResult[List[JavaEvent]] = eventSerializerPrivateWrapper.fromJsonAsEvents(json)
-    .map(event => event.map(_.toJava))
+    .flatMap(events => safely(events.map(_.toJava)))
 }
 
 class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) extends EventSerializer {

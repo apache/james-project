@@ -21,7 +21,6 @@ package org.apache.james.event.json.dtos;
 
 import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Test;
@@ -58,8 +57,8 @@ class MessageIdTest {
     }
 
     @Test
-    void messageIdDeserializationShouldThrowWhenInvalid() {
-        assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageIdReads().reads(new JsString("invalid")))
-            .isInstanceOf(IllegalArgumentException.class);
+    void messageIdDeserializationShouldFailWhenInvalid() {
+        assertThat(DTO_JSON_SERIALIZE.messageIdReads().reads(new JsString("invalid")).isError())
+            .isTrue();
     }
 }
