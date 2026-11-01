@@ -1262,6 +1262,35 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void notOfUidRangeShouldReturnTheOtherMessages() throws Exception {
+        SearchQuery searchQuery = SearchQuery.of(
+            SearchQuery.not(SearchQuery.uid(new SearchQuery.UidRange(m9.getUid()))));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
+            .containsOnly(m1.getUid(), m2.getUid(), m3.getUid(), m4.getUid(), m5.getUid(),
+                m6.getUid(), m7.getUid(), m8.getUid());
+    }
+
+    @Test
+    void orOfUidRangeAndAllShouldReturnAllMessages() throws Exception {
+        SearchQuery searchQuery = SearchQuery.of(
+            SearchQuery.or(SearchQuery.uid(new SearchQuery.UidRange(m9.getUid())), SearchQuery.all()));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
+            .containsOnly(m1.getUid(), m2.getUid(), m3.getUid(), m4.getUid(), m5.getUid(),
+                m6.getUid(), m7.getUid(), m8.getUid(), m9.getUid());
+    }
+
+    @Test
+    void uidRangeInALaterConjunctShouldRestrictTheResults() throws Exception {
+        SearchQuery searchQuery = SearchQuery.of(
+            SearchQuery.and(SearchQuery.all(), SearchQuery.and(SearchQuery.all(), SearchQuery.uid(new SearchQuery.UidRange(m2.getUid(), m3.getUid())))));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
+            .containsOnly(m2.getUid(), m3.getUid());
+    }
+
+    @Test
     void notShouldReturnResultsThatDoNotMatchAQuery() throws Exception {
         SearchQuery searchQuery = SearchQuery.of(
             SearchQuery.not(SearchQuery.headerExists("Precedence")));

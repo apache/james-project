@@ -99,11 +99,6 @@ class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
     @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
-    public void orShouldReturnResultsMatchinganyRequests() {
-    }
-
-    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
-    @Override
     public void internalDateBeforeShouldReturnMessagesBeforeAGivenDate() {
     }
 
