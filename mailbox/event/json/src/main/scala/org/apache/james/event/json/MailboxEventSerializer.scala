@@ -42,6 +42,7 @@ import play.api.libs.json._
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
+import scala.util.Try
 
 private sealed trait Event {
   def toJava: JavaEvent
@@ -490,19 +491,15 @@ class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, mess
       case exception: Exception => new SerializationResult.Failure(exception.getMessage)
     }
 
-  override def asEvents(serialized: String): DeserializationResult = {
-    val result = jsonSerialize.fromJsonAsEvents(serialized)
-    if (result.isError) {
-      List(new DeserializationResult.Failure(s"Could not deserialize events: $serialized")).asJava
-    }
-    new DeserializationResult.SuccessList(result.get.asJava)
-  }
+  override def asEvents(serialized: String): DeserializationResult =
+    Try(jsonSerialize.fromJsonAsEvents(serialized)).toOption
+      .flatMap(_.asOpt)
+      .map[DeserializationResult](events => new DeserializationResult.SuccessList(events.asJava))
+      .getOrElse(new DeserializationResult.Failure(s"Could not deserialize events: $serialized"))
 
-  override def asEvent(serialized: String): DeserializationResult = {
-    val result = fromJson(serialized)
-    if (result.isError) {
-      new DeserializationResult.Failure(s"Could not deserialize event: $serialized")
-    }
-    new DeserializationResult.Success(result.get)
-  }
+  override def asEvent(serialized: String): DeserializationResult =
+    Try(fromJson(serialized)).toOption
+      .flatMap(_.asOpt)
+      .map[DeserializationResult](event => new DeserializationResult.Success(event))
+      .getOrElse(new DeserializationResult.Failure(s"Could not deserialize event: $serialized"))
 }
