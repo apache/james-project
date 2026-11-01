@@ -30,6 +30,20 @@ import com.google.common.base.Preconditions;
 
 public class Username {
     public static final int MAXIMUM_MAIL_ADDRESS_LENGTH = 255;
+    /**
+     * Markers and special names of mailbox ACL entry keys (RFC 4314 identifiers). A username can not start with a
+     * marker nor be a special name, as its ACL entry key would be read back as a negative key, a group or a special
+     * key: such a user could not be granted mailbox rights.
+     */
+    public static final char ACL_NEGATIVE_MARKER = '-';
+    public static final char ACL_GROUP_MARKER = '$';
+    public static final String ACL_ANYONE = "anyone";
+    public static final String ACL_AUTHENTICATED = "authenticated";
+    public static final String ACL_OWNER = "owner";
+
+    private static boolean isAclSpecialName(String name) {
+        return ACL_ANYONE.equals(name) || ACL_AUTHENTICATED.equals(name) || ACL_OWNER.equals(name);
+    }
 
     public static Username of(String username) {
         Preconditions.checkArgument(username != null, "username should not be null or empty");
@@ -81,7 +95,13 @@ public class Username {
         Preconditions.checkArgument(!localPart.isEmpty(), "username local part should not be empty");
         Preconditions.checkArgument(!localPart.contains("@"), "username local part can not contain domain delimiter, got %s", localPart);
 
-        this.localPart = localPart.toLowerCase(Locale.US);
+        String lowerCasedLocalPart = localPart.toLowerCase(Locale.US);
+        Preconditions.checkArgument(lowerCasedLocalPart.charAt(0) != ACL_NEGATIVE_MARKER && lowerCasedLocalPart.charAt(0) != ACL_GROUP_MARKER,
+            "username can not start with '%s' nor '%s', got %s", ACL_NEGATIVE_MARKER, ACL_GROUP_MARKER, localPart);
+        Preconditions.checkArgument(domainPart.isPresent() || !isAclSpecialName(lowerCasedLocalPart),
+            "username can not be '%s', '%s' nor '%s', got %s", ACL_ANYONE, ACL_AUTHENTICATED, ACL_OWNER, localPart);
+
+        this.localPart = lowerCasedLocalPart;
         this.domainPart = domainPart;
     }
 
