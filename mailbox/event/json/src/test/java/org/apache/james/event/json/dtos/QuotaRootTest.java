@@ -21,12 +21,10 @@ package org.apache.james.event.json.dtos;
 
 import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.junit.jupiter.api.Test;
 
@@ -74,10 +72,9 @@ class QuotaRootTest {
     }
 
     @Test
-    void emptyQuotaRootShouldBeWellDeSerialized() {
-        assertThatThrownBy(() -> DTO_JSON_SERIALIZE.quotaRootReads().reads(new JsString("")).get())
-            .isInstanceOf(MailboxException.class)
-            .hasMessage(" used as QuotaRoot should contain at least one \"&\"");
+    void emptyQuotaRootDeserializationShouldFail() {
+        assertThat(DTO_JSON_SERIALIZE.quotaRootReads().reads(new JsString("")).isError())
+            .isTrue();
     }
 
     @Test
