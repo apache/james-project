@@ -178,13 +178,17 @@ public class AddFooter extends GenericMailet {
             IOException {
         
         /* This HTML part may have a closing <BODY> tag.  If so, we
-         * want to insert out footer immediately prior to that tag.
+         * want to insert out footer immediately prior to the last one, that closes the
+         * document: previous ones may belong to a quoted message or to a comment.
          */
         Matcher matcher = BODY_CLOSING_TAG.matcher(content);
-        if (!matcher.find()) {
+        int insertionIndex = -1;
+        while (matcher.find()) {
+            insertionIndex = matcher.start();
+        }
+        if (insertionIndex < 0) {
             return content + getFooterHTML();
         }
-        int insertionIndex = matcher.start(matcher.groupCount() - 1);
         return new StringBuilder()
                 .append(content, 0, insertionIndex)
                 .append(getFooterHTML())

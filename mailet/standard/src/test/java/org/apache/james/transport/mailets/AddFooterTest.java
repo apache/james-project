@@ -452,4 +452,52 @@ class AddFooterTest {
         assertThat((String) reparsed.getContent()).isEqualTo("hello\r\n" + footer);
         assertThat(new ContentType(reparsed.getContentType()).getParameter("charset")).isEqualTo("ISO-8859-1");
     }
+
+    @Test
+    void shouldInsertHtmlFooterBeforeTheLastClosingBodyTag() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+
+        String message = Joiner.on("\r\n").join(
+            "Subject: test",
+            "Content-Type: text/html; charset=utf-8",
+            "MIME-Version: 1.0",
+            "Content-Transfer-Encoding: 8bit",
+            "",
+            "<html><body><p>Reply</p><blockquote><html><body>quoted</body></html></blockquote>",
+            "</body></html>",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        mailet.service(mail);
+
+        assertThat((String) mail.getMessage().getContent())
+            .contains("quoted</body></html></blockquote>")
+            .contains("<br />" + MY_FOOTER + "</body></html>");
+    }
+
+    @Test
+    void shouldNotInsertHtmlFooterInAComment() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+
+        String message = Joiner.on("\r\n").join(
+            "Subject: test",
+            "Content-Type: text/html; charset=utf-8",
+            "MIME-Version: 1.0",
+            "Content-Transfer-Encoding: 8bit",
+            "",
+            "<html><body><p>Hi</p><!-- </BODY> --></body></html>",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        mailet.service(mail);
+
+        assertThat((String) mail.getMessage().getContent())
+            .contains("<!-- </BODY> --><br />" + MY_FOOTER + "</body></html>");
+    }
 }
