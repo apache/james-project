@@ -37,6 +37,8 @@ import org.apache.james.mailbox.model.MessageIdDto;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.fasterxml.jackson.core.io.JsonEOFException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -432,6 +434,17 @@ class AttributeValueTest {
         void fromJsonStringShouldThrowOnMalformedFormattedJson() {
             assertThatIllegalStateException()
                 .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"UrlSerializer\",\"value\": {}}"));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"http:", "http://host/a b", "http://host/{x}"})
+        @SuppressWarnings("deprecation")
+        void urlAcceptedByUrlConstructorShouldBeSerializedAndBack(String spec) throws Exception {
+            AttributeValue<URL> expected = AttributeValue.of(new URL(spec));
+
+            AttributeValue<?> actual = AttributeValue.fromJsonString(expected.toJson().get().toString());
+
+            assertThat(actual.value().toString()).isEqualTo(spec);
         }
     }
 
