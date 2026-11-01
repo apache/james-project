@@ -543,7 +543,19 @@ public abstract class ImapRequestLineReader {
      * @return <code>DayMonthYear</code>, not null
      */
     public DayMonthYear date() throws DecodingException {
+        // RFC 3501: date = date-text / DQUOTE date-text DQUOTE
+        if (nextChar() == '"') {
+            consume();
+            DayMonthYear date = dateText();
+            if (consume() != '"') {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a closing quote after the date");
+            }
+            return date;
+        }
+        return dateText();
+    }
 
+    private DayMonthYear dateText() throws DecodingException {
         final char one = consume();
         final char two = consume();
         final int day;
