@@ -864,7 +864,7 @@ public abstract class ImapRequestLineReader {
         case '\t':
             return currentTotal;
         case ')':
-            if (stopOnParen) {
+            if (stopOnParen && !first) {
                 return currentTotal;
             } else {
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a digit but was " + next);
@@ -881,7 +881,16 @@ public abstract class ImapRequestLineReader {
      * shonky.)
      */
     public long nzNumber() throws DecodingException {
-        long number = number();
+        return nzNumber(false);
+    }
+
+    /**
+     * Reads an argument of type "nznumber" (a non-zero number), see {@link #nzNumber()}
+     *
+     * @param stopOnParen true if it should stop to parse on the first closing paren
+     */
+    public long nzNumber(boolean stopOnParen) throws DecodingException {
+        long number = number(stopOnParen);
         if (number == 0) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Zero value not permitted.");
         }

@@ -182,13 +182,13 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         nextIsQ(request);
         
         try {
-            return SearchKey.buildModSeq(request.number());
+            return SearchKey.buildModSeq(request.number(true));
         } catch (DecodingException e) {
             // Just consume the [<entry-name> <entry-type-req>] and ignore it
             // See RFC4551 3.4. MODSEQ Search Criterion in SEARCH
             request.consumeQuoted();
             request.consumeWord(chr -> true);
-            return SearchKey.buildModSeq(request.number());
+            return SearchKey.buildModSeq(request.number(true));
         }
     }
 
@@ -397,13 +397,14 @@ public class SearchCommandParser extends AbstractUidCommandParser {
     
     private SearchKey old(ImapRequestLineReader request) throws DecodingException {
         nextIsD(request);
-        try {
-            // Check if its OLDER keyword
-            nextIsE(request);
+        // Peek rather than consume: OLD can be directly followed by a closing parenthesis, and a malformed OLDER
+        // should not be silently read as OLD
+        final char next = request.nextChar();
+        if (next == 'E' || next == 'e') {
+            request.consume();
             return older(request);
-        } catch (DecodingException e) {
-            return SearchKey.buildOld();
         }
+        return SearchKey.buildOld();
     }
     
     private SearchKey n(ImapSession session, ImapRequestLineReader request, Context context, Depth depth) throws DecodingException {
@@ -493,7 +494,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         nextIsE(request);
         nextIsR(request);
         nextIsSpace(request);
-        final long value = request.number();
+        final long value = request.number(true);
         result = SearchKey.buildLarger(value);
         return result;
     }
@@ -506,7 +507,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         nextIsE(request);
         nextIsR(request);
         nextIsSpace(request);
-        final long value = request.number();
+        final long value = request.number(true);
         result = SearchKey.buildSmaller(value);
         return result;
     }
@@ -595,7 +596,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         nextIsE(request);
         nextIsR(request);
         nextIsSpace(request);
-        result = SearchKey.buildYounger(request.nzNumber());
+        result = SearchKey.buildYounger(request.nzNumber(true));
         return result;
     }
     
@@ -604,7 +605,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         nextIsR(request);
         
         nextIsSpace(request);
-        result = SearchKey.buildOlder(request.nzNumber());
+        result = SearchKey.buildOlder(request.nzNumber(true));
         return result;
     }
 
