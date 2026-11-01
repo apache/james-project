@@ -657,9 +657,7 @@ public interface MailboxEvents {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof MailboxACLUpdated) {
-                MailboxACLUpdated that = (MailboxACLUpdated) o;
-
+            if (o instanceof MailboxSubscribedEvent that) {
                 return Objects.equals(this.eventId, that.eventId)
                     && Objects.equals(this.sessionId, that.sessionId)
                     && Objects.equals(this.username, that.username)
@@ -688,9 +686,7 @@ public interface MailboxEvents {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof MailboxACLUpdated) {
-                MailboxACLUpdated that = (MailboxACLUpdated) o;
-
+            if (o instanceof MailboxUnsubscribedEvent that) {
                 return Objects.equals(this.eventId, that.eventId)
                     && Objects.equals(this.sessionId, that.sessionId)
                     && Objects.equals(this.username, that.username)
