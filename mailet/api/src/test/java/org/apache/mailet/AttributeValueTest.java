@@ -573,6 +573,22 @@ class AttributeValueTest {
             assertThatThrownBy(() -> AttributeValue.of(invalidList))
                 .isInstanceOf(ClassCastException.class);
         }
+
+        @Test
+        void listWithAnUnserializableElementShouldNotBeSerialized() {
+            AttributeValue<?> value = AttributeValue.of(ImmutableList.of(
+                AttributeValue.ofUnserializable(new Object()), AttributeValue.of(false)));
+
+            assertThat(value.toJson()).isEmpty();
+        }
+
+        @Test
+        void listWithANestedUnserializableElementShouldNotBeSerialized() {
+            AttributeValue<?> value = AttributeValue.of(ImmutableList.of(
+                AttributeValue.of(ImmutableList.of(AttributeValue.ofUnserializable(new Object()))), AttributeValue.of(false)));
+
+            assertThat(value.toJson()).isEmpty();
+        }
     }
 
     @Nested
@@ -636,6 +652,15 @@ class AttributeValueTest {
             assertThatThrownBy(() -> AttributeValue.of(invalid))
                 .isInstanceOf(IllegalArgumentException.class);
         }
+
+        @Test
+        void mapWithAnUnserializableValueShouldNotBeSerialized() {
+            AttributeValue<?> value = AttributeValue.of(ImmutableMap.of(
+                "cal", AttributeValue.ofUnserializable(new Object()),
+                "other", AttributeValue.of(12)));
+
+            assertThat(value.toJson()).isEmpty();
+        }
     }
 
     @Nested
@@ -696,6 +721,13 @@ class AttributeValueTest {
 
             assertThatThrownBy(() -> AttributeValue.of(invalid))
                 .isInstanceOf(ClassCastException.class);
+        }
+
+        @Test
+        void optionalOfAnUnserializableValueShouldNotBeSerialized() {
+            AttributeValue<?> value = AttributeValue.of(Optional.of(AttributeValue.ofUnserializable(new Object())));
+
+            assertThat(value.toJson()).isEmpty();
         }
     }
 

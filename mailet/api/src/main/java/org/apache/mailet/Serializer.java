@@ -27,7 +27,6 @@ import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -535,11 +534,16 @@ public interface Serializer<T> {
     class CollectionSerializer<U> implements Serializer<Collection<AttributeValue<U>>> {
         @Override
         public Optional<JsonNode> serialize(Collection<AttributeValue<U>> object) {
-            List<JsonNode> jsons = object.stream()
-                .map(AttributeValue::toJson)
-                .flatMap(Optional::stream)
-                .collect(ImmutableList.toImmutableList());
-            return Optional.of(new ArrayNode(JsonNodeFactory.instance, jsons));
+            ImmutableList.Builder<JsonNode> jsons = ImmutableList.builder();
+            for (AttributeValue<U> value : object) {
+                Optional<JsonNode> json = value.toJson();
+                if (json.isEmpty()) {
+                    // Do not persist a truncated collection: drop the whole attribute
+                    return Optional.empty();
+                }
+                jsons.add(json.get());
+            }
+            return Optional.of(new ArrayNode(JsonNodeFactory.instance, jsons.build()));
         }
 
         @SuppressWarnings("unchecked")
@@ -580,10 +584,16 @@ public interface Serializer<T> {
     class MapSerializer<U> implements Serializer<Map<String, AttributeValue<U>>> {
         @Override
         public Optional<JsonNode> serialize(Map<String, AttributeValue<U>> object) {
-            Map<String, JsonNode> jsonMap = object.entrySet().stream()
-                .flatMap(entry -> entry.getValue().toJson().map(value -> Pair.of(entry.getKey(), value)).stream())
-                .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
-            return Optional.of(new ObjectNode(JsonNodeFactory.instance, jsonMap));
+            ImmutableMap.Builder<String, JsonNode> jsonMap = ImmutableMap.builder();
+            for (Map.Entry<String, AttributeValue<U>> entry : object.entrySet()) {
+                Optional<JsonNode> json = entry.getValue().toJson();
+                if (json.isEmpty()) {
+                    // Do not persist a truncated map: drop the whole attribute
+                    return Optional.empty();
+                }
+                jsonMap.put(entry.getKey(), json.get());
+            }
+            return Optional.of(new ObjectNode(JsonNodeFactory.instance, jsonMap.build()));
         }
 
         @SuppressWarnings("unchecked")
