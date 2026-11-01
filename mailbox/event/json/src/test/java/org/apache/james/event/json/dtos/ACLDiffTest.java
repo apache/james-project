@@ -21,10 +21,8 @@ package org.apache.james.event.json.dtos;
 
 import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailbox.acl.ACLDiff;
-import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -84,15 +82,27 @@ class ACLDiffTest {
         }
 
         @Test
-        void deSerializeShouldThrowWhenNameInEntryKeyIsEmpty() {
-            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("")))
-                .isInstanceOf(IllegalArgumentException.class);
+        void deSerializeShouldFailWhenNotIncludedNameInEntryKey() {
+            assertThat(DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("$")).isError())
+                .isTrue();
+        }
+
+        @Test
+        void deSerializeShouldFailWhenNameInEntryKeyIsEmpty() {
+            assertThat(DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("")).isError())
+                .isTrue();
         }
 
         @Test
         void deSerializeShouldThrowWhenNameInEntryKeyIsNotWellFormatted() {
             assertThatThrownBy(() -> DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("-")))
                 .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void deSerializeShouldFailWhenNameInEntryKeyIsNotWellFormatted() {
+            assertThat(DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("-")).isError())
+                .isTrue();
         }
 
         @Test
@@ -111,9 +121,9 @@ class ACLDiffTest {
     @Nested
     class RightTest {
         @Test
-        void deSerializeShouldThrowWhenUnsupportedRightInNewACL() {
-            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.aclRightsReads().reads(new JsString("\"unsupported\"")))
-                .isInstanceOf(UnsupportedRightException.class);
+        void deSerializeShouldFailWhenUnsupportedRightInNewACL() {
+            assertThat(DTO_JSON_SERIALIZE.aclRightsReads().reads(new JsString("\"unsupported\"")).isError())
+                .isTrue();
         }
 
         @Test
