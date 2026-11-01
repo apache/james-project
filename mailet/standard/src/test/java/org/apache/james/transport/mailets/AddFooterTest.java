@@ -544,4 +544,44 @@ class AddFooterTest {
         assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException();
         assertThat(MailUtil.toString(mail, "UTF-8")).doesNotContain(MY_FOOTER);
     }
+
+    @Test
+    void shouldNotFailWhenMultipartMixedHasNoBodyPart() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+
+        String message = Joiner.on("\r\n").join(
+            "Subject: test",
+            "Content-Type: multipart/mixed; bou*dary=\"out/mixed; bou]]ter\"",
+            "",
+            "--omultipaon: 1.0",
+            "Con/sce: multipar--",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException();
+        assertThat(MailUtil.toString(mail, "UTF-8")).doesNotContain(MY_FOOTER);
+    }
+
+    @Test
+    void shouldNotFailWhenMultipartRelatedHasNoBodyPart() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+
+        String message = Joiner.on("\r\n").join(
+            "Subject: test",
+            "Content-Type: multipart/related; bou*dary=\"out/mixed; bou]]ter\"",
+            "",
+            "--omultipaon: 1.0",
+            "Con/sce: multipar--",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException();
+        assertThat(MailUtil.toString(mail, "UTF-8")).doesNotContain(MY_FOOTER);
+    }
 }
