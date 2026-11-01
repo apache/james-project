@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -499,5 +500,48 @@ class AddFooterTest {
 
         assertThat((String) mail.getMessage().getContent())
             .contains("<!-- </BODY> --><br />" + MY_FOOTER + "</body></html>");
+    }
+
+    @Test
+    void shouldNotFailWhenTextPartContentTypeIsUnparsable() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+
+        String message = Joiner.on("\r\n").join(
+            "Subject: test",
+            "Content-Type: text/plain; charset=utf-8\f",
+            "",
+            "hello",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException();
+        assertThat(MailUtil.toString(mail, "UTF-8")).doesNotContain(MY_FOOTER);
+    }
+
+    @Test
+    void shouldNotFailWhenNestedTextPartContentTypeIsUnparsable() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+
+        String message = Joiner.on("\r\n").join(
+            "Subject: test",
+            "MIME-Version: 1.0",
+            "Content-Type: multipart/mixed; boundary=\"BOUNDARY\"",
+            "",
+            "--BOUNDARY",
+            "Content-Type: text/plain; charset=utf-8\f",
+            "",
+            "hello",
+            "--BOUNDARY--",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException();
+        assertThat(MailUtil.toString(mail, "UTF-8")).doesNotContain(MY_FOOTER);
     }
 }
