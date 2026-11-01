@@ -406,7 +406,9 @@ public class MailboxACL {
 
             boolean negative = serialized.charAt(0) == DEFAULT_NEGATIVE_MARKER;
             int nameStart = negative ? 1 : 0;
-            Preconditions.checkArgument(serialized.length() > nameStart, "Cannot parse a string with empty name");
+            if (nameStart >= serialized.length()) {
+                throw new IllegalStateException("Cannot parse a string with empty name");
+            }
             boolean isGroup = serialized.charAt(nameStart) == DEFAULT_GROUP_MARKER;
             Optional<NameType> explicitNameType = isGroup ? Optional.of(NameType.group) : Optional.empty();
             String name = isGroup ? serialized.substring(nameStart + 1) : serialized.substring(nameStart);
@@ -415,6 +417,20 @@ public class MailboxACL {
             NameType nameType = explicitNameType.orElseGet(() -> computeImplicitNameType(name));
 
             return new EntryKey(name, nameType, negative);
+        }
+
+        /**
+         * {@link #serialize()} does not escape the name: refuse the user names that would be read back by
+         * {@link #deserialize(String)} as another key (a group, a special name, or a key of another sign).
+         */
+        private static void assertRepresentableUserName(String name, boolean negative) {
+            Preconditions.checkArgument(name.charAt(0) != DEFAULT_GROUP_MARKER,
+                "User name '%s' can not start with '%s' in an ACL entry key", name, DEFAULT_GROUP_MARKER);
+            Preconditions.checkArgument(negative || name.charAt(0) != DEFAULT_NEGATIVE_MARKER,
+                "User name '%s' can not start with '%s' in a positive ACL entry key", name, DEFAULT_NEGATIVE_MARKER);
+            Preconditions.checkArgument(Arrays.stream(SpecialName.values())
+                    .noneMatch(specialName -> specialName.name().equals(name)),
+                "User name '%s' can not be a special name in an ACL entry key", name);
         }
 
         private static NameType computeImplicitNameType(String name) {
@@ -429,6 +445,10 @@ public class MailboxACL {
         public EntryKey(String name, NameType nameType, boolean negative) {
             Preconditions.checkNotNull(name, "Provide a name for this %s", getClass().getName());
             Preconditions.checkNotNull(nameType, "Provide a nameType for this %s", getClass().getName());
+            Preconditions.checkArgument(!name.isEmpty(), "Provide a non empty name for this %s", getClass().getName());
+            if (nameType == NameType.user) {
+                assertRepresentableUserName(name, negative);
+            }
 
             this.name = name;
             this.nameType = nameType;
