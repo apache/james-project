@@ -268,7 +268,8 @@ public interface Serializer<T> {
             } else if (json instanceof DoubleNode) {
                 return Optional.of(json.floatValue());
             } else {
-                return Optional.empty();
+                // Jackson writes NaN and infinities as JSON strings (WRITE_NAN_AS_STRINGS)
+                return parseNonFinite(json).map(Double::floatValue);
             }
         }
 
@@ -295,6 +296,18 @@ public interface Serializer<T> {
 
     Serializer<Float> FLOAT_SERIALIZER = new FloatSerializer();
 
+    private static Optional<Double> parseNonFinite(JsonNode json) {
+        if (!json.isTextual()) {
+            return Optional.empty();
+        }
+        return switch (json.asText()) {
+            case "NaN" -> Optional.of(Double.NaN);
+            case "Infinity" -> Optional.of(Double.POSITIVE_INFINITY);
+            case "-Infinity" -> Optional.of(Double.NEGATIVE_INFINITY);
+            default -> Optional.empty();
+        };
+    }
+
     class DoubleSerializer implements Serializer<Double> {
         @Override
         public Optional<JsonNode> serialize(Double object) {
@@ -306,7 +319,8 @@ public interface Serializer<T> {
             if (json instanceof DoubleNode || json instanceof FloatNode) {
                 return Optional.of(json.asDouble());
             } else {
-                return Optional.empty();
+                // Jackson writes NaN and infinities as JSON strings (WRITE_NAN_AS_STRINGS)
+                return parseNonFinite(json);
             }
         }
 
