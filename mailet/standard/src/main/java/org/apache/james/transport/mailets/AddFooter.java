@@ -225,6 +225,10 @@ public class AddFooter extends GenericMailet {
     }
     
     private boolean attachFooterToFirstPart(MimeMultipart multipart) throws MessagingException, IOException {
+        if (multipart.getCount() == 0) {
+            // A malformed multipart can be parsed without any body part
+            return false;
+        }
         MimeBodyPart firstPart = (MimeBodyPart) multipart.getBodyPart(0);
         return attachFooter(firstPart);
     }
