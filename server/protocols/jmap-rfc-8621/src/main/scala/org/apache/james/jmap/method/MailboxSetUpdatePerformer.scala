@@ -31,7 +31,7 @@ import org.apache.james.jmap.method.MailboxSetUpdatePerformer.{MailboxUpdateFail
 import org.apache.james.mailbox.MailboxManager.{MailboxSearchFetchType, RenameOption}
 import org.apache.james.mailbox.exception.{DifferentDomainException, InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.search.{MailboxQuery, PrefixedWildcard}
-import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
+import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
 import org.apache.james.mailbox.{DefaultMailboxes, MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
 import org.apache.james.util.{AuditTrail, ReactorUtils}
 import org.slf4j.LoggerFactory
@@ -136,12 +136,67 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
     patch.validate(mailboxIdFactory, serializer, capabilities, mailboxSession)
       .fold(e => SMono.error(e), validatedPatch => {
         val supportSharedMailbox: Boolean = capabilities.contains(JAMES_SHARES)
+        // An update is a unit: validate the new path before writing anything, write the rights at once, and restore
+        // them if the rename still fails
         getMessageManager(supportSharedMailbox, mailboxId, mailboxSession)
-          .flatMap(messageManager => updateMailboxRights(mailboxId, validatedPatch, mailboxSession)
-            .`then`(updateSubscription(mailboxId, validatedPatch, mailboxSession, messageManager))
-            .`then`(updateMailboxPath(mailboxId, unparsedMailboxId, validatedPatch, mailboxSession, messageManager, supportSharedMailbox)))
+          .flatMap(messageManager => computeNewMailboxPath(mailboxId, validatedPatch, mailboxSession, messageManager, supportSharedMailbox)
+            .flatMap {
+              case Left(e) => SMono.just[MailboxUpdateResult](MailboxUpdateFailure(unparsedMailboxId, e, Some(validatedPatch)))
+              case scala.Right(newPath) => updateMailboxRights(mailboxId, validatedPatch, mailboxSession)
+                .flatMap(previousAcl => updateSubscription(mailboxId, validatedPatch, mailboxSession, messageManager)
+                  .`then`(updateMailboxPath(mailboxId, unparsedMailboxId, validatedPatch, newPath, mailboxSession, messageManager))
+                  .flatMap(result => restoreRightsOnFailure(mailboxId, previousAcl, result, mailboxSession)))
+            })
       })
   }
+
+  private def computeNewMailboxPath(mailboxId: MailboxId,
+                                    validatedPatch: ValidatedMailboxPatchObject,
+                                    mailboxSession: MailboxSession,
+                                    mailbox: MessageManager,
+                                    supportSharedMailbox: Boolean): SMono[Either[Exception, Option[MailboxPath]]] =
+    if (validatedPatch.shouldUpdateMailboxPath) {
+      SMono.fromCallable[Either[Exception, Option[MailboxPath]]](() => {
+        try {
+          if (isASystemMailbox(mailbox) && !DefaultMailboxes.INBOX.equalsIgnoreCase(mailbox.getMailboxPath.getName)) {
+            throw SystemMailboxChangeException(mailboxId)
+          }
+          if (validatedPatch.parentIdUpdate.flatMap(_.newId).contains(mailboxId)) {
+            throw LoopInMailboxGraphException(mailboxId)
+          }
+          val oldPath = mailbox.getMailboxPath
+          val newPath = applyParentIdUpdate(mailboxId, validatedPatch.parentIdUpdate, mailboxSession, supportSharedMailbox)
+            .andThen(applyNameUpdate(validatedPatch.nameUpdate, mailboxSession))
+            .apply(oldPath)
+          if (oldPath.equals(newPath)) {
+            scala.Right(None)
+          } else {
+            val delimiter = mailboxSession.getPathDelimiter
+            val sanitizedPath = newPath.sanitize(delimiter)
+            sanitizedPath.assertAcceptable(delimiter)
+            if (SMono(mailboxManager.mailboxExists(sanitizedPath, mailboxSession)).block()) {
+              throw new MailboxExistsException(sanitizedPath.asString())
+            }
+            scala.Right(Some(newPath))
+          }
+        } catch {
+          case e: Exception => Left(e)
+        }
+      }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+    } else {
+      SMono.just(scala.Right(None))
+    }
+
+  private def restoreRightsOnFailure(mailboxId: MailboxId, previousAcl: Option[MailboxACL], result: MailboxUpdateResult,
+                                     mailboxSession: MailboxSession): SMono[MailboxUpdateResult] =
+    (result, previousAcl) match {
+      case (_: MailboxUpdateFailure, Some(acl)) =>
+        SMono.fromCallable(() => mailboxManager.setRights(mailboxId, acl, mailboxSession))
+          .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+          .onErrorResume(e => SMono.fromCallable(() => MailboxSetUpdatePerformer.LOGGER.error("Failed to restore the rights of {} after a failed update", mailboxId.serialize(), e)))
+          .`then`(SMono.just(result))
+      case _ => SMono.just(result)
+    }
 
   private def updateSubscription(mailboxId: MailboxId, validatedPatch: ValidatedMailboxPatchObject, mailboxSession: MailboxSession, messageManager: MessageManager): SMono[MailboxUpdateResult] = {
     validatedPatch.isSubscribedUpdate.map(isSubscribedUpdate => {
@@ -163,28 +218,16 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
   private def updateMailboxPath(mailboxId: MailboxId,
                                 unparsedMailboxId: UnparsedMailboxId,
                                 validatedPatch: ValidatedMailboxPatchObject,
+                                newPath: Option[MailboxPath],
                                 mailboxSession: MailboxSession,
-                                mailbox: MessageManager,
-                                supportSharedMailbox: Boolean): SMono[MailboxUpdateResult] = {
+                                mailbox: MessageManager): SMono[MailboxUpdateResult] = {
     if (validatedPatch.shouldUpdateMailboxPath) {
       SMono.fromCallable[MailboxUpdateResult](() => {
           try {
-            if (isASystemMailbox(mailbox) && !DefaultMailboxes.INBOX.equalsIgnoreCase(mailbox.getMailboxPath.getName)) {
-              throw SystemMailboxChangeException(mailboxId)
-            }
-            if (validatedPatch.parentIdUpdate.flatMap(_.newId).contains(mailboxId)) {
-              throw LoopInMailboxGraphException(mailboxId)
-            }
-            val oldPath = mailbox.getMailboxPath
-            val newPath = applyParentIdUpdate(mailboxId, validatedPatch.parentIdUpdate, mailboxSession, supportSharedMailbox)
-              .andThen(applyNameUpdate(validatedPatch.nameUpdate, mailboxSession))
-              .apply(oldPath)
-            if (!oldPath.equals(newPath)) {
-              mailboxManager.renameMailbox(mailboxId,
-                newPath,
-                RenameOption.RENAME_SUBSCRIPTIONS,
-                mailboxSession)
-            }
+            newPath.foreach(path => mailboxManager.renameMailbox(mailboxId,
+              path,
+              RenameOption.RENAME_SUBSCRIPTIONS,
+              mailboxSession))
             MailboxUpdateSuccess(mailboxId)
           } catch {
             case e: Exception => MailboxUpdateFailure(unparsedMailboxId, e, Some(validatedPatch))
@@ -246,19 +289,30 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
       .filterWhen(MailboxSetMethod.assertCapabilityIfSharedMailbox(mailboxSession, mailboxId, supportSharedMailbox))
 
+  /**
+   * Computes the resulting ACL and stores it at once, so that it is validated as a whole (eg the domains of every
+   * sharee) before anything is written.
+   *
+   * @return the ACL before the update, when it changed
+   */
   private def updateMailboxRights(mailboxId: MailboxId,
                                   validatedPatch: ValidatedMailboxPatchObject,
-                                  mailboxSession: MailboxSession): SMono[MailboxUpdateResult] = {
+                                  mailboxSession: MailboxSession): SMono[Option[MailboxACL]] = {
+    if (validatedPatch.rightsReset.isEmpty && validatedPatch.rightsPartialUpdates.isEmpty) {
+      return SMono.just(None)
+    }
 
-    val resetOperation: SMono[Unit] = validatedPatch.rightsReset.map(sharedWithResetUpdate => {
-      SMono.fromCallable(() => {
-        mailboxManager.setRights(mailboxId, sharedWithResetUpdate.rights.toMailboxAcl.asJava, mailboxSession)
-      }).`then`()
-    }).getOrElse(SMono.empty)
-
-    val partialUpdatesOperation: SMono[Unit] = SFlux.fromIterable(validatedPatch.rightsPartialUpdates)
-      .flatMap(partialUpdate => SMono.fromCallable(() => mailboxManager.applyRightsCommand(mailboxId, partialUpdate.asACLCommand(), mailboxSession))
-        .`then`(SMono(ReactorUtils.logAsMono(() => AuditTrail.entry
+    SMono.fromCallable(() => {
+      val previousAcl: MailboxACL = mailboxManager.listRights(mailboxId, mailboxSession)
+      val resetAcl: MailboxACL = validatedPatch.rightsReset
+        .map(sharedWithResetUpdate => sharedWithResetUpdate.rights.toMailboxAcl.asJava)
+        .getOrElse(previousAcl)
+      val newAcl: MailboxACL = validatedPatch.rightsPartialUpdates
+        .foldLeft(resetAcl)((acl, partialUpdate) => acl.apply(partialUpdate.asACLCommand()))
+      mailboxManager.setRights(mailboxId, newAcl, mailboxSession)
+      previousAcl
+    }).flatMap(previousAcl => SFlux.fromIterable(validatedPatch.rightsPartialUpdates)
+        .concatMap(partialUpdate => SMono(ReactorUtils.logAsMono(() => AuditTrail.entry
           .username(() => mailboxSession.getUser.asString())
           .protocol("JMAP")
           .action("Mailbox/set update")
@@ -267,15 +321,10 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
             "delegatee", partialUpdate.entryKey.getName,
             "mailboxId", mailboxId.serialize(),
             "rights", partialUpdate.rights.asJava.serialize()))
-          .log("JMAP mailbox shared.")))),
-        maxConcurrency = 5)
-      .`then`()
-
-    SFlux.merge(Seq(resetOperation, partialUpdatesOperation))
-      .`then`()
-      .`then`(SMono.just[MailboxUpdateResult](MailboxUpdateSuccess(mailboxId)))
+          .log("JMAP mailbox shared."))))
+        .`then`()
+        .`then`(SMono.just(Option(previousAcl))))
       .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-
   }
 
   private def createInboxIfNeeded(existingPath: MailboxPath, session: MailboxSession): SMono[Unit] = {
