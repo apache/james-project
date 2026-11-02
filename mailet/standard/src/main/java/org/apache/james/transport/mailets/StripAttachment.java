@@ -287,6 +287,9 @@ public class StripAttachment extends GenericMailet {
                 if (isMultipart(bodyPart)) {
                     if (processMultipartPartMessage(bodyPart, mail)) {
                         subpartHasBeenChanged = true;
+                        if (isEmptyMultipart(bodyPart)) {
+                            multipart.removeBodyPart(bodyPart);
+                        }
                     }
                 } else {
                     if (shouldBeRemoved(bodyPart, mail)) {
@@ -296,13 +299,23 @@ public class StripAttachment extends GenericMailet {
                 }
             }
             if (atLeastOneRemoved || subpartHasBeenChanged) {
-                updateBodyPart(part, multipart);
+                if (multipart.getCount() == 0 && part instanceof Message) {
+                    // RFC 2046 forbids empty multiparts: the parent removes empty nested ones, the message body becomes empty text
+                    part.setText("");
+                    ((Message) part).saveChanges();
+                } else {
+                    updateBodyPart(part, multipart);
+                }
             }
             return atLeastOneRemoved || subpartHasBeenChanged;
         } catch (Exception e) {
             LOGGER.error("Failing while analysing part for attachments (StripAttachment mailet).", e);
             return false;
         }
+    }
+
+    private boolean isEmptyMultipart(Part part) throws MessagingException, IOException {
+        return ((Multipart) part.getContent()).getCount() == 0;
     }
 
     private void updateBodyPart(Part part, Multipart newPartContent) throws MessagingException {
