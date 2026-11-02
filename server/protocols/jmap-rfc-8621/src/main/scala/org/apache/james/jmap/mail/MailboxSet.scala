@@ -33,7 +33,7 @@ import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
 import org.apache.james.jmap.method.{MailboxCreationParseException, SetRequest, WithAccountId}
-import org.apache.james.mailbox.model.MailboxACL.{ANYONE_KEY, ANYONE_NEGATIVE_KEY, EntryKey}
+import org.apache.james.mailbox.model.MailboxACL.{ANYONE_KEY, ANYONE_NEGATIVE_KEY, AUTHENTICATED_KEY, EntryKey}
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
 import org.apache.james.mailbox.{MailboxSession, Role}
 import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue}
@@ -276,11 +276,23 @@ object IsSubscribedUpdate {
 }
 
 object SharedWithAnyoneValidator {
+  // Keys granting rights to users not named in the ACL: only the Post right can be granted to them.
+  // The negative authenticated key only removes rights, and stays allowed.
+  private val POST_ONLY_KEYS: Set[EntryKey] = Set(ANYONE_KEY, ANYONE_NEGATIVE_KEY, AUTHENTICATED_KEY)
+
   def isValidPatch(entryKey: EntryKey, rights: Seq[Right]): Boolean = {
-    !((entryKey == ANYONE_KEY || entryKey == ANYONE_NEGATIVE_KEY) && rights.exists(_ != Right.Post))}
+    !(POST_ONLY_KEYS.contains(entryKey) && rights.exists(_ != Right.Post))}
 
   def areValidPatches(rightsMap: Map[EntryKey, Seq[Right]]): Boolean =
     rightsMap.forall { case (entryKey, rightsSeq) => isValidPatch(entryKey, rightsSeq)}
+
+  def invalidPatchMessage(entryKey: EntryKey): String =
+    s"only the `Post` right can be granted to the identifier `${entryKey.getName}`"
+
+  def invalidPatchMessage(rightsMap: Map[EntryKey, Seq[Right]]): String =
+    rightsMap.find { case (entryKey, rightsSeq) => !isValidPatch(entryKey, rightsSeq) }
+      .map { case (entryKey, _) => invalidPatchMessage(entryKey) }
+      .getOrElse(invalidPatchMessage(ANYONE_KEY))
 }
 
 object SharedWithResetUpdate {
@@ -289,7 +301,7 @@ object SharedWithResetUpdate {
     if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
       serializer.deserializeRights(input = newValue) match {
         case JsSuccess(value, _) if !SharedWithAnyoneValidator.areValidPatches(value.rights) =>
-          Left(InvalidPatchException("only the `Post` right can be granted to the identifier `anyone`"))
+          Left(InvalidPatchException(SharedWithAnyoneValidator.invalidPatchMessage(value.rights)))
         case JsSuccess(value, _) => scala.Right(SharedWithResetUpdate(value))
         case JsError(errors) => Left(InvalidUpdateException("sharedWith", s"Specified value do not match the expected JSON format: $errors"))
       }
@@ -313,7 +325,7 @@ object SharedWithPartialUpdate {
     if (SharedWithAnyoneValidator.isValidPatch(entryKey, rights.toRights)) {
       scala.Right(SharedWithPartialUpdate(entryKey, rights))
     } else {
-      scala.Left(InvalidPatchException("only the `Post` right can be granted to the identifier `anyone`"))
+      scala.Left(InvalidPatchException(SharedWithAnyoneValidator.invalidPatchMessage(entryKey)))
     }
 
   def parseEntryKey(property: String): Either[PatchUpdateValidationException, EntryKey] = try {
