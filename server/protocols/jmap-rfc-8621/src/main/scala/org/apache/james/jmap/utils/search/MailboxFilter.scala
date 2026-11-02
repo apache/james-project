@@ -124,7 +124,11 @@ object MailboxFilter {
             .map(QueryFilter.toCriterion)
             .toList
             .sequence
-            .map(_.flatten)
+            .map(_.map {
+              case Nil => SearchQuery.all()
+              case criterion :: Nil => criterion
+              case criteria => SearchQuery.and(criteria.asJava)
+            })
             .map(criteria => List(converter.apply(criteria)))
         case _ => Right(Nil)
       }

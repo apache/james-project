@@ -79,6 +79,19 @@ object EmailQueryMethodContract {
       Arguments.of(Boolean.box(withMailbox), s""""after": "$boundary", "before": "$boundary"""", Seq.empty[Int])))
   }
 
+  def filterConditionSemantics: Stream[Arguments] = Stream.of(
+    Arguments.of("{}", Seq(0, 1, 2, 3)),
+    Arguments.of("""{"operator": "OR", "conditions": [{}]}""", Seq(0, 1, 2, 3)),
+    Arguments.of("""{"operator": "OR", "conditions": [{}, {"hasKeyword": "custom"}]}""", Seq(0, 1, 2, 3)),
+    Arguments.of("""{"operator": "OR", "conditions": [{"hasKeyword": "custom"}, {}]}""", Seq(0, 1, 2, 3)),
+    Arguments.of("""{"operator": "AND", "conditions": [{}, {"hasKeyword": "custom"}]}""", Seq(0, 1)),
+    Arguments.of("""{"operator": "AND", "conditions": [{"hasKeyword": "custom"}, {}]}""", Seq(0, 1)),
+    Arguments.of("""{"operator": "NOT", "conditions": [{}]}""", Seq.empty[Int]),
+    Arguments.of("""{"operator": "NOT", "conditions": [{}, {"hasKeyword": "custom"}]}""", Seq.empty[Int]),
+    Arguments.of("""{"operator": "AND", "conditions": [{"hasKeyword": "custom"}, {"operator": "OR", "conditions": [{}]}]}""", Seq(0, 1)),
+    Arguments.of("""{"operator": "OR", "conditions": [{"hasKeyword": "custom", "notKeyword": "another_custom"}]}""", Seq(1)),
+    Arguments.of("""{"operator": "NOT", "conditions": [{"hasKeyword": "custom", "notKeyword": "another_custom"}]}""", Seq(0, 2, 3)))
+
   def jmapSystemKeywords : Stream[Arguments] = {
     Stream.of(
       Arguments.of(new Flags(Flags.Flag.SEEN), "$Seen"),
@@ -6810,6 +6823,116 @@ trait EmailQueryMethodContract {
         .isEqualTo(
           s"""["${messageId.serialize()}"]""".stripMargin)
     }
+  }
+
+  @ParameterizedTest
+  @MethodSource(Array("filterConditionSemantics"))
+  def emailQueryShouldPreserveFilterConditionSemantics(filter: String, matchingIndices: Seq[Int], server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val bobInbox = MailboxPath.inbox(bobUsername)
+    mailboxProbe.createMailbox(bobInbox)
+    val messageIds = Seq(
+      new FlagsBuilder().add("custom", "another_custom").build(),
+      new Flags("custom"),
+      new Flags("another_custom"),
+      new Flags())
+      .map(flags => mailboxProbe.appendMessage(bobUsername.asString, bobInbox,
+        AppendCommand.builder().withFlags(flags).build(buildTestMessage)).getMessageId)
+
+    mailboxProbe.createMailbox(MailboxPath.inbox(andreUsername))
+    mailboxProbe.appendMessage(andreUsername.asString, MailboxPath.inbox(andreUsername), AppendCommand.from(buildTestMessage))
+
+    assertEmailQueryMatches("{}", messageIds)
+    assertEmailQueryMatches(filter, matchingIndices.map(messageIds))
+  }
+
+  private def assertEmailQueryMatches(filter: String, expectedIds: Seq[MessageId]): Unit = {
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [["Email/query", {
+         |    "accountId": "$bobAccountId",
+         |    "filter": $filter
+         |  }, "c1"]]
+         |}""".stripMargin
+    val expected = expectedIds.map(id => s"\"${id.serialize}\"").mkString("[", ", ", "]")
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).inPath("$.methodResponses[0][0]").isEqualTo("\"Email/query\"")
+      assertThatJson(response)
+        .withOptions(IGNORING_ARRAY_ORDER)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(expected)
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array("inMailbox", "inMailboxOtherThan"))
+  def emptyConditionShouldPreserveMailboxScope(mailboxFilter: String, server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val bobInbox = MailboxPath.inbox(bobUsername)
+    val otherMailbox = MailboxPath.forUser(bobUsername, "other")
+    val inboxId = mailboxProbe.createMailbox(bobInbox)
+    val otherId = mailboxProbe.createMailbox(otherMailbox)
+    val messageId = mailboxProbe.appendMessage(bobUsername.asString, bobInbox, AppendCommand.from(buildTestMessage)).getMessageId
+    val otherMessageId = mailboxProbe.appendMessage(bobUsername.asString, otherMailbox, AppendCommand.from(buildTestMessage)).getMessageId
+    mailboxProbe.createMailbox(MailboxPath.inbox(andreUsername))
+    mailboxProbe.appendMessage(andreUsername.asString, MailboxPath.inbox(andreUsername), AppendCommand.from(buildTestMessage))
+    val mailboxCondition = mailboxFilter match {
+      case "inMailbox" => s"""{"inMailbox": "${inboxId.serialize}"}"""
+      case "inMailboxOtherThan" => s"""{"inMailboxOtherThan": ["${otherId.serialize}"]}"""
+    }
+    val filter =
+      s"""{
+         |  "operator": "AND",
+         |  "conditions": [$mailboxCondition, {"operator": "OR", "conditions": [{}]}]
+         |}""".stripMargin
+
+    assertEmailQueryMatches("{}", Seq(messageId, otherMessageId))
+    assertEmailQueryMatches(filter, Seq(messageId))
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array("allInThreadHaveKeyword", "someInThreadHaveKeyword", "noneInThreadHaveKeyword"))
+  def emptyConditionShouldNotHideUnsupportedFilter(unsupportedFilter: String): Unit = {
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [["Email/query", {
+         |    "accountId": "$bobAccountId",
+         |    "filter": {
+         |      "operator": "OR",
+         |      "conditions": [{}, {"$unsupportedFilter": "custom"}]
+         |    }
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).inPath("$.methodResponses[0][0]").isEqualTo("\"error\"")
+    assertThatJson(response).inPath("$.methodResponses[0][1].type").isEqualTo("\"unsupportedFilter\"")
   }
 
   @Test
