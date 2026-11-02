@@ -91,7 +91,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
         listMailboxContentBeforeReceivedAt = session.prepare(selectFrom(TABLE_NAME_RECEIVED_AT)
             .columns(MESSAGE_ID, RECEIVED_AT, THREAD_ID)
             .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
-            .whereColumn(RECEIVED_AT).isLessThanOrEqualTo(bindMarker(RECEIVED_AT))
+            .whereColumn(RECEIVED_AT).isLessThan(bindMarker(RECEIVED_AT))
             .orderBy(RECEIVED_AT, DESC)
             .limit(bindMarker(LIMIT_MARKER))
             .build());

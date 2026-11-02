@@ -121,7 +121,9 @@ public interface EmailQueryView {
      *     },
      *     "c1"]
      *
-     * @return messageIds of the messages in this mailbox, since being "after". Sorted by receivedAt.
+     * Date filtering is applied before collapsing threads and limiting results.
+     *
+     * @return messageIds in this mailbox with receivedAt greater than or equal to since, sorted by receivedAt descending.
      */
     Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads);
 
@@ -144,9 +146,11 @@ public interface EmailQueryView {
      *     },
      *     "c1"]
      *
-     * @return messageIds of the messages in this mailbox, since being "after". Sorted by receivedAt.
+     * Date filtering is applied before collapsing threads and limiting results.
+     *
+     * @return messageIds in this mailbox with receivedAt strictly less than before, sorted by receivedAt descending.
      */
-    Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads);
+    Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime before, Limit limit, boolean collapseThreads);
 
     Mono<Void> delete(MailboxId mailboxId, ZonedDateTime receivedAt, MessageId messageId);
 

@@ -29,6 +29,8 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.util.streams.Limit;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public interface EmailQueryViewContract {
     boolean COLLAPSE_THREAD = true;
@@ -83,7 +85,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_6, messageId3(), threadId1()).block();
 
         assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
-            .containsExactly(messageId1(), messageId2());
+            .containsExactly(messageId2());
     }
 
     @Test
@@ -155,7 +157,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_6, messageId3(), threadId1()).block();
 
         assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), COLLAPSE_THREAD).collectList().block())
-            .containsExactly(messageId1());
+            .containsExactly(messageId2());
     }
 
     @Test
@@ -166,6 +168,41 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_5, messageId4(), threadId1()).block();
 
         assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_5, Limit.limit(2), COLLAPSE_THREAD).collectList().block())
-            .containsExactly(messageId4(), messageId1());
+            .containsExactly(messageId2(), messageId1());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    default void beforeShouldExcludeAllMessagesAtBoundaryBeforeApplyingLimit(boolean collapseThreads) {
+        testee().save(mailboxId1(), DATE_4.minusSeconds(1), messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_4.minusSeconds(2), messageId2(), threadId2()).block();
+        testee().save(mailboxId1(), DATE_4, messageId3(), threadId3()).block();
+        testee().save(mailboxId1(), DATE_4, messageId4(), threadId3()).block();
+
+        assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(2), collapseThreads).collectList().block())
+            .containsExactly(messageId1(), messageId2());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    default void afterShouldIncludeBoundaryBeforeApplyingLimit(boolean collapseThreads) {
+        testee().save(mailboxId1(), DATE_4.minusSeconds(1), messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_4, messageId2(), threadId2()).block();
+        testee().save(mailboxId1(), DATE_4.plusSeconds(1), messageId3(), threadId3()).block();
+
+        assertThat(testee().listMailboxContentSinceAfterSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(2), collapseThreads).collectList().block())
+            .containsExactly(messageId3(), messageId2());
+    }
+
+    @Test
+    default void dateFiltersShouldRespectSubsecondReceivedAt() {
+        testee().save(mailboxId1(), DATE_4.minusNanos(500_000_000), messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_4, messageId2(), threadId2()).block();
+        testee().save(mailboxId1(), DATE_4.plusNanos(500_000_000), messageId3(), threadId3()).block();
+
+        assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId1());
+        assertThat(testee().listMailboxContentSinceAfterSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId3(), messageId2());
     }
 }
