@@ -83,7 +83,7 @@ public class PostgresEmailQueryViewDAO {
             .resolve(backendFetchLimit -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, RECEIVED_AT, THREAD_ID)
                     .from(TABLE_NAME)
                     .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                    .and(RECEIVED_AT.lessOrEqual(since.toOffsetDateTime()))
+                    .and(RECEIVED_AT.lessThan(since.toOffsetDateTime()))
                     .orderBy(RECEIVED_AT.desc())
                     .limit(backendFetchLimit.getLimit().get())))
                 .map(asEmailEntry(RECEIVED_AT)));

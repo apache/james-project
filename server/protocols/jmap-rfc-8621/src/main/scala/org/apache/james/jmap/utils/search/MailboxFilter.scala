@@ -27,7 +27,7 @@ import org.apache.james.jmap.mail.{And, EmailQueryRequest, FilterCondition, Filt
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery.{AccessibleNamespace, Namespace, PersonalNamespace}
 import org.apache.james.mailbox.model.SearchQuery.DateResolution.Second
-import org.apache.james.mailbox.model.SearchQuery.{AddressType, Criterion, DateComparator, DateOperator, DateResolution, InternalDateCriterion}
+import org.apache.james.mailbox.model.SearchQuery.{AddressType, Criterion}
 import org.apache.james.mailbox.model.{MailboxId, MultimailboxesSearchQuery, SearchQuery}
 
 import scala.jdk.CollectionConverters._
@@ -165,9 +165,7 @@ object MailboxFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.before match {
         case Some(before) =>
-          val strictlyBefore = SearchQuery.internalDateBefore(Date.from(before.asUTC.toInstant), Second)
-          val sameDate = SearchQuery.internalDateOn(Date.from(before.asUTC.toInstant), Second)
-          Right(List(SearchQuery.or(strictlyBefore, sameDate)))
+          Right(List(SearchQuery.internalDateBefore(Date.from(before.asUTC.toInstant), Second)))
         case None => Right(Nil)
       }
   }
@@ -176,8 +174,9 @@ object MailboxFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.after match {
         case Some(after) =>
-          val strictlyAfter = new InternalDateCriterion(new DateOperator(DateComparator.AFTER, Date.from(after.asUTC.toInstant), DateResolution.Second))
-          Right(List(strictlyAfter))
+          val strictlyAfter = SearchQuery.internalDateAfter(Date.from(after.asUTC.toInstant), Second)
+          val sameDate = SearchQuery.internalDateOn(Date.from(after.asUTC.toInstant), Second)
+          Right(List(SearchQuery.or(strictlyAfter, sameDate)))
         case None => Right(Nil)
       }
   }

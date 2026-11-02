@@ -73,7 +73,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     @Override
     public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime before, Limit limit, boolean collapseThreads) {
         Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values())
-            .filter(e -> e.getReceivedAt().isBefore(before) || e.getReceivedAt().isEqual(before));
+            .filter(e -> e.getReceivedAt().isBefore(before));
 
         return maybeCollapseThreads(Entry::getReceivedAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getReceivedAt).reversed())

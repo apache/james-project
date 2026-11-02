@@ -25,7 +25,10 @@ import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -187,6 +190,35 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     @Override
     protected MessageId initOtherBasedMessageId() {
         return InMemoryMessageId.of(1000);
+    }
+
+    @Test
+    void internalDateCriteriaShouldSupportJmapReceivedAtBoundaries() throws Exception {
+        MailboxId mailboxId = storeMailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "boundaries"), session).get();
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxId, session);
+        Instant boundary = Instant.parse("2023-10-15T10:00:00Z");
+        List<MessageUid> messageUids = new ArrayList<>();
+        for (long offset : new long[]{-1000, -500, 0, 500, 1000}) {
+            messageUids.add(messageManager.appendMessage(MessageManager.AppendCommand.builder()
+                .withInternalDate(Date.from(boundary.plusMillis(offset)))
+                .build(Message.Builder.of().setBody("boundary", StandardCharsets.UTF_8)), session).getId().getUid());
+        }
+        awaitUntilAsserted(mailboxId, 5);
+
+        SearchQuery.Criterion before = SearchQuery.internalDateBefore(Date.from(boundary), SearchQuery.DateResolution.Second);
+        SearchQuery.Criterion after = SearchQuery.or(
+            SearchQuery.internalDateAfter(Date.from(boundary), SearchQuery.DateResolution.Second),
+            SearchQuery.internalDateOn(Date.from(boundary), SearchQuery.DateResolution.Second));
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(before), session)).collectList().block())
+            .containsOnly(messageUids.get(0), messageUids.get(1));
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(after), session)).collectList().block())
+            .containsOnly(messageUids.get(2), messageUids.get(3), messageUids.get(4));
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.and(after,
+            SearchQuery.internalDateBefore(Date.from(boundary.plusSeconds(1)), SearchQuery.DateResolution.Second))), session)).collectList().block())
+            .containsOnly(messageUids.get(2), messageUids.get(3));
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.and(after, before)), session)).collectList().block())
+            .isEmpty();
     }
 
     @Test

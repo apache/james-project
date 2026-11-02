@@ -69,6 +69,16 @@ object EmailQueryMethodContract {
                          andreUsername: Username)
   val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
 
+  def receivedAtBoundaries: Stream[Arguments] = {
+    val boundary = "2023-10-15T10:00:00Z"
+    val upper = "2023-10-15T10:00:01Z"
+    Stream.of(false, true).flatMap(withMailbox => Stream.of(
+      Arguments.of(Boolean.box(withMailbox), s""""before": "$boundary"""", Seq(1, 0)),
+      Arguments.of(Boolean.box(withMailbox), s""""after": "$boundary"""", Seq(4, 3, 2)),
+      Arguments.of(Boolean.box(withMailbox), s""""after": "$boundary", "before": "$upper"""", Seq(3, 2)),
+      Arguments.of(Boolean.box(withMailbox), s""""after": "$boundary", "before": "$boundary"""", Seq.empty[Int])))
+  }
+
   def jmapSystemKeywords : Stream[Arguments] = {
     Stream.of(
       Arguments.of(new Flags(Flags.Flag.SEEN), "$Seen"),
@@ -4287,11 +4297,11 @@ trait EmailQueryMethodContract {
   }
 
   @Test
-  def shouldListMailsReceivedBeforeADateInclusively(server: GuiceJamesServer): Unit = {
+  def shouldListMailsReceivedBeforeADateExclusively(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
-    val requestDate = ZonedDateTime.now().minusDays(1)
-    val messageId1 = sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
+    val requestDate = ZonedDateTime.parse("2023-10-15T10:00:00Z")
+    sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
 
     val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -4330,7 +4340,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response)
         .inPath("$.methodResponses[0][1].ids")
-        .isEqualTo(s"""["${messageId1.serialize}"]""")
+        .isEqualTo("[]")
     }
   }
 
@@ -4437,11 +4447,11 @@ trait EmailQueryMethodContract {
   }
 
   @Test
-  def listMailsReceivedAfterADateShouldBeExclusive(server: GuiceJamesServer): Unit = {
+  def listMailsReceivedAfterADateShouldBeInclusive(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
-    val receivedDateMessage1 = ZonedDateTime.now().minusDays(1)
-    sendMessageToBobInbox(server, message, Date.from(receivedDateMessage1.toInstant))
+    val receivedDateMessage1 = ZonedDateTime.parse("2023-10-15T10:00:00Z")
+    val messageId1 = sendMessageToBobInbox(server, message, Date.from(receivedDateMessage1.toInstant))
 
     val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -4479,8 +4489,88 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
+        .when(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
-        .isEqualTo(s"""["${messageId2.serialize}"]""")
+        .isEqualTo(s"""["${messageId1.serialize}", "${messageId2.serialize}"]""")
+    }
+  }
+
+  @ParameterizedTest
+  @MethodSource(Array("receivedAtBoundaries"))
+  def shouldRespectReceivedAtBoundaries(withMailbox: Boolean, dateFilter: String, expectedIndices: Seq[Int], server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
+    val boundary = Instant.parse("2023-10-15T10:00:00Z")
+    val messageIds = Seq(-1000L, -500L, 0L, 500L, 1000L)
+      .map(offset => sendMessageToBobInbox(server, buildTestMessage, Date.from(boundary.plusMillis(offset))))
+    val mailboxFilter = if (withMailbox) s""""inMailbox": "${mailboxId.serialize()}",""" else ""
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [["Email/query", {
+         |    "accountId": "$bobAccountId",
+         |    "filter": {$mailboxFilter $dateFilter},
+         |    "sort": [{"property": "receivedAt", "isAscending": false}]
+         |  }, "c1"]]
+         |}""".stripMargin
+    val expectedIds = expectedIndices.map(index => s""""${messageIds(index).serialize}"""").mkString("[", ",", "]")
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract.body.asString
+
+      assertThatJson(response).inPath("$.methodResponses[0][0]").isEqualTo("Email/query")
+      // The search index stores receivedAt at second precision, so subsecond messages may tie in the sort.
+      assertThatJson(response).when(IGNORING_ARRAY_ORDER).inPath("$.methodResponses[0][1].ids").isEqualTo(expectedIds)
+    }
+  }
+
+  @Test
+  def inMailboxDateFiltersShouldApplyBeforeLimit(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
+    val boundary = Instant.parse("2023-10-15T10:00:00Z")
+    val messageIds = Seq(-2L, -1L, 0L, 0L, 1L)
+      .map(offset => sendMessageToBobInbox(server, buildTestMessage, Date.from(boundary.plusSeconds(offset))))
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/query", {
+         |      "accountId": "$bobAccountId",
+         |      "filter": {"inMailbox": "${mailboxId.serialize()}", "before": "$boundary"},
+         |      "sort": [{"property": "receivedAt", "isAscending": false}],
+         |      "limit": 2
+         |    }, "before"],
+         |    ["Email/query", {
+         |      "accountId": "$bobAccountId",
+         |      "filter": {"inMailbox": "${mailboxId.serialize()}", "after": "$boundary"},
+         |      "sort": [{"property": "receivedAt", "isAscending": false}],
+         |      "limit": 3
+         |    }, "after"]
+         |  ]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract.body.asString
+
+      assertThatJson(response).inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageIds(1).serialize}", "${messageIds.head.serialize}"]""")
+      assertThatJson(response).when(IGNORING_ARRAY_ORDER).inPath("$.methodResponses[1][1].ids")
+        .isEqualTo(s"""["${messageIds(4).serialize}", "${messageIds(3).serialize}", "${messageIds(2).serialize}"]""")
     }
   }
 
