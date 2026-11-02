@@ -66,6 +66,17 @@ public class Domain implements Serializable {
         return domainName.substring(1, domainName.length() - 1);
     }
 
+    /**
+     * java.net.IDN implements IDNA2003, that maps the "deviation" characters of UTS 46 (sharp s, final sigma, zero width
+     * joiner and non-joiner) while IDNA2008 keeps them: faß.de would be turned into fass.de, another domain. Refuse
+     * them rather than silently changing the domain. The capital sharp s is included as it lower-cases to a sharp s.
+     */
+    private static final String IDNA_DEVIATIONS = new String(new int[] {0x00DF, 0x1E9E, 0x03C2, 0x200C, 0x200D}, 0, 5);
+
+    static boolean containsIdnaDeviation(String domain) {
+        return domain.codePoints().anyMatch(codePoint -> IDNA_DEVIATIONS.indexOf(codePoint) >= 0);
+    }
+
     public static Domain of(String domain) {
         Preconditions.checkNotNull(domain, "Domain can not be null");
         Preconditions.checkArgument(domain.length() <= MAXIMUM_DOMAIN_LENGTH,
@@ -81,6 +92,8 @@ public class Domain implements Serializable {
             // performs are done below by assertValidPart anyway.
             domainWithoutBrackets = withoutBrackets;
         } else {
+            Preconditions.checkArgument(!containsIdnaDeviation(withoutBrackets),
+                "Domain '%s' holds a character that IDNA2003 and IDNA2008 resolve to different domains", domain);
             try {
                 domainWithoutBrackets = IDN.toASCII(withoutBrackets, IDN.ALLOW_UNASSIGNED);
             } catch (IllegalArgumentException e) {

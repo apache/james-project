@@ -21,6 +21,7 @@ package org.apache.james.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Properties;
 import java.util.stream.Stream;
@@ -451,5 +452,35 @@ class MailAddressTest {
     @ValueSource(strings = {"a@d﹎ς", "a@d＿e.com"})
     void domainMappedToANonLdhCharacterShouldBeRejected(String address) {
         Assertions.assertThatThrownBy(() -> new MailAddress(address)).isInstanceOf(AddressException.class);
+    }
+
+    static Stream<Arguments> idnaDeviationAddresses() {
+        return Stream.of(
+                "u@fa" + new String(Character.toChars(0x00DF)) + ".de",
+                "u@FA" + new String(Character.toChars(0x1E9E)) + ".de",
+                "u@f." + new String(Character.toChars(0x03C2)),
+                "u@a" + new String(Character.toChars(0x200C)) + "b.example",
+                "u@a" + new String(Character.toChars(0x200D)) + "b.example")
+            .map(Arguments::of);
+    }
+
+    @ParameterizedTest
+    @MethodSource("idnaDeviationAddresses")
+    void idnaDeviationCharactersShouldBeRejectedRatherThanChangingTheDomain(String address) {
+        assertThatThrownBy(() -> new MailAddress(address))
+            .isInstanceOf(AddressException.class);
+    }
+
+    @Test
+    void aLabelOfADeviationCharacterShouldNotBeMappedToAnotherDomain() {
+        // xn--fa-hia.de is faß.de under IDNA2008, IDNA2003 can not decode it
+        assertThatThrownBy(() -> new MailAddress("u@xn--fa-hia.de"))
+            .isInstanceOf(AddressException.class);
+    }
+
+    @Test
+    void unicodeDomainWithoutDeviationCharacterShouldStillBeAccepted() throws AddressException {
+        assertThat(new MailAddress("u@grå.org").getDomain().asString())
+            .isEqualTo("grå.org");
     }
 }

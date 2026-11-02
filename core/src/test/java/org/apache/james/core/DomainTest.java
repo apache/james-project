@@ -86,6 +86,27 @@ class DomainTest {
         assertThatThrownBy(() -> Domain.of(malformed))
             .hasMessageContaining(malformed);
     }
+
+    static Stream<Arguments> idnaDeviationDomains() {
+        return Stream.of(
+                "fa" + new String(Character.toChars(0x00DF)) + ".de",
+                "FA" + new String(Character.toChars(0x1E9E)) + ".de",
+                "f." + new String(Character.toChars(0x03C2)),
+                "a" + new String(Character.toChars(0x200C)) + "b.example",
+                "a" + new String(Character.toChars(0x200D)) + "b.example")
+            .map(Arguments::of);
+    }
+
+    @ParameterizedTest
+    @MethodSource("idnaDeviationDomains")
+    void idnaDeviationCharactersShouldBeRejectedRatherThanChangingTheDomain(String domain) {
+        assertThatThrownBy(() -> Domain.of(domain))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void aLabelOfADeviationCharacterShouldNotBeMappedToAnotherDomain() {
+        assertThatThrownBy(() -> Domain.of("xn--fa-hia.de"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
 }
-
-

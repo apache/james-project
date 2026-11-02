@@ -802,6 +802,9 @@ public class MailAddress implements java.io.Serializable {
         }
         String result = resultSB.toString();
         if (unicode) {
+            if (Domain.containsIdnaDeviation(result)) {
+                throw new AddressException("Domain holds a character that IDNA2003 and IDNA2008 resolve to different domains", address);
+            }
             try {
                 result = IDN.toASCII(result, IDN.ALLOW_UNASSIGNED);
             } catch (IllegalArgumentException e) {
