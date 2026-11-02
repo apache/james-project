@@ -39,6 +39,13 @@ object EmailHeader {
 }
 
 object RawHeaderValue {
+  def withoutLeadingWhiteSpace(value: String): String =
+    if (value.startsWith(" ") || value.startsWith("\t")) {
+      value.substring(1)
+    } else {
+      value
+    }
+
   def from(field: Field): RawHeaderValue = {
     val rawValue: String =
       Option(field.getRaw)
@@ -154,7 +161,8 @@ case class AllHeaderValues(values: List[EmailHeaderValue]) extends EmailHeaderVa
   override def asFields(name: EmailHeaderName): List[Field] = values.flatMap(_.asFields(name))
 }
 case class RawHeaderValue(value: String) extends EmailHeaderValue {
-  override def asFields(name: EmailHeaderName): List[Field] = List(new RawField(name.value, value.substring(1)))
+  // Email/get returns raw values with the white space following the colon: drop it only when present
+  override def asFields(name: EmailHeaderName): List[Field] = List(new RawField(name.value, RawHeaderValue.withoutLeadingWhiteSpace(value)))
 }
 case class TextHeaderValue(value: String) extends EmailHeaderValue {
   override def asFields(name: EmailHeaderName): List[Field] = List(new RawField(name.value, value))
