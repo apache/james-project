@@ -70,7 +70,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
     private static final int MAX_NESTING_DEPTH = 32;
     // Bounds the recursion of the parser (and of the evaluation of the resulting SearchKey tree) whatever the
     // combination of parentheses, OR and NOT
-    private static final int MAX_KEY_DEPTH = 256;
+    private static final int MAX_KEY_DEPTH = 1024;
 
     private record Depth(int parentheses, int keys) {
         static final Depth ROOT = new Depth(0, 0);
