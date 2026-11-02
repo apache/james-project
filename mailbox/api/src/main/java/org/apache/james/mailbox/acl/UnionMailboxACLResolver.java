@@ -150,6 +150,9 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
                     }
                 case user:
                     return aclKeyName.equals(queryUserOrGroupName);
+                case group:
+                    /* There is no group membership resolution: a group entry applies to no user */
+                    return false;
                 default:
                     throw new IllegalStateException("Unexpected " + NameType.class.getName() + "." + aclKeyNameType);
                 }
