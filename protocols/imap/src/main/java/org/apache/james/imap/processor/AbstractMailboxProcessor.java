@@ -101,7 +101,9 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
 
             return Mono.from(metricFactory.decoratePublisherWithTimerMetric(IMAP_PREFIX + acceptableMessage.getCommand().getName(),
                 mailboxManager.manageProcessing(
-                    processRequestReactive(acceptableMessage, session, responder)
+                    // Defer: exceptions thrown while building the processing (eg resolving the mailbox path) must be
+                    // turned into NO responses like the ones the processing signals
+                    Mono.defer(() -> processRequestReactive(acceptableMessage, session, responder))
                         .onErrorResume(DeniedAccessOnSharedMailboxException.class, e -> {
                             no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
                             return Mono.empty();
