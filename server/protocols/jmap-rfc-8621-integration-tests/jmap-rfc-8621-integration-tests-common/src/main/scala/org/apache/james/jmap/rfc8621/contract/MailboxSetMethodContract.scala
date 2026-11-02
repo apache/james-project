@@ -7207,6 +7207,145 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  def updateShouldNotChangeRightsWhenRenameFails(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+    val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "$bobAccountId",
+         |                "update": {
+         |                    "${mailboxId.serialize}": {
+         |                      "sharedWith/${andreUsername.asString}": [],
+         |                      "name": ""
+         |                    }
+         |                }
+         |           },
+         |    "c1"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].notUpdated").isObject.containsKey(mailboxId.serialize)
+    assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)).isEqualTo(aclBefore)
+  }
+
+  @Test
+  def updateShouldNotChangeRightsWhenOneSharedWithKeyIsRejected(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+    val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "$bobAccountId",
+         |                "update": {
+         |                    "${mailboxId.serialize}": {
+         |                      "sharedWith/${andreUsername.asString}": ["t"],
+         |                      "sharedWith/user@other.tld": ["l"]
+         |                    }
+         |                }
+         |           },
+         |    "c1"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].notUpdated").isObject.containsKey(mailboxId.serialize)
+    assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)).isEqualTo(aclBefore)
+  }
+
+  @Test
+  def updateShouldNotChangeRightsWhenTheNewNameAlreadyExists(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "existing"))
+    val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "$bobAccountId",
+         |                "update": {
+         |                    "${mailboxId.serialize}": {
+         |                      "sharedWith/${andreUsername.asString}": [],
+         |                      "name": "existing"
+         |                    }
+         |                }
+         |           },
+         |    "c1"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].notUpdated").isObject.containsKey(mailboxId.serialize)
+    assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)).isEqualTo(aclBefore)
+  }
+
+  @Test
   def partialRightsUpdateShouldFailWhenInvalidRights(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
