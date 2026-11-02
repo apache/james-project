@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store.mail.model.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +40,8 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class MessageParserImplTest {
     MessageParserImpl testee;
@@ -351,5 +354,28 @@ class MessageParserImplTest {
         List<ParsedAttachment> result = testee.retrieveAttachments(new ByteArrayInputStream(DefaultMessageWriter.asBytes(message)))
             .getAttachments();
         assertThat(result).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "Content-Disposition: attachment; filename=\"a\0b\"\r\n\r\nbody\r\n",
+        "Content-Disposition: attachment; filename=\"=?utf-8?B?YQBi?=\"\r\n\r\nbody\r\n",
+        "Content-Disposition: attachment; filename=\"=?utf-8?B?YQ0KYg==?=\"\r\n\r\nbody\r\n"})
+    void retrieveAttachmentsShouldNotKeepControlCharactersInName(String message) throws Exception {
+        MessageParser.ParsingResult result = testee.retrieveAttachments(
+            new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(result.getAttachments()).hasSize(1);
+        assertThat(result.getAttachments().get(0).getName())
+            .hasValueSatisfying(name -> assertThat(name).doesNotContainPattern("[\\x00-\\x1F\\x7F]"));
+    }
+
+    @Test
+    void retrieveAttachmentsShouldReplaceControlCharactersBySpaces() throws Exception {
+        String message = "Content-Disposition: attachment; filename=\"=?utf-8?B?YQBi?=\"\r\n\r\nbody\r\n";
+        MessageParser.ParsingResult result = testee.retrieveAttachments(
+            new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(result.getAttachments().get(0).getName()).contains("a b");
     }
 }
