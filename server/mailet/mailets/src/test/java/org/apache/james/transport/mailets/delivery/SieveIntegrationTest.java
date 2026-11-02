@@ -52,6 +52,8 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
@@ -974,6 +976,19 @@ class SieveIntegrationTest {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
         Mail mail = createMail();
         mail.getMessage().addHeader("List-Id", "0123456789");
+
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"list-id", "LIST-ID", "list-Unsubscribe"})
+    void vacationShouldNotSendNotificationToMailingListsWhateverTheHeaderCase(String headerName) throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+        Mail mail = createMail();
+        mail.getMessage().addHeader(headerName, "0123456789");
 
         testee.service(mail);
 
