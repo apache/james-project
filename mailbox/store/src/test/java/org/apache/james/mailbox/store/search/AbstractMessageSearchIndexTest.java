@@ -579,6 +579,77 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void subjectShouldMatchMoreThanFourWords() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "longSubject");
+        storeMailboxManager.createMailbox(mailboxPath, session);
+
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+        ComposedMessageId message1 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                .setSubject("Quarterly budget review meeting notes")
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session).getId();
+        messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                .setSubject("Quarterly report")
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session);
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 15);
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.subject("Quarterly budget review meeting notes")), session)).toStream())
+            .containsOnly(message1.getUid());
+    }
+
+    @Test
+    void bodyShouldMatchMoreThanFourWords() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "longBody");
+        storeMailboxManager.createMailbox(mailboxPath, session);
+
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+        ComposedMessageId message1 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("The quick brown fox jumps over the lazy dog", StandardCharsets.UTF_8)),
+            session).getId();
+        messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("A brown dog sleeps all day", StandardCharsets.UTF_8)),
+            session);
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 15);
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("brown fox jumps over the")), session)).toStream())
+            .containsOnly(message1.getUid());
+    }
+
+    @Test
+    void subjectShouldMatchWordAfterPunctuation() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "punctuation");
+        storeMailboxManager.createMailbox(mailboxPath, session);
+
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+        ComposedMessageId message1 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                .setSubject("Invitation <Team sync> tomorrow")
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session).getId();
+        messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                .setSubject("Weekly sync tomorrow")
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session);
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 15);
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.subject("Team")), session)).toStream())
+            .containsOnly(message1.getUid());
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.subject("Team sync")), session)).toStream())
+            .containsOnly(message1.getUid());
+    }
+
+    @Test
     void textShouldMatchEmailAddressLocalPart() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
