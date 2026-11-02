@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.json
 
-import org.apache.james.core.Username
+import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.json.EmailSetSerializerTest.SERIALIZER
 import org.apache.james.jmap.mail.EmailCreationRequest
 import org.apache.james.jmap.routes.{BlobResolver, BlobResolvers}
@@ -66,6 +66,25 @@ class EmailCreationRequestTest extends AnyWordSpec with Matchers {
           |"textBody":[{"partId":"a","type":"text/plain","header:X-Empty:asRaw":""}]}""".stripMargin)
 
       message should not be null
+    }
+
+    "save a draft whose address is only '@'" in {
+      val message = toMessage("""{"mailboxIds":{"1":true},"keywords":{"$draft":true},"to":[{"email":"@"}]}""")
+
+      message.getTo should not be null
+    }
+
+    "save a draft whose address has several '@'" in {
+      val message = toMessage("""{"mailboxIds":{"1":true},"keywords":{"$draft":true},"to":[{"email":"a@@b"}]}""")
+
+      message.getTo.flatten().get(0).getDomain shouldBe "b"
+    }
+
+    "keep a quoted local part containing '@'" in {
+      val message = toMessage("""{"mailboxIds":{"1":true},"from":[{"email":"\"a@b\"@d"}]}""")
+
+      message.getFrom.get(0).getDomain shouldBe "d"
+      new MailAddress(message.getFrom.get(0).getAddress) shouldBe new MailAddress("\"a@b\"@d")
     }
   }
 }

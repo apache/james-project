@@ -146,17 +146,14 @@ object UncheckedEmailAddress {
 }
 case class UncheckedEmailAddress(name: Option[EmailerName], email: UncheckedEmail) {
   def asMime4JMailbox: Mime4jMailbox = {
-    val parts = email.value.split('@')
-    val domainPart: String = parts match {
-      case Array(_, domain) => domain
-      case _ => ""
+    // Split at the last '@': a quoted local part can hold '@', and draft addresses need not be valid ones
+    val atIndex = email.value.lastIndexOf('@')
+    val (localPart, domainPart) = if (atIndex < 0) {
+      (email.value, "")
+    } else {
+      (email.value.substring(0, atIndex), email.value.substring(atIndex + 1))
     }
-    Some(email.value.split('@'))
-      .map(parts => new Mime4jMailbox(
-        name.map(_.value).orNull,
-        parts.head,
-        domainPart))
-      .get
+    new Mime4jMailbox(name.map(_.value).orNull, localPart, domainPart)
   }
 
   def validate: Either[IllegalArgumentException, EmailAddress] =
