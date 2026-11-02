@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 class SearchCommandParserNestingDepthTest {
 
     private static final int MAX_NESTING_DEPTH = 32;
-    private static final int MAX_KEY_DEPTH = 256;
+    private static final int MAX_KEY_DEPTH = 1024;
 
     private SearchCommandParser parser;
 
