@@ -143,9 +143,8 @@ class OidcJwtTokenVerifierTest {
             .signWith(toPrivateKey(OidcTokenFixture.PRIVATE_KEY_BASE64), Jwts.SIG.RS256)
             .compact();
 
-        assertThatThrownBy(() -> new OidcJwtTokenVerifier(configForClaim("kid")).verifySignatureAndExtractClaim(jws))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("Rejecting a ZIP JWT");
+        assertThat(new OidcJwtTokenVerifier(configForClaim("kid")).verifySignatureAndExtractClaim(jws))
+            .isEmpty();
     }
 
     @Test
