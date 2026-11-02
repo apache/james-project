@@ -6954,6 +6954,132 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  def partialRightsUpdateShouldNotGrantAuthenticatedRightOtherThanPost(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "$bobAccountId",
+         |                "update": {
+         |                    "${mailboxId.serialize}": {
+         |                      "sharedWith/authenticated": ["r", "l"]
+         |                    }
+         |                }
+         |           },
+         |    "c1"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState",
+        "methodResponses[1][1].state")
+      .isEqualTo(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [
+           |    ["Mailbox/set", {
+           |      "accountId": "$bobAccountId",
+           |      "notUpdated": {
+           |        "${mailboxId.serialize}": {
+           |          "type": "invalidPatch",
+           |          "description": "only the `Post` right can be granted to the identifier `authenticated`"
+           |        }
+           |      }
+           |    }, "c1"]
+           |  ]
+           |}""".stripMargin)
+
+
+    assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)).isEqualTo(aclBefore)
+  }
+
+  @Test
+  def resetRightsUpdateShouldNotGrantAuthenticatedRightOtherThanPost(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "$bobAccountId",
+         |                "update": {
+         |                    "${mailboxId.serialize}": {
+         |                      "sharedWith": {
+         |                        "authenticated":["r", "l"]
+         |                      }
+         |                    }
+         |                }
+         |           },
+         |    "c1"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState",
+        "methodResponses[1][1].state")
+      .isEqualTo(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [
+           |    ["Mailbox/set", {
+           |      "accountId": "$bobAccountId",
+           |      "notUpdated": {
+           |        "${mailboxId.serialize}": {
+           |          "type": "invalidPatch",
+           |          "description": "only the `Post` right can be granted to the identifier `authenticated`"
+           |        }
+           |      }
+           |    }, "c1"]
+           |  ]
+           |}""".stripMargin)
+
+
+    assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)).isEqualTo(aclBefore)
+  }
+
+  @Test
   def partialRightsUpdateShouldFailWhenInvalidRights(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
