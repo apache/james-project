@@ -35,18 +35,26 @@ import org.apache.lucene.analysis.shingle.ShingleFilterFactory;
  * <p>The text is split on whitespace and upper-cased, then indexed as words and as shingles of up to
  * {@link #DEFAULT_MAX_TOKEN_LENGTH} words. Before that, punctuation at the start and at the end of each
  * word is removed (see {@link #removePunctuationAroundWords(String)}), so {@code <Team sync>} is indexed
- * as {@code TEAM} and {@code SYNC}. Punctuation inside a word, as in {@code bob@example.com}, is kept.</p>
+ * as {@code TEAM} and {@code SYNC}. Only wrapping characters and sentence punctuation are removed: punctuation
+ * inside a word, as in {@code bob@example.com}, and other symbols, as in {@code C++} or {@code C#}, are kept.</p>
  */
 public final class LenientImapSearchAnalyzer {
 
     public static final int DEFAULT_MAX_TOKEN_LENGTH = 4;
 
     /**
-     * Runs of characters that are neither letters, digits nor whitespace, at the start or at the end of a
-     * whitespace separated word. A word made only of such characters, like {@code -}, is removed entirely.
-     * Whitespace is {@link Character#isWhitespace(char)}, as for the tokenizer, so an em space (U+2003) is a separator.
+     * Brackets, quotes, dashes and sentence punctuation: the characters removed around words.
      */
-    private static final String PUNCTUATION_AROUND_WORDS = "(?<!\\P{javaWhitespace})[^\\p{L}\\p{N}\\p{javaWhitespace}]+|[^\\p{L}\\p{N}\\p{javaWhitespace}]+(?!\\P{javaWhitespace})";
+    private static final String WRAPPING_PUNCTUATION = "[<>\\p{Ps}\\p{Pe}\\p{Pi}\\p{Pf}\\p{Pd}\"',.;:!?…]";
+
+    /**
+     * Runs of {@link #WRAPPING_PUNCTUATION} at the start or at the end of a whitespace separated word. A word made
+     * only of such characters, like {@code -}, is removed entirely. Whitespace is {@link Character#isWhitespace(char)},
+     * as for the tokenizer, so an em space (U+2003) is a separator. Quantifiers are possessive and a run is only
+     * matched from its first character, so a long run inside a word is scanned in linear time.
+     */
+    private static final String PUNCTUATION_AROUND_WORDS = "(?<!\\P{javaWhitespace})" + WRAPPING_PUNCTUATION + "++"
+        + "|(?<!" + WRAPPING_PUNCTUATION + ")" + WRAPPING_PUNCTUATION + "++(?!\\P{javaWhitespace})";
     private static final Pattern PUNCTUATION_AROUND_WORDS_PATTERN = Pattern.compile(PUNCTUATION_AROUND_WORDS);
 
     static final Analyzer INSTANCE = getAnalyzer();

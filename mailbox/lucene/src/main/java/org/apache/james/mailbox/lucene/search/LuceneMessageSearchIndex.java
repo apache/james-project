@@ -122,6 +122,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchNoDocsQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -181,9 +182,17 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final int DEFAULT_MAX_QUERY_RESULTS = 100000;
 
     /**
-     * Max number of word windows searched for one text value, which keeps the query below Lucene's clause limit
+     * Max number of words searched for one text value, which keeps the query below Lucene's clause limit
      */
-    private static final int MAX_SEARCHED_WINDOWS = 32;
+    private static final int MAX_SEARCHED_WORDS = 35;
+
+    /**
+     * Distance between the first words of two consecutive windows of a long value. It is smaller than the window
+     * size, so two consecutive windows share a word and every pair of adjacent words is inside one window.
+     */
+    private static final int WINDOW_STEP = LenientImapSearchAnalyzer.DEFAULT_MAX_TOKEN_LENGTH - 1;
+
+    private static final String TOO_MANY_CLAUSES_MESSAGE = "Unable to search the mailbox: the search query has too many criteria or values";
 
     private static final boolean INCLUDE_LOWER = true;
     private static final boolean INCLUDE_UPPER = true;
@@ -341,10 +350,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private Flux<MessageId> searchCollapseThreads(Collection<MailboxId> mailboxIds, SearchQuery searchQuery, SearchOptions searchOptions) throws MailboxException {
-        Query query = buildQuery(mailboxIds, searchQuery);
-
         try (IndexReader reader = DirectoryReader.open(writer)) {
             IndexSearcher searcher = new IndexSearcher(reader);
+            Query query = buildQuery(mailboxIds, searchQuery);
 
             GroupingSearch groupingSearch = new GroupingSearch(new TermGroupSelector(THREAD_ID_FIELD));
             Sort sort = createSort(searchQuery.getSorts());
@@ -365,6 +373,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 documentToSearchResult(document).getMessageId().ifPresent(result::add);
             }
             return Flux.fromIterable(result);
+        } catch (IndexSearcher.TooManyClauses e) {
+            throw new MailboxException(TOO_MANY_CLAUSES_MESSAGE, e);
         } catch (IOException e) {
             throw new MailboxException("Unable to search the mailbox", e);
         }
@@ -396,6 +406,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return Stream.of(docs.scoreDocs)
                 .map(Throwing.function(sDoc -> searcher.storedFields().document(sDoc.doc)))
                 .toList();
+        } catch (IndexSearcher.TooManyClauses e) {
+            throw new MailboxException(TOO_MANY_CLAUSES_MESSAGE, e);
         } catch (IOException e) {
             throw new MailboxException("Unable to search the mailbox", e);
         }
@@ -503,24 +515,33 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Return a {@link Query} for a value searched in a field indexed with {@link LenientImapSearchAnalyzer}.
      * Shingles are at most {@link LenientImapSearchAnalyzer#DEFAULT_MAX_TOKEN_LENGTH} tokens long, so a longer
-     * value is split into overlapping windows of that size. The windows are ANDed per document, so this is
-     * not a strict phrase match. Only the first {@link #MAX_SEARCHED_WINDOWS} windows are searched, so the words
-     * after them are not checked. Punctuation around words is removed like the analyzer does at index time;
-     * a value made only of punctuation is searched as is.
+     * value is split into windows of that size, starting every {@link #WINDOW_STEP} words, plus one window ending
+     * at the last word. The windows are ANDed per document, so this is not a strict phrase match. Only the first
+     * {@link #MAX_SEARCHED_WORDS} words are searched, so the words after them are not checked. Punctuation around
+     * words is removed like the analyzer does at index time; a value made only of punctuation matches nothing.
      */
     private Query createTextTermQuery(String fieldName, String value) {
-        List<String> tokens = Splitter.on(CharMatcher.forPredicate(Character::isWhitespace)).omitEmptyStrings()
-            .splitToList(LenientImapSearchAnalyzer.removePunctuationAroundWords(value));
-        if (tokens.isEmpty()) {
+        if (value.isEmpty()) {
             return createTermQuery(fieldName, value);
         }
+        List<String> allTokens = Splitter.on(CharMatcher.forPredicate(Character::isWhitespace)).omitEmptyStrings()
+            .splitToList(LenientImapSearchAnalyzer.removePunctuationAroundWords(value));
+        if (allTokens.isEmpty()) {
+            return new MatchNoDocsQuery();
+        }
+        List<String> tokens = allTokens.subList(0, Math.min(allTokens.size(), MAX_SEARCHED_WORDS));
         int windowSize = LenientImapSearchAnalyzer.DEFAULT_MAX_TOKEN_LENGTH;
         if (tokens.size() <= windowSize) {
             return createTermQuery(fieldName, String.join(" ", tokens));
         }
         BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-        for (int start = 0; start + windowSize <= tokens.size() && start < MAX_SEARCHED_WINDOWS; start++) {
-            queryBuilder.add(createTermQuery(fieldName, String.join(" ", tokens.subList(start, start + windowSize))), BooleanClause.Occur.MUST);
+        int lastWindowEnd = 0;
+        for (int start = 0; start + windowSize <= tokens.size(); start += WINDOW_STEP) {
+            lastWindowEnd = start + windowSize;
+            queryBuilder.add(createTermQuery(fieldName, String.join(" ", tokens.subList(start, lastWindowEnd))), BooleanClause.Occur.MUST);
+        }
+        if (lastWindowEnd < tokens.size()) {
+            queryBuilder.add(createTermQuery(fieldName, String.join(" ", tokens.subList(tokens.size() - windowSize, tokens.size()))), BooleanClause.Occur.MUST);
         }
         return queryBuilder.build();
     }
@@ -536,18 +557,23 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         String name = crit.getHeaderName().toUpperCase(Locale.US);
         String fieldName = PREFIX_HEADER_FIELD + name;
         return switch (crit.getOperator()) {
+            // an empty value is contained in any header value, even one without indexed words
+            case ContainsOperator cop when cop.getValue().isEmpty() -> createHeaderExistsQuery(name);
             case ContainsOperator cop -> createTextTermQuery(fieldName, cop.getValue().toUpperCase(Locale.US));
-            case SearchQuery.ExistsOperator existsOperator -> new BooleanQuery.Builder()
-                // documents indexed before HEADER_NAMES_FIELD existed only have the header field
-                .add(new PrefixQuery(new Term(fieldName, StringUtils.EMPTY)), BooleanClause.Occur.SHOULD)
-                .add(new TermQuery(new Term(HEADER_NAMES_FIELD, name)), BooleanClause.Occur.SHOULD)
-                .build();
+            case SearchQuery.ExistsOperator existsOperator -> createHeaderExistsQuery(name);
             case DateOperator dop -> createQuery(toSentDateField(dop.getDateResultion()), dop);
             case SearchQuery.AddressOperator addressOperator -> createTextTermQuery(name.toLowerCase(Locale.US), addressOperator.getAddress().toUpperCase(Locale.US));
             default -> throw new UnsupportedSearchException();
         };
     }
 
+    private Query createHeaderExistsQuery(String name) {
+        return new BooleanQuery.Builder()
+            // documents indexed before HEADER_NAMES_FIELD existed only have the header field
+            .add(new PrefixQuery(new Term(PREFIX_HEADER_FIELD + name, StringUtils.EMPTY)), BooleanClause.Occur.SHOULD)
+            .add(new TermQuery(new Term(HEADER_NAMES_FIELD, name)), BooleanClause.Occur.SHOULD)
+            .build();
+    }
 
     private Query createQuery(String field, DateOperator dop) {
         Date date = dop.getDate();
