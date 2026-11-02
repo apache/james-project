@@ -21,6 +21,7 @@ package org.apache.james.jdkim.mailets;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
@@ -53,6 +54,9 @@ import com.google.common.annotations.VisibleForTesting;
  * behaviour then set forceCRLF attribute to false.
  */
 public class DKIMVerify extends GenericMailet {
+    private static final Pattern LINE_BREAKS = Pattern.compile("\\r?\\n[ \\t]*|\\r");
+    private static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\p{Cntrl}&&[^\\t]]");
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DKIMVerify.class);
 
     public static final AttributeName DKIM_AUTH_RESULT = AttributeName.of("jDKIM.AUTHRESULT");
@@ -91,19 +95,29 @@ public class DKIMVerify extends GenericMailet {
                     msg.append(rec.getIdentity().toString());
                     msg.append(")");
                 }
-                mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of(msg.toString())));
+                String result = singleLine(msg.toString());
+                mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of(result)));
                 mail.setAttribute(new Attribute(DKIM_AUTH_RESULT_BOOLEAN, AttributeValue.of(true)));
-                LOGGER.info("DKIM signature {}", msg);
+                LOGGER.info("DKIM signature {}", result);
             }
         } catch (FailException e) {
             // fail
             String relatedRecordIdentity = Optional.ofNullable(e.getRelatedRecordIdentity())
                 .map(value -> "identity" + value + ":")
                 .orElse("");
-            String msg = "fail (" + relatedRecordIdentity + e.getMessage() + ")";
+            String msg = singleLine("fail (" + relatedRecordIdentity + e.getMessage() + ")");
             mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of(msg)));
             mail.setAttribute(new Attribute(DKIM_AUTH_RESULT_BOOLEAN, AttributeValue.of(false)));
             LOGGER.info("DKIM signature {}", msg);
         }
+    }
+
+    /**
+     * The result quotes text of the DKIM-Signature field chosen by the sender, folding included: unfold it and drop
+     * the remaining control characters, so that the attribute and the log line hold a single line.
+     */
+    @VisibleForTesting
+    static String singleLine(String value) {
+        return CONTROL_CHARACTERS.matcher(LINE_BREAKS.matcher(value).replaceAll(" ")).replaceAll("");
     }
 }
