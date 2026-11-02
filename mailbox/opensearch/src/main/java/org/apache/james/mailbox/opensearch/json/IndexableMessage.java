@@ -139,7 +139,8 @@ public class IndexableMessage {
                     Optional<String> bodyHtml = parsingResult.locateFirstHtmlBody();
 
                     List<MimePart> attachments = setFlattenedAttachments(parsingResult, indexAttachments);
-                    boolean hasAttachment = attachments.stream()
+                    // Describes the message whatever the indexing options: computed before the IndexAttachments filter
+                    boolean hasAttachment = parsingResult.getAttachmentsStream()
                         .anyMatch(mimePart -> !mimePart.isInlinedWithCid() && mimePart.getContentDisposition().isPresent());
 
                     HeaderCollection headerCollection = parsingResult.getHeaderCollection();
