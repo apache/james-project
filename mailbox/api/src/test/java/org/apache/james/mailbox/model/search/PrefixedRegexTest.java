@@ -88,6 +88,27 @@ class PrefixedRegexTest {
         private static final String EMPTY_PREFIX = "";
 
         @Test
+        void freeWildcardShouldMatchNameContainingLineFeed() {
+            PrefixedRegex prefixedRegex = new PrefixedRegex(EMPTY_PREFIX, "*", folderDelimiter());
+
+            assertThat(prefixedRegex.isExpressionMatch("\nr")).isTrue();
+        }
+
+        @Test
+        void freeWildcardShouldMatchLineFeedInTheMiddleOfAName() {
+            PrefixedRegex prefixedRegex = new PrefixedRegex(EMPTY_PREFIX, "a*b", folderDelimiter());
+
+            assertThat(prefixedRegex.isExpressionMatch("a\nb")).isTrue();
+        }
+
+        @Test
+        void localWildcardShouldMatchNameContainingLineFeed() {
+            PrefixedRegex prefixedRegex = new PrefixedRegex(EMPTY_PREFIX, "%", folderDelimiter());
+
+            assertThat(prefixedRegex.isExpressionMatch("\nr")).isTrue();
+        }
+
+        @Test
         public void shouldMatchBeanContract() {
             EqualsVerifier.forClass(PrefixedRegex.class)
                     .withIgnoredFields("pattern")
