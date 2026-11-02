@@ -150,7 +150,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 })
             .flatMap(metadata -> firstUnseen(session, fullMailboxPath, responder, metadata.getFirstUnseen(), session.getSelected())
             .thenReturn(metadata))
-            .doOnNext(metaData -> {
+            .flatMap(metaData -> {
                 SelectedMailbox selected = session.getSelected();
                 permanentFlags(responder, metaData.getPermanentFlags(), selected);
                 selected.resetNewApplicableFlags();
@@ -175,12 +175,17 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                         //  responses that MUST contain UIDs) and expunges those that have
                         //  occurred in this mailbox since the provided modification sequence.
 
-                        uidSet(request, metaData)
-                            .ifPresent(Throwing.<UidRange[]>consumer(
-                                uidSet -> respondVanished(responder, knownSequences, knownUids, selected, metaData.getUidNext(), uidSet))
-                                .sneakyThrow());
+                        Mono<Void> vanishedResponses = uidSet(request, metaData)
+                            .map(uidSet -> vanishedRanges(knownSequences, knownUids, selected, uidSet))
+                            .map(ranges -> Mono.from(getMailboxManager().getMailboxReactive(selected.getMailboxId(), session.getMailboxSession()))
+                                .flatMap(mailbox -> respondVanished(selected, ranges, metaData.getUidNext(), mailbox, session.getMailboxSession(), responder)))
+                            .orElse(Mono.empty());
 
-                        taggedOk(responder, request, metaData, HumanReadableText.SELECT);
+                        return vanishedResponses
+                            .then(Mono.fromRunnable(() -> {
+                                taggedOk(responder, request, metaData, HumanReadableText.SELECT);
+                                resetSavedSequenceSet(session);
+                            }));
                     } else {
 
                         taggedOk(responder, request, metaData, HumanReadableText.QRESYNC_UIDVALIDITY_MISMATCH);
@@ -189,9 +194,8 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                     taggedOk(responder, request, metaData, HumanReadableText.SELECT);
                 }
 
-                // Reset the saved sequence-set after successful SELECT / EXAMINE
-                // See RFC 5812 2.1. Normative Description of the SEARCHRES Extension
-                SearchResUtil.resetSavedSequenceSet(session);
+                resetSavedSequenceSet(session);
+                return Mono.<Void>empty();
             })
             .then();
     }
@@ -235,7 +239,13 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             });
     }
 
-    private void respondVanished(Responder responder, IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, MessageUid uidNext, UidRange[] uidSet) {
+    private void resetSavedSequenceSet(ImapSession session) {
+        // Reset the saved sequence-set after successful SELECT / EXAMINE
+        // See RFC 5812 2.1. Normative Description of the SEARCHRES Extension
+        SearchResUtil.resetSavedSequenceSet(session);
+    }
+
+    private List<MessageRange> vanishedRanges(IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, UidRange[] uidSet) {
         // RFC5162 3.1. QRESYNC Parameter to SELECT/EXAMINE
         //
         // Message sequence match data:
@@ -295,7 +305,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         //          expunges have not happened, or happen only toward the end of the
         //          mailbox.
         //
-        respondVanished(selected, ranges, uidNext, responder);
+        return ranges;
     }
 
     @VisibleForTesting
