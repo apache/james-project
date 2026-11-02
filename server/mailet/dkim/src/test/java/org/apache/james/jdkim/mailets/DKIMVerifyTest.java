@@ -90,6 +90,38 @@ public class DKIMVerifyTest {
             .hasValueSatisfying(result -> assertThat(result).startsWith("neutral"));
     }
 
+    @Test
+    void failReasonShouldNotHoldLineBreaks() throws Exception {
+        String message = "DKIM-Signature: v=1; d=example.com;\r\n junk;\r\n"
+            + "From: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\n";
+
+        Mail mail = process(message);
+
+        Optional<String> attr = AttributeUtils.getValueAndCastFromMail(mail, DKIMVerify.DKIM_AUTH_RESULT, String.class);
+        assertThat(attr)
+            .hasValueSatisfying(result -> assertThat(result)
+                .startsWith("fail")
+                .doesNotContain("\r", "\n"));
+    }
+
+    @Test
+    void singleLineShouldUnfoldLineBreaks() {
+        assertThat(DKIMVerify.singleLine("fail (a;\r\n     | [b;\r\n    ])"))
+            .isEqualTo("fail (a; | [b; ])");
+    }
+
+    @Test
+    void singleLineShouldReplaceBareLineBreaks() {
+        assertThat(DKIMVerify.singleLine("a\rb\nc"))
+            .isEqualTo("a b c");
+    }
+
+    @Test
+    void singleLineShouldDropOtherControlCharacters() {
+        assertThat(DKIMVerify.singleLine(new String(new char[] {'a', 0, 'b', 27, 'c', 127, 'd'})))
+            .isEqualTo("abcd");
+    }
+
     private Mail process(String message) throws Exception {
         Mailet mailet = new DKIMVerify((new MockPublicKeyRecordRetriever(
             "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDYDaYKXzwVYwqWbLhmuJ66aTAN8wmDR+rfHE8HfnkSOax0oIoTM5zquZrTLo30870YMfYzxwfB6j/Nz3QdwrUD/t0YMYJiUKyWJnCKfZXHJBJ+yfRHr7oW+UW3cVo9CG2bBfIxsInwYe175g9UjyntJpWueqdEIo1c2bhv9Mp66QIDAQAB;",
