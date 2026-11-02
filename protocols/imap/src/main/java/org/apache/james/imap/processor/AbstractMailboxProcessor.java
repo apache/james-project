@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import jakarta.mail.Flags;
 
@@ -69,6 +70,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
@@ -529,11 +531,32 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     /**
      * Send VANISHED responses if needed.
      *
+     * UIDNEXT is read from the store, while the UIDs of the selected mailbox are the ones this session knows of: messages
+     * added but whose event did not reach this session yet are below UIDNEXT without being known by the session. They are
+     * read from the store so that they are not reported as expunged.
+     *
      * @param requestedRanges UID ranges supplied by the client, not restricted to the UIDs of the selected mailbox:
      *                        expunged UIDs lower than the first remaining UID or higher than the last one must be reported.
-     * @param uidNext UIDNEXT of the selected mailbox: UIDs greater or equal were never assigned, thus never expunged.
+     * @param uidNext UIDNEXT of the selected mailbox: UIDs greater or equal were never assigned, thus never expunged. It
+     *                must be read before calling this method.
      */
-    protected void respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> requestedRanges, MessageUid uidNext, Responder responder) {
+    protected Mono<Void> respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> requestedRanges, MessageUid uidNext,
+                                         MessageManager mailbox, MailboxSession mailboxSession, Responder responder) {
+        MessageUid firstUidUnknownBySession = selectedMailbox.getLastUid()
+            .map(MessageUid::next)
+            .orElse(MessageUid.MIN_VALUE);
+        if (firstUidUnknownBySession.compareTo(uidNext) >= 0) {
+            return Mono.fromRunnable(() -> respondVanished(selectedMailbox, requestedRanges, uidNext, ImmutableSet.of(), responder));
+        }
+        return Flux.from(mailbox.listMessagesMetadata(MessageRange.range(firstUidUnknownBySession, uidNext.previous()), mailboxSession))
+            .map(metaData -> metaData.getComposedMessageId().getUid())
+            .collect(ImmutableSet.toImmutableSet())
+            .doOnNext(storedUidsUnknownBySession -> respondVanished(selectedMailbox, requestedRanges, uidNext, storedUidsUnknownBySession, responder))
+            .then();
+    }
+
+    private void respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> requestedRanges, MessageUid uidNext,
+                                 Set<MessageUid> storedUidsUnknownBySession, Responder responder) {
         // Work on ranges so that the cost depends on the mailbox content and not on the span of the requested UIDs.
         // Closed-open ranges keep the range set canonical over the discrete UID domain.
         RangeSet<Long> vanishedUids = TreeRangeSet.create();
@@ -543,7 +566,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         if (vanishedUids.isEmpty()) {
             return;
         }
-        selectedMailbox.allUids()
+        Stream.concat(selectedMailbox.allUids().stream(), storedUidsUnknownBySession.stream())
             .forEach(uid -> vanishedUids.remove(Range.closedOpen(uid.asLong(), uid.asLong() + 1)));
 
         UidRange[] vanishedIdRanges = vanishedUids.asRanges()

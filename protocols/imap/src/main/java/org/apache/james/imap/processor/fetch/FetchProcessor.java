@@ -327,8 +327,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         Mono<Void> vanishedResponses = Mono.empty();
         if (fetch.getVanished()) {
             vanishedResponses = mailbox.getMetaDataReactive(IGNORE, mailboxSession, EnumSet.of(MailboxMetaData.Item.NextUid))
-                .doOnNext(metaData -> respondVanished(selected, requestedRanges, metaData.getUidNext(), responder))
-                .then();
+                .flatMap(metaData -> respondVanished(selected, requestedRanges, metaData.getUidNext(), mailbox, mailboxSession, responder));
         }
         boolean omitExpunged = (!request.isUseUids());
         return vanishedResponses
