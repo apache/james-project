@@ -41,7 +41,9 @@ import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.mail.Part;
+import jakarta.mail.internet.ContentType;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
 
 import org.apache.commons.io.FileUtils;
@@ -318,10 +320,34 @@ public class StripAttachment extends GenericMailet {
         return ((Multipart) part.getContent()).getCount() == 0;
     }
 
-    private void updateBodyPart(Part part, Multipart newPartContent) throws MessagingException {
+    private void updateBodyPart(Part part, Multipart newPartContent) throws MessagingException, IOException {
         part.setContent(newPartContent);
         if (part instanceof Message) {
+            ensureBoundaries(part);
             ((Message) part).saveChanges();
+        }
+    }
+
+    /**
+     * A multipart parsed without boundary parameter (accepted leniently by Jakarta Mail) is written back with a
+     * "null" boundary, shared by all such nested multiparts, which corrupts the structure. Give them a fresh one.
+     */
+    private void ensureBoundaries(Part part) throws MessagingException, IOException {
+        // Rely on the content: setContent drops the Content-Type header of the part until changes are saved
+        if (!(part.getContent() instanceof MimeMultipart multipart)) {
+            return;
+        }
+        List<BodyPart> bodyParts = MultipartUtil.retrieveBodyParts(multipart);
+        for (BodyPart bodyPart : bodyParts) {
+            ensureBoundaries(bodyPart);
+        }
+        ContentType contentType = new ContentType(multipart.getContentType());
+        if (contentType.getParameter("boundary") == null) {
+            MimeMultipart withBoundary = new MimeMultipart(contentType.getSubType());
+            for (BodyPart bodyPart : bodyParts) {
+                withBoundary.addBodyPart(bodyPart);
+            }
+            part.setContent(withBoundary);
         }
     }
 

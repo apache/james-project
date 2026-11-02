@@ -41,6 +41,7 @@ import jakarta.mail.Part;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -442,6 +443,47 @@ class StripAttachmentTest {
 
         assertThat(AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of("rawIcalendar"), MAP_STRING_BYTES_CLASS))
             .hasValueSatisfying(map -> assertThat(map).containsOnlyKeys("invite.ics", "invite-1.ics"));
+    }
+
+    @Test
+    void serviceShouldKeepTheStructureOfMultipartsWithoutBoundaryParameter(TemporaryFolder temporaryFolder) throws Exception {
+        StripAttachment mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("remove", "matched")
+            .setProperty("pattern", ".*\\.ics")
+            .setProperty("directory", temporaryFolder.getFolderPath())
+            .build());
+
+        String raw = "Content-Type: multipart/mixed\r\n\r\n"
+            + "--outer\r\n"
+            + "Content-Type: multipart/alternative\r\n\r\n"
+            + "--inner\r\n"
+            + "Content-Type: text/plain\r\n\r\n"
+            + "text\r\n"
+            + "--inner--\r\n"
+            + "--outer\r\n"
+            + "Content-Type: text/calendar\r\n"
+            + "Content-Disposition: attachment; filename=\"invite.ics\"\r\n\r\n"
+            + "BEGIN:VCALENDAR\r\n"
+            + "--outer--\r\n";
+        Session session = Session.getDefaultInstance(new Properties());
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(new MimeMessage(session, new ByteArrayInputStream(raw.getBytes(StandardCharsets.US_ASCII))))
+            .build();
+
+        mailet.service(mail);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        mail.getMessage().writeTo(out);
+        MimeMessage reparsed = new MimeMessage(session, new ByteArrayInputStream(out.toByteArray()));
+        MimeMultipart mixed = (MimeMultipart) reparsed.getContent();
+        assertThat(mixed.getCount()).isEqualTo(1);
+        MimeMultipart alternative = (MimeMultipart) mixed.getBodyPart(0).getContent();
+        assertThat(alternative.getCount()).isEqualTo(1);
+        // The line break before a boundary delimiter belongs to the delimiter (RFC 2046)
+        assertThat(alternative.getBodyPart(0).getContent()).isEqualTo("text");
     }
 
     @Test
