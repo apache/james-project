@@ -61,9 +61,14 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
             .filter(header -> header.startsWith(AUTHORIZATION_HEADER_PREFIX))
             .map(header -> header.substring(AUTHORIZATION_HEADER_PREFIX.length()))
             .flatMap(userJWTToken -> Mono.fromCallable(() -> {
-                Username username = tokenManager.verifyAndExtractLogin(userJWTToken)
-                    .map(Username::of)
+                String login = tokenManager.verifyAndExtractLogin(userJWTToken)
                     .orElseThrow(() -> new UnauthorizedException("Failed Jwt verification"));
+                Username username;
+                try {
+                    username = Username.of(login);
+                } catch (IllegalArgumentException e) {
+                    throw new UnauthorizedException("Invalid username", e);
+                }
                 try {
                     usersRepository.assertValid(username);
                 } catch (UsersRepositoryException e) {
