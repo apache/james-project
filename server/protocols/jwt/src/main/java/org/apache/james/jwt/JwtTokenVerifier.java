@@ -134,6 +134,11 @@ public class JwtTokenVerifier {
     }
 
     public Optional<Claims> verify(String token) {
+        if (token == null || token.isBlank()) {
+            // jjwt rejects blank tokens with an IllegalArgumentException
+            LOGGER.info("Failed Jwt verification: blank token");
+            return Optional.empty();
+        }
         try {
             // if the token contains a kid, verify only with the corresponding key (or fail)
             return retrieveClaims(token, kidJwtParser);

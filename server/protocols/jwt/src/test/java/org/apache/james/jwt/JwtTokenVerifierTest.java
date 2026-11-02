@@ -31,6 +31,8 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableList;
 
@@ -293,5 +295,18 @@ class JwtTokenVerifierTest {
         assertThat(sutEc.verify(token)).isEmpty();
         assertThat(sutEc.verifyAndExtractLogin(token)).isEmpty();
         assertThat(sutEc.hasAttribute("admin", true, token)).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", " ", "\t", "\n "})
+    void verifyShouldRejectBlankTokens(String token) {
+        assertThat(sut.verify(token)).isEmpty();
+        assertThat(sut.verifyAndExtractLogin(token)).isEmpty();
+        assertThat(sut.hasAttribute("admin", true, token)).isFalse();
+    }
+
+    @Test
+    void verifyShouldRejectNullToken() {
+        assertThat(sut.verify(null)).isEmpty();
     }
 }
