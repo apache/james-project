@@ -490,7 +490,8 @@ public class SearchUtil {
 
     public static String removeGreaterThanCharactersAtBeginningOfLine(String text) {
         StringBuilder result = new StringBuilder();
-        boolean isNewLine = false;
+        // The start of the text is the start of a line
+        boolean isNewLine = true;
 
         for (int i = 0; i < text.length(); i++) {
             char current = text.charAt(i);
