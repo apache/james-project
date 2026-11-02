@@ -583,4 +583,23 @@ class UnionMailboxACLResolverTest {
                 .contains(MailboxACL.Right.Read))
             .isFalse();
     }
+
+    @Test
+    void resolveRightsShouldIgnoreGroupEntries() throws Exception {
+        MailboxACL groupAcl = new MailboxACL(new Entry(
+            EntryKey.deserialize("$group"), Rfc4314Rights.fromSerializedRfc4314Rights("lr")));
+
+        assertThat(noGlobals.resolveRights(USER_1, groupAcl, USER_2)).isEqualTo(MailboxACL.NO_RIGHTS);
+        assertThat(noGlobals.resolveRights(USER_1, groupAcl, USER_1)).isEqualTo(MailboxACL.NO_RIGHTS);
+    }
+
+    @Test
+    void resolveRightsShouldKeepOtherEntriesWhenAGroupEntryIsPresent() throws Exception {
+        MailboxACL mixedAcl = new MailboxACL(
+            new Entry(EntryKey.deserialize("$group"), Rfc4314Rights.fromSerializedRfc4314Rights("lr")),
+            new Entry(EntryKey.createUserEntryKey(USER_1), Rfc4314Rights.fromSerializedRfc4314Rights("r")));
+
+        assertThat(noGlobals.resolveRights(USER_1, mixedAcl, USER_2))
+            .isEqualTo(Rfc4314Rights.fromSerializedRfc4314Rights("r"));
+    }
 }

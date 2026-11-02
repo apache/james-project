@@ -33,7 +33,7 @@ import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
 import org.apache.james.jmap.method.{MailboxCreationParseException, SetRequest, WithAccountId}
-import org.apache.james.mailbox.model.MailboxACL.{ANYONE_KEY, ANYONE_NEGATIVE_KEY, AUTHENTICATED_KEY, EntryKey}
+import org.apache.james.mailbox.model.MailboxACL.{ANYONE_KEY, ANYONE_NEGATIVE_KEY, AUTHENTICATED_KEY, EntryKey, NameType}
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
 import org.apache.james.mailbox.{MailboxSession, Role}
 import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue}
@@ -275,6 +275,11 @@ object IsSubscribedUpdate {
   }
 }
 
+object SharedWithGroupValidator {
+  // James has no group membership resolution: a group entry would grant nothing
+  val GROUP_KEYS_NOT_SUPPORTED: String = "group identifiers (starting with `$`) are not supported"
+}
+
 object SharedWithAnyoneValidator {
   // Keys granting rights to users not named in the ACL: only the Post right can be granted to them.
   // The negative authenticated key only removes rights, and stays allowed.
@@ -296,10 +301,14 @@ object SharedWithAnyoneValidator {
 }
 
 object SharedWithResetUpdate {
+  import SharedWithGroupValidator.GROUP_KEYS_NOT_SUPPORTED
+
   def parse(serializer: MailboxSerializer, capabilities: Set[CapabilityIdentifier])
            (newValue: JsValue): Either[PatchUpdateValidationException, Update] =
     if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
       serializer.deserializeRights(input = newValue) match {
+        case JsSuccess(value, _) if value.rights.keys.exists(_.getNameType == NameType.group) =>
+          Left(InvalidUpdateException("sharedWith", GROUP_KEYS_NOT_SUPPORTED))
         case JsSuccess(value, _) if !SharedWithAnyoneValidator.areValidPatches(value.rights) =>
           Left(InvalidPatchException(SharedWithAnyoneValidator.invalidPatchMessage(value.rights)))
         case JsSuccess(value, _) => scala.Right(SharedWithResetUpdate(value))
@@ -311,6 +320,8 @@ object SharedWithResetUpdate {
 }
 
 object SharedWithPartialUpdate {
+  import SharedWithGroupValidator.GROUP_KEYS_NOT_SUPPORTED
+
   def parse(serializer: MailboxSerializer, capabilities: Set[CapabilityIdentifier])
            ( property: String, newValue: JsValue): Either[PatchUpdateValidationException, Update] =
     if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
@@ -329,7 +340,12 @@ object SharedWithPartialUpdate {
     }
 
   def parseEntryKey(property: String): Either[PatchUpdateValidationException, EntryKey] = try {
-    scala.Right(EntryKey.deserialize(property.substring(MailboxPatchObject.sharedWithPrefix.length)))
+    val entryKey = EntryKey.deserialize(property.substring(MailboxPatchObject.sharedWithPrefix.length))
+    if (entryKey.getNameType == NameType.group) {
+      Left(InvalidPropertyException(property, GROUP_KEYS_NOT_SUPPORTED))
+    } else {
+      scala.Right(entryKey)
+    }
   } catch {
     case e: Exception => Left(InvalidPropertyException(property, e.getMessage))
   }
