@@ -655,4 +655,29 @@ class AddFooterTest {
         assertTimeoutPreemptively(Duration.ofSeconds(10),
             () -> assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException());
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Content-Type: text/plain", "Content-Type: text/plain; charset=us-ascii"})
+    void shouldSwitchAnAsciiPartToUtf8WhenTheFooterHoldsLatin1Characters(String contentTypeHeader) throws Exception {
+        String footer = "Message confidentiel reçu";
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", footer)
+            .build());
+
+        String message = Joiner.on("\r\n").join(
+            "Subject: test",
+            "MIME-Version: 1.0",
+            contentTypeHeader,
+            "",
+            "hello",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        mailet.service(mail);
+
+        MimeMessage reparsed = reparse(mail);
+        assertThat((String) reparsed.getContent()).isEqualTo("hello\r\n" + footer);
+        assertThat(new ContentType(reparsed.getContentType()).getParameter("charset")).isEqualTo("UTF-8");
+    }
 }

@@ -190,13 +190,22 @@ public class AddFooter extends GenericMailet {
 
     private boolean canEncode(String charset, String content) {
         try {
-            return Charset.forName(MimeUtility.javaCharset(charset))
+            return toJavaCharset(charset)
                 .newEncoder()
                 .canEncode(content);
         } catch (IllegalArgumentException e) {
             // Illegal or unsupported charset name
             return false;
         }
+    }
+
+    private Charset toJavaCharset(String charset) {
+        // Rely on the declared charset when Java knows it: MimeUtility.javaCharset maps US-ASCII to ISO-8859-1, that
+        // would accept Latin-1 characters in a us-ascii part
+        if (Charset.isSupported(charset)) {
+            return Charset.forName(charset);
+        }
+        return Charset.forName(MimeUtility.javaCharset(charset));
     }
 
     /**
