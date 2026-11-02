@@ -258,4 +258,21 @@ class SearchUtilTest {
         assertThat(serialiazedMessageId).isNull();
     }
 
+    @Test
+    void removeGreaterThanCharactersAtBeginningOfLineShouldStripTheFirstLine() {
+        assertThat(SearchUtil.removeGreaterThanCharactersAtBeginningOfLine("> On Monday you wrote:\n> hello\nYes"))
+            .isEqualTo(" On Monday you wrote:\n hello\nYes");
+    }
+
+    @Test
+    void removeGreaterThanCharactersAtBeginningOfLineShouldStripRepeatedMarkersOfTheFirstLine() {
+        assertThat(SearchUtil.removeGreaterThanCharactersAtBeginningOfLine(">>> deep quote"))
+            .isEqualTo(" deep quote");
+    }
+
+    @Test
+    void removeGreaterThanCharactersAtBeginningOfLineShouldKeepGreaterThanCharactersInsideALine() {
+        assertThat(SearchUtil.removeGreaterThanCharactersAtBeginningOfLine("a > b\n>c"))
+            .isEqualTo("a > b\nc");
+    }
 }
