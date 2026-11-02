@@ -74,6 +74,11 @@ public interface DocumentFieldConstants {
     String HEADERS_FIELD = "headers";
 
     /**
+     * {@link Field} which will contain the name of each message header, even when its value has no indexed word
+     */
+    String HEADER_NAMES_FIELD = "headerNames";
+
+    /**
      * {@link Field} which will contain the mod-sequence of the message
      */
     String MODSEQ_FIELD = "modSeq";

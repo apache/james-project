@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -54,6 +55,18 @@ class LenientImapSearchAnalyzerTest {
     })
     void analyzerShouldIndexWordsWithoutSurroundingPunctuation(String value, String expectedTokens) throws IOException {
         assertThat(tokens(value)).containsExactlyInAnyOrder(expectedTokens.split(","));
+    }
+
+    @Test
+    void analyzerShouldRemovePunctuationAfterUnicodeWhitespace() throws IOException {
+        assertThat(tokens("hello <Team sync>"))
+            .containsExactlyInAnyOrder("HELLO", "TEAM", "SYNC", "HELLO TEAM", "TEAM SYNC", "HELLO TEAM SYNC");
+    }
+
+    @Test
+    void removePunctuationAroundWordsShouldTreatUnicodeWhitespaceAsSeparator() {
+        assertThat(LenientImapSearchAnalyzer.removePunctuationAroundWords("foo　<bob@x.org> bar"))
+            .isEqualTo("foo　bob@x.org bar");
     }
 
     private ImmutableList<String> tokens(String value) throws IOException {
