@@ -19,8 +19,11 @@
 package org.apache.james.mailbox.lucene.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.io.IOException;
+import java.text.Normalizer;
+import java.time.Duration;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -40,7 +43,8 @@ class LenientImapSearchAnalyzerTest {
         "<test99@localhost>|test99@localhost",
         "budget - review|budget  review",
         "user-from@domain.org|user-from@domain.org",
-        "C++|C",
+        "C++|C++",
+        "C#|C#",
         "---|''",
         "(fwd)|fwd"
     })
@@ -67,6 +71,27 @@ class LenientImapSearchAnalyzerTest {
     void removePunctuationAroundWordsShouldTreatUnicodeWhitespaceAsSeparator() {
         assertThat(LenientImapSearchAnalyzer.removePunctuationAroundWords("foo　<bob@x.org> bar"))
             .isEqualTo("foo　bob@x.org bar");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "को",
+        "की",
+        "café"
+    })
+    void removePunctuationAroundWordsShouldKeepCombiningMarks(String value) {
+        String decomposed = Normalizer.normalize(value, Normalizer.Form.NFD);
+
+        assertThat(LenientImapSearchAnalyzer.removePunctuationAroundWords(decomposed)).isEqualTo(decomposed);
+    }
+
+    @Test
+    void removePunctuationAroundWordsShouldBeFastOnLongPunctuationInsideAWord() {
+        String value = "a" + "-".repeat(1_000_000) + "a";
+
+        String result = assertTimeoutPreemptively(Duration.ofSeconds(5), () -> LenientImapSearchAnalyzer.removePunctuationAroundWords(value));
+
+        assertThat(result).isEqualTo(value);
     }
 
     private ImmutableList<String> tokens(String value) throws IOException {

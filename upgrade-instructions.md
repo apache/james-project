@@ -39,13 +39,16 @@ Concerned products: James apps relying on Lucene as the search index
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-4235
 
-The Lucene mailbox index now removes punctuation at the start and at the end of each word, so a subject `<Team sync>` is
-found when searching `Team`. Punctuation inside a word, as in an email address, is kept.
+The Lucene mailbox index now removes brackets, quotes, dashes and sentence punctuation at the start and at the end of
+each word, so a subject `<Team sync>` is found when searching `Team`. Punctuation inside a word, as in an email address,
+and other symbols, as in `C++`, are kept. A searched value made only of punctuation, such as `--`, no longer matches
+anything.
 
 Messages indexed before the upgrade keep words glued to their punctuation until they are reindexed. To apply the change
-to existing messages, [reindex all mails](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails).
-Until then, searches that include punctuation around words, such as `<bob@example.com>`, may miss those messages.
-In-memory Lucene indexes need nothing.
+to existing messages, [reindex all mails](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails)
+with the default `rebuildAll` mode: the Lucene index does not replace the document of a message it already holds, so
+the other modes keep the old documents. Until then, searches that include punctuation around words, such as
+`<bob@example.com>`, may miss those messages. In-memory Lucene indexes need nothing.
 
 ### JAMES-4236 populateEmailQueryView task reports mailbox counters
 

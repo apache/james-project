@@ -21,8 +21,10 @@ package org.apache.james.mailbox.lucene.search;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.james.mailbox.store.MessageIdManagerTestSystem.MOD_SEQ;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -40,6 +42,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -56,9 +59,12 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndexContract;
 import org.apache.james.util.streams.Limit;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -92,9 +98,7 @@ class LuceneMailboxMessageSearchIndexTest {
             + "It has " + RHUBARD + ".\r\n" + "It has " + CUSTARD + ".\r\n"
             + "It needs naught else.\r\n";
 
-    static final String VERY_LONG_BODY = IntStream.rangeClosed(1, 40)
-        .mapToObj(i -> "word" + i)
-        .collect(Collectors.joining(" "));
+    static final String VERY_LONG_BODY = words(1, 40);
 
     MessageUid uid1;
     MessageUid uid2;
@@ -388,12 +392,66 @@ class LuceneMailboxMessageSearchIndexTest {
         assertThat(result).isEmpty();
     }
 
+    @Test
+    void bodySearchShouldCheckTheLastSearchedWordOfVeryLongValue() throws Exception {
+        Mailbox veryLongText = veryLongTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.bodyContains(words(1, 34) + " x"));
+        Stream<MessageUid> result = index.search(session, veryLongText, query).toStream();
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void bodySearchShouldNotCheckWordsAfterTheSearchedWordsOfVeryLongValue() throws Exception {
+        Mailbox veryLongText = veryLongTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.bodyContains(words(1, 35) + " x"));
+        Stream<MessageUid> result = index.search(session, veryLongText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void bodySearchShouldMatchManyVeryLongValues() throws Exception {
+        Mailbox veryLongText = veryLongTextMailbox(words(1, 70));
+
+        SearchQuery query = SearchQuery.of(SearchQuery.and(IntStream.rangeClosed(1, 33)
+            .mapToObj(first -> SearchQuery.bodyContains(words(first, 35)))
+            .collect(ImmutableList.toImmutableList())));
+        Stream<MessageUid> result = index.search(session, veryLongText, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void searchShouldThrowMailboxExceptionWhenTheQueryHasTooManyClauses() throws Exception {
+        // wildcard queries of the suffix match are slow to build, prefix queries are enough to reach the limit
+        index.setEnableSuffixMatch(false);
+        Mailbox veryLongText = veryLongTextMailbox();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.and(IntStream.rangeClosed(1, 100)
+            .mapToObj(first -> SearchQuery.mailContains(words(first, 35)))
+            .collect(ImmutableList.toImmutableList())));
+        assertThatThrownBy(() -> index.search(session, veryLongText, query))
+            .isInstanceOf(MailboxException.class)
+            .hasMessageContaining("too many")
+            .hasCauseInstanceOf(IndexSearcher.TooManyClauses.class);
+    }
+
+    private static String words(int first, int count) {
+        return IntStream.range(first, first + count)
+            .mapToObj(i -> "word" + i)
+            .collect(Collectors.joining(" "));
+    }
+
     private Mailbox veryLongTextMailbox() throws Exception {
+        return veryLongTextMailbox(VERY_LONG_BODY);
+    }
+
+    private Mailbox veryLongTextMailbox(String body) throws Exception {
         TestId veryLongTextId = TestId.of(6);
         Mailbox veryLongText = new Mailbox(MailboxPath.forUser(BOB, "veryLongText"), UidValidity.of(23), veryLongTextId);
         MessageBuilder builder = new MessageBuilder()
             .header("Subject", "Very long text")
-            .body(VERY_LONG_BODY.getBytes(UTF_8))
+            .body(body.getBytes(UTF_8))
             .uid(MessageUid.of(1))
             .mailboxId(veryLongTextId);
         index.add(session, veryLongText, builder.build(factory.generate())).block();
@@ -480,6 +538,23 @@ class LuceneMailboxMessageSearchIndexTest {
     }
 
     @Test
+    void addressSearchShouldMatchDisplayNameWithCommaWithPrefixMatch() throws Exception {
+        index.setEnableSuffixMatch(false);
+        TestId commaNameId = TestId.of(13);
+        Mailbox commaName = new Mailbox(MailboxPath.forUser(BOB, "commaName"), UidValidity.of(30), commaNameId);
+        MessageBuilder builder = new MessageBuilder()
+            .header("To", "\"Potter, Harry\" <harry@example.org>")
+            .body("Body".getBytes(UTF_8))
+            .uid(MessageUid.of(1))
+            .mailboxId(commaNameId);
+        index.add(session, commaName, builder.build(factory.generate())).block();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.address(AddressType.To, "Potter Harry"));
+        Stream<MessageUid> result = index.search(session, commaName, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
     void bodySearchShouldMatchWordGluedToPunctuationAfterUnicodeWhitespaceWithPrefixMatch() throws Exception {
         index.setEnableSuffixMatch(false);
         TestId unicodeSpaceId = TestId.of(7);
@@ -511,6 +586,132 @@ class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = SearchQuery.of(SearchQuery.headerExists("Subject"));
         Stream<MessageUid> result = index.search(session, punctuationOnly, query).toStream();
         assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void bodySearchShouldNotIgnoreSymbolsAfterWordWithPrefixMatch() throws Exception {
+        index.setEnableSuffixMatch(false);
+        Mailbox utf8Body = utf8BodyMailbox("Cat");
+
+        SearchQuery query = SearchQuery.of(SearchQuery.bodyContains("C++"));
+        Stream<MessageUid> result = index.search(session, utf8Body, query).toStream();
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void bodySearchShouldNotIgnoreCombiningMarksWithPrefixMatch() throws Exception {
+        index.setEnableSuffixMatch(false);
+        Mailbox utf8Body = utf8BodyMailbox("को");
+
+        SearchQuery query = SearchQuery.of(SearchQuery.bodyContains("के"));
+        Stream<MessageUid> result = index.search(session, utf8Body, query).toStream();
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void bodySearchShouldMatchDecomposedCharactersWithPrefixMatch() throws Exception {
+        index.setEnableSuffixMatch(false);
+        String decomposed = Normalizer.normalize("Greek ᾳ letter", Normalizer.Form.NFD);
+        Mailbox utf8Body = utf8BodyMailbox(decomposed);
+
+        SearchQuery query = SearchQuery.of(SearchQuery.bodyContains(decomposed));
+        Stream<MessageUid> result = index.search(session, utf8Body, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void searchShouldMatchNothingWhenValueIsOnlyPunctuation() throws Exception {
+        TestId gluedDashesId = TestId.of(10);
+        Mailbox gluedDashes = new Mailbox(MailboxPath.forUser(BOB, "gluedDashes"), UidValidity.of(27), gluedDashesId);
+        MessageBuilder builder = new MessageBuilder()
+            .header("Subject", "Notes--draft")
+            .body("Notes--draft".getBytes(UTF_8))
+            .uid(MessageUid.of(1))
+            .mailboxId(gluedDashesId);
+        index.add(session, gluedDashes, builder.build(factory.generate())).block();
+
+        assertThat(index.search(session, gluedDashes, SearchQuery.of(SearchQuery.subject("--"))).toStream())
+            .isEmpty();
+        assertThat(index.search(session, gluedDashes, SearchQuery.of(SearchQuery.bodyContains("--"))).toStream())
+            .isEmpty();
+    }
+
+    @Test
+    void subjectSearchWithEmptyValueShouldMatchSubjectMadeOfPunctuationOnly() throws Exception {
+        TestId emptyHeaderId = TestId.of(11);
+        Mailbox emptyHeader = new Mailbox(MailboxPath.forUser(BOB, "emptyHeader"), UidValidity.of(28), emptyHeaderId);
+        index.add(session, emptyHeader, new MessageBuilder()
+            .header("Subject", "!!!")
+            .body("Body".getBytes(UTF_8))
+            .uid(MessageUid.of(1))
+            .mailboxId(emptyHeaderId)
+            .build(factory.generate())).block();
+        index.add(session, emptyHeader, new MessageBuilder()
+            .header("From", "bob@example.org")
+            .body("Body".getBytes(UTF_8))
+            .uid(MessageUid.of(2))
+            .mailboxId(emptyHeaderId)
+            .build(factory.generate())).block();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.subject(""));
+        Stream<MessageUid> result = index.search(session, emptyHeader, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void headerExistsShouldMatchHeaderWithEmptyValue() throws Exception {
+        TestId emptyHeaderId = TestId.of(11);
+        Mailbox emptyHeader = new Mailbox(MailboxPath.forUser(BOB, "emptyHeader"), UidValidity.of(28), emptyHeaderId);
+        index.add(session, emptyHeader, new MessageBuilder()
+            .header("X-Empty", "")
+            .body("Body".getBytes(UTF_8))
+            .uid(MessageUid.of(1))
+            .mailboxId(emptyHeaderId)
+            .build(factory.generate())).block();
+        index.add(session, emptyHeader, new MessageBuilder()
+            .header("Subject", "No X-Empty header")
+            .body("Body".getBytes(UTF_8))
+            .uid(MessageUid.of(2))
+            .mailboxId(emptyHeaderId)
+            .build(factory.generate())).block();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerExists("X-Empty"));
+        Stream<MessageUid> result = index.search(session, emptyHeader, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    @Test
+    void headerExistsShouldMatchMessageIndexedWithoutHeaderNames() throws Exception {
+        TestId oldIndexId = TestId.of(12);
+        Mailbox oldIndex = new Mailbox(MailboxPath.forUser(BOB, "oldIndex"), UidValidity.of(29), oldIndexId);
+        MailboxMessage message = new MessageBuilder()
+            .header("Subject", "Indexed by an older James")
+            .body("Body".getBytes(UTF_8))
+            .uid(MessageUid.of(1))
+            .mailboxId(oldIndexId)
+            .build(factory.generate());
+        LuceneIndexableDocument indexableDocument = new LuceneIndexableDocument(new JsoupTextExtractor());
+        Document document = indexableDocument.createMessageDocument(message, session).block();
+        document.removeFields(DocumentFieldConstants.HEADER_NAMES_FIELD);
+        index.writer.addDocument(document);
+        index.writer.addDocument(indexableDocument.createFlagsDocument(message));
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerExists("Subject"));
+        Stream<MessageUid> result = index.search(session, oldIndex, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(1));
+    }
+
+    private Mailbox utf8BodyMailbox(String body) throws Exception {
+        TestId utf8BodyId = TestId.of(9);
+        Mailbox utf8Body = new Mailbox(MailboxPath.forUser(BOB, "utf8Body"), UidValidity.of(26), utf8BodyId);
+        MessageBuilder builder = new MessageBuilder()
+            .header("Subject", "UTF-8 body")
+            .header("Content-Type", "text/plain; charset=UTF-8")
+            .body(body.getBytes(UTF_8))
+            .uid(MessageUid.of(1))
+            .mailboxId(utf8BodyId);
+        index.add(session, utf8Body, builder.build(factory.generate())).block();
+        return utf8Body;
     }
 
     private Mailbox punctuationMailbox() throws Exception {
