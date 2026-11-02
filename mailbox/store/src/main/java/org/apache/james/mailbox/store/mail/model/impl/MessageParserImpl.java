@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
@@ -55,6 +56,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 
 public class MessageParserImpl implements MessageParser {
+    private static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\x00-\\x1F\\x7F]");
 
     private static final String TEXT_MEDIA_TYPE = "text";
     private static final String CONTENT_TYPE = "Content-Type";
@@ -188,7 +190,10 @@ public class MessageParserImpl implements MessageParser {
         return contentTypeField
             .flatMap(field -> Optional.ofNullable(field.getParameter("name")))
             .or(() -> contentDispositionField.map(ContentDispositionField::getFilename))
-            .map(MimeUtil::unscrambleHeaderValue);
+            .map(MimeUtil::unscrambleHeaderValue)
+            // Decoded encoded words can hold any character: control characters (NUL, CR, LF...) are not safe to store
+            // (PostgreSQL JSONB rejects NUL) nor to display
+            .map(name -> CONTROL_CHARACTERS.matcher(name).replaceAll(" "));
     }
 
     private Optional<Cid> cid(Optional<ContentIdField> contentIdField) {
