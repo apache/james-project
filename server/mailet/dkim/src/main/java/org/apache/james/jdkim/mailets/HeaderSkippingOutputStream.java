@@ -40,17 +40,12 @@ public class HeaderSkippingOutputStream extends FilterOutputStream {
     public void write(byte[] b, int off, int len) throws IOException {
         if (inHeaders) {
             for (int i = off; i < off + len; i++) {
-                if (b[i] == skipTo[pos]) {
-                    pos++;
-                    if (pos == skipTo.length) {
-                        inHeaders = false;
-                        if (len - i - 1 > 0) {
-                            out.write(b, i + 1, len - i - 1);
-                        }
-                        break;
+                if (consumeHeaderByte(b[i])) {
+                    int remaining = off + len - i - 1;
+                    if (remaining > 0) {
+                        out.write(b, i + 1, remaining);
                     }
-                } else {
-                    pos = 0;
+                    break;
                 }
             }
         } else {
@@ -61,17 +56,27 @@ public class HeaderSkippingOutputStream extends FilterOutputStream {
     @Override
     public void write(int b) throws IOException {
         if (inHeaders) {
-            if (skipTo[pos] == b) {
-                pos++;
-                if (pos == skipTo.length) {
-                    inHeaders = false;
-                }
-            } else {
-                pos = 0;
-            }
+            consumeHeaderByte((byte) b);
         } else {
             out.write(b);
         }
+    }
+
+    /**
+     * @return true when this byte ends the header/body separator
+     */
+    private boolean consumeHeaderByte(byte b) {
+        if (b == skipTo[pos]) {
+            pos++;
+        } else {
+            // In "\r\n\r\n", a mismatching byte can only restart the separator if it is its first byte
+            pos = b == skipTo[0] ? 1 : 0;
+        }
+        if (pos == skipTo.length) {
+            inHeaders = false;
+            return true;
+        }
+        return false;
     }
 
 }
