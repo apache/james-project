@@ -7080,6 +7080,133 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  def partialRightsUpdateShouldRejectGroupIdentifiers(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "$bobAccountId",
+         |                "update": {
+         |                    "${mailboxId.serialize}": {
+         |                      "sharedWith/$$group": ["r", "l"]
+         |                    }
+         |                }
+         |           },
+         |    "c1"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState",
+        "methodResponses[1][1].state")
+      .isEqualTo(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [
+           |    ["Mailbox/set", {
+           |      "accountId": "$bobAccountId",
+           |      "notUpdated": {
+           |        "${mailboxId.serialize}": {
+           |          "type": "invalidPatch",
+           |          "description": "group identifiers (starting with `$$`) are not supported"
+           |        }
+           |      }
+           |    }, "c1"]
+           |  ]
+           |}""".stripMargin)
+
+
+    assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)).isEqualTo(aclBefore)
+  }
+
+  @Test
+  def resetRightsUpdateShouldRejectGroupIdentifiers(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "$bobAccountId",
+         |                "update": {
+         |                    "${mailboxId.serialize}": {
+         |                      "sharedWith": {
+         |                        "$$group":["r", "l"]
+         |                      }
+         |                    }
+         |                }
+         |           },
+         |    "c1"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState",
+        "methodResponses[1][1].state")
+      .isEqualTo(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [
+           |    ["Mailbox/set", {
+           |      "accountId": "$bobAccountId",
+           |      "notUpdated": {
+           |        "${mailboxId.serialize}": {
+           |          "type": "invalidArguments",
+           |          "description": "group identifiers (starting with `$$`) are not supported",
+           |          "properties": ["sharedWith"]
+           |        }
+           |      }
+           |    }, "c1"]
+           |  ]
+           |}""".stripMargin)
+
+
+    assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)).isEqualTo(aclBefore)
+  }
+
+  @Test
   def partialRightsUpdateShouldFailWhenInvalidRights(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
