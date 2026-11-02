@@ -508,6 +508,42 @@ class SieveIntegrationTest {
     }
 
     @Test
+    void rejectShouldWorkWhenNoMessageId() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
+
+        FakeMail mail = createMail();
+        mail.getMessage().removeHeader("Message-ID");
+        testee.service(mail);
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+        assertThat(mail.getRecipients()).isEmpty();
+    }
+
+    @Test
+    void rejectShouldWorkWhenBlankMessageId() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
+
+        FakeMail mail = createMail();
+        mail.getMessage().setHeader("Message-ID", " ");
+        testee.service(mail);
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+        assertThat(mail.getRecipients()).isEmpty();
+    }
+
+    @Test
+    void rejectShouldWorkWhenFoldedMessageId() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
+
+        FakeMail mail = createMail();
+        mail.getMessage().setHeader("Message-ID", "\r\n <folded@example.com>");
+        testee.service(mail);
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+        assertThat(mail.getRecipients()).isEmpty();
+    }
+
+    @Test
     void rejectShouldWorkWhenMultipleRecipients() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
         when(usersRepository.getUsername(new MailAddress("other@domain.tld"))).thenReturn(Username.of("other@domain.tld"));

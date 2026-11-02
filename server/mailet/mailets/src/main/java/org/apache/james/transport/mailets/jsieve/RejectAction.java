@@ -21,12 +21,14 @@ package org.apache.james.transport.mailets.jsieve;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Optional;
 
 import jakarta.mail.Address;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeUtility;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -34,6 +36,7 @@ import org.apache.james.mdn.MDN;
 import org.apache.james.mdn.MDNReport;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.OriginalMessageId;
 import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
@@ -110,16 +113,24 @@ public class RejectAction implements MailAction {
         }
 
         String finalRecipient = context.getRecipient().asString();
-        String originalMessageId = aMail.getMessage().getMessageID();
+        // Original-Message-ID is optional (RFC 8098 3.2.5): omit it when the message has no usable Message-ID
+        Optional<OriginalMessageId> originalMessageId = Optional.ofNullable(aMail.getMessage().getMessageID())
+            .map(MimeUtility::unfold)
+            .map(String::trim)
+            .filter(messageId -> !messageId.isEmpty())
+            .filter(messageId -> messageId.indexOf('\r') < 0 && messageId.indexOf('\n') < 0)
+            .map(OriginalMessageId::new);
+
+        MDNReport.Builder reportBuilder = MDNReport.builder();
+        originalMessageId.ifPresent(reportBuilder::originalMessageIdField);
 
         Multipart multipart = MDN.builder()
             .humanReadableText(humanText.toString())
             .report(
-                MDNReport.builder()
+                reportBuilder
                     .reportingUserAgentField(ReportingUserAgent.builder().userAgentName(reportingUAName).userAgentProduct(reportingUAProduct).build())
                     .finalRecipientField(finalRecipient)
                     .originalRecipientField(originalRecipient)
-                    .originalMessageIdField(originalMessageId)
                     .dispositionField(Disposition.builder()
                         .actionMode(DispositionActionMode.Automatic)
                         .sendingMode(DispositionSendingMode.Automatic)
