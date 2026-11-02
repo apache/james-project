@@ -32,6 +32,7 @@ import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.FLAG
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.FROM_FIELD;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.HAS_ATTACHMENT_FIELD;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.HEADERS_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.HEADER_NAMES_FIELD;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.ID_FIELD;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.INTERNAL_DATE_FIELD_DAY_RESOLUTION;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.INTERNAL_DATE_FIELD_HOUR_RESOLUTION;
@@ -166,6 +167,7 @@ public class LuceneIndexableDocument {
                 String headerValue = uppercase(header.getValue());
                 doc.add(new TextField(HEADERS_FIELD, String.format("%s: %s", headerName, headerValue), Field.Store.NO));
                 doc.add(new TextField(PREFIX_HEADER_FIELD + headerName, headerValue, Field.Store.NO));
+                doc.add(new StringField(HEADER_NAMES_FIELD, headerName, Field.Store.NO));
 
                 switch (headerName) {
                     case "TO":

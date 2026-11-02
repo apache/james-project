@@ -28,6 +28,7 @@ import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.FIRS
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.FLAGS_FIELD;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.HAS_ATTACHMENT_FIELD;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.HEADERS_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.HEADER_NAMES_FIELD;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.ID_FIELD;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.INTERNAL_DATE_FIELD_DAY_RESOLUTION;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.INTERNAL_DATE_FIELD_HOUR_RESOLUTION;
@@ -178,6 +179,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * Default max queryBuilder results
      */
     private static final int DEFAULT_MAX_QUERY_RESULTS = 100000;
+
+    /**
+     * Max number of word windows searched for one text value, which keeps the query below Lucene's clause limit
+     */
+    private static final int MAX_SEARCHED_WINDOWS = 32;
 
     private static final boolean INCLUDE_LOWER = true;
     private static final boolean INCLUDE_UPPER = true;
@@ -498,7 +504,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * Return a {@link Query} for a value searched in a field indexed with {@link LenientImapSearchAnalyzer}.
      * Shingles are at most {@link LenientImapSearchAnalyzer#DEFAULT_MAX_TOKEN_LENGTH} tokens long, so a longer
      * value is split into overlapping windows of that size. The windows are ANDed per document, so this is
-     * not a strict phrase match. Punctuation around words is removed like the analyzer does at index time;
+     * not a strict phrase match. Only the first {@link #MAX_SEARCHED_WINDOWS} windows are searched, so the words
+     * after them are not checked. Punctuation around words is removed like the analyzer does at index time;
      * a value made only of punctuation is searched as is.
      */
     private Query createTextTermQuery(String fieldName, String value) {
@@ -512,7 +519,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return createTermQuery(fieldName, String.join(" ", tokens));
         }
         BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-        for (int start = 0; start + windowSize <= tokens.size(); start++) {
+        for (int start = 0; start + windowSize <= tokens.size() && start < MAX_SEARCHED_WINDOWS; start++) {
             queryBuilder.add(createTermQuery(fieldName, String.join(" ", tokens.subList(start, start + windowSize))), BooleanClause.Occur.MUST);
         }
         return queryBuilder.build();
@@ -530,7 +537,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         String fieldName = PREFIX_HEADER_FIELD + name;
         return switch (crit.getOperator()) {
             case ContainsOperator cop -> createTextTermQuery(fieldName, cop.getValue().toUpperCase(Locale.US));
-            case SearchQuery.ExistsOperator existsOperator -> new PrefixQuery(new Term(fieldName, StringUtils.EMPTY));
+            case SearchQuery.ExistsOperator existsOperator -> new BooleanQuery.Builder()
+                // documents indexed before HEADER_NAMES_FIELD existed only have the header field
+                .add(new PrefixQuery(new Term(fieldName, StringUtils.EMPTY)), BooleanClause.Occur.SHOULD)
+                .add(new TermQuery(new Term(HEADER_NAMES_FIELD, name)), BooleanClause.Occur.SHOULD)
+                .build();
             case DateOperator dop -> createQuery(toSentDateField(dop.getDateResultion()), dop);
             case SearchQuery.AddressOperator addressOperator -> createTextTermQuery(name.toLowerCase(Locale.US), addressOperator.getAddress().toUpperCase(Locale.US));
             default -> throw new UnsupportedSearchException();

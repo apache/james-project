@@ -44,8 +44,9 @@ public final class LenientImapSearchAnalyzer {
     /**
      * Runs of characters that are neither letters, digits nor whitespace, at the start or at the end of a
      * whitespace separated word. A word made only of such characters, like {@code -}, is removed entirely.
+     * Whitespace is {@link Character#isWhitespace(char)}, as for the tokenizer, so an em space (U+2003) is a separator.
      */
-    private static final String PUNCTUATION_AROUND_WORDS = "(?<!\\S)[^\\p{L}\\p{N}\\s]+|[^\\p{L}\\p{N}\\s]+(?!\\S)";
+    private static final String PUNCTUATION_AROUND_WORDS = "(?<!\\P{javaWhitespace})[^\\p{L}\\p{N}\\p{javaWhitespace}]+|[^\\p{L}\\p{N}\\p{javaWhitespace}]+(?!\\P{javaWhitespace})";
     private static final Pattern PUNCTUATION_AROUND_WORDS_PATTERN = Pattern.compile(PUNCTUATION_AROUND_WORDS);
 
     static final Analyzer INSTANCE = getAnalyzer();
