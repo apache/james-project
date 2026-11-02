@@ -113,7 +113,8 @@ public class PrefixedRegex implements MailboxNameExpression {
         while (tokenizer.hasMoreTokens()) {
             stringBuilder.append(getRegexPartAssociatedWithToken(tokenizer));
         }
-        return Pattern.compile(stringBuilder.toString());
+        // DOTALL: the '*' wildcard matches any character, line terminators included (RFC 3501 6.3.8)
+        return Pattern.compile(stringBuilder.toString(), Pattern.DOTALL);
     }
 
     private String getRegexPartAssociatedWithToken(StringTokenizer tokenizer) {
