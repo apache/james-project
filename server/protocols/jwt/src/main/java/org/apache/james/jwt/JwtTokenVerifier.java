@@ -37,6 +37,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Locator;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.CompressionAlgorithm;
 
 public class JwtTokenVerifier {
@@ -59,7 +60,8 @@ public class JwtTokenVerifier {
 
         private void validate() {
             if (!allowZipJWT) {
-                throw new RuntimeException("Rejecting a ZIP JWT. Usage of ZIPPED JWT can result in " +
+                // A JwtException, so that the token is rejected like the other unsupported tokens
+                throw new UnsupportedJwtException("Rejecting a ZIP JWT. Usage of ZIPPED JWT can result in " +
                     "excessive memory usage with malicious JWT tokens. To activate support for ZIPPed" +
                     "JWT please run James with the -Djames.jwt.zip.allow=true system property.");
             }

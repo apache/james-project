@@ -20,14 +20,21 @@ package org.apache.james.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.StringReader;
+import java.security.PrivateKey;
 import java.security.Security;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+
+import io.jsonwebtoken.Jwts;
 
 class JwtTokenVerifierTest {
 
@@ -271,4 +278,20 @@ class JwtTokenVerifierTest {
         assertThat(authorized).isFalse();
     }
 
+    @Test
+    void verifyShouldRejectZippedTokenWhenZipIsDisabled() throws Exception {
+        PrivateKey privateKey;
+        try (PEMParser parser = new PEMParser(new StringReader(PRIVATE_PEM_KEY_EC))) {
+            privateKey = new JcaPEMKeyConverter().getKeyPair((PEMKeyPair) parser.readObject()).getPrivate();
+        }
+        String token = Jwts.builder()
+            .subject("user@example.com")
+            .compressWith(Jwts.ZIP.DEF)
+            .signWith(privateKey, Jwts.SIG.ES256)
+            .compact();
+
+        assertThat(sutEc.verify(token)).isEmpty();
+        assertThat(sutEc.verifyAndExtractLogin(token)).isEmpty();
+        assertThat(sutEc.hasAttribute("admin", true, token)).isFalse();
+    }
 }
