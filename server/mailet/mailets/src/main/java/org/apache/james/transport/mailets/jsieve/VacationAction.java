@@ -24,6 +24,7 @@ import java.util.Enumeration;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import jakarta.mail.Header;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
 
@@ -41,6 +42,7 @@ import com.google.common.collect.Sets;
 
 public class VacationAction implements MailAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(VacationAction.class);
+    private static final String LIST_HEADER_PREFIX = "List-";
 
     @Override
     public void execute(Action action, Mail mail, ActionContext context) throws MessagingException {
@@ -102,10 +104,11 @@ public class VacationAction implements MailAction {
     }
 
     private boolean isMailingList(Mail mail) throws MessagingException {
-        Enumeration<String> enumeration = mail.getMessage().getAllHeaderLines();
-        while (enumeration.hasMoreElements()) {
-            String headerName = enumeration.nextElement();
-            if (headerName.startsWith("List-")) {
+        // RFC 5230 4.5: do not answer List-* fields (RFC 2369, RFC 2919), whose names are case-insensitive
+        Enumeration<Header> headers = mail.getMessage().getAllHeaders();
+        while (headers.hasMoreElements()) {
+            String headerName = headers.nextElement().getName();
+            if (headerName.regionMatches(true, 0, LIST_HEADER_PREFIX, 0, LIST_HEADER_PREFIX.length())) {
                 return true;
             }
         }
