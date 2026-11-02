@@ -376,16 +376,36 @@ public class StripAttachment extends GenericMailet {
             .map(Throwing.function(previous -> {
                 ImmutableMap.Builder<String, AttributeValue<?>> builder = ImmutableMap.<String, AttributeValue<?>>builder()
                     .putAll(previous);
-                if (!previous.containsKey(fileName)) {
-                    builder.put(fileName, AttributeValue.of(writeAsBytes(bodyPart)));
-                } else {
-                    LOGGER.info("Duplicated file name {} for {}", fileName, mail.getName());
+                String key = uniqueKey(previous, fileName);
+                if (!key.equals(fileName)) {
+                    LOGGER.info("Duplicated file name {} for {}, stored as {}", fileName, mail.getName(), key);
                 }
+                builder.put(key, AttributeValue.of(writeAsBytes(bodyPart)));
                 return builder.build();
             }))
             .orElse(ImmutableMap.of(fileName, AttributeValue.of(writeAsBytes(bodyPart))));
 
         mail.setAttribute(new Attribute(attributeName, AttributeValue.of(result)));
+    }
+
+    /**
+     * Several parts can have the same name (eg "invite.ics"): derive a unique key ("invite-1.ics", "invite-2.ics"...)
+     * rather than dropping the content of the next ones.
+     */
+    @VisibleForTesting
+    static String uniqueKey(Map<String, ?> existing, String fileName) {
+        if (!existing.containsKey(fileName)) {
+            return fileName;
+        }
+        int extensionIndex = fileName.lastIndexOf('.');
+        String baseName = extensionIndex > 0 ? fileName.substring(0, extensionIndex) : fileName;
+        String extension = extensionIndex > 0 ? fileName.substring(extensionIndex) : "";
+        for (int counter = 1; ; counter++) {
+            String candidate = baseName + "-" + counter + extension;
+            if (!existing.containsKey(candidate)) {
+                return candidate;
+            }
+        }
     }
 
     private static byte[] writeAsBytes(BodyPart bodyPart) throws IOException, MessagingException {

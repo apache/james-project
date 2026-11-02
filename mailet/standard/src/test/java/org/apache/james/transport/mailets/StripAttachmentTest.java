@@ -33,10 +33,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 
 import jakarta.mail.BodyPart;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Part;
+import jakarta.mail.Session;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 
@@ -61,6 +63,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ConsumerChainer;
+import com.google.common.collect.ImmutableMap;
 
 @ExtendWith(TemporaryFolderExtension.class)
 class StripAttachmentTest {
@@ -396,16 +399,67 @@ class StripAttachmentTest {
         Optional<Map<String, AttributeValue<?>>> savedValue = AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of(customAttribute), MAP_STRING_BYTES_CLASS);
         ConsumerChainer<Map<String, AttributeValue<?>>> assertValue = Throwing.consumer(saved -> {
             assertThat(saved)
-                .hasSize(1)
-                .containsKeys(expectedKey);
+                .hasSize(2)
+                .containsKeys(expectedKey, "10-1.tmp");
 
             MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream((byte[]) saved.get(expectedKey).getValue()));
             String content = IOUtils.toString(savedBodyPart.getInputStream(), StandardCharsets.UTF_8);
             assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
+
+            MimeBodyPart secondSavedBodyPart = new MimeBodyPart(new ByteArrayInputStream((byte[]) saved.get("10-1.tmp").getValue()));
+            String secondContent = IOUtils.toString(secondSavedBodyPart.getInputStream(), StandardCharsets.UTF_8);
+            assertThat(secondContent).isEqualTo(EXPECTED_ATTACHMENT_CONTENT_2);
         });
         assertThat(savedValue)
             .isPresent()
             .hasValueSatisfying(assertValue.sneakyThrow());
+    }
+
+    @Test
+    void serviceShouldKeepEveryCalendarPartWhenNamesAreDuplicated() throws Exception {
+        StripAttachment mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("mimeType", "text/calendar")
+            .setProperty("attribute", "rawIcalendar")
+            .build());
+
+        String raw = "Content-Type: multipart/mixed; boundary=\"outer\"\r\n\r\n"
+            + "--outer\r\n"
+            + "Content-Type: text/calendar; method=REQUEST; name=\"invite.ics\"\r\n\r\n"
+            + "BEGIN:VCALENDAR\r\nUID:first\r\nEND:VCALENDAR\r\n"
+            + "--outer\r\n"
+            + "Content-Type: text/calendar; method=REQUEST; name=\"invite.ics\"\r\n\r\n"
+            + "BEGIN:VCALENDAR\r\nUID:second\r\nEND:VCALENDAR\r\n"
+            + "--outer--\r\n";
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties()),
+                new ByteArrayInputStream(raw.getBytes(StandardCharsets.US_ASCII))))
+            .build();
+
+        mailet.service(mail);
+
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of("rawIcalendar"), MAP_STRING_BYTES_CLASS))
+            .hasValueSatisfying(map -> assertThat(map).containsOnlyKeys("invite.ics", "invite-1.ics"));
+    }
+
+    @Test
+    void uniqueKeyShouldReturnTheFileNameWhenUnused() {
+        assertThat(StripAttachment.uniqueKey(ImmutableMap.of("other.ics", 1), "invite.ics"))
+            .isEqualTo("invite.ics");
+    }
+
+    @Test
+    void uniqueKeyShouldInsertACounterBeforeTheExtension() {
+        assertThat(StripAttachment.uniqueKey(ImmutableMap.of("invite.ics", 1, "invite-1.ics", 2), "invite.ics"))
+            .isEqualTo("invite-2.ics");
+    }
+
+    @Test
+    void uniqueKeyShouldAppendACounterWhenNoExtension() {
+        assertThat(StripAttachment.uniqueKey(ImmutableMap.of("invite", 1), "invite"))
+            .isEqualTo("invite-1");
     }
 
     @Test
