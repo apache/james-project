@@ -88,12 +88,6 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
      *            the argument passed in with the command by the SMTP client
      */
     private Response doEHLO(SMTPSession session, String argument) {
-        if (!isValid(argument)) {
-            LOGGER.error("Invalid EHLO argument received: {} which must be a domain name or an IP address.", argument);
-            return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
-                DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Invalid domain name or ip supplied as HELO argument");
-        }
-
         SMTPResponse resp = new SMTPResponse(SMTPRetCode.MAIL_OK, new StringBuilder(session.getConfiguration().getHelloName()).append(" Hello ").append(argument)
                 .append(" [")
                 .append(session.getRemoteAddress().getAddress().getHostAddress()).append("])"));
@@ -235,6 +229,11 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
 
         if (parameters == null) {
             return DOMAIN_ADDRESS_REQUIRED;
+        } else if (!isValid(parameters)) {
+            // Validate before storing: a rejected argument must not become the HELO name of the session
+            LOGGER.error("Invalid EHLO argument received: {} which must be a domain name or an IP address.", parameters);
+            return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
+                DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Invalid domain name or ip supplied as HELO argument");
         } else {
             // store provided name
             session.setAttachment(SMTPSession.CURRENT_HELO_NAME, parameters, State.Connection);

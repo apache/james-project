@@ -588,6 +588,70 @@ public class SMTPServerTest {
             .contains("(HELO myclient.example.com)");
     }
 
+    @Test
+    public void rejectedEhloArgumentShouldNotReplaceTheHeloNameOfTheReceivedHeader() throws Exception {
+        init(smtpConfiguration);
+
+        SMTPClient smtp = newSMTPClient();
+
+        assertThat(smtp.sendCommand("EHLO", "client.example")).isEqualTo(250);
+        assertThat(smtp.sendCommand("EHLO", "x\rX-Injected: yes")).isEqualTo(501);
+        smtp.setSender("mail@localhost");
+        smtp.addRecipient("mail@localhost");
+        assertThat(smtp.sendShortMessageData("Subject: test\r\n\r\nbody\r\n")).isTrue();
+
+        smtp.quit();
+        smtp.disconnect();
+
+        MimeMessage message = testSystem.queue.getLastMail().getMessage();
+        assertThat(message.getHeader("X-Injected")).isNull();
+        assertThat(message.getHeader("Received")[0])
+            .doesNotContainPattern("\r(?!\n)")
+            .contains("(EHLO client.example)");
+    }
+
+    @Test
+    public void rejectedHeloArgumentShouldNotReplaceTheHeloNameOfTheReceivedHeader() throws Exception {
+        init(smtpConfiguration);
+
+        SMTPClient smtp = newSMTPClient();
+
+        smtp.helo("client.example");
+        assertThat(smtp.sendCommand("HELO", "x\rX-Injected: yes")).isEqualTo(501);
+        smtp.setSender("mail@localhost");
+        smtp.addRecipient("mail@localhost");
+        assertThat(smtp.sendShortMessageData("Subject: test\r\n\r\nbody\r\n")).isTrue();
+
+        smtp.quit();
+        smtp.disconnect();
+
+        MimeMessage message = testSystem.queue.getLastMail().getMessage();
+        assertThat(message.getHeader("X-Injected")).isNull();
+        assertThat(message.getHeader("Received")[0])
+            .doesNotContainPattern("\r(?!\n)")
+            .contains("(HELO client.example)");
+    }
+
+    @Test
+    public void rejectedEhloArgumentShouldNotBeUsedAsHeloName() throws Exception {
+        init(smtpConfiguration);
+
+        SMTPClient smtp = newSMTPClient();
+
+        assertThat(smtp.sendCommand("EHLO", "client.example")).isEqualTo(250);
+        assertThat(smtp.sendCommand("EHLO", "not(a)hostname")).isEqualTo(501);
+        smtp.setSender("mail@localhost");
+        smtp.addRecipient("mail@localhost");
+        assertThat(smtp.sendShortMessageData("Subject: test\r\n\r\nbody\r\n")).isTrue();
+
+        smtp.quit();
+        smtp.disconnect();
+
+        assertThat(testSystem.queue.getLastMail().getMessage().getHeader("Received")[0])
+            .contains("(EHLO client.example)")
+            .doesNotContain("not(a)hostname");
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"good", "adomain.com", "sub.domain.com",  "127.0.0.1",  "[127.0.0.1]",
         "fe80::1ff:fe23:4567:890a", "[fe80::1ff:fe23:4567:890a]",
