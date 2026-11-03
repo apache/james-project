@@ -281,7 +281,7 @@ public class URIScanner {
             uri = new URI(uriStr);
             host = uri.getHost();
         } catch (URISyntaxException e) {
-            LOGGER.error("Caught exception", e);
+            LOGGER.debug("Ignoring unparsable URI candidate \"{}\": {}", uriStr, e.getMessage());
         }
         return host;
     }
