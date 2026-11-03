@@ -24,7 +24,7 @@ import java.util.UUID
 import cats.implicits.toTraverseOps
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration, Properties, SetError}
+import org.apache.james.jmap.core.{AccountId, Id, IdOrCreationReference, JmapRfc8621Configuration, Properties, SetError}
 import org.apache.james.jmap.method.{SetRequest, ValidableRequest, WithAccountId, standardError}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.{JsObject, JsPath, JsonValidationError}
@@ -122,7 +122,7 @@ case class MDNSendCreateResponse(subject: Option[SubjectField],
 case class MDNSendRequest(accountId: AccountId,
                           identityId: UnparsedIdentityId,
                           send: Map[MDNSendCreationId, JsObject],
-                          onSuccessUpdateEmail: Option[Map[MDNSendCreationId, JsObject]]) extends WithAccountId with SetRequest {
+                          onSuccessUpdateEmail: Option[Map[IdOrCreationReference, JsObject]]) extends WithAccountId with SetRequest {
 
 
   override def idCount: Int = send.size
@@ -138,20 +138,20 @@ case class MDNSendRequest(accountId: AccountId,
       .map(_ => this)
   }
 
-  private def validateOnSuccessUpdateEmail(creationId: MDNSendCreationId, supportedCreationIds: List[MDNSendCreationId]): Either[IllegalArgumentException, MDNSendCreationId] =
-    if (creationId.id.value.startsWith("#")) {
-      val realId = creationId.id.value.substring(1)
+  private def validateOnSuccessUpdateEmail(creationId: IdOrCreationReference, supportedCreationIds: List[MDNSendCreationId]): Either[IllegalArgumentException, MDNSendCreationId] =
+    if (creationId.value.startsWith("#")) {
+      val realId = creationId.value.substring(1)
       val validateId: Either[IllegalArgumentException, MDNSendCreationId] = Id.validate(realId).map(id => MDNSendCreationId(id))
       validateId.flatMap(mdnSendId => if (supportedCreationIds.contains(mdnSendId)) {
         scala.Right(mdnSendId)
       } else {
-        Left(new IllegalArgumentException(s"${creationId.id.value} cannot be referenced in current method call"))
+        Left(new IllegalArgumentException(s"${creationId.value} cannot be referenced in current method call"))
       })
     } else {
-      Left(new IllegalArgumentException(s"${creationId.id.value} cannot be retrieved as storage for MDNSend is not yet implemented"))
+      Left(new IllegalArgumentException(s"${creationId.value} cannot be retrieved as storage for MDNSend is not yet implemented"))
     }
 
-  def implicitEmailSetRequest(messageIdResolver: MDNSendCreationId => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[EmailSetRequest]] =
+  def implicitEmailSetRequest(messageIdResolver: IdOrCreationReference => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[EmailSetRequest]] =
     resolveOnSuccessUpdateEmail(messageIdResolver)
       .map(update =>
         if (update.isEmpty) {
@@ -164,7 +164,7 @@ case class MDNSendRequest(accountId: AccountId,
             destroy = None))
         })
 
-  def resolveOnSuccessUpdateEmail(messageIdResolver: MDNSendCreationId => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[Map[UnparsedMessageId, JsObject]]] =
+  def resolveOnSuccessUpdateEmail(messageIdResolver: IdOrCreationReference => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[Map[UnparsedMessageId, JsObject]]] =
     onSuccessUpdateEmail.map(map => map.toList
       .map {
         case (creationId, json) => messageIdResolver.apply(creationId).map(msgOpt => msgOpt.map(messageId => (EmailSet.asUnparsed(messageId), json)))
@@ -222,16 +222,16 @@ case class MDNSendResults(sent: Option[Map[MDNSendCreationId, MDNSendCreateRespo
                           notSent: Option[Map[MDNSendCreationId, SetError]],
                           mdnSentIdResolver: Map[MDNSendCreationId, MessageId]) {
 
-  def resolveMessageId(sendId: MDNSendCreationId): Either[IllegalArgumentException, Option[MessageId]] =
-    if (sendId.id.value.startsWith("#")) {
-      val realId: String = sendId.id.value.substring(1)
+  def resolveMessageId(sendId: IdOrCreationReference): Either[IllegalArgumentException, Option[MessageId]] =
+    if (sendId.value.startsWith("#")) {
+      val realId: String = sendId.value.substring(1)
       val validatedId: Either[IllegalArgumentException, MDNSendCreationId] = Id.validate(realId).map(id => MDNSendCreationId(id))
       validatedId
         .left.map(s => new IllegalArgumentException(s))
         .flatMap(id => retrieveMessageId(id)
           .map(id => scala.Right(Some(id))).getOrElse(scala.Right(None)))
     } else {
-      Left(new IllegalArgumentException(s"${sendId.id.value} cannot be retrieved as storage for MDNSend is not yet implemented"))
+      Left(new IllegalArgumentException(s"${sendId.value} cannot be retrieved as storage for MDNSend is not yet implemented"))
     }
 
   private def retrieveMessageId(creationId: MDNSendCreationId): Option[MessageId] =

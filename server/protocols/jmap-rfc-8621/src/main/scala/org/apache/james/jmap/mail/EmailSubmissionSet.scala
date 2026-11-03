@@ -22,13 +22,11 @@ package org.apache.james.jmap.mail
 import java.util.UUID
 
 import cats.implicits._
-import eu.timepit.refined.auto.autoUnwrap
-import eu.timepit.refined.refineV
 import org.apache.james.core.MailAddress
-import org.apache.james.jmap.core.Id.{Id, IdConstraint}
+import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Properties.toProperties
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration, SetError, UTCDate, UuidState}
+import org.apache.james.jmap.core.{AccountId, Id, IdOrCreationReference, JmapRfc8621Configuration, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.method.{EmailSubmissionCreationParseException, ValidableRequest, WithAccountId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.JsObject
@@ -48,9 +46,9 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
                                      create: Option[Map[EmailSubmissionCreationId, JsObject]],
                                      update: Option[Map[UnparsedEmailSubmissionId, JsObject]],
                                      destroy: Option[List[UnparsedEmailSubmissionId]],
-                                     onSuccessUpdateEmail: Option[Map[EmailSubmissionCreationId, JsObject]],
-                                     onSuccessDestroyEmail: Option[List[EmailSubmissionCreationId]]) extends WithAccountId with ValidableRequest {
-  def implicitEmailSetRequest(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[EmailSetRequest]] =
+                                     onSuccessUpdateEmail: Option[Map[IdOrCreationReference, JsObject]],
+                                     onSuccessDestroyEmail: Option[List[IdOrCreationReference]]) extends WithAccountId with ValidableRequest {
+  def implicitEmailSetRequest(messageIdResolver: IdOrCreationReference => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[EmailSetRequest]] =
     for {
       update <- resolveOnSuccessUpdateEmail(messageIdResolver)
       destroy <- resolveOnSuccessDestroyEmail(messageIdResolver)
@@ -66,7 +64,7 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
       }
     }
 
-  def resolveOnSuccessUpdateEmail(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[Map[UnparsedMessageId, JsObject]]]=
+  def resolveOnSuccessUpdateEmail(messageIdResolver: IdOrCreationReference => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[Map[UnparsedMessageId, JsObject]]]=
     onSuccessUpdateEmail.map(map => map.toList
         .map {
           case (creationId, json) => messageIdResolver.apply(creationId).map(msgIdOption => (msgIdOption, json))
@@ -77,7 +75,7 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
         .map(list => list.toMap))
       .sequence
 
-  def resolveOnSuccessDestroyEmail(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[List[UnparsedMessageId]]]=
+  def resolveOnSuccessDestroyEmail(messageIdResolver: IdOrCreationReference => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[List[UnparsedMessageId]]]=
     onSuccessDestroyEmail.map(list => list
         .map(creationId => messageIdResolver.apply(creationId))
         .filter(e => e.isLeft || e.toOption.get.isDefined)
@@ -122,19 +120,16 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
       .sequence
       .map(_ => this)
 
-  private def validate(creationId: EmailSubmissionCreationId, supportedCreationIds: List[EmailSubmissionCreationId]): Either[IllegalArgumentException, EmailSubmissionCreationId] = {
-    if (creationId.id.startsWith("#")) {
-      val realId = creationId.id.substring(1)
-      val validatedId: Either[String, Id] = refineV[IdConstraint](realId)
-      validatedId
-        .left.map(s => new IllegalArgumentException(s))
+  private def validate(creationId: IdOrCreationReference, supportedCreationIds: List[EmailSubmissionCreationId]): Either[IllegalArgumentException, EmailSubmissionCreationId] = {
+    if (creationId.value.startsWith("#")) {
+      Id.validate(creationId.value.substring(1))
         .flatMap(id => if (supportedCreationIds.contains(EmailSubmissionCreationId(id))) {
           scala.Right(EmailSubmissionCreationId(id))
         } else {
-          Left(new IllegalArgumentException(s"${creationId.id} cannot be referenced in current method call"))
+          Left(new IllegalArgumentException(s"${creationId.value} cannot be referenced in current method call"))
         })
     } else {
-      Left(new IllegalArgumentException(s"${creationId.id} cannot be retrieved as storage for EmailSubmission is not yet implemented"))
+      Left(new IllegalArgumentException(s"${creationId.value} cannot be retrieved as storage for EmailSubmission is not yet implemented"))
     }
   }
 }

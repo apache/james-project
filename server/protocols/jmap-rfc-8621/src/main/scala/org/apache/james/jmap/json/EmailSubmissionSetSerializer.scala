@@ -24,7 +24,7 @@ import eu.timepit.refined.refineV
 import jakarta.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.IdConstraint
-import org.apache.james.jmap.core.{SetError, UuidState}
+import org.apache.james.jmap.core.{IdOrCreationReference, SetError, UuidState}
 import org.apache.james.jmap.mail.{DestroyIds, EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue, UnparsedEmailSubmissionId, UnparsedMessageId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.{JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, Reads, Writes}
@@ -32,11 +32,14 @@ import play.api.libs.json.{JsError, JsNull, JsObject, JsResult, JsString, JsSucc
 import scala.util.Try
 
 class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory) {
-  private implicit val creationIdFormat: Reads[EmailSubmissionCreationId] = Json.valueFormat[EmailSubmissionCreationId]
   private implicit val mapCreationRequestByEmailSubmissionCreationId: Reads[Map[EmailSubmissionCreationId, JsObject]] =
     Reads.mapReads[EmailSubmissionCreationId, JsObject] {string => refineV[IdConstraint](string)
       .fold(e => JsError(s"email submission creationId needs to match id contraints: $e"),
         id => JsSuccess(EmailSubmissionCreationId(id))) }
+
+  private implicit val onSuccessUpdatesReads: Reads[Map[IdOrCreationReference, JsObject]] =
+    Reads.mapReads[IdOrCreationReference, JsObject] { string => IdOrCreationReference.validate(string)
+      .fold(e => JsError(s"email submission creationId needs to match id contraints: ${e.getMessage}"), JsSuccess(_)) }
 
   private implicit val messageIdReads: Reads[MessageId] = {
     case JsString(serializedMessageId) => Try(JsSuccess(messageIdFactory.fromString(serializedMessageId)))

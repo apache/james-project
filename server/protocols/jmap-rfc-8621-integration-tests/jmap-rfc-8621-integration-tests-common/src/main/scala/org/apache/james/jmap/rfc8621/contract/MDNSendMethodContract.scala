@@ -148,6 +148,62 @@ trait MDNSendMethodContract {
   }
 
   @Test
+  def onSuccessUpdateEmailShouldAcceptAMaximumLengthCreationReference(server: GuiceJamesServer): Unit = {
+    val creationId = "c" * 255
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val andreInbox = MailboxPath.inbox(andreUsername)
+    mailboxProbe.createMailbox(andreInbox)
+    val messageId = mailboxProbe.appendMessage(andreUsername.asString(), andreInbox, AppendCommand.builder()
+      .build(buildOriginalMessage("maximum length update reference")))
+      .getMessageId
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:mdn"],
+         |  "methodCalls": [
+         |    ["MDN/send", {
+         |      "accountId": "$andreAccountId",
+         |      "identityId": "$andreIdentityId",
+         |      "send": {
+         |        "$creationId": {
+         |          "forEmailId": "${messageId.serialize}",
+         |          "disposition": {
+         |            "actionMode": "manual-action",
+         |            "sendingMode": "mdn-sent-manually",
+         |            "type": "displayed"
+         |          }
+         |        }
+         |      },
+         |      "onSuccessUpdateEmail": {"#$creationId": {"keywords/$$mdnsent": true}}
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "$andreAccountId",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties": ["keywords"]
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract.body.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].sent").isObject.containsKey(creationId)
+    assertThatJson(response).inPath("methodResponses[1][0]").asString().isEqualTo("Email/set")
+    assertThatJson(response).inPath("methodResponses[1][1].updated")
+      .isEqualTo(s"""{"${messageId.serialize}": null}""")
+    assertThatJson(response).inPath("methodResponses[2][0]").asString().isEqualTo("Email/get")
+    assertThatJson(response).inPath("methodResponses[2][1].list")
+      .isEqualTo(s"""[{"id": "${messageId.serialize}", "keywords": {"$$mdnsent": true}}]""")
+    assertThatJson(response).inPath("methodResponses[2][1].notFound").isEqualTo("[]")
+  }
+
+  @Test
   def mdnSendShouldBeSuccessAndSendMailSuccessfully(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
