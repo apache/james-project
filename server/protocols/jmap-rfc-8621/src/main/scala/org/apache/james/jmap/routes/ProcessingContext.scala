@@ -118,7 +118,15 @@ case class BackReference(name: MethodName, path: JsonPath, resultOf: MethodCallI
   }
 }
 
-case class InvalidResultReferenceException(message: String) extends IllegalArgumentException
+sealed trait ArgumentResolutionError {
+  def message: String
+}
+
+case class InvalidResultReferenceException(message: String) extends IllegalArgumentException with ArgumentResolutionError
+
+case class DuplicateArgumentException(argument: String) extends IllegalArgumentException with ArgumentResolutionError {
+  override val message: String = s"Argument '$argument' is supplied both directly and as a result reference"
+}
 
 case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, ServerId],
                              private val invocations: ImmutableMap[MethodCallId, Invocation]) {
@@ -127,14 +135,20 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
 
   def recordInvocation(invocation: Invocation): ProcessingContext = ProcessingContext(creationIds, invocations + (invocation.methodCallId -> invocation))
 
-  def resolveBackReferences(invocation: Invocation): Either[InvalidResultReferenceException, Invocation] =
-    backReferenceResolver.reads(invocation.arguments.value) match {
-      case JsError(e) => Left(InvalidResultReferenceException(e.toString()))
-      case JsSuccess(JsObject(underlying), _) => Right(Invocation(methodName = invocation.methodName,
-        methodCallId = invocation.methodCallId,
-        arguments = Arguments(JsObject(underlying))))
-      case others: JsSuccess[JsValue] => Left(InvalidResultReferenceException(s"Unexpected value $others"))
+  def resolveBackReferences(invocation: Invocation): Either[ArgumentResolutionError, Invocation] = {
+    val arguments = invocation.arguments.value
+    val argumentNames = arguments.keys
+    argumentNames.find(key => key.startsWith("#") && argumentNames.contains(key.substring(1))) match {
+      case Some(key) => Left(DuplicateArgumentException(key.substring(1)))
+      case None => backReferenceResolver.reads(arguments) match {
+        case JsError(e) => Left(InvalidResultReferenceException(e.toString()))
+        case JsSuccess(JsObject(underlying), _) => Right(Invocation(methodName = invocation.methodName,
+          methodCallId = invocation.methodCallId,
+          arguments = Arguments(JsObject(underlying))))
+        case others: JsSuccess[JsValue] => Left(InvalidResultReferenceException(s"Unexpected value $others"))
+      }
     }
+  }
 
   private val backReferenceResolver: Reads[JsValue] = {
     case JsArray(value) => resolveBackReferences(value)
