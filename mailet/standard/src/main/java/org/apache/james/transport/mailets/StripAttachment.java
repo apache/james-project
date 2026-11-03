@@ -45,6 +45,7 @@ import jakarta.mail.internet.ContentType;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
+import jakarta.mail.internet.ParseException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -333,8 +334,8 @@ public class StripAttachment extends GenericMailet {
      * "null" boundary, shared by all such nested multiparts, which corrupts the structure. Give them a fresh one.
      */
     private void ensureBoundaries(Part part) throws MessagingException, IOException {
-        // Rely on the content: setContent drops the Content-Type header of the part until changes are saved
-        if (!(part.getContent() instanceof MimeMultipart multipart)) {
+        // Do not decode leaf parts: getContent() throws on a text part in a charset Java does not know (unknown-8bit...)
+        if (!hasMultipartContent(part) || !(part.getContent() instanceof MimeMultipart multipart)) {
             return;
         }
         List<BodyPart> bodyParts = MultipartUtil.retrieveBodyParts(multipart);
@@ -348,6 +349,19 @@ public class StripAttachment extends GenericMailet {
                 withBoundary.addBodyPart(bodyPart);
             }
             part.setContent(withBoundary);
+        }
+    }
+
+    private boolean hasMultipartContent(Part part) throws MessagingException {
+        // Rely on the DataHandler: setContent drops the Content-Type header of the part until changes are saved
+        String contentType = part.getDataHandler().getContentType();
+        if (contentType == null) {
+            return false;
+        }
+        try {
+            return new ContentType(contentType).match(MULTIPART_MIME_TYPE);
+        } catch (ParseException e) {
+            return false;
         }
     }
 
