@@ -20,7 +20,7 @@
    "attachments" : [],
    "isFlagged" : false,
    "mediaType" : "plain",
-   "hasAttachment" : false,
+   "hasAttachment" : true,
    "from" : [
       {
          "address" : "laura.ro@linagora.com",
