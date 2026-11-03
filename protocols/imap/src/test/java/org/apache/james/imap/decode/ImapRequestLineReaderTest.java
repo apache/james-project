@@ -165,6 +165,5 @@ class ImapRequestLineReaderTest {
     void numberShouldRejectNonDigits() {
         assertThatThrownBy(() -> reader("12a ").number())
             .isInstanceOf(DecodingException.class);
->>>>>>> 252432fc5a ([FIX] IMAP: read numbers iteratively and reject overflowing values)
     }
 }
