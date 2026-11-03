@@ -43,6 +43,15 @@ import scala.jdk.OptionConverters._
 object MailboxSetUpdatePerformer {
   private val LOGGER = LoggerFactory.getLogger(classOf[MailboxSetUpdatePerformer])
 
+  /**
+   * @return the commands giving back to the given entries their rights in previousAcl, leaving the other entries alone
+   */
+  private[method] def revertCommands(previousAcl: MailboxACL, entryKeys: Set[MailboxACL.EntryKey]): Seq[MailboxACL.ACLCommand] =
+    entryKeys.toSeq.map(entryKey => MailboxACL.command()
+      .key(entryKey)
+      .rights(Option(previousAcl.getEntries.get(entryKey)).getOrElse(MailboxACL.NO_RIGHTS))
+      .asReplacement())
+
   sealed trait MailboxUpdateResult
   case class MailboxUpdateSuccess(mailboxId: MailboxId) extends MailboxUpdateResult
   case class MailboxUpdateFailure(mailboxId: UnparsedMailboxId, exception: Throwable, patch: Option[ValidatedMailboxPatchObject]) extends MailboxUpdateResult {
@@ -136,16 +145,16 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
     patch.validate(mailboxIdFactory, serializer, capabilities, mailboxSession)
       .fold(e => SMono.error(e), validatedPatch => {
         val supportSharedMailbox: Boolean = capabilities.contains(JAMES_SHARES)
-        // An update is a unit: validate the new path before writing anything, write the rights at once, and restore
-        // them if the rename still fails
+        // An update is a unit: validate the new path before writing anything, and revert the rights changes if the
+        // update still fails
         getMessageManager(supportSharedMailbox, mailboxId, mailboxSession)
           .flatMap(messageManager => computeNewMailboxPath(mailboxId, validatedPatch, mailboxSession, messageManager, supportSharedMailbox)
             .flatMap {
               case Left(e) => SMono.just[MailboxUpdateResult](MailboxUpdateFailure(unparsedMailboxId, e, Some(validatedPatch)))
               case scala.Right(newPath) => updateMailboxRights(mailboxId, validatedPatch, mailboxSession)
-                .flatMap(previousAcl => updateSubscription(mailboxId, validatedPatch, mailboxSession, messageManager)
+                .flatMap(rightsRevert => updateSubscription(mailboxId, validatedPatch, mailboxSession, messageManager)
                   .`then`(updateMailboxPath(mailboxId, unparsedMailboxId, validatedPatch, newPath, mailboxSession, messageManager))
-                  .flatMap(result => restoreRightsOnFailure(mailboxId, previousAcl, result, mailboxSession)))
+                  .flatMap(result => restoreRightsOnFailure(mailboxId, rightsRevert, result, mailboxSession)))
             })
       })
   }
@@ -187,16 +196,23 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
       SMono.just(scala.Right(None))
     }
 
-  private def restoreRightsOnFailure(mailboxId: MailboxId, previousAcl: Option[MailboxACL], result: MailboxUpdateResult,
+  private def restoreRightsOnFailure(mailboxId: MailboxId, rightsRevert: Seq[MailboxACL.ACLCommand], result: MailboxUpdateResult,
                                      mailboxSession: MailboxSession): SMono[MailboxUpdateResult] =
-    (result, previousAcl) match {
-      case (_: MailboxUpdateFailure, Some(acl)) =>
-        SMono.fromCallable(() => mailboxManager.setRights(mailboxId, acl, mailboxSession))
+    result match {
+      case _: MailboxUpdateFailure if rightsRevert.nonEmpty =>
+        SMono.fromCallable(() => revertRights(mailboxId, rightsRevert, mailboxSession))
           .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-          .onErrorResume(e => SMono.fromCallable(() => MailboxSetUpdatePerformer.LOGGER.error("Failed to restore the rights of {} after a failed update", mailboxId.serialize(), e)))
           .`then`(SMono.just(result))
       case _ => SMono.just(result)
     }
+
+  private def revertRights(mailboxId: MailboxId, rightsRevert: Seq[MailboxACL.ACLCommand], mailboxSession: MailboxSession): Unit =
+    rightsRevert.foreach(command => try {
+      mailboxManager.applyRightsCommand(mailboxId, command, mailboxSession)
+    } catch {
+      case e: Exception => MailboxSetUpdatePerformer.LOGGER.error("Failed to restore the rights of {} for {} after a failed update",
+        mailboxId.serialize(), command.getEntryKey.serialize(), e)
+    })
 
   private def updateSubscription(mailboxId: MailboxId, validatedPatch: ValidatedMailboxPatchObject, mailboxSession: MailboxSession, messageManager: MessageManager): SMono[MailboxUpdateResult] = {
     validatedPatch.isSubscribedUpdate.map(isSubscribedUpdate => {
@@ -290,28 +306,42 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
       .filterWhen(MailboxSetMethod.assertCapabilityIfSharedMailbox(mailboxSession, mailboxId, supportSharedMailbox))
 
   /**
-   * Computes the resulting ACL and stores it at once, so that it is validated as a whole (eg the domains of every
-   * sharee) before anything is written.
+   * Applies the sharedWith changes. Partial updates go through applyRightsCommand, applied atomically by the mappers, so
+   * that the entries this patch does not touch are left alone even if they are concurrently modified.
    *
-   * @return the ACL before the update, when it changed
+   * If one of the changes is rejected (eg a sharee of another domain), the changes already applied are reverted
+   * before failing.
+   *
+   * @return the commands reverting the changes of this patch: they only touch the entries of this patch
    */
   private def updateMailboxRights(mailboxId: MailboxId,
                                   validatedPatch: ValidatedMailboxPatchObject,
-                                  mailboxSession: MailboxSession): SMono[Option[MailboxACL]] = {
+                                  mailboxSession: MailboxSession): SMono[Seq[MailboxACL.ACLCommand]] = {
     if (validatedPatch.rightsReset.isEmpty && validatedPatch.rightsPartialUpdates.isEmpty) {
-      return SMono.just(None)
+      return SMono.just(Seq())
     }
 
     SMono.fromCallable(() => {
       val previousAcl: MailboxACL = mailboxManager.listRights(mailboxId, mailboxSession)
-      val resetAcl: MailboxACL = validatedPatch.rightsReset
-        .map(sharedWithResetUpdate => sharedWithResetUpdate.rights.toMailboxAcl.asJava)
-        .getOrElse(previousAcl)
-      val newAcl: MailboxACL = validatedPatch.rightsPartialUpdates
-        .foldLeft(resetAcl)((acl, partialUpdate) => acl.apply(partialUpdate.asACLCommand()))
-      mailboxManager.setRights(mailboxId, newAcl, mailboxSession)
-      previousAcl
-    }).flatMap(previousAcl => SFlux.fromIterable(validatedPatch.rightsPartialUpdates)
+      var applied: Seq[MailboxACL.ACLCommand] = Seq()
+      try {
+        validatedPatch.rightsReset.foreach(sharedWithResetUpdate => {
+          val resetAcl: MailboxACL = sharedWithResetUpdate.rights.toMailboxAcl.asJava
+          mailboxManager.setRights(mailboxId, resetAcl, mailboxSession)
+          applied = MailboxSetUpdatePerformer.revertCommands(previousAcl,
+            previousAcl.getEntries.keySet.asScala.toSet ++ resetAcl.getEntries.keySet.asScala) ++ applied
+        })
+        validatedPatch.rightsPartialUpdates.foreach(partialUpdate => {
+          mailboxManager.applyRightsCommand(mailboxId, partialUpdate.asACLCommand(), mailboxSession)
+          applied = MailboxSetUpdatePerformer.revertCommands(previousAcl, Set(partialUpdate.entryKey)) ++ applied
+        })
+        applied
+      } catch {
+        case e: Exception =>
+          revertRights(mailboxId, applied, mailboxSession)
+          throw e
+      }
+    }).flatMap(rightsRevert => SFlux.fromIterable(validatedPatch.rightsPartialUpdates)
         .concatMap(partialUpdate => SMono(ReactorUtils.logAsMono(() => AuditTrail.entry
           .username(() => mailboxSession.getUser.asString())
           .protocol("JMAP")
@@ -323,7 +353,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
             "rights", partialUpdate.rights.asJava.serialize()))
           .log("JMAP mailbox shared."))))
         .`then`()
-        .`then`(SMono.just(Option(previousAcl))))
+        .`then`(SMono.just(rightsRevert)))
       .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
   }
 
