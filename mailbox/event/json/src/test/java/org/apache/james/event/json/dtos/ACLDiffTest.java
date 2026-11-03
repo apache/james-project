@@ -76,12 +76,6 @@ class ACLDiffTest {
     @Nested
     class EntryKeyTest {
         @Test
-        void deSerializeShouldThrowWhenNotIncludedNameInEntryKey() {
-            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("$")))
-                .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
         void deSerializeShouldFailWhenNotIncludedNameInEntryKey() {
             assertThat(DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("$")).isError())
                 .isTrue();
@@ -91,12 +85,6 @@ class ACLDiffTest {
         void deSerializeShouldFailWhenNameInEntryKeyIsEmpty() {
             assertThat(DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("")).isError())
                 .isTrue();
-        }
-
-        @Test
-        void deSerializeShouldThrowWhenNameInEntryKeyIsNotWellFormatted() {
-            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("-")))
-                .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
