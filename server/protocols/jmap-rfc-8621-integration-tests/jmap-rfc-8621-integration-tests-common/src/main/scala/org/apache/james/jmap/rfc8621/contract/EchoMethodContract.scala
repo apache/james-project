@@ -106,6 +106,38 @@ trait EchoMethodContract {
   }
 
   @Test
+  def echoShouldRejectNormalAndResultReferenceArgumentCollisions(): Unit = {
+    val response = `given`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        """{
+          |  "using":["urn:ietf:params:jmap:core"],
+          |  "methodCalls":[
+          |    ["Core/echo",{"ids":["x"]},"c0"],
+          |    ["Core/echo",{"ids":["y"],"#ids":{"resultOf":"c0","name":"Core/echo","path":"/ids"}},"c1"],
+          |    ["Core/echo",{"#ids":{"resultOf":"c0","name":"Core/echo","path":"/ids"}},"c2"]
+          |  ]
+          |}""".stripMargin)
+      .when()
+      .post()
+      .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract()
+      .asString()
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |  "sessionState":"${SESSION_STATE.value}",
+         |  "methodResponses":[
+         |    ["Core/echo",{"ids":["x"]},"c0"],
+         |    ["error",{"type":"invalidArguments","description":"$${json-unit.ignore}"},"c1"],
+         |    ["Core/echo",{"ids":["x"]},"c2"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def echoMethodShouldRespondOKWithRFC8621VersionAndSupportedMethod(): Unit = {
 

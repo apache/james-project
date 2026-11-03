@@ -91,7 +91,11 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
   private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, invocation: InvocationWithContext) : SFlux[InvocationWithContext] =
     SFlux.fromPublisher(
       invocation.processingContext.resolveBackReferences(invocation.invocation) match {
-        case Left(e) => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(
+        case Left(e: DuplicateArgumentException) => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(
+          errorCode = ErrorCode.InvalidArguments,
+          description = e.message,
+          methodCallId = invocation.invocation.methodCallId), invocation.processingContext))
+        case Left(e: InvalidResultReferenceException) => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(
           errorCode = ErrorCode.InvalidResultReference,
           description = s"Failed resolving back-reference: ${e.message}",
           methodCallId = invocation.invocation.methodCallId), invocation.processingContext))
