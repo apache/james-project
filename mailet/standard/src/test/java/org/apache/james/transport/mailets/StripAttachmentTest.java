@@ -487,6 +487,41 @@ class StripAttachmentTest {
     }
 
     @Test
+    void serviceShouldStripAttachmentsNextToATextPartInAnUnknownCharset(TemporaryFolder temporaryFolder) throws Exception {
+        StripAttachment mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("remove", "matched")
+            .setProperty("pattern", ".*\\.ics")
+            .setProperty("directory", temporaryFolder.getFolderPath())
+            .build());
+
+        String raw = "Content-Type: multipart/mixed; boundary=\"outer\"\r\n\r\n"
+            + "--outer\r\n"
+            + "Content-Type: text/plain; charset=unknown-8bit\r\n\r\n"
+            + "text\r\n"
+            + "--outer\r\n"
+            + "Content-Type: text/calendar\r\n"
+            + "Content-Disposition: attachment; filename=\"invite.ics\"\r\n\r\n"
+            + "BEGIN:VCALENDAR\r\n"
+            + "--outer--\r\n";
+        Session session = Session.getDefaultInstance(new Properties());
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(new MimeMessage(session, new ByteArrayInputStream(raw.getBytes(StandardCharsets.US_ASCII))))
+            .build();
+
+        mailet.service(mail);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        mail.getMessage().writeTo(out);
+        MimeMessage reparsed = new MimeMessage(session, new ByteArrayInputStream(out.toByteArray()));
+        MimeMultipart mixed = (MimeMultipart) reparsed.getContent();
+        assertThat(mixed.getCount()).isEqualTo(1);
+        assertThat(mixed.getBodyPart(0).getContentType()).startsWith("text/plain");
+    }
+
+    @Test
     void uniqueKeyShouldReturnTheFileNameWhenUnused() {
         assertThat(StripAttachment.uniqueKey(ImmutableMap.of("other.ics", 1), "invite.ics"))
             .isEqualTo("invite.ics");
