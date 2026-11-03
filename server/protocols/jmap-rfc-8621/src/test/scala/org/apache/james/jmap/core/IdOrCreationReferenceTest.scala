@@ -45,6 +45,14 @@ class IdOrCreationReferenceTest {
   }
 
   @Test
+  def shouldExplainAnEmptyCreationReference(): Unit = {
+    val message = "'#' is not a valid creation reference: creation id is empty"
+
+    assertThat(IdOrCreationReference.validate("#").left.toOption.get.getMessage).isEqualTo(message)
+    assertThat(Json.fromJson[IdOrCreationReference](JsString("#"))).isEqualTo(JsError(message))
+  }
+
+  @Test
   def shouldAcceptA255CharacterId(): Unit = {
     assertThat(IdOrCreationReference.validate("i" * 255).isRight).isTrue()
   }

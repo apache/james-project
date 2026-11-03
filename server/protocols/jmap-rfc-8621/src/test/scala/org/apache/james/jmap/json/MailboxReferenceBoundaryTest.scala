@@ -59,9 +59,19 @@ class MailboxReferenceBoundaryTest {
   }
 
   @Test
-  def destroyShouldRejectABareHash(): Unit = {
-    assertThat(serializer.deserializeMailboxSetRequest(Json.obj("accountId" -> "account", "destroy" -> Json.arr("#"))))
-      .isInstanceOf(classOf[JsError])
+  def setBoundariesShouldExplainAnEmptyCreationReference(): Unit = {
+    val message = "mailboxId does not match Id constraints: '#' is not a valid creation reference: creation id is empty"
+    val cases = Seq(
+      (serializer.deserializeMailboxSetRequest(Json.obj("accountId" -> "account", "destroy" -> Json.arr("#"))), "/destroy(0)"),
+      (serializer.deserializeMailboxSetRequest(Json.obj("accountId" -> "account", "update" -> Json.obj("#" -> Json.obj("name" -> "renamed")))), "/update/#"),
+      (serializer.mailboxCreationRequest.reads(Json.obj("name" -> "child", "parentId" -> "#")), "/parentId"))
+
+    cases.foreach { case (result, path) =>
+      val errors = result.asEither.left.toOption.get
+      assertThat(errors.head._1.toString).isEqualTo(path)
+      assertThat(errors.head._2.head.message).isEqualTo(
+        if (path == "/update/#") message.replace("does not match Id", "needs to match id") else message)
+    }
   }
 
   @ParameterizedTest
