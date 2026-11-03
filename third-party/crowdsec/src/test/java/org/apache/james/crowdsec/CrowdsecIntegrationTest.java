@@ -28,7 +28,6 @@ import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
@@ -245,7 +244,7 @@ class CrowdsecIntegrationTest {
             IntStream.range(0, 3)
                 .forEach(Throwing.intConsumer(any -> {
                     smtpProtocol.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
-                    smtpProtocol.sendCommand("EHLO", InetAddress.getLocalHost().toString());
+                    smtpProtocol.sendCommand("EHLO", "localhost");
                     smtpProtocol.sendCommand("AUTH PLAIN");
                     smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + BOB + "\0" + BAD_PASSWORD + "\0").getBytes(UTF_8)));
                     assertThat(smtpProtocol.getReplyString())
@@ -256,7 +255,7 @@ class CrowdsecIntegrationTest {
             CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
                 .untilAsserted(() -> {
                     smtpProtocol.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
-                    smtpProtocol.sendCommand("EHLO", InetAddress.getLocalHost().toString());
+                    smtpProtocol.sendCommand("EHLO", "localhost");
                     assertThat(smtpProtocol.getReplyString())
                         .contains("554 Email rejected");
                 });
@@ -268,7 +267,7 @@ class CrowdsecIntegrationTest {
             IntStream.range(0, 3)
                 .forEach(Throwing.intConsumer(any -> {
                     smtpProtocol.connect(LOCALHOST_IP, haProxyExtension.getProxiedSmtpPort());
-                    smtpProtocol.sendCommand("EHLO", InetAddress.getLocalHost().toString());
+                    smtpProtocol.sendCommand("EHLO", "localhost");
                     smtpProtocol.sendCommand("AUTH PLAIN");
                     smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + BOB + "\0" + BAD_PASSWORD + "\0").getBytes(UTF_8)));
                     assertThat(smtpProtocol.getReplyString())
@@ -279,7 +278,7 @@ class CrowdsecIntegrationTest {
             CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
                 .untilAsserted(() -> {
                     smtpProtocol.connect(LOCALHOST_IP, haProxyExtension.getProxiedSmtpPort());
-                    smtpProtocol.sendCommand("EHLO", InetAddress.getLocalHost().toString());
+                    smtpProtocol.sendCommand("EHLO", "localhost");
                     assertThat(smtpProtocol.getReplyString())
                         .contains("554 Email rejected");
                 });
@@ -291,7 +290,7 @@ class CrowdsecIntegrationTest {
             IntStream.range(0, 3)
                 .forEach(Throwing.intConsumer(any -> {
                     smtpProtocol.connect(LOCALHOST_IP, haProxyExtension.getProxiedSmtpPort());
-                    smtpProtocol.sendCommand("EHLO", InetAddress.getLocalHost().toString());
+                    smtpProtocol.sendCommand("EHLO", "localhost");
                     smtpProtocol.sendCommand("AUTH PLAIN");
                     smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + BOB + "\0" + BAD_PASSWORD + "\0").getBytes(UTF_8)));
                     assertThat(smtpProtocol.getReplyString())
@@ -301,7 +300,7 @@ class CrowdsecIntegrationTest {
             CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
                 .untilAsserted(() -> {
                     smtpProtocol.connect(LOCALHOST_IP, haProxyExtension.getProxiedSmtpPort());
-                    smtpProtocol.sendCommand("EHLO", InetAddress.getLocalHost().toString());
+                    smtpProtocol.sendCommand("EHLO", "localhost");
                     assertThat(smtpProtocol.getReplyString())
                         .contains("554 Email rejected");
                 });
