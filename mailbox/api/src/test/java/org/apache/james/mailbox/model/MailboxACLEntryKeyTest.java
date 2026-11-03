@@ -210,7 +210,7 @@ class MailboxACLEntryKeyTest {
     @Test
     void deserializeShouldRejectANegativeMarkerAlone() {
         assertThatThrownBy(() -> EntryKey.deserialize("-"))
-            .isInstanceOf(IllegalStateException.class);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

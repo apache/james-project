@@ -411,7 +411,7 @@ public class MailboxACL {
             boolean negative = serialized.charAt(0) == DEFAULT_NEGATIVE_MARKER;
             int nameStart = negative ? 1 : 0;
             if (nameStart >= serialized.length()) {
-                throw new IllegalStateException("Cannot parse a string with empty name");
+                throw new IllegalArgumentException("Cannot parse a string with empty name");
             }
             boolean isGroup = serialized.charAt(nameStart) == DEFAULT_GROUP_MARKER;
             Optional<NameType> explicitNameType = isGroup ? Optional.of(NameType.group) : Optional.empty();
