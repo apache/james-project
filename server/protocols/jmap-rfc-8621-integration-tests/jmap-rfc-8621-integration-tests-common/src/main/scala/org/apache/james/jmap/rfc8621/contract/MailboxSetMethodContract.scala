@@ -1121,6 +1121,73 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  def createShouldPreserveIndependentItemsWhenParentReferenceIsEmpty(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [["Mailbox/set", {
+         |    "accountId": "$bobAccountId",
+         |    "create": {
+         |      "bad": {"name": "invalid-child", "parentId": "#"},
+         |      "good": {"name": "independent"}
+         |    }
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract.response
+    val body = response.asString
+
+    assertThatJson(body).inPath("methodResponses").isArray.hasSize(1)
+    assertThatJson(body).inPath("methodResponses[0][0]").isEqualTo("Mailbox/set")
+    assertThatJson(body).inPath("methodResponses[0][1].created").isObject.containsOnlyKeys("good")
+    assertThatJson(body).inPath("methodResponses[0][1].notCreated").isEqualTo(
+      """{
+        |  "bad": {
+        |    "type": "invalidArguments",
+        |    "description": "'/parentId' property is not valid: mailboxId does not match Id constraints: '#' is not a valid creation reference: creation id is empty"
+        |  }
+        |}""".stripMargin)
+
+    val mailboxId = response.path[String]("methodResponses[0][1].created.good.id")
+    assertThat(mailboxId).isNotEmpty
+
+    val getResponse = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/get", {
+               |    "accountId": "$bobAccountId",
+               |    "ids": ["$mailboxId"],
+               |    "properties": ["id", "name", "parentId"]
+               |  }, "c2"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract.body.asString
+
+    assertThatJson(getResponse).inPath("methodResponses[0][0]").isEqualTo("Mailbox/get")
+    assertThatJson(getResponse).inPath("methodResponses[0][1].list")
+      .isEqualTo(s"""[{"id": "$mailboxId", "name": "independent", "parentId": null}]""")
+    assertThatJson(getResponse).inPath("methodResponses[0][1].notFound").isEqualTo("[]")
+    val mailboxes = server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())
+    assertThat(mailboxes).contains("independent")
+    assertThat(mailboxes).doesNotContain("invalid-child")
+  }
+
+  @Test
   def mailboxSetShouldCreateMailboxWhenOnlyName(server: GuiceJamesServer): Unit = {
     val request =
       s"""
@@ -3282,7 +3349,7 @@ trait MailboxSetMethodContract {
       .body
       .asString
 
-    val message = "'/destroy(0)' property is not valid: mailboxId does not match Id constraints: Predicate failed: '' contains some invalid characters. Should be [#a-zA-Z0-9-_] and no longer than 255 chars."
+    val message = "'/destroy(0)' property is not valid: mailboxId does not match Id constraints: '#' is not a valid creation reference: creation id is empty"
     assertThatJson(response)
       .isEqualTo(
       s"""{

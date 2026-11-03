@@ -41,7 +41,9 @@ object IdOrCreationReference {
   }
 
   def validate(value: String): Either[IllegalArgumentException, IdOrCreationReference] =
-    if (value.startsWith("#")) {
+    if (value == "#") {
+      Left(new IllegalArgumentException("'#' is not a valid creation reference: creation id is empty"))
+    } else if (value.startsWith("#")) {
       Id.validate(value.substring(1)).map(CreationReference)
     } else {
       Id.validate(value).map(ExistingId)
