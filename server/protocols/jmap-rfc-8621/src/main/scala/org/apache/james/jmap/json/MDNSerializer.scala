@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import jakarta.inject.Inject
-import org.apache.james.jmap.core.{Id, SetError}
+import org.apache.james.jmap.core.{Id, IdOrCreationReference, SetError}
 import org.apache.james.jmap.mail.{BlobId, BlobIds, ErrorField, ExtensionFieldName, ExtensionFieldValue, FinalRecipientField, ForEmailIdField, IncludeOriginalMessageField, MDNDisposition, MDNGatewayField, MDNNotFound, MDNNotParsable, MDNParseRequest, MDNParseResponse, MDNParsed, MDNSendCreateRequest, MDNSendCreateResponse, MDNSendCreationId, MDNSendRequest, MDNSendResponse, OriginalMessageIdField, OriginalRecipientField, ReportUAField, SubjectField, TextBodyField, UnparsedIdentityId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json._
@@ -61,6 +61,11 @@ class MDNSerializer @Inject()(messageIdFactory: MessageId.Factory) {
   private implicit val mapMDNSendIDAndMDNReads: Reads[Map[MDNSendCreationId, JsObject]] =
     Reads.mapReads[MDNSendCreationId, JsObject] {
       s => Id.validate(s).fold(e => JsError(e.getMessage), partId => JsSuccess(MDNSendCreationId(partId)))
+    }
+
+  private implicit val onSuccessUpdatesReads: Reads[Map[IdOrCreationReference, JsObject]] =
+    Reads.mapReads[IdOrCreationReference, JsObject] {
+      s => IdOrCreationReference.validate(s).fold(e => JsError(e.getMessage), JsSuccess(_))
     }
 
   private implicit val mapExtensionFieldRead: Reads[Map[ExtensionFieldName, ExtensionFieldValue]] =

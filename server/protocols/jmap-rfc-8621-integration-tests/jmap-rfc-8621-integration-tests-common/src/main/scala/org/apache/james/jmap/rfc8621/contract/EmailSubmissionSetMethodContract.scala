@@ -1183,6 +1183,98 @@ trait EmailSubmissionSetMethodContract {
   }
 
   @Test
+  def onSuccessUpdateEmailShouldAcceptAMaximumLengthCreationReference(server: GuiceJamesServer): Unit = {
+    val creationId = "c" * 255
+    val messageId = appendBobDraft(server, "maximum length update reference")
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |    ["EmailSubmission/set", {
+         |      "accountId": "$bobAccountId",
+         |      "create": {
+         |        "$creationId": {
+         |          "identityId": "${identityIdOf(bobUsername)}",
+         |          "emailId": "${messageId.serialize}"
+         |        }
+         |      },
+         |      "onSuccessUpdateEmail": {"#$creationId": {"keywords": {"$$sent": true}}}
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "$bobAccountId",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties": ["keywords"]
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract.body.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].created").isObject.containsKey(creationId)
+    assertThatJson(response).inPath("methodResponses[1][0]").asString().isEqualTo("Email/set")
+    assertThatJson(response).inPath("methodResponses[1][1].updated")
+      .isEqualTo(s"""{"${messageId.serialize}": null}""")
+    assertThatJson(response).inPath("methodResponses[2][0]").asString().isEqualTo("Email/get")
+    assertThatJson(response).inPath("methodResponses[2][1].list")
+      .isEqualTo(s"""[{"id": "${messageId.serialize}", "keywords": {"$$sent": true}}]""")
+    assertThatJson(response).inPath("methodResponses[2][1].notFound").isEqualTo("[]")
+  }
+
+  @Test
+  def onSuccessDestroyEmailShouldAcceptAMaximumLengthCreationReference(server: GuiceJamesServer): Unit = {
+    val creationId = "c" * 255
+    val messageId = appendBobDraft(server, "maximum length destroy reference")
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |    ["EmailSubmission/set", {
+         |      "accountId": "$bobAccountId",
+         |      "create": {
+         |        "$creationId": {
+         |          "identityId": "${identityIdOf(bobUsername)}",
+         |          "emailId": "${messageId.serialize}"
+         |        }
+         |      },
+         |      "onSuccessDestroyEmail": ["#$creationId"]
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "$bobAccountId",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties": ["keywords"]
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract.body.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].created").isObject.containsKey(creationId)
+    assertThatJson(response).inPath("methodResponses[1][0]").asString().isEqualTo("Email/set")
+    assertThatJson(response).inPath("methodResponses[1][1].destroyed")
+      .isEqualTo(s"""["${messageId.serialize}"]""")
+    assertThatJson(response).inPath("methodResponses[2][0]").asString().isEqualTo("Email/get")
+    assertThatJson(response).inPath("methodResponses[2][1].list").isEqualTo("[]")
+    assertThatJson(response).inPath("methodResponses[2][1].notFound")
+      .isEqualTo(s"""["${messageId.serialize}"]""")
+  }
+
+  @Test
   def onSuccessUpdateEmailShouldTriggerAnImplicitEmailSetCall(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of

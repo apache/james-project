@@ -26,7 +26,6 @@ import java.time.{Clock, Duration, LocalDateTime, ZoneId, ZonedDateTime}
 import cats.implicits.toTraverseOps
 import com.google.common.collect.ImmutableMap
 import eu.timepit.refined.auto._
-import eu.timepit.refined.refineV
 import jakarta.annotation.PreDestroy
 import jakarta.inject.{Inject, Named}
 import jakarta.mail.Address
@@ -36,10 +35,10 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.model.Identity
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
-import org.apache.james.jmap.core.Id.{Id, IdConstraint}
+import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
-import org.apache.james.jmap.core.{ClientId, Invocation, JmapRfc8621Configuration, Properties, ServerId, SessionTranslator, SetError, SubmissionCapabilityFactory, UTCDate, UuidState}
+import org.apache.james.jmap.core.{ClientId, Id, IdOrCreationReference, Invocation, JmapRfc8621Configuration, Properties, ServerId, SessionTranslator, SetError, SubmissionCapabilityFactory, UTCDate, UuidState}
 import org.apache.james.jmap.json.EmailSubmissionSetSerializer
 import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue, UnparsedEmailSubmissionId, UnparsedIdentityId}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, NO_DELAY, VALID_PARAMETER_NAME_SET, formatter}
@@ -145,22 +144,18 @@ object EmailSubmissionSetMethod {
         case success: CreationSuccess if id.id.value.equals("#" + success.emailSubmissionCreationId.id.value) => success.emailSubmissionCreationResponse.id
       }
 
-    def resolveMessageId(creationId: EmailSubmissionCreationId): Either[IllegalArgumentException, Option[MessageId]] = {
-      if (creationId.id.startsWith("#")) {
-        val realId = creationId.id.substring(1)
-        val validatedId: Either[String, Id] = refineV[IdConstraint](realId)
-
-       validatedId
-          .left.map(s => new IllegalArgumentException(s))
+    def resolveMessageId(creationId: IdOrCreationReference): Either[IllegalArgumentException, Option[MessageId]] = {
+      if (creationId.value.startsWith("#")) {
+        Id.validate(creationId.value.substring(1))
           .flatMap(id => retrieveCreationResult(EmailSubmissionCreationId(id))
             .map(scala.Right(_))
-            .getOrElse(Left(new IllegalArgumentException(s"${creationId.id} cannot be referenced in current method call"))))
+            .getOrElse(Left(new IllegalArgumentException(s"${creationId.value} cannot be referenced in current method call"))))
           .map {
             case (success: CreationSuccess) => Some(success.messageId)
             case (_: CreationFailure) => None
           }
       } else {
-        Left(new IllegalArgumentException(s"${creationId.id} cannot be retrieved as storage for EmailSubmission is not yet implemented"))
+        Left(new IllegalArgumentException(s"${creationId.value} cannot be retrieved as storage for EmailSubmission is not yet implemented"))
       }
     }
     private def retrieveCreationResult(creationId: EmailSubmissionCreationId): Option[CreationResult] =
