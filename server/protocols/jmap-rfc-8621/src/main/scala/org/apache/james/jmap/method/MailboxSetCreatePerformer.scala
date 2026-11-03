@@ -114,17 +114,16 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
                             jsObject: JsObject,
                             processingContext: ProcessingContext,
                             supportSharedMailbox: Boolean): (MailboxCreationResult, ProcessingContext) = {
-    parseCreate(jsObject)
-      .flatMap(mailboxCreationRequest => resolvePath(mailboxSession, mailboxCreationRequest, supportSharedMailbox)
-        .flatMap(path => createMailbox(mailboxSession = mailboxSession,
-          path = path,
-          mailboxCreationRequest = mailboxCreationRequest)))
-      .flatMap(creationResponse => recordCreationIdInProcessingContext(mailboxCreationId, processingContext, creationResponse.id)
-        .map(context => (creationResponse, context)))
-      .fold(e => (MailboxCreationFailure(mailboxCreationId, e), processingContext),
-        creationResponseWithUpdatedContext => {
-          (MailboxCreationSuccess(mailboxCreationId, creationResponseWithUpdatedContext._1), creationResponseWithUpdatedContext._2)
-        })
+    val creation = for {
+      request <- parseCreate(jsObject)
+      path <- resolvePath(mailboxSession, request, supportSharedMailbox)
+      response <- createMailbox(mailboxSession, path, request)
+      updatedContext <- recordCreationIdInProcessingContext(mailboxCreationId, processingContext, response.id)
+    } yield (response, updatedContext)
+
+    // Keep a failed creation local to its item so independent create entries can continue.
+    creation.fold(error => (MailboxCreationFailure(mailboxCreationId, error), processingContext),
+      { case (response, updatedContext) => (MailboxCreationSuccess(mailboxCreationId, response), updatedContext) })
   }
 
   private def parseCreate(jsObject: JsObject): Either[MailboxCreationParseException, MailboxCreationRequest] =
