@@ -230,4 +230,19 @@ class SearchUtilsMultipartMixedTest {
         assertThat(messageSearches.isMatch(SearchQuery
                 .mailContains(SAMPLE_PART_TWO_FIELD), row, recent)).isTrue();
     }
+
+    @Test
+    void textSearchShouldNotFailOnABase64PartStartingWithAPad() throws Exception {
+        MessageBuilder builder = new MessageBuilder();
+        builder.header("From", "alice@example.com");
+        builder.header("Content-Type", "multipart/mixed; boundary=b");
+        builder.body(("--b\r\nContent-Type: text/plain\r\n\r\nhello\r\n"
+            + "--b\r\nContent-Type: application/octet-stream\r\n"
+            + "Content-Transfer-Encoding: base64\r\n\r\n=C3=A9\r\n--b--\r\n").getBytes(StandardCharsets.US_ASCII));
+        MailboxMessage message = builder.build();
+
+        assertThat(messageSearches.isMatch(SearchQuery.bodyContains("absent"), message, recent)).isFalse();
+        assertThat(messageSearches.isMatch(SearchQuery.not(SearchQuery.bodyContains("absent")), message, recent)).isTrue();
+        assertThat(messageSearches.isMatch(SearchQuery.not(SearchQuery.mailContains("absent")), message, recent)).isTrue();
+    }
 }
