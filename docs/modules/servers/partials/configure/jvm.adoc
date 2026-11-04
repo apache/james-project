@@ -177,6 +177,34 @@ james.jmap.quota.draft.compatibility=true
 ----
 To enable the compatibility.
 
+== JMAP Email/query date boundary compatibility
+
+By default, JMAP `Email/query` follows RFC 8621: `before` matches `receivedAt < T` and
+`after` matches `receivedAt >= T`. The property
+`james.jmap.email.query.date.boundary.backward.compatibility` restores historical date boundaries
+for clients that still rely on them.
+
+Optional. Boolean. Defaults to false. Only `true` (case insensitive) enables compatibility.
+
+Ex in `jvm.properties`
+----
+james.jmap.email.query.date.boundary.backward.compatibility=true
+----
+
+Alternatively, pass `-Djames.jmap.email.query.date.boundary.backward.compatibility=true` to the JVM.
+Set the property before starting James and restart every node after changing it: the policy is a
+JVM-wide snapshot read on first use.
+
+Compatibility mode makes `before` inclusive on all backends. Regular search (including OpenSearch)
+compares at second precision and makes `after` exclusive; EmailQueryView compares stored timestamps
+and keeps `after` inclusive. Subsecond filter bounds retain existing precision limitations.
+Shared SearchQuery and IMAP semantics are unchanged.
+
+Enable compatibility before or with the backend upgrade for affected clients. Disable it once deployed
+clients support RFC-compatible pagination, including older client installations still in use.
+Clients must deduplicate repeated IDs; inclusive cursors cannot guarantee progress when a group of
+emails with the same timestamp exceeds the page size.
+
 == JMAP EmailSubmission without identityId
 
 RFC 8621 requires `EmailSubmission/set` creations to carry an `identityId`. Some clients omit it, so James accepts
