@@ -160,7 +160,14 @@ class SearchUtilTest {
         assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
             assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("x"));
     }
-    
+
+    @Test
+    void getBaseSubjectShouldRemoveFwdTrailerCaseInsensitively() {
+        assertThat(SearchUtil.getBaseSubject("Re: Hello (FWD)")).isEqualTo("Hello");
+        assertThat(SearchUtil.getBaseSubject("Hello (Fwd)")).isEqualTo("Hello");
+        assertThat(SearchUtil.getBaseSubject("(fwd)")).isEqualTo("");
+    }
+
     @Test
     void truncateSubjectFieldShouldNotExceedTheLimitWhenCuttingInsideACharacter() {
         // byte 32766 is the first byte of an e acute
