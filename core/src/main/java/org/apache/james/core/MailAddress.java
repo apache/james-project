@@ -402,8 +402,8 @@ public class MailAddress implements java.io.Serializable {
     }
 
     /**
-     * An escaped (quoted-pair) or quoted separator is part of the local part, not a details delimiter:
-     * cutting there would yield an unparseable address.
+     * An escaped (quoted-pair) or quoted separator, or one following a '.', is part of the local part,
+     * not a details delimiter: cutting there would yield an unparseable address.
      */
     private int detailsSeparatorPosition(String separatorDelimiterSequence) {
         boolean quoted = false;
@@ -413,11 +413,15 @@ public class MailAddress implements java.io.Serializable {
                 i++;
             } else if (c == '\"') {
                 quoted = !quoted;
-            } else if (!quoted && localPart.startsWith(separatorDelimiterSequence, i)) {
+            } else if (!quoted && localPart.startsWith(separatorDelimiterSequence, i) && !followsDot(i)) {
                 return i;
             }
         }
         return -1;
+    }
+
+    private boolean followsDot(int position) {
+        return position > 0 && localPart.charAt(position - 1) == '.';
     }
 
     public MailAddress stripDetails(String separatorDelimiterSequence) {
