@@ -27,16 +27,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadFactory;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 class ImapRequestFrameDecoderTest {
     private static class Collector extends ChannelInboundHandlerAdapter {
@@ -46,6 +51,22 @@ class ImapRequestFrameDecoderTest {
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
             messages.add((ImapMessage) msg);
         }
+    }
+
+    @BeforeEach
+    void synchronousScheduler() {
+        // So that a literal spooled to a file is decoded before the assertions
+        Schedulers.setFactory(new Schedulers.Factory() {
+            @Override
+            public Scheduler newBoundedElastic(int threadCap, int queuedTaskCap, ThreadFactory threadFactory, int ttlSeconds) {
+                return Schedulers.immediate();
+            }
+        });
+    }
+
+    @AfterEach
+    void resetScheduler() {
+        Schedulers.resetFactory();
     }
 
     private static List<String> decode(boolean authenticated, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength, List<byte[]> chunks) {
@@ -144,5 +165,17 @@ class ImapRequestFrameDecoderTest {
         assertThat(decode(true, 32, 5504, 3008, chunks))
             .hasSize(2)
             .last().asString().contains("tag=d, command=NOOP");
+    }
+
+    @Test
+    void aCommandPipelinedAfterAFileBackedLiteralShouldBeDecoded() {
+        List<byte[]> chunks = List.of(
+            "a APPEND INBOX {40}\r\n".getBytes(StandardCharsets.US_ASCII),
+            "0123456789012345678901234567890123456789\r\nb NOOP\r\n".getBytes(StandardCharsets.US_ASCII));
+
+        // inMemorySizeLimit 32 < 40: the literal is spooled to a file
+        assertThat(decode(true, 32, 5504, 3008, chunks))
+            .hasSize(2)
+            .last().asString().contains("tag=b, command=NOOP");
     }
 }
