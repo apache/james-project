@@ -61,17 +61,8 @@
             <artifactId>event-bus-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.beachape</groupId>
-            <artifactId>enumeratum_${scala.base}</artifactId>
-            <version>1.9.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.chuusai</groupId>
-            <artifactId>shapeless_2.13</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.typesafe.play</groupId>
-            <artifactId>play-json_${scala.base}</artifactId>
+            <artifactId>play-json_${scala.binary}</artifactId>
         </dependency>
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>
@@ -79,22 +70,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.julienrf</groupId>
-            <artifactId>play-json-derived-codecs_${scala.base}</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.chuusai</groupId>
-                    <artifactId>shapeless_2.13</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
         </dependency>
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-java8-compat_${scala.base}</artifactId>
+            <artifactId>scala-java8-compat_${scala.binary}</artifactId>
         </dependency>
     </dependencies>
 
