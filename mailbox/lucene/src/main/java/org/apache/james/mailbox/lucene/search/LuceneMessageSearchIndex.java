@@ -65,9 +65,11 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -416,10 +418,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private Query buildQueryFromMailboxes(Collection<MailboxId> mailboxIds) {
         BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
         for (MailboxId id: mailboxIds) {
-            String idAsString = id.serialize();
-            queryBuilder.add(new TermQuery(new Term(MAILBOX_ID_FIELD, idAsString)), BooleanClause.Occur.SHOULD);
+            queryBuilder.add(mailboxQuery(id), BooleanClause.Occur.SHOULD);
         }
         return queryBuilder.build();
+    }
+
+    private Query mailboxQuery(MailboxId mailboxId) {
+        return new TermQuery(new Term(MAILBOX_ID_FIELD, mailboxId.serialize()));
     }
 
     private Query buildQuery(Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {
@@ -431,7 +436,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
         List<Criterion> crits = searchQuery.getCriteria();
         for (Criterion crit : crits) {
-            queryBuilder.add(createQuery(crit, inMailboxes, searchQuery.getRecentMessageUids()), BooleanClause.Occur.MUST);
+            queryBuilder.add(createQuery(crit, mailboxIds, searchQuery.getRecentMessageUids()), BooleanClause.Occur.MUST);
         }
         return queryBuilder.build();
     }
@@ -636,7 +641,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * Return a {@link Query} which is build based on the given {@link SearchQuery.FlagCriterion}. This is kind of a hack
      * as it will do a search for the flags in this method and
      */
-    private Query createFlagQuery(String flag, boolean isSet, Query inMailboxes, Collection<MessageUid> recentUids) throws MailboxException {
+    private Query createFlagQuery(String flag, boolean isSet, Collection<MailboxId> mailboxIds, Collection<MessageUid> recentUids) throws MailboxException {
         BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
 
         if (isSet) {
@@ -649,38 +654,57 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
             queryBuilder.add(bQuery.build(), BooleanClause.Occur.MUST);
         }
-        queryBuilder.add(inMailboxes, BooleanClause.Occur.MUST);
+        queryBuilder.add(buildQueryFromMailboxes(mailboxIds), BooleanClause.Occur.MUST);
 
         try (IndexReader reader = DirectoryReader.open(writer)) {
             IndexSearcher searcher = new IndexSearcher(reader);
-            Set<MessageUid> uids = new HashSet<>();
+            Map<String, MailboxId> mailboxIdsBySerialization = new HashMap<>();
+            Map<MailboxId, Set<MessageUid>> uidsByMailbox = new HashMap<>();
+            for (MailboxId mailboxId : mailboxIds) {
+                mailboxIdsBySerialization.put(mailboxId.serialize(), mailboxId);
+                uidsByMailbox.put(mailboxId, new HashSet<>());
+            }
 
             // queryBuilder for all the documents sorted by uid
             TopDocs docs = searcher.search(queryBuilder.build(), maxQueryResults, new Sort(UID_SORT));
             ScoreDoc[] sDocs = docs.scoreDocs;
             for (ScoreDoc sDoc : sDocs) {
-                MessageUid uid = MessageUid.of(searcher.storedFields().document(sDoc.doc).getField(UID_FIELD).numericValue().longValue());
-                uids.add(uid);
+                Document doc = searcher.storedFields().document(sDoc.doc);
+                MessageUid uid = MessageUid.of(doc.getField(UID_FIELD).numericValue().longValue());
+                Optional.ofNullable(mailboxIdsBySerialization.get(doc.get(MAILBOX_ID_FIELD)))
+                    .ifPresent(mailboxId -> uidsByMailbox.get(mailboxId).add(uid));
             }
 
             // add or remove recent uids
             if (flag.equalsIgnoreCase("\\RECENT")) {
-                if (isSet) {
-                    uids.addAll(recentUids);
-                } else {
-                    uids.removeAll(recentUids);
+                for (Set<MessageUid> uids : uidsByMailbox.values()) {
+                    if (isSet) {
+                        uids.addAll(recentUids);
+                    } else {
+                        uids.removeAll(recentUids);
+                    }
                 }
             }
 
-            List<MessageRange> ranges = MessageRange.toRanges(new ArrayList<>(uids));
-            UidRange[] nRanges = new UidRange[ranges.size()];
-            for (int i = 0; i < ranges.size(); i++) {
-                MessageRange range = ranges.get(i);
-                nRanges[i] = new UidRange(range.getUidFrom(), range.getUidTo());
+            BooleanQuery.Builder flaggedMessages = new BooleanQuery.Builder();
+            for (Map.Entry<MailboxId, Set<MessageUid>> entry : uidsByMailbox.entrySet()) {
+                if (!entry.getValue().isEmpty()) {
+                    List<MessageRange> ranges = MessageRange.toRanges(new ArrayList<>(entry.getValue()));
+                    UidRange[] nRanges = new UidRange[ranges.size()];
+                    for (int i = 0; i < ranges.size(); i++) {
+                        MessageRange range = ranges.get(i);
+                        nRanges[i] = new UidRange(range.getUidFrom(), range.getUidTo());
+                    }
+                    flaggedMessages.add(new BooleanQuery.Builder()
+                        .add(mailboxQuery(entry.getKey()), BooleanClause.Occur.MUST)
+                        .add(createUidQuery((UidCriterion) SearchQuery.uid(nRanges)), BooleanClause.Occur.MUST)
+                        .build(), BooleanClause.Occur.SHOULD);
+                }
             }
-            return createUidQuery((UidCriterion) SearchQuery.uid(nRanges));
+            // An empty BooleanQuery matches no document
+            return flaggedMessages.build();
         } catch (IOException e) {
-            throw new MailboxException("Unable to search mailbox " + inMailboxes, e);
+            throw new MailboxException("Unable to search mailboxes " + mailboxIds, e);
         }
     }
 
@@ -792,26 +816,26 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.ConjunctionCriterion}
      */
-    private Query createConjunctionQuery(SearchQuery.ConjunctionCriterion crit, Query inMailboxes, Collection<MessageUid> recentUids) throws MailboxException {
+    private Query createConjunctionQuery(SearchQuery.ConjunctionCriterion crit, Collection<MailboxId> mailboxIds, Collection<MessageUid> recentUids) throws MailboxException {
         List<Criterion> crits = crit.getCriteria();
         BooleanQuery.Builder conQuery = new BooleanQuery.Builder();
         switch (crit.getType()) {
         case AND:
             for (Criterion criterion : crits) {
-                conQuery.add(createQuery(criterion, inMailboxes, recentUids), BooleanClause.Occur.MUST);
+                conQuery.add(createQuery(criterion, mailboxIds, recentUids), BooleanClause.Occur.MUST);
             }
             return conQuery.build();
         case OR:
             for (Criterion criterion : crits) {
-                conQuery.add(createQuery(criterion, inMailboxes, recentUids), BooleanClause.Occur.SHOULD);
+                conQuery.add(createQuery(criterion, mailboxIds, recentUids), BooleanClause.Occur.SHOULD);
             }
             return conQuery.build();
         case NOR:
             BooleanQuery.Builder nor = new BooleanQuery.Builder();
             for (Criterion criterion : crits) {
-                conQuery.add(createQuery(criterion, inMailboxes, recentUids), BooleanClause.Occur.SHOULD);
+                conQuery.add(createQuery(criterion, mailboxIds, recentUids), BooleanClause.Occur.SHOULD);
             }
-            nor.add(inMailboxes, BooleanClause.Occur.MUST);
+            nor.add(buildQueryFromMailboxes(mailboxIds), BooleanClause.Occur.MUST);
 
             nor.add(conQuery.build(), BooleanClause.Occur.MUST_NOT);
             return nor.build();
@@ -823,7 +847,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Return a {@link Query} which is builded based on the given {@link Criterion}
      */
-    private Query createQuery(Criterion criterion, Query inMailboxes, Collection<MessageUid> recentUids) throws MailboxException {
+    private Query createQuery(Criterion criterion, Collection<MailboxId> mailboxIds, Collection<MessageUid> recentUids) throws MailboxException {
         if (criterion instanceof SearchQuery.InternalDateCriterion crit) {
             return createInternalDateQuery(crit);
         } else if (criterion instanceof SearchQuery.SaveDateCriterion crit) {
@@ -837,17 +861,17 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         } else if (criterion instanceof UidCriterion crit) {
             return createUidQuery(crit);
         } else if (criterion instanceof FlagCriterion crit) {
-            return createFlagQuery(toString(crit.getFlag()), crit.getOperator().isSet(), inMailboxes, recentUids);
+            return createFlagQuery(toString(crit.getFlag()), crit.getOperator().isSet(), mailboxIds, recentUids);
         } else if (criterion instanceof AttachmentCriterion crit) {
             return createAttachmentQuery(crit.getOperator().isSet());
         } else if (criterion instanceof CustomFlagCriterion crit) {
-            return createFlagQuery(crit.getFlag().toLowerCase(Locale.US), crit.getOperator().isSet(), inMailboxes, recentUids);
+            return createFlagQuery(crit.getFlag().toLowerCase(Locale.US), crit.getOperator().isSet(), mailboxIds, recentUids);
         } else if (criterion instanceof SearchQuery.TextCriterion crit) {
             return createTextQuery(crit);
         } else if (criterion instanceof SearchQuery.AllCriterion) {
             return createAllQuery();
         } else if (criterion instanceof SearchQuery.ConjunctionCriterion crit) {
-            return createConjunctionQuery(crit, inMailboxes, recentUids);
+            return createConjunctionQuery(crit, mailboxIds, recentUids);
         } else if (criterion instanceof SearchQuery.ModSeqCriterion) {
             return createModSeqQuery((SearchQuery.ModSeqCriterion) criterion);
         } else if (criterion instanceof SearchQuery.MimeMessageIDCriterion mimeMessageIDCriterion) {

@@ -44,6 +44,7 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchOptions;
@@ -796,6 +797,70 @@ class LuceneMailboxMessageSearchIndexTest {
             .collectList().block();
 
         assertThat(result).containsOnly(id1);
+    }
+
+    @Test
+    void flagIsSetAcrossMailboxesHavingTheSameUidsShouldMatchOnlyTheFlaggedMessages() throws Exception {
+        MessageId notDeletedId = factory.generate();
+        index.add(session, mailbox3, new MessageBuilder()
+            .flags(new Flags(Flag.SEEN))
+            .mailboxId(TEST_ID_3)
+            .uid(uid3)
+            .build(notDeletedId)).block();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flag.DELETED));
+
+        List<MessageId> result = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox3.getMailboxId()), query, LIMIT)
+            .collectList().block();
+
+        assertThat(result).containsOnly(id3, id4);
+    }
+
+    @Test
+    void flagIsUnSetAcrossMailboxesHavingTheSameUidsShouldNotMatchTheFlaggedMessages() throws Exception {
+        MessageId notDeletedId = factory.generate();
+        index.add(session, mailbox3, new MessageBuilder()
+            .flags(new Flags(Flag.SEEN))
+            .mailboxId(TEST_ID_3)
+            .uid(uid3)
+            .build(notDeletedId)).block();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsUnSet(Flag.DELETED));
+
+        List<MessageId> result = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox3.getMailboxId()), query, LIMIT)
+            .collectList().block();
+
+        assertThat(result)
+            .contains(notDeletedId)
+            .doesNotContain(id3, id4);
+    }
+
+    @Test
+    void customFlagSearchAcrossMailboxesHavingTheSameUidsShouldMatchOnlyTheFlaggedMessage() throws Exception {
+        MessageUid uid = MessageUid.of(10);
+        MessageId labelledId = factory.generate();
+        index.add(session, mailbox, new MessageBuilder()
+            .flags(new Flags("label1"))
+            .mailboxId(TEST_ID_1)
+            .uid(uid)
+            .build(labelledId)).block();
+        MessageId notLabelledId = factory.generate();
+        index.add(session, mailbox3, new MessageBuilder()
+            .flags(new Flags(Flag.SEEN))
+            .mailboxId(TEST_ID_3)
+            .uid(uid)
+            .build(notLabelledId)).block();
+        List<MailboxId> mailboxIds = ImmutableList.of(mailbox.getMailboxId(), mailbox3.getMailboxId());
+
+        List<MessageId> labelled = index.search(session, mailboxIds, SearchQuery.of(SearchQuery.flagIsSet("label1")), LIMIT)
+            .collectList().block();
+        List<MessageId> notLabelled = index.search(session, mailboxIds, SearchQuery.of(SearchQuery.flagIsUnSet("label1")), LIMIT)
+            .collectList().block();
+
+        assertThat(labelled).containsOnly(labelledId);
+        assertThat(notLabelled)
+            .contains(notLabelledId)
+            .doesNotContain(labelledId);
     }
 
     @Test
