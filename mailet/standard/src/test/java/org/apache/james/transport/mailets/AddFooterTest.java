@@ -458,6 +458,22 @@ class AddFooterTest {
     }
 
     @Test
+    void shouldKeepFooterIntactInUtf16TextPart() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", "-- \r\nfooter\r\n")
+            .build());
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.setText("ഊഊഊഊ text", "UTF-16");
+        message.saveChanges();
+        Mail mail = FakeMail.from(message);
+
+        mailet.service(mail);
+
+        assertThat((String) reparse(mail).getContent()).isEqualTo("ഊഊഊഊ text\r\n-- \r\nfooter\r\n");
+    }
+
+    @Test
     void shouldInsertHtmlFooterBeforeTheLastClosingBodyTag() throws Exception {
         mailet.init(FakeMailetConfig.builder()
             .mailetName("Test")
