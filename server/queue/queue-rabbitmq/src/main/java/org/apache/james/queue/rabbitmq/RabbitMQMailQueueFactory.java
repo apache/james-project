@@ -52,6 +52,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.QueueSpecification;
@@ -167,9 +168,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             sender.declareExchange(ExchangeSpecification.exchange(exchangeName)
                 .durable(true)
                 .type("direct")),
-            sender.declareExchange(ExchangeSpecification.exchange(mailQueueName.toDeadLetterExchangeName())
-                .durable(true)
-                .type("direct")),
+            declareDeadLetterExchange(mailQueueName),
             sender.declareQueue(QueueSpecification.queue(mailQueueName.toWorkQueueName().asString())
                 .durable(evaluateDurable(DURABLE, configuration.isQuorumQueuesUsed()))
                 .exclusive(evaluateExclusive(!EXCLUSIVE, configuration.isQuorumQueuesUsed()))
@@ -177,20 +176,12 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                 .arguments(configuration.workQueueArgumentsBuilder()
                     .deadLetter(mailQueueName.toDeadLetterExchangeName())
                     .build())),
-            sender.declareQueue(QueueSpecification.queue(mailQueueName.toDeadLetterQueueName())
-                .durable(evaluateDurable(DURABLE, configuration.isQuorumQueuesUsed()))
-                .exclusive(evaluateExclusive(!EXCLUSIVE, configuration.isQuorumQueuesUsed()))
-                .autoDelete(evaluateAutoDelete(!AUTO_DELETE, configuration.isQuorumQueuesUsed()))
-                .arguments(configuration.workQueueArgumentsBuilder()
-                    .build())),
+            declareDeadLetterQueue(mailQueueName),
             sender.bind(BindingSpecification.binding()
                 .exchange(mailQueueName.toRabbitExchangeName().asString())
                 .queue(mailQueueName.toWorkQueueName().asString())
                 .routingKey(EMPTY_ROUTING_KEY)),
-            sender.bind(BindingSpecification.binding()
-                .exchange(mailQueueName.toDeadLetterExchangeName())
-                .queue(mailQueueName.toDeadLetterQueueName())
-                .routingKey(EMPTY_ROUTING_KEY)))
+            declareDeadLetterBinding(mailQueueName))
             .then()
             .block();
         return privateFactory.create(mailQueueName, prefetchCount);
@@ -199,7 +190,55 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     private Optional<RabbitMQMailQueue> getQueueFromRabbitServer(MailQueueName name, PrefetchCount prefetchCount) {
         return mqManagementApi.listCreatedMailQueueNames()
             .filter(name::equals)
-            .map(queueName -> privateFactory.create(queueName, prefetchCount))
-            .findFirst();
+            .findFirst()
+            .map(queueName -> {
+                recreateMissingDeadLetterInfrastructure(queueName);
+                return privateFactory.create(queueName, prefetchCount);
+            });
+    }
+
+    /**
+     * Verifies the dead letter infrastructure associated with an existing mail queue: dead letter
+     * exchange, dead letter queue and the binding between the two. Missing pieces are idempotently
+     * re-declared, self-healing infrastructure that was manually deleted, e.g. between two James
+     * restarts. Existing pieces are left untouched, even when bearing different arguments. The
+     * binding is always re-declared as RabbitMQ collapses equivalent bindings.
+     */
+    private void recreateMissingDeadLetterInfrastructure(MailQueueName mailQueueName) {
+        Flux.concat(
+            mqManagementApi.exchangeExists(mailQueueName.toDeadLetterExchangeName())
+                ? Mono.empty()
+                : declareDeadLetterExchange(mailQueueName),
+            mqManagementApi.queueExists(mailQueueName.toDeadLetterQueueName())
+                ? Mono.empty()
+                : declareDeadLetterQueue(mailQueueName),
+            declareDeadLetterBinding(mailQueueName))
+            .then()
+            .block();
+    }
+
+    private Mono<Void> declareDeadLetterExchange(MailQueueName mailQueueName) {
+        return sender.declareExchange(ExchangeSpecification.exchange(mailQueueName.toDeadLetterExchangeName())
+            .durable(true)
+            .type("direct"))
+            .then();
+    }
+
+    private Mono<Void> declareDeadLetterQueue(MailQueueName mailQueueName) {
+        return sender.declareQueue(QueueSpecification.queue(mailQueueName.toDeadLetterQueueName())
+            .durable(evaluateDurable(DURABLE, configuration.isQuorumQueuesUsed()))
+            .exclusive(evaluateExclusive(!EXCLUSIVE, configuration.isQuorumQueuesUsed()))
+            .autoDelete(evaluateAutoDelete(!AUTO_DELETE, configuration.isQuorumQueuesUsed()))
+            .arguments(configuration.workQueueArgumentsBuilder()
+                .build()))
+            .then();
+    }
+
+    private Mono<Void> declareDeadLetterBinding(MailQueueName mailQueueName) {
+        return sender.bind(BindingSpecification.binding()
+            .exchange(mailQueueName.toDeadLetterExchangeName())
+            .queue(mailQueueName.toDeadLetterQueueName())
+            .routingKey(EMPTY_ROUTING_KEY))
+            .then();
     }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.rabbitmq;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -42,18 +43,40 @@ public class RabbitMQMailQueueManagement {
 
     @VisibleForTesting
     RabbitMQMailQueueManagement(RabbitMQManagementAPI api) {
+        this(api, Optional.empty());
+    }
+
+    @VisibleForTesting
+    RabbitMQMailQueueManagement(RabbitMQManagementAPI api, Optional<String> vhost) {
         this.api = api;
-        this.vhost = Optional.empty();
+        this.vhost = vhost;
     }
 
     Stream<MailQueueName> listCreatedMailQueueNames() {
-        return vhost.map(api::listVhostQueues)
-            .orElse(api.listQueues())
+        return listQueues()
             .stream()
             .map(RabbitMQManagementAPI.MessageQueue::getName)
             .map(MailQueueName::fromRabbitWorkQueueName)
             .flatMap(Optional::stream)
             .distinct();
+    }
+
+    boolean queueExists(String queueName) {
+        return listQueues()
+            .stream()
+            .anyMatch(queue -> queue.getName().equals(queueName));
+    }
+
+    boolean exchangeExists(String exchangeName) {
+        return vhost.map(api::listVhostExchanges)
+            .orElse(api.listExchanges())
+            .stream()
+            .anyMatch(exchange -> exchange.getName().equals(exchangeName));
+    }
+
+    private List<RabbitMQManagementAPI.MessageQueue> listQueues() {
+        return vhost.map(api::listVhostQueues)
+            .orElse(api.listQueues());
     }
 
     @VisibleForTesting

@@ -21,6 +21,7 @@ package org.apache.james.queue.rabbitmq;
 
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
+import java.util.Optional;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
@@ -47,6 +49,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.QueueSpecification;
 
 class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQMailQueue> {
@@ -121,5 +124,159 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
         mailQueueFactory.createQueue(NAME_2);
 
         assertThat(api.listVhostQueues(VHOST)).isEmpty();
+    }
+
+    @Test
+    void createQueueShouldRecreateMissingDeadLetterQueue() throws Exception {
+        org.apache.james.queue.api.MailQueueName queueName = org.apache.james.queue.api.MailQueueName.of("recreateDlq");
+        MailQueueName mailQueueName = mailQueueName(queueName);
+
+        mailQueueFactory.createQueue(queueName);
+
+        rabbitMQExtension.managementAPI().deleteQueue("/", mailQueueName.toDeadLetterQueueName());
+        assertThat(rabbitMQExtension.managementAPI().listQueues())
+            .noneMatch(queue -> queue.getName().equals(mailQueueName.toDeadLetterQueueName()));
+
+        mailQueueFactory.createQueue(queueName);
+
+        assertThat(rabbitMQExtension.managementAPI().listQueues())
+            .anyMatch(queue -> queue.getName().equals(mailQueueName.toDeadLetterQueueName()));
+        assertThat(rabbitMQExtension.managementAPI().listBindings("/", mailQueueName.toDeadLetterExchangeName()))
+            .anyMatch(binding -> binding.getDestination().equals(mailQueueName.toDeadLetterQueueName()));
+    }
+
+    @Test
+    void createQueueShouldRecreateMissingDeadLetterExchange() throws Exception {
+        org.apache.james.queue.api.MailQueueName queueName = org.apache.james.queue.api.MailQueueName.of("recreateDlx");
+        MailQueueName mailQueueName = mailQueueName(queueName);
+
+        declareWorkQueue(mailQueueName);
+        declareDeadLetterQueue(mailQueueName);
+
+        mailQueueFactory.createQueue(queueName);
+
+        assertThat(rabbitMQExtension.managementAPI().listExchanges())
+            .anyMatch(exchange -> exchange.getName().equals(mailQueueName.toDeadLetterExchangeName()));
+        assertThat(rabbitMQExtension.managementAPI().listBindings("/", mailQueueName.toDeadLetterExchangeName()))
+            .anyMatch(binding -> binding.getDestination().equals(mailQueueName.toDeadLetterQueueName())
+                && binding.getRoutingKey().equals(EMPTY_ROUTING_KEY));
+    }
+
+    @Test
+    void createQueueShouldRecreateMissingDeadLetterBinding() throws Exception {
+        org.apache.james.queue.api.MailQueueName queueName = org.apache.james.queue.api.MailQueueName.of("recreateBinding");
+        MailQueueName mailQueueName = mailQueueName(queueName);
+
+        declareWorkQueue(mailQueueName);
+        declareDeadLetterQueue(mailQueueName);
+        declareDeadLetterExchange(mailQueueName);
+
+        mailQueueFactory.createQueue(queueName);
+
+        assertThat(rabbitMQExtension.managementAPI().listBindings("/", mailQueueName.toDeadLetterExchangeName()))
+            .anyMatch(binding -> binding.getDestination().equals(mailQueueName.toDeadLetterQueueName())
+                && binding.getRoutingKey().equals(EMPTY_ROUTING_KEY));
+    }
+
+    @Test
+    void createQueueShouldNotFailWhenDeadLetterInfrastructureExists() throws Exception {
+        org.apache.james.queue.api.MailQueueName queueName = org.apache.james.queue.api.MailQueueName.of("completeInfrastructure");
+        MailQueueName mailQueueName = mailQueueName(queueName);
+
+        mailQueueFactory.createQueue(queueName);
+
+        assertThatCode(() -> mailQueueFactory.createQueue(queueName))
+            .doesNotThrowAnyException();
+
+        assertThat(rabbitMQExtension.managementAPI().listQueues())
+            .anyMatch(queue -> queue.getName().equals(mailQueueName.toDeadLetterQueueName()));
+        assertThat(rabbitMQExtension.managementAPI().listQueues())
+            .anyMatch(queue -> queue.getName().equals(mailQueueName.toWorkQueueName().asString()));
+    }
+
+    @Test
+    void createQueueShouldNotRecreateDeadLetterQueueWithDifferentArguments() throws Exception {
+        org.apache.james.queue.api.MailQueueName queueName = org.apache.james.queue.api.MailQueueName.of("foreignArgsDlq");
+        MailQueueName mailQueueName = mailQueueName(queueName);
+
+        declareWorkQueue(mailQueueName);
+        declareForeignDeadLetterQueue(mailQueueName);
+        declareDeadLetterExchange(mailQueueName);
+
+        assertThatCode(() -> mailQueueFactory.createQueue(queueName))
+            .doesNotThrowAnyException();
+
+        assertThat(rabbitMQExtension.managementAPI().listQueues())
+            .anyMatch(queue -> queue.getName().equals(mailQueueName.toDeadLetterQueueName())
+                && !queue.isDurable());
+    }
+
+    @Test
+    void getQueueShouldRecreateMissingDeadLetterQueue() throws Exception {
+        org.apache.james.queue.api.MailQueueName queueName = org.apache.james.queue.api.MailQueueName.of("getQueueRecreateDlq");
+        MailQueueName mailQueueName = mailQueueName(queueName);
+
+        mailQueueFactory.createQueue(queueName);
+
+        rabbitMQExtension.managementAPI().deleteQueue("/", mailQueueName.toDeadLetterQueueName());
+
+        assertThat(mailQueueFactory.getQueue(queueName)).isPresent();
+
+        assertThat(rabbitMQExtension.managementAPI().listQueues())
+            .anyMatch(queue -> queue.getName().equals(mailQueueName.toDeadLetterQueueName()));
+    }
+
+    @Test
+    void exchangeExistsShouldNotConsiderExchangesFromOtherVhosts() throws Exception {
+        RabbitMQManagementAPI api = rabbitMQExtension.managementAPI();
+        api.addVhost(VHOST);
+
+        MailQueueName mailQueueName = MailQueueName.fromString("otherVhostExchange");
+        declareDeadLetterExchange(mailQueueName);
+
+        assertThat(new RabbitMQMailQueueManagement(api, Optional.of(VHOST))
+            .exchangeExists(mailQueueName.toDeadLetterExchangeName()))
+            .isFalse();
+        assertThat(mqManagementApi.exchangeExists(mailQueueName.toDeadLetterExchangeName()))
+            .isTrue();
+    }
+
+    private void declareWorkQueue(MailQueueName mailQueueName) {
+        rabbitMQExtension.getSender()
+            .declareQueue(QueueSpecification.queue(mailQueueName.toWorkQueueName().asString())
+                .durable(DURABLE)
+                .exclusive(!EXCLUSIVE)
+                .autoDelete(!AUTO_DELETE))
+            .block();
+    }
+
+    private void declareDeadLetterQueue(MailQueueName mailQueueName) {
+        rabbitMQExtension.getSender()
+            .declareQueue(QueueSpecification.queue(mailQueueName.toDeadLetterQueueName())
+                .durable(DURABLE)
+                .exclusive(!EXCLUSIVE)
+                .autoDelete(!AUTO_DELETE))
+            .block();
+    }
+
+    private void declareDeadLetterExchange(MailQueueName mailQueueName) {
+        rabbitMQExtension.getSender()
+            .declareExchange(ExchangeSpecification.exchange(mailQueueName.toDeadLetterExchangeName())
+                .durable(true)
+                .type("direct"))
+            .block();
+    }
+
+    private void declareForeignDeadLetterQueue(MailQueueName mailQueueName) {
+        rabbitMQExtension.getSender()
+            .declareQueue(QueueSpecification.queue(mailQueueName.toDeadLetterQueueName())
+                .durable(!DURABLE)
+                .exclusive(!EXCLUSIVE)
+                .autoDelete(!AUTO_DELETE))
+            .block();
+    }
+
+    private MailQueueName mailQueueName(org.apache.james.queue.api.MailQueueName name) {
+        return MailQueueName.fromString(name.asString());
     }
 }
