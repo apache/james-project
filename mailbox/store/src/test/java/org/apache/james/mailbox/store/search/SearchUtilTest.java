@@ -169,6 +169,13 @@ class SearchUtilTest {
     }
 
     @Test
+    void getBaseSubjectShouldRemoveRefwdLeaderWithBlob() {
+        assertThat(SearchUtil.getBaseSubject("Re[2]: Hello")).isEqualTo("Hello");
+        assertThat(SearchUtil.getBaseSubject("Fwd [list]: Hello")).isEqualTo("Hello");
+        assertThat(SearchUtil.getBaseSubject("Re: re[]:reA")).isEqualTo("reA");
+    }
+
+    @Test
     void truncateSubjectFieldShouldNotExceedTheLimitWhenCuttingInsideACharacter() {
         // byte 32766 is the first byte of an e acute
         String subject = "a" + String.valueOf((char) 0xE9).repeat(20_000);
