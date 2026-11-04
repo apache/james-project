@@ -255,7 +255,8 @@ public abstract class ImapRequestLineReader {
             } else if (coderResult.isError()) {
                 throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding");
             } else if (coderResult.isUnderflow()) {
-                buffer.clear();
+                // Keep the bytes of a character not complete yet, to decode them with the next ones
+                buffer.compact();
             }
             return coderResult;
         }
