@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import jakarta.mail.internet.InternetAddress;
 
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.jupiter.api.Test;
 
@@ -52,5 +53,12 @@ class InternetAddressConverterTest {
     void convertShouldWorkWithTwoAddress() throws Exception {
         assertThat(InternetAddressConverter.convert(ImmutableList.of(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)))
             .containsOnly(new InternetAddress(MailAddressFixture.ANY_AT_JAMES.asString()), new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.asString()));
+    }
+
+    @Test
+    void convertShouldNotDropRecipientsWithCombiningMarkDomains() throws Exception {
+        assertThat(InternetAddressConverter.convert(ImmutableList.of(new MailAddress("x@भारत"), MailAddressFixture.ANY_AT_JAMES)))
+            .extracting(InternetAddress::getAddress)
+            .containsOnly("x@भारत", MailAddressFixture.ANY_AT_JAMES.asString());
     }
 }

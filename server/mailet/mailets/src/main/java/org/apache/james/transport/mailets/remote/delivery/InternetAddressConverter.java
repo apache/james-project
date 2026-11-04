@@ -32,7 +32,18 @@ public class InternetAddressConverter {
     public static ImmutableSet<InternetAddress> convert(Collection<MailAddress> recipients) {
         Preconditions.checkNotNull(recipients);
         return recipients.stream()
-            .flatMap(mailAddress -> mailAddress.toInternetAddress().stream())
+            .map(mailAddress -> mailAddress.toInternetAddress()
+                .orElseGet(() -> withoutParsing(mailAddress)))
             .collect(ImmutableSet.toImmutableSet());
+    }
+
+    /**
+     * InternetAddress(String) refuses some domains James accepts, eg IDNs with combining marks (x@भारत): the
+     * address is already validated by James, do not drop the recipient.
+     */
+    private static InternetAddress withoutParsing(MailAddress mailAddress) {
+        InternetAddress internetAddress = new InternetAddress();
+        internetAddress.setAddress(mailAddress.asString());
+        return internetAddress;
     }
 }
