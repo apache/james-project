@@ -362,7 +362,7 @@ public class SearchUtil {
                 }
                 return true;
             }
-            if (end - start > FWD_PARENS.length() && subject.startsWith(FWD_PARENS, end - FWD_PARENS.length())) {
+            if (endsWithIgnoreCase(FWD_PARENS)) {
                 end -= FWD_PARENS.length();
                 return true;
             }
