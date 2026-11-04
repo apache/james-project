@@ -19,42 +19,27 @@
 
 package org.apache.james.mailbox.cassandra.object.compaction;
 
-import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
-import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
-import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
-import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.BLOB_ID;
-import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.REFERENCE_ID;
-import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.REFERENCE_TYPE;
-import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.RUN_ID;
-import static org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceIndexTable.TABLE_NAME;
-
 import jakarta.inject.Inject;
 
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceDAO.Reference;
 import org.apache.james.mailbox.cassandra.object.compaction.CassandraBlobReferenceDAO.Type;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * Paged, run-scoped reference storage. No TTL: silently losing an index during a pass could leave dead references.
- * Abandoned runs can be cleaned using their run ID; they never participate in another run's lookups.
- */
+/** Run-specific reference index. An abandoned table can be dropped by its run ID once the run has stopped. */
 public class CassandraBlobReferenceIndexDAO {
+    static final String TABLE_PREFIX = "blob_ref_";
     private static final int PAGE_SIZE = 500;
+    private final CqlSession session;
     private final CassandraAsyncExecutor executor;
-    private final PreparedStatement insert;
-    private final PreparedStatement select;
-    private final PreparedStatement partitions;
-    private final PreparedStatement delete;
     private final int pageSize;
 
     @Inject
@@ -64,37 +49,42 @@ public class CassandraBlobReferenceIndexDAO {
 
     @VisibleForTesting
     CassandraBlobReferenceIndexDAO(CqlSession session, int pageSize) {
+        this.session = session;
         this.executor = new CassandraAsyncExecutor(session);
         this.pageSize = pageSize;
-        insert = session.prepare(insertInto(TABLE_NAME)
-            .value(RUN_ID, bindMarker(RUN_ID)).value(BLOB_ID, bindMarker(BLOB_ID))
-            .value(REFERENCE_TYPE, bindMarker(REFERENCE_TYPE)).value(REFERENCE_ID, bindMarker(REFERENCE_ID)).build());
-        select = session.prepare(selectFrom(TABLE_NAME).columns(REFERENCE_TYPE, REFERENCE_ID)
-            .where(column(RUN_ID).isEqualTo(bindMarker(RUN_ID)), column(BLOB_ID).isEqualTo(bindMarker(BLOB_ID))).build());
-        partitions = session.prepare(selectFrom(TABLE_NAME).distinct().columns(RUN_ID, BLOB_ID).build());
-        delete = session.prepare(deleteFrom(TABLE_NAME)
-            .where(column(RUN_ID).isEqualTo(bindMarker(RUN_ID)), column(BLOB_ID).isEqualTo(bindMarker(BLOB_ID))).build());
+    }
+
+    static String tableName(RunId runId) {
+        return TABLE_PREFIX + runId.value().toString().replace("-", "");
+    }
+
+    Mono<Void> create(RunId runId) {
+        return changeSchema("CREATE TABLE IF NOT EXISTS " + tableName(runId)
+            + " (blob_id text, reference_type text, reference_id uuid, PRIMARY KEY (blob_id, reference_type, reference_id))");
     }
 
     Mono<Void> store(RunId runId, Reference reference) {
-        return executor.executeVoid(insert.bind()
-            .setUuid(RUN_ID, runId.value()).setString(BLOB_ID, reference.blobId().asString())
-            .setString(REFERENCE_TYPE, reference.type().name()).setUuid(REFERENCE_ID, reference.referenceId()));
+        return executor.executeVoid(SimpleStatement.newInstance(
+            "INSERT INTO " + tableName(runId) + " (blob_id, reference_type, reference_id) VALUES (?, ?, ?)",
+            reference.blobId().asString(), reference.type().name(), reference.referenceId()));
     }
 
     Flux<Reference> retrieve(RunId runId, BlobId blobId) {
-        return executor.executeRows(select.bind()
-                .setUuid(RUN_ID, runId.value()).setString(BLOB_ID, blobId.asString()).setPageSize(pageSize))
-            .map(row -> new Reference(blobId, Type.valueOf(row.getString(REFERENCE_TYPE)), row.getUuid(REFERENCE_ID)));
+        return executor.executeRows(SimpleStatement.newInstance(
+                "SELECT reference_type, reference_id FROM " + tableName(runId) + " WHERE blob_id = ?", blobId.asString())
+                .setPageSize(pageSize))
+            .map(row -> new Reference(blobId, Type.valueOf(row.getString("reference_type")), row.getUuid("reference_id")));
     }
 
     public Mono<Void> cleanup(RunId runId) {
-        // One paged scan of index partition keys, never another scan of authoritative mailbox tables.
-        // Do not collect keys in memory, and never delete partitions belonging to other runs.
-        return executor.executeRows(partitions.bind().setPageSize(pageSize))
-            .filter(row -> runId.equals(new RunId(row.getUuid(RUN_ID))))
-            .concatMap(row -> executor.executeVoid(delete.bind()
-                .setUuid(RUN_ID, runId.value()).setString(BLOB_ID, row.getString(BLOB_ID))))
-            .then();
+        return changeSchema("DROP TABLE IF EXISTS " + tableName(runId));
+    }
+
+    private Mono<Void> changeSchema(String query) {
+        return executor.executeVoid(SimpleStatement.newInstance(query)
+                .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(session)))
+            .then(Mono.fromCompletionStage(session::checkSchemaAgreementAsync))
+            .flatMap(agreed -> agreed ? Mono.empty()
+                : Mono.error(new IllegalStateException("No Cassandra schema agreement after " + query)));
     }
 }

@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /** Relocates authoritative references; secondary header indexes are repaired on a missing-blob read. */
@@ -55,7 +56,7 @@ public class CassandraBlobIdUpdater implements BlobIdUpdater {
             Objects.requireNonNull(referencedBlobIdObserver);
             return Mono.usingWhen(
                 Mono.fromSupplier(() -> new CassandraBlobIdUpdater(RunId.generate(), references, index)),
-                updater -> references.listReferences()
+                updater -> updater.createIndex.thenMany(Flux.defer(references::listReferences))
                     .doOnNext(reference -> referencedBlobIdObserver.accept(reference.blobId()))
                     .filter(reference -> generationCondition.test(reference.blobId()))
                     .concatMap(reference -> index.store(updater.runId, reference))
@@ -69,12 +70,15 @@ public class CassandraBlobIdUpdater implements BlobIdUpdater {
     private final RunId runId;
     private final CassandraBlobReferenceDAO references;
     private final CassandraBlobReferenceIndexDAO index;
+    private final Mono<Void> createIndex;
     private final AtomicBoolean closed = new AtomicBoolean();
 
     private CassandraBlobIdUpdater(RunId runId, CassandraBlobReferenceDAO references, CassandraBlobReferenceIndexDAO index) {
         this.runId = runId;
         this.references = references;
         this.index = index;
+        // Let an in-flight CREATE finish before cancellation can DROP the table.
+        this.createIndex = Mono.defer(() -> index.create(runId)).cache();
         LOGGER.info("Preparing blob reference snapshot {}", runId);
     }
 
@@ -95,7 +99,8 @@ public class CassandraBlobIdUpdater implements BlobIdUpdater {
     public Mono<Void> cleanup() {
         return Mono.defer(() -> {
             closed.set(true);
-            return index.cleanup(runId)
+            return createIndex.onErrorComplete()
+                .then(Mono.defer(() -> index.cleanup(runId)))
                 .doOnSuccess(any -> LOGGER.info("Cleaned blob reference snapshot {}", runId))
                 .doOnError(error -> LOGGER.warn("Unable to clean blob reference snapshot {}. Cleanup can be retried using this run ID.", runId, error));
         });

@@ -55,7 +55,6 @@ class CassandraBlobIdUpdaterTest {
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
         CassandraMessageDataDefinition.MODULE,
         CassandraAttachmentDataDefinition.MODULE,
-        CassandraBlobReferenceIndexDataDefinition.MODULE,
         CassandraSchemaVersionDataDefinition.MODULE));
 
     private CqlSession session;
@@ -194,13 +193,13 @@ class CassandraBlobIdUpdaterTest {
         updater.cleanup().block();
         updater.cleanup().block();
 
-        assertThat(session.execute("SELECT * FROM blobReferenceIndex").all()).isEmpty();
+        assertThat(runTables()).isEmpty();
         assertThatThrownBy(() -> updater.replaceReferences(OLD, NEW).block())
             .isInstanceOf(IllegalStateException.class).hasMessageContaining("cleaned up");
     }
 
     @Test
-    void cleanupShouldLeaveOtherRunsIntactAcrossPages() {
+    void cleanupShouldLeaveOtherRunsIntact() {
         for (int i = 0; i < 5; i++) {
             saveMessage(new PlainBlobId.Factory().of("header-" + i), new PlainBlobId.Factory().of("body-" + i));
         }
@@ -208,12 +207,25 @@ class CassandraBlobIdUpdaterTest {
         BlobIdUpdater first = factory.forPredicate(id -> true, id -> { }).block();
         BlobIdUpdater second = factory.forPredicate(id -> true, id -> { }).block();
 
+        assertThat(runTables()).hasSize(2);
         first.cleanup().block();
+        assertThat(runTables()).hasSize(1);
         second.replaceReferences(OLD, NEW).block();
 
         assertThat(message(target).getString("headerContent")).isEqualTo(NEW.asString());
         second.cleanup().block();
-        assertThat(session.execute("SELECT * FROM blobReferenceIndex").all()).isEmpty();
+        assertThat(runTables()).isEmpty();
+    }
+
+    @Test
+    void abandonedTableCanBeDroppedByRunId() {
+        RunId abandoned = RunId.generate();
+        new CassandraBlobReferenceIndexDAO(session).create(abandoned).block();
+        assertThat(runTables()).containsExactly(CassandraBlobReferenceIndexDAO.tableName(abandoned));
+
+        new CassandraBlobReferenceIndexDAO(session).cleanup(abandoned).block();
+
+        assertThat(runTables()).isEmpty();
     }
 
     @Test
@@ -227,7 +239,7 @@ class CassandraBlobIdUpdaterTest {
             }
         }).block()).hasMessageContaining("observer failed");
 
-        assertThat(session.execute("SELECT * FROM blobReferenceIndex").all()).isEmpty();
+        assertThat(runTables()).isEmpty();
         assertThat(message(message).getString("headerContent")).isEqualTo(OLD.asString());
         assertThat(message(message).getString("bodyContent")).isEqualTo(OLD.asString());
     }
@@ -306,7 +318,15 @@ class CassandraBlobIdUpdaterTest {
         updater.cleanup().block();
 
         assertThat(observed).isEmpty();
-        assertThat(session.execute("SELECT * FROM blobReferenceIndex").all()).isEmpty();
+        assertThat(runTables()).isEmpty();
+    }
+
+    private List<String> runTables() {
+        return session.execute("SELECT table_name FROM system_schema.tables WHERE keyspace_name = ?",
+                session.getKeyspace().orElseThrow().asInternal()).all().stream()
+            .map(row -> row.getString("table_name"))
+            .filter(name -> name.startsWith(CassandraBlobReferenceIndexDAO.TABLE_PREFIX))
+            .toList();
     }
 
     private UUID saveMessage(BlobId header, BlobId body) {
