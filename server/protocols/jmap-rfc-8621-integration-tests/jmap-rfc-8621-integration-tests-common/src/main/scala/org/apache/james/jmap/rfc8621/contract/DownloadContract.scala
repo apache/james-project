@@ -431,6 +431,50 @@ trait DownloadContract {
   }
 
   @Test
+  def downloadShouldNotLetTheBrowserRenderActiveContentInline(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(bobUsername)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .queryParam("type", "text/html")
+    .when
+      .get(s"/download/$bobAccountId/${messageId.serialize()}_3")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("text/html")
+      .header("Content-Disposition", "attachment")
+      .header("X-Content-Type-Options", "nosniff")
+      .header("Content-Security-Policy", "sandbox")
+  }
+
+  @Test
+  def downloadShouldSandboxInlineContent(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(bobUsername)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$bobAccountId/${messageId.serialize()}_3")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("text/plain")
+      .header("X-Content-Type-Options", "nosniff")
+      .header("Content-Security-Policy", "sandbox")
+  }
+
+  @Test
   def userCanSpecifyNameWhenDownloadingPart(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
