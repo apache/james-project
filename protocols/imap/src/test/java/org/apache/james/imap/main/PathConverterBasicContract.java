@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Username;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -30,6 +31,8 @@ import org.apache.james.mailbox.model.MailboxFolderDelimiterAwareTest;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class PathConverterBasicContract extends MailboxFolderDelimiterAwareTest {
     public static final Username USERNAME = Username.of("username");
@@ -124,6 +127,16 @@ public abstract class PathConverterBasicContract extends MailboxFolderDelimiterA
     @Test
     public void buildFullPathShouldDenyUserSegmentWithDomainDelimiter() {
         assertThatThrownBy(() -> pathConverter().buildFullPath("#user" + folderDelimiter() + "a@b" + folderDelimiter() + "INBOX"))
+            .isInstanceOf(DeniedAccessOnSharedMailboxException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "@-", "a@b_c!"})
+    public void mailboxQueryShouldDenyAnInvalidUserSegment(String userSegment) {
+        FakeImapSession session = new FakeImapSession();
+        session.setMailboxSession(mailboxSession);
+
+        assertThatThrownBy(() -> pathConverter().mailboxQuery("", "#user" + folderDelimiter() + userSegment + folderDelimiter() + "x", session))
             .isInstanceOf(DeniedAccessOnSharedMailboxException.class);
     }
 
