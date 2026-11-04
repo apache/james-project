@@ -21,6 +21,7 @@ package org.apache.james.jmap.utils.search
 import java.util.Date
 
 import cats.implicits._
+import org.apache.james.jmap.api.EmailQueryDateBoundaries
 import org.apache.james.jmap.core.CapabilityIdentifier
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.mail.{And, EmailQueryRequest, FilterCondition, FilterOperator, FilterQuery, HeaderContains, HeaderExist, Not, Operator, Or, UnsupportedFilterException}
@@ -169,7 +170,9 @@ object MailboxFilter {
     override def toQuery(filterCondition: FilterCondition): Either[UnsupportedFilterException, List[Criterion]] =
       filterCondition.before match {
         case Some(before) =>
-          Right(List(SearchQuery.internalDateBefore(Date.from(before.asUTC.toInstant), Second)))
+          val strictlyBefore = SearchQuery.internalDateBefore(Date.from(before.asUTC.toInstant), Second)
+          val sameDate = SearchQuery.internalDateOn(Date.from(before.asUTC.toInstant), Second)
+          Right(List(if (EmailQueryDateBoundaries.BACKWARD_COMPATIBILITY_ENABLED) SearchQuery.or(strictlyBefore, sameDate) else strictlyBefore))
         case None => Right(Nil)
       }
   }
@@ -180,7 +183,7 @@ object MailboxFilter {
         case Some(after) =>
           val strictlyAfter = SearchQuery.internalDateAfter(Date.from(after.asUTC.toInstant), Second)
           val sameDate = SearchQuery.internalDateOn(Date.from(after.asUTC.toInstant), Second)
-          Right(List(SearchQuery.or(strictlyAfter, sameDate)))
+          Right(List(if (EmailQueryDateBoundaries.BACKWARD_COMPATIBILITY_ENABLED) strictlyAfter else SearchQuery.or(strictlyAfter, sameDate)))
         case None => Right(Nil)
       }
   }

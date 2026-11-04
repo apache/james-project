@@ -148,7 +148,7 @@ public interface EmailQueryView {
      *
      * Date filtering is applied before collapsing threads and limiting results.
      *
-     * @return messageIds in this mailbox with receivedAt strictly less than before, sorted by receivedAt descending.
+     * @return messageIds in this mailbox with receivedAt less than before (or equal when backward compatibility is enabled), sorted by receivedAt descending.
      */
     Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime before, Limit limit, boolean collapseThreads);
 

@@ -215,6 +215,23 @@
             </subsection>
         </section>
 
+        <section name="Email/query date boundary compatibility">
+            <p>Email/query defaults to RFC 8621: before excludes the boundary and after includes it.
+                To restore historical behavior, set
+                <code>james.jmap.email.query.date.boundary.backward.compatibility=true</code> in
+                <code>jvm.properties</code>, or pass it as a JVM <code>-D</code> option. The default is false;
+                only true (case insensitive) enables compatibility. Restart James after changing it.</p>
+            <p>Compatibility mode makes before inclusive on all backends. Regular search (including
+                OpenSearch) compares at second precision and makes after exclusive; EmailQueryView
+                compares stored timestamps and keeps after inclusive. Subsecond filter bounds retain
+                existing precision limitations. Shared SearchQuery and IMAP semantics are unchanged.</p>
+            <p>Clients must deduplicate repeated IDs; inclusive cursors cannot guarantee progress when
+                a timestamp group exceeds the page size. Enable compatibility before the backend upgrade
+                in affected deployments (update external Helm configuration separately). Once deployed
+                clients support RFC pagination, remove the option and restart all nodes. No reindexing
+                or data migration is required.</p>
+        </section>
+
     </body>
 
 </document>

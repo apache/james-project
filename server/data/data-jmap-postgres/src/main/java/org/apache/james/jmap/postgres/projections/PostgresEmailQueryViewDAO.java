@@ -36,6 +36,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.jmap.api.EmailQueryDateBoundaries;
 import org.apache.james.jmap.api.projections.EmailQueryViewUtils;
 import org.apache.james.jmap.api.projections.EmailQueryViewUtils.EmailEntry;
 import org.apache.james.mailbox.model.MessageId;
@@ -83,7 +84,9 @@ public class PostgresEmailQueryViewDAO {
             .resolve(backendFetchLimit -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, RECEIVED_AT, THREAD_ID)
                     .from(TABLE_NAME)
                     .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                    .and(RECEIVED_AT.lessThan(since.toOffsetDateTime()))
+                    .and(EmailQueryDateBoundaries.BACKWARD_COMPATIBILITY_ENABLED
+                        ? RECEIVED_AT.lessOrEqual(since.toOffsetDateTime())
+                        : RECEIVED_AT.lessThan(since.toOffsetDateTime()))
                     .orderBy(RECEIVED_AT.desc())
                     .limit(backendFetchLimit.getLimit().get())))
                 .map(asEmailEntry(RECEIVED_AT)));

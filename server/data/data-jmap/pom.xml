@@ -166,6 +166,31 @@
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <executions>
+                    <!-- Use a fresh JVM because the date boundary policy is initialized once. -->
+                    <execution>
+                        <id>backward-compatibility-email-query-boundaries</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <phase>test</phase>
+                        <configuration>
+                            <test>MemoryEmailQueryViewTest</test>
+                            <failIfNoSpecifiedTests>true</failIfNoSpecifiedTests>
+                            <forkCount>1</forkCount>
+                            <reuseForks>false</reuseForks>
+                            <reportNameSuffix>backward-compatibility-date-boundaries</reportNameSuffix>
+                            <promoteUserPropertiesToSystemProperties>false</promoteUserPropertiesToSystemProperties>
+                            <systemPropertyVariables>
+                                <james.jmap.email.query.date.boundary.backward.compatibility>true</james.jmap.email.query.date.boundary.backward.compatibility>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
