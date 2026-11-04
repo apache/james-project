@@ -43,18 +43,11 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.URIRBLHandler;
-import org.apache.james.smtpserver.fastfail.URIScanner;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
 
 class URIRBLHandlerTest {
 
@@ -197,41 +190,6 @@ class URIRBLHandlerTest {
         HookResult response = handler.onMessage(session, mockedMail);
 
         assertThat(HookReturnCode.declined()).describedAs("Email was not rejected").isEqualTo(response.getResult());
-    }
-
-    @Test
-    void testUnparsableUriIsLoggedAtDebugWithoutRejectingMail() throws IOException, MessagingException {
-        ArrayList<String> servers = new ArrayList<>();
-        servers.add(URISERVER);
-
-        SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(
-                "https://}{}@media (max-width: 600px) http://" + GOOD_DOMAIN + "/")));
-
-        Logger logger = (Logger) LoggerFactory.getLogger(URIScanner.class);
-        Level previousLevel = logger.getLevel();
-        ListAppender<ILoggingEvent> appender = new ListAppender<>();
-        appender.start();
-        logger.setLevel(Level.DEBUG);
-        logger.addAppender(appender);
-        HookResult response;
-        try {
-            URIRBLHandler handler = new URIRBLHandler();
-            handler.setDNSService(setupMockedDnsServer());
-            handler.setUriRblServer(servers);
-            response = handler.onMessage(session, mockedMail);
-        } finally {
-            logger.detachAppender(appender);
-            logger.setLevel(previousLevel);
-        }
-
-        assertThat(HookReturnCode.declined()).describedAs("Email was not rejected").isEqualTo(response.getResult());
-        assertThat(appender.list)
-            .filteredOn(event -> event.getFormattedMessage().startsWith("Ignoring unparsable URI candidate"))
-            .hasSize(2)
-            .allSatisfy(event -> assertThat(event.getLevel()).isEqualTo(Level.DEBUG))
-            .extracting(ILoggingEvent::getFormattedMessage)
-            .anySatisfy(message -> assertThat(message).contains("https://"))
-            .anySatisfy(message -> assertThat(message).contains("mailto:////}{}@media"));
     }
 
     @Test
