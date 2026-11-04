@@ -36,11 +36,16 @@ import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.imap.message.request.CreateRequest;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import reactor.core.publisher.Mono;
 
 class CreateProcessorTest {
     @ParameterizedTest
@@ -62,5 +67,29 @@ class CreateProcessorTest {
 
         assertThat(outputStream.toString(StandardCharsets.US_ASCII))
             .startsWith("A1 BAD CREATE");
+    }
+
+    @Test
+    void createShouldNotFoldANonAsciiCaseVariantToInbox() throws Exception {
+        InMemoryMailboxManager mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
+        CreateProcessor testee = new CreateProcessor(mailboxManager, new UnpooledStatusResponseFactory(),
+            new RecordingMetricFactory(), PathConverter.Factory.DEFAULT);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of("bob"));
+        FakeImapSession session = new FakeImapSession();
+        session.authenticated();
+        session.setMailboxSession(mailboxSession);
+
+        // Turkish dotless i: Character.toUpperCase('ı') is 'I'
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImapResponseComposerImpl composer = new ImapResponseComposerImpl(new OutputStreamImapResponseWriter(outputStream));
+        testee.process(new CreateRequest("ınbox", new Tag("A1")),
+            new ResponseEncoder(new DefaultImapEncoderFactory(new DefaultLocalizer(), true).buildImapEncoder(), composer),
+            session);
+        composer.flush();
+
+        assertThat(Mono.from(mailboxManager.mailboxExists(MailboxPath.forUser(Username.of("bob"), "ınbox"), mailboxSession)).block())
+            .isTrue();
+        assertThat(Mono.from(mailboxManager.mailboxExists(MailboxPath.inbox(Username.of("bob")), mailboxSession)).block())
+            .isFalse();
     }
 }

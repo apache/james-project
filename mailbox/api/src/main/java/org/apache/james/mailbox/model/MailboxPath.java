@@ -36,6 +36,7 @@ import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Ascii;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -270,7 +271,7 @@ public class MailboxPath {
     }
 
     public boolean isInbox() {
-        return DefaultMailboxes.INBOX.equalsIgnoreCase(name);
+        return name != null && Ascii.equalsIgnoreCase(DefaultMailboxes.INBOX, name);
     }
 
     @Override
