@@ -86,6 +86,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private final AtomicBoolean framingEnabled = new AtomicBoolean(true);
     private ArrayList<byte[]> pending = new ArrayList<>();
     private boolean discardUntilEndOfLine = false;
+    private final AtomicBoolean awaitingFileBackedLiteral = new AtomicBoolean(false);
 
     public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength) {
         this.decoder = decoder;
@@ -131,6 +132,12 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
         if (discardUntilEndOfLine) {
             discardRestOfRejectedLine(in);
+            return;
+        }
+
+        if (awaitingFileBackedLiteral.get()) {
+            // What follows a literal spooled to a file waits for that command to be decoded,
+            // so that commands keep their order. See resumeAfterFileBackedLiteral.
             return;
         }
 
@@ -342,6 +349,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                     e -> {
                         fileChunkConsumer.discard();
                         ctx.fireExceptionCaught(e);
+                        resumeAfterFileBackedLiteral(ctx);
                     },
                     () -> {
                         fileChunkConsumer.finalizeDataTransfer();
@@ -367,6 +375,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                             }
                             ctx.fireExceptionCaught(e);
                         }
+                        resumeAfterFileBackedLiteral(ctx);
                     });
             attachment.put(SUBSCRIPTION, (Disposable) () -> {
                 // Clear the file if the connection is reset while buffering the litteral.
@@ -379,13 +388,39 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         }
         int readableBytes = in.readableBytes();
         byte[] bytes = new byte[readableBytes];
-        in.readBytes(bytes);
+        // Only consume what belongs to the literal and its line: the rest stays in Netty's
+        // cumulation, to be decoded once this command is.
+        in.getBytes(in.readerIndex(), bytes);
         int accepted = literalLineLength(bytes, sink.getRight().get(), size);
+        in.skipBytes(accepted);
         sink.getLeft().emitNext(accepted == readableBytes ? bytes : Arrays.copyOf(bytes, accepted), FAIL_FAST);
-        boolean endOfLineReached = accepted < readableBytes || bytes[accepted - 1] == '\n';
+        boolean lineEnded = accepted > 0 && bytes[accepted - 1] == '\n';
+        boolean endOfLineReached = accepted < readableBytes || lineEnded;
         if (sink.getRight().addAndGet(accepted) >= size && endOfLineReached) {
+            if (!lineEnded) {
+                // Malformed literal line, the command will be rejected: drop the rest of that line.
+                discardUntilEndOfLine = true;
+            }
+            awaitingFileBackedLiteral.set(true);
             sink.getLeft().tryEmitComplete();
         }
+    }
+
+    /**
+     * Decode the bytes received after a file-backed literal once its command was handed over,
+     * from the event loop and after it, so that the commands keep their order.
+     */
+    private void resumeAfterFileBackedLiteral(ChannelHandlerContext ctx) {
+        ctx.executor().execute(() -> {
+            awaitingFileBackedLiteral.set(false);
+            if (!ctx.isRemoved() && ctx.channel().isActive()) {
+                try {
+                    channelRead(ctx, Unpooled.EMPTY_BUFFER);
+                } catch (Exception e) {
+                    ctx.fireExceptionCaught(e);
+                }
+            }
+        });
     }
 
     /**
