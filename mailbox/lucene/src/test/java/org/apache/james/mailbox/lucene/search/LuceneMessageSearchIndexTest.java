@@ -182,16 +182,6 @@ class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
     public void modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq() {
     }
 
-    @Disabled("MAILBOX-273: failing test on Lucene (intended for ES)")
-    @Override
-    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes() {
-    }
-
-    @Disabled("MAILBOX-273: failing test on Lucene (intended for ES)")
-    @Override
-    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() {
-    }
-
     @Disabled("JAMES-2590: Lucene implementation is not handling mail addresses with names")
     @Override
     public void sortOnToShouldWork() {
