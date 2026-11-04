@@ -133,6 +133,15 @@ public interface PathConverter {
             }
         }
 
+        private Username parseQueriedUsername(String username) {
+            try {
+                return Username.of(username);
+            } catch (IllegalArgumentException e) {
+                // The user segment is client supplied: reject invalid usernames like an unknown namespace
+                throw new DeniedAccessOnSharedMailboxException();
+            }
+        }
+
         private String sanitizeMailboxName(String mailboxName) {
             // use uppercase for INBOX
             // See IMAP-349
@@ -211,7 +220,7 @@ public interface PathConverter {
                 int separatorPosition = decodedMailboxName.indexOf(mailboxSession.getPathDelimiter());
                 if (separatorPosition >= 0) {
                     // interpret first part as the user
-                    Username username = Username.of(decodedMailboxName.substring(0, separatorPosition));
+                    Username username = parseQueriedUsername(decodedMailboxName.substring(0, separatorPosition));
                     return MailboxQuery.builder()
                         .namespace(MailboxConstants.USER_NAMESPACE)
                         .username(username)
