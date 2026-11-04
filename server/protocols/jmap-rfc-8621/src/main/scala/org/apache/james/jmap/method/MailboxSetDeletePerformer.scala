@@ -118,7 +118,7 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
             if (onDestroy.value) {
               SMono(mailboxManager.deleteMailboxReactive(id, mailboxSession))
                 .flatMap(deletedMailbox => SMono(subscriptionManager.unsubscribeReactive(deletedMailbox.generateAssociatedPath(), mailboxSession)))
-                .`then`()
+                .map(_ => ())
             } else {
               SMono(mailbox.getMessagesReactive(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession)).hasElement
                 .handle((hasElement: Boolean, sink: SynchronousSink[Unit]) => {
@@ -128,7 +128,7 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
                 })
                 .`then`(SMono(mailboxManager.deleteMailboxReactive(id, mailboxSession))
                   .flatMap(deletedMailbox => SMono(subscriptionManager.unsubscribeReactive(deletedMailbox.generateAssociatedPath(), mailboxSession)))
-                  .`then`())
+                  .map(_ => ()))
             }
           })
       })

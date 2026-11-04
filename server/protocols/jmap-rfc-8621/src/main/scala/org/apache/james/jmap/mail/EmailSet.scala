@@ -568,7 +568,7 @@ case class EmailSetUpdate(keywords: Option[Keywords],
   def isMailboxUpdate: Boolean = mailboxIds.isDefined || mailboxIdsToAdd.isDefined || mailboxIdsToRemove.isDefined
 }
 
-case class ValidatedEmailSetUpdate private(keywordsTransformation: Function[Keywords, Keywords],
+case class ValidatedEmailSetUpdate private[mail](keywordsTransformation: Function[Keywords, Keywords],
                                            mailboxIdsTransformation: Function[MailboxIds, MailboxIds],
                                            update: EmailSetUpdate)
 

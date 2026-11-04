@@ -377,7 +377,7 @@ object ParentIdUpdate {
   def changeParentTo(newId: MailboxId): ParentIdUpdate = ParentIdUpdate(Some(newId))
   def removeParent(): ParentIdUpdate = ParentIdUpdate(None)
 }
-case class ParentIdUpdate private (newId: Option[MailboxId]) extends Update
+case class ParentIdUpdate private[mail] (newId: Option[MailboxId]) extends Update
 
 sealed trait Update
 case class NameUpdate(newName: String) extends Update

@@ -119,7 +119,7 @@ object JmapRfc8621Configuration {
       webPushEnabled = configuration.getBoolean(WEB_PUSH_ENABLED_PROPERTY, true),
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
       maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala,
-      preventServerSideRequestForgery = Optional.ofNullable(configuration.getBoolean(WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY, null)).orElse(true),
+      preventServerSideRequestForgery = configuration.getBoolean(WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY, true),
       vapid = VapidConfiguration.from(
         publicKey = Option(configuration.getString(WEB_PUSH_VAPID_PUBLIC_KEY_PROPERTY, null)),
         privateKey = Option(configuration.getString(WEB_PUSH_VAPID_PRIVATE_KEY_PROPERTY, null)),

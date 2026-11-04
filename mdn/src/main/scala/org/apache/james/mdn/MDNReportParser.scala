@@ -102,10 +102,8 @@ class MDNReportParser(val input: ParserInput) extends Parser {
     ("Reporting-UA" ~ ":" ~ ows ~ capture(uaName) ~ ows ~ (";" ~ ows ~ capture(uaProduct) ~ ows).?) ~> ((uaName: String, uaProduct: Option[String]) => {
      val builder = ReportingUserAgent.builder()
         .userAgentName(uaName)
-      (uaProduct match {
-         case Some(product) => builder.userAgentProduct(product)
-         case None => builder
-       }).build()
+      val builderWithProduct = uaProduct.fold(builder)(builder.userAgentProduct)
+      builderWithProduct.build()
     })
   }
 

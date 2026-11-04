@@ -466,7 +466,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         "sender" -> Option(mimeMessage.getSender).toList,
         "replyTo" -> Option(mimeMessage.getReplyTo).toList.flatten))
       .doOnNext { case (headerName, addresses) => addresses.foreach(address => validateMailAddress(headerName, address)) }
-      .`then`()
+      .thenEmpty(SMono.empty)
       .`then`(SMono.just(mimeMessage))
 
   private def validateMailAddress(headName: String, address: Address): MailAddress =

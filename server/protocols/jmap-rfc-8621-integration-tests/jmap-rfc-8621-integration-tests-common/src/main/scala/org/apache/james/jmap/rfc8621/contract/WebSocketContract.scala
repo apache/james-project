@@ -1472,20 +1472,20 @@ trait WebSocketContract {
               .block(scala.concurrent.duration.Duration.fromNanos(100000000)))
               .fold(e => "No notification received", s => s)
 
-          List(response, maybeNotification)
+            List(response, maybeNotification)
         })
         .send(backend)
         .body
 
-      Thread.sleep(100)
-      val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
-      val emailState: String = jmapGuiceProbe.getLatestEmailState(accountId).getValue.toString
-      val mailboxState: String = jmapGuiceProbe.getLatestMailboxState(accountId).getValue.toString
+    Thread.sleep(100)
+    val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
+    val emailState: String = jmapGuiceProbe.getLatestEmailState(accountId).getValue.toString
+    val mailboxState: String = jmapGuiceProbe.getLatestMailboxState(accountId).getValue.toString
 
-      val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Mailbox":"$mailboxState"}}}"""
-      val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Email":"$emailState"}}}"""
+    val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Mailbox":"$mailboxState"}}}"""
+    val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Email":"$emailState"}}}"""
 
-      assertThat(response.toOption.get.asJava)
+    assertThat(response.toOption.get.asJava)
         .hasSize(2) // Email create response + no notification message
         .contains("No notification received")
         .doesNotContain(mailboxStateChange, emailStateChange)

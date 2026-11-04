@@ -25,7 +25,7 @@ import play.api.libs.json.{JsString, JsValue, Json, Writes}
 
 class UploadSerializer {
 
-  private implicit val blobIdWrites: Writes[BlobId] = Json.valueWrites[BlobId]
+  private implicit val blobIdWrites: Writes[BlobId] = valueWrites[BlobId]
   private implicit val contentTypeWrites: Writes[ContentType] = contentType => JsString(contentType.asString())
   private implicit val uploadResponseWrites: Writes[UploadResponse] = Json.writes[UploadResponse]
 

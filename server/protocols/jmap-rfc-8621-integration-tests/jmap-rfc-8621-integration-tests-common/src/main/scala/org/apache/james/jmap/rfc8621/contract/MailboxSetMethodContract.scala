@@ -1210,7 +1210,7 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-      `given`
+    `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
@@ -1758,7 +1758,7 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-      `given`
+    `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
@@ -2020,7 +2020,7 @@ trait MailboxSetMethodContract {
         |}
         |""".stripMargin
 
-      `given`
+    `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when

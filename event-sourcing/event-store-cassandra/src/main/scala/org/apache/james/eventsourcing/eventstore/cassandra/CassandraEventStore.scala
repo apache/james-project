@@ -24,6 +24,7 @@ import org.apache.james.eventsourcing.eventstore.{EventStore, EventStoreFailedEx
 import org.apache.james.eventsourcing.{AggregateId, Event, EventId}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
+import reactor.core.scala.publisher.publisherUnit2PublisherVoid
 
 class CassandraEventStore @Inject() (eventStoreDao: EventStoreDao) extends EventStore {
   override def appendAll(events: Iterable[Event]): Publisher[Void] =

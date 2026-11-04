@@ -36,7 +36,7 @@ import play.api.libs.json.{Format, JsArray, JsError, JsNull, JsObject, JsPath, J
 
 object IdentitySerializer {
   private implicit val emailerNameReads: Format[EmailerName] = Json.valueFormat[EmailerName]
-  private implicit val identityIdFormat: Format[IdentityId] = Json.valueFormat[IdentityId]
+  private implicit val identityIdFormat: Format[IdentityId] = valueFormat[IdentityId]
   private implicit val unparsedIdentityIdReads: Reads[UnparsedIdentityId] = {
     case JsString(string) =>
       refined.refineV[IdConstraint](string)
@@ -45,8 +45,8 @@ object IdentitySerializer {
           id => JsSuccess(UnparsedIdentityId(id)))
     case _ => JsError("identityId needs to be represented by a JsString")
   }
-  private implicit val identityIdUnparsedFormat: Format[UnparsedIdentityId] = Json.valueFormat[UnparsedIdentityId]
-  private implicit val identityIdsFormat: Format[IdentityIds] = Json.valueFormat[IdentityIds]
+  private implicit val identityIdUnparsedFormat: Format[UnparsedIdentityId] = valueFormat[UnparsedIdentityId]
+  private implicit val identityIdsFormat: Format[IdentityIds] = valueFormat[IdentityIds]
   private implicit val emailAddressReads: Format[EmailAddress] = Format(
     Json.reads[EmailAddress],
     writesNull.writes[EmailAddress])
@@ -56,10 +56,10 @@ object IdentitySerializer {
   private implicit val mayDeleteWrites: Writes[MayDeleteIdentity] = Json.valueWrites[MayDeleteIdentity]
   private implicit val identityWrites: Writes[Identity] = writesNull.writes[Identity]
   private implicit val identityGetRequestReads: Reads[IdentityGetRequest] = Json.reads[IdentityGetRequest]
-  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
+  private implicit val stateWrites: Writes[UuidState] = valueWrites[UuidState]
   private implicit val identityGetResponseWrites: OWrites[IdentityGetResponse] = Json.writes[IdentityGetResponse]
 
-  private implicit val identityCreationIdWrites: Writes[IdentityCreationId] = Json.valueWrites[IdentityCreationId]
+  private implicit val identityCreationIdWrites: Writes[IdentityCreationId] = valueWrites[IdentityCreationId]
   private implicit val identityCreationResponseWrites: Writes[IdentityCreationResponse] = Json.writes[IdentityCreationResponse]
   private implicit val identityMapCreationResponseWrites: Writes[Map[IdentityCreationId, IdentityCreationResponse]] =
     mapWrites[IdentityCreationId, IdentityCreationResponse](id => identityCreationIdWrites.writes(id).as[String], identityCreationResponseWrites)
@@ -67,7 +67,7 @@ object IdentitySerializer {
     mapWrites[IdentityCreationId, SetError](_.serialise, setErrorWrites)
   private implicit val unparsedIdentityMapSetErrorForCreationWrites: Writes[Map[UnparsedIdentityId, SetError]] =
     mapWrites[UnparsedIdentityId, SetError](_.id.value, setErrorWrites)
-  private implicit val identitySetUpdateResponseWrites: Writes[IdentitySetUpdateResponse] = Json.valueWrites[IdentitySetUpdateResponse]
+  private implicit val identitySetUpdateResponseWrites: Writes[IdentitySetUpdateResponse] = valueWrites[IdentitySetUpdateResponse]
   private implicit val mapIdentitySetUpdateResponseWrites: Writes[Map[IdentityId, IdentitySetUpdateResponse]] =
     mapWrites[IdentityId, IdentitySetUpdateResponse](_.id.toString, identitySetUpdateResponseWrites)
   private implicit val identitySetResponseWrites: OWrites[IdentitySetResponse] = Json.writes[IdentitySetResponse]
@@ -87,15 +87,15 @@ object IdentitySerializer {
     }
 
   implicit def optionReads[T: Reads]: Reads[Option[T]] = (json: JsValue) => json.validateOpt[T]
-  private implicit val identityNameUpdateReads: Reads[IdentityNameUpdate] = Json.valueReads[IdentityNameUpdate]
+  private implicit val identityNameUpdateReads: Reads[IdentityNameUpdate] = valueReads[IdentityNameUpdate]
   private implicit val identityReplyToUpdateReads2: Reads[EmailAddress] = Json.reads[EmailAddress]
 
-  private implicit val identityReplyToUpdateReads: Reads[IdentityReplyToUpdate] = Json.valueReads[IdentityReplyToUpdate]
-  private implicit val identityBccUpdateReads: Reads[IdentityBccUpdate] = Json.valueReads[IdentityBccUpdate]
-  private implicit val identitySortOrderUpdateReads: Reads[IdentitySortOrderUpdate] = Json.valueReads[IdentitySortOrderUpdate]
+  private implicit val identityReplyToUpdateReads: Reads[IdentityReplyToUpdate] = valueReads[IdentityReplyToUpdate]
+  private implicit val identityBccUpdateReads: Reads[IdentityBccUpdate] = valueReads[IdentityBccUpdate]
+  private implicit val identitySortOrderUpdateReads: Reads[IdentitySortOrderUpdate] = valueReads[IdentitySortOrderUpdate]
 
-  private implicit val identityTextSignatureUpdateReads: Reads[IdentityTextSignatureUpdate] = Json.valueReads[IdentityTextSignatureUpdate]
-  private implicit val identityHtmlSignatureUpdateReads: Reads[IdentityHtmlSignatureUpdate] = Json.valueReads[IdentityHtmlSignatureUpdate]
+  private implicit val identityTextSignatureUpdateReads: Reads[IdentityTextSignatureUpdate] = valueReads[IdentityTextSignatureUpdate]
+  private implicit val identityHtmlSignatureUpdateReads: Reads[IdentityHtmlSignatureUpdate] = valueReads[IdentityHtmlSignatureUpdate]
 
   private implicit val identitySetRequestReads: Reads[IdentitySetRequest] = Json.reads[IdentitySetRequest]
   private implicit val identityCreationRequest: Reads[IdentityCreationRequest] = {

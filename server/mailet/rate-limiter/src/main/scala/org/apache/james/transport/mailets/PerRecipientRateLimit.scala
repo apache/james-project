@@ -38,7 +38,6 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.DurationConverters._
-import scala.util.Using
 
 case class PerRecipientRateLimiter(rateLimiter: RateLimiter, keyPrefix: Option[KeyPrefix], entityType: EntityType) {
   def rateLimit(recipient: MailAddress, mail: Mail): Publisher[RateLimitingResult] =
@@ -128,10 +127,11 @@ class PerRecipientRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) ex
         case _ =>
           mail.setRecipients(ImmutableList.copyOf(acceptableRecipients.asJava))
 
-          Using(mail.duplicate())(newMail => {
+          val newMail = mail.duplicate()
+          try {
             newMail.setRecipients(ImmutableList.copyOf(rateLimitedRecipients.asJava))
             getMailetContext.sendMail(newMail, exceededProcessor)
-          })(LifecycleUtil.dispose(_))
+          } finally LifecycleUtil.dispose(newMail)
       }
     }
   }

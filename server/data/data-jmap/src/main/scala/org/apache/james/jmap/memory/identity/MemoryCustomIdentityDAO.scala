@@ -60,17 +60,17 @@ class MemoryCustomIdentityDAO @Inject()(@Named("JMAP") eventBus: EventBus) exten
       .fold(SMono.error[Unit](IdentityNotFoundException(identityId)))(updatedIdentity =>
         SMono.fromCallable[Unit](() => table.put(user, identityId, updatedIdentity))
           .flatMap(_ => SMono.fromPublisher(eventBus.dispatch(CustomIdentityUpdated(Event.EventId.random(), user, updatedIdentity), AccountIdRegistrationKey(AccountId.fromUsername(user))))
-            .`then`()))
+            .map(_ => ())))
 
   override def upsert(user: Username, patch: Identity): SMono[Unit] =
     SMono.fromCallable[Unit](() => table.put(user, patch.id, patch))
       .flatMap(_ => SMono.fromPublisher(eventBus.dispatch(CustomIdentityUpdated(Event.EventId.random(), user, patch), AccountIdRegistrationKey(AccountId.fromUsername(user))))
-        .`then`())
+        .map(_ => ()))
 
   override def delete(username: Username, ids: Set[IdentityId]): Publisher[Unit] =
     SMono.fromCallable[Unit](() => ids.foreach(id => table.remove(username, id)))
       .flatMap(_ => SMono.fromPublisher(eventBus.dispatch(CustomIdentityDeleted(Event.EventId.random(), username, ids), AccountIdRegistrationKey(AccountId.fromUsername(username))))
-        .`then`())
+        .map(_ => ()))
 
   override def delete(username: Username): Publisher[Unit] =
     SMono.fromCallable(() => {
@@ -79,5 +79,5 @@ class MemoryCustomIdentityDAO @Inject()(@Named("JMAP") eventBus: EventBus) exten
       ids
     })
       .flatMap(ids => SMono.fromPublisher(eventBus.dispatch(AllCustomIdentitiesDeleted(Event.EventId.random(), username, ids), AccountIdRegistrationKey(AccountId.fromUsername(username))))
-        .`then`())
+        .map(_ => ()))
 }

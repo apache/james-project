@@ -3258,7 +3258,7 @@ trait EmailSetMethodContract {
     val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
-    val blobIdOfAndre: String = given(baseRequestSpecBuilder(server)
+    val blobIdOfAndre: String = `given`(baseRequestSpecBuilder(server)
       .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build)
