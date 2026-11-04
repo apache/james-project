@@ -23,7 +23,7 @@ import java.lang.Boolean.{FALSE, TRUE, valueOf}
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Callable
 import java.util.function.Consumer
-import java.util.stream
+import java.util.{Locale, stream}
 import java.util.stream.Stream
 
 import com.google.common.base.CharMatcher
@@ -74,6 +74,18 @@ object DownloadRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[DownloadRoutes])
 
   val BUFFER_SIZE: Int = 16 * 1024
+
+  // Media types a browser renders as an active document able to run scripts
+  private val ACTIVE_MIME_TYPES: Set[String] = Set(
+    "text/html",
+    "application/xhtml+xml",
+    "image/svg+xml",
+    "text/xml",
+    "application/xml",
+    "text/xsl")
+
+  def isActiveContent(contentType: String): Boolean =
+    ACTIVE_MIME_TYPES.contains(contentType.split(';').head.trim.toLowerCase(Locale.US))
 }
 
 sealed trait BlobResolutionResult {
@@ -382,11 +394,13 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
                            blobContentType: ContentType,
                            blob: Blob): SMono[Unit] = {
     val resourceSupplier: Callable[InputStream] = () => blob.content
-    val sourceSupplier: java.util.function.Function[InputStream, Mono[Void]] = stream => SMono(addContentDispositionHeader(optionalName)
+    val contentType = sanitizeHeaderValue(blobContentType.asString)
+    val sourceSupplier: java.util.function.Function[InputStream, Mono[Void]] = stream => SMono(addContentDispositionHeader(optionalName, contentType)
       .compose(addContentLengthHeader(blob.size))
       .compose(addCacheControlHeader())
+      .compose(addContentSecurityHeaders())
       .apply(response)
-      .header(CONTENT_TYPE, sanitizeHeaderValue(blobContentType.asString))
+      .header(CONTENT_TYPE, contentType)
       .status(OK)
       .send(ReactorUtils.toChunks(stream, BUFFER_SIZE)
         .map(Unpooled.wrappedBuffer(_))
@@ -400,9 +414,20 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
       .`then`
   }
 
-  private def addContentDispositionHeader(optionalName: Option[String]): HttpServerResponse => HttpServerResponse =
+  private def addContentDispositionHeader(optionalName: Option[String], contentType: String): HttpServerResponse => HttpServerResponse =
     resp => optionalName.map(addContentDispositionHeaderRegardingEncoding(_, resp))
-      .getOrElse(resp)
+      .getOrElse {
+        if (DownloadRoutes.isActiveContent(contentType)) {
+          resp.header("Content-Disposition", "attachment")
+        } else {
+          resp
+        }
+      }
+
+  // Blobs are user controlled content served from the JMAP origin: never let the browser sniff them, nor run them as an active document
+  private def addContentSecurityHeaders(): HttpServerResponse => HttpServerResponse =
+    resp => resp.header("X-Content-Type-Options", "nosniff")
+      .header("Content-Security-Policy", "sandbox")
 
   private def sanitizeHeaderValue(s: String): String =
     if (HttpHeaderValidationUtil.validateValidHeaderValue(s) == -1) {
