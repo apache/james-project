@@ -82,7 +82,7 @@ trait WebSocketWithPingIntervalContract {
 
     // The websocket connection is keep alive during client ping interval
     val response: Either[String, WebSocketFrame] = authenticatedRequest(server)
-      .response(asWebSocket[Identity, WebSocketFrame] { ws: WebSocket[Identity] =>
+      .response(asWebSocket[Identity, WebSocketFrame] { (ws: WebSocket[Identity]) =>
         sendEchoTextFrame(ws)
         Thread.sleep(intervalDurationInMillis * 3)
         ws.receive()

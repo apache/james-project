@@ -36,6 +36,7 @@ import org.apache.james.server.core.MailImpl
 import org.apache.james.user.memory.MemoryUsersRepository
 import org.apache.mailet.Mail
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.BooleanAssert
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.{mock, when}
 
@@ -80,13 +81,13 @@ class SenderHeaderEmailSubmissionSetValidationTest {
       new java.util.ArrayList[Locale](), '.', MailboxSession.SessionType.System)
 
   private def assertRejected(result: Option[SetError]): Unit = {
-    assertThat(result.isDefined).as("rejected").isTrue
+    assertThat(result.isDefined).asInstanceOf[BooleanAssert].as("rejected").isTrue
     assertThat(result.get.`type`).isEqualTo(EmailSubmissionSetMethod.forbiddenFrom)
     assertThat(result.get.properties).isEqualTo(Some(Properties("sender")))
   }
 
   private def assertAccepted(result: Option[SetError]): Unit =
-    assertThat(result.isEmpty).as(s"accepted but got $result").isTrue
+    assertThat(result.isEmpty).asInstanceOf[BooleanAssert].as(s"accepted but got $result").isTrue
 
   @Test
   def shouldAcceptMailWithoutSender(): Unit =

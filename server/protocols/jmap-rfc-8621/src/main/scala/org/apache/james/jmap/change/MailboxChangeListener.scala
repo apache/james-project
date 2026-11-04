@@ -41,7 +41,7 @@ import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
 import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.publisher.Mono
-import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scala.publisher.{SFlux, SMono, publisherUnit2PublisherVoid}
 
 import scala.jdk.CollectionConverters._
 

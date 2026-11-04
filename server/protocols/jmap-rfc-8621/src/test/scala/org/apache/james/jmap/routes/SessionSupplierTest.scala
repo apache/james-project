@@ -51,8 +51,8 @@ class SessionSupplierTest extends AnyWordSpec with Matchers {
       new SessionSupplier(DefaultCapabilities.supported(configuration), configuration)
         .generate(USERNAME, Set(), configuration.urlPrefixes()).blockOption().get
         .capabilities.capabilities
-        .filter(_.identifier() == JMAP_WEBPUSH_VAPID)
-        .map(_.properties()) should equal(Set(WebPushVapidCapabilityProperties(VapidTestFixture.PUBLIC_KEY)))
+        .filter(_.identifier == JMAP_WEBPUSH_VAPID)
+        .map(_.properties) should equal(Set(WebPushVapidCapabilityProperties(VapidTestFixture.PUBLIC_KEY)))
     }
 
     "not advertise VAPID when Web Push is disabled" in {

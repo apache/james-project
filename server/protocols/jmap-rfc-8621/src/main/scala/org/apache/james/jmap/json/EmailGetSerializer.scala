@@ -68,7 +68,7 @@ object EmailGetSerializer {
   private implicit val fetchTextBodyValuesReads: Reads[FetchTextBodyValues] = Json.valueReads[FetchTextBodyValues]
   private implicit val fetchHTMLBodyValuesReads: Reads[FetchHTMLBodyValues] = Json.valueReads[FetchHTMLBodyValues]
   private implicit val fetchAllBodyValuesReads: Reads[FetchAllBodyValues] = Json.valueReads[FetchAllBodyValues]
-  private implicit val blobIdWrites: Writes[BlobId] = Json.valueWrites[BlobId]
+  private implicit val blobIdWrites: Writes[BlobId] = valueWrites[BlobId]
   private implicit val cidWrites: Writes[Cid] = cid => JsString(cid.getValue)
   private implicit val nameWrites: Writes[Name] = Json.valueWrites[Name]
   private implicit val threadIdWrites: Writes[ThreadId] = Json.valueWrites[ThreadId]
@@ -77,7 +77,7 @@ object EmailGetSerializer {
   private implicit val charsetWrites: Writes[Charset] = Json.valueWrites[Charset]
   private implicit val dispositionWrites: Writes[Disposition] = Json.valueWrites[Disposition]
   private implicit val languageWrites: Format[Language] = Json.valueFormat[Language]
-  private implicit val languagesFormat: Format[Languages] = Json.valueFormat[Languages]
+  private implicit val languagesFormat: Format[Languages] = valueFormat[Languages]
   private implicit val locationWrites: Writes[Location] = Json.valueWrites[Location]
   private implicit val emailerNameWrites: Writes[EmailerName] = Json.valueWrites[EmailerName]
   private implicit val emailAddressWrites: Writes[EmailAddress] = writesNull.writes[EmailAddress]
@@ -90,20 +90,20 @@ object EmailGetSerializer {
   private implicit val previewWrites: Writes[Preview] = preview => JsString(preview.getValue)
   private implicit val hasAttachmentWrites: Writes[HasAttachment] = Json.valueWrites[HasAttachment]
   private implicit val headerNameWrites: Writes[EmailHeaderName] = Json.valueWrites[EmailHeaderName]
-  private implicit val rawHeaderWrites: Writes[RawHeaderValue] = Json.valueWrites[RawHeaderValue]
-  private implicit val textHeaderWrites: Writes[TextHeaderValue] = Json.valueWrites[TextHeaderValue]
-  private implicit val addressesHeaderWrites: Writes[AddressesHeaderValue] = Json.valueWrites[AddressesHeaderValue]
-  private implicit val uncheckedAddressesHeaderValueWrites: Writes[UncheckedAddressesHeaderValue] = Json.valueWrites[UncheckedAddressesHeaderValue]
+  private implicit val rawHeaderWrites: Writes[RawHeaderValue] = valueWrites[RawHeaderValue]
+  private implicit val textHeaderWrites: Writes[TextHeaderValue] = valueWrites[TextHeaderValue]
+  private implicit val addressesHeaderWrites: Writes[AddressesHeaderValue] = valueWrites[AddressesHeaderValue]
+  private implicit val uncheckedAddressesHeaderValueWrites: Writes[UncheckedAddressesHeaderValue] = valueWrites[UncheckedAddressesHeaderValue]
   private implicit val GroupNameWrites: Writes[GroupName] = Json.valueWrites[GroupName]
   private implicit val emailAddressGroupWrites: Writes[EmailAddressGroup] = (o: EmailAddressGroup) =>
     Json.obj(
       "name" -> Json.toJson(o.name),
       "addresses" -> Json.toJson(o.addresses))
-  private implicit val groupedAddressesHeaderWrites: Writes[GroupedAddressesHeaderValue] = Json.valueWrites[GroupedAddressesHeaderValue]
-  private implicit val messageIdsHeaderWrites: Writes[MessageIdsHeaderValue] = Json.valueWrites[MessageIdsHeaderValue]
-  private implicit val dateHeaderWrites: Writes[DateHeaderValue] = Json.valueWrites[DateHeaderValue]
+  private implicit val groupedAddressesHeaderWrites: Writes[GroupedAddressesHeaderValue] = valueWrites[GroupedAddressesHeaderValue]
+  private implicit val messageIdsHeaderWrites: Writes[MessageIdsHeaderValue] = valueWrites[MessageIdsHeaderValue]
+  private implicit val dateHeaderWrites: Writes[DateHeaderValue] = valueWrites[DateHeaderValue]
   private implicit val headerURLWrites: Writes[HeaderURL] = Json.valueWrites[HeaderURL]
-  private implicit val urlsHeaderWrites: Writes[URLsHeaderValue] = Json.valueWrites[URLsHeaderValue]
+  private implicit val urlsHeaderWrites: Writes[URLsHeaderValue] = valueWrites[URLsHeaderValue]
   private implicit val emailHeaderWrites: Writes[EmailHeaderValue] = {
     case headerValue: AllHeaderValues => JsArray(headerValue.values.map(h =>  Json.toJson[EmailHeaderValue](h)(emailHeaderWrites)))
     case headerValue: RawHeaderValue => Json.toJson[RawHeaderValue](headerValue)
@@ -114,10 +114,10 @@ object EmailGetSerializer {
     case headerValue: DateHeaderValue => Json.toJson[DateHeaderValue](headerValue)
     case headerValue: URLsHeaderValue => Json.toJson[URLsHeaderValue](headerValue)
   }
-  private implicit val allHeaderWrites: Writes[AllHeaderValues] = Json.valueWrites[AllHeaderValues]
+  private implicit val allHeaderWrites: Writes[AllHeaderValues] = valueWrites[AllHeaderValues]
   private implicit val headersWrites: Writes[EmailHeader] = Json.writes[EmailHeader]
   private implicit val bodyValueWrites: Writes[EmailBodyValue] = Json.writes[EmailBodyValue]
-  private implicit val unparsedMessageIdWrites: Writes[UnparsedEmailId] = Json.valueWrites[UnparsedEmailId]
+  private implicit val unparsedMessageIdWrites: Writes[UnparsedEmailId] = valueWrites[UnparsedEmailId]
   private implicit val unparsedMessageIdReads: Reads[UnparsedEmailId] = {
     case JsString(string) => refined.refineV[IdConstraint](string)
       .fold(
@@ -125,12 +125,12 @@ object EmailGetSerializer {
         id => JsSuccess(UnparsedEmailId(id)))
     case _ => JsError("emailId needs to be represented by a JsString")
   }
-  private implicit val emailIdsReads: Reads[EmailIds] = Json.valueReads[EmailIds]
+  private implicit val emailIdsReads: Reads[EmailIds] = valueReads[EmailIds]
   private implicit val emailGetRequestReads: Reads[EmailGetRequest] = Json.reads[EmailGetRequest]
 
   private implicit val emailChangesRequestReads: Reads[EmailChangesRequest] = Json.reads[EmailChangesRequest]
   private implicit val subjectWrites: Writes[Subject] = Json.valueWrites[Subject]
-  private implicit val emailNotFoundWrites: Writes[EmailNotFound] = Json.valueWrites[EmailNotFound]
+  private implicit val emailNotFoundWrites: Writes[EmailNotFound] = valueWrites[EmailNotFound]
   private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
   private implicit val keywordWrites: Writes[Keyword] = Json.valueWrites[Keyword]
   private implicit val keywordsWrites: Writes[Keywords] = keywords => JsObject(keywords.asMap.map {
@@ -154,7 +154,7 @@ object EmailGetSerializer {
       (__ \ "location").write[Option[Location]] and
       (__ \ "subParts").lazyWriteNullable(implicitly[Writes[List[EmailBodyPartToSerialize]]](list => new JsArray(list.map(bodyPartWritesToSerializeWrites.writes).toIndexedSeq) )) and
         JsPath.write[Map[String, Option[EmailHeaderValue]]]
-    )(unlift(EmailBodyPartToSerialize.unapply))
+    )(part => (part.partId, part.blobId, part.headers, part.size, part.name, part.`type`, part.charset, part.disposition, part.cid, part.language, part.location, part.subParts, part.specificHeaders))
 
   private implicit val bodyPartWrites: Writes[EmailBodyPart] = part => bodyPartWritesToSerializeWrites.writes(EmailBodyPartToSerialize.from(part))
 
@@ -166,22 +166,22 @@ object EmailGetSerializer {
   private val emailFastViewWrites: OWrites[EmailFastView] = (JsPath.write[EmailMetadata] and
     JsPath.write[EmailHeaders] and
     JsPath.write[EmailBodyMetadata] and
-    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailFastView.unapply))
+    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (view => (view.metadata, view.header, view.bodyMetadata, view.specificHeaders))
   private val emailFastViewWithAttachmentsWrites: OWrites[EmailFastViewWithAttachments] = (JsPath.write[EmailMetadata] and
     JsPath.write[EmailHeaders] and
     JsPath.write[AttachmentsMetadata] and
     JsPath.write[EmailBodyMetadata] and
-    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailFastViewWithAttachments.unapply))
+    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (view => (view.metadata, view.header, view.attachments, view.bodyMetadata, view.specificHeaders))
   private val emailHeaderViewWrites: OWrites[EmailHeaderView] = (JsPath.write[EmailMetadata] and
     JsPath.write[EmailHeaders] and
-    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailHeaderView.unapply))
+    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (view => (view.metadata, view.header, view.specificHeaders))
   private val emailMetadataViewWrites: OWrites[EmailMetadataView] = view => Json.toJsObject(view.metadata)
   private implicit val emailBodyWrites: Writes[EmailBody] = Json.writes[EmailBody]
   private implicit val emailFullViewWrites: OWrites[EmailFullView] = (JsPath.write[EmailMetadata] and
     JsPath.write[EmailHeaders] and
     JsPath.write[EmailBody] and
     JsPath.write[EmailBodyMetadata] and
-    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailFullView.unapply))
+    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (view => (view.metadata, view.header, view.body, view.bodyMetadata, view.specificHeaders))
   private implicit val emailWrites: OWrites[EmailView] = {
     case view: EmailMetadataView => emailMetadataViewWrites.writes(view)
     case view: EmailHeaderView => emailHeaderViewWrites.writes(view)
@@ -189,19 +189,19 @@ object EmailGetSerializer {
     case view: EmailFastViewWithAttachments => emailFastViewWithAttachmentsWrites.writes(view)
     case view: EmailFullView => emailFullViewWrites.writes(view)
   }
-  private implicit val emailParseNotFoundWrites: Writes[EmailParseNotFound] = Json.valueWrites[EmailParseNotFound]
-  private implicit val emailNotParsableWrites: Writes[EmailParseNotParsable] = Json.valueWrites[EmailParseNotParsable]
+  private implicit val emailParseNotFoundWrites: Writes[EmailParseNotFound] = valueWrites[EmailParseNotFound]
+  private implicit val emailNotParsableWrites: Writes[EmailParseNotParsable] = valueWrites[EmailParseNotParsable]
   private implicit val emailParseMetadata: Writes[EmailParseMetadata] = Json.writes[EmailParseMetadata]
 
   private implicit val emailParseViewWrites: OWrites[EmailParseView] = (JsPath.write[EmailParseMetadata] and
     JsPath.write[EmailHeaders]and
     JsPath.write[EmailBody] and
     JsPath.write[EmailBodyMetadata] and
-    JsPath.write[Map[String, Option[EmailHeaderValue]]] ) (unlift(EmailParseView.unapply))
+    JsPath.write[Map[String, Option[EmailHeaderValue]]] ) (view => (view.metadata, view.header, view.body, view.bodyMetadata, view.specificHeaders))
 
   private implicit val parsedMapWrites: Writes[Map[BlobId, EmailParseView]] = mapWrites[BlobId, EmailParseView](s => s.value.value, emailParseViewWrites)
 
-  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
+  private implicit val stateWrites: Writes[UuidState] = valueWrites[UuidState]
   private implicit val emailGetResponseWrites: Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
   private implicit val emailParseResponseWrites: Writes[EmailParseResponse] = Json.writes[EmailParseResponse]
   private implicit val changesResponseWrites: OWrites[EmailChangesResponse] = Json.writes[EmailChangesResponse]
@@ -297,7 +297,7 @@ object EmailGetSerializer {
 
   def deserializeEmailChangesRequest(input: JsValue): JsResult[EmailChangesRequest] = Json.fromJson[EmailChangesRequest](input)
 
-  private implicit val blobIdsWrites: Format[BlobIds] = Json.valueFormat[BlobIds]
+  private implicit val blobIdsWrites: Format[BlobIds] = valueFormat[BlobIds]
   private implicit val emailParseRequestReads: Reads[EmailParseRequest] = Json.reads[EmailParseRequest]
 
   def deserializeEmailParseRequest(input: JsValue): JsResult[EmailParseRequest] = Json.fromJson[EmailParseRequest](input)

@@ -24,7 +24,8 @@ trait TypeName {
     maybeState.map(state => Map[TypeName, State](this -> state))
       .getOrElse(Map())
 
-  def asString(): String
+  // parameterless: Scala 3 forbids a val/case-class-param to override an empty-paren def (E164)
+  def asString: String
   def parse(string: String): Option[TypeName]
   def parseState(string: String): Either[IllegalArgumentException, State]
 }

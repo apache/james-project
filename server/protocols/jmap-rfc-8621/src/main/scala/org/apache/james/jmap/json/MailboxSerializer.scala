@@ -40,7 +40,7 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case JsString(serializedMailboxId) => Try(JsSuccess(mailboxIdFactory.fromString(serializedMailboxId))).getOrElse(JsError())
     case _ => JsError()
   }
-  private implicit val unparsedMailboxIdWrites: Writes[UnparsedMailboxId] = Json.valueWrites[UnparsedMailboxId]
+  private implicit val unparsedMailboxIdWrites: Writes[UnparsedMailboxId] = valueWrites[UnparsedMailboxId]
   private implicit val unparsedMailboxIdReads: Reads[UnparsedMailboxId] = {
     case JsString(string) =>
       org.apache.james.jmap.core.Id.validate(string)
@@ -55,11 +55,11 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case Role.SPAM => JsString("junk")
     case role => JsString(role.serialize())
   }
-  private implicit val sortOrderWrites: Writes[SortOrder] = Json.valueWrites[SortOrder]
-  private implicit val totalEmailsWrites: Writes[TotalEmails] = Json.valueWrites[TotalEmails]
-  private implicit val unreadEmailsWrites: Writes[UnreadEmails] = Json.valueWrites[UnreadEmails]
-  private implicit val totalThreadsWrites: Writes[TotalThreads] = Json.valueWrites[TotalThreads]
-  private implicit val unreadThreadsWrites: Writes[UnreadThreads] = Json.valueWrites[UnreadThreads]
+  private implicit val sortOrderWrites: Writes[SortOrder] = valueWrites[SortOrder]
+  private implicit val totalEmailsWrites: Writes[TotalEmails] = valueWrites[TotalEmails]
+  private implicit val unreadEmailsWrites: Writes[UnreadEmails] = valueWrites[UnreadEmails]
+  private implicit val totalThreadsWrites: Writes[TotalThreads] = valueWrites[TotalThreads]
+  private implicit val unreadThreadsWrites: Writes[UnreadThreads] = valueWrites[UnreadThreads]
   private implicit val isSubscribedWrites: Format[IsSubscribed] = Json.valueFormat[IsSubscribed]
 
   private implicit val mayReadItemsWrites: Writes[MayReadItems] = Json.valueWrites[MayReadItems]
@@ -77,7 +77,7 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
 
   private implicit val mailboxACLWrites: Writes[MailboxACL.Right] = right => JsString(right.asCharacter.toString)
 
-  private implicit val rightWrites: Writes[Right] = Json.valueWrites[Right]
+  private implicit val rightWrites: Writes[Right] = valueWrites[Right]
   private implicit val rightRead: Reads[Right] = {
     case jsString: JsString =>
       if (jsString.value.length != 1) {
@@ -90,11 +90,11 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case _ => JsError("Right must be represented as a String")
   }
   private implicit val mailboxJavaRightReads: Reads[JavaRight] = value => rightRead.reads(value).map(right => right.toMailboxRight)
-  private implicit val mailboxRfc4314RightsReads: Reads[Rfc4314Rights] = Json.valueReads[Rfc4314Rights]
+  private implicit val mailboxRfc4314RightsReads: Reads[Rfc4314Rights] = valueReads[Rfc4314Rights]
   private implicit val rightSeqWrites: Writes[Seq[Right]] = seq => JsArray(seq.map(rightWrites.writes))
   private implicit val rightsMapWrites: Writes[Map[EntryKey, Seq[Right]]] =
     mapWrites[EntryKey, Seq[Right]](_.toString(), rightSeqWrites)
-  private implicit val rightsWrites: Writes[Rights] = Json.valueWrites[Rights]
+  private implicit val rightsWrites: Writes[Rights] = valueWrites[Rights]
 
   private implicit val mapRightsReads: Reads[Map[EntryKey, Seq[Right]]] = _.validate[Map[String, Seq[Right]]]
     .map(rawMap =>
@@ -117,7 +117,7 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
 
   implicit val mailboxCreationResponseWrites: Writes[MailboxCreationResponse] = Json.writes[MailboxCreationResponse]
 
-  private implicit val idsRead: Reads[Ids] = Json.valueReads[Ids]
+  private implicit val idsRead: Reads[Ids] = valueReads[Ids]
 
   private implicit val mailboxGetRequest: Reads[MailboxGetRequest] = Json.reads[MailboxGetRequest]
 
@@ -133,7 +133,7 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     implicit val unparsedMailboxIdReads: Reads[UnparsedMailboxId] = mailboxReferenceReads
     Json.reads[MailboxCreationRequest]
   }
-  private implicit val mailboxPatchObject: Reads[MailboxPatchObject] = Json.valueReads[MailboxPatchObject]
+  private implicit val mailboxPatchObject: Reads[MailboxPatchObject] = valueReads[MailboxPatchObject]
 
   private implicit val mapPatchObjectByMailboxIdReads: Reads[Map[UnparsedMailboxId, MailboxPatchObject]] =
     Reads.mapReads[UnparsedMailboxId, MailboxPatchObject](string => UnparsedMailboxId.validate(string)
@@ -149,12 +149,12 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     Json.reads[MailboxSetRequest]
   }
 
-  private implicit val notFoundWrites: Writes[NotFound] = Json.valueWrites[NotFound]
+  private implicit val notFoundWrites: Writes[NotFound] = valueWrites[NotFound]
 
-  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
+  private implicit val stateWrites: Writes[UuidState] = valueWrites[UuidState]
   private implicit val mailboxGetResponseWrites: Writes[MailboxGetResponse] = Json.writes[MailboxGetResponse]
 
-  private implicit val mailboxSetUpdateResponseWrites: Writes[MailboxUpdateResponse] = Json.valueWrites[MailboxUpdateResponse]
+  private implicit val mailboxSetUpdateResponseWrites: Writes[MailboxUpdateResponse] = valueWrites[MailboxUpdateResponse]
 
   private implicit val mailboxMapSetErrorForCreationWrites: Writes[Map[MailboxCreationId, SetError]] =
     mapWrites[MailboxCreationId, SetError](_.id.value, setErrorWrites)

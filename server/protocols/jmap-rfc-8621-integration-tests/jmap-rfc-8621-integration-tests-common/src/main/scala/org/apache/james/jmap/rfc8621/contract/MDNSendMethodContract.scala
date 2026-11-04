@@ -1117,7 +1117,7 @@ trait MDNSendMethodContract {
          |  ]
          |}""".stripMargin
 
-      `given`(buildBOBRequestSpecification(server))
+    `given`(buildBOBRequestSpecification(server))
         .body(request)
       .when
         .post

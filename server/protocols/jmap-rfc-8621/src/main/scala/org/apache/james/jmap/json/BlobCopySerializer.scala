@@ -24,8 +24,8 @@ import org.apache.james.jmap.mail.{BlobId, BlobIds}
 import play.api.libs.json.{JsObject, JsResult, Json, OWrites, Reads, Writes}
 
 class BlobCopySerializer {
-  private implicit val blobIdWrites: Writes[BlobId] = Json.valueWrites[BlobId]
-  private implicit val blobIdsReads: Reads[BlobIds] = Json.valueReads[BlobIds]
+  private implicit val blobIdWrites: Writes[BlobId] = valueWrites[BlobId]
+  private implicit val blobIdsReads: Reads[BlobIds] = valueReads[BlobIds]
 
   private implicit val copiedWrites: Writes[Map[BlobId, BlobId]] =
     mapWrites[BlobId, BlobId](_.value.value, blobIdWrites)

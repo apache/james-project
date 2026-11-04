@@ -23,6 +23,8 @@ import java.time.Duration
 
 import eu.timepit.refined.auto._
 import org.apache.james.rate.limiter.api.RateLimiterContract.SLIDING_WIDOW_PRECISION
+import org.apache.james.rate.limiter.api.Increment.given
+import org.apache.james.rate.limiter.api.AllowedQuantity.given
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.Test
@@ -50,7 +52,7 @@ trait RateLimiterContract {
    SoftAssertions.assertSoftly(softly => {
     (1 to 4).foreach(_ => {
      val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key1"), 1)).block()
-     softly.assertThat[RateLimitingResult](actual).isEqualTo(AcceptableRate)
+     softly.assertThat(actual).isEqualTo(AcceptableRate)
     })
    })
   }

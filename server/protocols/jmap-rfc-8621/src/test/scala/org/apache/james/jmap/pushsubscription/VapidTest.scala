@@ -30,6 +30,7 @@ import java.util.{Base64, Date}
 import io.jsonwebtoken.{Claims, Jws, Jwts}
 import org.apache.james.jmap.pushsubscription.VapidTestFixture.{CONFIGURATION, KEY_PAIR, NOW, PRIVATE_KEY, PUBLIC_KEY, parse}
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
+import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.Test
 
 object VapidTestFixture {
@@ -195,13 +196,13 @@ class VapidTest {
 
   @Test
   def configurationShouldRejectAPublicKeyOfAnotherPrivateKey(): Unit =
-    assertThatThrownBy(() => VapidConfiguration.from(Some(VapidTestFixture.encodePublicKey(VapidTestFixture.generateKeyPair())), Some(PRIVATE_KEY), None))
+    assertThatThrownBy(() => VapidConfiguration.from(Some(VapidTestFixture.encodePublicKey(VapidTestFixture.generateKeyPair())), Some(PRIVATE_KEY), None)).asInstanceOf[ThrowableAssert[Throwable]]
       .isInstanceOf(classOf[IllegalArgumentException])
       .hasMessageContaining("does not match")
 
   @Test
   def configurationShouldRejectAPublicKeyThatIsNotAnUncompressedPoint(): Unit =
-    assertThatThrownBy(() => VapidConfiguration.from(Some(PRIVATE_KEY), Some(PRIVATE_KEY), None))
+    assertThatThrownBy(() => VapidConfiguration.from(Some(PRIVATE_KEY), Some(PRIVATE_KEY), None)).asInstanceOf[ThrowableAssert[Throwable]]
       .isInstanceOf(classOf[IllegalArgumentException])
       .hasMessageContaining("uncompressed P-256 point")
 
@@ -209,26 +210,26 @@ class VapidTest {
   def configurationShouldRejectAPublicKeyThatIsNotOnTheCurve(): Unit = {
     val notAPoint: String = Base64.getUrlEncoder.withoutPadding().encodeToString(Array[Byte](0x04) ++ Array.fill[Byte](64)(1))
 
-    assertThatThrownBy(() => VapidConfiguration.from(Some(notAPoint), Some(PRIVATE_KEY), None))
+    assertThatThrownBy(() => VapidConfiguration.from(Some(notAPoint), Some(PRIVATE_KEY), None)).asInstanceOf[ThrowableAssert[Throwable]]
       .isInstanceOf(classOf[IllegalArgumentException])
       .hasMessageContaining("not a point of the P-256 curve")
   }
 
   @Test
   def configurationShouldRejectAPrivateKeyOfTheWrongLength(): Unit =
-    assertThatThrownBy(() => VapidConfiguration.from(Some(PUBLIC_KEY), Some(PUBLIC_KEY), None))
+    assertThatThrownBy(() => VapidConfiguration.from(Some(PUBLIC_KEY), Some(PUBLIC_KEY), None)).asInstanceOf[ThrowableAssert[Throwable]]
       .isInstanceOf(classOf[IllegalArgumentException])
       .hasMessageContaining("32 bytes")
 
   @Test
   def configurationShouldRejectKeysThatAreNotBase64Url(): Unit =
-    assertThatThrownBy(() => VapidConfiguration.from(Some("not base64 !"), Some(PRIVATE_KEY), None))
+    assertThatThrownBy(() => VapidConfiguration.from(Some("not base64 !"), Some(PRIVATE_KEY), None)).asInstanceOf[ThrowableAssert[Throwable]]
       .isInstanceOf(classOf[IllegalArgumentException])
       .hasMessageContaining("base64url")
 
   @Test
   def configurationShouldRejectASubjectThatIsNotAContactUri(): Unit =
-    assertThatThrownBy(() => VapidConfiguration.from(Some(PUBLIC_KEY), Some(PRIVATE_KEY), Some("postmaster@example.com")))
+    assertThatThrownBy(() => VapidConfiguration.from(Some(PUBLIC_KEY), Some(PRIVATE_KEY), Some("postmaster@example.com"))).asInstanceOf[ThrowableAssert[Throwable]]
       .isInstanceOf(classOf[IllegalArgumentException])
       .hasMessageContaining("mailto:")
 

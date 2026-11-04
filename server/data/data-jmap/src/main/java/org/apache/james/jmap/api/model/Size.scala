@@ -26,9 +26,9 @@ import eu.timepit.refined.refineV
 import org.slf4j.{Logger, LoggerFactory}
 
 object Size {
-  private val logger: Logger = LoggerFactory.getLogger(classOf[Size])
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
   type Size = Long Refined NonNegative
-  val Zero: Size = 0L
+  val Zero: Size = refineV[NonNegative](0L).fold(e => throw new IllegalStateException(e), identity)
 
   def sanitizeSize(value: Long): Size = {
     val size: Either[String, Size] = refineV[NonNegative](value)

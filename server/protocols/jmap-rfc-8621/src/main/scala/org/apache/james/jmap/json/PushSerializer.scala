@@ -60,7 +60,7 @@ case class PushSerializer @Inject()(typeStateFactory: TypeStateFactory) {
       .fold(throwable => JsError(throwable.getMessage), JsSuccess(_))
     case _ => JsError("Expecting a JsString as typeName")
   }
-  private implicit val pushStateReads: Reads[PushState] = Json.valueReads[PushState]
+  private implicit val pushStateReads: Reads[PushState] = valueReads[PushState]
   private implicit val webSocketPushEnableReads: Reads[WebSocketPushEnable] = Json.reads[WebSocketPushEnable]
   private implicit val webSocketInboundReads: Reads[WebSocketInboundMessage] = {
     case json: JsObject =>
@@ -75,10 +75,10 @@ case class PushSerializer @Inject()(typeStateFactory: TypeStateFactory) {
     case _ => JsError("Expecting a JsObject to represent a webSocket inbound message")
   }
 
-  private implicit val typeStateMapWrites: Writes[Map[TypeName, State]] = mapWrites[TypeName, State](_.asString(), stateWrites)
-  private implicit val typeStateWrites: Writes[TypeState] = Json.valueWrites[TypeState]
+  private implicit val typeStateMapWrites: Writes[Map[TypeName, State]] = mapWrites[TypeName, State](_.asString, stateWrites)
+  private implicit val typeStateWrites: Writes[TypeState] = valueWrites[TypeState]
   private implicit val changeWrites: OWrites[Map[AccountId, TypeState]] = mapWrites[AccountId, TypeState](_.id.value, typeStateWrites)
-  private implicit val pushStateWrites: Writes[PushState] = Json.valueWrites[PushState]
+  private implicit val pushStateWrites: Writes[PushState] = valueWrites[PushState]
   private implicit val stateChangeWrites: Writes[StateChange] = stateChange =>
     stateChange.pushState.map(pushState =>
       JsObject(Map(

@@ -44,5 +44,5 @@ class ReactiveSubscriberWrapper(delegate: Subscriber) extends ReactiveSubscriber
 
   def handleReactive(commandExecuted: EventWithState): Publisher[Void] = SMono.fromCallable(() => handle(commandExecuted))
     .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-    .`then`()
+    .map((_: Unit) => null: Void)
 }

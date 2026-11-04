@@ -207,7 +207,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     keywordsMap => STRICT_KEYWORDS_FACTORY.fromSet(keywordsMap.keys.toSet)
       .fold(e => JsError(e.getMessage), keywords => JsSuccess(keywords)))
 
-  private implicit val blobIdWrites: Writes[BlobId] = Json.valueWrites[BlobId]
+  private implicit val blobIdWrites: Writes[BlobId] = valueWrites[BlobId]
   private implicit val blobIdReads: Reads[BlobId] = {
     case JsString(string) => BlobId.of(string)
       .toEither.fold(
@@ -215,7 +215,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
         blobId => JsSuccess(blobId))
     case _ => JsError("blobId needs to be represented by a JsString")
   }
-  private implicit val unparsedMessageIdWrites: Writes[UnparsedMessageId] = Json.valueWrites[UnparsedMessageId]
+  private implicit val unparsedMessageIdWrites: Writes[UnparsedMessageId] = valueWrites[UnparsedMessageId]
   private implicit val unparsedMessageIdReads: Reads[UnparsedMessageId] = {
     case JsString(string) => refined.refineV[IdConstraint](string)
       .fold(
@@ -226,8 +226,8 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val unitWrites: Writes[Unit] = _ => JsNull
   private implicit val updatedWrites: Writes[Map[MessageId, Unit]] = mapWrites[MessageId, Unit](_.serialize, unitWrites)
   private implicit val notDestroyedWrites: Writes[Map[UnparsedMessageId, SetError]] = mapWrites[UnparsedMessageId, SetError](_.id.value, setErrorWrites)
-  private implicit val destroyIdsReads: Reads[DestroyIds] = Json.valueFormat[DestroyIds]
-  private implicit val destroyIdsWrites: Writes[DestroyIds] = Json.valueWrites[DestroyIds]
+  private implicit val destroyIdsReads: Reads[DestroyIds] = valueFormat[DestroyIds]
+  private implicit val destroyIdsWrites: Writes[DestroyIds] = valueWrites[DestroyIds]
   private implicit val emailRequestSetReads: Reads[EmailSetRequest] = Json.reads[EmailSetRequest]
   private implicit val threadIdWrites: Writes[ThreadId] = Json.valueWrites[ThreadId]
   private implicit val emailCreationResponseWrites: Writes[EmailCreationResponse] = Json.writes[EmailCreationResponse]
@@ -236,7 +236,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val notCreatedMapWrites: Writes[Map[EmailCreationId, SetError]] =
     mapWrites[EmailCreationId, SetError](_.id.value, setErrorWrites)
 
-  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
+  private implicit val stateWrites: Writes[UuidState] = valueWrites[UuidState]
   private implicit val emailResponseSetWrites: OWrites[EmailSetResponse] = Json.writes[EmailSetResponse]
 
   private implicit val subjectReads: Reads[Subject] = Json.valueReads[Subject]
@@ -246,8 +246,8 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val headerMessageIdReads: Reads[HeaderMessageId] = Json.valueReads[HeaderMessageId]
   private implicit val emailAddressReads: Reads[EmailAddress] = Json.reads[EmailAddress]
   private implicit val unvalidatedEmailAddressReads: Reads[UncheckedEmailAddress] = Json.reads[UncheckedEmailAddress]
-  private implicit val unvalidatedAddressesHeaderValueReads: Reads[UncheckedAddressesHeaderValue] = Json.valueReads[UncheckedAddressesHeaderValue]
-  private implicit val addressesHeaderValueReads: Reads[AddressesHeaderValue] = Json.valueReads[AddressesHeaderValue]
+  private implicit val unvalidatedAddressesHeaderValueReads: Reads[UncheckedAddressesHeaderValue] = valueReads[UncheckedAddressesHeaderValue]
+  private implicit val addressesHeaderValueReads: Reads[AddressesHeaderValue] = valueReads[AddressesHeaderValue]
   private implicit val messageIdsHeaderValueReads: Reads[MessageIdsHeaderValue] = {
     case JsArray(value) => value.map(headerMessageIdReads.reads)
       .map(_.asEither)
@@ -290,7 +290,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     }.sequence
 
   private implicit val typeReads: Reads[Type] = Json.valueReads[Type]
-  private implicit val clientPartIdReads: Reads[ClientPartId] = Json.valueReads[ClientPartId]
+  private implicit val clientPartIdReads: Reads[ClientPartId] = valueReads[ClientPartId]
   private val rawClientBodyWithoutHeaderReads: Reads[ClientBodyWithoutHeaders] = Json.reads[ClientBodyWithoutHeaders]
 
   private implicit val clientBodyReads: Reads[ClientBody] = {
@@ -362,15 +362,15 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
 
   sealed trait HeaderValueReads extends Reads[EmailHeaderValue]
   case object RawReads extends HeaderValueReads {
-    val rawReads: Reads[RawHeaderValue] = Json.valueReads[RawHeaderValue]
+    val rawReads: Reads[RawHeaderValue] = valueReads[RawHeaderValue]
     override def reads(json: JsValue): JsResult[EmailHeaderValue] = rawReads.reads(json)
   }
   case object AllReads extends HeaderValueReads {
-    val rawReads: Reads[RawHeaderValue] = Json.valueReads[RawHeaderValue]
+    val rawReads: Reads[RawHeaderValue] = valueReads[RawHeaderValue]
     override def reads(json: JsValue): JsResult[EmailHeaderValue] = rawReads.reads(json)
   }
   case object TextReads extends HeaderValueReads {
-    val textReads: Reads[TextHeaderValue] = Json.valueReads[TextHeaderValue]
+    val textReads: Reads[TextHeaderValue] = valueReads[TextHeaderValue]
     override def reads(json: JsValue): JsResult[TextHeaderValue] = textReads.reads(json)
   }
   case object AddressesReads extends HeaderValueReads {
@@ -392,7 +392,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     override def reads(json: JsValue): JsResult[URLsHeaderValue] = urlsReads.reads(json)
   }
   case object GroupedAddressReads extends HeaderValueReads {
-    val groupsReads: Reads[GroupedAddressesHeaderValue] = Json.valueReads[GroupedAddressesHeaderValue]
+    val groupsReads: Reads[GroupedAddressesHeaderValue] = valueReads[GroupedAddressesHeaderValue]
     override def reads(json: JsValue): JsResult[GroupedAddressesHeaderValue] = groupsReads.reads(json)
   }
 
@@ -426,9 +426,9 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val charsetReads: Reads[Charset] = Json.valueReads[Charset]
   private implicit val dispositionReads: Reads[Disposition] = Json.valueReads[Disposition]
   private implicit val languageReads: Format[Language] = Json.valueFormat[Language]
-  private implicit val languagesWrites: Format[Languages] = Json.valueFormat[Languages]
+  private implicit val languagesWrites: Format[Languages] = valueFormat[Languages]
   private implicit val locationReads: Reads[Location] = Json.valueReads[Location]
-  private implicit val cidFormat: Format[ClientCid] = Json.valueFormat[ClientCid]
+  private implicit val cidFormat: Format[ClientCid] = valueFormat[ClientCid]
   private implicit val attachmentReads: Reads[Attachment] = {
     case JsObject(keys) if keys.keys.exists(_.contains("header:Content-Transfer-Encoding")) =>
       JsError("Content-Transfer-Encoding should not be specified on attachment")

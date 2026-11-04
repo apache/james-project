@@ -80,7 +80,7 @@ trait AuthenticationContract {
   class BasicAuth {
     @Test
     def postShouldRespond401WhenNoAuthorizationHeader(): Unit = {
-      given()
+      `given`()
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(ECHO_REQUEST_OBJECT)
       .when

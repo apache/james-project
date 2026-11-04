@@ -157,7 +157,7 @@ trait EmailQueryMethodContract {
          |    "c1"]]
          |}""".stripMargin
 
-      val response = `given`
+    val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
@@ -668,7 +668,7 @@ trait EmailQueryMethodContract {
          |    "c1"]]
          |}""".stripMargin
 
-      val response = `given`
+    val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
@@ -807,7 +807,7 @@ trait EmailQueryMethodContract {
          |	]
          |}""".stripMargin
 
-      val response = `given`
+    val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
@@ -956,7 +956,7 @@ trait EmailQueryMethodContract {
          |	]
          |}""".stripMargin
 
-      val response = `given`
+    val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
@@ -1095,7 +1095,7 @@ trait EmailQueryMethodContract {
          |    "c1"]]
          |}""".stripMargin
 
-      val response = `given`
+    val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
@@ -1168,7 +1168,7 @@ trait EmailQueryMethodContract {
          |	]
          |}""".stripMargin
 
-      val response = `given`
+    val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
@@ -1318,7 +1318,7 @@ trait EmailQueryMethodContract {
          |	]
          |}""".stripMargin
 
-      val response = `given`
+    val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
@@ -1392,7 +1392,7 @@ trait EmailQueryMethodContract {
          |	]
          |}""".stripMargin
 
-      val response = `given`
+    val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
@@ -1990,7 +1990,7 @@ trait EmailQueryMethodContract {
          |    "c1"]]
          |}""".stripMargin
 
-      val response = `given`
+    val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
@@ -7883,7 +7883,7 @@ trait EmailQueryMethodContract {
          |    "c1"]]
          |}""".stripMargin
 
-      val response = `given`
+    val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
       .when
