@@ -46,6 +46,7 @@ import org.apache.james.protocols.smtp.hook.MailParametersHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -217,7 +218,8 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                 return SYNTAX_ERROR;
             }
             String senderAddressString = removeBrackets(sender);
-            session.setAttachment(SMTPSession.RAW_SENDER_STRING, senderAddressString, State.Transaction);
+            // Echoed in the reply: trimmed like MailAddress parses it, without control characters such as a bare CR
+            session.setAttachment(SMTPSession.RAW_SENDER_STRING, CharMatcher.javaIsoControl().replaceFrom(senderAddressString.trim(), '?'), State.Transaction);
             if (AddressNormalization.containsNonAscii(senderAddressString)
                     && !session.getAttachment(SMTPSession.SMTPUTF8_REQUESTED, State.Transaction).orElse(Boolean.FALSE)) {
                 LOGGER.info("Rejected non-ASCII sender address without SMTPUTF8: {}", sender);

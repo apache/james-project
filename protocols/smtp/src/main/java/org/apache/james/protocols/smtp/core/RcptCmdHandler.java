@@ -47,6 +47,7 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -165,7 +166,8 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
                     + getDefaultDomain();
         }
 
-        session.setAttachment(SMTPSession.RAW_CURRENT_RECIPIENT_STRING, recipient, State.Transaction);
+        // Echoed in the reply: trimmed like MailAddress parses it, without control characters such as a bare CR
+        session.setAttachment(SMTPSession.RAW_CURRENT_RECIPIENT_STRING, CharMatcher.javaIsoControl().replaceFrom(recipient.trim(), '?'), State.Transaction);
 
         if (AddressNormalization.containsNonAscii(recipient)
                 && !session.getAttachment(SMTPSession.SMTPUTF8_REQUESTED, State.Transaction).orElse(Boolean.FALSE)) {
