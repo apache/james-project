@@ -459,6 +459,9 @@ public interface RabbitMQManagementAPI {
     @RequestLine("GET /api/queues/{vhost}")
     List<MessageQueue> listVhostQueues(@Param("vhost") String vhost);
 
+    @RequestLine("GET /api/exchanges/{vhost}")
+    List<Exchange> listVhostExchanges(@Param("vhost") String vhost);
+
     @RequestLine("PUT /api/vhosts/{vhost}")
     List<MessageQueue> addVhost(@Param("vhost") String vhost);
 
