@@ -381,6 +381,13 @@ class MailAddressTest {
     }
 
     @Test
+    void stripDetailsShouldIgnoreASeparatorFollowingADot() throws AddressException {
+        MailAddress mailAddress = new MailAddress("bob.+tag@example.com");
+
+        assertThat(mailAddress.stripDetails("+").asString()).isEqualTo("bob.+tag@example.com");
+    }
+
+    @Test
     void stripDetailsShouldStripAfterAnEscapedSeparator() throws AddressException {
         MailAddress mailAddress = new MailAddress("a\\-b-details@domain.tld");
 
