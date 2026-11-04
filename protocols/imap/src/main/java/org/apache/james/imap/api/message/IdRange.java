@@ -201,7 +201,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
         } else if (range2.getLowVal() == Long.MAX_VALUE && range2.getHighVal() == Long.MAX_VALUE) {
             return -1;
         } else {
-            return (int) (getLowVal() - range2.getLowVal());
+            return Long.compare(getLowVal(), range2.getLowVal());
         }
     }
 

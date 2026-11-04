@@ -127,4 +127,11 @@ class IdRangeTest {
         assertThat(r2.getLowVal()).isEqualTo(r1.getLowVal());
         assertThat(r2.getHighVal()).isEqualTo(r1.getHighVal());
     }
+
+    @Test
+    void mergeRangesShouldKeepRangesWhoseLowValuesAreFarApart() {
+        List<IdRange> merged = IdRange.mergeRanges(List.of(new IdRange(4294967294L), new IdRange(1L)));
+
+        assertThat(merged).containsExactly(new IdRange(1L), new IdRange(4294967294L));
+    }
 }
