@@ -19,15 +19,21 @@
 
 package org.apache.james.jmap.routes
 
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicInteger
 
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.{ClientId, Id, ServerId}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
+import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 
 import scala.collection.immutable.ListMap
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class CreateProcessorTest {
   private val emptyContext = ProcessingContext(Map.empty, Map.empty)
@@ -123,14 +129,42 @@ class CreateProcessorTest {
     assertThat(publisher.block()).isEqualTo(first)
     assertThat(executions.get()).isEqualTo(2)
   }
+
   @Test
-  def shouldProcessALongReversedChainWithoutRecursiveTraversal(): Unit = {
-    val ids = (1 to 1000).map(i => ClientId(Id.validate("item-" + i).toOption.get))
+  def shouldWaitForParentCompletionBeforeCreatingChild(): Unit = {
+    val parentCompletion = new CompletableFuture[Either[String, (Set[ServerId], ServerId)]]()
+    val executions = new AtomicInteger()
+    val completion = CreateProcessor.process(ListMap(child -> Set(parent), parent -> Set.empty[ClientId]), emptyContext)(
+      dependencies = (parents: Set[ClientId]) => parents,
+      create = (parents: Set[ClientId], context: ProcessingContext) => {
+        executions.incrementAndGet()
+        if (parents.isEmpty) {
+          SMono.fromPublisher(Mono.fromFuture(parentCompletion))
+        } else {
+          SMono.just(Right((parents.map(id => context.retrieveServerId(id).get), serverId(child))))
+        }
+      },
+      invalidDependency = (_: Set[ClientId]) => "invalid dependency").toFuture
+
+    assertThat(executions.get()).isEqualTo(1)
+    assertThat(completion.isCompleted).isFalse()
+    parentCompletion.complete(Right((Set.empty[ServerId], serverId(parent))))
+
+    val (results, context) = Await.result(completion, 5.seconds)
+    assertThat(results(child)).isEqualTo(Right(Set(serverId(parent))))
+    assertThat(context.retrieveServerId(child)).isEqualTo(Some(serverId(child)))
+    assertThat(executions.get()).isEqualTo(2)
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = Array(1000, 10000))
+  def shouldProcessALongReversedChainWithoutRecursiveTraversal(size: Int): Unit = {
+    val ids = (1 to size).map(i => ClientId(Id.validate("item-" + i).toOption.get))
     val entries = ids.zipWithIndex.map { case (id, index) =>
       id -> (if (index == 0) Set.empty[ClientId] else Set(ids(index - 1)))
     }
     val (results, context) = process(entries.reverse).block()
-    assertThat(results.size).isEqualTo(1000)
+    assertThat(results.size).isEqualTo(size)
     assertThat(results.values.forall(_.isRight)).isTrue()
     assertThat(context.retrieveServerId(ids.last)).isEqualTo(Some(serverId(ids.last)))
   }

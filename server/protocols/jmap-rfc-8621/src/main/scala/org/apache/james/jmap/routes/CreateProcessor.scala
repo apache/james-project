@@ -35,20 +35,23 @@ object CreateProcessor {
     SMono.defer(() => {
       val localDependencies = creates.view.mapValues(value => dependencies(value).intersect(creates.keySet)).toMap
       val ordered = order(localDependencies)
-      ordered.foldLeft(SMono.just((Map.empty[ClientId, Either[E, R]], initialContext))) {
-        case (acc, id) => acc.flatMap { case (results, context) =>
-          val entry = creates(id)
-          if (localDependencies(id).exists(dependency => !results.get(dependency).exists(_.isRight))) {
-            SMono.just((results.updated(id, Left(invalidDependency(entry))), context))
-          } else {
-            create(entry, context).map {
-              case Left(error) => (results.updated(id, Left(error)), context)
-              case Right((result, serverId)) =>
-                (results.updated(id, Right(result)), context.recordCreatedId(id, serverId))
+      SMono.just((ordered.toList, Map.empty[ClientId, Either[E, R]], initialContext))
+        .expand {
+          case (Nil, _, _) => SMono.empty
+          case (id :: remaining, results, context) =>
+            val entry = creates(id)
+            if (localDependencies(id).exists(dependency => !results.get(dependency).exists(_.isRight))) {
+              SMono.just((remaining, results.updated(id, Left(invalidDependency(entry))), context))
+            } else {
+              create(entry, context).map {
+                case Left(error) => (remaining, results.updated(id, Left(error)), context)
+                case Right((result, serverId)) =>
+                  (remaining, results.updated(id, Right(result)), context.recordCreatedId(id, serverId))
+              }
             }
-          }
         }
-      }
+        .last()
+        .map { case (_, results, context) => (results, context) }
     }).cache()
 
   // Kahn's algorithm: each vertex and edge is visited once. Remaining vertices
