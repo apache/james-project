@@ -85,4 +85,11 @@ class ModifiedUtf7Test {
     void decodeShouldReturnNonAsciiValueWithoutShiftAsIs() {
         assertThat(ModifiedUtf7.decodeModifiedUTF7("é")).isEqualTo("é");
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"&2Ok-", "&2AA-", "&3AA-", "a&2AA-b"})
+    void decodeShouldRejectUnpairedSurrogates(String input) {
+        assertThatThrownBy(() -> ModifiedUtf7.decodeModifiedUTF7(input))
+            .isInstanceOf(MalformedUtf7Exception.class);
+    }
 }

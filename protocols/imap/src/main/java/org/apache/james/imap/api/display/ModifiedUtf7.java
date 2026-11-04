@@ -58,7 +58,23 @@ public class ModifiedUtf7 {
         if (!encodeModifiedUTF7(decoded).equals(input)) {
             throw new MalformedUtf7Exception(input);
         }
+        // Modified UTF-7 encodes UTF-16: an unpaired surrogate is not a character.
+        if (hasUnpairedSurrogate(decoded)) {
+            throw new MalformedUtf7Exception(input);
+        }
         return decoded;
+    }
+
+    private static boolean hasUnpairedSurrogate(String value) {
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (Character.isHighSurrogate(c) && i + 1 < value.length() && Character.isLowSurrogate(value.charAt(i + 1))) {
+                i++;
+            } else if (Character.isSurrogate(c)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String decode(String input) {
