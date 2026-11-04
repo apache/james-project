@@ -166,4 +166,13 @@ class ImapRequestLineReaderTest {
         assertThatThrownBy(() -> reader("12a ").number())
             .isInstanceOf(DecodingException.class);
     }
+
+    @Test
+    void consumeQuotedShouldDecodeAMultiByteCharacterAcrossTheBufferBoundary() throws Exception {
+        String value = "a".repeat(63) + "é";
+        inputStream = new ByteArrayInputStream(("\"" + value + "\"\r\n").getBytes(StandardCharsets.UTF_8));
+        lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThat(lineReader.consumeQuoted()).isEqualTo(value);
+    }
 }
