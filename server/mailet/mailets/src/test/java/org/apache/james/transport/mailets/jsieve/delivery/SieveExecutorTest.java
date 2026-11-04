@@ -61,4 +61,20 @@ class SieveExecutorTest {
             .hasSize(1)
             .allSatisfy(sentMail -> assertThat(sentMail.getAttributes()).containsKey(SIEVE_NOTIFICATION));
     }
+
+    @Test
+    void handleFailureShouldSendANotificationWhenTheMessageHasNoSubject() throws Exception {
+        testee.handleFailure(RECIPIENT1, MailImpl.builder()
+            .name("mymail")
+            .sender("sender@localhost")
+            .addRecipient(RECIPIENT1)
+            .mimeMessage(MimeMessageBuilder
+                .mimeMessageBuilder()
+                .setText("this is the content"))
+            .build(), new Exception());
+
+        assertThat(mailetContext.getSentMails())
+            .hasSize(1)
+            .allSatisfy(sentMail -> assertThat(sentMail.getAttributes()).containsKey(SIEVE_NOTIFICATION));
+    }
 }

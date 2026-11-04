@@ -19,14 +19,14 @@
 
 package org.apache.james.transport.mailets.jsieve.delivery;
 
+import java.util.Optional;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.mailet.Mail;
-
-import com.google.common.base.Strings;
 
 public class SieveFailureMessageComposer {
 
@@ -42,16 +42,16 @@ public class SieveFailureMessageComposer {
 
         MimeBodyPart originalPart = new MimeBodyPart();
         originalPart.setContent(originalMessage, "message/rfc822");
-        if (Strings.isNullOrEmpty(originalMessage.getSubject())) {
-            originalPart.setFileName(originalMessage.getSubject().trim());
-        } else {
-            originalPart.setFileName("No Subject");
-        }
+        String subject = Optional.ofNullable(originalMessage.getSubject())
+            .map(String::trim)
+            .filter(value -> !value.isEmpty())
+            .orElse("No Subject");
+        originalPart.setFileName(subject);
         originalPart.setDisposition(MimeBodyPart.INLINE);
         multipart.addBodyPart(originalPart);
 
         message.setContent(multipart);
-        message.setSubject("[SIEVE ERROR] " + originalMessage.getSubject());
+        message.setSubject("[SIEVE ERROR] " + subject);
         message.setHeader("X-Priority", "1");
         message.saveChanges();
         return message;
