@@ -262,12 +262,22 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
             // 7-bit ASCII only
             if (character >= 128) {
                 buffer.write(BYTE_QUESTION);
+            } else if (isForbiddenInQuotedString(character)) {
+                buffer.write(SP);
             } else {
                 buffer.write((byte) character);
             }
         }
         buffer.write(BYTE_DQUOTE);
         return this;
+    }
+
+    /**
+     * RFC 3501 / RFC 9051 QUOTED-CHAR excludes CR and LF (TEXT-CHAR) and NUL (CHAR / CHAR8):
+     * writing them verbatim would break the response framing (and allow response injection).
+     */
+    private static boolean isForbiddenInQuotedString(int character) {
+        return character == '\r' || character == '\n' || character == 0;
     }
 
     @Override
