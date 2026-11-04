@@ -58,7 +58,7 @@
         </dependency>
         <dependency>
             <groupId>com.clever-cloud.pulsar4s</groupId>
-            <artifactId>pulsar4s-core_${scala.base}</artifactId>
+            <artifactId>pulsar4s-core_${scala.binary}</artifactId>
             <version>${clever-cloud.pulsar4s.version}</version>
             <exclusions>
                 <exclusion>
@@ -75,7 +75,7 @@
         </dependency>
         <dependency>
             <groupId>com.clever-cloud.pulsar4s</groupId>
-            <artifactId>pulsar4s-pekko-streams_${scala.base}</artifactId>
+            <artifactId>pulsar4s-pekko-streams_${scala.binary}</artifactId>
             <version>${clever-cloud.pulsar4s.version}</version>
             <exclusions>
                 <exclusion>
@@ -92,13 +92,13 @@
         </dependency>
         <dependency>
             <groupId>com.dimafeng</groupId>
-            <artifactId>testcontainers-scala-pulsar_${scala.base}</artifactId>
+            <artifactId>testcontainers-scala-pulsar_${scala.binary}</artifactId>
             <version>0.43.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.dimafeng</groupId>
-            <artifactId>testcontainers-scala-scalatest_${scala.base}</artifactId>
+            <artifactId>testcontainers-scala-scalatest_${scala.binary}</artifactId>
             <version>0.43.0</version>
             <scope>test</scope>
         </dependency>
@@ -116,12 +116,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.pekko</groupId>
-            <artifactId>pekko-stream-typed_${scala.base}</artifactId>
+            <artifactId>pekko-stream-typed_${scala.binary}</artifactId>
             <version>${pekko-stream.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.pekko</groupId>
-            <artifactId>pekko-stream_${scala.base}</artifactId>
+            <artifactId>pekko-stream_${scala.binary}</artifactId>
             <version>${pekko-stream.version}</version>
         </dependency>
         <dependency>
@@ -135,7 +135,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_${scala.base}</artifactId>
+            <artifactId>scalatest_${scala.binary}</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

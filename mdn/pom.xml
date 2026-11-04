@@ -58,12 +58,12 @@
         </dependency>
         <dependency>
             <groupId>org.parboiled</groupId>
-            <artifactId>parboiled_${scala.base}</artifactId>
+            <artifactId>parboiled_${scala.binary}</artifactId>
             <version>2.5.1</version>
         </dependency>
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-java8-compat_${scala.base}</artifactId>
+            <artifactId>scala-java8-compat_${scala.binary}</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

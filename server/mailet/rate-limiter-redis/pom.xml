@@ -95,7 +95,7 @@
         </dependency>
         <dependency>
             <groupId>eu.timepit</groupId>
-            <artifactId>refined_${scala.base}</artifactId>
+            <artifactId>refined_${scala.binary}</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -129,7 +129,7 @@
         </dependency>
         <dependency>
             <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-scala-extensions_${scala.base}</artifactId>
+            <artifactId>reactor-scala-extensions_2.13</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
