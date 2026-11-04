@@ -19,6 +19,8 @@
 
 package org.apache.james.smtpserver;
 
+import java.io.IOException;
+
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
@@ -150,6 +152,13 @@ public class SenderHeaderVerificationHook implements JamesMessageHook, SaslAuthR
             return DefaultAddressParser.DEFAULT.parseMailbox(field).getAddress().equals(address.getAddress());
         } catch (ParseException e) {
             return false;
+        } catch (Error e) {
+            // mime4j 0.8.15 wraps in an Error the IOException raised when strictly decoding a malformed encoded word
+            // of the display name, eg '=?utf-8?B?*?= <bob@domain.tld>'. Later versions throw IllegalArgumentException.
+            if (e.getCause() instanceof IOException) {
+                return false;
+            }
+            throw e;
         }
     }
 }
