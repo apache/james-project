@@ -290,9 +290,11 @@ public class StripAttachment extends GenericMailet {
                 if (isMultipart(bodyPart)) {
                     if (processMultipartPartMessage(bodyPart, mail)) {
                         subpartHasBeenChanged = true;
-                        if (isEmptyMultipart(bodyPart)) {
-                            multipart.removeBodyPart(bodyPart);
-                        }
+                    }
+                    // Also covers multiparts parsed without any part (truncated input): Jakarta Mail can not write
+                    // them back once an ancestor is rewritten
+                    if (isEmptyMultipart(bodyPart)) {
+                        multipart.removeBodyPart(bodyPart);
                     }
                 } else {
                     if (shouldBeRemoved(bodyPart, mail)) {
