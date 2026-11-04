@@ -1047,6 +1047,31 @@ public abstract class AbstractSMTPServerTest {
     }
 
     @Test
+    void mailAndRcptRepliesShouldNotEchoControlCharacters() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String replies = rawUtf8Exchange(bindedAddress,
+                greetingCommand() + " localhost\r\n",
+                "MAIL FROM:<a@b.c\r>\r\n",
+                "RCPT TO:<d@e.f\r>\r\n",
+                "QUIT\r\n");
+
+            assertThat(replies)
+                .contains("Sender <a@b.c> OK")
+                .contains("Recipient <d@e.f> OK")
+                .doesNotContain("\r>");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
     void mailFromWithNonAsciiSenderShouldBeAcceptedWhenSmtpUtf8IsAsserted() throws Exception {
         ProtocolServer server = null;
         try {
