@@ -43,6 +43,7 @@ import org.mockito.ArgumentCaptor;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 class CassandraBlobIdUpdaterFactoryTest {
     private static final BlobId OLD = new PlainBlobId.Factory().of("old");
@@ -59,6 +60,7 @@ class CassandraBlobIdUpdaterFactoryTest {
         references = mock(CassandraBlobReferenceDAO.class);
         index = mock(CassandraBlobReferenceIndexDAO.class);
         testee = new CassandraBlobIdUpdater.Factory(references, index);
+        when(index.create(any())).thenReturn(Mono.empty());
         when(index.store(any(), any())).thenReturn(Mono.empty());
         when(index.cleanup(any())).thenReturn(Mono.empty());
     }
@@ -107,6 +109,31 @@ class CassandraBlobIdUpdaterFactoryTest {
         subscription.dispose();
 
         verify(index).cleanup(any());
+    }
+
+    @Test
+    void failedCreationShouldAttemptCleanupWithoutScanningReferences() {
+        IllegalStateException failure = new IllegalStateException("create failed");
+        when(index.create(any())).thenReturn(Mono.error(failure));
+
+        assertThatThrownBy(() -> testee.forPredicate(id -> true, id -> { }).block()).isSameAs(failure);
+
+        verify(index).cleanup(any());
+        verify(references, never()).listReferences();
+    }
+
+    @Test
+    void cancellationShouldWaitForTableCreationBeforeDroppingIt() {
+        Sinks.Empty<Void> creation = Sinks.empty();
+        when(index.create(any())).thenReturn(creation.asMono());
+
+        Disposable subscription = testee.forPredicate(id -> true, id -> { }).subscribe();
+        subscription.dispose();
+
+        verify(index, never()).cleanup(any());
+        assertThat(creation.tryEmitEmpty()).isEqualTo(Sinks.EmitResult.OK);
+        verify(index).cleanup(any());
+        verify(references, never()).listReferences();
     }
 
     @Test
