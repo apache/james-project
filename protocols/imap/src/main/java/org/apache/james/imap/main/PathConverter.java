@@ -33,6 +33,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedRegex;
 import org.apache.james.mailbox.model.search.Wildcard;
 
+import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -145,7 +146,7 @@ public interface PathConverter {
         private String sanitizeMailboxName(String mailboxName) {
             // use uppercase for INBOX
             // See IMAP-349
-            if (mailboxName.equalsIgnoreCase(MailboxConstants.INBOX)) {
+            if (Ascii.equalsIgnoreCase(mailboxName, MailboxConstants.INBOX)) {
                 return MailboxConstants.INBOX;
             }
             return mailboxName;

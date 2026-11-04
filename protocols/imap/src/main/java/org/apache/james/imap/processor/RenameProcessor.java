@@ -23,7 +23,6 @@ import static org.apache.james.util.ReactorUtils.logAsMono;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -89,7 +88,7 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
     }
 
     private Mono<Void> createInboxIfNeeded(MailboxPath existingPath, MailboxSession session) {
-        if (!existingPath.getName().equalsIgnoreCase(ImapConstants.INBOX_NAME)) {
+        if (!existingPath.isInbox()) {
             return Mono.empty();
         }
         return Mono.from(getMailboxManager().mailboxExists(existingPath, session))

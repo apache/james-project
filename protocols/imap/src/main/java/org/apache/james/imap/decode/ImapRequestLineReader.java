@@ -54,6 +54,7 @@ import org.apache.james.imap.api.process.SearchResUtil;
 import org.apache.james.imap.message.Literal;
 import org.apache.james.mailbox.MessageUid;
 
+import com.google.common.base.Ascii;
 import com.google.common.base.CharMatcher;
 
 /**
@@ -512,7 +513,7 @@ public abstract class ImapRequestLineReader {
      */
     public String mailboxUTF7() throws DecodingException {
         String mailbox = astring();
-        if (mailbox.equalsIgnoreCase(ImapConstants.INBOX_NAME)) {
+        if (Ascii.equalsIgnoreCase(mailbox, ImapConstants.INBOX_NAME)) {
             return ImapConstants.INBOX_NAME;
         } else {
             return mailbox;
