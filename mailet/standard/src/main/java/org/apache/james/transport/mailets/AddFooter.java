@@ -35,6 +35,7 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimePart;
+import jakarta.mail.internet.MimePartDataSource;
 import jakarta.mail.internet.MimeUtility;
 import jakarta.mail.internet.ParseException;
 
@@ -104,6 +105,25 @@ public class AddFooter extends GenericMailet {
             return false;
         }
 
+        if (part.isMimeType("multipart/mixed")
+                || part.isMimeType("multipart/related")) {
+            MimeMultipart multipart = parseMultipart(part);
+            boolean added = attachFooterToFirstPart(multipart, depth + 1);
+            if (added) {
+                part.setContent(multipart);
+            }
+            return added;
+        } else if (part.isMimeType("multipart/alternative")) {
+            MimeMultipart multipart = parseMultipart(part);
+            boolean added = attachFooterToAllSubparts(multipart, depth + 1);
+            if (added) {
+                part.setContent(multipart);
+            }
+            return added;
+        } else if (part.isMimeType("multipart/*")) {
+            return false;
+        }
+
         if (part.getContent() instanceof String) {
             Optional<String> content = attachFooterToTextPart(part);
             if (content.isPresent()) {
@@ -113,26 +133,17 @@ public class AddFooter extends GenericMailet {
                 return true;
             }
         }
-
-        if (part.isMimeType("multipart/mixed")
-                || part.isMimeType("multipart/related")) {
-            MimeMultipart multipart = (MimeMultipart) part.getContent();
-            boolean added = attachFooterToFirstPart(multipart, depth + 1);
-            if (added) {
-                part.setContent(multipart);
-            }
-            return added;
-
-        } else if (part.isMimeType("multipart/alternative")) {
-            MimeMultipart multipart = (MimeMultipart) part.getContent();
-            boolean added = attachFooterToAllSubparts(multipart, depth + 1);
-            if (added) {
-                part.setContent(multipart);
-            }
-            return added;
-        }
         //Give up... we won't attach the footer to this MimePart
         return false;
+    }
+
+    /**
+     * Unlike {@link MimePart#getContent()}, does not cache the parsed multipart in the part. A cached multipart is
+     * re-serialised from its parsed form when the changes are saved, and Jakarta Mail refuses to write a multipart
+     * parsed without any body part (truncated input). Parts the footer is not added to are thus written as received.
+     */
+    private MimeMultipart parseMultipart(MimePart part) throws MessagingException {
+        return new MimeMultipart(new MimePartDataSource(part));
     }
 
     private boolean exceedsMaxMimeDepth(MimePart part, int depth) {
@@ -140,7 +151,8 @@ public class AddFooter extends GenericMailet {
             return true;
         }
         try {
-            if (part.isMimeType("multipart/*") && part.getContent() instanceof MimeMultipart multipart) {
+            if (part.isMimeType("multipart/*")) {
+                MimeMultipart multipart = parseMultipart(part);
                 for (int index = 0; index < multipart.getCount(); index++) {
                     if (exceedsMaxMimeDepth((MimeBodyPart) multipart.getBodyPart(index), depth + 1)) {
                         return true;
@@ -148,7 +160,7 @@ public class AddFooter extends GenericMailet {
                 }
             }
             return false;
-        } catch (MessagingException | IOException | RuntimeException e) {
+        } catch (MessagingException | RuntimeException e) {
             // Unreadable parts are handled while adding the footer
             return false;
         }

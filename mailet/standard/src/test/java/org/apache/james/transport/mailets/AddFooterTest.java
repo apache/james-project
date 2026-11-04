@@ -588,6 +588,36 @@ class AddFooterTest {
         assertThat(MailUtil.toString(mail, "UTF-8")).doesNotContain(MY_FOOTER);
     }
 
+    @Test
+    void shouldKeepMessageWritableWhenANestedMultipartHasNoPart() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+
+        String message = Joiner.on("\r\n").join(
+            "From: sender@example.com",
+            "MIME-Version: 1.0",
+            "Content-Type: multipart/mixed; boundary=\"outer\"",
+            "",
+            "--outer",
+            "Content-Type: text/plain",
+            "",
+            "hello",
+            "--outer",
+            "Content-Type: multipart/related; boundary=\"zz\"",
+            "",
+            "--zz",
+            "Content-Type: text/plain",
+            "--outer--",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        mailet.service(mail);
+
+        assertThat(MailUtil.toString(mail, "UTF-8")).contains(MY_FOOTER);
+    }
+
     private static String nestedMessage(String multipartType, int depth) {
         StringBuilder message = new StringBuilder("Subject: deep\r\nMIME-Version: 1.0\r\n");
         for (int i = 0; i < depth; i++) {
