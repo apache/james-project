@@ -234,7 +234,9 @@ public class MailAddress implements java.io.Serializable {
                     pos++;
                     continue;
                 }
-                break;
+                // A mailbox ends with its domain: nothing may follow a domain literal
+                throw new AddressException("Unexpected character after the domain at position " +
+                        (pos + 1) + " in '" + address + "'", address, pos + 1);
             }
 
             if (domainSB.length() == 0) {
