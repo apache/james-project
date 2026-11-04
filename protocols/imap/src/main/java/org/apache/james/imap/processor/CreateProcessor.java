@@ -57,6 +57,7 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
 
         return Mono.fromCallable(() -> pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName()))
             .flatMap(mailboxPath -> Mono.from(mailboxManager.createMailboxReactive(mailboxPath, session.getMailboxSession())))
+            .switchIfEmpty(Mono.fromRunnable(() -> taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME)))
             .flatMap(mailboxId -> unsolicitedResponses(session, responder, false)
                 .then(Mono.fromRunnable(() -> okComplete(request, StatusResponse.ResponseCode.mailboxId(mailboxId), responder))))
             .onErrorResume(MailboxExistsException.class, e -> {
