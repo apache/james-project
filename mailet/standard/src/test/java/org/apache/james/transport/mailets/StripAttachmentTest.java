@@ -216,6 +216,41 @@ class StripAttachmentTest {
     }
 
     @Test
+    void serviceShouldDropNestedMultipartThatHasNoPartInTheInput() throws Exception {
+        Mailet mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("remove", "all")
+            .setProperty("pattern", ".*")
+            .build());
+
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString("From: sender@example.com\r\n" +
+            "MIME-Version: 1.0\r\n" +
+            "Content-Type: multipart/mixed; boundary=\"outer\"\r\n" +
+            "\r\n" +
+            "--outer\r\n" +
+            "Content-Type: text/plain\r\n" +
+            "Content-Disposition: attachment; filename=\"a.txt\"\r\n" +
+            "\r\n" +
+            "hello\r\n" +
+            "--outer\r\n" +
+            "Content-Type: multipart/related; boundary=\"zz\"\r\n" +
+            "\r\n" +
+            "--zz\r\n" +
+            "Content-Type: text/plain\r\n" +
+            "--outer--\r\n");
+        Mail mail = FakeMail.from(message);
+
+        mailet.service(mail);
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        assertThatCode(() -> mail.getMessage().writeTo(output))
+            .doesNotThrowAnyException();
+        assertThat(output.toString(StandardCharsets.UTF_8))
+            .doesNotContain("a.txt");
+    }
+
+    @Test
     void serviceShouldRemoveWhenMimeTypeMatches() throws Exception {
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
