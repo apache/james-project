@@ -230,8 +230,8 @@ class URIRBLHandlerTest {
             .hasSize(2)
             .allSatisfy(event -> assertThat(event.getLevel()).isEqualTo(Level.DEBUG))
             .extracting(ILoggingEvent::getFormattedMessage)
-            .anySatisfy(message -> assertThat(message).contains("\"https://\""))
-            .anySatisfy(message -> assertThat(message).contains("\"mailto:////}{}@media\""));
+            .anySatisfy(message -> assertThat(message).contains("https://"))
+            .anySatisfy(message -> assertThat(message).contains("mailto:////}{}@media"));
     }
 
     @Test
