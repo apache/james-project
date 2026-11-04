@@ -22,8 +22,8 @@ import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Callable
 import java.util.function.Consumer
-import java.util.{Locale, stream}
 import java.util.stream.Stream
+import java.util.{Locale, stream}
 
 import com.google.common.base.CharMatcher
 import eu.timepit.refined.numeric.NonNegative
