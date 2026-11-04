@@ -74,8 +74,9 @@ trait CapabilityProperties {
 }
 
 trait Capability {
-  def identifier(): CapabilityIdentifier
-  def properties(): CapabilityProperties
+  // parameterless: Scala 3 forbids a val/case-class-param to override an empty-paren def (E164)
+  def identifier: CapabilityIdentifier
+  def properties: CapabilityProperties
 }
 
 object UrlPrefixes {

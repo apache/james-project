@@ -369,7 +369,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
       return SMono.empty
     }
     SMono(mailboxManager.createMailboxReactive(existingPath, session))
-      .`then`()
+      .map(_ => ())
   }
 
   private def isASystemMailbox(mailbox: MessageManager): Boolean =

@@ -36,6 +36,8 @@ object AllowedQuantity {
   type PositiveLongConstraint = Positive
   type AllowedQuantity = Long Refined PositiveLongConstraint
 
+  given Conversion[Long, AllowedQuantity] = value => validate(value).fold(e => throw e, identity)
+
   def validate(value: Long): Either[NumberFormatException, AllowedQuantity] =
     refined.refineV[PositiveLongConstraint](value)
       .left.map(error => new NumberFormatException(error))
@@ -44,6 +46,8 @@ object AllowedQuantity {
 object Increment {
   type PositiveLongConstraint = Positive
   type Increment = Int Refined PositiveLongConstraint
+
+  given Conversion[Int, Increment] = value => validate(value).fold(e => throw e, identity)
 
   def validate(value: Int): Either[NumberFormatException, Increment] =
     refined.refineV[PositiveLongConstraint](value)

@@ -38,7 +38,7 @@ case object CustomTypeName1 extends TypeName {
   override val asString: String = "custom1"
 
   override def parse(string: String): Option[TypeName] = string match {
-    case CustomTypeName1.asString => Some(CustomTypeName1)
+    case s if s == CustomTypeName1.asString => Some(CustomTypeName1)
     case _ => None
   }
 
@@ -49,7 +49,7 @@ case object CustomTypeName2 extends TypeName {
   override val asString: String = "custom2"
 
   override def parse(string: String): Option[TypeName] = string match {
-    case CustomTypeName2.asString => Some(CustomTypeName2)
+    case s if s == CustomTypeName2.asString => Some(CustomTypeName2)
     case _ => None
   }
 

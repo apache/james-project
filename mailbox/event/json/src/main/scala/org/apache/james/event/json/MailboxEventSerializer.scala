@@ -24,7 +24,6 @@ import java.util
 import java.util.{TreeMap => JavaTreeMap}
 
 import jakarta.inject.Inject
-import julienrf.json.derived
 import org.apache.james.core.Username
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaSizeLimit, QuotaSizeUsage}
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
@@ -277,7 +276,7 @@ private object ScalaConverter {
 }
 
 class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) {
-  implicit val systemFlagsWrites: Writes[SystemFlag] = Writes.enumNameWrites
+  implicit val systemFlagsWrites: Writes[SystemFlag] = value => JsString(value.toString)
   implicit val userWriters: Writes[Username] = (user: Username) => JsString(user.asString)
   implicit val quotaRootWrites: Writes[QuotaRoot] = quotaRoot => JsString(quotaRoot.getValue)
   implicit val quotaScopeWrites: Writes[JavaQuota.Scope] = value => JsString(value.name)
@@ -434,7 +433,52 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val updatedFlagsReads: Reads[DTOs.UpdatedFlags] = Json.reads[DTOs.UpdatedFlags]
 
   private class EventSerializerPrivateWrapper {
-    implicit val eventOFormat: OFormat[Event] = derived.oformat()
+    private val mailboxACLUpdatedF: OFormat[DTO.MailboxACLUpdated] = Json.format[DTO.MailboxACLUpdated]
+    private val mailboxAddedF: OFormat[DTO.MailboxAdded] = Json.format[DTO.MailboxAdded]
+    private val mailboxDeletionF: OFormat[DTO.MailboxDeletion] = Json.format[DTO.MailboxDeletion]
+    private val mailboxRenamedF: OFormat[DTO.MailboxRenamed] = Json.format[DTO.MailboxRenamed]
+    private val quotaUsageUpdatedF: OFormat[DTO.QuotaUsageUpdatedEvent] = Json.format[DTO.QuotaUsageUpdatedEvent]
+    private val addedF: OFormat[DTO.Added] = Json.format[DTO.Added]
+    private val expungedF: OFormat[DTO.Expunged] = Json.format[DTO.Expunged]
+    private val messageMoveEventF: OFormat[DTO.MessageMoveEvent] = Json.format[DTO.MessageMoveEvent]
+    private val flagsUpdatedF: OFormat[DTO.FlagsUpdated] = Json.format[DTO.FlagsUpdated]
+    private val mailboxSubscribedEventF: OFormat[DTO.MailboxSubscribedEvent] = Json.format[DTO.MailboxSubscribedEvent]
+    private val mailboxUnSubscribedEventF: OFormat[DTO.MailboxUnSubscribedEvent] = Json.format[DTO.MailboxUnSubscribedEvent]
+    private val messageContentDeletionEventF: OFormat[DTO.MessageContentDeletionEvent] = Json.format[DTO.MessageContentDeletionEvent]
+
+    implicit val eventOFormat: OFormat[Event] = OFormat(
+      Reads[Event] {
+        case JsObject(singleField) if singleField.size == 1 => singleField.head match {
+          case ("MailboxACLUpdated", payload) => mailboxACLUpdatedF.reads(payload)
+          case ("MailboxAdded", payload) => mailboxAddedF.reads(payload)
+          case ("MailboxDeletion", payload) => mailboxDeletionF.reads(payload)
+          case ("MailboxRenamed", payload) => mailboxRenamedF.reads(payload)
+          case ("QuotaUsageUpdatedEvent", payload) => quotaUsageUpdatedF.reads(payload)
+          case ("Added", payload) => addedF.reads(payload)
+          case ("Expunged", payload) => expungedF.reads(payload)
+          case ("MessageMoveEvent", payload) => messageMoveEventF.reads(payload)
+          case ("FlagsUpdated", payload) => flagsUpdatedF.reads(payload)
+          case ("MailboxSubscribedEvent", payload) => mailboxSubscribedEventF.reads(payload)
+          case ("MailboxUnSubscribedEvent", payload) => mailboxUnSubscribedEventF.reads(payload)
+          case ("MessageContentDeletionEvent", payload) => messageContentDeletionEventF.reads(payload)
+          case (unknown, _) => JsError(s"unknown event type: $unknown")
+        }
+        case _ => JsError("expected a single-key object describing an event")
+      },
+      OWrites[Event] {
+        case e: DTO.MailboxACLUpdated => JsObject(Seq("MailboxACLUpdated" -> mailboxACLUpdatedF.writes(e)))
+        case e: DTO.MailboxAdded => JsObject(Seq("MailboxAdded" -> mailboxAddedF.writes(e)))
+        case e: DTO.MailboxDeletion => JsObject(Seq("MailboxDeletion" -> mailboxDeletionF.writes(e)))
+        case e: DTO.MailboxRenamed => JsObject(Seq("MailboxRenamed" -> mailboxRenamedF.writes(e)))
+        case e: DTO.QuotaUsageUpdatedEvent => JsObject(Seq("QuotaUsageUpdatedEvent" -> quotaUsageUpdatedF.writes(e)))
+        case e: DTO.Added => JsObject(Seq("Added" -> addedF.writes(e)))
+        case e: DTO.Expunged => JsObject(Seq("Expunged" -> expungedF.writes(e)))
+        case e: DTO.MessageMoveEvent => JsObject(Seq("MessageMoveEvent" -> messageMoveEventF.writes(e)))
+        case e: DTO.FlagsUpdated => JsObject(Seq("FlagsUpdated" -> flagsUpdatedF.writes(e)))
+        case e: DTO.MailboxSubscribedEvent => JsObject(Seq("MailboxSubscribedEvent" -> mailboxSubscribedEventF.writes(e)))
+        case e: DTO.MailboxUnSubscribedEvent => JsObject(Seq("MailboxUnSubscribedEvent" -> mailboxUnSubscribedEventF.writes(e)))
+        case e: DTO.MessageContentDeletionEvent => JsObject(Seq("MessageContentDeletionEvent" -> messageContentDeletionEventF.writes(e)))
+      })
 
     def toJson(event: Event): String = Json.toJson(event).toString()
     def toJson(event: Iterable[Event]): String = Json.toJson(event).toString()

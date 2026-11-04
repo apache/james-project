@@ -28,6 +28,8 @@ import org.apache.james.backends.redis.KvrocksSentinelExtension.KvrocksSentinel
 import org.apache.james.backends.redis.{KvrocksSentinelExtension, RedisClientFactory}
 import org.apache.james.rate.limiter.KvrocksSentinelRateLimiterTest.{RULES, SLIDING_WIDOW_PRECISION}
 import org.apache.james.rate.limiter.api._
+import org.apache.james.rate.limiter.api.Increment.given
+import org.apache.james.rate.limiter.api.AllowedQuantity.given
 import org.apache.james.rate.limiter.redis.RedisRateLimiterFactory
 import org.apache.james.server.core.filesystem.FileSystemImpl
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode}

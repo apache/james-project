@@ -50,7 +50,7 @@ case class StateChangeEventDTOFactory @Inject()(typeStateFactory: TypeStateFacto
     getEmailState = Optional.empty(),
     getMailboxState = Optional.empty(),
     getVacationResponseState = Optional.empty(),
-    getTypeStates = Optional.of(event.map.map(element => element._1.asString() -> element._2.serialize).asJava))
+    getTypeStates = Optional.of(event.map.map(element => element._1.asString -> element._2.serialize).asJava))
 }
 
 case class StateChangeEventDTO(@JsonProperty("type") getType: String,

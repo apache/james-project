@@ -23,6 +23,7 @@ import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.method.EmailSubmissionSetValidation
+import org.apache.james.jmap.rfc8621.contract.given
 import org.apache.james.mailbox.MailboxSession
 import org.apache.mailet.Mail
 import reactor.core.scala.publisher.SMono

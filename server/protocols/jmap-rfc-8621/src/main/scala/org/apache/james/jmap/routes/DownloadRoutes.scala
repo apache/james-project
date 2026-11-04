@@ -379,7 +379,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
           .map(ContentType.of)
           .getOrElse(blob.contentType),
         blob = blob)
-        .`then`())
+        )
       .doOnSuccess(_ => pendingDownloadMetric.decrement())
 
   private def getIfOwner(request: HttpServerRequest, response: HttpServerResponse, mailboxSession: MailboxSession): SMono[Unit] =
@@ -411,7 +411,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
         resourceSupplier,
         sourceSupplier,
         resourceRelease))
-      .`then`
+      .map(_ => ())
   }
 
   private def addContentDispositionHeader(optionalName: Option[String], contentType: String): HttpServerResponse => HttpServerResponse =
@@ -480,6 +480,6 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
             .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
             .header(CONTENT_LENGTH, Integer.toString(bytes.length))
             .sendByteArray(SMono.just(bytes))
-            .`then`).`then`)
+            .`then`).map(_ => ()))
     }
 }

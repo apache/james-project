@@ -165,7 +165,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
                                  session: MailboxSession): SMono[Seq[EmailUpdateResult]] = {
     val messageIds = metaData.keys.toSeq
     SMono(mailboxManager.getMailboxReactive(mailboxId, session))
-      .flatMap(mailbox => SMono(mailbox.setFlagsReactive(flags, updateMode, ranges.asJava, session)).`then`())
+      .flatMap(mailbox => SMono(mailbox.setFlagsReactive(flags, updateMode, ranges.asJava, session)).map(_ => ()))
       .`then`(SMono.just(messageIds.map(EmailUpdateSuccess)))
       .onErrorResume(e => SMono.just(messageIds.map(id => EmailUpdateFailure(EmailSet.asUnparsed(id), e))))
   }
@@ -178,7 +178,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
     val targetId: MailboxId = update.update.mailboxIds.get.value.headOption.get
     val messageIds = metaData.keys.toSeq
 
-    SMono(mailboxManager.moveMessagesReactive(ranges.asJava, mailboxId, targetId, session)).`then`()
+    SMono(mailboxManager.moveMessagesReactive(ranges.asJava, mailboxId, targetId, session)).map(_ => ())
       .`then`(SMono.just(messageIds.map(EmailUpdateSuccess)))
       .doOnSuccess(_ => auditMove(messageIds, Seq(mailboxId), Seq(targetId), session))
       .onErrorResume(e => SMono.just(messageIds.map(id => EmailUpdateFailure(EmailSet.asUnparsed(id), e))))

@@ -31,7 +31,7 @@ import scala.language.implicitConversions
 
 object VacationSerializer {
 
-  private implicit val unparsedMessageIdWrites: Writes[UnparsedVacationResponseId] = Json.valueWrites[UnparsedVacationResponseId]
+  private implicit val unparsedMessageIdWrites: Writes[UnparsedVacationResponseId] = valueWrites[UnparsedVacationResponseId]
   private implicit val unparsedMessageIdReads: Reads[UnparsedVacationResponseId] = {
     case JsString(string) => refined.refineV[IdConstraint](string)
       .fold(
@@ -46,11 +46,11 @@ object VacationSerializer {
   }
   private implicit val vacationResponseSetRequestReads: Reads[VacationResponseSetRequest] = Json.reads[VacationResponseSetRequest]
 
-  private implicit val vacationResponseSetUpdateResponseWrites: Writes[VacationResponseUpdateResponse] = Json.valueWrites[VacationResponseUpdateResponse]
+  private implicit val vacationResponseSetUpdateResponseWrites: Writes[VacationResponseUpdateResponse] = valueWrites[VacationResponseUpdateResponse]
 
   private implicit val vacationResponseSetErrorWrites: Writes[VacationResponseSetError] = Json.writes[VacationResponseSetError]
 
-  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
+  private implicit val stateWrites: Writes[UuidState] = valueWrites[UuidState]
   private implicit val vacationResponseSetResponseWrites: Writes[VacationResponseSetResponse] = Json.writes[VacationResponseSetResponse]
 
   private implicit val vacationResponseIdWrites: Writes[VacationResponseId] = _ => JsString(VACATION_RESPONSE_ID.value)
@@ -60,15 +60,15 @@ object VacationSerializer {
     case _ => JsError("Expecting JsString(singleton) to represent a VacationResponseId")
   }
   private implicit val isEnabledWrites: Writes[IsEnabled] = Json.valueWrites[IsEnabled]
-  private implicit val fromDateWrites: Writes[FromDate] = Json.valueWrites[FromDate]
-  private implicit val toDateWrites: Writes[ToDate] = Json.valueWrites[ToDate]
+  private implicit val fromDateWrites: Writes[FromDate] = valueWrites[FromDate]
+  private implicit val toDateWrites: Writes[ToDate] = valueWrites[ToDate]
   private implicit val subjectWrites: Writes[Subject] = Json.valueWrites[Subject]
   private implicit val textBodyWrites: Writes[TextBody] = Json.valueWrites[TextBody]
   private implicit val htmlBodyWrites: Writes[HtmlBody] = Json.valueWrites[HtmlBody]
 
   private implicit val vacationResponseWrites: Writes[VacationResponse] = writesNull.writes[VacationResponse]
 
-  private implicit val vacationResponseIdsReads: Reads[VacationResponseIds] = Json.valueReads[VacationResponseIds]
+  private implicit val vacationResponseIdsReads: Reads[VacationResponseIds] = valueReads[VacationResponseIds]
 
   private implicit val vacationResponseGetRequest: Reads[VacationResponseGetRequest] = Json.reads[VacationResponseGetRequest]
 

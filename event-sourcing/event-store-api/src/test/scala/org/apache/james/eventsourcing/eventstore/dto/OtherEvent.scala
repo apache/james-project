@@ -22,7 +22,7 @@ import org.apache.james.eventsourcing.{Event, EventId, TestAggregateId}
 
 final case class OtherEvent(override val eventId: EventId, aggregateId: TestAggregateId, payload: Long) extends Event {
 
-  override def getAggregateId = aggregateId
+  override def getAggregateId: TestAggregateId = aggregateId
 
   def getPayload = payload
 }

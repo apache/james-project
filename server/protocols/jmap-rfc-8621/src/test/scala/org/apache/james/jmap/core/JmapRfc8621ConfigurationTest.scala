@@ -26,6 +26,7 @@ import org.apache.james.jmap.pushsubscription.VapidTestFixture
 import org.apache.james.rrt.api.RecipientValidator
 import org.apache.james.rrt.api.RecipientValidator.RecipientRewriteTableCheck
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
+import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.Test
 
 class JmapRfc8621ConfigurationTest {
@@ -80,7 +81,7 @@ class JmapRfc8621ConfigurationTest {
 
   @Test
   def shouldThrowWhenOnlyOneVapidKeyIsConfigured(): Unit =
-    assertThatThrownBy(() => configurationWith("webpush.vapid.public.key" -> VapidTestFixture.PUBLIC_KEY))
+    assertThatThrownBy(() => configurationWith("webpush.vapid.public.key" -> VapidTestFixture.PUBLIC_KEY)).asInstanceOf[ThrowableAssert[Throwable]]
       .isInstanceOf(classOf[IllegalArgumentException])
       .hasMessageContaining("both its public and its private key")
 

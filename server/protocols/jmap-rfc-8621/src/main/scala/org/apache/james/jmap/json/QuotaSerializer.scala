@@ -28,7 +28,7 @@ import play.api.libs.json._
 
 object QuotaSerializer {
 
-  private implicit val unparsedQuotaIdWrites: Writes[UnparsedQuotaId] = Json.valueWrites[UnparsedQuotaId]
+  private implicit val unparsedQuotaIdWrites: Writes[UnparsedQuotaId] = valueWrites[UnparsedQuotaId]
   private implicit val unparsedQuotaIdReads: Reads[UnparsedQuotaId] = {
     case JsString(string) => refined.refineV[IdConstraint](string)
       .fold(
@@ -36,11 +36,11 @@ object QuotaSerializer {
         id => JsSuccess(UnparsedQuotaId(id)))
     case _ => JsError("vacation response id needs to be represented by a JsString")
   }
-  private implicit val quotaIdsReads: Reads[QuotaIds] = Json.valueReads[QuotaIds]
+  private implicit val quotaIdsReads: Reads[QuotaIds] = valueReads[QuotaIds]
 
   private implicit val quotaGetRequestReads: Reads[QuotaGetRequest] = Json.reads[QuotaGetRequest]
 
-  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
+  private implicit val stateWrites: Writes[UuidState] = valueWrites[UuidState]
 
   private implicit val resourceTypeWrite: Writes[ResourceType] = resourceType => JsString(resourceType.asString())
   private implicit val scopeReads: Reads[Scope] = {
@@ -49,7 +49,7 @@ object QuotaSerializer {
     case _ => JsError(s"Expecting a JsString to represent a scope property")
   }
 
-  private implicit val optionReads: Reads[QuotaName] = Json.valueReads[QuotaName]
+  private implicit val optionReads: Reads[QuotaName] = valueReads[QuotaName]
 
   private implicit val resourceTypeReads: Reads[ResourceType] = {
     case JsString("count") => json.JsSuccess(CountResourceType)
@@ -65,8 +65,8 @@ object QuotaSerializer {
 
   private implicit val scopeWrites: Writes[Scope] = scope => JsString(scope.asString())
   private implicit val dataTypeWrites: Writes[DataType] = dataType => JsString(dataType.asString())
-  private implicit val quotaNameWrites: Writes[QuotaName] = Json.valueWrites[QuotaName]
-  private implicit val quotaDescriptionWrites: Writes[QuotaDescription] = Json.valueWrites[QuotaDescription]
+  private implicit val quotaNameWrites: Writes[QuotaName] = valueWrites[QuotaName]
+  private implicit val quotaDescriptionWrites: Writes[QuotaDescription] = valueWrites[QuotaDescription]
 
   private implicit val jmapQuotaWrites: Writes[JmapQuota] = writesNull.writes[JmapQuota]
 

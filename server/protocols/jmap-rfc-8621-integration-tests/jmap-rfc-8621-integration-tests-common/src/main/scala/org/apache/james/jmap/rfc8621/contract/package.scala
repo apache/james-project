@@ -22,6 +22,7 @@ package org.apache.james.jmap.rfc8621
 import java.util.concurrent.TimeoutException
 
 import cats.implicits.toFunctorOps
+import eu.timepit.refined.api.Refined
 import reactor.core.publisher.Flux
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
@@ -56,4 +57,8 @@ package object contract {
         .collectSeq()
         .block().toList
   }
+
+  given stringRefined[P]: Conversion[String, String Refined P] = s => Refined.unsafeApply(s)
+  given intRefined[P]: Conversion[Int, Int Refined P] = i => Refined.unsafeApply(i)
+  given longRefined[P]: Conversion[Long, Long Refined P] = l => Refined.unsafeApply(l)
 }

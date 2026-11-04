@@ -180,7 +180,6 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
       .fold(e => SMono.error[Void](e),
         options => SMono(authenticator.authenticate(request))
           .flatMap((mailboxSession: MailboxSession) => userProvisioner.provisionUser(mailboxSession)
-            .`then`
             .`then`(registerSSE(response, mailboxSession, options))))
       .onErrorResume(throwable => handleConnectionEstablishmentError(throwable, response))
       .asJava()

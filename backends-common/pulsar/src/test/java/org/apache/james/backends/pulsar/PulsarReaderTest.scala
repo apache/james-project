@@ -28,10 +28,10 @@ import org.scalatest.matchers.should.Matchers
 import scala.concurrent.ExecutionContextExecutor
 
 class PulsarReaderTest extends org.scalatest.wordspec.AsyncWordSpec with ForAllTestContainer with Matchers {
-  implicit val actorSystem = ActorSystem()
+  implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val ec: ExecutionContextExecutor = actorSystem.dispatcher
   override val container: PulsarContainer = PulsarContainer("2.9.1")
-  implicit lazy val client = PulsarClient(container.pulsarBrokerUrl())
+  implicit lazy val client: PulsarClient = PulsarClient(container.pulsarBrokerUrl())
 
   "it" should {
     "return 0 records when topic is empty" in {

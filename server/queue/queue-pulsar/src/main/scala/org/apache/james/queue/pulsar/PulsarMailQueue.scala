@@ -488,7 +488,7 @@ class PulsarMailQueue(
    * @inheritdoc
    */
   override def clear(): Long = {
-    val count = getSize()
+    val count = getSize
     admin.topics().delete(outTopic.name, true)
     admin.topics().delete(scheduledTopic.name, true)
     count

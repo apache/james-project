@@ -36,20 +36,20 @@ import scala.language.implicitConversions
 
 object ResponseSerializer {
   // CreateIds
-  private implicit val clientIdFormat: Format[ClientId] = Json.valueFormat[ClientId]
-  private implicit val serverIdFormat: Format[ServerId] = Json.valueFormat[ServerId]
+  private implicit val clientIdFormat: Format[ClientId] = valueFormat[ClientId]
+  private implicit val serverIdFormat: Format[ServerId] = valueFormat[ServerId]
 
   private implicit val createdIdsIdWrites: Writes[Map[ClientId, ServerId]] =
     mapWrites[ClientId, ServerId](_.value.value, serverIdFormat)
 
   private implicit val createdIdsIdRead: Reads[Map[ClientId, ServerId]] =
     Reads.mapReads[ClientId, ServerId] { clientIdString => refineV[IdConstraint](clientIdString).fold(JsError(_), id => JsSuccess(ClientId(id)))}
-  private implicit val createdIdsFormat: Format[CreatedIds] = Json.valueFormat[CreatedIds]
+  private implicit val createdIdsFormat: Format[CreatedIds] = valueFormat[CreatedIds]
 
   // Invocation
-  private implicit val methodNameFormat: Format[MethodName] = Json.valueFormat[MethodName]
+  private implicit val methodNameFormat: Format[MethodName] = valueFormat[MethodName]
   private implicit val argumentFormat: Format[Arguments] = Json.valueFormat[Arguments]
-  private implicit val methodCallIdFormat: Format[MethodCallId] = Json.valueFormat[MethodCallId]
+  private implicit val methodCallIdFormat: Format[MethodCallId] = valueFormat[MethodCallId]
   private implicit val invocationRead: Reads[Invocation] = (
     (JsPath \ core.Invocation.METHOD_NAME).read[MethodName] and
       (JsPath \ core.Invocation.ARGUMENTS).read[Arguments] and
@@ -64,21 +64,21 @@ object ResponseSerializer {
   private implicit val requestObjectRead: Format[RequestObject] = Json.format[RequestObject]
 
   // ResponseObject
-  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
+  private implicit val stateWrites: Writes[UuidState] = valueWrites[UuidState]
   private implicit val responseObjectFormat: OFormat[ResponseObject] = Json.format[ResponseObject]
 
-  private implicit val maxSizeUploadWrites: Writes[MaxSizeUpload] = Json.valueWrites[MaxSizeUpload]
-  private implicit val maxConcurrentUploadWrites: Writes[MaxConcurrentUpload] = Json.valueWrites[MaxConcurrentUpload]
-  private implicit val maxSizeRequestWrites: Writes[MaxSizeRequest] = Json.valueWrites[MaxSizeRequest]
-  private implicit val maxConcurrentRequestsWrites: Writes[MaxConcurrentRequests] = Json.valueWrites[MaxConcurrentRequests]
-  private implicit val maxCallsInRequestWrites: Writes[MaxCallsInRequest] = Json.valueWrites[MaxCallsInRequest]
-  private implicit val maxObjectsInGetWrites: Writes[MaxObjectsInGet] = Json.valueWrites[MaxObjectsInGet]
-  private implicit val maxObjectsInSetWrites: Writes[MaxObjectsInSet] = Json.valueWrites[MaxObjectsInSet]
+  private implicit val maxSizeUploadWrites: Writes[MaxSizeUpload] = valueWrites[MaxSizeUpload]
+  private implicit val maxConcurrentUploadWrites: Writes[MaxConcurrentUpload] = valueWrites[MaxConcurrentUpload]
+  private implicit val maxSizeRequestWrites: Writes[MaxSizeRequest] = valueWrites[MaxSizeRequest]
+  private implicit val maxConcurrentRequestsWrites: Writes[MaxConcurrentRequests] = valueWrites[MaxConcurrentRequests]
+  private implicit val maxCallsInRequestWrites: Writes[MaxCallsInRequest] = valueWrites[MaxCallsInRequest]
+  private implicit val maxObjectsInGetWrites: Writes[MaxObjectsInGet] = valueWrites[MaxObjectsInGet]
+  private implicit val maxObjectsInSetWrites: Writes[MaxObjectsInSet] = valueWrites[MaxObjectsInSet]
 
-  private implicit val maxMailboxesPerEmailWrites: Writes[MaxMailboxesPerEmail] = Json.valueWrites[MaxMailboxesPerEmail]
-  private implicit val maxMailboxDepthWrites: Writes[MaxMailboxDepth] = Json.valueWrites[MaxMailboxDepth]
-  private implicit val maxSizeMailboxNameWrites: Writes[MaxSizeMailboxName] = Json.valueWrites[MaxSizeMailboxName]
-  private implicit val maxSizeAttachmentsPerEmailWrites: Writes[MaxSizeAttachmentsPerEmail] = Json.valueWrites[MaxSizeAttachmentsPerEmail]
+  private implicit val maxMailboxesPerEmailWrites: Writes[MaxMailboxesPerEmail] = valueWrites[MaxMailboxesPerEmail]
+  private implicit val maxMailboxDepthWrites: Writes[MaxMailboxDepth] = valueWrites[MaxMailboxDepth]
+  private implicit val maxSizeMailboxNameWrites: Writes[MaxSizeMailboxName] = valueWrites[MaxSizeMailboxName]
+  private implicit val maxSizeAttachmentsPerEmailWrites: Writes[MaxSizeAttachmentsPerEmail] = valueWrites[MaxSizeAttachmentsPerEmail]
   private implicit val mayCreateTopLevelMailboxWrites: Writes[MayCreateTopLevelMailbox] = Json.valueWrites[MayCreateTopLevelMailbox]
 
   private implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
@@ -99,7 +99,7 @@ object ResponseSerializer {
   private implicit val setCapabilityWrites: Writes[Set[_ <: Capability]] =
     (set: Set[_ <: Capability]) =>
       JsObject(set
-        .map(capability => (capability.identifier().value, capability.properties().jsonify()))
+        .map(capability => (capability.identifier.value, capability.properties.jsonify()))
         .toMap)
 
   private implicit val capabilitiesWrites: Writes[Capabilities] = capabilities => setCapabilityWrites.writes(capabilities.capabilities)
@@ -122,7 +122,7 @@ object ResponseSerializer {
   private implicit val sessionWrites: Writes[Session] = Json.writes[Session]
 
 
-  private implicit val propertiesWrites: Writes[Properties] = Json.valueWrites[Properties]
+  private implicit val propertiesWrites: Writes[Properties] = valueWrites[Properties]
 
   private implicit val setErrorDescriptionWrites: Writes[SetErrorDescription] = Json.valueWrites[SetErrorDescription]
 

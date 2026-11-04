@@ -70,7 +70,10 @@ object EntityType {
     .map(quantity => Rules(Seq(Rule(quantity, duration))))
 
   def extractQuantity(entityType: EntityType, mail: Mail): Option[Increment] = entityType match {
-    case Count      => Some(1)
+    case Count      =>
+      Some(Increment
+        .validate(1)
+        .orThrow(s"invalid quantity for ${entityType.asString}"))
     case Recipients =>
       Some(Increment
         .validate(mail.getRecipients.size())

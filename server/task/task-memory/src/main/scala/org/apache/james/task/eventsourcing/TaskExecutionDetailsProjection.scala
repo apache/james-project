@@ -80,12 +80,12 @@ class MemoryTaskExecutionDetailsProjection() extends TaskExecutionDetailsProject
 
   override def listReactive(): Publisher[TaskExecutionDetails] = SFlux.fromIterable(this.details.values().asScala)
 
-  override def updateReactive(details: TaskExecutionDetails): Publisher[Void] = SMono.fromCallable(() => this.details.put(details.taskId, details)).`then`()
+  override def updateReactive(details: TaskExecutionDetails): Publisher[Void] = SMono.fromCallable(() => this.details.put(details.taskId, details)).map(_ => null: Void)
 
   override def listDetailsByBeforeDate(beforeDate: Instant): Publisher[TaskExecutionDetails] = SFlux.fromIterable(this.details.values().asScala)
     .filter(taskExecutionDetails => taskExecutionDetails.getSubmittedDate.toInstant.isBefore(beforeDate))
 
   override def remove(taskExecutionDetails: TaskExecutionDetails): Publisher[Void] =
-    SMono.fromCallable(() => details.remove(taskExecutionDetails.taskId)).`then`()
+    SMono.fromCallable(() => details.remove(taskExecutionDetails.taskId)).map(_ => null: Void)
 
 }

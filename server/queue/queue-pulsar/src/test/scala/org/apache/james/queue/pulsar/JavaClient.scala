@@ -28,7 +28,7 @@ import scala.util.Try
 case class JavaClient(brokerUri: String, topic: String) {
   private val client: PulsarAsyncClient = PulsarClient(brokerUri)
   private val producerConfig: ProducerConfig = ProducerConfig(Topic(topic), enableBatching = Some(false))
-  private val producer: Producer[String] = client.producer(producerConfig)(Schema.STRING)
+  private val producer: Producer[String] = client.producer(producerConfig)(using Schema.STRING)
 
   def send(payload: String): Try[MessageId] = producer.send(payload)
 
@@ -37,7 +37,7 @@ case class JavaClient(brokerUri: String, topic: String) {
       subscriptionName = Subscription("subscription"),
       topics = Seq(Topic(topic)),
       subscriptionType = Some(SubscriptionType.Shared),
-      subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest)))(Schema.STRING)
+      subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest)))(using Schema.STRING)
 
   def consumeOne: Option[ConsumerMessage[String]] = consumer.receive(FiniteDuration(1, SECONDS)).toOption.flatten
 }

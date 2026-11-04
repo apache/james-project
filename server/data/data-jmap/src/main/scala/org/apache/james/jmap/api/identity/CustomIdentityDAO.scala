@@ -234,7 +234,7 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
             .switchIfEmpty(SMono.error(IdentityNotFoundException(identityId)))
             .flatMap(_ => SMono(customIdentityDao.upsert(user, identityUpdateRequest.update(customIdentity))))
       }
-      .`then`()
+      .map(_ => ())
   }
 
   def delete(username: Username, ids: Set[IdentityId]): Publisher[Unit] = {

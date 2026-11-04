@@ -37,7 +37,7 @@ class EventBus @Inject() (eventStore: EventStore, subscribers: Set[Subscriber]) 
   private def runHandlers(events: Iterable[EventWithState]): SMono[Void] =
     SFlux.fromIterable(events.flatMap((commandExecuted: EventWithState) => subscribers.map(subscriber => (commandExecuted, subscriber))))
       .concatMap(infos => runHandler(infos._1, infos._2))
-      .`then`()
+      .thenEmpty(SMono.empty)
       .`then`(SMono.empty)
 
   private def runHandler(commandExecuted: EventWithState, subscriber: Subscriber): Publisher[Void] =

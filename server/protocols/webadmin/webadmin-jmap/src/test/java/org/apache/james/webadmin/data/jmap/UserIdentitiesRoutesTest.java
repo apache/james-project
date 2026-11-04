@@ -76,7 +76,7 @@ class UserIdentitiesRoutesTest {
     void setUp() {
         MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         identityFactory = mock(DefaultIdentitySupplier.class);
-        Mockito.when(identityFactory.userCanSendFrom(any(), any())).thenReturn(SMono.just(true).hasElement());
+        Mockito.when(identityFactory.userCanSendFrom(any(), any())).thenReturn(SMono.just(true));
 
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.FAST, new MemoryEventDeadLetters());
         identityRepository = new IdentityRepository(new MemoryCustomIdentityDAO(eventBus), identityFactory);

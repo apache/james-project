@@ -104,7 +104,6 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
   private def handleWebSockets(httpServerRequest: HttpServerRequest, httpServerResponse: HttpServerResponse): Mono[Void] =
     SMono(authenticator.authenticate(httpServerRequest))
       .flatMap((mailboxSession: MailboxSession) => userProvisioner.provisionUser(mailboxSession)
-        .`then`
         .`then`(SMono(httpServerResponse.addHeader(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, "jmap")
           .sendWebsocket((in: WebsocketInbound, out: WebsocketOutbound) => handleWebSocketConnection(mailboxSession)(in, out), websocketServerSpec))))
       .onErrorResume(throwable => handleHttpHandshakeError(throwable, httpServerRequest, httpServerResponse))
