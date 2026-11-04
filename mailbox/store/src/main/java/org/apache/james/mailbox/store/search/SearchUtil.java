@@ -399,6 +399,11 @@ public class SearchUtil {
                 return start;
             }
             position = skipWhiteSpaces(position);
+            // optional [subj-blob] before the colon
+            int afterBlob = skipWhiteSpaces(removeBlob(position));
+            if (afterBlob < end && subject.charAt(afterBlob) == COLON) {
+                position = afterBlob;
+            }
 
             if (position < end && subject.charAt(position) == COLON) {
                 position++;
