@@ -202,10 +202,10 @@ class CassandraMessageMetadataReconcilerTest {
     }
 
     @Test
-    void repairFailureShouldPropagateAndAllowRetry(CassandraCluster cassandra) {
+    void repairFailureShouldReturnCanonicalMessageAndAllowRetry(CassandraCluster cassandra) {
         cassandra.getConf().registerScenario(fail().times(1).whenQueryStartsWith("UPDATE imapuidtable SET headercontent"));
 
-        assertThatThrownBy(() -> testee.reconcile(stale, FetchType.HEADERS).block()).hasRootCauseMessage("Injected failure");
+        assertThat(testee.reconcile(stale, FetchType.HEADERS).block()).isSameAs(canonical);
 
         assertThat(messageIds.retrieve(mailboxId, uid).block()).contains(metadata(messageId, NEW));
         assertThat(imapUids.retrieve(messageId, Optional.of(mailboxId)).single().block()).isEqualTo(stale);

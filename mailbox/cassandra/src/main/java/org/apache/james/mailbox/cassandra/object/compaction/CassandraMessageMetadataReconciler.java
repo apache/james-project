@@ -27,11 +27,15 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageMetadata;
 import org.apache.james.mailbox.cassandra.mail.MessageRepresentation;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Mono;
 
 /** Repairs historical header references after a missing-blob read, using messageV3 as the source of truth. */
 public class CassandraMessageMetadataReconciler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageMetadataReconciler.class);
+
     private final CassandraMessageDAOV3 messageV3Dao;
     private final CassandraMessageIdDAO messageIdDao;
     private final CassandraMessageIdToImapUidDAO imapUidDao;
@@ -45,7 +49,12 @@ public class CassandraMessageMetadataReconciler {
 
     public Mono<MessageRepresentation> reconcile(CassandraMessageMetadata metadata, FetchType fetchType) {
         return messageV3Dao.retrieveMessage(metadata.getComposedMessageId(), fetchType)
-            .flatMap(message -> repair(metadata, message.getHeaderId()).thenReturn(message));
+            .flatMap(message -> Mono.defer(() -> repair(metadata, message.getHeaderId()))
+                .onErrorResume(error -> {
+                    LOGGER.warn("Failed to repair historical header references for message {}", message.getMessageId(), error);
+                    return Mono.empty();
+                })
+                .thenReturn(message));
     }
 
     private Mono<Void> repair(CassandraMessageMetadata metadata, BlobId headerId) {
