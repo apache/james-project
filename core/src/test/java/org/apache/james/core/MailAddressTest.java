@@ -169,6 +169,13 @@ class MailAddressTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"x@[1.2.3.4]@例え.jp", "x@[1.2.3.4]@example.com", "x@[1.2.3.4]garbage", "x@[1.2.3.4]>"})
+    void domainLiteralFollowedByTextShouldBeRejected(String address) {
+        assertThatThrownBy(() -> new MailAddress(address))
+            .isInstanceOf(AddressException.class);
+    }
+
+    @ParameterizedTest
     @MethodSource("goodAddresses")
     void toInternetAddressShouldNoop(String mailAddress) throws Exception {
         assertThat(new MailAddress(mailAddress).toInternetAddress())
