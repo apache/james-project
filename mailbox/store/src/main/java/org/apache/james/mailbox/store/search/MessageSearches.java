@@ -221,14 +221,21 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         return isInMessage(value, input, false);
     }
 
-    private boolean isInMessage(String value, InputStream input, boolean header) throws IOException, MimeException {
-        return MessageMatcher.builder()
-            .searchContents(Lists.<CharSequence>newArrayList(value))
-            .caseInsensitive(true)
-            .includeHeaders(header)
-            .logger(LOGGER)
-            .build()
-            .messageMatches(input);
+    private boolean isInMessage(String value, InputStream input, boolean header) throws MimeException {
+        try {
+            return MessageMatcher.builder()
+                .searchContents(Lists.<CharSequence>newArrayList(value))
+                .caseInsensitive(true)
+                .includeHeaders(header)
+                .logger(LOGGER)
+                .build()
+                .messageMatches(input);
+        } catch (IOException e) {
+            // A part that can not be decoded (eg a base64 part starting with a pad, see mime4j 0.8.15) should not
+            // exclude the message from both the criterion and its negation: consider the text as not found.
+            LOGGER.warn("Unable to decode the content of a message while searching it, the searched text is considered as not found", e);
+            return false;
+        }
     }
 
     private boolean messageContains(String value, MailboxMessage message) throws IOException, MimeException {
