@@ -57,12 +57,15 @@ import org.apache.james.mime4j.stream.RawField
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
+import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource, ValueSource}
 import org.threeten.extra.Seconds
+
+import scala.jdk.CollectionConverters._
 
 object EmailQueryMethodContract {
   case class TestContext(bobUsername: Username, bobAccountId: String,
@@ -4309,12 +4312,14 @@ trait EmailQueryMethodContract {
     }
   }
 
+  private def backwardCompatibilityEnabled: Boolean = java.lang.Boolean.getBoolean("james.jmap.email.query.date.boundary.backward.compatibility")
+
   @Test
   def shouldListMailsReceivedBeforeADateExclusively(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
     val requestDate = ZonedDateTime.parse("2023-10-15T10:00:00Z")
-    sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
+    val messageId1 = sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
 
     val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
@@ -4353,7 +4358,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response)
         .inPath("$.methodResponses[0][1].ids")
-        .isEqualTo("[]")
+        .isEqualTo(if (backwardCompatibilityEnabled) s"""["${messageId1.serialize}"]""" else "[]")
     }
   }
 
@@ -4504,7 +4509,7 @@ trait EmailQueryMethodContract {
       assertThatJson(response)
         .when(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
-        .isEqualTo(s"""["${messageId1.serialize}", "${messageId2.serialize}"]""")
+        .isEqualTo(if (backwardCompatibilityEnabled) s"""["${messageId2.serialize}"]""" else s"""["${messageId1.serialize}", "${messageId2.serialize}"]""")
     }
   }
 
@@ -4585,6 +4590,76 @@ trait EmailQueryMethodContract {
       assertThatJson(response).when(IGNORING_ARRAY_ORDER).inPath("$.methodResponses[1][1].ids")
         .isEqualTo(s"""["${messageIds(4).serialize}", "${messageIds(3).serialize}", "${messageIds(2).serialize}"]""")
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array("before", "mailbox-before", "after", "range", "equal"))
+  def receivedAtBoundariesShouldRespectCompatibilityMode(filterKind: String, server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
+    val boundary = ZonedDateTime.parse("2020-01-01T12:00:00Z")
+    val offsets = if (filterKind == "mailbox-before") List(-1000L, 0L, 1000L) else List(-1000L, 0L, 100L, 1000L)
+    val ids = offsets.map(offset =>
+      sendMessageToBobInbox(server, buildTestMessage, Date.from(boundary.toInstant.plusMillis(offset))).serialize())
+    val filter = filterKind match {
+      case "before" => "\"before\": \"2020-01-01T12:00:00Z\""
+      case "mailbox-before" => s"\"inMailbox\": \"${mailboxId.serialize()}\", \"before\": \"2020-01-01T12:00:00Z\""
+      case "after" => "\"after\": \"2020-01-01T12:00:00Z\""
+      case "range" => "\"after\": \"2020-01-01T12:00:00Z\", \"before\": \"2020-01-01T12:00:01Z\""
+      case "equal" => "\"after\": \"2020-01-01T12:00:00Z\", \"before\": \"2020-01-01T12:00:00Z\""
+    }
+    // Legacy search compares at second precision; the view compares timestamps.
+    val expected = filterKind match {
+      case "before" if backwardCompatibilityEnabled => ids.take(3)
+      case "mailbox-before" if backwardCompatibilityEnabled => ids.take(2)
+      case "before" | "mailbox-before" => ids.take(1)
+      case "after" if backwardCompatibilityEnabled => ids.drop(3)
+      case "after" => ids.drop(1)
+      case "range" if backwardCompatibilityEnabled => ids.drop(3)
+      case "range" => ids.slice(1, 3)
+      case "equal" => Nil
+    }
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      assertThat(queryReceivedAtIds(filter).asJava).containsExactlyInAnyOrderElementsOf(expected.asJava)
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = Array(false, true))
+  def dateCursorPaginationShouldPreserveUnloadedBoundaryEmails(inMailbox: Boolean, server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
+    val boundary = ZonedDateTime.parse("2020-01-01T12:00:00Z")
+    val tiedIds = (1 to 3).map(_ =>
+      sendMessageToBobInbox(server, buildTestMessage, Date.from(boundary.toInstant)).serialize()).toList
+    val olderId = sendMessageToBobInbox(server, buildTestMessage, Date.from(boundary.minusSeconds(1).toInstant)).serialize()
+    val mailboxFilter = if (inMailbox) s"\"inMailbox\": \"${mailboxId.serialize()}\"" else ""
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      assertThat(queryReceivedAtIds(mailboxFilter).asJava).hasSize(4)
+    }
+    val firstPage = queryReceivedAtIds(mailboxFilter, 1)
+    assertThat(firstPage.asJava).hasSize(1).isSubsetOf(tiedIds.asJava)
+    val secondFilter = List(mailboxFilter, "\"before\": \"2020-01-01T12:00:00Z\"").filter(_.nonEmpty).mkString(",")
+    val secondPage = queryReceivedAtIds(secondFilter)
+    val expected = if (backwardCompatibilityEnabled) tiedIds :+ olderId else List(olderId)
+    assertThat(secondPage.asJava).containsExactlyInAnyOrderElementsOf(expected.asJava)
+    val deduplicated = (firstPage ++ secondPage).distinct
+    val expectedCombined = if (backwardCompatibilityEnabled) tiedIds :+ olderId else firstPage :+ olderId
+    assertThat(deduplicated.asJava).containsExactlyInAnyOrderElementsOf(expectedCombined.asJava)
+  }
+
+  private def queryReceivedAtIds(filter: String, limit: Int = 10): List[String] = {
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               | "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               | "methodCalls": [["Email/query", {
+               |   "accountId": "$bobAccountId", "filter": {$filter},
+               |   "sort": [{"property": "receivedAt", "isAscending": false}],
+               |   "collapseThreads": false, "limit": $limit
+               | }, "c1"]]
+               |}""".stripMargin)
+      .when().post()
+      .`then`().statusCode(SC_OK)
+      .extract().jsonPath().getList[String]("methodResponses[0][1].ids").asScala.toList
   }
 
   @Test

@@ -25,6 +25,7 @@ import java.util.function.Function;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.jmap.api.EmailQueryDateBoundaries;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -73,7 +74,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     @Override
     public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime before, Limit limit, boolean collapseThreads) {
         Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values())
-            .filter(e -> e.getReceivedAt().isBefore(before));
+            .filter(e -> e.getReceivedAt().isBefore(before) || (EmailQueryDateBoundaries.BACKWARD_COMPATIBILITY_ENABLED && e.getReceivedAt().isEqual(before)));
 
         return maybeCollapseThreads(Entry::getReceivedAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getReceivedAt).reversed())

@@ -34,6 +34,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 public interface EmailQueryViewContract {
     boolean COLLAPSE_THREAD = true;
+    boolean BACKWARD_COMPATIBILITY_ENABLED = Boolean.getBoolean("james.jmap.email.query.date.boundary.backward.compatibility");
     ZonedDateTime DATE_2 = ZonedDateTime.parse("2010-10-30T16:12:00Z");
     ZonedDateTime DATE_3 = ZonedDateTime.parse("2010-10-30T17:12:00Z");
     ZonedDateTime DATE_4 = ZonedDateTime.parse("2010-10-30T18:12:00Z");
@@ -85,7 +86,9 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_6, messageId3(), threadId1()).block();
 
         assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
-            .containsExactly(messageId2());
+            .containsExactly(BACKWARD_COMPATIBILITY_ENABLED
+                ? new MessageId[] {messageId1(), messageId2()}
+                : new MessageId[] {messageId2()});
     }
 
     @Test
@@ -157,7 +160,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_6, messageId3(), threadId1()).block();
 
         assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), COLLAPSE_THREAD).collectList().block())
-            .containsExactly(messageId2());
+            .containsExactly(BACKWARD_COMPATIBILITY_ENABLED ? messageId1() : messageId2());
     }
 
     @Test
@@ -168,19 +171,30 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_5, messageId4(), threadId1()).block();
 
         assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_5, Limit.limit(2), COLLAPSE_THREAD).collectList().block())
-            .containsExactly(messageId2(), messageId1());
+            .containsExactly(BACKWARD_COMPATIBILITY_ENABLED ? messageId4() : messageId2(), messageId1());
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     default void beforeShouldExcludeAllMessagesAtBoundaryBeforeApplyingLimit(boolean collapseThreads) {
+        ThreadId boundaryThread = threadId3();
         testee().save(mailboxId1(), DATE_4.minusSeconds(1), messageId1(), threadId1()).block();
         testee().save(mailboxId1(), DATE_4.minusSeconds(2), messageId2(), threadId2()).block();
-        testee().save(mailboxId1(), DATE_4, messageId3(), threadId3()).block();
-        testee().save(mailboxId1(), DATE_4, messageId4(), threadId3()).block();
+        testee().save(mailboxId1(), DATE_4, messageId3(), boundaryThread).block();
+        testee().save(mailboxId1(), DATE_4, messageId4(), boundaryThread).block();
 
-        assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(2), collapseThreads).collectList().block())
-            .containsExactly(messageId1(), messageId2());
+        var result = testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(2), collapseThreads).collectList().block();
+        if (BACKWARD_COMPATIBILITY_ENABLED) {
+            if (collapseThreads) {
+                assertThat(result).hasSize(2);
+                assertThat(result.get(0)).isIn(messageId3(), messageId4());
+                assertThat(result.get(1)).isEqualTo(messageId1());
+            } else {
+                assertThat(result).containsExactlyInAnyOrder(messageId3(), messageId4());
+            }
+        } else {
+            assertThat(result).containsExactly(messageId1(), messageId2());
+        }
     }
 
     @ParameterizedTest
@@ -201,7 +215,9 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_4.plusNanos(500_000_000), messageId3(), threadId3()).block();
 
         assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
-            .containsExactly(messageId1());
+            .containsExactly(BACKWARD_COMPATIBILITY_ENABLED
+                ? new MessageId[] {messageId2(), messageId1()}
+                : new MessageId[] {messageId1()});
         assertThat(testee().listMailboxContentSinceAfterSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId3(), messageId2());
     }

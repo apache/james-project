@@ -38,6 +38,7 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.jmap.api.EmailQueryDateBoundaries;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.EmailQueryViewUtils;
 import org.apache.james.jmap.api.projections.EmailQueryViewUtils.EmailEntry;
@@ -88,10 +89,12 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .limit(bindMarker(LIMIT_MARKER))
             .build());
 
-        listMailboxContentBeforeReceivedAt = session.prepare(selectFrom(TABLE_NAME_RECEIVED_AT)
+        var beforeQuery = selectFrom(TABLE_NAME_RECEIVED_AT)
             .columns(MESSAGE_ID, RECEIVED_AT, THREAD_ID)
-            .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
-            .whereColumn(RECEIVED_AT).isLessThan(bindMarker(RECEIVED_AT))
+            .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID));
+        listMailboxContentBeforeReceivedAt = session.prepare((EmailQueryDateBoundaries.BACKWARD_COMPATIBILITY_ENABLED
+                ? beforeQuery.whereColumn(RECEIVED_AT).isLessThanOrEqualTo(bindMarker(RECEIVED_AT))
+                : beforeQuery.whereColumn(RECEIVED_AT).isLessThan(bindMarker(RECEIVED_AT)))
             .orderBy(RECEIVED_AT, DESC)
             .limit(bindMarker(LIMIT_MARKER))
             .build());
