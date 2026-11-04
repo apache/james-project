@@ -687,8 +687,9 @@
         <io.micrometer.tracing.version>1.7.2</io.micrometer.tracing.version>
 
         <bouncycastle.version>1.86</bouncycastle.version>
-        <scala.base>2.13</scala.base>
-        <scala.version>${scala.base}.16</scala.version>
+        <scala.base>3.10</scala.base>
+        <scala.binary>3</scala.binary>
+        <scala.version>${scala.base}.0</scala.version>
         <doclint>none</doclint>
         <mockito.version>5.24.0</mockito.version>
         <ical4j.version>4.4.0</ical4j.version>
@@ -2203,11 +2204,6 @@
                 <version>${jutf7.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.chuusai</groupId>
-                <artifactId>shapeless_2.13</artifactId>
-                <version>2.3.13</version>
-            </dependency>
-            <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
                 <version>${jackson.annotations.version}</version>
@@ -2364,7 +2360,7 @@
             </dependency>
             <dependency>
                 <groupId>com.typesafe.play</groupId>
-                <artifactId>play-json_${scala.base}</artifactId>
+                <artifactId>play-json_${scala.binary}</artifactId>
                 <version>2.10.6</version>
             </dependency>
             <dependency>
@@ -2431,22 +2427,22 @@
             </dependency>
             <dependency>
                 <groupId>eu.timepit</groupId>
-                <artifactId>refined_${scala.base}</artifactId>
+                <artifactId>refined_${scala.binary}</artifactId>
                 <version>0.11.3</version>
             </dependency>
             <dependency>
                 <groupId>io.circe</groupId>
-                <artifactId>circe-core_${scala.base}</artifactId>
+                <artifactId>circe-core_${scala.binary}</artifactId>
                 <version>${circe.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.circe</groupId>
-                <artifactId>circe-generic_${scala.base}</artifactId>
+                <artifactId>circe-generic_${scala.binary}</artifactId>
                 <version>${circe.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.circe</groupId>
-                <artifactId>circe-parser_${scala.base}</artifactId>
+                <artifactId>circe-parser_${scala.binary}</artifactId>
                 <version>${circe.version}</version>
             </dependency>
             <dependency>
@@ -2611,7 +2607,7 @@
             </dependency>
             <dependency>
                 <groupId>io.projectreactor</groupId>
-                <artifactId>reactor-scala-extensions_${scala.base}</artifactId>
+                <artifactId>reactor-scala-extensions_2.13</artifactId>
                 <version>0.8.0</version>
             </dependency>
             <dependency>
@@ -2907,11 +2903,6 @@
                 <version>1.23.2</version>
             </dependency>
             <dependency>
-                <groupId>org.julienrf</groupId>
-                <artifactId>play-json-derived-codecs_${scala.base}</artifactId>
-                <version>11.0.0</version>
-            </dependency>
-            <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
                 <version>${junit.jupiter.version}</version>
@@ -2977,18 +2968,23 @@
                 <version>${scala.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala3-library_${scala.binary}</artifactId>
+                <version>${scala.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.scala-lang.modules</groupId>
-                <artifactId>scala-java8-compat_${scala.base}</artifactId>
+                <artifactId>scala-java8-compat_${scala.binary}</artifactId>
                 <version>1.0.2</version>
             </dependency>
             <dependency>
                 <groupId>org.scalacheck</groupId>
-                <artifactId>scalacheck_${scala.base}</artifactId>
+                <artifactId>scalacheck_${scala.binary}</artifactId>
                 <version>1.18.1</version>
             </dependency>
             <dependency>
                 <groupId>org.scalatest</groupId>
-                <artifactId>scalatest_${scala.base}</artifactId>
+                <artifactId>scalatest_${scala.binary}</artifactId>
                 <version>3.2.19</version>
             </dependency>
             <dependency>
@@ -3161,12 +3157,12 @@
                     <dependencies>
                         <dependency>
                             <groupId>ch.epfl.scala</groupId>
-                            <artifactId>scalafix-core_${scala.base}</artifactId>
+                            <artifactId>scalafix-core_2.13</artifactId>
                             <version>0.14.3</version>
                         </dependency>
                         <dependency>
                             <groupId>com.nequissimus</groupId>
-                            <artifactId>sort-imports_${scala.base}</artifactId>
+                            <artifactId>sort-imports_2.13</artifactId>
                             <version>0.6.1</version>
                         </dependency>
                     </dependencies>
@@ -3681,12 +3677,9 @@
                         <source>${target.jdk}</source>
                         <target>${target.jdk}</target>
                         <args>
-                            <arg>-Xlog-implicits</arg>
                             <arg>-feature</arg>
-                            <arg>-unchecked</arg>
                             <arg>-deprecation</arg>
-                            <arg>-explaintypes</arg>
-                            <arg>-Wconf:msg=Auto-application to \`\(\)\` is deprecated:s</arg>
+                            <arg>-explain-types</arg>
                         </args>
                         <jvmArgs>
                             <jvmArg>-Xss128m</jvmArg>
@@ -3694,13 +3687,6 @@
                             <jvmArg>-Xmx4g</jvmArg>
                             <jvmArg>-XX:MaxMetaspaceSize=2g</jvmArg>
                         </jvmArgs>
-                        <compilerPlugins>
-                            <compilerPlugin>
-                                <groupId>org.scalameta</groupId>
-                                <artifactId>semanticdb-scalac_${scala.version}</artifactId>
-                                <version>4.15.2</version>
-                            </compilerPlugin>
-                        </compilerPlugins>
                     </configuration>
                     <executions>
                         <execution>

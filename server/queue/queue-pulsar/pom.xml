@@ -101,19 +101,19 @@
         </dependency>
         <dependency>
             <groupId>eu.timepit</groupId>
-            <artifactId>refined_${scala.base}</artifactId>
+            <artifactId>refined_${scala.binary}</artifactId>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
-            <artifactId>circe-core_${scala.base}</artifactId>
+            <artifactId>circe-core_${scala.binary}</artifactId>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
-            <artifactId>circe-generic_${scala.base}</artifactId>
+            <artifactId>circe-generic_${scala.binary}</artifactId>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
-            <artifactId>circe-parser_${scala.base}</artifactId>
+            <artifactId>circe-parser_${scala.binary}</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.annotation</groupId>
@@ -134,7 +134,7 @@
         </dependency>
         <dependency>
             <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-java8-compat_${scala.base}</artifactId>
+            <artifactId>scala-java8-compat_${scala.binary}</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

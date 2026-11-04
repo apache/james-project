@@ -85,7 +85,7 @@
         </dependency>
         <dependency>
             <groupId>com.typesafe.play</groupId>
-            <artifactId>play-json_${scala.base}</artifactId>
+            <artifactId>play-json_${scala.binary}</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

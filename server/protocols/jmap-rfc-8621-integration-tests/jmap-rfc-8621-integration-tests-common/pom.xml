@@ -80,12 +80,12 @@
         </dependency>
         <dependency>
             <groupId>com.softwaremill.sttp.client3</groupId>
-            <artifactId>okhttp-backend_${scala.base}</artifactId>
+            <artifactId>okhttp-backend_${scala.binary}</artifactId>
             <version>3.11.0</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.play</groupId>
-            <artifactId>play-json_${scala.base}</artifactId>
+            <artifactId>play-json_${scala.binary}</artifactId>
         </dependency>
         <dependency>
             <groupId>io.rest-assured</groupId>
