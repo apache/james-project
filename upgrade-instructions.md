@@ -31,6 +31,16 @@ Change list:
  - [JAMES-4236 populateEmailQueryView task reports mailbox counters](#james-4236-populateemailqueryview-task-reports-mailbox-counters)
  - [JAMES-4235 Lucene ignores punctuation around words](#james-4235-lucene-ignores-punctuation-around-words)
 
+### Has attachment indexing with indexAttachments=false
+
+Date: 04/11/2026
+
+Perimeter: OpenSearch search index
+
+Prior to https://github.com/apache/james-project/pull/3326 if indexAttachment=false then hasAttachment property was always false.
+Now we rely on existing data to set this value properly.
+Existing deployments using this setting might need a reindexing for it to apply on histrical data.
+
 ### JAMES-4235 Lucene ignores punctuation around words
 
 Date: 30/10/2026
