@@ -286,6 +286,17 @@ class SenderHeaderVerificationHookTest {
     }
 
     @Test
+    void malformedEncodedWordInSenderDisplayNameShouldBeRejected() throws Exception {
+        start("smtpserver-sender-header-verification.xml");
+        SMTPClient smtpProtocol = authenticateAsBob();
+
+        send(smtpProtocol, BOB.asString(), "rcpt@example.com",
+            "From: " + BOB.asString() + "\r\nSender: =?utf-8?B?*?= <" + BOB.asString() + ">\r\n");
+
+        assertRejected(smtpProtocol);
+    }
+
+    @Test
     void unauthenticatedSessionsShouldNotBeChecked() throws Exception {
         start("smtpserver-sender-header-verification.xml");
         SMTPClient smtpProtocol = connect();
