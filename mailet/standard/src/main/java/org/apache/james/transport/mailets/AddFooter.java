@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -181,7 +182,8 @@ public class AddFooter extends GenericMailet {
 
     /**
      * The footer may hold characters that the charset of the part can not represent, and that would be replaced by
-     * '?' when encoding. In such a case, switch the part to UTF-8: the original text is already decoded at this stage.
+     * '?' when encoding. In such a case, or when the charset is not ASCII-compatible, switch the part to UTF-8: the
+     * original text is already decoded at this stage.
      */
     private String contentTypeAbleToEncode(String contentType, String content) {
         ContentType parsedContentType;
@@ -193,7 +195,7 @@ public class AddFooter extends GenericMailet {
         }
         String charset = Optional.ofNullable(parsedContentType.getParameter(CHARSET))
             .orElse(StandardCharsets.US_ASCII.name());
-        if (canEncode(charset, content)) {
+        if (canEncode(charset, content) && isAsciiCompatible(charset)) {
             return contentType;
         }
         parsedContentType.setParameter(CHARSET, StandardCharsets.UTF_8.name());
@@ -207,6 +209,18 @@ public class AddFooter extends GenericMailet {
                 .canEncode(content);
         } catch (IllegalArgumentException e) {
             // Illegal or unsupported charset name
+            return false;
+        }
+    }
+
+    /**
+     * Jakarta Mail may pick quoted-printable for a text part, which canonicalises the CR and LF bytes: this corrupts
+     * charsets that are not ASCII-compatible (UTF-16, UTF-32...), which RFC 2046 forbids anyway in text parts.
+     */
+    private boolean isAsciiCompatible(String charset) {
+        try {
+            return Arrays.equals(CARRIAGE_RETURN.getBytes(toJavaCharset(charset)), CARRIAGE_RETURN.getBytes(StandardCharsets.US_ASCII));
+        } catch (IllegalArgumentException | UnsupportedOperationException e) {
             return false;
         }
     }
