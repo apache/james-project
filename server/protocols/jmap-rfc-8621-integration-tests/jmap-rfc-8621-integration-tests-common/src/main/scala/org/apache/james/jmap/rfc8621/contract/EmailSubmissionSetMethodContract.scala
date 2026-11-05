@@ -1294,6 +1294,7 @@ trait EmailSubmissionSetMethodContract {
     val requestBob =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "createdIds": {"initial": "initial-server"},
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$bobAccountId",
@@ -1342,6 +1343,7 @@ trait EmailSubmissionSetMethodContract {
         "methodResponses[2][1].state")
       .isEqualTo(s"""{
                    |    "sessionState": "${SESSION_STATE.value}",
+                   |    "createdIds": {"initial": "initial-server", "k1490": "$${json-unit.any-string}"},
                    |    "methodResponses": [
                    |        [
                    |            "EmailSubmission/set",

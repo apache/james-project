@@ -196,6 +196,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(s"""{
               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+              |  "createdIds": {"initial": "initial-server"},
               |  "methodCalls": [
               |    ["Email/import",
               |      {
@@ -242,6 +243,10 @@ trait EmailImportContract {
     val messageId = responseAsJson
       .\("id")
       .get.asInstanceOf[JsString].value
+
+    assertThatJson(response)
+      .inPath("createdIds")
+      .isEqualTo(s"""{"initial": "initial-server", "C42": "$messageId"}""")
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].oldState", "methodResponses[0][1].newState", "methodResponses[1][1].state")

@@ -246,7 +246,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
             maybeEmailSetRequest => maybeEmailSetRequest.map(emailSetRequest =>
                 emailSetMethod.doProcess(
                   capabilities = capabilities,
-                  invocation = invocation,
+                  invocation = invocation.copy(processingContext = createdResults._2),
                   mailboxSession = mailboxSession,
                   request = emailSetRequest))
               .getOrElse(SMono.empty))
