@@ -52,7 +52,9 @@ public class VacationAction implements MailAction {
                 context.getScriptActivationDate().toLocalDate(),
                 context.getScriptInterpretationDate().toLocalDate()))
             .intValue();
-        if (isStillInVacation(actionVacation, dayDifference)
+        // RFC 5230 section 4.6: no reply to a message with a null envelope sender
+        if (mail.hasSender()
+                && isStillInVacation(actionVacation, dayDifference)
                 && isValidForReply(mail, actionVacation, context)
                 && !isMailingList(mail)) {
             sendVacationNotification(mail, actionVacation, context);
