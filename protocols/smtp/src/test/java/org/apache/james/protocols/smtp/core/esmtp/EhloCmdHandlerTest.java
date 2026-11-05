@@ -31,6 +31,26 @@ class EhloCmdHandlerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
+        "a::%x\ry",
+        "[a::%x\ry]",
+        "IPv6:a::%x\ry",
+        "a::%\0x",
+        "a::%x y",
+        "a::%x) (y",
+        "a::%x\ry:1.2.3.4",
+    })
+    void isValidShouldRejectIpv6ZoneWithForbiddenCharacters(String argument) {
+        assertThat(handler.isValid(argument)).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"fe80::1%eth0", "[fe80::1%eth0]"})
+    void isValidShouldAcceptIpv6ZoneMadeOfUnreservedCharacters(String argument) {
+        assertThat(handler.isValid(argument)).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
         // Standard domain names
         "example.com",
         "mail.example.com",
