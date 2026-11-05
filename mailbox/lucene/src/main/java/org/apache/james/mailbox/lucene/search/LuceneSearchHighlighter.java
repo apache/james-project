@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
@@ -62,6 +63,7 @@ import org.apache.lucene.search.highlight.SimpleSpanFragmenter;
 import org.apache.lucene.util.QueryBuilder;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -116,10 +118,11 @@ public class LuceneSearchHighlighter implements SearchHighlighter {
     }
 
     private Flux<SearchSnippet> highlightSearch(Collection<MailboxId> mailboxIds, SearchQuery searchQuery, List<MessageId> messageIds) {
-        int limit = messageIds.size();
-        return Mono.fromCallable(() -> luceneMessageSearchIndex.searchDocument(mailboxIds, searchQuery, limit)).flatMapMany(Flux::fromIterable)
+        Set<MessageId> requestedMessageIds = ImmutableSet.copyOf(messageIds);
+        return Mono.fromCallable(() -> luceneMessageSearchIndex.searchDocument(mailboxIds, searchQuery)).flatMapMany(Flux::fromIterable)
+            .filter(document -> requestedMessageIds.contains(messageIdFactory.fromString(document.get(MESSAGE_ID_FIELD))))
+            .distinct(document -> document.get(MESSAGE_ID_FIELD))
             .map(document -> Throwing.supplier(() -> buildSearchSnippet(document, searchQuery)).get())
-            .filter(searchSnippet -> messageIds.contains(searchSnippet.messageId()))
             .subscribeOn(Schedulers.boundedElastic());
     }
 
