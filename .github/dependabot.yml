@@ -24,16 +24,18 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "[BUILD]"
+    # Netty (and the libraries shipping their own Netty-based transport, which need to be upgraded
+    # together so that a single Netty version is resolved at runtime), Scala and Spring upgrades are
+    # complex tasks: they are handled manually rather than by dependabot.
+    ignore:
+      - dependency-name: "io.netty*"
+      - dependency-name: "software.amazon.awssdk*"
+      - dependency-name: "org.apache.cassandra*"
+      - dependency-name: "io.projectreactor*"
+      - dependency-name: "io.lettuce*"
+      - dependency-name: "org.scala-lang*"
+      - dependency-name: "org.springframework*"
     groups:
-      # Netty, and the libraries shipping their own Netty-based transport, need to be upgraded
-      # together so that a single Netty version is resolved at runtime.
-      netty-stack:
-        patterns:
-          - "io.netty*"
-          - "software.amazon.awssdk*"
-          - "org.apache.cassandra*"
-          - "io.projectreactor*"
-          - "io.lettuce*"
       jackson:
         patterns:
           - "com.fasterxml.jackson*"
@@ -42,9 +44,6 @@ updates:
           - "org.slf4j*"
           - "ch.qos.logback*"
           - "org.apache.logging.log4j*"
-      scala:
-        patterns:
-          - "org.scala-lang*"
       circe:
         patterns:
           - "io.circe*"
@@ -69,9 +68,6 @@ updates:
       metrics:
         patterns:
           - "io.dropwizard.metrics*"
-      spring:
-        patterns:
-          - "org.springframework*"
       feign:
         patterns:
           - "io.github.openfeign*"
