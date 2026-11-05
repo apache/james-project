@@ -65,7 +65,7 @@ class CassandraBlobIdUpdaterTest {
         session = cassandra.getConf();
         factory = new CassandraBlobIdUpdater.Factory(
             new CassandraBlobReferenceDAO(session, new PlainBlobId.Factory(), 2),
-            new CassandraBlobReferenceIndexDAO(session, 2));
+            new CassandraBlobReferenceIndex(session, 2));
     }
 
     @Test
@@ -220,10 +220,10 @@ class CassandraBlobIdUpdaterTest {
     @Test
     void abandonedTableCanBeDroppedByRunId() {
         RunId abandoned = RunId.generate();
-        new CassandraBlobReferenceIndexDAO(session).create(abandoned).block();
-        assertThat(runTables()).containsExactly(CassandraBlobReferenceIndexDAO.tableName(abandoned));
+        new CassandraBlobReferenceIndex(session).create(abandoned).block();
+        assertThat(runTables()).containsExactly(CassandraBlobReferenceIndex.tableName(abandoned));
 
-        new CassandraBlobReferenceIndexDAO(session).cleanup(abandoned).block();
+        new CassandraBlobReferenceIndex(session).cleanup(abandoned).block();
 
         assertThat(runTables()).isEmpty();
     }
@@ -325,7 +325,7 @@ class CassandraBlobIdUpdaterTest {
         return session.execute("SELECT table_name FROM system_schema.tables WHERE keyspace_name = ?",
                 session.getKeyspace().orElseThrow().asInternal()).all().stream()
             .map(row -> row.getString("table_name"))
-            .filter(name -> name.startsWith(CassandraBlobReferenceIndexDAO.TABLE_PREFIX))
+            .filter(name -> name.startsWith(CassandraBlobReferenceIndex.TABLE_PREFIX))
             .toList();
     }
 

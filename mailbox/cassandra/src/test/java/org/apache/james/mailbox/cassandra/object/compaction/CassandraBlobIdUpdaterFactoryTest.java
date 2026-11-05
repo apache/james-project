@@ -22,7 +22,6 @@ package org.apache.james.mailbox.cassandra.object.compaction;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -51,17 +50,19 @@ class CassandraBlobIdUpdaterFactoryTest {
     private static final Reference REFERENCE = new Reference(OLD, Type.HEADER, UUID.randomUUID());
 
     private CassandraBlobReferenceDAO references;
-    private CassandraBlobReferenceIndexDAO index;
+    private CassandraBlobReferenceIndex index;
+    private CassandraBlobReferenceIndexDAO dao;
 
     private CassandraBlobIdUpdater.Factory testee;
 
     @BeforeEach
     void setUp() {
         references = mock(CassandraBlobReferenceDAO.class);
-        index = mock(CassandraBlobReferenceIndexDAO.class);
+        index = mock(CassandraBlobReferenceIndex.class);
+        dao = mock(CassandraBlobReferenceIndexDAO.class);
         testee = new CassandraBlobIdUpdater.Factory(references, index);
-        when(index.create(any())).thenReturn(Mono.empty());
-        when(index.store(any(), any())).thenReturn(Mono.empty());
+        when(index.create(any())).thenReturn(Mono.just(dao));
+        when(dao.store(any())).thenReturn(Mono.empty());
         when(index.cleanup(any())).thenReturn(Mono.empty());
     }
 
@@ -72,7 +73,7 @@ class CassandraBlobIdUpdaterFactoryTest {
 
         assertThatThrownBy(() -> testee.forPredicate(id -> true, id -> { }).block()).isSameAs(failure);
 
-        verify(index).store(any(), eq(REFERENCE));
+        verify(dao).store(REFERENCE);
         verify(index).cleanup(any());
         verify(references, never()).replace(any(), any());
     }
@@ -81,7 +82,7 @@ class CassandraBlobIdUpdaterFactoryTest {
     void shouldPropagateIndexFailureAndCleanRun() {
         IllegalStateException failure = new IllegalStateException("index failed");
         when(references.listReferences()).thenReturn(Flux.just(REFERENCE));
-        when(index.store(any(), any())).thenReturn(Mono.error(failure));
+        when(dao.store(any())).thenReturn(Mono.error(failure));
 
         assertThatThrownBy(() -> testee.forPredicate(id -> true, id -> { }).block()).isSameAs(failure);
 
@@ -97,7 +98,7 @@ class CassandraBlobIdUpdaterFactoryTest {
         }, id -> { }).block()).hasMessage("predicate failed");
 
         verify(index).cleanup(any());
-        verify(index, never()).store(any(), any());
+        verify(dao, never()).store(any());
     }
 
     @Test
@@ -105,7 +106,7 @@ class CassandraBlobIdUpdaterFactoryTest {
         when(references.listReferences()).thenReturn(Flux.just(REFERENCE).concatWith(Flux.never()));
 
         Disposable subscription = testee.forPredicate(id -> true, id -> { }).subscribe();
-        verify(index).store(any(), eq(REFERENCE));
+        verify(dao).store(REFERENCE);
         subscription.dispose();
 
         verify(index).cleanup(any());
@@ -124,14 +125,14 @@ class CassandraBlobIdUpdaterFactoryTest {
 
     @Test
     void cancellationShouldWaitForTableCreationBeforeDroppingIt() {
-        Sinks.Empty<Void> creation = Sinks.empty();
+        Sinks.One<CassandraBlobReferenceIndexDAO> creation = Sinks.one();
         when(index.create(any())).thenReturn(creation.asMono());
 
         Disposable subscription = testee.forPredicate(id -> true, id -> { }).subscribe();
         subscription.dispose();
 
         verify(index, never()).cleanup(any());
-        assertThat(creation.tryEmitEmpty()).isEqualTo(Sinks.EmitResult.OK);
+        assertThat(creation.tryEmitValue(dao)).isEqualTo(Sinks.EmitResult.OK);
         verify(index).cleanup(any());
         verify(references, never()).listReferences();
     }
@@ -145,7 +146,7 @@ class CassandraBlobIdUpdaterFactoryTest {
         BlobIdUpdater second = preparation.block();
 
         ArgumentCaptor<RunId> runIds = ArgumentCaptor.forClass(RunId.class);
-        verify(index, times(2)).store(runIds.capture(), eq(REFERENCE));
+        verify(index, times(2)).create(runIds.capture());
         assertThat(runIds.getAllValues().get(0)).isNotEqualTo(runIds.getAllValues().get(1));
         verify(index, never()).cleanup(any());
         first.cleanup().block();
@@ -163,13 +164,13 @@ class CassandraBlobIdUpdaterFactoryTest {
         updater.cleanup().block();
 
         verify(index, times(2)).cleanup(any());
-        verify(index, never()).retrieve(any(), any());
+        verify(dao, never()).retrieve(any());
     }
 
     @Test
     void successfulReplacementShouldKeepSnapshotUntilExplicitCleanup() {
         when(references.listReferences()).thenReturn(Flux.just(REFERENCE));
-        when(index.retrieve(any(), eq(OLD))).thenReturn(Flux.just(REFERENCE));
+        when(dao.retrieve(OLD)).thenReturn(Flux.just(REFERENCE));
         when(references.replace(REFERENCE, NEW)).thenReturn(Mono.empty());
         BlobIdUpdater updater = testee.forPredicate(id -> true, id -> { }).block();
 
