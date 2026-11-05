@@ -395,6 +395,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         return new SearchResult(messageId, mailboxId, uid);
     }
 
+    public List<Document> searchDocument(Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {
+        return searchDocument(mailboxIds, searchQuery, maxQueryResults);
+    }
+
     public List<Document> searchDocument(Collection<MailboxId> mailboxIds, SearchQuery searchQuery, int maxQueryResults) throws MailboxException {
         try (IndexReader reader = DirectoryReader.open(writer)) {
             IndexSearcher searcher = new IndexSearcher(reader);

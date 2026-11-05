@@ -20,6 +20,9 @@ package org.apache.james.mailbox.lucene.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -27,23 +30,31 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.searchhighligt.SearchHighLighterContract;
 import org.apache.james.mailbox.searchhighligt.SearchHighlighter;
 import org.apache.james.mailbox.searchhighligt.SearchHighlighterConfiguration;
+import org.apache.james.mailbox.searchhighligt.SearchSnippet;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Flux;
 
 class LuceneMemorySearchHighLighterTest implements SearchHighLighterContract {
     private MessageSearchIndex messageSearchIndex;
@@ -114,4 +125,36 @@ class LuceneMemorySearchHighLighterTest implements SearchHighLighterContract {
             session(owner))).run();
     }
 
+    @Test
+    void highlightSearchShouldReturnOneSnippetPerMessageWhenMessageIsInSeveralMailboxes() throws Exception {
+        MailboxSession session = session(USERNAME1);
+        MailboxId archiveId = storeMailboxManager.createMailbox(MailboxPath.forUser(USERNAME1, "Archive"), session).get();
+
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("Shared plan")
+                    .setBody("first", StandardCharsets.UTF_8)),
+            session).getId();
+
+        ComposedMessageId m2 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("Shared notes")
+                    .setBody("second", StandardCharsets.UTF_8)),
+            session).getId();
+
+        storeMailboxManager.copyMessages(MessageRange.one(m1.getUid()), m1.getMailboxId(), archiveId, session);
+
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.subject("Shared")))
+            .inMailboxes(List.of(m1.getMailboxId(), archiveId))
+            .build();
+
+        List<SearchSnippet> searchSnippets = Flux.from(testee().highlightSearch(List.of(m1.getMessageId(), m2.getMessageId()), multiMailboxSearch, session))
+            .collectList()
+            .block();
+
+        assertThat(searchSnippets).extracting(SearchSnippet::messageId)
+            .containsExactlyInAnyOrder(m1.getMessageId(), m2.getMessageId());
+    }
 }
