@@ -20,10 +20,16 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import jakarta.mail.MessagingException;
 
@@ -36,6 +42,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -91,6 +99,77 @@ class ICalendarParserTest {
     static final Class<Map<String, AttributeValue<Object>>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, AttributeValue<Object>>>) (Object) Map.class;
 
     ICalendarParser mailet = new ICalendarParser();
+
+    private static String timeZone(String tzId, String rrule) {
+        return "BEGIN:VTIMEZONE\r\n"
+            + "TZID:" + tzId + "\r\n"
+            + "BEGIN:STANDARD\r\n"
+            + "DTSTART:19700101T000000\r\n"
+            + "TZOFFSETFROM:+0100\r\n"
+            + "TZOFFSETTO:+0100\r\n"
+            + "RRULE:" + rrule + "\r\n"
+            + "END:STANDARD\r\n"
+            + "END:VTIMEZONE\r\n";
+    }
+
+    private static String calendar(String... timeZones) {
+        return "BEGIN:VCALENDAR\r\n"
+            + "VERSION:2.0\r\n"
+            + "PRODID:-//Apache James//Timezone test//EN\r\n"
+            + "METHOD:REQUEST\r\n"
+            + String.join("", timeZones)
+            + "END:VCALENDAR\r\n";
+    }
+
+    private static String commaSeparatedRange(int startInclusive, int endExclusive) {
+        return IntStream.range(startInclusive, endExclusive)
+            .mapToObj(Integer::toString)
+            .collect(Collectors.joining(","));
+    }
+
+    static Stream<String> expensiveRecurrenceRules() {
+        return Stream.of(
+            "FREQ=MINUTELY",
+            "FREQ=SECONDLY",
+            "FREQ=YEARLY;BYHOUR=" + commaSeparatedRange(0, 24) + ";BYMINUTE=" + commaSeparatedRange(0, 60) + ";BYSECOND=" + commaSeparatedRange(0, 60));
+    }
+
+    private Map<String, AttributeValue<Object>> parse(String ics) throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("ICalendarParser")
+            .setProperty(SOURCE_ATTRIBUTE, SOURCE_CUSTOM_ATTRIBUTE)
+            .setProperty(DESTINATION_ATTRIBUTE, DESTINATION_CUSTOM_ATTRIBUTE)
+            .build());
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .attribute(new Attribute(SOURCE_CUSTOM_ATTRIBUTE_NAME, AttributeValue.of(ImmutableMap.of(
+                "event.ics", AttributeValue.of(ics.getBytes(StandardCharsets.UTF_8))))))
+            .build();
+
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () -> mailet.service(mail));
+
+        return AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS).get();
+    }
+
+    @ParameterizedTest
+    @MethodSource("expensiveRecurrenceRules")
+    void serviceShouldSkipCalendarWhenCustomTimeZoneRecurrenceIsTooExpensive(String rrule) throws Exception {
+        assertThat(parse(calendar(timeZone("Custom Time", rrule)))).isEmpty();
+    }
+
+    @Test
+    void serviceShouldBoundTheRecurrenceCostOfACalendarAcrossItsTimeZones() throws Exception {
+        String[] timeZones = IntStream.range(0, 5)
+            .mapToObj(i -> timeZone("Custom Time " + i, "FREQ=DAILY"))
+            .toArray(String[]::new);
+
+        assertThat(parse(calendar(timeZones))).isEmpty();
+    }
+
+    @Test
+    void serviceShouldKeepCalendarWhenCustomTimeZoneHasARegularRecurrence() throws Exception {
+        assertThat(parse(calendar(timeZone("Custom Time", "FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU")))).hasSize(1);
+    }
 
     @Test
     void initShouldSetSourceAttributeWhenAbsent() throws Exception {
