@@ -215,6 +215,76 @@ class StripAttachmentTest {
             .contains("kept");
     }
 
+    private static final String MALFORMED_TOP_CONTENT_TYPE_MESSAGE = "Content-Type: multipart/mixed; boundary=x; =y\r\n" +
+        "\r\n" +
+        "--x\r\n" +
+        "Content-Type: application/octet-stream\r\n" +
+        "Content-Disposition: attachment; filename=\"report.exe\"\r\n" +
+        "\r\n" +
+        "PAYLOAD\r\n" +
+        "--x--\r\n";
+
+    private static final String MALFORMED_NESTED_CONTENT_TYPE_MESSAGE = "Content-Type: multipart/mixed; boundary=outer\r\n" +
+        "\r\n" +
+        "--outer\r\n" +
+        "Content-Type: multipart/related; boundary=inner; =y\r\n" +
+        "\r\n" +
+        "--inner\r\n" +
+        "Content-Type: text/plain\r\n" +
+        "\r\n" +
+        "nested\r\n" +
+        "--inner--\r\n" +
+        "--outer\r\n" +
+        "Content-Type: application/octet-stream\r\n" +
+        "Content-Disposition: attachment; filename=\"report.exe\"\r\n" +
+        "\r\n" +
+        "PAYLOAD\r\n" +
+        "--outer--\r\n";
+
+    @Test
+    void serviceShouldFailWhenRemovalIsConfiguredAndTheTopContentTypeHasAMalformedParameter() throws Exception {
+        Mailet mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("remove", "all")
+            .setProperty("pattern", ".*")
+            .build());
+        Mail mail = FakeMail.from(MimeMessageUtil.mimeMessageFromString(MALFORMED_TOP_CONTENT_TYPE_MESSAGE));
+
+        assertThatThrownBy(() -> mailet.service(mail))
+            .isInstanceOf(MailetException.class);
+    }
+
+    @Test
+    void serviceShouldFailWhenRemovalIsConfiguredAndANestedContentTypeHasAMalformedParameter() throws Exception {
+        Mailet mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("remove", "all")
+            .setProperty("pattern", ".*")
+            .build());
+        Mail mail = FakeMail.from(MimeMessageUtil.mimeMessageFromString(MALFORMED_NESTED_CONTENT_TYPE_MESSAGE));
+
+        assertThatThrownBy(() -> mailet.service(mail))
+            .isInstanceOf(MailetException.class);
+    }
+
+    @Test
+    void serviceShouldStillCollectOtherPartsWhenNoRemovalIsConfiguredAndANestedContentTypeHasAMalformedParameter() throws Exception {
+        Mailet mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("remove", "no")
+            .setProperty("pattern", ".*")
+            .setProperty("attribute", "my.attribute")
+            .build());
+        Mail mail = FakeMail.from(MimeMessageUtil.mimeMessageFromString(MALFORMED_NESTED_CONTENT_TYPE_MESSAGE));
+
+        mailet.service(mail);
+
+        assertThat(mail.getAttribute(AttributeName.of("my.attribute"))).isPresent();
+    }
+
     @Test
     void serviceShouldDropNestedMultipartThatHasNoPartInTheInput() throws Exception {
         Mailet mailet = new StripAttachment();

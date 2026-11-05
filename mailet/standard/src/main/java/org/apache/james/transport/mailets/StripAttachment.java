@@ -314,13 +314,22 @@ public class StripAttachment extends GenericMailet {
             }
             return atLeastOneRemoved || subpartHasBeenChanged;
         } catch (Exception e) {
-            LOGGER.error("Failing while analysing part for attachments (StripAttachment mailet).", e);
-            return false;
+            if (removeAttachments.equals(REMOVE_NONE)) {
+                LOGGER.error("Failing while analysing part for attachments (StripAttachment mailet).", e);
+                return false;
+            }
+            // Passing the mail on would keep attachments we were asked to remove
+            throw new MailetException("Could not analyse the mail in order to remove its attachments", e);
         }
     }
 
-    private boolean isEmptyMultipart(Part part) throws MessagingException, IOException {
-        return ((Multipart) part.getContent()).getCount() == 0;
+    private boolean isEmptyMultipart(Part part) {
+        try {
+            return ((Multipart) part.getContent()).getCount() == 0;
+        } catch (Exception e) {
+            // A part that can not be parsed was already reported by processMultipartPartMessage: its siblings still need processing
+            return false;
+        }
     }
 
     private void updateBodyPart(Part part, Multipart newPartContent) throws MessagingException, IOException {
