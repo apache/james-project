@@ -49,6 +49,7 @@ public class RecipientValidator {
 
     private static final String ENABLE_RECIPIENT_REWRITE_TABLE_PROPERTY = "enableRecipientRewriteTable";
     private static final String RECIPIENT_REWRITE_TABLE_CHECK_PROPERTY = "recipientRewriteTableCheck";
+    private static final String POSTMASTER_LOCAL_PART = "postmaster";
 
     public enum RecipientRewriteTableCheck {
         MAPPING_EXISTS,
@@ -104,6 +105,8 @@ public class RecipientValidator {
     public boolean isValidLocalRecipient(MailAddress recipient, Policy policy) throws UsersRepositoryException, RecipientRewriteTableException {
         // Check existence of mailbox first to use RRT less often.
         if (mailboxExists(recipient)) {
+            return true;
+        } else if (recipient.getLocalPart().equalsIgnoreCase(POSTMASTER_LOCAL_PART)) {
             return true;
         } else {
             // Check whether there is a valid RRT entry for the recipient.
