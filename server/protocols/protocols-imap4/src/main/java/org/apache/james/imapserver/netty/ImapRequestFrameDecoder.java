@@ -72,6 +72,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     @VisibleForTesting
     static final String NEEDED_DATA = "NEEDED_DATA";
     private static final boolean RETRY = true;
+    private static final String TRAILING_EOL_SIZE = "TRAILING_EOL_SIZE";
     private static final String SINK = "SINK";
     private static final String SUBSCRIPTION = "SUBSCRIPTION";
     public static final int UNAUTHENTICATE_LITERAL_MAX_SIZE = Optional.ofNullable(System.getProperty("james.imap.unauthenticated.literal.max.size"))
@@ -200,7 +201,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 return Optional.of(message);
             } catch (NettyImapRequestLineReader.NotEnoughDataException e) {
                 // this exception was thrown because we don't have enough data yet
-                requestMoreData(ctx, in, attachment, e.getNeededSize(), readerIndex);
+                requestMoreData(ctx, in, attachment, e, readerIndex);
             }
         } else {
             // The session was null so may be the case because the channel was already closed but there were still bytes in the buffer.
@@ -265,7 +266,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         }
     }
 
-    private void requestMoreData(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, int neededData, int readerIndex) {
+    private void requestMoreData(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, NettyImapRequestLineReader.NotEnoughDataException notEnoughData, int readerIndex) {
+        int neededData = notEnoughData.getNeededSize();
+        attachment.put(TRAILING_EOL_SIZE, notEnoughData.getTrailingEolSize());
         // Everything we could offer was not enough, so the rest has to come from the network:
         // keep all of `in` and retry the whole parse once more bytes arrive.
         in.readerIndex(readerIndex);
@@ -391,12 +394,18 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         // Only consume what belongs to the literal and its line: the rest stays in Netty's
         // cumulation, to be decoded once this command is.
         in.getBytes(in.readerIndex(), bytes);
-        int accepted = literalLineLength(bytes, sink.getRight().get(), size);
+        int received = sink.getRight().get();
+        // size counts the CRLF ending the line, but it may as well be a bare LF: it can not be counted on
+        int literalSize = size - (Integer) attachment.getOrDefault(TRAILING_EOL_SIZE, 0);
+        int literalBytes = Math.min(readableBytes, Math.max(0, literalSize - received));
+        boolean literalSpooled = received + literalBytes >= literalSize;
+        int accepted = literalSpooled ? endOfLiteralLine(bytes, literalBytes) : literalBytes;
         in.skipBytes(accepted);
         sink.getLeft().emitNext(accepted == readableBytes ? bytes : Arrays.copyOf(bytes, accepted), FAIL_FAST);
-        boolean lineEnded = accepted > 0 && bytes[accepted - 1] == '\n';
+        sink.getRight().addAndGet(accepted);
+        boolean lineEnded = accepted > literalBytes && bytes[accepted - 1] == '\n';
         boolean endOfLineReached = accepted < readableBytes || lineEnded;
-        if (sink.getRight().addAndGet(accepted) >= size && endOfLineReached) {
+        if (literalSpooled && endOfLineReached) {
             if (!lineEnded) {
                 // Malformed literal line, the command will be rejected: drop the rest of that line.
                 discardUntilEndOfLine = true;
@@ -424,16 +433,12 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     }
 
     /**
-     * How many of {@code bytes} belong to the literal and to the end of its line, {@code received}
-     * bytes out of {@code size} having already been spooled. {@code size} counts the CRLF ending the
-     * line, but {@link ImapRequestLineReader#eol()} tolerates spaces before it: keep spooling them,
-     * and the CRLF, rather than cutting the line short.
+     * Where the end of the line following a literal stops in {@code bytes}, starting at {@code length}.
+     * {@link ImapRequestLineReader#eol()} tolerates spaces before the end of line, and a bare LF: keep
+     * spooling them rather than cutting the line short, but nothing after, as this is the next command.
      */
-    private static int literalLineLength(byte[] bytes, int received, int size) {
-        int length = Math.min(bytes.length, Math.max(0, size - received));
-        if (received + length < size || (length > 0 && bytes[length - 1] == '\n')) {
-            return length;
-        }
+    private static int endOfLiteralLine(byte[] bytes, int literalEnd) {
+        int length = literalEnd;
         while (length < bytes.length && (bytes[length] == ' ' || bytes[length] == '\r')) {
             length++;
         }
