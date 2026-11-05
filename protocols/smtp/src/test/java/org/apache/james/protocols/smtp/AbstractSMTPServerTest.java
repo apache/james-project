@@ -1072,6 +1072,30 @@ public abstract class AbstractSMTPServerTest {
     }
 
     @Test
+    void rcptUnsupportedOptionReplyShouldNotEchoControlCharacters() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String replies = rawUtf8Exchange(bindedAddress,
+                greetingCommand() + " localhost\r\n",
+                "MAIL FROM:<a@b.c>\r\n",
+                "RCPT TO:<d@e.f> NO\rTIFY=x\r\n",
+                "QUIT\r\n");
+
+            assertThat(replies)
+                .contains("504 Unrecognized or unsupported option: NO?TIFY")
+                .doesNotContain("NO\rTIFY");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
     void mailFromWithNonAsciiSenderShouldBeAcceptedWhenSmtpUtf8IsAsserted() throws Exception {
         ProtocolServer server = null;
         try {

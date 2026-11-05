@@ -211,7 +211,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
                     return new SMTPResponse(
                         SMTPRetCode.PARAMETER_NOT_IMPLEMENTED,
                         "Unrecognized or unsupported option: "
-                            + parameter.getKey());
+                            + CharMatcher.javaIsoControl().replaceFrom(parameter.getKey(), '?'));
                 }
                 if (parameters.putIfAbsent(parameter.getKey(), parameter.getValue()) != null) {
                     LOGGER.debug("RCPT command had duplicated option {}{}",
