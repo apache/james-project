@@ -110,7 +110,7 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         if (size + crlf > buffer.readableBytes()) {
             // ok let us throw a exception which till the decoder how many more
             // bytes we need
-            throw new NotEnoughDataException(size + read + crlf);
+            throw new NotEnoughDataException(size + read + crlf, crlf);
         }
 
         // Unset the next char.
@@ -144,14 +144,23 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         private static final boolean DISABLE_SUPPRESSION = false;
 
         private final int size;
+        private final int trailingEolSize;
 
-        public NotEnoughDataException(int size) {
+        public NotEnoughDataException(int size, int trailingEolSize) {
             super(NO_MESSAGE, NO_CAUSE, DISABLE_SUPPRESSION, false);
             this.size = size;
+            this.trailingEolSize = trailingEolSize;
         }
 
         public NotEnoughDataException() {
-            this(UNKNOWN_SIZE);
+            this(UNKNOWN_SIZE, 0);
+        }
+
+        /**
+         * Return how many bytes of the needed size stand for the end of line expected after the literal
+         */
+        public int getTrailingEolSize() {
+            return trailingEolSize;
         }
 
         /**
