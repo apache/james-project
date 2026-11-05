@@ -52,7 +52,7 @@ object CreateProcessor {
         }
         .last()
         .map { case (_, results, context) => (results, context) }
-    }).cache()
+    })
 
   // Kahn's algorithm: each vertex and edge is visited once. Remaining vertices
   // belong to a cycle or depend on one; process() rejects them without side effects.
