@@ -28,7 +28,8 @@ C: R0lGODlhMQL1APAAAAAAAAAAACH5BAEAAAEALAAAAAAxAvUAAAL-jI-py-0PF5gUxIuz3rz7D4biS
 S: a1 OK SETMETADATA completed.
 
 C: a2 GETMETADATA INBOX /private/comment
-S: \* METADATA "INBOX" \(\/private\/comment "Content-Type: image/jpeg
+S: \* METADATA "INBOX" \(\/private\/comment \{169\}
+S: Content-Type: image/jpeg
 S: Content-Transfer-Encoding: base64
-S: R0lGODlhMQL1APAAAAAAAAAAACH5BAEAAAEALAAAAAAxAvUAAAL-jI-py-0PF5gUxIuz3rz7D4biSJbmiabqqlZuxcbyTNf2jef6zkfvT-kJ"\)
+S: R0lGODlhMQL1APAAAAAAAAAAACH5BAEAAAEALAAAAAAxAvUAAAL-jI-py-0PF5gUxIuz3rz7D4biSJbmiabqqlZuxcbyTNf2jef6zkfvT-kJ\)
 S: a2 OK GETMETADATA completed.
