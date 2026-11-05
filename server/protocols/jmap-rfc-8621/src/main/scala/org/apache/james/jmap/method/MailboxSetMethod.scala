@@ -65,7 +65,9 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath] =
-    (arguments.value \ "create").asOpt[JsObject].map(_.keys.iterator.map(id => JsPath \ "create" \ id \ "parentId").toSet).getOrElse(Set.empty)
+    (arguments.value \ "create").asOpt[JsObject]
+      .map(creates => creates.keys.map(id => JsPath \ "create" \ id \ "parentId").toSet)
+      .getOrElse(Set.empty)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxSetRequest): SMono[InvocationWithContext] = for {
     oldState <- retrieveState(capabilities, mailboxSession)

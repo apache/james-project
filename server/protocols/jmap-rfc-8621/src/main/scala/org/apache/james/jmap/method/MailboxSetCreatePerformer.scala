@@ -134,11 +134,13 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
     } yield (response, ServerId(id))
 
   private def resolveParent(request: MailboxCreationRequest, context: ProcessingContext): Either[Exception, MailboxCreationRequest] =
-    request.parentId.flatMap(_.id.creationId)
-      .map(parent => context.retrieveServerId(parent)
-        .toRight(invalidParentReference)
-        .map(id => request.copy(parentId = Some(UnparsedMailboxId(id.value)))))
-      .getOrElse(Right(request))
+    request.parentId.flatMap(_.id.creationId) match {
+      case None => Right(request)
+      case Some(parentCreationId) =>
+        context.retrieveServerId(parentCreationId)
+          .toRight(invalidParentReference)
+          .map(parentId => request.copy(parentId = Some(UnparsedMailboxId(parentId.value))))
+    }
 
   private def parseCreate(jsObject: JsObject): Either[MailboxCreationParseException, MailboxCreationRequest] =
     MailboxCreationRequest.validateProperties(jsObject)
