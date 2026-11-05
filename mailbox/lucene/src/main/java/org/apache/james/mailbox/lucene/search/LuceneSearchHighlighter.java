@@ -27,7 +27,6 @@ import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SUBJ
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -51,7 +50,6 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
@@ -61,6 +59,7 @@ import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.search.highlight.SimpleHTMLEncoder;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.search.highlight.SimpleSpanFragmenter;
+import org.apache.lucene.util.QueryBuilder;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -146,9 +145,9 @@ public class LuceneSearchHighlighter implements SearchHighlighter {
 
     private Optional<Query> buildQueryFromCriterion(SearchQuery.Criterion criterion) {
         if (criterion instanceof TextCriterion textCriterion) {
-            return Optional.of(buildQuery(BODY_FIELD, textCriterion.getOperator().getValue().toLowerCase(Locale.US)));
+            return buildQuery(BODY_FIELD, textCriterion.getOperator().getValue());
         } else if (criterion instanceof SubjectCriterion subjectCriterion) {
-            return Optional.of(buildQuery(SUBJECT_FIELD, subjectCriterion.getSubject().toLowerCase(Locale.US)));
+            return buildQuery(SUBJECT_FIELD, subjectCriterion.getSubject());
         } else if (criterion instanceof ConjunctionCriterion conjunctionCriterion && !conjunctionCriterion.getType().equals(SearchQuery.Conjunction.NOR)) {
             BooleanQuery.Builder conQuery = new BooleanQuery.Builder();
             conjunctionCriterion.getCriteria().stream()
@@ -160,9 +159,8 @@ public class LuceneSearchHighlighter implements SearchHighlighter {
         return Optional.empty();
     }
 
-    private Query buildQuery(String field, String queryValue) {
-        QueryParser parser = new QueryParser(field, analyzer);
-        return Throwing.supplier(() -> parser.parse(queryValue)).get();
+    private Optional<Query> buildQuery(String field, String queryValue) {
+        return Optional.ofNullable(new QueryBuilder(analyzer).createBooleanQuery(field, queryValue));
     }
 
     private SearchSnippet buildSearchSnippet(Document doc, SearchQuery searchQuery) {
