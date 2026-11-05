@@ -176,7 +176,7 @@ public class OpenSearchSearchHighlighterTest implements SearchHighLighterContrac
 
     @Override
     public MailboxId randomMailboxId(Username username) {
-        String random = new String(new byte[8]);
+        String random = UUID.randomUUID().toString();
         return Throwing.supplier(() -> storeMailboxManager.createMailbox(MailboxPath.forUser(USERNAME1, random), session(username)).get()).get();
     }
 

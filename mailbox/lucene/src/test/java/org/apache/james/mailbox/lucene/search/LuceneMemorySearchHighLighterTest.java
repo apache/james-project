@@ -20,6 +20,8 @@ package org.apache.james.mailbox.lucene.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -96,7 +98,7 @@ class LuceneMemorySearchHighLighterTest implements SearchHighLighterContract {
 
     @Override
     public MailboxId randomMailboxId(Username username) {
-        String random = new String(new byte[8]);
+        String random = UUID.randomUUID().toString();
         return Throwing.supplier(() -> storeMailboxManager.createMailbox(MailboxPath.forUser(USERNAME1, random), session(username)).get()).get();
     }
 
