@@ -33,6 +33,7 @@ import jakarta.mail.internet.MimeBodyPart;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.core.builder.MimeMessageBuilder.Header;
@@ -993,6 +994,27 @@ class SieveIntegrationTest {
             .build());
         // No action taken
         assertThat(mail.getAttribute(ATTRIBUTE_NAME)).isEmpty();
+    }
+
+    @Test
+    void vacationShouldNotReplyAndShouldKeepTheMessageWhenNullSender() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setSubject("Undelivered Mail")
+                .addToRecipient(RECEIVER_DOMAIN_COM)
+                .setText("body"))
+            .state(Mail.DEFAULT)
+            .recipient(RECEIVER_DOMAIN_COM)
+            .sender(MaybeSender.nullSender())
+            .build();
+
+        testee.service(mail);
+
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
     }
 
     @Test
