@@ -121,13 +121,13 @@ class CreateProcessorTest {
   }
 
   @Test
-  def shouldExecuteCreationsOnlyOnceAcrossRepeatedSubscriptions(): Unit = {
+  def shouldExecuteCreationsLazilyForEachSubscription(): Unit = {
     val executions = new AtomicInteger()
     val publisher = process(Seq(parent -> Set.empty[ClientId], child -> Set(parent)), executions = executions)
     assertThat(executions.get()).isZero()
     val first = publisher.block()
     assertThat(publisher.block()).isEqualTo(first)
-    assertThat(executions.get()).isEqualTo(2)
+    assertThat(executions.get()).isEqualTo(4)
   }
 
   @Test
