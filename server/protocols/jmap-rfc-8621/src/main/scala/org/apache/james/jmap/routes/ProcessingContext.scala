@@ -23,7 +23,7 @@ import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.numeric.NonNegInt
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId}
+import org.apache.james.jmap.core.{ClientId, CreatedIds, Id, Invocation, ServerId}
 import org.apache.james.jmap.json.BackReferenceDeserializer
 import play.api.libs.json.{JsArray, JsError, JsObject, JsPath, JsResult, JsString, JsSuccess, JsValue, Reads}
 
@@ -130,6 +130,8 @@ case class DuplicateArgumentException(argument: String) extends IllegalArgumentE
 
 case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, ServerId],
                              private val invocations: ImmutableMap[MethodCallId, Invocation]) {
+
+  def createdIds: CreatedIds = CreatedIds(creationIds)
 
   def recordCreatedId(clientId: ClientId, serverId: ServerId): ProcessingContext = ProcessingContext(creationIds + (clientId -> serverId), invocations)
 

@@ -45,7 +45,7 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
 
   def process(requestObject: RequestObject,
               mailboxSession: MailboxSession): SMono[ResponseObject] = {
-    val processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)
+    val processingContext: ProcessingContext = ProcessingContext(requestObject.createdIds.map(_.value).getOrElse(Map.empty), Map.empty)
     val capabilities: Set[CapabilityIdentifier] = requestObject.using
 
     val validatedRequestObject = for {
@@ -53,7 +53,9 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
       _ <- validateMaxCalls(requestObject)
     } yield {
       processSequentiallyAndUpdateContext(requestObject, mailboxSession, processingContext, capabilities)
-        .map(invocations => ResponseObject(configuration.sessionState, invocations.map(_.invocation)))
+        .map(invocations => ResponseObject(configuration.sessionState, invocations.map(_.invocation),
+          requestObject.createdIds.map(_ => invocations.lastOption
+            .map(_.processingContext).getOrElse(processingContext).createdIds)))
     }
     validatedRequestObject.fold(e => SMono.error(e), obj => obj)
   }
@@ -104,7 +106,15 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
           description = s"Failed resolving back-reference: ${e.message}",
           methodCallId = invocation.invocation.methodCallId), invocation.processingContext))
         case Right(resolvedInvocation) => processMethodWithMatchName(capabilities, InvocationWithContext(resolvedInvocation, invocation.processingContext), mailboxSession)
-          .map(_.recordInvocation)
+          .scan(invocation) { (previous, response) =>
+            val withContext = if (response.invocation.methodName.value.value == "error") {
+              response.copy(processingContext = previous.processingContext)
+            } else {
+              response
+            }
+            withContext.recordInvocation
+          }
+          .skip(1)
       })
   }
 

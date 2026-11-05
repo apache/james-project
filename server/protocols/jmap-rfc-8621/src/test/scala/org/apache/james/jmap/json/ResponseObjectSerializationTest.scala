@@ -28,6 +28,13 @@ import play.api.libs.json._
 
 class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
   "Deserialize ResponseObject" should {
+    "preserve createdIds when serializing again" in {
+      Seq(Json.obj(), Json.obj("client" -> "server")).foreach { ids =>
+        val json = Json.obj("sessionState" -> SESSION_STATE.value, "methodResponses" -> Json.arr(), "createdIds" -> ids)
+        ResponseSerializer.serialize(ResponseSerializer.deserializeResponseObject(json.toString).get) should be(json)
+      }
+    }
+
     "succeed " in {
       val expectedResponseObject = ResponseObject(
         sessionState = SESSION_STATE,
