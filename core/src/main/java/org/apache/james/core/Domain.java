@@ -118,6 +118,7 @@ public class Domain implements Serializable {
             Preconditions.checkArgument(!domainWithoutBrackets.startsWith("xn--") &&
                                         !domainWithoutBrackets.contains(".xn--"),
                                         "A-label could not be decoded to Unicode in %s", domain);
+            assertLowerCasedFormParsesBack(domainWithoutBrackets, domain);
         }
 
         int pos = 0;
@@ -134,6 +135,17 @@ public class Domain implements Serializable {
         Domain.assertValidPart(domainWithoutBrackets, pos, domainWithoutBrackets.length());
         assertValidLastPart(domainWithoutBrackets, pos);
         return new Domain(domainWithoutBrackets);
+    }
+
+    // IDN.toUnicode leaves capitals unknown to IDNA2003 untouched (eg U+13A0) while asString() lower-cases them with
+    // the current Unicode tables: same check as for the Unicode input, so that asString() parses back.
+    private static void assertLowerCasedFormParsesBack(String decodedDomain, String domain) {
+        String lowerCased = decodedDomain.toLowerCase(Locale.US);
+        if (!lowerCased.equals(decodedDomain)) {
+            String roundTrip = IDN.toUnicode(IDN.toASCII(lowerCased, IDN.ALLOW_UNASSIGNED));
+            Preconditions.checkArgument(!roundTrip.startsWith("xn--") && !roundTrip.contains(".xn--"),
+                "Domain '%s' is invalid according to IDNA once lower-cased", domain);
+        }
     }
 
     private static void assertValidPart(String domainPart, int begin, int end) {

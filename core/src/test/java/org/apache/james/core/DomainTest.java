@@ -105,6 +105,13 @@ class DomainTest {
             .isInstanceOf(IllegalArgumentException.class);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"xn--58d.tld", "a.xn--58d", "XN--58D.tld", "xn--48-edMMMMMMM.xn--MMMd"})
+    void aLabelWhoseLowerCaseIsNotValidAccordingToIdnaShouldBeRejected(String domain) {
+        assertThatThrownBy(() -> Domain.of(domain))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
     @Test
     void aLabelOfADeviationCharacterShouldNotBeMappedToAnotherDomain() {
         assertThatThrownBy(() -> Domain.of("xn--fa-hia.de"))
