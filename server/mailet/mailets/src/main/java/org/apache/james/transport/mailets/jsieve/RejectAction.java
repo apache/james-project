@@ -22,10 +22,12 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import jakarta.mail.Address;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
+import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeUtility;
@@ -142,19 +144,23 @@ public class RejectAction implements MailAction {
             .asMultipart();
 
         // Send the message
-        MimeMessage reply = (MimeMessage) aMail.getMessage().reply(false);
+        MimeMessage reply;
+        try {
+            reply = (MimeMessage) aMail.getMessage().reply(false);
+        } catch (AddressException e) {
+            // The message is refused anyway: nothing to answer to
+            LOGGER.info("Unable to send reject MDN. Could not parse the recipient.", e);
+            return;
+        }
         context.getRecipient().toInternetAddress()
             .ifPresent(Throwing.<Address>consumer(reply::setFrom).sneakyThrow());
         reply.setContent(multipart);
         reply.saveChanges();
-        Address[] recipientAddresses = reply.getAllRecipients();
-        if (recipientAddresses != null) {
+        ImmutableList<MailAddress> recipients = usableRecipients(reply);
+        if (!recipients.isEmpty()) {
             MailImpl mail = MailImpl.builder()
                 .name(MailImpl.getId())
-                .addRecipients(Arrays.stream(recipientAddresses)
-                    .map(InternetAddress.class::cast)
-                    .map(Throwing.function(MailAddress::new))
-                    .collect(ImmutableList.toImmutableList()))
+                .addRecipients(recipients)
                 .mimeMessage(reply)
                 .build();
             try {
@@ -167,4 +173,22 @@ public class RejectAction implements MailAction {
         }
     }
 
+    private ImmutableList<MailAddress> usableRecipients(MimeMessage reply) throws MessagingException {
+        return Optional.ofNullable(reply.getAllRecipients())
+            .stream()
+            .flatMap(Arrays::stream)
+            .map(InternetAddress.class::cast)
+            .flatMap(this::asMailAddress)
+            .collect(ImmutableList.toImmutableList());
+    }
+
+    // Jakarta Mail accepts values in From and Reply-To that MailAddress refuses
+    private Stream<MailAddress> asMailAddress(InternetAddress address) {
+        try {
+            return Stream.of(new MailAddress(address));
+        } catch (AddressException e) {
+            LOGGER.info("Ignoring an unusable recipient for the reject MDN: {}", address, e);
+            return Stream.empty();
+        }
+    }
 }

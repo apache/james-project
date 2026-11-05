@@ -507,6 +507,31 @@ class SieveIntegrationTest {
         assertThat(mail.getRecipients()).isEmpty();
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"alice", "a@b, <"})
+    void rejectShouldNotDeliverWhenFromIsNotUsable(String from) throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
+
+        FakeMail mail = createMail();
+        mail.getMessage().setHeader("From", from);
+        testee.service(mail);
+
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+        assertThat(mail.getRecipients()).isEmpty();
+    }
+
+    @Test
+    void rejectShouldStillAnswerTheUsableAddressWhenReplyToHoldsAnUnusableOne() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
+
+        FakeMail mail = createMail();
+        mail.getMessage().setHeader("Reply-To", "sender@any.com, alice");
+        testee.service(mail);
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+        assertThat(mail.getRecipients()).isEmpty();
+    }
+
     @Test
     void rejectShouldWorkWhenNoMessageId() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
