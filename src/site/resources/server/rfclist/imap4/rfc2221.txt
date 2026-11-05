@@ -233,7 +233,7 @@ RFC 2221                 IMAP4 Login Referrals              October 1997
 
    This document and translations of it may be copied and furnished to
    others, and derivative works that comment on or otherwise explain it
-   or assist in its implmentation may be prepared, copied, published
+   or assist in its implementation may be prepared, copied, published
    andand distributed, in whole or in part, without restriction of any
    kind, provided that the above copyright notice and this paragraph are
    included on all such copies and derivative works.  However, this
