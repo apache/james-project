@@ -66,6 +66,8 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
         .or(CharMatcher.inRange('0', '9'));
     private static final CharMatcher LABEL_CHAR_MATCHER = ALPHANUMERIC_MATCHER.or(CharMatcher.is('-'));
     private static final CharMatcher OPAQUE_IDENTIFIER_MATCHER = ALPHANUMERIC_MATCHER.or(CharMatcher.is(':'));
+    // RFC 6874 unreserved characters
+    private static final CharMatcher IPV6_ZONE_MATCHER = ALPHANUMERIC_MATCHER.or(CharMatcher.anyOf("._~-"));
     private static final Splitter LABEL_SPLITTER = Splitter.on('.');
     private static final int MAX_HOSTNAME_LENGTH = 253;
     private static final int MAX_LABEL_LENGTH = 63;
@@ -105,6 +107,16 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
     public static boolean isValid(String argument) {
         String hostname = unquote(argument);
 
+        // Guava accepts anything after the % of an IPv6 address
+        return hasValidIpv6Zone(hostname) && isValidHostname(hostname);
+    }
+
+    private static boolean hasValidIpv6Zone(String hostname) {
+        int zone = hostname.indexOf('%');
+        return zone == -1 || IPV6_ZONE_MATCHER.matchesAllOf(hostname.substring(zone + 1));
+    }
+
+    private static boolean isValidHostname(String hostname) {
         // Without [] Guava attempt to parse IPV4
         return InetAddresses.isUriInetAddress(hostname)
             // Guava tries parsing IPv6 if and only if wrapped by []
