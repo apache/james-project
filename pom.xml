@@ -655,7 +655,7 @@
         <jackson.databind.version>2.22.4</jackson.databind.version>
         <feign.version>13.6</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
-        <jjwt.version>0.12.6</jjwt.version>
+        <jjwt.version>0.13.0</jjwt.version>
         <metrics.version>4.2.40</metrics.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <testcontainers.modules.version>1.21.4</testcontainers.modules.version>
