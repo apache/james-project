@@ -23,9 +23,12 @@ package org.apache.mailet;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.mail.MessagingException;
@@ -37,6 +40,7 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
 import org.apache.mailet.PerRecipientHeaders.Header;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -159,7 +163,51 @@ public interface Mail extends Serializable, Cloneable {
      * @since Mailet API v2.4
      */
     void setRecipients(Collection<MailAddress> recipients);
-    
+
+    /**
+     * RewrittenRecipient is the mapping between an old recipient and any number of new recipients.
+     * @param originalAddress is the original recipient.
+     * @param rewrittenAddresses are the new recipients that replace the original recipient.
+     */
+    record RewrittenRecipient(MailAddress originalAddress, Collection<MailAddress> rewrittenAddresses) {}
+
+    /**
+     * For every mapping, the old address is removed from and the rewritten Addresses are added to the recipients.
+     * All recipients that are not mapped are dropped. It is an illegal argument to rewrite the same recipient multiple times.
+     * In contrast to setRecipients, updateRecipients also updates the per recipient headers.
+     * All per recipient headers of the original address are set on all rewritten addresses. Per recipient headers
+     * are dropped if the recipient is not part of the recipient set anymore.
+     *
+     * @param rewrittenRecipients maps old recipients to new recipients.
+     * @since Mailet API v3.3
+     */
+    default void updateRecipients(Collection<RewrittenRecipient> rewrittenRecipients) {
+        Preconditions.checkArgument(
+            this.getRecipients().containsAll(rewrittenRecipients.stream().map(RewrittenRecipient::originalAddress).collect(Collectors.toList())),
+            "Rewritten recipients contain an original address that is not a recipient of the email");
+        Preconditions.checkArgument(
+            rewrittenRecipients.stream().map(RewrittenRecipient::originalAddress).allMatch(new HashSet<MailAddress>()::add),
+            "Rewritten recipients must not contain duplicate original addresses");
+
+        List<MailAddress> newRecipients = rewrittenRecipients.stream()
+            .flatMap(rewrittenRecipient -> rewrittenRecipient.rewrittenAddresses().stream())
+            .distinct()
+            .collect(Collectors.toList());
+
+        PerRecipientHeaders newHeaders = new PerRecipientHeaders();
+        rewrittenRecipients.forEach(rewrittenRecipient -> {
+            Collection<Header> oldHeaders = getPerRecipientSpecificHeaders().getHeadersForRecipient(rewrittenRecipient.originalAddress());
+            for (MailAddress recipient : rewrittenRecipient.rewrittenAddresses()) {
+                for (Header header : oldHeaders) {
+                    newHeaders.addHeaderForRecipient(header, recipient);
+                }
+            }
+        });
+
+        setRecipients(newRecipients);
+        setPerRecipientSpecificHeaders(newHeaders);
+    }
+
     /**
      * Returns the sender of the message, as specified by the SMTP "MAIL FROM" command,
      * or internally defined.
@@ -400,6 +448,14 @@ public interface Mail extends Serializable, Cloneable {
      * @return the recipient-specific headers
      */
     PerRecipientHeaders getPerRecipientSpecificHeaders();
+
+    /**
+     * Set an association between recipients and specific headers.
+     *
+     * @param headers the recipient-specific headers
+     * @since Mailet API v3.3
+     */
+    void setPerRecipientSpecificHeaders(PerRecipientHeaders headers);
 
     /**
      * Returns the message size (including headers).

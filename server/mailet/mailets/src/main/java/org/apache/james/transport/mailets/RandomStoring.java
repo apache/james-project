@@ -80,6 +80,7 @@ public class RandomStoring extends GenericMailet {
             .map(Throwing.function(info -> info.getUser().asMailAddress()))
             .collect(ImmutableList.toImmutableList());
 
+        // As there is no clear mapping, per recipient headers are getting lost here.
         mail.setRecipients(mailAddresses);
         reroutingInfos.forEach(reroutingInfo ->
                 StorageDirective.builder()

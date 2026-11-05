@@ -113,6 +113,7 @@ public class MailModifier {
 
     public void setRecipients(List<MailAddress> recipients) {
         if (!recipients.isEmpty()) {
+            // As there is no clear mapping, per recipient headers are getting lost here.
             mail.setRecipients(recipients
                 .stream()
                 .collect(ImmutableList.toImmutableList()));

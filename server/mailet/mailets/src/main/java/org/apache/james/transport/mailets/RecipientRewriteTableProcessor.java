@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -56,6 +57,7 @@ import org.apache.mailet.DsnParameters;
 import org.apache.mailet.DsnParameters.RecipientDsnParameters;
 import org.apache.mailet.LoopPrevention;
 import org.apache.mailet.Mail;
+import org.apache.mailet.Mail.RewrittenRecipient;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.ProcessingState;
 import org.slf4j.Logger;
@@ -93,6 +95,10 @@ public class RecipientRewriteTableProcessor {
 
         RrtExecutionResult executionResult() {
             return executionResult;
+        }
+
+        RewrittenRecipient asRewrittenRecipient() {
+            return new RewrittenRecipient(this.originalAddress, this.executionResult.getNewRecipients());
         }
 
         DsnParameters applyOnDsnParameters(DsnParameters dsnParameters) {
@@ -242,7 +248,7 @@ public class RecipientRewriteTableProcessor {
                 LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
                 try {
                     copy.setSender(originalRecipient);
-                    copy.setRecipients(newRecipients);
+                    copy.updateRecipients(Arrays.asList(new RewrittenRecipient(originalRecipient, newRecipients)));
                     copy.setAttribute(FORWARDED_ATTRIBUTE);
                     recordedRecipients.merge(originalRecipient).recordOn(copy);
 
@@ -396,7 +402,9 @@ public class RecipientRewriteTableProcessor {
             mail.setState(Mail.GHOST);
         }
 
-        mail.setRecipients(executionResults.newRecipients);
+        mail.updateRecipients(decisions.stream()
+            .map(Decision::asRewrittenRecipient)
+            .collect(Collectors.toList()));
     }
 
     private List<Decision> executeRrtFor(Mail mail) {

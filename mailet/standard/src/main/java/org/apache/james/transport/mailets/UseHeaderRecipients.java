@@ -86,6 +86,8 @@ public class UseHeaderRecipients extends GenericMailet {
      * Process an incoming email, removing the currently identified
      * recipients and replacing them with the recipients indicated in
      * the Mail-For, To and Cc headers of the actual email.
+     * As there is no clear mapping, per recipient headers will get lost
+     * when using this mailet.
      *
      * @param mail incoming email
      */

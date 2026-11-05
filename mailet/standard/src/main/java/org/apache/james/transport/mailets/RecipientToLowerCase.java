@@ -18,17 +18,19 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
+import org.apache.mailet.Mail.RewrittenRecipient;
 import org.apache.mailet.base.GenericMailet;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 
 /**
  * {@link GenericMailet} which convert all Recipients to lowercase
@@ -37,9 +39,9 @@ public class RecipientToLowerCase extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        mail.setRecipients(mail.getRecipients().stream()
-            .map(Throwing.function(this::toLowerCase))
-            .collect(ImmutableList.toImmutableList()));
+        mail.updateRecipients(mail.getRecipients().stream()
+            .map(recipient -> new RewrittenRecipient(recipient, Arrays.asList(Throwing.function(this::toLowerCase).apply(recipient))))
+            .collect(Collectors.toList()));
     }
 
     private MailAddress toLowerCase(MailAddress mailAddress) throws AddressException {
