@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /** Relocates authoritative references; secondary header indexes are repaired on a missing-blob read. */
@@ -42,10 +41,10 @@ public class CassandraBlobIdUpdater implements BlobIdUpdater {
 
     public static class Factory implements BlobIdUpdater.Factory {
         private final CassandraBlobReferenceDAO references;
-        private final CassandraBlobReferenceIndexDAO index;
+        private final CassandraBlobReferenceIndex index;
 
         @Inject
-        public Factory(CassandraBlobReferenceDAO references, CassandraBlobReferenceIndexDAO index) {
+        public Factory(CassandraBlobReferenceDAO references, CassandraBlobReferenceIndex index) {
             this.references = references;
             this.index = index;
         }
@@ -56,11 +55,11 @@ public class CassandraBlobIdUpdater implements BlobIdUpdater {
             Objects.requireNonNull(referencedBlobIdObserver);
             return Mono.usingWhen(
                 Mono.fromSupplier(() -> new CassandraBlobIdUpdater(RunId.generate(), references, index)),
-                updater -> updater.createIndex.thenMany(Flux.defer(references::listReferences))
+                updater -> updater.createIndex.flatMap(dao -> references.listReferences()
                     .doOnNext(reference -> referencedBlobIdObserver.accept(reference.blobId()))
                     .filter(reference -> generationCondition.test(reference.blobId()))
-                    .concatMap(reference -> index.store(updater.runId, reference))
-                    .then(Mono.just((BlobIdUpdater) updater)),
+                    .concatMap(dao::store)
+                    .then(Mono.just((BlobIdUpdater) updater))),
                 updater -> Mono.empty(),
                 (updater, failure) -> updater.cleanup(),
                 CassandraBlobIdUpdater::cleanup);
@@ -69,15 +68,15 @@ public class CassandraBlobIdUpdater implements BlobIdUpdater {
 
     private final RunId runId;
     private final CassandraBlobReferenceDAO references;
-    private final CassandraBlobReferenceIndexDAO index;
-    private final Mono<Void> createIndex;
+    private final CassandraBlobReferenceIndex index;
+    private final Mono<CassandraBlobReferenceIndexDAO> createIndex;
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    private CassandraBlobIdUpdater(RunId runId, CassandraBlobReferenceDAO references, CassandraBlobReferenceIndexDAO index) {
+    private CassandraBlobIdUpdater(RunId runId, CassandraBlobReferenceDAO references, CassandraBlobReferenceIndex index) {
         this.runId = runId;
         this.references = references;
         this.index = index;
-        // Let an in-flight CREATE finish before cancellation can DROP the table.
+        // Let creation and statement preparation finish before cancellation can DROP the table.
         this.createIndex = Mono.defer(() -> index.create(runId)).cache();
         LOGGER.info("Preparing blob reference snapshot {}", runId);
     }
@@ -89,7 +88,7 @@ public class CassandraBlobIdUpdater implements BlobIdUpdater {
         return Mono.defer(() -> {
             Preconditions.checkState(!closed.get(), "Blob ID updater has been cleaned up");
             // Keep the snapshot until cleanup so a partial failure can be retried safely.
-            return index.retrieve(runId, oldId)
+            return createIndex.flatMapMany(dao -> dao.retrieve(oldId))
                 .concatMap(reference -> references.replace(reference, newId))
                 .then();
         });
