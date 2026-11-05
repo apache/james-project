@@ -90,6 +90,30 @@ class MetadataResponseEncoderTest {
     }
 
     @Test
+    void encodingShouldUseALiteralWhenValueHoldsLineBreaks() throws Exception {
+        MetadataResponse response = new MetadataResponse("INBOX", ImmutableList.of(
+            MailboxAnnotation.newInstance(PRIVATE_KEY, "two\r\nlines"),
+            SHARED_ANNOTATION));
+
+        encoder.encode(response, composer);
+        composer.flush();
+
+        assertThat(byteImapResponseWriter.getString())
+            .isEqualTo("* METADATA \"INBOX\" (/private/comment {10}\r\ntwo\r\nlines /shared/comment \"Shared comment\")\r\n");
+    }
+
+    @Test
+    void encodingShouldNotWriteNulInALiteral() throws Exception {
+        MetadataResponse response = new MetadataResponse("INBOX", ImmutableList.of(MailboxAnnotation.newInstance(PRIVATE_KEY, "a\0\r\nb")));
+
+        encoder.encode(response, composer);
+        composer.flush();
+
+        assertThat(byteImapResponseWriter.getString())
+            .isEqualTo("* METADATA \"INBOX\" (/private/comment {5}\r\na \r\nb)\r\n");
+    }
+
+    @Test
     void encodingShouldWellFormWhenNilReturnedAnnotation() throws Exception {
         MetadataResponse response = new MetadataResponse("INBOX", ImmutableList.of(MailboxAnnotation.nil(PRIVATE_KEY)));
 

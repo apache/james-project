@@ -40,8 +40,9 @@ C: two lines. )
 S: a4 OK SETMETADATA completed.
 
 C: g2 GETMETADATA "INBOX" /private/comment
-S: \* METADATA "INBOX" \(\/private\/comment "My new comment across
-S: two lines."\)
+S: \* METADATA "INBOX" \(\/private\/comment \{33\}
+S: My new comment across
+S: two lines.\)
 S: g2 OK GETMETADATA completed.
 
 C: a5 SETMETADATA INBOX (/private/comment "My new comment" /shared/comment "This one is for you!")
