@@ -70,6 +70,10 @@ public class SetAnnotationCommandParser extends AbstractImapCommandParser {
         try {
             String key = request.atom();
             String value = request.nstring();
+            // RFC 5464: only a literal8, which is not supported, can carry a NUL
+            if (value != null && value.indexOf('\0') >= 0) {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "A metadata value can not hold a NUL");
+            }
 
             return Optional.ofNullable(value)
                 .map(transforMailboxAnnotation(key))

@@ -67,6 +67,24 @@ class SetAnnotationCommandParserTest {
     }
 
     @Test
+    void decodeMessageShouldThrowDecodingExceptionWhenQuotedValueHoldsNul() {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"a\0b\") \n").getBytes());
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, null))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldThrowDecodingExceptionWhenLiteralValueHoldsNul() {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment {3}\na\0b) \n").getBytes());
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, new ByteArrayOutputStream());
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, null))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
     void decodeMessageShouldReturnRequestContainsOneNilAnnotation() throws Exception {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment NIL) \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
