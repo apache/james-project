@@ -21,7 +21,7 @@ package org.apache.james.jmap.core
 
 import eu.timepit.refined.auto._
 
-case class ResponseObject(sessionState: UuidState, methodResponses: Seq[Invocation])
+case class ResponseObject(sessionState: UuidState, methodResponses: Seq[Invocation], createdIds: Option[CreatedIds] = None)
 
 object ResponseObject {
   val SESSION_STATE: UuidState = UuidState.fromString("2c9f1b12-b35a-43e6-9af2-0106fb53a943")
