@@ -178,4 +178,27 @@ class ImapRequestFrameDecoderTest {
             .hasSize(2)
             .last().asString().contains("tag=b, command=NOOP");
     }
+
+    @Test
+    void aCommandPipelinedAfterAFileBackedLiteralEndingWithABareLfShouldBeDecoded() {
+        List<byte[]> chunks = List.of(
+            "a APPEND INBOX {40}\r\n".getBytes(StandardCharsets.US_ASCII),
+            "0123456789012345678901234567890123456789\nb NOOP\r\n".getBytes(StandardCharsets.US_ASCII));
+
+        // inMemorySizeLimit 32 < 40: the literal is spooled to a file
+        assertThat(decode(true, 32, 5504, 3008, chunks))
+            .hasSize(2)
+            .last().asString().contains("tag=b, command=NOOP");
+    }
+
+    @Test
+    void aFileBackedLiteralEndingWithALfShouldStillExpectItsEndOfLine() {
+        List<byte[]> chunks = List.of(
+            "a APPEND INBOX {40}\r\n".getBytes(StandardCharsets.US_ASCII),
+            "012345678901234567890123456789012345678\n\r\nb NOOP\r\n".getBytes(StandardCharsets.US_ASCII));
+
+        assertThat(decode(true, 32, 5504, 3008, chunks))
+            .hasSize(2)
+            .last().asString().contains("tag=b, command=NOOP");
+    }
 }
