@@ -101,9 +101,9 @@ public class MailboxPath {
     @VisibleForTesting
     static String evaluateInvalidChars() {
         if (RELAX_MAILBOX_NAME_VALIDATION) {
-            return "\r\n";
+            return "\r\n\0";
         }
-        return "%*\r\n";
+        return "%*\r\n\0";
     }
 
     @VisibleForTesting
