@@ -236,7 +236,7 @@ public class MailboxPath {
                 String.format("'%s' has an empty part within its mailbox name considering %s as a delimiter", asString(), pathDelimiter));
         }
         if (nameContainsForbiddenCharacters()) {
-            throw new MailboxNameException(asString() + " contains one of the forbidden characters " + INVALID_CHARS + " or starts with #");
+            throw new MailboxNameException(asString() + " contains one of the forbidden characters " + INVALID_CHARS.replace("\0", "\\0") + " or starts with #");
         }
         if (isMailboxNameTooLong()) {
             throw new TooLongMailboxNameException("Mailbox name exceeds maximum size of " + MAX_MAILBOX_NAME_LENGTH + " characters");
