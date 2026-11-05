@@ -39,20 +39,26 @@ object CreateProcessor {
         .expand {
           case (Nil, _, _) => SMono.empty
           case (id :: remaining, results, context) =>
-            val entry = creates(id)
-            if (localDependencies(id).exists(dependency => !results.get(dependency).exists(_.isRight))) {
-              SMono.just((remaining, results.updated(id, Left(invalidDependency(entry))), context))
-            } else {
-              create(entry, context).map {
-                case Left(error) => (remaining, results.updated(id, Left(error)), context)
-                case Right((result, serverId)) =>
-                  (remaining, results.updated(id, Right(result)), context.recordCreatedId(id, serverId))
-              }
-            }
+            processCreation(id, creates(id), localDependencies(id), results, context)(create, invalidDependency)
+              .map { case (updatedResults, updatedContext) => (remaining, updatedResults, updatedContext) }
         }
         .last()
         .map { case (_, results, context) => (results, context) }
     })
+
+  private def processCreation[A, E, R](id: ClientId, entry: A, dependencies: Set[ClientId],
+                                      results: Map[ClientId, Either[E, R]], context: ProcessingContext)(
+                                      create: (A, ProcessingContext) => SMono[Either[E, (R, ServerId)]],
+                                      invalidDependency: A => E): SMono[(Map[ClientId, Either[E, R]], ProcessingContext)] =
+    if (dependencies.exists(dependency => !results.get(dependency).exists(_.isRight))) {
+      SMono.just((results.updated(id, Left(invalidDependency(entry))), context))
+    } else {
+      create(entry, context).map {
+        case Left(error) => (results.updated(id, Left(error)), context)
+        case Right((result, serverId)) =>
+          (results.updated(id, Right(result)), context.recordCreatedId(id, serverId))
+      }
+    }
 
   // Kahn's algorithm: each vertex and edge is visited once. Remaining vertices
   // belong to a cycle or depend on one; process() rejects them without side effects.
