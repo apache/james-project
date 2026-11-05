@@ -478,6 +478,13 @@ class AttributeValueTest {
 
             assertThat(actual.value().toString()).isEqualTo(spec);
         }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"mailto:\0#x", "mailto:a@b\0#x"})
+        @SuppressWarnings("deprecation")
+        void urlThatCanNotBeReadBackShouldNotBeSerialized(String spec) throws Exception {
+            assertThat(AttributeValue.of(new URL(spec)).toJson()).isEmpty();
+        }
     }
 
     @Nested

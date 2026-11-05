@@ -490,22 +490,29 @@ public interface Serializer<T> {
     class UrlSerializer implements Serializer<URL> {
         @Override
         public Optional<JsonNode> serialize(URL object) {
-            return STRING_SERIALIZER.serialize(object.toString());
+            String url = object.toString();
+            // toString() and new URL() are not always inverses (e.g. trailing control characters): refuse now
+            // what could not be read back
+            return parse(url)
+                .filter(parsed -> parsed.toString().equals(url))
+                .flatMap(parsed -> STRING_SERIALIZER.serialize(url));
         }
 
         @Override
         public Optional<URL> deserialize(JsonNode json) {
-            return STRING_SERIALIZER.deserialize(json).flatMap(url -> {
-                try {
-                    // Parse with the same (lenient) parser as the one that built the URL, URI would reject
-                    // some URLs that URL accepts (e.g. "http:" or a space in the path)
-                    @SuppressWarnings("deprecation")
-                    URL result = new URL(url);
-                    return Optional.of(result);
-                } catch (MalformedURLException e) {
-                    return Optional.empty();
-                }
-            });
+            return STRING_SERIALIZER.deserialize(json).flatMap(this::parse);
+        }
+
+        private Optional<URL> parse(String url) {
+            try {
+                // Parse with the same (lenient) parser as the one that built the URL, URI would reject
+                // some URLs that URL accepts (e.g. "http:" or a space in the path)
+                @SuppressWarnings("deprecation")
+                URL result = new URL(url);
+                return Optional.of(result);
+            } catch (MalformedURLException e) {
+                return Optional.empty();
+            }
         }
 
         @Override
