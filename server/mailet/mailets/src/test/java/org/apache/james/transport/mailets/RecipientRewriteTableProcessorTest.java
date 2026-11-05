@@ -44,6 +44,8 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -373,6 +375,33 @@ class RecipientRewriteTableProcessorTest {
                 .containsEntry(
                     RecipientRewriteTableProcessor.FORWARDED_ATTRIBUTE_NAME,
                     new Attribute(RecipientRewriteTableProcessor.FORWARDED_ATTRIBUTE_NAME, AttributeValue.of(true))));
+    }
+
+    @Test
+    void processShouldUpdatePerRecipientHeaders() throws Exception {
+        virtualTableStore.addMapping(
+            MappingSource.fromMailAddress(MailAddressFixture.ANY_AT_LOCAL),
+            Mapping.alias(MailAddressFixture.RECIPIENT1.asString()));
+        virtualTableStore.addMapping(
+            MappingSource.fromMailAddress(MailAddressFixture.ANY_AT_LOCAL),
+            Mapping.alias(MailAddressFixture.RECIPIENT2.asString()));
+
+        mail = FakeMail.builder()
+            .name("mail")
+            .sender(MailAddressFixture.SENDER)
+            .mimeMessage(message)
+            .recipients(MailAddressFixture.ANY_AT_LOCAL, MailAddressFixture.OTHER_AT_LOCAL)
+            .addHeaderForRecipient(Header.builder().name("Header1-Name").value("header1 value").build(), MailAddressFixture.ANY_AT_LOCAL)
+            .addHeaderForRecipient(Header.builder().name("Header2-Name").value("header2 value").build(), MailAddressFixture.OTHER_AT_LOCAL)
+            .build();
+
+        processor.processMail(mail);
+
+        PerRecipientHeaders expected = new PerRecipientHeaders();
+        expected.addHeaderForRecipient(Header.builder().name("Header1-Name").value("header1 value").build(), MailAddressFixture.RECIPIENT1);
+        expected.addHeaderForRecipient(Header.builder().name("Header1-Name").value("header1 value").build(), MailAddressFixture.RECIPIENT2);
+        expected.addHeaderForRecipient(Header.builder().name("Header2-Name").value("header2 value").build(), MailAddressFixture.OTHER_AT_LOCAL);
+        assertThat(mail.getPerRecipientSpecificHeaders()).isEqualTo(expected);
     }
 
     private void defineDefaultDomain(String jamesLocal) throws ConfigurationException {

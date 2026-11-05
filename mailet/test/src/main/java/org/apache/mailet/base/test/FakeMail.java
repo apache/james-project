@@ -635,6 +635,11 @@ public class FakeMail implements Mail {
     }
 
     @Override
+    public void setPerRecipientSpecificHeaders(PerRecipientHeaders headers) {
+        perRecipientHeaders = headers;
+    }
+
+    @Override
     public void addSpecificHeaderForRecipient(Header header, MailAddress recipient) {
         perRecipientHeaders.addHeaderForRecipient(header, recipient);
     }
