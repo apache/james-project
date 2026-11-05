@@ -212,6 +212,14 @@ class MailboxPathTest {
         }
 
         @Test
+        void forbiddenCharactersErrorMessageShouldNotHoldARawNul() {
+            assertThatThrownBy(() -> MailboxPath.forUser(USER, "a*b").assertAcceptable(folderDelimiter()))
+                    .isInstanceOf(MailboxNameException.class)
+                    .hasMessageContaining("\\0")
+                    .hasMessageNotContaining("\0");
+        }
+
+        @Test
         void childShouldThrowWhenBlank() {
             MailboxPath path = MailboxPath.forUser(USER, "folder");
             assertThatThrownBy(() -> path.child(" ", folderDelimiter()))
