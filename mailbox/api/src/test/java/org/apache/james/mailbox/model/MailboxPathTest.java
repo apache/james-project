@@ -206,6 +206,12 @@ class MailboxPathTest {
         }
 
         @Test
+        void shouldThrowWhenNul() {
+            assertThatThrownBy(() -> MailboxPath.forUser(USER, "a\0b").assertAcceptable(folderDelimiter()))
+                    .isInstanceOf(MailboxNameException.class);
+        }
+
+        @Test
         void childShouldThrowWhenBlank() {
             MailboxPath path = MailboxPath.forUser(USER, "folder");
             assertThatThrownBy(() -> path.child(" ", folderDelimiter()))
