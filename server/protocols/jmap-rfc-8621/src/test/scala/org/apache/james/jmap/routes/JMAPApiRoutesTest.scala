@@ -274,6 +274,39 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     jmapServer.stop()
   }
 
+  "RFC-8621 createdIds" should "resolve initial mappings and return them after a failed call" in {
+    val response = RestAssured.`given`()
+      .header("Authorization", s"Basic $userBase64String")
+      .body("""{"using":["urn:ietf:params:jmap:core"],"createdIds":{"old":"server-id"},
+        |"methodCalls":[["Core/echo",{"id":"#old"},"echo"],["Unknown/method",{},"error"]]}""".stripMargin)
+      .post().`then`().statusCode(HttpStatus.SC_OK).extract().asString()
+
+    val json = play.api.libs.json.Json.parse(response)
+    assert((json \ "createdIds").get == play.api.libs.json.Json.obj("old" -> "server-id"))
+    assert((json \ "methodResponses")(0)(1)("id").as[String] == "server-id")
+    assert((json \ "methodResponses")(1)(1)("type").as[String] == "unknownMethod")
+  }
+
+  "RFC-8621 createdIds" should "return an explicitly requested empty map with no method calls" in {
+    RestAssured.`given`()
+      .header("Authorization", s"Basic $userBase64String")
+      .body("""{"using":["urn:ietf:params:jmap:core"],"createdIds":{},"methodCalls":[]}""")
+      .post().`then`().statusCode(HttpStatus.SC_OK)
+      .body("createdIds", equalTo(new java.util.HashMap[String, String]()))
+  }
+
+  "RFC-8621 createdIds" should "reject malformed mappings at the request boundary" in {
+    Seq("[]", "42", "{\"\":\"server\"}", "{\"client\":\"\"}", "{\"client\":42}",
+      "{\"bad id\":\"server\"}", "{\"client\":\"bad id\"}",
+      s"{\"${"c" * 256}\":\"server\"}", s"{\"client\":\"${"s" * 256}\"}").foreach { ids =>
+      RestAssured.`given`()
+        .header("Authorization", s"Basic $userBase64String")
+        .body(s"""{"using":["urn:ietf:params:jmap:core"],"createdIds":$ids,"methodCalls":[]}""")
+        .post().`then`().statusCode(HttpStatus.SC_BAD_REQUEST)
+        .body("type", equalTo(RequestLevelErrorType.NOT_REQUEST.value))
+    }
+  }
+
   "Extract original client IP address" should "work well" in {
     assert(JMAPApiRoutes.extractOriginalClientIP("203.0.113.195, 2001:db8:85a3:8d3:1319:8a2e:370:7348")
       .equals("203.0.113.195"))
