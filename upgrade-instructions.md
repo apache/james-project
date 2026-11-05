@@ -31,6 +31,17 @@ Change list:
  - [JAMES-4236 populateEmailQueryView task reports mailbox counters](#james-4236-populateemailqueryview-task-reports-mailbox-counters)
  - [JAMES-4235 Lucene ignores punctuation around words](#james-4235-lucene-ignores-punctuation-around-words)
  - [Regex mappings are evaluated with RE2J](#regex-mappings-are-evaluated-with-re2j)
+ - [Domains with an A-label decoding to a capital unknown to IDNA2003 are rejected](#domains-with-an-a-label-decoding-to-a-capital-unknown-to-idna2003-are-rejected)
+
+### Domains with an A-label decoding to a capital unknown to IDNA2003 are rejected
+
+Date: 05/11/2026
+
+Perimeter: domains and usernames
+
+`Domain.of` now rejects an A-label decoding to a capital that IDNA2003 does not map to lower case, for example `xn--58d.tld` (U+13A0),
+as it already did for the Unicode form of such a domain. Their stored form could not be parsed back, so that the mailbox events of such users could not be read.
+Accounts that already exist in such a domain will fail to be parsed and need to be moved to another domain.
 
 ### Regex mappings are evaluated with RE2J
 
