@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -190,6 +191,7 @@ public class LuceneSearchHighlighter implements SearchHighlighter {
         return Stream.ofNullable(doc.getFields(ATTACHMENT_TEXT_CONTENT_FIELD)).flatMap(Arrays::stream)
             .map(IndexableField::stringValue)
             .map(Throwing.function(contentType -> highlighter.getBestFragment(analyzer, ATTACHMENT_TEXT_CONTENT_FIELD, contentType)))
+            .filter(Objects::nonNull)
             .findFirst();
     }
 }
