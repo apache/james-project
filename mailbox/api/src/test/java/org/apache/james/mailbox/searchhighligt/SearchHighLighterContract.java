@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.searchhighligt;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.nio.charset.StandardCharsets;
@@ -541,6 +542,90 @@ public interface SearchHighLighterContract {
                 assertThat(highlightedSubject).contains("<mark>Quarterly</mark> report"));
             softly.assertThat(searchSnippets.getFirst().highlightedBody()).isEmpty();
         });
+    }
+
+    @Test
+    default void highlightSearchShouldSupportBracketsInSubject() throws Exception {
+        MailboxSession session = session(USERNAME1);
+
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("[Ticket] Server down (urgent)")
+                    .setBody("Hello there", StandardCharsets.UTF_8)),
+            session).getId();
+
+        verifyMessageWasIndexed(1);
+
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(
+                SearchQuery.subject("[Ticket]")))
+            .inMailboxes(List.of(m1.getMailboxId()))
+            .build();
+
+        List<SearchSnippet> searchSnippets = Flux.from(testee().highlightSearch(List.of(m1.getMessageId()), multiMailboxSearch, session))
+            .collectList()
+            .block();
+
+        assertThat(searchSnippets).hasSize(1);
+        assertSoftly(softly -> {
+            softly.assertThat(searchSnippets.getFirst().messageId()).isEqualTo(m1.getMessageId());
+            softly.assertThat(searchSnippets.getFirst().highlightedSubject()).hasValueSatisfying(highlightedSubject ->
+                assertThat(highlightedSubject).contains("<mark>Ticket</mark>"));
+        });
+    }
+
+    @Test
+    default void highlightSearchShouldSupportUnbalancedParenthesisInSubject() throws Exception {
+        MailboxSession session = session(USERNAME1);
+
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("[Ticket] Server down (urgent)")
+                    .setBody("Hello there", StandardCharsets.UTF_8)),
+            session).getId();
+
+        verifyMessageWasIndexed(1);
+
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(
+                SearchQuery.subject("down (urgent")))
+            .inMailboxes(List.of(m1.getMailboxId()))
+            .build();
+
+        List<SearchSnippet> searchSnippets = Flux.from(testee().highlightSearch(List.of(m1.getMessageId()), multiMailboxSearch, session))
+            .collectList()
+            .block();
+
+        assertThat(searchSnippets).hasSize(1);
+        assertSoftly(softly -> {
+            softly.assertThat(searchSnippets.getFirst().messageId()).isEqualTo(m1.getMessageId());
+            softly.assertThat(searchSnippets.getFirst().highlightedSubject()).hasValueSatisfying(highlightedSubject ->
+                assertThat(highlightedSubject).contains("Server <mark>down</mark> (<mark>urgent</mark>)"));
+        });
+    }
+
+    @Test
+    default void highlightSearchShouldNotFailWhenSearchValueHasNoWord() throws Exception {
+        MailboxSession session = session(USERNAME1);
+
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("[Ticket] Server down (urgent) !!!")
+                    .setBody("Hello there", StandardCharsets.UTF_8)),
+            session).getId();
+
+        verifyMessageWasIndexed(1);
+
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(
+                SearchQuery.subject("!!!")))
+            .inMailboxes(List.of(m1.getMailboxId()))
+            .build();
+
+        assertThatCode(() -> Flux.from(testee().highlightSearch(List.of(m1.getMessageId()), multiMailboxSearch, session))
+                .collectList()
+                .block())
+            .doesNotThrowAnyException();
     }
 
     @Test
