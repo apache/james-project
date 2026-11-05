@@ -35,6 +35,8 @@ object CreateProcessor {
     SMono.defer(() => {
       val localDependencies = creates.view.mapValues(value => dependencies(value).intersect(creates.keySet)).toMap
       val ordered = order(localDependencies)
+      // Emit one accumulated state per creation. expand avoids a recursive flatMap
+      // subscription chain when many synchronous creates depend on one another.
       SMono.just((ordered.toList, Map.empty[ClientId, Either[E, R]], initialContext))
         .expand {
           case (Nil, _, _) => SMono.empty
@@ -63,24 +65,24 @@ object CreateProcessor {
   // Kahn's algorithm: each vertex and edge is visited once. Remaining vertices
   // belong to a cycle or depend on one; process() rejects them without side effects.
   private def order(dependencies: Map[ClientId, Set[ClientId]]): Seq[ClientId] = {
-    val remaining = mutable.Map.from(dependencies.view.mapValues(_.size))
+    val unresolvedParentCounts = mutable.Map.from(dependencies.view.mapValues(_.size))
     val dependents = mutable.Map.empty[ClientId, Vector[ClientId]]
     dependencies.foreach { case (id, parents) =>
       parents.foreach(parent => dependents.update(parent, dependents.getOrElse(parent, Vector.empty) :+ id))
     }
-    val ready = mutable.Queue.from(dependencies.keys.filter(id => remaining(id) == 0))
+    val ready = mutable.Queue.from(dependencies.keys.filter(id => unresolvedParentCounts(id) == 0))
     val ordered = Vector.newBuilder[ClientId]
     while (ready.nonEmpty) {
       val id = ready.dequeue()
       ordered += id
-      remaining.remove(id)
+      unresolvedParentCounts.remove(id)
       dependents.getOrElse(id, Vector.empty).foreach(child => {
-        remaining.update(child, remaining(child) - 1)
-        if (remaining(child) == 0) {
+        unresolvedParentCounts.update(child, unresolvedParentCounts(child) - 1)
+        if (unresolvedParentCounts(child) == 0) {
           ready.enqueue(child)
         }
       })
     }
-    ordered.result() ++ remaining.keys
+    ordered.result() ++ unresolvedParentCounts.keys
   }
 }
