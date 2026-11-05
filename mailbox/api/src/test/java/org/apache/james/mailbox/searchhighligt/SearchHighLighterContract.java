@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
@@ -503,6 +504,43 @@ public interface SearchHighLighterContract {
         assertThat(searchSnippets.getFirst().highlightedBody())
             .isPresent()
             .satisfies(highlightedBody -> assertThat(highlightedBody.get()).contains("This is a <mark>beautiful</mark> banana"));
+    }
+
+    @Test
+    default void highlightSearchShouldReturnSubjectWhenTextAttachmentDoesNotMatch() throws Exception {
+        MailboxSession session = session(USERNAME1);
+
+        // m1 matches by subject, while neither its body nor its text attachment contains the searched word
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("Quarterly report")
+                    .setBody(MultipartBuilder.create("mixed")
+                        .addTextPart("Hello there", StandardCharsets.UTF_8)
+                        .addBodyPart(BodyPartBuilder.create()
+                            .setBody("numbers inside", "plain", StandardCharsets.UTF_8)
+                            .setContentDisposition("attachment", "notes.txt"))
+                        .build())),
+            session).getId();
+
+        verifyMessageWasIndexed(1);
+
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(
+                SearchQuery.subject("Quarterly")))
+            .inMailboxes(List.of(m1.getMailboxId()))
+            .build();
+
+        List<SearchSnippet> searchSnippets = Flux.from(testee().highlightSearch(List.of(m1.getMessageId()), multiMailboxSearch, session))
+            .collectList()
+            .block();
+
+        assertThat(searchSnippets).hasSize(1);
+        assertSoftly(softly -> {
+            softly.assertThat(searchSnippets.getFirst().messageId()).isEqualTo(m1.getMessageId());
+            softly.assertThat(searchSnippets.getFirst().highlightedSubject()).hasValueSatisfying(highlightedSubject ->
+                assertThat(highlightedSubject).contains("<mark>Quarterly</mark> report"));
+            softly.assertThat(searchSnippets.getFirst().highlightedBody()).isEmpty();
+        });
     }
 
     @Test
