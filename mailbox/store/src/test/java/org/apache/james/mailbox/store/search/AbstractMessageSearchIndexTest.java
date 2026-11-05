@@ -840,6 +840,54 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void multimailboxSearchShouldReturnOnlyTheMessageMarkedAsDeletedWhenUidsCollide() throws MailboxException {
+        // m1 (deleted) in INBOX and mOther (seen) in MyFolder both have uid 1
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.DELETED));
+
+        List<MessageId> actual = messageSearchIndex.search(
+            session,
+            ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
+            searchQuery,
+            LIMIT)
+            .collectList().block();
+
+        assertThat(actual).containsOnly(m1.getMessageId());
+    }
+
+    @Test
+    void multimailboxSearchShouldNotReturnTheMessageMarkedAsDeletedWhenUidsCollide() throws MailboxException {
+        // m1 (deleted) in INBOX and mOther (seen) in MyFolder both have uid 1
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.flagIsUnSet(Flags.Flag.DELETED));
+
+        List<MessageId> actual = messageSearchIndex.search(
+            session,
+            ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
+            searchQuery,
+            LIMIT)
+            .collectList().block();
+
+        assertThat(actual)
+            .contains(mOther.getMessageId())
+            .doesNotContain(m1.getMessageId());
+    }
+
+    @Test
+    void multimailboxSearchOnUserFlagShouldReturnOnlyTheFlaggedMessagesWhenUidsCollide() throws MailboxException {
+        // MyFolder messages with uids 2 and 3 carry "Hello you", INBOX m2 and m3 do not
+        List<MailboxId> mailboxIds = ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId());
+
+        List<MessageId> flagged = messageSearchIndex.search(session, mailboxIds, SearchQuery.of(SearchQuery.flagIsSet("Hello you")), LIMIT)
+            .collectList().block();
+        List<MessageId> notFlagged = messageSearchIndex.search(session, mailboxIds, SearchQuery.of(SearchQuery.flagIsUnSet("Hello you")), LIMIT)
+            .collectList().block();
+
+        assertThat(flagged).containsOnly(m9.getMessageId(), mailWithAttachment.getMessageId(), mailWithInlinedAttachment.getMessageId());
+        assertThat(notFlagged)
+            .contains(m2.getMessageId(), m3.getMessageId())
+            .doesNotContain(m9.getMessageId(), mailWithAttachment.getMessageId(), mailWithInlinedAttachment.getMessageId());
+    }
+
+    @Test
     void multimailboxSearchShouldLimitTheSize() throws MailboxException {
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.SEEN));
 
