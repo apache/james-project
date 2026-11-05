@@ -31,7 +31,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 
-import scala.collection.immutable.ListMap
+import scala.collection.immutable.VectorMap
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -45,7 +45,7 @@ class CreateProcessorTest {
 
   private def process(entries: Seq[(ClientId, Set[ClientId])], context: ProcessingContext = emptyContext,
                       failures: Set[ClientId] = Set.empty, executions: AtomicInteger = new AtomicInteger()) =
-    CreateProcessor.process(ListMap(entries.map { case (id, parents) => id -> (id, parents) }: _*), context)(
+    CreateProcessor.process(VectorMap(entries.map { case (id, parents) => id -> (id, parents) }: _*), context)(
       dependencies = (entry: (ClientId, Set[ClientId])) => entry._2,
       create = (entry: (ClientId, Set[ClientId]), current: ProcessingContext) => SMono.fromCallable(() => {
         executions.incrementAndGet()
@@ -134,7 +134,7 @@ class CreateProcessorTest {
   def shouldWaitForParentCompletionBeforeCreatingChild(): Unit = {
     val parentCompletion = new CompletableFuture[Either[String, (Set[ServerId], ServerId)]]()
     val executions = new AtomicInteger()
-    val completion = CreateProcessor.process(ListMap(child -> Set(parent), parent -> Set.empty[ClientId]), emptyContext)(
+    val completion = CreateProcessor.process(VectorMap(child -> Set(parent), parent -> Set.empty[ClientId]), emptyContext)(
       dependencies = (parents: Set[ClientId]) => parents,
       create = (parents: Set[ClientId], context: ProcessingContext) => {
         executions.incrementAndGet()
