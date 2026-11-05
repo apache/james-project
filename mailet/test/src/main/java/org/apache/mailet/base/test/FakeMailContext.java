@@ -44,6 +44,7 @@ import org.apache.mailet.HostAddress;
 import org.apache.mailet.LookupException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
+import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
 
 import com.github.fge.lambdas.Throwing;
@@ -71,6 +72,7 @@ public class FakeMailContext implements MailetContext {
             .message(mail.getMessage())
             .state(mail.getState())
             .attributes(mail.attributes().collect(ImmutableList.toImmutableList()))
+            .perRecipientHeaders(mail.getPerRecipientSpecificHeaders())
             .fromMailet();
     }
 
@@ -117,6 +119,7 @@ public class FakeMailContext implements MailetContext {
             private Optional<Collection<MailAddress>> recipients = Optional.empty();
             private MimeMessage msg;
             private Map<AttributeName, Attribute> attributes = new HashMap<>();
+            private PerRecipientHeaders perRecipientHeaders = new PerRecipientHeaders();
             private Optional<String> state = Optional.empty();
             private Optional<Boolean> fromMailet = Optional.empty();
             private Optional<Delay> delay = Optional.empty();
@@ -147,6 +150,11 @@ public class FakeMailContext implements MailetContext {
 
             public Builder recipients(MailAddress... recipients) {
                 this.recipients = Optional.<Collection<MailAddress>>of(ImmutableList.copyOf(recipients));
+                return this;
+            }
+
+            public Builder perRecipientHeaders(PerRecipientHeaders perRecipientHeaders) {
+                this.perRecipientHeaders.addAll(perRecipientHeaders);
                 return this;
             }
 
@@ -199,7 +207,7 @@ public class FakeMailContext implements MailetContext {
                     this.attribute(Mail.SENT_BY_MAILET_ATTRIBUTE);
                 }
                 return new SentMail(sender, recipients.orElse(ImmutableList.<MailAddress>of()), msg,
-                    ImmutableMap.copyOf(attributes), state.orElse(Mail.DEFAULT), delay);
+                    ImmutableMap.copyOf(attributes), perRecipientHeaders, state.orElse(Mail.DEFAULT), delay);
             }
         }
 
@@ -208,15 +216,17 @@ public class FakeMailContext implements MailetContext {
         private final MimeMessage msg;
         private final Optional<String> subject;
         private final Map<AttributeName, Attribute> attributes;
+        private final PerRecipientHeaders perRecipientHeaders;
         private final String state;
         private final Optional<Delay> delay;
 
-        private SentMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, Map<AttributeName, Attribute> attributes, String state, Optional<Delay> delay) throws MessagingException {
+        private SentMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, Map<AttributeName, Attribute> attributes, PerRecipientHeaders perRecipientHeaders, String state, Optional<Delay> delay) throws MessagingException {
             this.sender = sender;
             this.recipients = ImmutableList.copyOf(recipients);
             this.msg = tryCopyMimeMessage(msg);
             this.subject = getSubject(msg);
             this.attributes = ImmutableMap.copyOf(attributes);
+            this.perRecipientHeaders = perRecipientHeaders;
             this.state = state;
             this.delay = delay;
         }
@@ -251,6 +261,10 @@ public class FakeMailContext implements MailetContext {
 
         public Map<AttributeName, Attribute> getAttributes() {
             return ImmutableMap.copyOf(attributes);
+        }
+
+        public PerRecipientHeaders getPerRecipientHeaders() {
+            return perRecipientHeaders;
         }
 
         public Optional<Delay> getDelay() {

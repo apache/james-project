@@ -21,6 +21,7 @@ package org.apache.james.jmap.mailet.filter;
 
 import static org.apache.james.jmap.mailet.filter.JMAPFiltering.RRT_ERROR;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -46,6 +47,7 @@ import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.AuditTrail;
 import org.apache.mailet.LoopPrevention;
 import org.apache.mailet.Mail;
+import org.apache.mailet.Mail.RewrittenRecipient;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.StorageDirective;
 import org.slf4j.Logger;
@@ -264,7 +266,7 @@ public class ActionApplier {
         MailImpl copy = MailImpl.duplicate(mail);
         try {
             copy.setSender(mailAddress);
-            copy.setRecipients(newRecipients);
+            copy.updateRecipients(Arrays.asList(new RewrittenRecipient(mailAddress, newRecipients)));
             recordedRecipients.merge(mailAddress).recordOn(copy);
 
             mailetContext.sendMail(copy);

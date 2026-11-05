@@ -19,14 +19,14 @@
 
 package org.apache.james.mailets.flow;
 
+import java.util.Collections;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
-
-import com.google.common.collect.ImmutableList;
 
 public class ClearRecipientsMailet extends GenericMailet {
     @Override
     public void service(Mail mail) {
-        mail.setRecipients(ImmutableList.of());
+        mail.updateRecipients(Collections.emptyList());
     }
 }

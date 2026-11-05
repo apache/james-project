@@ -26,6 +26,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -33,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
@@ -46,7 +49,9 @@ import org.apache.mailet.AttributeValue;
 import org.apache.mailet.ContractMailTest;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
+import org.apache.mailet.Mail.RewrittenRecipient;
 import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -532,5 +537,102 @@ public class MailImplTest extends ContractMailTest {
 
         assertThat(mail.dsnParameters())
             .isEmpty();
+    }
+
+    @Test
+    void updateRecipientsShouldReplaceRecipients() throws AddressException {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .addRecipients("user1@apache.org")
+            .build();
+        RewrittenRecipient rewrittenRecipient = new RewrittenRecipient(new MailAddress("user1@apache.org"), Arrays.asList(new MailAddress("user2@apache.org")));
+        mail.updateRecipients(Arrays.asList(rewrittenRecipient));
+
+        assertThat(mail.getRecipients()).containsExactly(new MailAddress("user2@apache.org"));
+    }
+
+    @Test
+    void updateRecipientsThrowsWhenMappingNonExistingRecipient() throws AddressException {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .addRecipients("user1@apache.org")
+            .build();
+        RewrittenRecipient rewrittenRecipient = new RewrittenRecipient(new MailAddress("user2@apache.org"), Collections.emptyList());
+        assertThatThrownBy(() -> mail.updateRecipients(Arrays.asList(rewrittenRecipient)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void updateRecipientsThrowsWhenMappingRecipientTwice() throws AddressException {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .addRecipients("user1@apache.org")
+            .build();
+        RewrittenRecipient rewrittenRecipient1 = new RewrittenRecipient(new MailAddress("user1@apache.org"), Arrays.asList(new MailAddress("user2@apache.org")));
+        RewrittenRecipient rewrittenRecipient2 = new RewrittenRecipient(new MailAddress("user1@apache.org"), Arrays.asList(new MailAddress("user3@apache.org")));
+        assertThatThrownBy(() -> mail.updateRecipients(Arrays.asList(rewrittenRecipient1, rewrittenRecipient2)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void updateRecipientsShouldDropNonExistingRecipientsAndTheirHeaders() throws AddressException {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .addRecipients("user1@apache.org")
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("user1@apache.org").build(), new MailAddress("user1@apache.org"))
+            .build();
+        mail.updateRecipients(Collections.emptyList());
+
+        assertThat(mail.getRecipients()).isEmpty();
+        assertThat(mail.getPerRecipientSpecificHeaders().getHeadersForRecipient(new MailAddress("user1@apache.org"))).isEmpty();
+    }
+
+    @Test
+    void updateRecipientsShouldDropRecipientsAndTheirHeaders() throws AddressException {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .addRecipients("user1@apache.org")
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("user1@apache.org").build(), new MailAddress("user1@apache.org"))
+            .build();
+        RewrittenRecipient rewrittenRecipient = new RewrittenRecipient(new MailAddress("user1@apache.org"), Collections.emptyList());
+        mail.updateRecipients(Arrays.asList(rewrittenRecipient));
+
+        assertThat(mail.getRecipients()).isEmpty();
+        assertThat(mail.getPerRecipientSpecificHeaders().getHeadersForRecipient(new MailAddress("user1@apache.org"))).isEmpty();
+    }
+
+    @Test
+    void updateRecipientsShouldReplacePerRecipientHeaders() throws AddressException {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .addRecipients("user1@apache.org", "user2@apache.org")
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("user1@apache.org").build(), new MailAddress("user1@apache.org"))
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("user2@apache.org").build(), new MailAddress("user2@apache.org"))
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("old@apache.org").build(), new MailAddress("old@apache.org"))
+            .build();
+        RewrittenRecipient rewrittenRecipient = new RewrittenRecipient(new MailAddress("user1@apache.org"), Arrays.asList(new MailAddress("user3@apache.org")));
+        mail.updateRecipients(Arrays.asList(rewrittenRecipient));
+
+        PerRecipientHeaders expected = new PerRecipientHeaders();
+        expected.addHeaderForRecipient(Header.builder().name("Delivered-To").value("user1@apache.org").build(), new MailAddress("user3@apache.org"));
+        assertThat(mail.getPerRecipientSpecificHeaders()).isEqualTo(expected);
+    }
+
+    @Test
+    void updateRecipientsMergesPerRecipientHeaders() throws AddressException {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .addRecipients("user1@apache.org", "user2@apache.org")
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("user1@apache.org").build(), new MailAddress("user1@apache.org"))
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("user2@apache.org").build(), new MailAddress("user2@apache.org"))
+            .build();
+        RewrittenRecipient rewrittenRecipient1 = new RewrittenRecipient(new MailAddress("user1@apache.org"), Arrays.asList(new MailAddress("user3@apache.org")));
+        RewrittenRecipient rewrittenRecipient2 = new RewrittenRecipient(new MailAddress("user2@apache.org"), Arrays.asList(new MailAddress("user3@apache.org")));
+        mail.updateRecipients(Arrays.asList(rewrittenRecipient1, rewrittenRecipient2));
+
+        PerRecipientHeaders expected = new PerRecipientHeaders();
+        expected.addHeaderForRecipient(Header.builder().name("Delivered-To").value("user1@apache.org").build(), new MailAddress("user3@apache.org"));
+        expected.addHeaderForRecipient(Header.builder().name("Delivered-To").value("user2@apache.org").build(), new MailAddress("user3@apache.org"));
+        assertThat(mail.getPerRecipientSpecificHeaders()).isEqualTo(expected);
     }
 }

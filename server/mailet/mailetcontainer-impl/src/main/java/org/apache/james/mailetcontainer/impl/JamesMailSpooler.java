@@ -53,6 +53,7 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,6 +132,8 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         private void performProcessMail(MailQueueItem queueItem, Mail mail) {
             LOGGER.debug("==== Begin processing mail {} with state {} ====", mail.getName(), mail.getState());
             ImmutableList<MailAddress> originalRecipients = ImmutableList.copyOf(mail.getRecipients());
+            PerRecipientHeaders originalPerRecipientHeaders = new PerRecipientHeaders();
+            originalPerRecipientHeaders.addAll(mail.getPerRecipientSpecificHeaders());
             try {
                 mailProcessor.service(mail);
 
@@ -139,17 +142,18 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
                 }
                 queueItem.done(MailQueueItem.CompletionStatus.SUCCESS);
             } catch (Throwable e) {
-                handleError(queueItem, mail, originalRecipients, e);
+                handleError(queueItem, mail, originalRecipients, originalPerRecipientHeaders, e);
             } finally {
                 LOGGER.debug("==== End processing mail {} ====", mail.getName());
             }
         }
 
-        private void handleError(MailQueueItem queueItem, Mail mail, ImmutableList<MailAddress> originalRecipients, Throwable processingException) {
+        private void handleError(MailQueueItem queueItem, Mail mail, ImmutableList<MailAddress> originalRecipients, PerRecipientHeaders originalPerRecipientHeaders, Throwable processingException) {
             int failureCount = computeFailureCount(mail);
 
-            // Restore original recipients
+            // Restore original recipients and original perRecipient headers
             queueItem.getMail().setRecipients(originalRecipients);
+            queueItem.getMail().setPerRecipientSpecificHeaders(originalPerRecipientHeaders);
 
             try {
                 if (failureCount > MAXIMUM_FAILURE_COUNT) {
