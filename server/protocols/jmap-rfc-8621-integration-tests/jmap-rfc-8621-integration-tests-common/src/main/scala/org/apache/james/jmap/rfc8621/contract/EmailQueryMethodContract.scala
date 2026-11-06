@@ -4636,7 +4636,7 @@ trait EmailQueryMethodContract {
       assertThat(queryReceivedAtIds(mailboxFilter).asJava).hasSize(4)
     }
     val firstPage = queryReceivedAtIds(mailboxFilter, 1)
-    assertThat(firstPage.asJava).hasSize(1).isSubsetOf(tiedIds.asJava)
+    assertThat(firstPage.asJava).hasSize(1).isSubsetOf(tiedIds: _*)
     val secondFilter = List(mailboxFilter, "\"before\": \"2020-01-01T12:00:00Z\"").filter(_.nonEmpty).mkString(",")
     val secondPage = queryReceivedAtIds(secondFilter)
     val expected = if (backwardCompatibilityEnabled) tiedIds :+ olderId else List(olderId)
