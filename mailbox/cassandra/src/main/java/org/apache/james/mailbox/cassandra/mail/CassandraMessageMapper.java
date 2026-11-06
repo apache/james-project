@@ -43,6 +43,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
@@ -52,6 +53,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.mail.utils.FlagsUpdateStageResult;
+import org.apache.james.mailbox.cassandra.object.compaction.CassandraMessageMetadataReconciler;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -102,6 +104,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private final CassandraIndexTableHandler indexTableHandler;
     private final CassandraFirstUnseenDAO firstUnseenDAO;
     private final AttachmentLoader attachmentLoader;
+    private final CassandraMessageMetadataReconciler metadataReconciler;
     private final CassandraDeletedMessageDAO deletedMessageDAO;
     private final BlobStore blobStore;
     private final CassandraConfiguration cassandraConfiguration;
@@ -129,6 +132,7 @@ public class CassandraMessageMapper implements MessageMapper {
         this.indexTableHandler = indexTableHandler;
         this.firstUnseenDAO = firstUnseenDAO;
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
+        this.metadataReconciler = new CassandraMessageMetadataReconciler(messageDAOV3, messageIdDAO, imapUidDAO);
         this.applicableFlagDAO = applicableFlagDAO;
         this.deletedMessageDAO = deletedMessageDAO;
         this.blobStore = blobStore;
@@ -268,9 +272,13 @@ public class CassandraMessageMapper implements MessageMapper {
         }
         if (fetchType == FetchType.HEADERS && metadata.isComplete()) {
             return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), metadata.getHeaderContent().get(), SIZE_BASED))
-                .map(metadata::asMailboxMessage);
+                .map(metadata::asMailboxMessage)
+                .onErrorResume(ObjectNotFoundException.class, error -> metadataReconciler.reconcile(metadata, fetchType)
+                    .flatMap(message -> attachmentLoader.addAttachmentToMessage(
+                        Pair.of(metadata.getComposedMessageId(), message), metadata.getSaveDate(), fetchType)));
         }
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)
+            .onErrorResume(ObjectNotFoundException.class, error -> metadataReconciler.reconcile(metadata, fetchType))
             .map(messageRepresentation -> Pair.of(metadata.getComposedMessageId(), messageRepresentation))
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, metadata.getSaveDate(), fetchType));
     }
