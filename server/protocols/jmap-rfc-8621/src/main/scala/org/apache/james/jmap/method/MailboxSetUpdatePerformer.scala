@@ -132,7 +132,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
         case (original, resolved) =>
           resolved.fold(
             e => SMono.just(MailboxUpdateFailure(original, e, None)),
-            entry => updateMailbox(mailboxSession, entry._1, original, entry._2, capabilities))
+            { case (mailboxId, patch) => updateMailbox(mailboxSession, mailboxId, original, patch, capabilities) })
             .onErrorResume(e => SMono.just(MailboxUpdateFailure(original, e, None)))
       }, maxConcurrency = 5)
       .collectSeq()

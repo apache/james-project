@@ -3237,7 +3237,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
          |      "notDestroyed": {
          |        "#C42": {
          |          "type": "notFound",
-         |          "description": "#C42"
+         |          "description": "Unable to resolve mailbox reference '#C42': no successful creation is recorded for creation ID 'C42'"
          |        }
          |      }
          |    }, "c2"],
@@ -3311,7 +3311,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
          |      "notDestroyed": {
          |        "#C42": {
          |          "type": "notFound",
-         |          "description": "#C42"
+         |          "description": "Unable to resolve mailbox reference '#C42': no successful creation is recorded for creation ID 'C42'"
          |        }
          |      }
          |    }, "c2"]
@@ -3398,7 +3398,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
            |    "notDestroyed": {
            |      "$reference": {
            |        "type": "notFound",
-           |        "description": "$reference"
+           |        "description": "Unable to resolve mailbox reference '$reference': no successful creation is recorded for creation ID '${reference.substring(1)}'"
            |      }
            |    }
            |  }, "c1"]]
@@ -8865,7 +8865,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
-         |          "description": "#C42 was not used in previously defined creationIds",
+         |          "description": "no successful creation is recorded for creation ID 'C42'",
          |          "properties": ["parentId"]
          |        }
          |      }
@@ -9610,7 +9610,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
          |                "notUpdated": {
          |                    "#invalid": {
          |                        "type": "notFound",
-         |                        "description": "#invalid"
+         |                        "description": "Unable to resolve mailbox reference '#invalid': no successful creation is recorded for creation ID 'invalid'"
          |                    }
          |                }
          |            },

@@ -187,17 +187,24 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
 
       BackReferenceDeserializer.deserializeBackReference(entry._2) match {
         case JsSuccess(backReference, _) => resolveBackReference(newEntry, backReference)
-        // If the JSON object is not a back-reference continue parsing (it could be a creationId)
-        case _: JsError =>
-          backReferenceResolver(path \ entry._1, deferred).reads(entry._2)
-            .fold(e => Left(JsError(e)),
-              json => if (deferred.contains(path \ entry._1)) Right((entry._1, json))
-              else resolveCreationId(entry._1)
-                .fold(_ => Right((entry._1, json)),
-                  serverId => Right((serverId.value.value, json))))
+        // Resolve the value first so an invalid nested result reference still rejects the invocation.
+        case _: JsError => propagateBackReferenceResolution(entry, path, deferred)
+          .map(resolvedEntry => resolveCreationReferenceKey(resolvedEntry, path, deferred))
       }
     } else {
       propagateBackReferenceResolution(entry, path, deferred)
+    }
+  }
+
+  private def resolveCreationReferenceKey(entry: (String, JsValue), path: JsPath, deferred: Set[JsPath]): (String, JsValue) = {
+    val (originalKey, resolvedValue) = entry
+    val shouldDeferCreationReference = deferred.contains(path \ originalKey)
+    if (shouldDeferCreationReference) {
+      entry
+    } else {
+      resolveCreationId(originalKey)
+        .fold(_ => entry,
+          serverId => (serverId.value.value, resolvedValue))
     }
   }
 
@@ -227,7 +234,7 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
   def resolveId(reference: IdOrCreationReference): Either[IllegalArgumentException, ServerId] =
     reference.creationId match {
       case Some(clientId) => retrieveServerId(clientId)
-        .toRight(new IllegalArgumentException(s"$reference was not used in previously defined creationIds"))
+        .toRight(new IllegalArgumentException(s"no successful creation is recorded for creation ID '${clientId.value.value}'"))
       case None => Id.validate(reference.value).map(ServerId)
     }
 

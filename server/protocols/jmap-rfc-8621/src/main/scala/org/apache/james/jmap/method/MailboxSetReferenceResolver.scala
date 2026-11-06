@@ -34,7 +34,7 @@ import play.api.libs.json.JsString
 object MailboxSetReferenceResolver {
   def target(id: UnparsedMailboxId, context: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Either[Throwable, MailboxId] =
     context.resolveId(id.id)
-      .left.map(_ => new MailboxNotFoundException(id.id.value))
+      .left.map(cause => new MailboxNotFoundException(s"Unable to resolve mailbox reference '${id.id.value}': ${cause.getMessage}"))
       .flatMap(serverId => MailboxGet.parseString(mailboxIdFactory)(serverId.value.value).toEither)
 
   def patch(patch: MailboxPatchObject, context: ProcessingContext): Either[Exception, MailboxPatchObject] =
@@ -47,20 +47,30 @@ object MailboxSetReferenceResolver {
     }
 
   def updates(request: MailboxSetRequest, context: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Seq[(UnparsedMailboxId, Either[Throwable, (MailboxId, MailboxPatchObject)])] = {
-    val targets = request.update.toSeq.flatMap(_.toSeq).map { case (id, patch) => (id, target(id, context, mailboxIdFactory), patch) }
-    val counts = targets.flatMap(_._2.toOption).groupMapReduce(identity)(_ => 1)(_ + _)
-    targets.map { case (original, resolved, originalPatch) =>
-      original -> resolved.flatMap(id =>
-        if (counts(id) > 1) Left(new IllegalArgumentException("Multiple update keys resolve to the same mailbox"))
-        else patch(originalPatch, context).map(id -> _))
+    val resolvedTargets = request.update.toSeq.flatMap(_.toSeq).map { case (original, originalPatch) =>
+      (original, target(original, context, mailboxIdFactory), originalPatch)
+    }
+    val updateCountByMailboxId = resolvedTargets.flatMap(_._2.toOption).groupMapReduce(identity)(_ => 1)(_ + _)
+
+    resolvedTargets.map { case (original, resolvedTarget, originalPatch) =>
+      val resolvedUpdate = resolvedTarget.flatMap(mailboxId => {
+        val hasMultipleUpdates = updateCountByMailboxId(mailboxId) > 1
+        if (hasMultipleUpdates) {
+          Left(new IllegalArgumentException("Multiple update keys resolve to the same mailbox"))
+        } else {
+          patch(originalPatch, context).map(resolvedPatch => mailboxId -> resolvedPatch)
+        }
+      })
+      original -> resolvedUpdate
     }
   }
 
   def deletions(request: MailboxSetRequest, context: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Seq[(Seq[UnparsedMailboxId], Either[Throwable, MailboxId])] = {
-    val targets = request.destroy.toSeq.flatten.distinct.map(id => id -> target(id, context, mailboxIdFactory))
-    val unresolved = targets.collect { case (original, Left(error)) => Seq(original) -> Left(error) }
-    val resolved = targets.collect { case (original, Right(id)) => id -> original }
-      .groupMap(_._1)(_._2).toSeq.map { case (id, originals) => originals -> Right(id) }
-    unresolved ++ resolved
+    val resolvedTargets = request.destroy.toSeq.flatten.distinct.map(original => original -> target(original, context, mailboxIdFactory))
+    val unresolvedDeletions = resolvedTargets.collect { case (original, Left(error)) => Seq(original) -> Left(error) }
+    val originalsByMailboxId = resolvedTargets.collect { case (original, Right(mailboxId)) => mailboxId -> original }
+      .groupMap(_._1)(_._2)
+    val uniqueDeletions = originalsByMailboxId.toSeq.map { case (mailboxId, originals) => originals -> Right(mailboxId) }
+    unresolvedDeletions ++ uniqueDeletions
   }
 }
