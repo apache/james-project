@@ -3084,7 +3084,7 @@
             <dependency>
                 <groupId>org.threeten</groupId>
                 <artifactId>threeten-extra</artifactId>
-                <version>1.8.0</version>
+                <version>1.11.0</version>
             </dependency>
             <dependency>
                 <groupId>org.zoomba-lang</groupId>
