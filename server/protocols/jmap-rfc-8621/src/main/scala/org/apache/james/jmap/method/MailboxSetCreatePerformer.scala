@@ -96,22 +96,27 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
   def createMailboxes(mailboxSession: MailboxSession,
                       mailboxSetRequest: MailboxSetRequest,
                       processingContext: ProcessingContext,
-                      supportSharedMailbox: Boolean): SMono[(MailboxCreationResults, ProcessingContext)] =
-    CreateProcessor.process(mailboxSetRequest.create.getOrElse(Map.empty).map { case (id, json) =>
+                      supportSharedMailbox: Boolean): SMono[(MailboxCreationResults, ProcessingContext)] = {
+    val createsByClientId = mailboxSetRequest.create.getOrElse(Map.empty).map { case (id, json) =>
       ClientId(id.id) -> json
-    }, processingContext)(
+    }
+
+    CreateProcessor.process(createsByClientId, processingContext)(
       dependencies = (json: JsObject) => parentReference(json).toSet,
       create = (json: JsObject, context: ProcessingContext) => SMono.fromCallable(() =>
         createMailbox(mailboxSession, json, context, supportSharedMailbox)),
       invalidDependency = (_: JsObject) => invalidParentReference)
-      .map { case (results, context) =>
-        val creations = results.toSeq.map { case (id, result) =>
-          result.fold(error => MailboxCreationFailure(MailboxCreationId(id.value), error),
-            response => MailboxCreationSuccess(MailboxCreationId(id.value), response))
-        }
-        (MailboxCreationResults(creations), context)
-      }
+      .map { case (results, context) => (toMailboxCreationResults(results), context) }
       .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+  }
+
+  private def toMailboxCreationResults(results: Map[ClientId, Either[Exception, MailboxCreationResponse]]): MailboxCreationResults = {
+    val creations = results.toSeq.map { case (id, result) =>
+      result.fold(error => MailboxCreationFailure(MailboxCreationId(id.value), error),
+        response => MailboxCreationSuccess(MailboxCreationId(id.value), response))
+    }
+    MailboxCreationResults(creations)
+  }
 
   private def parentReference(json: JsObject): Option[ClientId] =
     (json \ "parentId").asOpt[IdOrCreationReference]

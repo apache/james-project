@@ -51,10 +51,12 @@ trait Method {
 
   val requiredCapabilities: Set[CapabilityIdentifier]
 
-  /** Creation reference values at these paths are resolved by the method after ordering its creates. */
-  def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath] = Set.empty
-
   def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext]
+}
+
+trait DeferredCreationReferences {
+  /** Creation reference values at these paths are resolved by the method after ordering its creates. */
+  def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath]
 }
 
 trait WithAccountId {

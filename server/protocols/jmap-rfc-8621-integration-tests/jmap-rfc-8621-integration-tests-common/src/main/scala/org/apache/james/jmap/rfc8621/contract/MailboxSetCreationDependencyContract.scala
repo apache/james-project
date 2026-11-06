@@ -30,23 +30,16 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import play.api.libs.json.{JsArray, JsNull, JsObject, JsValue, Json}
+import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 
 trait MailboxSetCreationDependencyContract {
   def bobUsername: Username
   def bobAccountId: String
 
-  private def mailboxSetCall(create: JsObject, callId: String): JsValue =
-    Json.arr("Mailbox/set", Json.obj("accountId" -> bobAccountId, "create" -> create), callId)
-
-  private def execute(calls: JsValue*): JsValue = {
-    val request = Json.obj(
-      "using" -> Json.arr("urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"),
-      "methodCalls" -> JsArray(calls))
-
+  private def execute(request: String): JsValue = {
     Json.parse(given()
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request.toString())
+      .body(request)
       .when().post()
       .then().statusCode(200)
       .extract().asString())
@@ -66,16 +59,32 @@ trait MailboxSetCreationDependencyContract {
     "child,grandchild,parent", "grandchild,parent,child", "grandchild,child,parent"))
   def createShouldResolveSameCallHierarchyInAnyOrder(order: String, server: GuiceJamesServer): Unit = {
     val mailboxesByCreationId = Map(
-      "parent" -> Json.obj("name" -> "parent", "parentId" -> JsNull),
-      "child" -> Json.obj("name" -> "child", "parentId" -> "#parent"),
-      "grandchild" -> Json.obj("name" -> "grandchild", "parentId" -> "#child"))
-    val orderedCreates = JsObject(order.split(",").toSeq.map(id => id -> mailboxesByCreationId(id)))
-    val getHierarchy = Json.arr("Mailbox/get", Json.obj(
-      "accountId" -> bobAccountId,
-      "ids" -> Json.arr("#parent", "#child", "#grandchild"),
-      "properties" -> Json.arr("id", "parentId")), "getHierarchy")
+      "parent" ->
+        """
+          |"parent": {"name": "parent", "parentId": null}""".stripMargin,
+      "child" ->
+        """
+          |"child": {"name": "child", "parentId": "#parent"}""".stripMargin,
+      "grandchild" ->
+        """
+          |"grandchild": {"name": "grandchild", "parentId": "#child"}""".stripMargin)
+    val orderedCreates = order.split(",").map(mailboxesByCreationId).mkString(",\n")
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {$orderedCreates}
+      |    }, "createHierarchy"],
+      |    ["Mailbox/get", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "ids": ["#parent", "#child", "#grandchild"],
+      |      "properties": ["id", "parentId"]
+      |    }, "getHierarchy"]
+      |  ]
+      |}""".stripMargin
 
-    val response = execute(mailboxSetCall(orderedCreates, "createHierarchy"), getHierarchy)
+    val response = execute(request)
 
     val creationResponse = responseFor(response, "createHierarchy")
     val parentId = storedMailboxId(server, "parent")
@@ -95,9 +104,20 @@ trait MailboxSetCreationDependencyContract {
   @ParameterizedTest
   @ValueSource(ints = Array(7, 255))
   def createShouldRejectUnknownParentReferences(referenceLength: Int, server: GuiceJamesServer): Unit = {
-    val creates = Json.obj("child" -> Json.obj("name" -> "child", "parentId" -> ("#" + "x" * referenceLength)))
+    val unknownCreationId = "x" * referenceLength
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "child": {"name": "child", "parentId": "#$unknownCreationId"}
+      |      }
+      |    }, "create"]
+      |  ]
+      |}""".stripMargin
 
-    val creationResponse = responseFor(execute(mailboxSetCall(creates, "create")), "create")
+    val creationResponse = responseFor(execute(request), "create")
 
     assertThat((creationResponse \ "notCreated" \ "child" \ "type").as[String]).isEqualTo("invalidProperties")
     assertThat((creationResponse \ "notCreated" \ "child" \ "properties").as[Seq[String]])
@@ -108,9 +128,19 @@ trait MailboxSetCreationDependencyContract {
 
   @Test
   def createShouldRejectSelfReferences(server: GuiceJamesServer): Unit = {
-    val creates = Json.obj("self" -> Json.obj("name" -> "self", "parentId" -> "#self"))
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "self": {"name": "self", "parentId": "#self"}
+      |      }
+      |    }, "create"]
+      |  ]
+      |}""".stripMargin
 
-    val creationResponse = responseFor(execute(mailboxSetCall(creates, "create")), "create")
+    val creationResponse = responseFor(execute(request), "create")
 
     assertThat((creationResponse \ "notCreated" \ "self" \ "type").as[String]).isEqualTo("invalidProperties")
     assertThat((creationResponse \ "notCreated" \ "self" \ "properties").as[Seq[String]])
@@ -121,13 +151,22 @@ trait MailboxSetCreationDependencyContract {
 
   @Test
   def createShouldRejectCyclesAndTheirDescendantsWhileCreatingIndependentMailboxes(server: GuiceJamesServer): Unit = {
-    val creates = Json.obj(
-      "first" -> Json.obj("name" -> "first", "parentId" -> "#second"),
-      "second" -> Json.obj("name" -> "second", "parentId" -> "#first"),
-      "descendant" -> Json.obj("name" -> "descendant", "parentId" -> "#first"),
-      "independent" -> Json.obj("name" -> "independent"))
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "first": {"name": "first", "parentId": "#second"},
+      |        "second": {"name": "second", "parentId": "#first"},
+      |        "descendant": {"name": "descendant", "parentId": "#first"},
+      |        "independent": {"name": "independent"}
+      |      }
+      |    }, "create"]
+      |  ]
+      |}""".stripMargin
 
-    val creationResponse = responseFor(execute(mailboxSetCall(creates, "create")), "create")
+    val creationResponse = responseFor(execute(request), "create")
 
     Seq("first", "second", "descendant").foreach(creationId => {
       val error = creationResponse \ "notCreated" \ creationId
@@ -143,12 +182,21 @@ trait MailboxSetCreationDependencyContract {
 
   @Test
   def createShouldPreserveParentFailureAndRejectItsChild(server: GuiceJamesServer): Unit = {
-    val creates = Json.obj(
-      "parent" -> Json.obj("name" -> "bad.name"),
-      "child" -> Json.obj("name" -> "child", "parentId" -> "#parent"),
-      "independent" -> Json.obj("name" -> "independent"))
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "parent": {"name": "bad.name"},
+      |        "child": {"name": "child", "parentId": "#parent"},
+      |        "independent": {"name": "independent"}
+      |      }
+      |    }, "create"]
+      |  ]
+      |}""".stripMargin
 
-    val creationResponse = responseFor(execute(mailboxSetCall(creates, "create")), "create")
+    val creationResponse = responseFor(execute(request), "create")
 
     assertThat((creationResponse \ "notCreated" \ "parent" \ "type").as[String]).isEqualTo("invalidArguments")
     assertThat((creationResponse \ "notCreated" \ "child" \ "type").as[String]).isEqualTo("invalidProperties")
@@ -161,13 +209,22 @@ trait MailboxSetCreationDependencyContract {
 
   @Test
   def createShouldResolveSiblingsAndIndependentRoots(server: GuiceJamesServer): Unit = {
-    val creates = Json.obj(
-      "sibling1" -> Json.obj("name" -> "sibling1", "parentId" -> "#root"),
-      "sibling2" -> Json.obj("name" -> "sibling2", "parentId" -> "#root"),
-      "root" -> Json.obj("name" -> "root"),
-      "otherRoot" -> Json.obj("name" -> "otherRoot"))
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "sibling1": {"name": "sibling1", "parentId": "#root"},
+      |        "sibling2": {"name": "sibling2", "parentId": "#root"},
+      |        "root": {"name": "root"},
+      |        "otherRoot": {"name": "otherRoot"}
+      |      }
+      |    }, "create"]
+      |  ]
+      |}""".stripMargin
 
-    val creationResponse = responseFor(execute(mailboxSetCall(creates, "create")), "create")
+    val creationResponse = responseFor(execute(request), "create")
 
     assertThat((creationResponse \ "notCreated").toOption.isEmpty).isTrue()
     assertThat((creationResponse \ "created").as[JsObject].keys)
@@ -180,15 +237,29 @@ trait MailboxSetCreationDependencyContract {
 
   @Test
   def createShouldPreferTheSameCallMappingWhenACreationIdIsReused(server: GuiceJamesServer): Unit = {
-    val createOldParent = mailboxSetCall(Json.obj(
-      "parent" -> Json.obj("name" -> "old")), "createOldParent")
-    val replaceParentAndCreateChild = mailboxSetCall(Json.obj(
-      "child" -> Json.obj("name" -> "child", "parentId" -> "#parent"),
-      "parent" -> Json.obj("name" -> "new")), "replaceParentAndCreateChild")
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "parent": {"name": "old"}
+      |      }
+      |    }, "createOldParent"],
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "child": {"name": "child", "parentId": "#parent"},
+      |        "parent": {"name": "new"}
+      |      }
+      |    }, "replaceParentAndCreateChild"]
+      |  ]
+      |}""".stripMargin
 
-    val response = execute(createOldParent, replaceParentAndCreateChild)
+    val response = execute(request)
 
     val replacementResponse = responseFor(response, "replaceParentAndCreateChild")
+
     assertThat((replacementResponse \ "notCreated").toOption.isEmpty).isTrue()
     assertThat((replacementResponse \ "created" \ "child" \ "id").as[String])
       .isEqualTo(storedMailboxId(server, "new.child"))
@@ -198,18 +269,36 @@ trait MailboxSetCreationDependencyContract {
 
   @Test
   def createShouldNotUseAnOldMappingWhenTheSameCallParentFails(server: GuiceJamesServer): Unit = {
-    val createOldParent = mailboxSetCall(Json.obj(
-      "parent" -> Json.obj("name" -> "old")), "createOldParent")
-    val failReplacement = mailboxSetCall(Json.obj(
-      "child" -> Json.obj("name" -> "child", "parentId" -> "#parent"),
-      "parent" -> Json.obj("name" -> "bad.name"),
-      "root" -> Json.obj("name" -> "root")), "failReplacement")
-    val reuseOldParentInLaterCall = mailboxSetCall(Json.obj(
-      "later" -> Json.obj("name" -> "later", "parentId" -> "#parent")), "reuseOldParent")
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "parent": {"name": "old"}
+      |      }
+      |    }, "createOldParent"],
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "child": {"name": "child", "parentId": "#parent"},
+      |        "parent": {"name": "bad.name"},
+      |        "root": {"name": "root"}
+      |      }
+      |    }, "failReplacement"],
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "later": {"name": "later", "parentId": "#parent"}
+      |      }
+      |    }, "reuseOldParent"]
+      |  ]
+      |}""".stripMargin
 
-    val response = execute(createOldParent, failReplacement, reuseOldParentInLaterCall)
+    val response = execute(request)
 
     val failedReplacement = responseFor(response, "failReplacement")
+
     assertThat((failedReplacement \ "notCreated" \ "parent" \ "type").as[String]).isEqualTo("invalidArguments")
     assertThat((failedReplacement \ "notCreated" \ "child" \ "type").as[String]).isEqualTo("invalidProperties")
     assertThat((failedReplacement \ "created").as[JsObject].keys).isEqualTo(Set("root"))
@@ -224,11 +313,20 @@ trait MailboxSetCreationDependencyContract {
     val existingParentId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(bobUsername, "existing")).serialize()
     val creationId = "x" * 255
-    val creates = Json.obj(
-      "child" -> Json.obj("name" -> "child", "parentId" -> ("#" + creationId)),
-      creationId -> Json.obj("name" -> "parent", "parentId" -> existingParentId))
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "child": {"name": "child", "parentId": "#$creationId"},
+      |        "$creationId": {"name": "parent", "parentId": ${Json.toJson(existingParentId)}}
+      |      }
+      |    }, "create"]
+      |  ]
+      |}""".stripMargin
 
-    val creationResponse = responseFor(execute(mailboxSetCall(creates, "create")), "create")
+    val creationResponse = responseFor(execute(request), "create")
 
     assertThat((creationResponse \ "notCreated").toOption.isEmpty).isTrue()
     assertThat((creationResponse \ "created" \ "child" \ "id").as[String])
@@ -237,21 +335,33 @@ trait MailboxSetCreationDependencyContract {
 
   @Test
   def createShouldNotInferACycleFromACrossTypeReference(server: GuiceJamesServer): Unit = {
-    val createMailbox = mailboxSetCall(Json.obj(
-      "shared" -> Json.obj("name" -> "mailbox")), "createMailbox")
-    val createEmailWithSameCreationId = Json.arr("Email/set", Json.obj(
-      "accountId" -> bobAccountId,
-      "create" -> Json.obj("shared" -> Json.obj(
-        "mailboxIds" -> Json.obj("#shared" -> true),
-        "subject" -> "cross-type reference"))), "createEmail")
-    val getEmail = Json.arr("Email/get", Json.obj(
-      "accountId" -> bobAccountId,
-      "ids" -> Json.arr("#shared"),
-      "properties" -> Json.arr("id", "mailboxIds")), "getEmail")
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "shared": {"name": "mailbox"}
+      |      }
+      |    }, "createMailbox"],
+      |    ["Email/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {
+      |        "shared": {"mailboxIds": {"#shared": true}, "subject": "cross-type reference"}
+      |      }
+      |    }, "createEmail"],
+      |    ["Email/get", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "ids": ["#shared"],
+      |      "properties": ["id", "mailboxIds"]
+      |    }, "getEmail"]
+      |  ]
+      |}""".stripMargin
 
-    val response = execute(createMailbox, createEmailWithSameCreationId, getEmail)
+    val response = execute(request)
 
     val emailCreation = responseFor(response, "createEmail")
+
     assertThat((emailCreation \ "notCreated").toOption.isEmpty).isTrue()
     val createdEmailId = (emailCreation \ "created" \ "shared" \ "id").as[String]
     val fetchedEmail = (responseFor(response, "getEmail") \ "list")(0)
