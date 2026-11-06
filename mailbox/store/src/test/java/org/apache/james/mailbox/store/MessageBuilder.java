@@ -32,6 +32,7 @@ import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.ByteContent;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
@@ -47,7 +48,7 @@ public class MessageBuilder {
     private static final char[] NEW_LINE = { 0x0D, 0x0A };
     private static final ImmutableList<MessageAttachmentMetadata> NO_ATTACHMENTS = ImmutableList.of();
 
-    private TestId mailboxId = TestId.of(113);
+    private MailboxId mailboxId = TestId.of(113);
     private MessageUid uid = MessageUid.of(776);
     private Date internalDate = new Date();
     private Optional<Date> saveDate = Optional.of(new Date());
@@ -56,8 +57,8 @@ public class MessageBuilder {
     private byte[] body = {};
     private final Map<String, String> headers = new HashMap<>();
 
-    public MessageBuilder mailboxId(TestId testId) {
-        this.mailboxId = testId;
+    public MessageBuilder mailboxId(MailboxId mailboxId) {
+        this.mailboxId = mailboxId;
         return this;
     }
 
