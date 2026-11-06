@@ -36,6 +36,14 @@ class SearchConfigurationTest {
     }
 
     @Test
+    void unknownSearchImplementationErrorShouldListLucene() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", "unknown");
+        assertThatThrownBy(() -> SearchConfiguration.from(configuration))
+            .hasMessageContaining("lucene");
+    }
+
+    @Test
     void searchImplementationShouldReturnOpenSearchByDefault() throws Exception {
         assertThat(SearchConfiguration.from(new PropertiesConfiguration()).getImplementation())
             .isEqualTo(SearchConfiguration.Implementation.OpenSearch);
@@ -63,5 +71,21 @@ class SearchConfigurationTest {
         configuration.addProperty("implementation", "scanning");
         assertThat(SearchConfiguration.from(configuration).getImplementation())
                 .isEqualTo(SearchConfiguration.Implementation.Scanning);
+    }
+
+    @Test
+    void searchImplementationShouldReturnLuceneWhenSetToLucene() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", "lucene");
+        assertThat(SearchConfiguration.from(configuration).getImplementation())
+                .isEqualTo(SearchConfiguration.Implementation.Lucene);
+    }
+
+    @Test
+    void searchImplementationShouldBeCaseInsensitiveForLucene() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", "Lucene");
+        assertThat(SearchConfiguration.from(configuration).getImplementation())
+                .isEqualTo(SearchConfiguration.Implementation.Lucene);
     }
 }
