@@ -29,6 +29,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.rrt.api.InvalidRegexException;
 import org.apache.james.rrt.api.LoopDetectedException;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
@@ -621,6 +622,12 @@ public interface RecipientRewriteTableContract {
 
         assertThat(virtualUserTable().getMappingsForType(Mapping.Type.Alias))
             .containsExactly(mapping1, mapping2, mapping3);
+    }
+
+    @Test
+    default void addRegexMappingShouldThrowOnBraces() {
+        assertThatThrownBy(() -> virtualUserTable().addRegexMapping(SOURCE, "((a{1000}){1000}){1000}:admin@test"))
+            .isInstanceOf(InvalidRegexException.class);
     }
 
     @Test

@@ -25,7 +25,6 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Stream;
 
@@ -202,7 +201,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     @Override
     public void addRegexMapping(MappingSource source, String regex) throws RecipientRewriteTableException {
         try {
-            Pattern.compile(regex);
+            RegexEngine.configured().validate(regex);
         } catch (PatternSyntaxException e) {
             throw new InvalidRegexException("Invalid regex: " + regex, e);
         }

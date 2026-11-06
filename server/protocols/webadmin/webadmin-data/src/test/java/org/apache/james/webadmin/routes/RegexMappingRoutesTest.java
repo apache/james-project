@@ -147,6 +147,18 @@ class RegexMappingRoutesTest {
     }
 
     @Test
+    void addRegexMappingShouldReturnBadRequestWhenRegexContainsBraces() {
+        with()
+            .post("james@domain.tld/targets/" + URLEncoder.encode("((a{1000}){1000}){1000}:bob@domain.tld"))
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .contentType(ContentType.JSON)
+            .body("type", is("InvalidArgument"))
+            .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+            .body("message", is("Invalid regex: ((a{1000}){1000}){1000}:bob@domain.tld"));
+    }
+
+    @Test
     void addRegexMappingShouldReturnNoContentWhenRegexContainsQuestionMark() {
         with()
             .post("james@domain.tld/targets/" + URLEncoder.encode("^[aei?ou].*james@domain.tld"))
