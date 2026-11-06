@@ -39,22 +39,22 @@ case class WorkerStatusListener(eventSourcingSystem: EventSourcingSystem) extend
 
   import WorkerStatusListener.LOGGER
 
-  override def started(taskId: TaskId): Publisher[Void] = SMono(eventSourcingSystem.dispatch(Start(taskId))).map(_ => null: Void)
+  override def started(taskId: TaskId): Publisher[Void] = SMono(eventSourcingSystem.dispatch(Start(taskId))).`then`(SMono.empty)
 
   override def completed(taskId: TaskId, result: Result, additionalInformationPublisher: Publisher[Optional[TaskExecutionDetails.AdditionalInformation]]): Publisher[Void] =
     additionalInformation(taskId, additionalInformationPublisher)
       .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Complete(taskId, result, additionalInformation))))
-      .map(_ => null: Void)
+      .`then`(SMono.empty)
 
   override def failed(taskId: TaskId, additionalInformationPublisher: Publisher[Optional[TaskExecutionDetails.AdditionalInformation]], errorMessage: Optional[String], t: Optional[Throwable]): Publisher[Void] =
     additionalInformation(taskId, additionalInformationPublisher)
     .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Fail(taskId, additionalInformation, errorMessage.toScala, t.toScala.map(t => Throwables.getStackTraceAsString(t))))))
-    .map(_ => null: Void)
+    .`then`(SMono.empty)
 
   override def cancelled(taskId: TaskId, additionalInformationPublisher: Publisher[Optional[TaskExecutionDetails.AdditionalInformation]]): Publisher[Void] =
     additionalInformation(taskId, additionalInformationPublisher)
       .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(Cancel(taskId, additionalInformation))))
-      .map(_ => null: Void)
+      .`then`(SMono.empty)
 
   /**
    * A task needs to be able to reach a terminal state even when its progress reporting is broken: some tasks
@@ -74,6 +74,6 @@ case class WorkerStatusListener(eventSourcingSystem: EventSourcingSystem) extend
   override def updated(taskId: TaskId, additionalInformationPublisher: Publisher[TaskExecutionDetails.AdditionalInformation]): Publisher[Void] =
     SMono.fromPublisher(additionalInformationPublisher)
       .flatMap(additionalInformation => SMono(eventSourcingSystem.dispatch(UpdateAdditionalInformation(taskId, additionalInformation))))
-      .map(_ => null: Void)
+      .`then`(SMono.empty)
 
 }

@@ -33,7 +33,7 @@ class InMemoryEventStore() extends EventStore {
 
   override def appendAll(events: Iterable[Event]): Publisher[Void] = {
     if (events.nonEmpty) {
-      SMono.fromCallable(() => doAppendAll(events)).map(_ => null: Void)
+      SMono.fromCallable(() => doAppendAll(events)).`then`(SMono.empty)
     } else {
       SMono.empty
     }
@@ -64,5 +64,5 @@ class InMemoryEventStore() extends EventStore {
     events.forall(_.getAggregateId.equals(aggregateId))
 
   override def remove(aggregateId: AggregateId): Publisher[Void] =
-    SMono.fromCallable(() => storeRef.set(storeRef.get().removed(aggregateId))).map(_ => null: Void)
+    SMono.fromCallable(() => storeRef.set(storeRef.get().removed(aggregateId))).`then`(SMono.empty)
 }

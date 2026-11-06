@@ -77,7 +77,7 @@ class PushListener @Inject()(pushRepository: PushSubscriptionRepository,
           .filter(isNotOutdatedSubscription(_, clock))
           .filter(_.validated)
           .flatMap(sendNotification(_, event), ReactorUtils.DEFAULT_CONCURRENCY)
-          .map(_ => null: Void)
+          .thenMany(SMono.empty)
       case _ => SMono.empty
     }
 
