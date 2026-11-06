@@ -30,6 +30,26 @@ Change list:
  - [JAMES-4236 JMAP EmailSubmission/set validates identityId](#james-4236-jmap-emailsubmissionset-validates-identityid)
  - [JAMES-4236 populateEmailQueryView task reports mailbox counters](#james-4236-populateemailqueryview-task-reports-mailbox-counters)
  - [JAMES-4235 Lucene ignores punctuation around words](#james-4235-lucene-ignores-punctuation-around-words)
+ - [JAMES-4235 Lucene search option for Guice apps](#james-4235-lucene-search-option-for-guice-apps)
+
+### JAMES-4235 Lucene search option for Guice apps
+
+Date: 06/11/2026
+
+Concerned products: Postgres James server, and other Guice apps reading `search.properties`
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-4235
+
+`search.properties` accepts `implementation=lucene`: mails are indexed into an embedded Lucene index under
+`var/store/lucene` of the working directory. The Postgres single node sample configuration
+(`server/apps/postgres-app/sample-configuration-single`, used by its `docker-compose.yml`) now uses it instead of
+`scanning`.
+
+When switching an existing server from `scanning` to `lucene`, the index starts empty: messages received before the
+switch are not found by searches until you
+[reindex all mails](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails). Keep the Lucene folder
+on persistent storage, and run a single James node on it. Index changes are written to disk when James stops cleanly:
+after a crash, reindex all mails again.
 
 ### Has attachment indexing with indexAttachments=false
 
