@@ -30,6 +30,22 @@ Change list:
  - [JAMES-4236 JMAP EmailSubmission/set validates identityId](#james-4236-jmap-emailsubmissionset-validates-identityid)
  - [JAMES-4236 populateEmailQueryView task reports mailbox counters](#james-4236-populateemailqueryview-task-reports-mailbox-counters)
  - [JAMES-4235 Lucene ignores punctuation around words](#james-4235-lucene-ignores-punctuation-around-words)
+ - [Regex mappings are evaluated with RE2J](#regex-mappings-are-evaluated-with-re2j)
+
+### Regex mappings are evaluated with RE2J
+
+Date: 06/11/2026
+
+Perimeter: recipient rewrite tables
+
+Regex mappings now rely on RE2J rather than `java.util.regex`. The regular expression is limited to 500 characters. The whole mapping cannot contain
+`{`, `}` nor control characters, which rules out counted repetitions like `[a-z]{1,64}`, `\p{L}` and the `${1}` parameters of the replacement.
+
+RE2J does not support lookaround, backreferences, possessive quantifiers, atomic groups, `\R` and `\h`. Adding such a regex is rejected, and
+an already stored one is not applied: an error is logged when it is evaluated. RE2J also interprets character class intersections like `[a-z&&[^b]]` differently,
+without any error.
+
+Please review your regex mappings before upgrading (`GET /mappings`). To keep the previous behaviour, set `james.rrt.regex.safe=false` in `jvm.properties`.
 
 ### Has attachment indexing with indexAttachments=false
 

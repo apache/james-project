@@ -370,3 +370,19 @@ james.mailbox.handleRecent=false
 ----
 
 Defaults to true (no breaking changes)
+
+== Regex mappings engine
+
+Regex mappings are evaluated against the recipients of incoming mails. By default, they rely on RE2J, whose matching
+time is linear. The regular expression is limited to 500 characters. The whole mapping cannot contain `{`, `}` nor control characters,
+which rules out counted repetitions and `${1}` parameters. Syntax unsupported by RE2J (lookaround, backreferences, possessive quantifiers, atomic groups...) is rejected.
+
+Setting this property to `false` evaluates regex mappings with `java.util.regex`, without these limits. A regex can
+then consume an arbitrary amount of CPU for each recipient it applies to.
+
+Ex in `jvm.properties`
+----
+james.rrt.regex.safe=false
+----
+
+Defaults to true.

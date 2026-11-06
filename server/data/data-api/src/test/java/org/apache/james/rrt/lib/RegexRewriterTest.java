@@ -21,10 +21,13 @@ package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
+import java.time.Duration;
 import java.util.regex.PatternSyntaxException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.junit.jupiter.api.Test;
 
 class RegexRewriterTest {
@@ -65,29 +68,55 @@ class RegexRewriterTest {
     @Test
     void regexMapShouldCorrectlyReplaceMatchingGroups() throws Exception {
         MailAddress mailAddress = new MailAddress("prefix_abc@test");
-        assertThat(new UserRewritter.RegexRewriter().regexMap(mailAddress, "prefix_(.*)@test:admin@${1}"))
+        assertThat(new UserRewritter.RegexRewriter(RegexEngine.UNSAFE).regexMap(mailAddress, "prefix_(.*)@test:admin@${1}"))
             .contains("admin@abc");
     }
 
     @Test
     void regexMapShouldCorrectlyReplaceSeveralMatchingGroups() throws Exception {
         MailAddress mailAddress = new MailAddress("prefix_abc_def@test");
-        assertThat(new UserRewritter.RegexRewriter().regexMap(mailAddress, "prefix_(.*)_(.*)@test:admin@${1}.${2}"))
+        assertThat(new UserRewritter.RegexRewriter(RegexEngine.UNSAFE).regexMap(mailAddress, "prefix_(.*)_(.*)@test:admin@${1}.${2}"))
             .contains("admin@abc.def");
     }
 
     @Test
     void regexMapShouldCorrectlyReplaceSeveralOutOfOrderMatchingGroups() throws Exception {
         MailAddress mailAddress = new MailAddress("prefix_abc_def@test");
-        assertThat(new UserRewritter.RegexRewriter().regexMap(mailAddress, "prefix_(.*)_(.*)@test:admin@${2}.${1}"))
+        assertThat(new UserRewritter.RegexRewriter(RegexEngine.UNSAFE).regexMap(mailAddress, "prefix_(.*)_(.*)@test:admin@${2}.${1}"))
             .contains("admin@def.abc");
     }
 
 
     @Test
+    void regexMapShouldNotBacktrackCatastrophically() throws Exception {
+        MailAddress mailAddress = new MailAddress("a".repeat(64) + "!@test");
+        assertTimeoutPreemptively(Duration.ofSeconds(10),
+            () -> assertThat(new UserRewritter.RegexRewriter().regexMap(mailAddress, "(a+)+@test:admin@test")).isEmpty());
+    }
+
+    @Test
+    void regexMapShouldThrowOnParameters() throws Exception {
+        assertThatThrownBy(() -> new UserRewritter.RegexRewriter().regexMap(new MailAddress("prefix_abc@test"), "prefix_(.*)@test:admin@${1}"))
+            .isInstanceOf(PatternSyntaxException.class);
+    }
+
+    @Test
+    void userRewriterShouldNotRewriteWhenParameters() throws Exception {
+        assertThat(new UserRewritter.RegexRewriter().generateUserRewriter("prefix_(.*)@test:admin@${1}")
+            .rewrite(Username.of("prefix_abc@test")))
+            .isEmpty();
+    }
+
+    @Test
+    void regexMapShouldThrowOnBraces() throws Exception {
+        assertThatThrownBy(() -> new UserRewritter.RegexRewriter().regexMap(new MailAddress("abc@test"), "((a{1000}){1000}){1000}:admin@test"))
+            .isInstanceOf(PatternSyntaxException.class);
+    }
+
+    @Test
     void regexMapShouldCorrectlyReplaceRepeatingMatchingGroups() throws Exception {
         MailAddress mailAddress = new MailAddress("prefix_abc_def@test");
-        assertThat(new UserRewritter.RegexRewriter().regexMap(mailAddress, "prefix_(.*)_(.*)@test:admin@${1}.${1}"))
+        assertThat(new UserRewritter.RegexRewriter(RegexEngine.UNSAFE).regexMap(mailAddress, "prefix_(.*)_(.*)@test:admin@${1}.${1}"))
             .contains("admin@abc.abc");
     }
 }

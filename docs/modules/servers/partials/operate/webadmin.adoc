@@ -3604,10 +3604,13 @@ Response codes:
 
 You can use *webadmin* to create regex mappings.
 
-A regex mapping contains a mapping source and a Java Regular Expression
+A regex mapping contains a mapping source and an RE2 Regular Expression
 (regex) in String as the mapping value. Everytime, if a mail containing
 a recipient matched with the mapping source, then that mail will be
 re-routed to a new recipient address which is re written by the regex.
+
+The mapping is limited: see the `james.rrt.regex.safe` property in `jvm.properties`. Notably it cannot
+contain `{` nor `}`, hence no `${1}` parameter.
 
 This feature uses xref:{xref-base}/architecture/index.adoc#_recipient_rewrite_tables[Recipients rewrite table]
 and requires the
