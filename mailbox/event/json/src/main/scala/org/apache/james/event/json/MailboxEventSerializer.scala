@@ -25,7 +25,7 @@ import java.util.{TreeMap => JavaTreeMap}
 
 import jakarta.inject.Inject
 import org.apache.james.core.Username
-import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaSizeLimit, QuotaSizeUsage}
+import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaLimitValue, QuotaSizeLimit, QuotaSizeUsage, QuotaUsageValue}
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
 import org.apache.james.event.json.DTOs._
 import org.apache.james.events.Event.EventId
@@ -37,6 +37,7 @@ import org.apache.james.mailbox.events.{MessageMoveEvent => JavaMessageMoveEvent
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, ThreadId, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import org.apache.james.mailbox.quota.QuotaRootDeserializer
 import org.apache.james.mailbox.{MessageUid, ModSeq}
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 import scala.jdk.CollectionConverters._
@@ -425,8 +426,18 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
 
   implicit val flagsReads: Reads[Flags] = Json.reads[Flags]
   implicit val aclDiffReads: Reads[ACLDiff] = Json.reads[ACLDiff]
-  implicit val quotaCReads: Reads[DTOs.Quota[QuotaCountLimit, QuotaCountUsage]] = Json.reads[DTOs.Quota[QuotaCountLimit, QuotaCountUsage]]
-  implicit val quotaSReads: Reads[DTOs.Quota[QuotaSizeLimit, QuotaSizeUsage]] = Json.reads[DTOs.Quota[QuotaSizeLimit, QuotaSizeUsage]]
+  // DTOs.Quota is an F-bounded generic case class: under Scala 3, the Mirror.Product synthesized
+  // on its companion instantiates T/U with Nothing, making Mirror.fromProduct unconditionally
+  // throw ClassCastException("Cannot cast to scala.Nothing"). play-json Json.reads relies on that
+  // mirror to build instances, so derive the Quota reads by hand.
+  private def quotaReads[T <: QuotaLimitValue[T], U <: QuotaUsageValue[U, T]](implicit usageReads: Reads[U], limitReads: Reads[T]): Reads[DTOs.Quota[T, U]] =
+    ((__ \ "used").read[U])
+      .and((__ \ "limit").read[T])
+      .and((__ \ "limits").read[Map[JavaQuota.Scope, T]])
+      .apply((used: U, limit: T, limits: Map[JavaQuota.Scope, T]) => DTOs.Quota[T, U](used, limit, limits))
+
+  implicit val quotaCReads: Reads[DTOs.Quota[QuotaCountLimit, QuotaCountUsage]] = quotaReads[QuotaCountLimit, QuotaCountUsage]
+  implicit val quotaSReads: Reads[DTOs.Quota[QuotaSizeLimit, QuotaSizeUsage]] = quotaReads[QuotaSizeLimit, QuotaSizeUsage]
   implicit val mailboxPathReads: Reads[DTOs.MailboxPath] = Json.reads[DTOs.MailboxPath]
   implicit val mailboxACLReads: Reads[DTOs.MailboxACL] = Json.reads[DTOs.MailboxACL]
   implicit val messageMetaDataReads: Reads[DTOs.MessageMetaData] = Json.reads[DTOs.MessageMetaData]
