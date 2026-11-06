@@ -39,11 +39,12 @@ import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.core.{DefaultCapabilities, JmapRfc8621Configuration, RequestLevelErrorType}
+import org.apache.james.jmap.core.{ClientId, DefaultCapabilities, JmapRfc8621Configuration, RequestLevelErrorType, ServerId}
 import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, UserProvisioning}
-import org.apache.james.jmap.method.{CoreEchoMethod, Method}
+import org.apache.james.jmap.method.{CoreEchoMethod, DeferredCreationReferences, InvocationWithContext, Method}
 import org.apache.james.jmap.routes.JMAPApiRoutesTest._
 import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutesHandler, JMAPServer, Version, VersionParser}
+import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.extension.PreDeletionHook
 import org.apache.james.mailbox.inmemory.{InMemoryMailboxManager, MemoryMailboxManagerProvider}
 import org.apache.james.metrics.tests.RecordingMetricFactory
@@ -55,7 +56,7 @@ import org.mockito.Mockito.{doReturn, mock, when}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json.JsObject
+import play.api.libs.json.JsPath
 import reactor.core.scala.publisher.SFlux
 
 object JMAPApiRoutesTest {
@@ -77,7 +78,19 @@ object JMAPApiRoutesTest {
   private val AUTHENTICATOR: Authenticator = Authenticator.of(new RecordingMetricFactory, authenticationStrategy)
 
   private val userProvisionner: UserProvisioning = new UserProvisioning(usersRepository, new RecordingMetricFactory)
-  private val JMAP_METHODS: Set[Method] = Set(new CoreEchoMethod)
+  private val seedCreationMapping = new CoreEchoMethod {
+    override val methodName: MethodName = MethodName("Test/seedCreationMapping")
+
+    override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): SFlux[InvocationWithContext] =
+      SFlux.just(invocation.copy(processingContext = invocation.processingContext.recordCreatedId(ClientId("parent"), ServerId("old-parent"))))
+  }
+  private val deferredEcho = new CoreEchoMethod with DeferredCreationReferences {
+    override val methodName: MethodName = MethodName("Test/deferredEcho")
+
+    override def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath] =
+      Set(JsPath \ "create" \ "child" \ "parentId", JsPath \ "create" \ "fromResult" \ "parentId")
+  }
+  private val JMAP_METHODS: Set[Method] = Set(new CoreEchoMethod, seedCreationMapping, deferredEcho)
 
   private val configuration: JmapRfc8621Configuration = JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")
   private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(JMAP_METHODS, DefaultCapabilities.supported(configuration).map(_.id()), configuration))
@@ -419,6 +432,66 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .body("detail", equalTo("The request used unsupported capabilities: Set(urn:ietf:params:jmap:core1)"))
   }
 
+  "RFC-8621 dispatcher" should "defer opt-in creation values while resolving other paths and result references" in {
+    val response = RestAssured
+      .`given`()
+        .header("Authorization", s"Basic $userBase64String")
+        .body("""{
+          |  "using": ["urn:ietf:params:jmap:core"],
+          |  "methodCalls": [
+          |    ["Test/seedCreationMapping", {"id": "result-parent"}, "seed"],
+          |    ["Test/deferredEcho", {
+          |      "create": {
+          |        "child": {"parentId": "#parent", "name": "#parent"},
+          |        "fromResult": {"#parentId": {"resultOf": "seed", "name": "Test/seedCreationMapping", "path": "/id"}}
+          |      },
+          |      "update": {"#parent": {"parentId": "#parent"}}
+          |    }, "defer"]
+          |  ]
+          |}""".stripMargin)
+      .when().post()
+      .`then`().statusCode(HttpStatus.SC_OK)
+      .extract().asString()
+
+    assertThatJson(response).isEqualTo(s"""{
+      |  "sessionState": "${SESSION_STATE.value}",
+      |  "methodResponses": [
+      |    ["Test/seedCreationMapping", {"id": "result-parent"}, "seed"],
+      |    ["Test/deferredEcho", {
+      |      "create": {
+      |        "child": {"parentId": "#parent", "name": "old-parent"},
+      |        "fromResult": {"parentId": "result-parent"}
+      |      },
+      |      "update": {"old-parent": {"parentId": "old-parent"}}
+      |    }, "defer"]
+      |  ]
+      |}""".stripMargin)
+  }
+
+  "RFC-8621 dispatcher" should "resolve creation references for methods without the opt-in capability" in {
+    val response = RestAssured
+      .`given`()
+        .header("Authorization", s"Basic $userBase64String")
+        .body("""{
+          |  "using": ["urn:ietf:params:jmap:core"],
+          |  "methodCalls": [
+          |    ["Test/seedCreationMapping", {}, "seed"],
+          |    ["Core/echo", {"create": {"child": {"parentId": "#parent"}}}, "echo"]
+          |  ]
+          |}""".stripMargin)
+      .when().post()
+      .`then`().statusCode(HttpStatus.SC_OK)
+      .extract().asString()
+
+    assertThatJson(response).isEqualTo(s"""{
+      |  "sessionState": "${SESSION_STATE.value}",
+      |  "methodResponses": [
+      |    ["Test/seedCreationMapping", {}, "seed"],
+      |    ["Core/echo", {"create": {"child": {"parentId": "old-parent"}}}, "echo"]
+      |  ]
+      |}""".stripMargin)
+  }
+
   "RFC-8621 with random error when processing request " should "return 200, with serverFail error, others method call proceed normally" in {
     val mockCoreEchoMethod = mock(classOf[CoreEchoMethod])
 
@@ -429,7 +502,6 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
 
     when(mockCoreEchoMethod.methodName).thenReturn(MethodName("Core/echo"))
     when(mockCoreEchoMethod.requiredCapabilities).thenReturn(Set(JMAP_CORE))
-    when(mockCoreEchoMethod.deferredCreationReferencePaths(Arguments(any[JsObject]))).thenCallRealMethod()
 
     val methods: Set[Method] = Set(mockCoreEchoMethod)
     val jmapRfc8621Configuration = JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")

@@ -60,7 +60,7 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
                                  mailboxChangeRepository: MailboxChangeRepository,
                                  val metricFactory: MetricFactory,
                                  val sessionSupplier: SessionSupplier,
-                                 val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[MailboxSetRequest] {
+                                 val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[MailboxSetRequest] with DeferredCreationReferences {
   override val methodName: MethodName = MethodName("Mailbox/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
