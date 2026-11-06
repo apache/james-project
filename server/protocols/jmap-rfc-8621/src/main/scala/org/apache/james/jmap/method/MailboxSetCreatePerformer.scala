@@ -112,8 +112,11 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
 
   private def toMailboxCreationResults(results: Map[ClientId, Either[Exception, MailboxCreationResponse]]): MailboxCreationResults = {
     val creations = results.toSeq.map { case (id, result) =>
-      result.fold(error => MailboxCreationFailure(MailboxCreationId(id.value), error),
-        response => MailboxCreationSuccess(MailboxCreationId(id.value), response))
+      val mailboxCreationId = MailboxCreationId(id.value)
+      result match {
+        case Left(error) => MailboxCreationFailure(mailboxCreationId, error)
+        case Right(response) => MailboxCreationSuccess(mailboxCreationId, response)
+      }
     }
     MailboxCreationResults(creations)
   }
