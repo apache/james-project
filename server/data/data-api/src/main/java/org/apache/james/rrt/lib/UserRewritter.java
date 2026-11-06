@@ -22,10 +22,7 @@ package org.apache.james.rrt.lib;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import java.util.stream.IntStream;
 
 import jakarta.mail.internet.AddressException;
 
@@ -36,6 +33,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
@@ -81,6 +79,17 @@ public interface UserRewritter extends Serializable {
         private static final int REGEX = 0;
         private static final int PARAMETERIZED_STRING = 1;
 
+        private final RegexEngine regexEngine;
+
+        public RegexRewriter() {
+            this(RegexEngine.configured());
+        }
+
+        @VisibleForTesting
+        RegexRewriter(RegexEngine regexEngine) {
+            this.regexEngine = regexEngine;
+        }
+
         @Override
         public UserRewritter generateUserRewriter(String mapping) {
             return oldUser -> {
@@ -99,6 +108,8 @@ public interface UserRewritter extends Serializable {
          *
          * It must be formatted as <regular-expression>:<parameterized-string>, e.g.,
          * (.*)@(.*):${1}@tld
+         *
+         * The ${1} parameters are rejected by {@link RegexEngine#SAFE}.
          */
         public Optional<String> regexMap(MailAddress address, String mapping) {
             List<String> parts = ImmutableList.copyOf(Splitter.on(':').split(mapping));
@@ -106,21 +117,9 @@ public interface UserRewritter extends Serializable {
                 throw new PatternSyntaxException("Regex should be formatted as <regular-expression>:<parameterized-string>", mapping, 0);
             }
 
-            Pattern pattern = Pattern.compile(parts.get(REGEX));
-            Matcher match = pattern.matcher(address.asString());
-
-            if (match.matches()) {
-                ImmutableList<String> parameters = listMatchingGroups(match);
-                return Optional.of(replaceParameters(parts.get(PARAMETERIZED_STRING), parameters));
-            }
-            return Optional.empty();
-        }
-
-        private ImmutableList<String> listMatchingGroups(Matcher match) {
-            return IntStream
-                .rangeClosed(1, match.groupCount())
-                .mapToObj(match::group)
-                .collect(ImmutableList.toImmutableList());
+            regexEngine.checkMapping(mapping);
+            return regexEngine.match(parts.get(REGEX), address.asString())
+                .map(parameters -> replaceParameters(parts.get(PARAMETERIZED_STRING), parameters));
         }
 
         private String replaceParameters(String input, List<String> parameters) {

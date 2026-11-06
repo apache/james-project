@@ -15,6 +15,7 @@ Changes to apply between 3.9.1 and 3.9.2 will be reported here.
 Change list:
 
  - [JAMES-4210 SMTP PLAIN/LOGIN authentication honors auth.requireSSL](#james-4210-smtp-plainlogin-authentication-honors-authrequiressl)
+ - [Regex mappings are evaluated with RE2J](#regex-mappings-are-evaluated-with-re2j)
 
 ### JAMES-4210 SMTP PLAIN/LOGIN authentication honors auth.requireSSL
 
@@ -35,6 +36,21 @@ Deployments that intentionally allow clear-text SMTP authentication must add the
     <requireSSL>false</requireSSL>
 </auth>
 ```
+
+### Regex mappings are evaluated with RE2J
+
+Date: 06/11/2026
+
+Perimeter: recipient rewrite tables
+
+Regex mappings now rely on RE2J rather than `java.util.regex`. The regular expression is limited to 500 characters. The whole mapping cannot contain
+`{`, `}` nor control characters, which rules out counted repetitions like `[a-z]{1,64}`, `\p{L}` and the `${1}` parameters of the replacement.
+
+RE2J does not support lookaround, backreferences, possessive quantifiers, atomic groups, `\R` and `\h`. Adding such a regex is rejected, and
+an already stored one is not applied: an error is logged when it is evaluated. RE2J also interprets character class intersections like `[a-z&&[^b]]` differently,
+without any error.
+
+Please review your regex mappings before upgrading (`GET /mappings`). To keep the previous behaviour, set `james.rrt.regex.safe=false` in `jvm.properties`.
 
 ## 3.9.1 version
 
