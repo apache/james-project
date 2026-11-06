@@ -65,22 +65,28 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath] = {
-    val creates = (arguments.value \ "create").asOpt[JsObject].map(_.keys.map(id => JsPath \ "create" \ id \ "parentId")).getOrElse(Set.empty)
-    val updates = (arguments.value \ "update").asOpt[JsObject].map(_.keys.flatMap(id => Set(
-      JsPath \ "update" \ id, JsPath \ "update" \ id \ "parentId"))).getOrElse(Set.empty)
-    val destroys = (arguments.value \ "destroy").asOpt[JsArray].map(_.value.indices.map(index => (JsPath \ "destroy")(index)).toSet).getOrElse(Set.empty)
-    (creates ++ updates ++ destroys).toSet
+    val createParentPaths = (arguments.value \ "create").asOpt[JsObject]
+      .map(creates => creates.keys.map(id => JsPath \ "create" \ id \ "parentId").toSet)
+      .getOrElse(Set.empty)
+    val updateTargetAndParentPaths = (arguments.value \ "update").asOpt[JsObject]
+      .map(updates => updates.keys.flatMap(id => Set(JsPath \ "update" \ id, JsPath \ "update" \ id \ "parentId")).toSet)
+      .getOrElse(Set.empty)
+    val destroyTargetPaths = (arguments.value \ "destroy").asOpt[JsArray]
+      .map(destroys => destroys.value.indices.map(index => (JsPath \ "destroy")(index)).toSet)
+      .getOrElse(Set.empty)
+    createParentPaths ++ updateTargetAndParentPaths ++ destroyTargetPaths
   }
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxSetRequest): SMono[InvocationWithContext] = for {
     oldState <- retrieveState(capabilities, mailboxSession)
     supportSharedMailbox = capabilities.contains(JAMES_SHARES)
     creationResults <- createPerformer.createMailboxes(mailboxSession, request, invocation.processingContext, supportSharedMailbox)
-    updateResults <- updatePerformer.updateMailboxes(mailboxSession, request, capabilities, creationResults._2)
-    deletionResults <- deletePerformer.deleteMailboxes(mailboxSession, request, supportSharedMailbox, creationResults._2)
+    (createdMailboxes, contextAfterCreate) = creationResults
+    updateResults <- updatePerformer.updateMailboxes(mailboxSession, request, capabilities, contextAfterCreate)
+    deletionResults <- deletePerformer.deleteMailboxes(mailboxSession, request, supportSharedMailbox, contextAfterCreate)
     newState <- retrieveState(capabilities, mailboxSession)
-    response = createResponse(capabilities, invocation.invocation, request, creationResults._1, deletionResults, updateResults, oldState, newState)
-  } yield InvocationWithContext(response, creationResults._2)
+    response = createResponse(capabilities, invocation.invocation, request, createdMailboxes, deletionResults, updateResults, oldState, newState)
+  } yield InvocationWithContext(response, contextAfterCreate)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, MailboxSetRequest] =
     serializer.deserializeMailboxSetRequest(invocation.arguments.value).asEitherRequest

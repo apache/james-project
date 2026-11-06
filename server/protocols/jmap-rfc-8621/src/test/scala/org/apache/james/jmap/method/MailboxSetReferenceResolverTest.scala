@@ -72,16 +72,25 @@ class MailboxSetReferenceResolverTest {
   }
 
   @Test
-  def shouldReturnNotFoundForAnUnknownMaximumLengthTarget(): Unit = {
+  def shouldDescribeAnUnknownMaximumLengthUpdateTarget(): Unit = {
     val reference = "#" + "u" * 255
-    val input = request(Json.obj("update" -> Json.obj(reference -> Json.obj("name" -> "missing")),
-      "destroy" -> Json.arr(reference)))
+    val input = request(Json.obj("update" -> Json.obj(reference -> Json.obj("name" -> "missing"))))
     val update = MailboxSetReferenceResolver.updates(input, context, mailboxIdFactory).head
     assertThat(update._1.id.value).isEqualTo(reference)
     assertThat(update._2.left.toOption.get).isInstanceOf(classOf[MailboxNotFoundException])
+    assertThat(update._2.left.toOption.get.getMessage)
+      .isEqualTo(s"Unable to resolve mailbox reference '$reference': no successful creation is recorded for creation ID '${reference.substring(1)}'")
+  }
+
+  @Test
+  def shouldDescribeAnUnknownMaximumLengthDestroyTarget(): Unit = {
+    val reference = "#" + "u" * 255
+    val input = request(Json.obj("destroy" -> Json.arr(reference)))
     val deletion = MailboxSetReferenceResolver.deletions(input, context, mailboxIdFactory).head
     assertThat(deletion._1.head.id.value).isEqualTo(reference)
     assertThat(deletion._2.left.toOption.get).isInstanceOf(classOf[MailboxNotFoundException])
+    assertThat(deletion._2.left.toOption.get.getMessage)
+      .isEqualTo(s"Unable to resolve mailbox reference '$reference': no successful creation is recorded for creation ID '${reference.substring(1)}'")
   }
 
   @Test
@@ -98,10 +107,11 @@ class MailboxSetReferenceResolverTest {
     val results = MailboxSetReferenceResolver.deletions(input, context, mailboxIdFactory)
     assertThat(results.size).isEqualTo(2)
     val aliases = results.find(_._2.isRight).get
-    assertThat(aliases._1.map(_.id.value).toSet == Set("#x", "1")).isTrue()
+    assertThat(aliases._1.map(_.id.value).toSet).isEqualTo(Set("#x", "1"))
     assertThat(aliases._2.toOption.get.serialize()).isEqualTo("1")
     assertThat(results.find(_._2.isLeft).get._1.head.id.value).isEqualTo("#missing")
   }
+
   @Test
   def shouldRejectUpdatesWhoseDifferentTokensParseToTheSameMailbox(): Unit = {
     val numericContext = ProcessingContext(Map(ClientId("x") -> ServerId("1")), Map.empty)
@@ -124,16 +134,17 @@ class MailboxSetReferenceResolverTest {
     assertThat(originals.contains(Set("#x", "01", "1"))).isTrue()
     assertThat(originals.contains(Set("2"))).isTrue()
   }
+
   @Test
   def shouldRetainOriginalTokensForFactoryParseFailures(): Unit = {
     val invalidContext = ProcessingContext(Map(ClientId("x") -> ServerId("not-a-number")), Map.empty)
     val input = request(Json.obj("update" -> Json.obj("#x" -> Json.obj("name" -> "alias"),
       "not-a-number" -> Json.obj("name" -> "literal")), "destroy" -> Json.arr("#x", "not-a-number")))
     val updates = MailboxSetReferenceResolver.updates(input, invalidContext, mailboxIdFactory)
-    assertThat(updates.map(_._1.id.value).toSet == Set("#x", "not-a-number")).isTrue()
+    assertThat(updates.map(_._1.id.value).toSet).isEqualTo(Set("#x", "not-a-number"))
     updates.foreach(result => assertThat(result._2.left.toOption.get).isInstanceOf(classOf[NumberFormatException]))
     val deletions = MailboxSetReferenceResolver.deletions(input, invalidContext, mailboxIdFactory)
-    assertThat(deletions.flatMap(_._1.map(_.id.value)).toSet == Set("#x", "not-a-number")).isTrue()
+    assertThat(deletions.flatMap(_._1.map(_.id.value)).toSet).isEqualTo(Set("#x", "not-a-number"))
     deletions.foreach(result => assertThat(result._2.left.toOption.get).isInstanceOf(classOf[NumberFormatException]))
   }
 }

@@ -74,6 +74,7 @@ class DeferredCreationReferenceTest {
 
     assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = expectedArguments)))
   }
+
   @Test
   def shouldDeferUpdateKeysAndValuesWithoutLosingAliases(): Unit = {
     val arguments = Json.obj("update" -> Json.obj("#parent" -> Json.obj("parentId" -> "#parent"),
@@ -83,4 +84,29 @@ class DeferredCreationReferenceTest {
       JsPath \ "update" \ "#parent" \ "parentId", (JsPath \ "destroy")(0))))
       .isEqualTo(Right(invocation))
   }
+
+  @Test
+  def shouldPreserveCreationReferencesInAResolvedUpdateResult(): Unit = {
+    val patches = Json.obj("#parent" -> Json.obj("parentId" -> "#parent", "name" -> "after"))
+    val previous = Invocation(MethodName("Core/echo"), Arguments(Json.obj("patches" -> patches)), MethodCallId("echoPatches"))
+    val invocation = Invocation(MethodName("Mailbox/set"), Arguments(Json.obj(
+      "#update" -> Json.obj("resultOf" -> "echoPatches", "name" -> "Core/echo", "path" -> "/patches"))), MethodCallId("updateFromResult"))
+
+    val resolved = context.recordInvocation(previous).resolveBackReferences(invocation)
+
+    assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj("update" -> patches)))))
+  }
+
+  @Test
+  def shouldPreserveCreationReferencesInAResolvedDestroyResult(): Unit = {
+    val targets = Json.arr("#parent")
+    val previous = Invocation(MethodName("Core/echo"), Arguments(Json.obj("targets" -> targets)), MethodCallId("echoTargets"))
+    val invocation = Invocation(MethodName("Mailbox/set"), Arguments(Json.obj(
+      "#destroy" -> Json.obj("resultOf" -> "echoTargets", "name" -> "Core/echo", "path" -> "/targets"))), MethodCallId("destroyFromResult"))
+
+    val resolved = context.recordInvocation(previous).resolveBackReferences(invocation)
+
+    assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj("destroy" -> targets)))))
+  }
+
 }
