@@ -681,7 +681,7 @@
         <guice.version>7.0.0</guice.version>
         <logback.version>1.6.6</logback.version>
         <tink.version>1.17.0</tink.version>
-        <zstd-jni.version>1.5.7-7</zstd-jni.version>
+        <zstd-jni.version>1.5.7-25</zstd-jni.version>
         <lettuce.core.version>6.8.2.RELEASE</lettuce.core.version>
         <io.micrometer.core.version>1.17.2</io.micrometer.core.version>
         <io.micrometer.tracing.version>1.7.2</io.micrometer.tracing.version>
