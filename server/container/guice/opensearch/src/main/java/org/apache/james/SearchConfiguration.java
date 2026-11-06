@@ -37,7 +37,8 @@ public class SearchConfiguration {
     public enum Implementation {
         Scanning("scanning"),
         OpenSearch("opensearch"),
-        OpenSearchDisabled("opensearch-disabled");
+        OpenSearchDisabled("opensearch-disabled"),
+        Lucene("lucene");
 
         static Optional<Implementation> parse(String value) {
             return Stream.of(values())
@@ -82,6 +83,10 @@ public class SearchConfiguration {
 
     public static SearchConfiguration openSearchDisabled() {
         return new SearchConfiguration(Implementation.OpenSearchDisabled);
+    }
+
+    public static SearchConfiguration lucene() {
+        return new SearchConfiguration(Implementation.Lucene);
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchConfiguration.class);
