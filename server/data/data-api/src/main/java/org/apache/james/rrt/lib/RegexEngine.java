@@ -22,12 +22,6 @@ package org.apache.james.rrt.lib;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.PatternSyntaxException;
-import java.util.stream.IntStream;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Evaluates the regular expressions of regex mappings.
@@ -42,8 +36,8 @@ import com.google.common.collect.ImmutableList;
  * without any of these limits. This restores the syntax RE2J does not support (lookaround, backreferences, ...).
  */
 public interface RegexEngine {
-    RegexEngine SAFE = new Safe();
-    RegexEngine UNSAFE = new Unsafe();
+    RegexEngine SAFE = new SafeRegexEngine();
+    RegexEngine UNSAFE = new UnsafeRegexEngine();
 
     static RegexEngine configured() {
         return Holder.CONFIGURED;
@@ -75,73 +69,5 @@ public interface RegexEngine {
         private static final RegexEngine CONFIGURED = Boolean.parseBoolean(System.getProperty("james.rrt.regex.safe", "true"))
             ? SAFE
             : UNSAFE;
-    }
-
-    class Safe implements RegexEngine {
-        @VisibleForTesting
-        static final int MAX_REGEX_LENGTH = 500;
-        private static final CharMatcher BRACES = CharMatcher.anyOf("{}");
-
-        @Override
-        public void checkMapping(String mapping) {
-            if (BRACES.matchesAnyOf(mapping)) {
-                throw new PatternSyntaxException("Regex mapping should not contain '{' nor '}'", mapping, -1);
-            }
-            if (CharMatcher.javaIsoControl().matchesAnyOf(mapping)) {
-                throw new PatternSyntaxException("Regex mapping should not contain control characters", CharMatcher.javaIsoControl().removeFrom(mapping), -1);
-            }
-        }
-
-        @Override
-        public void validate(String mapping) {
-            checkMapping(mapping);
-            compile(Splitter.on(':').split(mapping).iterator().next());
-        }
-
-        @Override
-        public Optional<List<String>> match(String regex, String input) {
-            com.google.re2j.Matcher matcher = compile(regex).matcher(input);
-            if (matcher.matches()) {
-                return Optional.of(IntStream.rangeClosed(1, matcher.groupCount())
-                    .mapToObj(matcher::group)
-                    .collect(ImmutableList.toImmutableList()));
-            }
-            return Optional.empty();
-        }
-
-        private com.google.re2j.Pattern compile(String regex) {
-            if (regex.length() > MAX_REGEX_LENGTH) {
-                throw new PatternSyntaxException("Regex exceeds " + MAX_REGEX_LENGTH + " characters", regex, -1);
-            }
-            checkMapping(regex);
-            try {
-                return com.google.re2j.Pattern.compile(regex);
-            } catch (com.google.re2j.PatternSyntaxException e) {
-                throw new PatternSyntaxException(e.getDescription(), regex, -1);
-            }
-        }
-    }
-
-    class Unsafe implements RegexEngine {
-        @Override
-        public void checkMapping(String mapping) {
-
-        }
-
-        @Override
-        public void validate(String mapping) {
-            java.util.regex.Pattern.compile(mapping);
-        }
-
-        @Override
-        public Optional<List<String>> match(String regex, String input) {
-            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(regex).matcher(input);
-            if (matcher.matches()) {
-                return Optional.of(IntStream.rangeClosed(1, matcher.groupCount())
-                    .mapToObj(matcher::group)
-                    .collect(ImmutableList.toImmutableList()));
-            }
-            return Optional.empty();
-        }
     }
 }

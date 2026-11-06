@@ -59,7 +59,7 @@ class RegexEngineTest {
 
     @Test
     void safeShouldBoundEvaluationOfLongestRegex() {
-        String regex = "(a*)".repeat(RegexEngine.Safe.MAX_REGEX_LENGTH / 4);
+        String regex = "(a*)".repeat(SafeRegexEngine.MAX_REGEX_LENGTH / 4);
 
         assertTimeoutPreemptively(Duration.ofSeconds(10),
             () -> assertThat(RegexEngine.SAFE.match(regex, LONG_INPUT)).isEmpty());
@@ -111,13 +111,13 @@ class RegexEngineTest {
 
     @Test
     void safeShouldAcceptRegexOfMaximumLength() {
-        assertThatCode(() -> RegexEngine.SAFE.validate("a".repeat(RegexEngine.Safe.MAX_REGEX_LENGTH)))
+        assertThatCode(() -> RegexEngine.SAFE.validate("a".repeat(SafeRegexEngine.MAX_REGEX_LENGTH)))
             .doesNotThrowAnyException();
     }
 
     @Test
     void safeShouldRefuseRegexExceedingMaximumLength() {
-        assertThatThrownBy(() -> RegexEngine.SAFE.validate("a".repeat(RegexEngine.Safe.MAX_REGEX_LENGTH + 1)))
+        assertThatThrownBy(() -> RegexEngine.SAFE.validate("a".repeat(SafeRegexEngine.MAX_REGEX_LENGTH + 1)))
             .isInstanceOf(PatternSyntaxException.class);
     }
 
@@ -138,7 +138,7 @@ class RegexEngineTest {
 
     @Test
     void unsafeShouldNotLimitLength() {
-        assertThatCode(() -> RegexEngine.UNSAFE.validate("a".repeat(RegexEngine.Safe.MAX_REGEX_LENGTH + 1)))
+        assertThatCode(() -> RegexEngine.UNSAFE.validate("a".repeat(SafeRegexEngine.MAX_REGEX_LENGTH + 1)))
             .doesNotThrowAnyException();
     }
 
