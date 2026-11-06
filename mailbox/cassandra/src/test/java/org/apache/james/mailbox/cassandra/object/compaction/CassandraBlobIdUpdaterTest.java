@@ -19,10 +19,13 @@
 
 package org.apache.james.mailbox.cassandra.object.compaction;
 
+import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +33,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.StatementRecorder;
+import org.apache.james.backends.cassandra.TestingSession;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.blob.api.BlobId;
@@ -41,10 +46,14 @@ import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentDataDefinit
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageDataDefinition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+
+import reactor.core.Disposable;
+import reactor.core.publisher.Mono;
 
 class CassandraBlobIdUpdaterTest {
     private static final BlobId OLD = new PlainBlobId.Factory().of("old");
@@ -57,7 +66,7 @@ class CassandraBlobIdUpdaterTest {
         CassandraAttachmentDataDefinition.MODULE,
         CassandraSchemaVersionDataDefinition.MODULE));
 
-    private CqlSession session;
+    private TestingSession session;
     private CassandraBlobIdUpdater.Factory factory;
 
     @BeforeEach
@@ -199,13 +208,122 @@ class CassandraBlobIdUpdaterTest {
     }
 
     @Test
+    void shouldPropagateSourceFailureAndDropRunTable() {
+        saveMessage(OLD, OLD);
+        session.registerScenario(fail().times(1).whenQueryStartsWith("SELECT messageid,headercontent,bodycontent FROM messagev3"));
+
+        assertThatThrownBy(() -> factory.forPredicate(id -> true, id -> { }).block())
+            .hasRootCauseMessage("Injected failure");
+        assertThat(runTables()).isEmpty();
+    }
+
+    @Test
+    void shouldPropagateIndexWriteFailureAndDropRunTable() {
+        saveMessage(OLD, OLD);
+        session.registerScenario(fail().times(1).whenQueryStartsWith("INSERT INTO blob_ref_"));
+
+        assertThatThrownBy(() -> factory.forPredicate(id -> true, id -> { }).block())
+            .hasRootCauseMessage("Injected failure");
+        assertThat(runTables()).isEmpty();
+    }
+
+    @Test
+    void shouldDropRunTableWhenPredicateFails() {
+        saveMessage(OLD, OLD);
+
+        assertThatThrownBy(() -> factory.forPredicate(id -> {
+            throw new IllegalArgumentException("predicate failed");
+        }, id -> { }).block()).hasMessage("predicate failed");
+        assertThat(runTables()).isEmpty();
+    }
+
+    @Test
+    void failedCreationShouldAttemptCleanupWithoutScanningReferences() {
+        saveMessage(OLD, OLD);
+        StatementRecorder recorder = session.recordStatements();
+        session.registerScenario(fail().times(1).whenQueryStartsWith("CREATE TABLE IF NOT EXISTS blob_ref_"));
+
+        assertThatThrownBy(() -> factory.forPredicate(id -> true, id -> { }).block())
+            .hasRootCauseMessage("Injected failure");
+        assertThat(dropStatements(recorder)).hasSize(1);
+        assertThat(recorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith("SELECT"))).isEmpty();
+        assertThat(runTables()).isEmpty();
+    }
+
+    @Test
+    @Timeout(20)
+    void cancellationShouldWaitForTableCreationBeforeDroppingIt() throws InterruptedException {
+        Barrier creation = new Barrier();
+        StatementRecorder recorder = session.recordStatements();
+        session.registerScenario(awaitOn(creation).thenExecuteNormally().times(1)
+            .whenQueryStartsWith("CREATE TABLE IF NOT EXISTS blob_ref_"));
+        Disposable subscription = factory.forPredicate(id -> true, id -> { }).subscribe();
+        try {
+            creation.awaitCaller();
+            subscription.dispose();
+            assertThat(dropStatements(recorder)).isEmpty();
+        } finally {
+            subscription.dispose();
+            creation.releaseCaller();
+        }
+
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            assertThat(dropStatements(recorder)).hasSize(1);
+            assertThat(runTables()).isEmpty();
+        });
+        assertThat(recorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith("SELECT"))).isEmpty();
+    }
+
+    @Test
+    @Timeout(20)
+    void cancellationDuringPreparationShouldDropRunTable() throws InterruptedException {
+        saveMessage(OLD, OLD);
+        Barrier scan = new Barrier();
+        session.registerScenario(awaitOn(scan).thenExecuteNormally().times(1)
+            .whenQueryStartsWith("SELECT messageid,headercontent,bodycontent FROM messagev3"));
+        Disposable subscription = factory.forPredicate(id -> true, id -> { }).subscribe();
+        try {
+            scan.awaitCaller();
+            assertThat(runTables()).hasSize(1);
+        } finally {
+            subscription.dispose();
+            scan.releaseCaller();
+        }
+
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> assertThat(runTables()).isEmpty());
+    }
+
+    @Test
+    void cleanupFailureShouldBeRetryableAndKeepUpdaterClosed() {
+        saveMessage(OLD, OLD);
+        BlobIdUpdater updater = factory.forPredicate(id -> true, id -> { }).block();
+        session.registerScenario(fail().times(1).whenQueryStartsWith("DROP TABLE IF EXISTS blob_ref_"));
+
+        assertThatThrownBy(() -> updater.cleanup().block()).hasRootCauseMessage("Injected failure");
+        assertThat(runTables()).hasSize(1);
+        assertThatThrownBy(() -> updater.replaceReferences(OLD, NEW).block())
+            .isInstanceOf(IllegalStateException.class).hasMessageContaining("cleaned up");
+        updater.cleanup().block();
+        assertThat(runTables()).isEmpty();
+    }
+
+    private List<SimpleStatement> dropStatements(StatementRecorder recorder) {
+        return recorder.listExecutedStatements().stream()
+            .filter(SimpleStatement.class::isInstance)
+            .map(SimpleStatement.class::cast)
+            .filter(statement -> statement.getQuery().startsWith("DROP TABLE IF EXISTS blob_ref_"))
+            .toList();
+    }
+
+    @Test
     void cleanupShouldLeaveOtherRunsIntact() {
         for (int i = 0; i < 5; i++) {
             saveMessage(new PlainBlobId.Factory().of("header-" + i), new PlainBlobId.Factory().of("body-" + i));
         }
         UUID target = saveMessage(OLD, OLD);
-        BlobIdUpdater first = factory.forPredicate(id -> true, id -> { }).block();
-        BlobIdUpdater second = factory.forPredicate(id -> true, id -> { }).block();
+        Mono<BlobIdUpdater> preparation = factory.forPredicate(id -> true, id -> { });
+        BlobIdUpdater first = preparation.block();
+        BlobIdUpdater second = preparation.block();
 
         assertThat(runTables()).hasSize(2);
         first.cleanup().block();
@@ -213,6 +331,7 @@ class CassandraBlobIdUpdaterTest {
         second.replaceReferences(OLD, NEW).block();
 
         assertThat(message(target).getString("headerContent")).isEqualTo(NEW.asString());
+        assertThat(runTables()).hasSize(1);
         second.cleanup().block();
         assertThat(runTables()).isEmpty();
     }
