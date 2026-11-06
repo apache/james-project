@@ -36,7 +36,6 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimePart;
-import jakarta.mail.internet.MimePartDataSource;
 import jakarta.mail.internet.MimeUtility;
 import jakarta.mail.internet.ParseException;
 
@@ -139,12 +138,13 @@ public class AddFooter extends GenericMailet {
     }
 
     /**
-     * Unlike {@link MimePart#getContent()}, does not cache the parsed multipart in the part. A cached multipart is
-     * re-serialised from its parsed form when the changes are saved, and Jakarta Mail refuses to write a multipart
-     * parsed without any body part (truncated input). Parts the footer is not added to are thus written as received.
+     * Reads the current content of the part, including what earlier mailets set. Unlike {@link MimePart#getContent()},
+     * does not cache the multipart it parses in the part. A cached multipart is re-serialised from its parsed form when
+     * the changes are saved, and Jakarta Mail refuses to write a multipart parsed without any body part (truncated
+     * input). Parts the footer is not added to are thus written as received.
      */
-    private MimeMultipart parseMultipart(MimePart part) throws MessagingException {
-        return new MimeMultipart(new MimePartDataSource(part));
+    private MimeMultipart parseMultipart(MimePart part) throws MessagingException, IOException {
+        return (MimeMultipart) part.getDataHandler().getContent();
     }
 
     private boolean exceedsMaxMimeDepth(MimePart part, int depth) {
@@ -161,7 +161,7 @@ public class AddFooter extends GenericMailet {
                 }
             }
             return false;
-        } catch (MessagingException | RuntimeException e) {
+        } catch (MessagingException | IOException | RuntimeException e) {
             // Unreadable parts are handled while adding the footer
             return false;
         }

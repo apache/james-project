@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.ContentType;
+import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
@@ -632,6 +633,125 @@ class AddFooterTest {
         mailet.service(mail);
 
         assertThat(MailUtil.toString(mail, "UTF-8")).contains(MY_FOOTER);
+    }
+
+    @Test
+    void shouldNotBringBackAttachmentsRemovedByAnEarlierMailet() throws Exception {
+        assertFooterAddedWithoutAttachmentAfterStripAttachment(Joiner.on("\r\n").join(
+            "From: sender@example.com",
+            "MIME-Version: 1.0",
+            "Content-Type: multipart/mixed; boundary=\"outer\"",
+            "",
+            "--outer",
+            "Content-Type: text/plain",
+            "",
+            "hello",
+            "--outer",
+            "Content-Type: application/octet-stream",
+            "Content-Disposition: attachment; filename=\"report.exe\"",
+            "",
+            "PAYLOAD",
+            "--outer--",
+            ""));
+    }
+
+    @Test
+    void shouldNotBringBackNestedAttachmentsRemovedByAnEarlierMailet() throws Exception {
+        assertFooterAddedWithoutAttachmentAfterStripAttachment(Joiner.on("\r\n").join(
+            "From: sender@example.com",
+            "MIME-Version: 1.0",
+            "Content-Type: multipart/mixed; boundary=\"outer\"",
+            "",
+            "--outer",
+            "Content-Type: multipart/mixed; boundary=\"inner\"",
+            "",
+            "--inner",
+            "Content-Type: text/plain",
+            "",
+            "hello",
+            "--inner",
+            "Content-Type: application/octet-stream",
+            "Content-Disposition: attachment; filename=\"report.exe\"",
+            "",
+            "PAYLOAD",
+            "--inner--",
+            "--outer--",
+            ""));
+    }
+
+    private void assertFooterAddedWithoutAttachmentAfterStripAttachment(String message) throws Exception {
+        Mailet stripAttachment = new StripAttachment();
+        stripAttachment.init(FakeMailetConfig.builder()
+            .mailetName("StripAttachment")
+            .setProperty("remove", "matched")
+            .setProperty("pattern", ".*\\.exe")
+            .build());
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        stripAttachment.service(mail);
+        mailet.service(mail);
+
+        assertThat(MailUtil.toString(mail, "UTF-8"))
+            .contains("hello", MY_FOOTER)
+            .doesNotContain("PAYLOAD", "report.exe");
+    }
+
+    @Test
+    void shouldNotBringBackAPartRemovedByAnEarlierMailet() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+        Mail mail = FakeMail.fromMime(Joiner.on("\r\n").join(
+            "From: sender@example.com",
+            "MIME-Version: 1.0",
+            "Content-Type: multipart/mixed; boundary=\"outer\"",
+            "",
+            "--outer",
+            "Content-Type: text/plain",
+            "",
+            "hello",
+            "--outer",
+            "Content-Type: application/octet-stream",
+            "Content-Disposition: attachment; filename=\"report.exe\"",
+            "",
+            "PAYLOAD",
+            "--outer--",
+            ""), "UTF-8", "UTF-8");
+        MimeMultipart multipart = (MimeMultipart) mail.getMessage().getContent();
+        multipart.removeBodyPart(1);
+        mail.getMessage().setContent(multipart);
+        mail.getMessage().saveChanges();
+
+        mailet.service(mail);
+
+        assertThat(MailUtil.toString(mail, "UTF-8"))
+            .contains("hello", MY_FOOTER)
+            .doesNotContain("PAYLOAD", "report.exe");
+    }
+
+    @Test
+    void shouldAddFooterToAMultipartSetProgrammatically() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+        MimeBodyPart textPart = new MimeBodyPart();
+        textPart.setText("hello");
+        MimeMultipart multipart = new MimeMultipart();
+        multipart.addBodyPart(textPart);
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.setContent(multipart);
+        message.saveChanges();
+        Mail mail = FakeMail.builder().name("mail").mimeMessage(message).build();
+
+        mailet.service(mail);
+
+        assertThat(MailUtil.toString(mail, "UTF-8")).contains("hello", MY_FOOTER);
     }
 
     private static String nestedMessage(String multipartType, int depth) {
