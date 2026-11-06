@@ -28,40 +28,52 @@ import scala.collection.mutable
   * Foreign keys to other types share the context, but are not ordering edges.
   */
 object CreateProcessor {
-  private case class ProcessingState[E, R](remaining: List[ClientId],
-                                          results: Map[ClientId, Either[E, R]],
-                                          context: ProcessingContext)
+  private case class ProcessingState[Error, Created](remaining: List[ClientId],
+                                                     results: Map[ClientId, Either[Error, Created]],
+                                                     context: ProcessingContext)
 
-  def process[A, E, R](creates: Map[ClientId, A], initialContext: ProcessingContext)(
-                       dependencies: A => Set[ClientId],
-                       create: (A, ProcessingContext) => SMono[Either[E, (R, ServerId)]],
-                       invalidDependency: A => E): SMono[(Map[ClientId, Either[E, R]], ProcessingContext)] =
+  /** Order same-call dependencies, then create each item with the context accumulated so far.
+    * Only successful creations add a server ID to the context.
+    * The create callback returns the created value and its server ID, or an item error.
+    * References outside this call are resolved by the consumer using that context.
+    */
+  def process[Input, Error, Created](creates: Map[ClientId, Input], initialContext: ProcessingContext)(
+                                     dependencies: Input => Set[ClientId],
+                                     create: (Input, ProcessingContext) => SMono[Either[Error, (Created, ServerId)]],
+                                     invalidDependency: Input => Error): SMono[(Map[ClientId, Either[Error, Created]], ProcessingContext)] =
     SMono.defer(() => {
-      val localDependencies = creates.view.mapValues(value => dependencies(value).intersect(creates.keySet)).toMap
-      val ordered = order(localDependencies)
+      val dependenciesInThisCall = creates.view.mapValues(value => dependencies(value).intersect(creates.keySet)).toMap
+      val creationOrder = orderByDependencies(dependenciesInThisCall)
       // Emit one accumulated state per creation. expand avoids a recursive flatMap
       // subscription chain when many synchronous creates depend on one another.
-      val initialState = ProcessingState[E, R](
-        remaining = ordered.toList,
+      val initialState = ProcessingState[Error, Created](
+        remaining = creationOrder.toList,
         results = Map.empty,
         context = initialContext)
       SMono.just(initialState)
-        .expand(state => state.remaining match {
-          case Nil => SMono.empty
-          case id :: remaining =>
-            processCreation(id, creates(id), localDependencies(id), state.results, state.context)(create, invalidDependency)
-              .map { case (updatedResults, updatedContext) =>
-                ProcessingState(remaining = remaining, results = updatedResults, context = updatedContext)
-              }
-        })
+        .expand(state => processNextCreation(state, creates, dependenciesInThisCall)(create, invalidDependency))
         .last()
         .map(state => (state.results, state.context))
     })
 
-  private def processCreation[A, E, R](id: ClientId, entry: A, dependencies: Set[ClientId],
-                                      results: Map[ClientId, Either[E, R]], context: ProcessingContext)(
-                                      create: (A, ProcessingContext) => SMono[Either[E, (R, ServerId)]],
-                                      invalidDependency: A => E): SMono[(Map[ClientId, Either[E, R]], ProcessingContext)] = {
+  private def processNextCreation[Input, Error, Created](state: ProcessingState[Error, Created],
+                                                         creates: Map[ClientId, Input],
+                                                         dependenciesInThisCall: Map[ClientId, Set[ClientId]])(
+                                                         create: (Input, ProcessingContext) => SMono[Either[Error, (Created, ServerId)]],
+                                                         invalidDependency: Input => Error): SMono[ProcessingState[Error, Created]] =
+    state.remaining match {
+      case Nil => SMono.empty
+      case creationId :: remaining =>
+        processCreation(creationId, creates(creationId), dependenciesInThisCall(creationId), state.results, state.context)(create, invalidDependency)
+          .map { case (results, context) =>
+            ProcessingState(remaining = remaining, results = results, context = context)
+          }
+    }
+
+  private def processCreation[Input, Error, Created](id: ClientId, entry: Input, dependencies: Set[ClientId],
+                                                     results: Map[ClientId, Either[Error, Created]], context: ProcessingContext)(
+                                                     create: (Input, ProcessingContext) => SMono[Either[Error, (Created, ServerId)]],
+                                                     invalidDependency: Input => Error): SMono[(Map[ClientId, Either[Error, Created]], ProcessingContext)] = {
     val hasUnsuccessfulDependency = dependencies.exists(dependency => !results.get(dependency).exists(_.isRight))
     if (hasUnsuccessfulDependency) {
       SMono.just((results.updated(id, Left(invalidDependency(entry))), context))
@@ -76,7 +88,7 @@ object CreateProcessor {
 
   // Process parents before their dependents. Keep entries blocked by cycles so
   // processCreation can return a per-item error without attempting to create them.
-  private def order(dependencies: Map[ClientId, Set[ClientId]]): Seq[ClientId] = {
+  private def orderByDependencies(dependencies: Map[ClientId, Set[ClientId]]): Seq[ClientId] = {
     val unresolvedParentCounts = mutable.Map.from(dependencies.view.mapValues(_.size))
     val dependents = mutable.Map.empty[ClientId, Vector[ClientId]]
     dependencies.foreach { case (id, parents) =>

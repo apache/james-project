@@ -24,36 +24,54 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodNam
 import org.apache.james.jmap.core.{ClientId, Invocation, ServerId}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import play.api.libs.json.{JsPath, Json}
+import play.api.libs.json.{JsObject, JsPath, Json}
 
 class DeferredCreationReferenceTest {
   private val context = ProcessingContext(Map(ClientId("parent") -> ServerId("old-parent")), Map.empty)
 
   @Test
   def shouldDeferOnlyDeclaredValuesAndKeepLegacySubstitutionElsewhere(): Unit = {
-    val arguments = Json.obj("create" -> Json.obj("child" -> Json.obj("parentId" -> "#parent", "name" -> "#parent")),
-      "update" -> Json.obj("#parent" -> Json.obj("parentId" -> "#parent")))
+    val arguments = Json.parse("""{
+      |  "create": {"child": {"parentId": "#parent", "name": "#parent"}},
+      |  "update": {"#parent": {"parentId": "#parent"}}
+      |}""".stripMargin).as[JsObject]
+    val expectedArguments = Json.parse("""{
+      |  "create": {"child": {"parentId": "#parent", "name": "old-parent"}},
+      |  "update": {"old-parent": {"parentId": "old-parent"}}
+      |}""".stripMargin).as[JsObject]
     val invocation = Invocation(MethodName("Mailbox/set"), Arguments(arguments), MethodCallId("set"))
+    val deferredPaths = Set(JsPath \ "create" \ "child" \ "parentId")
 
-    assertThat(context.resolveBackReferences(invocation, Set(JsPath \ "create" \ "child" \ "parentId")))
-      .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
-        "create" -> Json.obj("child" -> Json.obj("parentId" -> "#parent", "name" -> "old-parent")),
-        "update" -> Json.obj("old-parent" -> Json.obj("parentId" -> "old-parent")))))))
+    val resolved = context.resolveBackReferences(invocation, deferredPaths)
+
+    assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = Arguments(expectedArguments))))
   }
 
   @Test
   def shouldKeepResolvingResultReferencesAtDeferredPaths(): Unit = {
     val previous = Invocation(MethodName("Core/echo"), Arguments(Json.obj("id" -> "real-parent")), MethodCallId("previous"))
-    val invocation = Invocation(MethodName("Mailbox/set"), Arguments(Json.obj("create" -> Json.obj("child" -> Json.obj(
-      "#parentId" -> Json.obj("resultOf" -> "previous", "name" -> "Core/echo", "path" -> "/id"))))), MethodCallId("set"))
-    val resolved = context.recordInvocation(previous).resolveBackReferences(invocation, Set(JsPath \ "create" \ "child" \ "parentId")).toOption.get
+    val arguments = Json.parse("""{
+      |  "create": {
+      |    "child": {
+      |      "#parentId": {"resultOf": "previous", "name": "Core/echo", "path": "/id"}
+      |    }
+      |  }
+      |}""".stripMargin).as[JsObject]
+    val invocation = Invocation(MethodName("Mailbox/set"), Arguments(arguments), MethodCallId("set"))
+    val deferredPaths = Set(JsPath \ "create" \ "child" \ "parentId")
+    val contextWithPreviousResult = context.recordInvocation(previous)
+
+    val resolved = contextWithPreviousResult.resolveBackReferences(invocation, deferredPaths).toOption.get
     assertThat((resolved.arguments.value \ "create" \ "child" \ "parentId").as[String]).isEqualTo("real-parent")
   }
 
   @Test
   def shouldDistinguishDeferredArrayElements(): Unit = {
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj("ids" -> Json.arr("#parent", "#parent"))), MethodCallId("echo"))
-    assertThat(context.resolveBackReferences(invocation, Set((JsPath \ "ids")(0))))
-      .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj("ids" -> Json.arr("#parent", "old-parent"))))))
+    val expectedArguments = Arguments(Json.obj("ids" -> Json.arr("#parent", "old-parent")))
+
+    val resolved = context.resolveBackReferences(invocation, Set((JsPath \ "ids")(0)))
+
+    assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = expectedArguments)))
   }
 }
