@@ -43,21 +43,24 @@ class CreateProcessorTest {
 
   private def serverId(id: ClientId): ServerId = ServerId(Id.validate("server-" + id.value.value).toOption.get)
 
+  private case class CreationInput(id: ClientId, parents: Set[ClientId])
+
   private def process(entries: Seq[(ClientId, Set[ClientId])], context: ProcessingContext = emptyContext,
-                      failures: Set[ClientId] = Set.empty, executions: AtomicInteger = new AtomicInteger()) =
-    CreateProcessor.process(VectorMap(entries.map { case (id, parents) => id -> (id, parents) }: _*), context)(
-      dependencies = (entry: (ClientId, Set[ClientId])) => entry._2,
-      create = (entry: (ClientId, Set[ClientId]), current: ProcessingContext) => SMono.fromCallable(() => {
+                      failures: Set[ClientId] = Set.empty, executions: AtomicInteger = new AtomicInteger()) = {
+    val creates = VectorMap(entries.map { case (id, parents) => id -> CreationInput(id, parents) }: _*)
+    CreateProcessor.process(creates, context)(
+      dependencies = (input: CreationInput) => input.parents,
+      create = (input: CreationInput, current: ProcessingContext) => SMono.fromCallable(() => {
         executions.incrementAndGet()
-        val (id, parents) = entry
-        if (failures.contains(id)) {
+        if (failures.contains(input.id)) {
           Left("domain failure")
         } else {
-          val resolvedParents = parents.map(p => current.retrieveServerId(p).get)
-          Right((resolvedParents, serverId(id)))
+          val resolvedParents = input.parents.map(parent => current.retrieveServerId(parent).get)
+          Right((resolvedParents, serverId(input.id)))
         }
       }),
-      invalidDependency = (_: (ClientId, Set[ClientId])) => "invalid dependency")
+      invalidDependency = (_: CreationInput) => "invalid dependency")
+  }
 
   @Test
   def shouldCreateEveryPermutationWithTheAccumulatedContext(): Unit = {

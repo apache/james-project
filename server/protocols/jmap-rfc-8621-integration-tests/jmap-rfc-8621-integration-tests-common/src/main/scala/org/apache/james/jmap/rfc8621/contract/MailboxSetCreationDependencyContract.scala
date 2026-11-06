@@ -45,10 +45,12 @@ trait MailboxSetCreationDependencyContract {
       .extract().asString())
   }
 
-  private def responseFor(response: JsValue, callId: String): JsValue =
-    (response \ "methodResponses").as[Seq[JsArray]]
-      .find(call => call(2).as[String] == callId)
-      .getOrElse(throw new AssertionError(s"Missing response for call '$callId': $response"))(1)
+  private def responseFor(response: JsValue, callId: String): JsValue = {
+    val methodResponses = (response \ "methodResponses").as[Seq[JsArray]]
+    val matchingResponse = methodResponses.find(call => call(2).as[String] == callId)
+      .getOrElse(throw new AssertionError(s"Missing response for call '$callId': $response"))
+    matchingResponse(1)
+  }
 
   private def storedMailboxId(server: GuiceJamesServer, path: String): String =
     server.getProbe(classOf[MailboxProbeImpl])
