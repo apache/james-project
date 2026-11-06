@@ -44,6 +44,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
+import org.apache.james.modules.mailbox.LuceneVarStoreDirectoryModule;
 import org.apache.james.modules.mailbox.OpenSearchClientModule;
 import org.apache.james.modules.mailbox.OpenSearchDisabledModule;
 import org.apache.james.modules.mailbox.OpenSearchMailboxMappingModule;
@@ -58,6 +60,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
+import com.google.inject.util.Modules;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -174,6 +177,10 @@ public class SearchModuleChooser {
                 new OpenSearchDisabledModule(),
                 new ScanningQuotaSearchModule(),
                 new FakeSearchHighlightModule());
+            case Lucene -> ImmutableList.of(
+                Modules.override(new LuceneSearchMailboxModule()).with(new LuceneVarStoreDirectoryModule()),
+                new ReIndexingModule(),
+                new ScanningQuotaSearchModule());
         };
     }
 }

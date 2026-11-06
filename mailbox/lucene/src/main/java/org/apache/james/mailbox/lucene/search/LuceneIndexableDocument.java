@@ -131,7 +131,7 @@ public class LuceneIndexableDocument {
     public Document createMessageDocument(MailboxMessage message, MailboxSession session, MimePart mimePartExtracted) {
         Document doc = new Document();
         doc.add(new StringField(USERS, session.getUser().asString().toUpperCase(Locale.US), Field.Store.YES));
-        doc.add(new StringField(MAILBOX_ID_FIELD, message.getMailboxId().serialize().toUpperCase(Locale.US), Field.Store.YES));
+        doc.add(new StringField(MAILBOX_ID_FIELD, message.getMailboxId().serialize(), Field.Store.YES));
         doc.add(new NumericDocValuesField(UID_FIELD, message.getUid().asLong()));
         doc.add(new LongPoint(UID_FIELD, message.getUid().asLong()));
         doc.add(new StoredField(UID_FIELD, message.getUid().asLong()));
@@ -140,7 +140,7 @@ public class LuceneIndexableDocument {
         doc.add(new NumericDocValuesField(SIZE_FIELD, message.getFullContentOctets()));
 
         // create a unique key for the document which can be used later on updates to find the document
-        doc.add(new StringField(ID_FIELD, message.getMailboxId().serialize().toUpperCase(Locale.US) + "-" + message.getUid().asLong(), Field.Store.YES));
+        doc.add(new StringField(ID_FIELD, message.getMailboxId().serialize() + "-" + message.getUid().asLong(), Field.Store.YES));
 
         Optional.ofNullable(SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message))
             .ifPresent(serializedMessageId -> doc.add(new StringField(MESSAGE_ID_FIELD, serializedMessageId, Field.Store.YES)));
