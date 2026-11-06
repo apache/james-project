@@ -131,7 +131,7 @@ public class LuceneIndexableDocument {
     public Document createMessageDocument(MailboxMessage message, MailboxSession session, MimePart mimePartExtracted) {
         Document doc = new Document();
         doc.add(new StringField(USERS, session.getUser().asString().toUpperCase(Locale.US), Field.Store.YES));
-        doc.add(new StringField(MAILBOX_ID_FIELD, message.getMailboxId().serialize().toUpperCase(Locale.US), Field.Store.YES));
+        doc.add(new StringField(MAILBOX_ID_FIELD, message.getMailboxId().serialize(), Field.Store.YES));
         doc.add(new NumericDocValuesField(UID_FIELD, message.getUid().asLong()));
         doc.add(new LongPoint(UID_FIELD, message.getUid().asLong()));
         doc.add(new StoredField(UID_FIELD, message.getUid().asLong()));
@@ -251,7 +251,7 @@ public class LuceneIndexableDocument {
     }
 
     public static String createMessageIdField(MailboxId mailboxId, long uid) {
-        return mailboxId.serialize().toUpperCase(Locale.US) + "-" + uid;
+        return mailboxId.serialize() + "-" + uid;
     }
 
     public static String createFlagsIdField(MailboxId mailboxId, MessageUid messageUid) {
