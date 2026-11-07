@@ -3393,6 +3393,41 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void deleteShouldThrowWithoutDeleteMessagesRight() throws Exception {
+            MailboxPath path = MailboxPath.forUser(USER_1, "shared");
+            mailboxManager.createMailbox(path, session);
+            ComposedMessageId messageId = mailboxManager.getMailbox(path, session)
+                .appendMessage(AppendCommand.builder().build(message), session).getId();
+            mailboxManager.setRights(path, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read)
+                    .asAddition()),
+                session);
+
+            MessageManager sharedMailbox = mailboxManager.getMailbox(path, session2);
+            assertThatThrownBy(() -> sharedMailbox.delete(ImmutableList.of(messageId.getUid()), session2))
+                .isInstanceOf(InsufficientRightsException.class);
+            assertThat(mailboxManager.getMailbox(path, session).getMessageCount(session)).isEqualTo(1);
+        }
+
+        @Test
+        void deleteShouldSucceedWithDeleteMessagesRight() throws Exception {
+            MailboxPath path = MailboxPath.forUser(USER_1, "shared");
+            mailboxManager.createMailbox(path, session);
+            ComposedMessageId messageId = mailboxManager.getMailbox(path, session)
+                .appendMessage(AppendCommand.builder().build(message), session).getId();
+            mailboxManager.setRights(path, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.DeleteMessages)
+                    .asAddition()),
+                session);
+
+            mailboxManager.getMailbox(path, session2).delete(ImmutableList.of(messageId.getUid()), session2);
+
+            assertThat(mailboxManager.getMailbox(path, session).getMessageCount(session)).isEqualTo(0);
+        }
+
+        @Test
         void hasRightShouldThrowOnUnknownMailbox() {
             assertThatThrownBy(() -> mailboxManager.hasRight(
                     MailboxPath.forUser(USER_1, "notFound"),
