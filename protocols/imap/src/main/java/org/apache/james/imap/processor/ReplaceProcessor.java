@@ -40,12 +40,14 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.api.MetricFactory;
@@ -90,7 +92,9 @@ public class ReplaceProcessor extends AbstractMailboxProcessor<ReplaceRequest> i
         final MailboxManager mailboxManager = getMailboxManager();
 
         session.stopDetectingCommandInjection();
-        return append(session, responder, messageIn, datetime, flags, mailboxPath, mailboxManager)
+        // Checked upfront so that the replacement is not appended when the base message can not be deleted
+        return assertCanDeleteMessagesInSelectedMailbox(session)
+            .then(append(session, responder, messageIn, datetime, flags, mailboxPath, mailboxManager))
             .then(deleteBaseMessage(request, session))
             .then(Mono.defer(() -> unsolicitedResponses(session, responder, request.isUseUid())))
             .then(Mono.fromRunnable(() -> okComplete(request, responder))).then()
@@ -108,6 +112,11 @@ public class ReplaceProcessor extends AbstractMailboxProcessor<ReplaceRequest> i
                 no(request, responder, HumanReadableText.FAILURE_OVERQUOTA, ResponseCode.overQuota());
                 return Mono.empty();
             })
+            .doOnEach(logOnError(InsufficientRightsException.class, e -> LOGGER.info("Replace failed for mailbox {}: {}", mailboxPath, e.getMessage())))
+            .onErrorResume(InsufficientRightsException.class, e -> {
+                no(request, responder, HumanReadableText.UNSUFFICIENT_RIGHTS);
+                return Mono.empty();
+            })
             .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Append failed for mailbox {}", mailboxPath, e)))
             .onErrorResume(MailboxException.class, e -> {
                 // Some other issue
@@ -119,6 +128,14 @@ public class ReplaceProcessor extends AbstractMailboxProcessor<ReplaceRequest> i
     private Mono<Void> append(ImapSession session, Responder responder, Content messageIn, Date datetime, Flags flags, MailboxPath mailboxPath, MailboxManager mailboxManager) {
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, session.getMailboxSession()))
             .flatMap(mailbox -> appendToMailbox(messageIn, datetime, flags, session, mailbox, responder));
+    }
+
+    private Mono<Void> assertCanDeleteMessagesInSelectedMailbox(ImapSession session) {
+        return getSelectedMailboxReactive(session)
+            .filter(Throwing.<MessageManager>predicate(messageManager -> getMailboxManager()
+                .hasRight(messageManager.getMailboxEntity(), MailboxACL.Right.DeleteMessages, session.getMailboxSession())).sneakyThrow())
+            .switchIfEmpty(Mono.error(() -> new InsufficientRightsException("Replacing a message requires 't' right on the selected mailbox")))
+            .then();
     }
 
     private Mono<Void> deleteBaseMessage(ReplaceRequest request, ImapSession session) {

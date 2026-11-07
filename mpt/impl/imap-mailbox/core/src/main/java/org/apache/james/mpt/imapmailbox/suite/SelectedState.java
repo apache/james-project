@@ -21,14 +21,20 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
+import org.apache.james.core.Username;
+import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
+import org.apache.james.mpt.script.ImapScriptedTestProtocol;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public abstract class SelectedState implements ImapTestConstants {
+    private static final Username OTHER_USER_NAME = Username.of("Boby");
+    private static final String OTHER_USER_PASSWORD = "password";
 
     protected abstract ImapHostSystem createImapHostSystem();
     
@@ -51,6 +57,32 @@ public abstract class SelectedState implements ImapTestConstants {
         simpleScriptedTestProtocol
             .withLocale(Locale.US)
             .run("Replace");
+    }
+
+    @Test
+    public void replaceInASharedMailboxShouldBeRejectedWithoutDeleteMessagesRight() throws Exception {
+        sharedMailboxScriptedTestProtocol("lrswipe")
+            .run("ReplaceSharedMailboxWithoutDeleteMessagesRight");
+    }
+
+    @Test
+    public void replaceInASharedMailboxShouldSucceedWithDeleteMessagesRight() throws Exception {
+        sharedMailboxScriptedTestProtocol("lrswipte")
+            .run("ReplaceSharedMailboxWithDeleteMessagesRight");
+    }
+
+    private ImapScriptedTestProtocol sharedMailboxScriptedTestProtocol(String rights) throws Exception {
+        ImapScriptedTestProtocol scriptedTestProtocol = new ImapScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
+            .withUser(USER, PASSWORD)
+            .withUser(OTHER_USER_NAME, OTHER_USER_PASSWORD);
+        BasicImapCommands.welcome(scriptedTestProtocol);
+        BasicImapCommands.authenticate(scriptedTestProtocol);
+
+        MailboxPath sharedMailbox = MailboxPath.forUser(OTHER_USER_NAME, "sharedMailbox");
+        return scriptedTestProtocol
+            .withFilledMailbox(sharedMailbox)
+            .withRights(sharedMailbox, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights(rights))
+            .withLocale(Locale.US);
     }
 
     @Test
