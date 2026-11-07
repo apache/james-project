@@ -35,12 +35,14 @@ Migrate the embedded message queue broker in Apache James from ActiveMQ Classic 
 1. **Embedded Broker Architecture (`EmbeddedActiveMQ.java`):**
    - Use `org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ` running in-VM (`vm://0`).
    - Use Artemis native high-performance journal storage for bindings, journal, paging, and large messages (`setPersistenceEnabled(true)`).
-   - Configure optimal embedded JMS client connection factory with `setConsumerWindowSize(0)` and `setBlockOnAcknowledge(true)`.
+   - Configure the embedded JMS client connection factory with `setConsumerWindowSize(0)`; `blockOnDurableSend` and `blockOnAcknowledge` are driven by configuration (`activemq.properties`) and default to `false` (durability is guaranteed by the transactional journal sync, see `artemis.journal.sync.transactional`).
 
 2. **Delayed Delivery Handling (JAMES-4192):**
-   - ActiveMQ Artemis natively supports the Jakarta Messaging delivery delay specification via an internal dedicated scheduler (`ScheduledDeliveryHandler`).
-   - Delayed messages remain tracked on the destination (accessible via `scheduledCount`), preventing inconsistencies between queue reporting and delivery state.
-   - Note: While Artemis improves scheduler handling in memory, head-of-line blocking under heavy paging with message selectors ([JAMES-4192](https://issues.apache.org/jira/browse/JAMES-4192)) still requires dedicated architectural work and is deferred to a follow-up issue.
+   - The root cause of JAMES-4192 is a JMS **consumer selector** (`JAMES_NEXT_DELIVERY <= now OR FORCE_DELIVERY = true`): a broker evaluates selectors only against in-memory messages, so once paging starts, ready mail sitting in page files behind rejected delayed mail is never delivered (head-of-line blocking / starvation). The fix removes selector evaluation from the delivery path entirely.
+   - Delayed mail is routed to a dedicated companion queue (`<queueName>-delayed`) as **ordinary** (non-scheduled) JMS messages. A background task moves *due* mail to the main queue; the main queue is consumed with **no selector** (`getMessageSelector()` returns `null`) at wire speed. Ready mail is therefore never blocked by delayed mail.
+   - The transfer task itself is **paging-safe**: it consumes the delayed queue **without a selector**, evaluates `JAMES_NEXT_DELIVERY <= now` **in memory**, and re-enqueues not-yet-due messages within the same transacted session (bounded per pass by a batch limit). It never asks the broker to evaluate a selector against paged-out messages, so the JAMES-4192 starvation cannot reappear inside the delayed queue.
+   - Artemis **native** scheduled delivery (`_AMQ_SCHED_DELIVERY` / `setDeliveryDelay`) was deliberately **not** used: natively-scheduled messages are hidden from `browse()`/`getSize()` and their body is truncated by the management API (ARTEMIS-3141/3128/3175), which would break the `ManageableMailQueue` contract for delayed mail (browse, size, remove, flush). Keeping delayed mail as ordinary messages on a companion queue preserves full manageability.
+   - `getSize()`, `browse()`, `remove()`, `clear()` and `flush()` span both queues, so the `ManageableMailQueue` contract holds for delayed mail; `flush()` force-delivers delayed mail by draining the companion queue (selector-less) and re-enqueuing with `FORCE_DELIVERY`.
 
 3. **JMS Mail Queue Implementation:**
    - Standardize on standard Jakarta JMS `ObjectMessage` / `BytesMessage` instead of ActiveMQ proprietary `BlobMessage`.
@@ -48,15 +50,13 @@ Migrate the embedded message queue broker in Apache James from ActiveMQ Classic 
    - Enforce strict compliance with JMS identifier rules for message properties (`AMQ139012`), escaping dots and hyphens into hexadecimal sequences.
 
 4. **Metrics & Health Check:**
-   - ActiveMQ Classic's `StatisticsBrokerPlugin` (request-reply destination statistics via advisory temporary queues) was proprietary to Classic and is omitted in Artemis. The legacy broker-stats polling collector is substituted by a safe no-op implementation (`ActiveMQMetricCollectorNoop`).
-   - James application-level queue metrics (`enqueuedMailsMetric`, `dequeuedMailsMetric`, and `queueSizeGauge`) remain fully gathered inside James via `JMSCacheableMailQueue` through standard `MetricFactory` and `GaugeRegistry`.
-   - Broker-level metrics in Artemis are natively exposed via Micrometer / Prometheus or JMX.
+   - ActiveMQ Classic's `StatisticsBrokerPlugin` (request-reply destination statistics) is specific to Classic and omitted in Artemis. Legacy collector is substituted by a safe no-op implementation in favor of native Artemis JMX / Management APIs.
    - Maintain `ActiveMQHealthCheck` verifying connectivity and session creation.
 
 ## Consequences
 
 - **Performance:** Substantially higher spooling throughput (scaling from ~350-400 msgs/s on ActiveMQ Classic to 1,700–2,000+ msgs/s with Artemis) with minimal spool latency.
-- **Reliability:** Improved handling of scheduled delivery and modern broker architecture. Resolving selector evaluation on paged-out queues (JAMES-4192) will be addressed in a follow-up.
+- **Reliability:** The paged-out selector evaluation problem (JAMES-4192) is resolved by removing the selector from the delivery path and confining delayed mail to a companion queue with a paging-safe, selector-less transfer; see the "Delayed Delivery Handling" decision above. Trade-off: a background transfer task adds up to one transfer-interval of latency before a due mail is delivered, and re-enqueues not-yet-due messages each pass (bounded by a batch limit).
 - **Large Messages:** Robust and standardized large payload streaming without custom blob store lifecycles.
 - **Migration & Upgrade:** Artemis uses an independent, high-performance journal format and cannot directly parse legacy KahaDB journals. Operators must drain/flush existing mail queues before upgrading James versions.
 
