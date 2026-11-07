@@ -261,4 +261,47 @@ public interface BloomFilterGCAlgorithmContract {
                 .bloomFilterAssociatedProbability(ASSOCIATED_PROBABILITY)
                 .build());
     }
+
+    @Test
+    default void gcShouldNotRemoveChunkBlobsEvenWhenInOldGenerationAndUnreferenced() {
+        BlobStoreDAO blobStoreDAO = blobStoreDAO();
+        when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.empty());
+
+        BlobId normalBlob = GENERATION_AWARE_BLOB_ID_FACTORY.of(UUID.randomUUID().toString());
+        BlobId chunkBlob = BLOB_ID_FACTORY.parse("1_1_chunk1234567890abcdef");
+
+        Mono.from(blobStoreDAO.save(DEFAULT_BUCKET, normalBlob, BlobStoreDAO.BytesBlob.of("normal".getBytes()))).block();
+        Mono.from(blobStoreDAO.save(DEFAULT_BUCKET, chunkBlob, BlobStoreDAO.BytesBlob.of("chunk".getBytes()))).block();
+
+        CLOCK.setInstant(NOW.plusMonths(2).toInstant());
+
+        Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
+        BloomFilterGCAlgorithm bloomFilterGCAlgorithm = bloomFilterGCAlgorithm();
+        Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+
+        assertThatThrownBy(() -> blobStoreDAO.read(DEFAULT_BUCKET, normalBlob))
+            .isInstanceOf(ObjectNotFoundException.class);
+
+        assertThat(Mono.from(blobStoreDAO.readBytes(DEFAULT_BUCKET, chunkBlob)).block().payload())
+            .isEqualTo("chunk".getBytes());
+    }
+
+    @Test
+    default void gcShouldRemoveBlobsContainingChunkSubstringWhenNotMatchingChunkIdPattern() {
+        BlobStoreDAO blobStoreDAO = blobStoreDAO();
+        when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.empty());
+
+        BlobId pseudoChunkBlob = GENERATION_AWARE_BLOB_ID_FACTORY.of("hash_chunk_test_value");
+
+        Mono.from(blobStoreDAO.save(DEFAULT_BUCKET, pseudoChunkBlob, BlobStoreDAO.BytesBlob.of("pseudo".getBytes()))).block();
+
+        CLOCK.setInstant(NOW.plusMonths(2).toInstant());
+
+        Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
+        BloomFilterGCAlgorithm bloomFilterGCAlgorithm = bloomFilterGCAlgorithm();
+        Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+
+        assertThatThrownBy(() -> blobStoreDAO.read(DEFAULT_BUCKET, pseudoChunkBlob))
+            .isInstanceOf(ObjectNotFoundException.class);
+    }
 }
