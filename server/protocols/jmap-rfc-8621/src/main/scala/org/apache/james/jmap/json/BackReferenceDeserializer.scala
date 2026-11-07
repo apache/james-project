@@ -29,8 +29,8 @@ object BackReferenceDeserializer {
     case _ => JsError("JsonPath objects are represented by JsonString")
   }
 
-  private implicit val methodNameFormat: Format[MethodName] = Json.valueFormat[MethodName]
-  private implicit val methodCallIdFormat: Format[MethodCallId] = Json.valueFormat[MethodCallId]
+  private implicit val methodNameFormat: Format[MethodName] = valueFormat[MethodName]
+  private implicit val methodCallIdFormat: Format[MethodCallId] = valueFormat[MethodCallId]
   private implicit val backReferenceReads: Reads[BackReference] = Json.reads[BackReference]
 
   def deserializeBackReference(input: JsValue): JsResult[BackReference] = Json.fromJson[BackReference](input)

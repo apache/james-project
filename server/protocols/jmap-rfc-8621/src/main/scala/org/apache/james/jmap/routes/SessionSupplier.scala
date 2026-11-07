@@ -65,7 +65,7 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory], configuration
   private def evaluateCapabilities(username: Username, urlPrefixes: UrlPrefixes): SMono[Set[Capability]] =
     SFlux.fromIterable(capabilityFactories)
       .flatMap(capabilityFactory => SMono.fromPublisher(capabilityFactory.createReactive(urlPrefixes, username)))
-      .filter(capability => !configuration.disabledCapabilities.contains(capability.identifier()))
+      .filter(capability => !configuration.disabledCapabilities.contains(capability.identifier))
       .collectSeq()
       .map(_.toSet)
 
@@ -73,15 +73,14 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory], configuration
     Account.from(username, IsPersonal(true), IsReadOnly(false), capabilities)
 
   private def delegatedAccounts(delegatedUsers: Set[Username], capabilities: Set[Capability]): Either[IllegalArgumentException, List[Account]] =
-    delegatedUsers.map(user => AccountId.from(user)
-      .map(Account(_, user, IsPersonal(false), IsReadOnly(false), capabilities)))
+    delegatedUsers.map(user => Account.from(user, IsPersonal(false), IsReadOnly(false), capabilities))
       .toList.traverse(x => Validated.fromEither(x.left.map(List(_))))
       .toEither
       .left.map(_.head)
 
   private def primaryAccounts(accountId: AccountId, capabilities: Set[Capability]): Map[CapabilityIdentifier, AccountId] =
     capabilities
-      .map(capability => (capability.identifier(), accountId))
+      .map(capability => (capability.identifier, accountId))
       .toMap
 }
 

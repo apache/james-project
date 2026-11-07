@@ -21,6 +21,8 @@ package org.apache.james.eventsourcing
 import com.google.common.base.Preconditions
 
 object EventId {
+  def apply(value: Int): EventId = new EventId(value)
+
   def fromSerialized(value: Int): EventId = {
     Preconditions.checkArgument(value >= 0, "EventId can not be negative".asInstanceOf[Object])
     new EventId(value)

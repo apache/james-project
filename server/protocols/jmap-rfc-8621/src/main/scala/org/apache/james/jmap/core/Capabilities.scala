@@ -45,5 +45,5 @@ object Capabilities {
 }
 
 case class Capabilities(capabilities: Set[Capability]) {
-  def ids: Set[CapabilityIdentifier] = capabilities.map(_.identifier())
+  def ids: Set[CapabilityIdentifier] = capabilities.map(_.identifier)
 }

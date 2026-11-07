@@ -34,7 +34,7 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import scala.jdk.DurationConverters._
 
 case class GlobalKey(keyPrefix: Option[KeyPrefix], entityType: EntityType) extends RateLimitingKey {
-  override val asString: String = {
+  override def asString(): String = {
     val key = s"${entityType.asString}_global}"
     keyPrefix.map(prefix => s"${prefix.value}_$key").getOrElse(key)
   }

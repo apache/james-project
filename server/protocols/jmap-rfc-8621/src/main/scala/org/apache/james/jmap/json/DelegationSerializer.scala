@@ -28,13 +28,13 @@ import org.apache.james.jmap.delegation.{Delegate, DelegateCreationId, DelegateC
 import play.api.libs.json.{Format, JsArray, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
 
 object DelegationSerializer {
-  private implicit val delegationIdFormat: Format[DelegationId] = Json.valueFormat[DelegationId]
+  private implicit val delegationIdFormat: Format[DelegationId] = valueFormat[DelegationId]
   private implicit val userReads: Reads[Username] = {
     case JsString(userAsString) => JsSuccess(Username.of(userAsString))
     case _ => JsError("username needs to be represented by a JsString")
   }
-  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
-  private implicit val delegateCreationIdWrites: Writes[DelegateCreationId] = Json.valueWrites[DelegateCreationId]
+  private implicit val stateWrites: Writes[UuidState] = valueWrites[UuidState]
+  private implicit val delegateCreationIdWrites: Writes[DelegateCreationId] = valueWrites[DelegateCreationId]
   private implicit val delegateCreationResponseWrites: Writes[DelegateCreationResponse] = Json.writes[DelegateCreationResponse]
   private implicit val delegateSetMapCreationResponseWrites: Writes[Map[DelegateCreationId, DelegateCreationResponse]] =
     mapWrites[DelegateCreationId, DelegateCreationResponse](_.serialize, delegateCreationResponseWrites)
@@ -58,7 +58,7 @@ object DelegationSerializer {
     case _ => JsError("delegate id needs to be represented by a JsString")
   }
   private implicit val delegateSetRequestReads: Reads[DelegateSetRequest] = Json.reads[DelegateSetRequest]
-  private implicit val delegateIdsReads: Reads[DelegateIds] = Json.valueReads[DelegateIds]
+  private implicit val delegateIdsReads: Reads[DelegateIds] = valueReads[DelegateIds]
   private implicit val delegateGetRequestReads: Reads[DelegateGetRequest] = Json.reads[DelegateGetRequest]
   private implicit val delegatedAccountGetRequestReads: Reads[DelegatedAccountGetRequest] = Json.reads[DelegatedAccountGetRequest]
   private implicit val delegatedAccountSetRequestReads: Reads[DelegatedAccountSetRequest] = Json.reads[DelegatedAccountSetRequest]

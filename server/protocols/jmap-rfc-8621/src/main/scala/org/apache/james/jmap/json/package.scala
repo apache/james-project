@@ -22,7 +22,7 @@ package org.apache.james.jmap
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-import eu.timepit.refined.api.{RefType, Validate}
+import eu.timepit.refined.api.{RefType, Refined, Validate}
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.api.change.Limit
 import org.apache.james.jmap.core.SetError.SetErrorDescription
@@ -31,6 +31,8 @@ import org.apache.james.jmap.mail.HasMoreChanges
 import play.api.libs.json._
 
 import scala.annotation.nowarn
+import scala.compiletime.{error, summonInline}
+import scala.deriving.Mirror
 import scala.util.{Failure, Success, Try}
 
 package object json {
@@ -85,9 +87,9 @@ package object json {
     case _ => JsError("Expecting js string to represent UTC Date")
   }
 
-  private[json] implicit val stateReads: Reads[UuidState] = Json.valueReads[UuidState]
-  private[json] implicit val accountIdWrites: Format[AccountId] = Json.valueFormat[AccountId]
-  private[json] implicit val propertiesFormat: Format[Properties] = Json.valueFormat[Properties]
+  private[json] implicit val stateReads: Reads[UuidState] = valueReads[UuidState]
+  private[json] implicit val accountIdWrites: Format[AccountId] = valueFormat[AccountId]
+  private[json] implicit val propertiesFormat: Format[Properties] = valueFormat[Properties]
   private[json] implicit val setErrorDescriptionWrites: Writes[SetErrorDescription] = Json.valueWrites[SetErrorDescription]
   private[json] implicit val setErrorWrites: Writes[SetError] = Json.writes[SetError]
   private[json] implicit val mailAddressWrites: Writes[MailAddress] = mailAddress => JsString(mailAddress.asString)
@@ -105,4 +107,28 @@ package object json {
     case JsNumber(underlying) if underlying <= 0 => JsError("Expecting a positive integer as Limit")
     case _ => JsError("Expecting a number as Limit")
   }
+
+  given stringRefined[P]: Conversion[String, String Refined P] = s => Refined.unsafeApply(s)
+  given intRefined[P]: Conversion[Int, Int Refined P] = i => Refined.unsafeApply(i)
+  given longRefined[P]: Conversion[Long, Long Refined P] = l => Refined.unsafeApply(l)
+
+  // play-json Scala 3 artifact requires T <: AnyVal for `valueWrites[T]`/`valueReads[T]`/`valueFormat[T]`
+  // (the 2.13 artifact accepted any single-field case class). These replacements derive the same
+  // JSON representation (raw wrapped value) for any single-field case class, without needing AnyVal.
+  private[json] inline def valueWrites[T <: Product](using m: Mirror.ProductOf[T]): Writes[T] =
+    inline m match {
+      case m: Mirror.ProductOf[T] { type MirroredElemTypes = h *: EmptyTuple } =>
+        Writes(t => summonInline[Writes[h]].writes(t.productElement(0).asInstanceOf[h]))
+      case _ => error("valueWrites expects a single-field case class")
+    }
+
+  private[json] inline def valueReads[T <: Product](using m: Mirror.ProductOf[T]): Reads[T] =
+    inline m match {
+      case m: Mirror.ProductOf[T] { type MirroredElemTypes = h *: EmptyTuple } =>
+        Reads(js => summonInline[Reads[h]].reads(js).map(v => m.fromProduct(Tuple1(v))))
+      case _ => error("valueReads expects a single-field case class")
+    }
+
+  private[json] inline def valueFormat[T <: Product](using m: Mirror.ProductOf[T]): Format[T] =
+    Format(valueReads[T], valueWrites[T])
 }

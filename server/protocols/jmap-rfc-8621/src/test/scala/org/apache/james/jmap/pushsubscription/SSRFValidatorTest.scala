@@ -27,6 +27,7 @@ import io.netty.util.concurrent.ImmediateEventExecutor
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
 import org.apache.james.jmap.pushsubscription.SSRFValidator.HostResolver
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
+import org.assertj.core.api.{BooleanAssert, ThrowableAssert}
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -82,7 +83,7 @@ class SSRFValidatorTest {
     "2002:7f00:1::1",
     "2002:c0a8:1::1"))
   def forbiddenReasonShouldRejectAddressesReachingTheLocalNetwork(ip: String): Unit =
-    assertThat(SSRFValidator.forbiddenReason(InetAddress.getByName(ip)).isDefined)
+    assertThat(SSRFValidator.forbiddenReason(InetAddress.getByName(ip)).isDefined).asInstanceOf[BooleanAssert]
       .describedAs(s"$ip is expected to be rejected")
       .isTrue
 
@@ -103,7 +104,7 @@ class SSRFValidatorTest {
     "2002:808:808::1",
     "64:ff9b::808:808"))
   def forbiddenReasonShouldAcceptPublicAddresses(ip: String): Unit =
-    assertThat(SSRFValidator.forbiddenReason(InetAddress.getByName(ip)).isEmpty)
+    assertThat(SSRFValidator.forbiddenReason(InetAddress.getByName(ip)).isEmpty).asInstanceOf[BooleanAssert]
       .describedAs(s"$ip is expected to be accepted")
       .isTrue
 
@@ -120,7 +121,7 @@ class SSRFValidatorTest {
   def validateShouldRejectAHostResolvingToASingleForbiddenAddress(): Unit = {
     val validator = new SSRFValidator(resolvingTo(LOOPBACK_ADDRESS))
 
-    assertThatThrownBy(() => validator.validate(url("http://push.example.com")).block())
+    assertThatThrownBy(() => validator.validate(url("http://push.example.com")).block()).asInstanceOf[ThrowableAssert[Throwable]]
       .isInstanceOf(classOf[IllegalArgumentException])
       .hasMessageContaining("server-side request forgery")
   }
@@ -130,7 +131,7 @@ class SSRFValidatorTest {
     // Validating the first address only would let the connection land on the second one
     val validator = new SSRFValidator(resolvingTo(PUBLIC_ADDRESS, LOOPBACK_ADDRESS))
 
-    assertThatThrownBy(() => validator.validate(url("http://push.example.com")).block())
+    assertThatThrownBy(() => validator.validate(url("http://push.example.com")).block()).asInstanceOf[ThrowableAssert[Throwable]]
       .isInstanceOf(classOf[IllegalArgumentException])
       .hasMessageContaining("server-side request forgery")
   }
@@ -147,7 +148,7 @@ class SSRFValidatorTest {
   def validateShouldRejectUnsupportedSchemes(): Unit = {
     val validator = new SSRFValidator(resolvingTo(PUBLIC_ADDRESS))
 
-    assertThatThrownBy(() => validator.validate(url("file:///etc/passwd")).block())
+    assertThatThrownBy(() => validator.validate(url("file:///etc/passwd")).block()).asInstanceOf[ThrowableAssert[Throwable]]
       .isInstanceOf(classOf[IllegalArgumentException])
       .hasMessageContaining("unsupported scheme")
   }

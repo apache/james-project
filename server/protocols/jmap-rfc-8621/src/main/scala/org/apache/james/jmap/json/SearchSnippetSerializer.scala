@@ -37,7 +37,7 @@ class SearchSnippetSerializer @Inject()(val emailQuerySerializer: EmailQuerySeri
     case _ => JsError("emailId needs to be represented by a JsString")
   }
 
-  private implicit val unparsedMessageIdWrites: Writes[UnparsedEmailId] = Json.valueWrites[UnparsedEmailId]
+  private implicit val unparsedMessageIdWrites: Writes[UnparsedEmailId] = valueWrites[UnparsedEmailId]
 
   implicit def filterQueryReads: Reads[FilterQuery] = emailQuerySerializer.filterQueryReads
 

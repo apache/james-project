@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap
 
+import eu.timepit.refined.api.Refined
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.json.ResponseSerializer
@@ -45,4 +46,8 @@ package object method {
     def asEitherRequest: Either[IllegalArgumentException, T] =
       jsResult.asEither.left.map(errors => new IllegalArgumentException(standardErrorMessage(errors)))
   }
+
+  given stringRefined[P]: Conversion[String, String Refined P] = s => Refined.unsafeApply(s)
+  given intRefined[P]: Conversion[Int, Int Refined P] = i => Refined.unsafeApply(i)
+  given longRefined[P]: Conversion[Long, Long Refined P] = l => Refined.unsafeApply(l)
 }

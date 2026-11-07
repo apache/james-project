@@ -25,6 +25,8 @@ import eu.timepit.refined.auto._
 import org.apache.james.backends.redis.{RedisClientFactory, RedisConfiguration}
 import org.apache.james.rate.limiter.TopologyRedisRateLimiterTest.{RULES, SLIDING_WIDOW_PRECISION}
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateLimitingResult, Rule, Rules, TestKey}
+import org.apache.james.rate.limiter.api.Increment.given
+import org.apache.james.rate.limiter.api.AllowedQuantity.given
 import org.apache.james.rate.limiter.redis.RedisRateLimiterFactory
 import org.apache.james.server.core.filesystem.FileSystemImpl
 import org.assertj.core.api.Assertions.assertThat

@@ -34,10 +34,10 @@ class MDNSerializer @Inject()(messageIdFactory: MessageId.Factory) {
       .fold(_ => JsError("Invalid messageId"), messageId => messageId)
     case _ => JsError("Expecting messageId to be represented by a JsString")
   }
-  private implicit val blobIdReads: Reads[BlobId] = Json.valueReads[BlobId]
-  private implicit val blobIdsWrites: Format[BlobIds] = Json.valueFormat[BlobIds]
-  private implicit val mdnNotFoundWrites: Writes[MDNNotFound] = Json.valueWrites[MDNNotFound]
-  private implicit val mdnNotParsableWrites: Writes[MDNNotParsable] = Json.valueWrites[MDNNotParsable]
+  private implicit val blobIdReads: Reads[BlobId] = valueReads[BlobId]
+  private implicit val blobIdsWrites: Format[BlobIds] = valueFormat[BlobIds]
+  private implicit val mdnNotFoundWrites: Writes[MDNNotFound] = valueWrites[MDNNotFound]
+  private implicit val mdnNotParsableWrites: Writes[MDNNotParsable] = valueWrites[MDNNotParsable]
   private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
   private implicit val forEmailIdFormat: Format[ForEmailIdField] = Json.valueFormat[ForEmailIdField]
   private implicit val subjectFieldFormat: Format[SubjectField] = Json.valueFormat[SubjectField]
@@ -49,8 +49,14 @@ class MDNSerializer @Inject()(messageIdFactory: MessageId.Factory) {
   private implicit val includeOriginalMessageFieldFormat: Format[IncludeOriginalMessageField] = Json.valueFormat[IncludeOriginalMessageField]
   private implicit val mdnGatewayFieldFormat: Format[MDNGatewayField] = Json.valueFormat[MDNGatewayField]
   private implicit val mdnDispositionFormat: Format[MDNDisposition] = Json.format[MDNDisposition]
-  private implicit val identityIdFormat: Format[UnparsedIdentityId] = Json.valueFormat[UnparsedIdentityId]
-  private implicit val mdnErrorFieldReads: Reads[ErrorField] = Json.reads[ErrorField]
+  private implicit val identityIdFormat: Format[UnparsedIdentityId] = valueFormat[UnparsedIdentityId]
+  // play-json Scala 3 product macro cannot derive Reads for a value class (no Mirror):
+  // hand-written equivalent of the Scala 2.13 macro expansion (reads an object {"value": ...})
+  private implicit val mdnErrorFieldReads: Reads[ErrorField] =
+    Reads {
+      case obj @ JsObject(_) => (JsPath \ "value").read[String].map(ErrorField(_)).reads(obj)
+      case _ => JsError("error.expected.jsobject")
+    }
   private implicit val mdnErrorFieldWrites: Writes[ErrorField] = Json.valueWrites[ErrorField]
   private implicit val extensionFieldNameFormat: Format[ExtensionFieldName] = Json.valueFormat[ExtensionFieldName]
   private implicit val extensionFieldValueFormat: Format[ExtensionFieldValue] = Json.valueFormat[ExtensionFieldValue]

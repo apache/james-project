@@ -108,12 +108,12 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
       .map(identityUpdate.update(_))
       .flatMap(updatedIdentity => insert(user, updatedIdentity)
         .flatMap(i => SMono.fromPublisher(eventBus.dispatch(CustomIdentityUpdated(Event.EventId.random(), user, i), AccountIdRegistrationKey(AccountId.fromUsername(user))))
-          .`then`()).asJava()))
+          .map(_ => ())).asJava()))
 
   override def upsert(user: Username, patch: Identity): SMono[Unit] =
     insert(user, patch)
       .flatMap(_ => SMono.fromPublisher(eventBus.dispatch(CustomIdentityUpdated(Event.EventId.random(), user, patch), AccountIdRegistrationKey(AccountId.fromUsername(user))))
-        .`then`())
+        .map(_ => ()))
 
   override def delete(username: Username, ids: Set[IdentityId]): SMono[Unit] =
     SFlux.fromIterable(ids)
@@ -122,7 +122,7 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
         .setUuid(ID, id.id)))
       .collectSeq()
       .flatMap(_ => SMono.fromPublisher(eventBus.dispatch(CustomIdentityDeleted(Event.EventId.random(), username, ids), AccountIdRegistrationKey(AccountId.fromUsername(username))))
-        .`then`())
+        .map(_ => ()))
 
   override def delete(username: Username): SMono[Unit] =
     list(username)
@@ -131,8 +131,8 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
       .flatMap(ids =>
         SMono.fromPublisher(executor.executeVoid(deleteAllStatement.bind()
           .setString(USER, username.asString()))
-          .then(Mono.from(eventBus.dispatch(AllCustomIdentitiesDeleted(Event.EventId.random(), username, ids.toSet), AccountIdRegistrationKey(AccountId.fromUsername(username))))))
-          .`then`())
+          .`then`(Mono.from(eventBus.dispatch(AllCustomIdentitiesDeleted(Event.EventId.random(), username, ids.toSet), AccountIdRegistrationKey(AccountId.fromUsername(username))))))
+          .map(_ => ()))
 
   private def insert(username: Username, identity: Identity): SMono[Identity] = {
     val replyTo: java.util.Set[UdtValue] = toJavaSet(identity.replyTo.getOrElse(List()))

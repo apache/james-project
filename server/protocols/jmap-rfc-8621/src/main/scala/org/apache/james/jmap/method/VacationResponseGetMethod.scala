@@ -76,7 +76,7 @@ class VacationResponseGetMethod @Inject()(vacationService: VacationService,
             methodCallId = invocation.invocation.methodCallId))
         case invalidProperties: Properties =>
           SMono.just(Invocation.error(errorCode = ErrorCode.InvalidArguments,
-            description = s"The following properties [${invalidProperties.format}] do not exist.",
+            description = s"The following properties [${invalidProperties.format()}] do not exist.",
             methodCallId = invocation.invocation.methodCallId))
       }).map(InvocationWithContext(_, invocation.processingContext))
     }

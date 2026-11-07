@@ -21,18 +21,24 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError, UuidState}
+import org.apache.james.jmap.core.{AccountId, Id, IdOrCreationReference, Properties, SetError, UuidState}
 import org.apache.james.jmap.mail.{MailboxGetResponse, MailboxSetResponse, NotFound, UnparsedMailboxId}
 import org.apache.james.mailbox.model.TestId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import play.api.libs.json.{JsError, JsString, JsSuccess, Json}
+import play.api.libs.json.{JsError, JsString, JsSuccess, Json, Reads, Writes}
 
 class MailboxReferenceBoundaryTest {
   private val serializer = new MailboxSerializer(new TestId.Factory)
   private val reference = "#" + "c" * 255
+
+  // play-json_3 value macros are restricted to AnyVal, and the json package object's Mirror-based
+  // helpers cannot be inlined from test sources (dotty Inlining crash), so mirror their raw-string
+  // shape on top of the public IdOrCreationReference format.
+  private val unparsedMailboxIdWrites: Writes[UnparsedMailboxId] = IdOrCreationReference.format.contramap(_.id)
+  private val unparsedMailboxIdReads: Reads[UnparsedMailboxId] = IdOrCreationReference.format.map(UnparsedMailboxId(_))
 
   @Test
   def destroyShouldAcceptAMaximumLengthCreationReference(): Unit = {
@@ -91,13 +97,11 @@ class MailboxReferenceBoundaryTest {
   }
 
   @Test
-  def valueMacrosShouldRoundTripAReferenceAsAJsonString(): Unit = {
+  def valueRepresentationShouldRoundTripAReferenceAsAJsonString(): Unit = {
     val token = UnparsedMailboxId.validate(reference).toOption.get
-    val reads = Json.valueReads[UnparsedMailboxId]
-    val writes = Json.valueWrites[UnparsedMailboxId]
 
-    assertThat(writes.writes(token)).isEqualTo(JsString(reference))
-    assertThat(reads.reads(writes.writes(token))).isEqualTo(JsSuccess(token))
+    assertThat(unparsedMailboxIdWrites.writes(token)).isEqualTo(JsString(reference))
+    assertThat(unparsedMailboxIdReads.reads(unparsedMailboxIdWrites.writes(token))).isEqualTo(JsSuccess(token))
   }
 
   @Test
@@ -123,7 +127,7 @@ class MailboxReferenceBoundaryTest {
     val token = UnparsedMailboxId(Id.validate("#").toOption.get)
 
     assertThat(token.id.value).isEqualTo("#")
-    assertThat(Json.valueWrites[UnparsedMailboxId].writes(token)).isEqualTo(JsString("#"))
+    assertThat(unparsedMailboxIdWrites.writes(token)).isEqualTo(JsString("#"))
   }
 
   @ParameterizedTest

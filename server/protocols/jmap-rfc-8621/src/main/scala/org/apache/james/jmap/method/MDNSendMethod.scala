@@ -172,7 +172,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
   private def enqueue(mail: MailImpl): SMono[Unit] =
     SMono(queue.enqueueReactive(mail))
       .doFinally(_ =>  LifecycleUtil.dispose(mail))
-      .`then`()
+      .map(_ => ())
 
   private def retrieveRelatedMessageResult(session: MailboxSession, requestEntry: MDNSendCreateRequest): SMono[MessageResult] =
     SMono(messageIdManager.getMessagesReactive(ImmutableList.of(requestEntry.forEmailId.originalMessageId), FetchGroup.FULL_CONTENT, session))

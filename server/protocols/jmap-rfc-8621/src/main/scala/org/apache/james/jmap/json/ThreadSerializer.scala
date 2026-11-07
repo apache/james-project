@@ -28,13 +28,13 @@ import scala.language.implicitConversions
 
 object ThreadSerializer {
   private implicit val messageIdWrites: Writes[MessageId] = messageId => JsString(messageId.serialize())
-  private implicit val unparsedThreadIdReads: Reads[UnparsedThreadId] = Json.valueReads[UnparsedThreadId]
+  private implicit val unparsedThreadIdReads: Reads[UnparsedThreadId] = valueReads[UnparsedThreadId]
   private implicit val threadGetReads: Reads[ThreadGetRequest] = Json.reads[ThreadGetRequest]
   private implicit val threadChangesReads: Reads[ThreadChangesRequest] = Json.reads[ThreadChangesRequest]
   private implicit val threadWrites: OWrites[Thread] = Json.writes[Thread]
-  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
-  private implicit val unparsedThreadIdWrites: Writes[UnparsedThreadId] = Json.valueWrites[UnparsedThreadId]
-  private implicit val threadNotFoundWrites: Writes[ThreadNotFound] = Json.valueWrites[ThreadNotFound]
+  private implicit val stateWrites: Writes[UuidState] = valueWrites[UuidState]
+  private implicit val unparsedThreadIdWrites: Writes[UnparsedThreadId] = valueWrites[UnparsedThreadId]
+  private implicit val threadNotFoundWrites: Writes[ThreadNotFound] = valueWrites[ThreadNotFound]
   private implicit val threadGetWrites: OWrites[ThreadGetResponse] = Json.writes[ThreadGetResponse]
   private implicit val changesResponseWrites: OWrites[ThreadChangesResponse] = Json.writes[ThreadChangesResponse]
 

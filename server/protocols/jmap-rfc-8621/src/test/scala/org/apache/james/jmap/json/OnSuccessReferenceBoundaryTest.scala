@@ -26,6 +26,7 @@ import org.apache.james.jmap.core.{AccountId, Id, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.mail.{EmailSubmissionCreationId, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetResponse, MDNSendCreateResponse, MDNSendCreationId, MDNSendResponse}
 import org.apache.james.mailbox.model.TestMessageId
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.BooleanAssert
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -41,7 +42,7 @@ class OnSuccessReferenceBoundaryTest {
   def onSuccessShouldAcceptReferencesUpToTheCreationIdLimit(suffixLength: Int): Unit = {
     val token = "#" + "c" * suffixLength
 
-    boundaries.foreach(boundary => assertThat(parseToken(boundary, token).isSuccess).as(boundary).isTrue())
+    boundaries.foreach(boundary => assertThat(parseToken(boundary, token).isSuccess).asInstanceOf[BooleanAssert].as(boundary).isTrue())
   }
 
   @Test
@@ -52,7 +53,7 @@ class OnSuccessReferenceBoundaryTest {
   @ParameterizedTest
   @ValueSource(strings = Array("##", "#created", "##created", "a#b"))
   def onSuccessShouldPreserveExistingLexicalAcceptance(token: String): Unit = {
-    boundaries.foreach(boundary => assertThat(parseToken(boundary, token).isSuccess).as(boundary).isTrue())
+    boundaries.foreach(boundary => assertThat(parseToken(boundary, token).isSuccess).asInstanceOf[BooleanAssert].as(boundary).isTrue())
   }
 
   @Test
@@ -65,7 +66,7 @@ class OnSuccessReferenceBoundaryTest {
 
       val expectedPath = if (boundary == "submissionDestroy") s"/$property(0)" else s"/$property/#"
       assertThat(errors.map(_._1.toString).toList).as(boundary).isEqualTo(List(expectedPath))
-      assertThat(errors.flatMap(_._2).map(_.message).exists(_.contains("'#' is not a valid creation reference: creation id is empty")))
+      assertThat(errors.flatMap(_._2).map(_.message).exists(_.contains("'#' is not a valid creation reference: creation id is empty"))).asInstanceOf[BooleanAssert]
         .as(boundary).isTrue()
     }
   }
@@ -79,7 +80,7 @@ class OnSuccessReferenceBoundaryTest {
   @Test
   def onSuccessShouldKeepTheOrdinaryIdLengthLimit(): Unit = {
     boundaries.foreach { boundary =>
-      assertThat(parseToken(boundary, "i" * 255).isSuccess).as(boundary).isTrue()
+      assertThat(parseToken(boundary, "i" * 255).isSuccess).asInstanceOf[BooleanAssert].as(boundary).isTrue()
       assertThat(parseToken(boundary, "i" * 256)).as(boundary).isInstanceOf(classOf[JsError])
     }
   }

@@ -47,7 +47,7 @@ class MailboxesProvisioner @Inject() (mailboxManager: MailboxManager,
       .map(toMailboxPath(session))
       .filterWhen(mailboxPath => mailboxDoesntExist(mailboxPath, session))
       .concatMap(mailboxPath => createMailbox(mailboxPath, session))
-      .`then`
+      .thenEmpty(SMono.empty)
   }
 
   private def mailboxDoesntExist(mailboxPath: MailboxPath, session: MailboxSession): SMono[Boolean] = {
@@ -69,6 +69,6 @@ class MailboxesProvisioner @Inject() (mailboxManager: MailboxManager,
           SMono.empty
         case e => SMono.error(e)
       }
-      .`then`()
+      .map(_ => ())
   }
 }

@@ -76,12 +76,12 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
         id => JsSuccess(UnparsedMessageId(id)))
     case _ => JsError("messageId needs to be represented by a JsString")
   }
-  private implicit val unparsedMessageIdWrites: Writes[UnparsedMessageId] = Json.valueWrites[UnparsedMessageId]
-  private implicit val destroyIdsReads: Reads[DestroyIds] = Json.valueFormat[DestroyIds]
+  private implicit val unparsedMessageIdWrites: Writes[UnparsedMessageId] = valueWrites[UnparsedMessageId]
+  private implicit val destroyIdsReads: Reads[DestroyIds] = valueFormat[DestroyIds]
 
   private implicit val emailSubmissionSetRequestReads: Reads[EmailSubmissionSetRequest] = Json.reads[EmailSubmissionSetRequest]
 
-  private implicit val emailSubmissionIdWrites: Writes[EmailSubmissionId] = Json.valueWrites[EmailSubmissionId]
+  private implicit val emailSubmissionIdWrites: Writes[EmailSubmissionId] = valueWrites[EmailSubmissionId]
 
   private implicit val parameterNameReads: Reads[ParameterName] = Json.valueReads[ParameterName]
   private implicit val parameterValueReads: Reads[ParameterValue] = Json.valueReads[ParameterValue]
@@ -103,7 +103,7 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
 
   private implicit val emailSubmissionCreationResponseWrites: Writes[EmailSubmissionCreationResponse] = Json.writes[EmailSubmissionCreationResponse]
 
-  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
+  private implicit val stateWrites: Writes[UuidState] = valueWrites[UuidState]
   private implicit def emailSubmissionSetResponseWrites(implicit emailSubmissionCreationResponseWrites: Writes[EmailSubmissionCreationResponse]): Writes[EmailSubmissionSetResponse] = Json.writes[EmailSubmissionSetResponse]
 
   private implicit def emailSubmissionMapCreationResponseWrites(implicit emailSubmissionSetCreationResponseWrites: Writes[EmailSubmissionCreationResponse]): Writes[Map[EmailSubmissionCreationId, EmailSubmissionCreationResponse]] =

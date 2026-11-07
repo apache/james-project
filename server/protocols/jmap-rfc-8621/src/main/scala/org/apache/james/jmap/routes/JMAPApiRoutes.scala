@@ -86,7 +86,6 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
   private def post(httpServerRequest: HttpServerRequest, httpServerResponse: HttpServerResponse): Mono[Void] =
     SMono(authenticator.authenticate(httpServerRequest))
       .flatMap((mailboxSession: MailboxSession) => userProvisioner.provisionUser(mailboxSession)
-        .`then`
         .`then`(this.requestAsJsonStream(httpServerRequest)
           .flatMap(requestObject => this.process(requestObject, httpServerResponse, mailboxSession))))
       .onErrorResume(throwable => handleError(throwable, httpServerResponse))
