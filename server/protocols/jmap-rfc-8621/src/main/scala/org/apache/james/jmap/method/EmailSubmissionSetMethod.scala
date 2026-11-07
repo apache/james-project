@@ -50,7 +50,7 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
-import org.apache.james.server.core.{MailImpl, MimeMessageSource, MimeMessageWrapper}
+import org.apache.james.server.core.{AddressFields, MailImpl, MimeMessageSource, MimeMessageWrapper}
 import org.apache.james.util.{AuditTrail, ReactorUtils}
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue, Mail}
 import org.slf4j.{Logger, LoggerFactory}
@@ -423,6 +423,9 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   private def invalidFutureReleaseParameter(keySet: Set[ParameterName]) =
     keySet.contains(ParameterName.holdFor) && keySet.contains(ParameterName.holdUntil)
 
+  private def addresses(field: Option[String]): List[InternetAddress] =
+    field.toList.flatMap(value => AddressFields.parse(value).asScala)
+
   private def toMimeMessage(name: String, message: MessageResult): Try[MimeMessageWrapper] = {
     val source = MessageMimeMessageSource(name, message)
     // if MimeMessageCopyOnWriteProxy throws an error in the constructor we
@@ -434,9 +437,11 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       })
   }
 
+  // The From field defaults to the Sender field, as for MimeMessage::getFrom
   private def validate(session: MailboxSession)(mimeMessage: MimeMessage, envelope: Envelope): SMono[MimeMessage] =
-    SFlux.fromIterable(Option(mimeMessage.getSender).toList ++ Option(mimeMessage.getFrom).toList.flatten)
-      .map(_.asInstanceOf[InternetAddress].getAddress)
+    SFlux.fromIterable(addresses(Option(mimeMessage.getHeader("Sender", null))) ++
+        addresses(Option(mimeMessage.getHeader("From", ",")).orElse(Option(mimeMessage.getHeader("Sender", null)))))
+      .map(_.getAddress)
       .filterWhen(addressAsString => SMono.fromPublisher(canSendFrom.userCanSendFromReactive(session.getUser, Username.fromMailAddress(new MailAddress(addressAsString))))
         .map(Boolean.unbox(_)).map(!_), Queues.SMALL_BUFFER_SIZE)
       .collectSeq()
