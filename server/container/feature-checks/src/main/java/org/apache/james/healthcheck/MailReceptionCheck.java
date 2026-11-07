@@ -250,6 +250,8 @@ public class MailReceptionCheck implements HealthCheck {
                         .doOnSubscribe(any -> sendMail(username, content).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER).subscribe())
                         .map(any -> Result.healthy(componentName()))
                         .next(),
+                    Registration::unregister,
+                    (registration, error) -> registration.unregister(),
                     Registration::unregister);
             })
             .timeout(configuration.getTimeout(), Mono.error(() -> new RuntimeException("HealthCheck email was not received after " + configuration.getTimeout().toMillis() + "ms")))
