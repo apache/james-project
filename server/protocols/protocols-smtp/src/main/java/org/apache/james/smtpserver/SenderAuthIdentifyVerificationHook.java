@@ -19,6 +19,7 @@
 package org.apache.james.smtpserver;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -27,6 +28,7 @@ import jakarta.mail.Address;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -43,10 +45,10 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.rrt.api.CanSendFrom;
+import org.apache.james.server.core.AddressFields;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.MemoizedSupplier;
-import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,9 +149,9 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
             (nSession.senderVerificationConfiguration().mode() == SMTPConfiguration.SenderVerificationMode.RELAXED && session.getUsername() != null);
         if (shouldCheck) {
             try {
-                Address[] fromAddresses = mail.getMessage().getFrom();
+                List<InternetAddress> fromAddresses = fromAddresses(mail.getMessage());
 
-                if (fromAddresses == null || fromAddresses.length == 0) {
+                if (fromAddresses.isEmpty()) {
                     return HookResult.builder()
                         .hookReturnCode(HookReturnCode.deny())
                         .smtpReturnCode(SMTPRetCode.BAD_SEQUENCE)
@@ -158,7 +160,7 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
                         .build();
                 }
 
-                return StreamUtils.ofNullable(fromAddresses)
+                return fromAddresses.stream()
                     .distinct()
                     .flatMap(address -> doCheckMessage(session, address))
                     .findFirst()
@@ -175,6 +177,16 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
         } else {
             return HookResult.DECLINED;
         }
+    }
+
+    // As MimeMessage::getFrom, the From field defaults to the Sender field
+    private List<InternetAddress> fromAddresses(MimeMessage message) throws MessagingException {
+        String field = Optional.ofNullable(message.getHeader("From", ","))
+            .orElse(message.getHeader("Sender", null));
+        if (field == null) {
+            return List.of();
+        }
+        return AddressFields.parse(field);
     }
 
     private Stream<HookResult> doCheckMessage(SMTPSession session, Address from) {

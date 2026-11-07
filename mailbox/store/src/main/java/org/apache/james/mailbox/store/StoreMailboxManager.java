@@ -637,13 +637,26 @@ public class StoreMailboxManager implements MailboxManager {
                 .filter(mailbox -> mailbox.generateAssociatedPath().getHierarchyLevels(fromSession.getPathDelimiter()).contains(from))
                 .sort(Comparator.comparing(mailbox -> mailbox.generateAssociatedPath().getHierarchyLevels(fromSession.getPathDelimiter()).size()))
                 .collectList()
-                .handle((mailboxes, sink) -> {
+                .<List<Mailbox>>handle((mailboxes, sink) -> {
                     if (mailboxes.stream().map(mailbox -> mailbox.generateAssociatedPath()).anyMatch(from::equals)) {
                         sink.next(mailboxes);
                     } else {
                         sink.error(new MailboxNotFoundException(from));
                     }
-                }));
+                }))
+            .flatMap(mailboxes -> assertCanDeleteSubMailboxesWhenRename(fromSession, from, mailboxes));
+    }
+
+    private Mono<List<Mailbox>> assertCanDeleteSubMailboxesWhenRename(MailboxSession session, MailboxPath from, List<Mailbox> mailboxes) {
+        if (from.belongsTo(session)) {
+            return Mono.just(mailboxes);
+        }
+        // RFC 4314: renaming requires the DeleteMailbox right on every renamed mailbox, inferiors included
+        if (mailboxes.stream().allMatch(mailbox -> storeRightManager.hasRight(mailbox, Right.DeleteMailbox, session))) {
+            return Mono.just(mailboxes);
+        }
+        return Mono.error(new InsufficientRightsException("user '" + session.getUser().asString()
+            + "' is not allowed to delete all the sub-mailboxes of '" + from.asString() + "'"));
     }
 
     protected Flux<Mailbox> getMailboxWithPathLikeUponRename(MailboxMapper mapper, MailboxQuery.UserBound query) {
