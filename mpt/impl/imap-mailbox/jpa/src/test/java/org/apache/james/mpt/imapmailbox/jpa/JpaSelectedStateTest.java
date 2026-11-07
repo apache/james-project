@@ -62,4 +62,14 @@ public class JpaSelectedStateTest extends SelectedState {
     @Disabled("SEARCH save date just return empty result for JPA")
     public void testSearchSaveDate() {
     }
+
+    @Override
+    @Disabled("JPA does not support ACL capabilities")
+    public void replaceInASharedMailboxShouldBeRejectedWithoutDeleteMessagesRight() {
+    }
+
+    @Override
+    @Disabled("JPA does not support ACL capabilities")
+    public void replaceInASharedMailboxShouldSucceedWithDeleteMessagesRight() {
+    }
 }

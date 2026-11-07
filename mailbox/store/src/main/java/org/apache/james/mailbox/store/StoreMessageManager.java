@@ -278,13 +278,14 @@ public class StoreMessageManager implements MessageManager {
 
     @Override
     public void delete(List<MessageUid> messageUids, MailboxSession mailboxSession) throws MailboxException {
-        Map<MessageUid, MessageMetaData> deletedMessages = MailboxReactorUtils.block(deleteMessages(messageUids, mailboxSession));
-
-        dispatchExpungeEvent(mailboxSession, deletedMessages).block();
+        MailboxReactorUtils.block(deleteReactive(messageUids, mailboxSession));
     }
 
     @Override
     public Mono<Void> deleteReactive(List<MessageUid> uids, MailboxSession mailboxSession) {
+        if (!storeRightManager.hasRight(mailbox, MailboxACL.Right.DeleteMessages, mailboxSession)) {
+            return Mono.error(new InsufficientRightsException("Deleting messages requires 't' right"));
+        }
         return deleteMessages(uids, mailboxSession)
             .flatMap(deleteMessages -> dispatchExpungeEvent(mailboxSession, deleteMessages));
     }
