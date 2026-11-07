@@ -36,7 +36,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.MailboxId
 import org.apache.james.mailbox.{MailboxSession, MessageManager}
 import org.apache.james.metrics.api.MetricFactory
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, JsPath}
 import reactor.core.scala.publisher.SMono
 
 case class MailboxHasMailException(mailboxId: MailboxId) extends Exception
@@ -60,9 +60,14 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
                                  mailboxChangeRepository: MailboxChangeRepository,
                                  val metricFactory: MetricFactory,
                                  val sessionSupplier: SessionSupplier,
-                                 val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[MailboxSetRequest] {
+                                 val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[MailboxSetRequest] with DeferredCreationReferences {
   override val methodName: MethodName = MethodName("Mailbox/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
+
+  override def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath] =
+    (arguments.value \ "create").asOpt[JsObject]
+      .map(creates => creates.keys.map(id => JsPath \ "create" \ id \ "parentId").toSet)
+      .getOrElse(Set.empty)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxSetRequest): SMono[InvocationWithContext] = for {
     oldState <- retrieveState(capabilities, mailboxSession)
