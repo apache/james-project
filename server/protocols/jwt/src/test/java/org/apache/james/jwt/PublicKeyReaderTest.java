@@ -20,12 +20,21 @@
 package org.apache.james.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.security.Security;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 class PublicKeyReaderTest {
 
@@ -38,6 +47,26 @@ class PublicKeyReaderTest {
             "U1LZUUbJW9/CH45YXz82CYqkrfbnQxqRb2iVbVjs/sHopHd1NTiCfUtwvcYJiBVj\n" +
             "kwIDAQAB\n" +
             "-----END PUBLIC KEY-----";
+
+    private static final String X509_CERTIFICATE = "-----BEGIN CERTIFICATE-----\n" +
+            "MIIDETCCAfkCFEng6ISWvEq/JkD8u64MA+x2VhS/MA0GCSqGSIb3DQEBCwUAMEUx\n" +
+            "CzAJBgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRl\n" +
+            "cm5ldCBXaWRnaXRzIFB0eSBMdGQwHhcNMjEwODMwMDQwMzIwWhcNMjIwODMwMDQw\n" +
+            "MzIwWjBFMQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UE\n" +
+            "CgwYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOC\n" +
+            "AQ8AMIIBCgKCAQEAsjjah2w8AKpnGKya4QG/tdRoR9pJkKWfyf17ywcYWBxcpj0Q\n" +
+            "+dkn+CXvBafhQ2zlf+bPkWxYhBuXyMB8QNCp/sMlaQ8dGFw/LGojglHk8T4aIu+a\n" +
+            "Ffy0hgN9yniuEHmFdjP2XECbA7UbHQPZTO/DU3QJ0FabqKO61pHB4bliNsTWGjzg\n" +
+            "seU5kdS1Uup0AK/URO2pSLpnDPV/l0yNmxvGfO/ulPNVJyxiJuT+Rl51LlxpWhu3\n" +
+            "G/hFX2mJP0Mn/cX3xNm2HrYIaasglum7bXN/vfiqSFAg46LgT7UJ4pCHoLI99K7Z\n" +
+            "OpgBqK/Q4P4UxOggxkawI+JmVLTmCpz1c6JR3QIDAQABMA0GCSqGSIb3DQEBCwUA\n" +
+            "A4IBAQAzSrClRytVW1fzL1rXMw7rYVoyoQ6ar3+e/SYiy5p+uSlEda9M/suNSvnV\n" +
+            "HAdoZS5Ka6v4AAsWtc6gfwa91jGzxMr5O+mvcx/VCCwahwzQe9KOm17WDhHfObq0\n" +
+            "sWDkXSVrrXiZC7gWkB4tczHQJNJKD3aNzYmlKX6GaCKVdBT3eCgIzMkolvIQdW5r\n" +
+            "lexckmoeEI+52UzgSyLFYzw+HLphmvszsYNLo6s6LBqgHWLdjVA1KsqSKGrqaNJd\n" +
+            "xdjw3S5PHAgOdwxNgip5Vdg1Rq8MjtoVGSC2fn678SyZYOAqxEeKf1CtkYTLySjz\n" +
+            "w0ipBFOo1qLHlaT5lHQxOIAmKsK1\n" +
+            "-----END CERTIFICATE-----";
 
     @BeforeAll
     static void init() {
@@ -52,5 +81,55 @@ class PublicKeyReaderTest {
     @Test
     void fromPEMShouldReturnRSAPublicKeyWhenValidPEMKey() {
         assertThat(new PublicKeyReader().fromPEM(PUBLIC_PEM_KEY)).isPresent();
+    }
+
+    @Test
+    void fromPEMShouldReturnRSAPublicKeyWhenValidX509Certificate() {
+        // X509_CERTIFICATE is valid between 2021-08-30 and 2022-08-30
+        Clock clockDuringValidity = Clock.fixed(Instant.parse("2021-12-01T00:00:00Z"), ZoneOffset.UTC);
+        assertThat(new PublicKeyReader(clockDuringValidity).fromPEM(X509_CERTIFICATE)).isPresent();
+    }
+
+    @Test
+    void fromPEMShouldThrowWhenExpiredX509CertificateByDefault() {
+        Clock clockAfterExpiry = Clock.fixed(Instant.parse("2023-01-01T00:00:00Z"), ZoneOffset.UTC);
+        assertThatThrownBy(() -> new PublicKeyReader(clockAfterExpiry).fromPEM(X509_CERTIFICATE))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Certificate is not valid");
+    }
+
+    @Test
+    void fromPEMShouldThrowWhenNotYetValidX509CertificateByDefault() {
+        Clock clockBeforeValidity = Clock.fixed(Instant.parse("2020-01-01T00:00:00Z"), ZoneOffset.UTC);
+        assertThatThrownBy(() -> new PublicKeyReader(clockBeforeValidity).fromPEM(X509_CERTIFICATE))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Certificate is not valid");
+    }
+
+    @Test
+    void fromPEMShouldReturnRSAPublicKeyWhenExpiredX509CertificateAndAllowOutdated() {
+        Clock clockAfterExpiry = Clock.fixed(Instant.parse("2023-01-01T00:00:00Z"), ZoneOffset.UTC);
+        boolean allowOutdated = true;
+        assertThat(new PublicKeyReader(clockAfterExpiry, allowOutdated).fromPEM(X509_CERTIFICATE)).isPresent();
+    }
+
+    @Test
+    void fromPEMShouldLogWarnWhenExpiredX509CertificateAndAllowOutdated() {
+        ListAppender<ILoggingEvent> loggingEvents = getListAppenderForClass(PublicKeyReader.class);
+        Clock clockAfterExpiry = Clock.fixed(Instant.parse("2023-01-01T00:00:00Z"), ZoneOffset.UTC);
+        boolean allowOutdated = true;
+
+        new PublicKeyReader(clockAfterExpiry, allowOutdated).fromPEM(X509_CERTIFICATE);
+
+        assertThat(loggingEvents.list)
+            .anySatisfy(event -> assertThat(event.getFormattedMessage()).contains("Certificate is not valid"));
+    }
+
+    private static ListAppender<ILoggingEvent> getListAppenderForClass(Class<?> clazz) {
+        Logger logger = (Logger) LoggerFactory.getLogger(clazz);
+        ListAppender<ILoggingEvent> loggingEventListAppender = new ListAppender<>();
+        loggingEventListAppender.start();
+        logger.addAppender(loggingEventListAppender);
+        return loggingEventListAppender;
     }
 }
