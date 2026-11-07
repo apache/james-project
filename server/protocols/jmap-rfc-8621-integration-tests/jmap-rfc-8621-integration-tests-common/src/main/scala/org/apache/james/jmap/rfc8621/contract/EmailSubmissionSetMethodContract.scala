@@ -1293,6 +1293,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
+         |  "createdIds": {"initial":"initial-server"},
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
@@ -1334,9 +1335,14 @@ trait EmailSubmissionSetMethodContract {
       .body
       .asString
 
+    val json = play.api.libs.json.Json.parse(response)
+    val submissionId = (json \ "methodResponses")(0)(1)("created")("k1490")("id").as[String]
+    assertThatJson((json \ "createdIds").get.toString)
+      .isEqualTo(play.api.libs.json.Json.obj("initial" -> "initial-server", "k1490" -> submissionId).toString)
+
     assertThatJson(response)
       // Ids are randomly generated, and not stored, let's ignore it
-      .whenIgnoringPaths("methodResponses[0][1].created.k1490",
+      .whenIgnoringPaths("createdIds", "methodResponses[0][1].created.k1490",
         "methodResponses[1][1].newState",
         "methodResponses[1][1].oldState",
         "methodResponses[2][1].state")

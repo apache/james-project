@@ -132,6 +132,25 @@ trait PushSubscriptionSetMethodContract {
     s"http://127.0.0.1:${pushServer.getLocalPort}/subscribe"
 
   @Test
+  def createdIdsShouldIncludeSuccessfulPushSubscriptions(pushServer: ClientAndServer): Unit = {
+    val result = `given`
+      .body(s"""{
+        |  "using": ["urn:ietf:params:jmap:core"],
+        |  "createdIds": {"initial":"initial-server"},
+        |  "methodCalls": [["PushSubscription/set", {"create": {
+        |    "subscription": {"deviceClientId":"created-ids-device", "url":"${getPushServerUrl(pushServer)}"},
+        |    "failed": {"deviceClientId":"invalid"}
+        |  }}, "create"]]
+        |}""".stripMargin)
+      .post().`then`().statusCode(SC_OK).extract().asString()
+    val json = play.api.libs.json.Json.parse(result)
+    val subscriptionId = (json \ "methodResponses")(0)(1)("created")("subscription")("id").as[String]
+    assertThatJson((json \ "createdIds").get.toString)
+      .isEqualTo(play.api.libs.json.Json.obj("initial" -> "initial-server", "subscription" -> subscriptionId).toString)
+    assertThatJson(result).inPath("methodResponses[0][1].notCreated.failed.type").asString().isEqualTo("invalidArguments")
+  }
+
+  @Test
   def setMethodShouldNotRequireAccountId(): Unit = {
     val request: String =
       """{
