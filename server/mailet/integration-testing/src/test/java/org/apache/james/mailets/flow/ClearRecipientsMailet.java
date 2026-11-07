@@ -22,11 +22,11 @@ package org.apache.james.mailets.flow;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSetMultimap;
 
 public class ClearRecipientsMailet extends GenericMailet {
     @Override
     public void service(Mail mail) {
-        mail.setRecipients(ImmutableList.of());
+        mail.updateRecipients(ImmutableSetMultimap.of());
     }
 }

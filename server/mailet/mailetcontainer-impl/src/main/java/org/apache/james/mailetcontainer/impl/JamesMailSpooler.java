@@ -53,6 +53,7 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -148,8 +149,9 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         private void handleError(MailQueueItem queueItem, Mail mail, ImmutableList<MailAddress> originalRecipients, Throwable processingException) {
             int failureCount = computeFailureCount(mail);
 
-            // Restore original recipients
+            // Restore original recipients and remove modified headers
             queueItem.getMail().setRecipients(originalRecipients);
+            queueItem.getMail().setPerRecipientSpecificHeaders(new PerRecipientHeaders());
 
             try {
                 if (failureCount > MAXIMUM_FAILURE_COUNT) {

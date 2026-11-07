@@ -64,6 +64,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -396,7 +397,14 @@ public class RecipientRewriteTableProcessor {
             mail.setState(Mail.GHOST);
         }
 
-        mail.setRecipients(executionResults.newRecipients);
+        mail.updateRecipients(
+            decisions.stream()
+                .collect(
+                    HashMultimap::create,
+                    (map, decision) -> map.putAll(decision.originalAddress(), decision.executionResult().getNewRecipients()),
+                    HashMultimap::putAll
+                )
+        );
     }
 
     private List<Decision> executeRrtFor(Mail mail) {

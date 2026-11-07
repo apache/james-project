@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets;
 
 import java.util.Collection;
-import java.util.stream.Stream;
 
 import jakarta.mail.MessagingException;
 
@@ -28,8 +27,8 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Rewrites recipient addresses to make sure email for the postmaster is
@@ -54,15 +53,20 @@ public class PostmasterAlias extends GenericMailet {
             .filter(this::isPostmasterAlias)
             .collect(ImmutableList.toImmutableList());
 
-        if (!postmasterAliases.isEmpty()) {
-            mail.setRecipients(
-                Stream.concat(
-                    mail.getRecipients()
-                        .stream()
-                        .filter(address -> !postmasterAliases.contains(address)),
-                    Stream.of(getMailetContext().getPostmaster()))
-                .collect(ImmutableSet.toImmutableSet()));
+        if (postmasterAliases.isEmpty()) {
+            return;
         }
+
+        MailAddress postmaster = getMailetContext().getPostmaster();
+        mail.updateRecipients(
+            mail.getRecipients()
+                .stream()
+                .collect(
+                    HashMultimap::create,
+                    (map, recipient) -> map.put(recipient, isPostmasterAlias(recipient) ? postmaster : recipient),
+                    HashMultimap::putAll
+            )
+        );
     }
 
     private boolean isPostmasterAlias(MailAddress addr) {

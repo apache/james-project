@@ -23,6 +23,7 @@ package org.apache.mailet;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -38,6 +39,7 @@ import org.apache.james.core.Username;
 import org.apache.mailet.PerRecipientHeaders.Header;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 
 /**
  * <p>Wraps a MimeMessage with additional routing and processing information.
@@ -159,7 +161,35 @@ public interface Mail extends Serializable, Cloneable {
      * @since Mailet API v2.4
      */
     void setRecipients(Collection<MailAddress> recipients);
-    
+
+    /**
+     * Replaces the recipient addresses in the keys with the recipient addresses in the collections they point to.
+     * Recipients not contained in the mapping's keys are dropped.
+     * In contrast to setRecipients, updateRecipients also updates the per recipient headers.
+     * All per recipient headers of a mapping source are set on its mapping targets. Per recipient headers
+     * are dropped if the recipient is not part of the recipient set anymore.
+     *
+     * @param recipientMapping Mapping from old recipients to new recipients
+     * @since Mailet API v3.3
+     */
+    default void updateRecipients(Multimap<MailAddress, MailAddress> recipientMapping) {
+        HashSet<MailAddress> newRecipients = new HashSet<MailAddress>(recipientMapping.size());
+        PerRecipientHeaders newHeaders = new PerRecipientHeaders();
+
+        recipientMapping.asMap().forEach((oldRecipient, replacementRecipients) -> {
+            newRecipients.addAll(replacementRecipients);
+            Collection<Header> oldHeaders = getPerRecipientSpecificHeaders().getHeadersForRecipient(oldRecipient);
+            for (MailAddress recipient : replacementRecipients) {
+                for (Header header : oldHeaders) {
+                    newHeaders.addHeaderForRecipient(header, recipient);
+                }
+            }
+        });
+
+        setRecipients(newRecipients);
+        setPerRecipientSpecificHeaders(newHeaders);
+    }
+
     /**
      * Returns the sender of the message, as specified by the SMTP "MAIL FROM" command,
      * or internally defined.
@@ -400,6 +430,14 @@ public interface Mail extends Serializable, Cloneable {
      * @return the recipient-specific headers
      */
     PerRecipientHeaders getPerRecipientSpecificHeaders();
+
+    /**
+     * Set an association between recipients and specific headers.
+     *
+     * @param headers the recipient-specific headers
+     * @since Mailet API v3.3
+     */
+    void setPerRecipientSpecificHeaders(PerRecipientHeaders headers);
 
     /**
      * Returns the message size (including headers).

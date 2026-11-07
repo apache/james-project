@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
@@ -47,12 +48,14 @@ import org.apache.mailet.ContractMailTest;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 
 public class MailImplTest extends ContractMailTest {
@@ -532,5 +535,55 @@ public class MailImplTest extends ContractMailTest {
 
         assertThat(mail.dsnParameters())
             .isEmpty();
+    }
+
+    @Test
+    void updateRecipientsShouldReplaceRecipients() throws AddressException {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .addRecipients("user1@apache.org", "user2@apache.org")
+            .build();
+        HashMultimap<MailAddress, MailAddress> map = HashMultimap.create();
+        map.put(new MailAddress("user1@apache.org"), new MailAddress("user3@apache.org"));
+        mail.updateRecipients(map);
+
+        assertThat(mail.getRecipients()).containsExactly(new MailAddress("user3@apache.org"));
+    }
+
+    @Test
+    void updateRecipientsShouldReplacePerRecipientHeaders() throws AddressException {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .addRecipients("user1@apache.org", "user2@apache.org")
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("user1@apache.org").build(), new MailAddress("user1@apache.org"))
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("user2@apache.org").build(), new MailAddress("user2@apache.org"))
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("old@apache.org").build(), new MailAddress("old@apache.org"))
+            .build();
+        HashMultimap<MailAddress, MailAddress> map = HashMultimap.create();
+        map.put(new MailAddress("user1@apache.org"), new MailAddress("user3@apache.org"));
+        mail.updateRecipients(map);
+
+        PerRecipientHeaders expected = new PerRecipientHeaders();
+        expected.addHeaderForRecipient(Header.builder().name("Delivered-To").value("user1@apache.org").build(), new MailAddress("user3@apache.org"));
+        assertThat(mail.getPerRecipientSpecificHeaders()).isEqualTo(expected);
+    }
+
+    @Test
+    void updateRecipientsMergesPerRecipientHeaders() throws AddressException {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .addRecipients("user1@apache.org", "user2@apache.org")
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("user1@apache.org").build(), new MailAddress("user1@apache.org"))
+            .addHeaderForRecipient(Header.builder().name("Delivered-To").value("user2@apache.org").build(), new MailAddress("user2@apache.org"))
+            .build();
+        HashMultimap<MailAddress, MailAddress> map = HashMultimap.create();
+        map.put(new MailAddress("user1@apache.org"), new MailAddress("user3@apache.org"));
+        map.put(new MailAddress("user2@apache.org"), new MailAddress("user3@apache.org"));
+        mail.updateRecipients(map);
+
+        PerRecipientHeaders expected = new PerRecipientHeaders();
+        expected.addHeaderForRecipient(Header.builder().name("Delivered-To").value("user1@apache.org").build(), new MailAddress("user3@apache.org"));
+        expected.addHeaderForRecipient(Header.builder().name("Delivered-To").value("user2@apache.org").build(), new MailAddress("user3@apache.org"));
+        assertThat(mail.getPerRecipientSpecificHeaders()).isEqualTo(expected);
     }
 }
