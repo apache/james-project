@@ -54,7 +54,8 @@ import org.junit.jupiter.api.Test;
 import com.google.common.base.Preconditions;
 
 class ValidRcptHandlerTest {
-    private static final Username VALID_USER = Username.of("postmaster");
+    private static final Username VALID_USER = Username.of("bob");
+    private static final String POSTMASTER = "postmaster";
     private static final String INVALID_USER = "invalid";
     private static final String USER1 = "user1";
     private static final String USER2 = "user2";
@@ -67,6 +68,7 @@ class ValidRcptHandlerTest {
     private ValidRcptHandler handler;
     private MemoryRecipientRewriteTable memoryRecipientRewriteTable;
     private MailAddress validUserEmail;
+    private MailAddress postmasterEmail;
     private MailAddress user1mail;
     private MailAddress invalidUserEmail;
     private MailAddress validUserEmailWithSubAddressing;
@@ -87,6 +89,7 @@ class ValidRcptHandlerTest {
         handler = new ValidRcptHandler(users, memoryRecipientRewriteTable, memoryDomainList);
 
         validUserEmail = new MailAddress(VALID_USER.asString() + "@localhost");
+        postmasterEmail = new MailAddress(POSTMASTER + "@localhost");
         user1mail = new MailAddress(USER1 + "@localhost");
         invalidUserEmail = new MailAddress(INVALID_USER + "@localhost");
         validUserEmailWithSubAddressing = new MailAddress(VALID_USER.asString() + "+detail@localhost");
@@ -220,6 +223,24 @@ class ValidRcptHandlerTest {
         SMTPSession session = setupMockedSMTPSession(RELAYING_ALLOWED);
 
         HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, validUserEmail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
+    }
+
+    @Test
+    void doRcptShouldDeclinePostmasterWhenRelay() throws Exception {
+        SMTPSession session = setupMockedSMTPSession(RELAYING_ALLOWED);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, postmasterEmail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
+    }
+
+    @Test
+    void doRcptShouldDeclinePostmasterWhenNoRelay() throws Exception {
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, postmasterEmail).getResult();
 
         assertThat(rCode).isEqualTo(HookReturnCode.declined());
     }
