@@ -33,6 +33,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -131,6 +132,8 @@ public class PostgresMapperProvider implements MapperProvider {
     public MessageUid generateMessageUid(Mailbox mailbox) {
         try {
             return messageUidProvider.nextUid(mailbox);
+        } catch (MailboxNotFoundException e) {
+            return MessageUid.MIN_VALUE;
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         }
@@ -141,6 +144,8 @@ public class PostgresMapperProvider implements MapperProvider {
         try {
             return new PostgresModSeqProvider(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()))
                 .nextModSeq(mailbox);
+        } catch (MailboxNotFoundException e) {
+            return ModSeq.first();
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         }
