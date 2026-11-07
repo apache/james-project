@@ -20,7 +20,7 @@ package org.apache.james.jmap.method
 
 import org.apache.james.jmap.api.exception.ChangeNotFoundException
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.core.Invocation.MethodName
+import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, JmapRfc8621Configuration, SessionTranslator}
 import org.apache.james.jmap.delegation.ForbiddenAccountManagementException
 import org.apache.james.jmap.mail.{IdentityIdNotFoundException, RequestTooLargeException, UnsupportedFilterException, UnsupportedNestingException, UnsupportedRequestParameterException, UnsupportedSortException}
@@ -31,6 +31,7 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.MDCStructuredLogger
 import org.reactivestreams.Publisher
 import org.slf4j.LoggerFactory
+import play.api.libs.json.JsPath
 import reactor.core.scala.publisher.SFlux
 
 object Method {
@@ -49,6 +50,9 @@ trait Method {
   val methodName: MethodName
 
   val requiredCapabilities: Set[CapabilityIdentifier]
+
+  /** Creation reference values and object keys at these paths are resolved by the method after its creates. */
+  def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath] = Set.empty
 
   def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext]
 }

@@ -36,7 +36,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.MailboxId
 import org.apache.james.mailbox.{MailboxSession, MessageManager}
 import org.apache.james.metrics.api.MetricFactory
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsArray, JsObject, JsPath}
 import reactor.core.scala.publisher.SMono
 
 case class MailboxHasMailException(mailboxId: MailboxId) extends Exception
@@ -64,12 +64,20 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
   override val methodName: MethodName = MethodName("Mailbox/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
+  override def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath] = {
+    val creates = (arguments.value \ "create").asOpt[JsObject].map(_.keys.map(id => JsPath \ "create" \ id \ "parentId")).getOrElse(Set.empty)
+    val updates = (arguments.value \ "update").asOpt[JsObject].map(_.keys.flatMap(id => Set(
+      JsPath \ "update" \ id, JsPath \ "update" \ id \ "parentId"))).getOrElse(Set.empty)
+    val destroys = (arguments.value \ "destroy").asOpt[JsArray].map(_.value.indices.map(index => (JsPath \ "destroy")(index)).toSet).getOrElse(Set.empty)
+    (creates ++ updates ++ destroys).toSet
+  }
+
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxSetRequest): SMono[InvocationWithContext] = for {
     oldState <- retrieveState(capabilities, mailboxSession)
     supportSharedMailbox = capabilities.contains(JAMES_SHARES)
     creationResults <- createPerformer.createMailboxes(mailboxSession, request, invocation.processingContext, supportSharedMailbox)
-    updateResults <- updatePerformer.updateMailboxes(mailboxSession, request, capabilities)
-    deletionResults <- deletePerformer.deleteMailboxes(mailboxSession, request, supportSharedMailbox)
+    updateResults <- updatePerformer.updateMailboxes(mailboxSession, request, capabilities, creationResults._2)
+    deletionResults <- deletePerformer.deleteMailboxes(mailboxSession, request, supportSharedMailbox, creationResults._2)
     newState <- retrieveState(capabilities, mailboxSession)
     response = createResponse(capabilities, invocation.invocation, request, creationResults._1, deletionResults, updateResults, oldState, newState)
   } yield InvocationWithContext(response, creationResults._2)
