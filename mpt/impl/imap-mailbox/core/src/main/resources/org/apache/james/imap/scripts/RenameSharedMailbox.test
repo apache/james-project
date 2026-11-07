@@ -79,6 +79,10 @@ S: a9 OK RENAME completed.
 C: a11 RENAME #user.boby.otherSharedMailbox.newChild1 #user.boby.otherSharedMailbox.sub1.newChild1
 S: a11 OK RENAME completed.
 
+# Cannot move a shared mailbox to an owner's mailbox when a sub-mailbox lacks the "delete mailbox" right
+C: A110 RENAME #user.boby.sharedMailbox.child3 ownerChild3
+S: A110 NO RENAME failed. Insufficient rights.
+
 # SubMailbox is renamed
 C: A111 RENAME #user.boby.sharedMailbox.child3 #user.boby.sharedMailbox.child3New
 S: A111 OK RENAME completed.
