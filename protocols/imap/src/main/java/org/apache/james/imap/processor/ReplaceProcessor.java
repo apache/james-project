@@ -92,8 +92,14 @@ public class ReplaceProcessor extends AbstractMailboxProcessor<ReplaceRequest> i
         final MailboxManager mailboxManager = getMailboxManager();
 
         session.stopDetectingCommandInjection();
-        // Checked upfront so that the replacement is not appended when the base message can not be deleted
-        return assertCanDeleteMessagesInSelectedMailbox(session)
+        if (session.getSelected().isReadOnly()) {
+            // https://datatracker.ietf.org/doc/html/rfc3501#section-6.3.2
+            //      No changes to the permanent state of the mailbox, including per-user state, are permitted.
+            no(request, responder, HumanReadableText.MAILBOX_IS_READ_ONLY);
+            return Mono.empty();
+        }
+        // Checked upfront so that the replacement is not appended when the base message can not be removed
+        return assertCanRemoveMessagesInSelectedMailbox(session)
             .then(append(session, responder, messageIn, datetime, flags, mailboxPath, mailboxManager))
             .then(deleteBaseMessage(request, session))
             .then(Mono.defer(() -> unsolicitedResponses(session, responder, request.isUseUid())))
@@ -130,11 +136,15 @@ public class ReplaceProcessor extends AbstractMailboxProcessor<ReplaceRequest> i
             .flatMap(mailbox -> appendToMailbox(messageIn, datetime, flags, session, mailbox, responder));
     }
 
-    private Mono<Void> assertCanDeleteMessagesInSelectedMailbox(ImapSession session) {
+    // https://www.rfc-editor.org/rfc/rfc8508.html#section-4.1
+    //      The Access Control List (ACL) rights [RFC4314] required for UID REPLACE are the union of the ACL rights
+    //      required for UID STORE and UID EXPUNGE in the current mailbox, and APPEND in the target mailbox.
+    private Mono<Void> assertCanRemoveMessagesInSelectedMailbox(ImapSession session) {
         return getSelectedMailboxReactive(session)
             .filter(Throwing.<MessageManager>predicate(messageManager -> getMailboxManager()
-                .hasRight(messageManager.getMailboxEntity(), MailboxACL.Right.DeleteMessages, session.getMailboxSession())).sneakyThrow())
-            .switchIfEmpty(Mono.error(() -> new InsufficientRightsException("Replacing a message requires 't' right on the selected mailbox")))
+                .myRights(messageManager.getMailboxEntity(), session.getMailboxSession())
+                .contains(MailboxACL.Right.DeleteMessages, MailboxACL.Right.PerformExpunge)).sneakyThrow())
+            .switchIfEmpty(Mono.error(() -> new InsufficientRightsException("Replacing a message requires 't' and 'e' rights on the selected mailbox")))
             .then();
     }
 
