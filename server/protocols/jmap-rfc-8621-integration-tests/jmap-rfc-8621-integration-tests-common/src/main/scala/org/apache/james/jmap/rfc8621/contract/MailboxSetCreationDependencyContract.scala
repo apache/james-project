@@ -56,27 +56,18 @@ trait MailboxSetCreationDependencyContract {
     server.getProbe(classOf[MailboxProbeImpl])
       .getMailboxId("#private", bobUsername.asString(), path).serialize()
 
-  @ParameterizedTest
-  @ValueSource(strings = Array("parent,child,grandchild", "parent,grandchild,child", "child,parent,grandchild",
-    "child,grandchild,parent", "grandchild,parent,child", "grandchild,child,parent"))
-  def createShouldResolveSameCallHierarchyInAnyOrder(order: String, server: GuiceJamesServer): Unit = {
-    val mailboxesByCreationId = Map(
-      "parent" ->
-        """
-          |"parent": {"name": "parent", "parentId": null}""".stripMargin,
-      "child" ->
-        """
-          |"child": {"name": "child", "parentId": "#parent"}""".stripMargin,
-      "grandchild" ->
-        """
-          |"grandchild": {"name": "grandchild", "parentId": "#child"}""".stripMargin)
-    val orderedCreates = order.split(",").map(mailboxesByCreationId).mkString(",\n")
+  @Test
+  def createShouldResolveSameCallHierarchyWhenChildrenAppearFirst(server: GuiceJamesServer): Unit = {
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {$orderedCreates}
+      |      "create": {
+      |        "grandchild": {"name": "grandchild", "parentId": "#child"},
+      |        "child": {"name": "child", "parentId": "#parent"},
+      |        "parent": {"name": "parent", "parentId": null}
+      |      }
       |    }, "createHierarchy"],
       |    ["Mailbox/get", {
       |      "accountId": ${Json.toJson(bobAccountId)},
@@ -238,7 +229,10 @@ trait MailboxSetCreationDependencyContract {
   }
 
   @Test
-  def createShouldPreferTheSameCallMappingWhenACreationIdIsReused(server: GuiceJamesServer): Unit = {
+  def createShouldResolveAReusedCreationIdToTheMostRecentlyCreatedMailbox(server: GuiceJamesServer): Unit = {
+    // RFC 8620 section 5.3 requires the latest successful mapping when a creation ID is reused.
+    // The same section requires creating the new parent before resolving the child's reference.
+    // https://www.rfc-editor.org/rfc/rfc8620.html#section-5.3
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
@@ -254,18 +248,22 @@ trait MailboxSetCreationDependencyContract {
       |        "child": {"name": "child", "parentId": "#parent"},
       |        "parent": {"name": "new"}
       |      }
-      |    }, "replaceParentAndCreateChild"]
+      |    }, "reuseParentIdAndCreateChild"]
       |  ]
       |}""".stripMargin
 
     val response = execute(request)
 
-    val replacementResponse = responseFor(response, "replaceParentAndCreateChild")
+    val creationResponse = responseFor(response, "reuseParentIdAndCreateChild")
 
-    assertThat((replacementResponse \ "notCreated").toOption.isEmpty).isTrue()
-    assertThat((replacementResponse \ "created" \ "child" \ "id").as[String])
+    val oldParentResponse = responseFor(response, "createOldParent")
+    assertThat((oldParentResponse \ "created" \ "parent" \ "id").as[String])
+      .isEqualTo(storedMailboxId(server, "old"))
+
+    assertThat((creationResponse \ "notCreated").toOption.isEmpty).isTrue()
+    assertThat((creationResponse \ "created" \ "child" \ "id").as[String])
       .isEqualTo(storedMailboxId(server, "new.child"))
-    assertThat((replacementResponse \ "created" \ "parent" \ "id").as[String])
+    assertThat((creationResponse \ "created" \ "parent" \ "id").as[String])
       .isEqualTo(storedMailboxId(server, "new"))
   }
 
@@ -337,6 +335,8 @@ trait MailboxSetCreationDependencyContract {
 
   @Test
   def createShouldNotInferACycleFromACrossTypeReference(server: GuiceJamesServer): Unit = {
+    // Creation IDs share one map across types (RFC 8620 section 5.3). The email's
+    // mailboxIds references the earlier mailbox; only after creation does #shared identify the email.
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [

@@ -74,6 +74,7 @@ object CreateProcessor {
                                                      results: Map[ClientId, Either[Error, Created]], context: ProcessingContext)(
                                                      create: (Input, ProcessingContext) => SMono[Either[Error, (Created, ServerId)]],
                                                      invalidDependency: Input => Error): SMono[(Map[ClientId, Either[Error, Created]], ProcessingContext)] = {
+    // A failed or cyclic same-call dependency must not fall back to an older mapping.
     val hasUnsuccessfulDependency = dependencies.exists(dependency => !results.get(dependency).exists(_.isRight))
     if (hasUnsuccessfulDependency) {
       SMono.just((results.updated(id, Left(invalidDependency(entry))), context))
@@ -86,8 +87,8 @@ object CreateProcessor {
     }
   }
 
-  // Process parents before their dependents. Keep entries blocked by cycles so
-  // processCreation can return a per-item error without attempting to create them.
+  // Use Kahn's algorithm to process parents before their dependents. Keep entries
+  // blocked by cycles so processCreation can reject them without attempting creation.
   private def orderByDependencies(dependencies: Map[ClientId, Set[ClientId]]): Seq[ClientId] = {
     val unresolvedParentCounts = mutable.Map.from(dependencies.view.mapValues(_.size))
     val dependents = mutable.Map.empty[ClientId, Vector[ClientId]]
