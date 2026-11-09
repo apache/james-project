@@ -72,4 +72,9 @@ public class JpaSelectedStateTest extends SelectedState {
     @Disabled("JPA does not support ACL capabilities")
     public void replaceInASharedMailboxShouldSucceedWithDeleteMessagesRight() {
     }
+
+    @Override
+    @Disabled("JPA does not support ACL capabilities")
+    public void replaceInASharedMailboxShouldBeRejectedWithoutPerformExpungeRight() {
+    }
 }

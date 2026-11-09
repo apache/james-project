@@ -71,6 +71,19 @@ public abstract class SelectedState implements ImapTestConstants {
             .run("ReplaceSharedMailboxWithDeleteMessagesRight");
     }
 
+    @Test
+    public void replaceInASharedMailboxShouldBeRejectedWithoutPerformExpungeRight() throws Exception {
+        sharedMailboxScriptedTestProtocol("lrswipt")
+            .run("ReplaceSharedMailboxWithoutPerformExpungeRight");
+    }
+
+    @Test
+    public void replaceShouldBeRejectedInAMailboxSelectedByExamine() throws Exception {
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("ReplaceExaminedMailbox");
+    }
+
     private ImapScriptedTestProtocol sharedMailboxScriptedTestProtocol(String rights) throws Exception {
         ImapScriptedTestProtocol scriptedTestProtocol = new ImapScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
             .withUser(USER, PASSWORD)
