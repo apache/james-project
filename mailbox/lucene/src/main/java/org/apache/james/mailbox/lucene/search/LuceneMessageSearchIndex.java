@@ -58,6 +58,7 @@ import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SIZE
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.THREAD_ID_FIELD;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.UID_FIELD;
 import static org.apache.james.mailbox.lucene.search.LuceneIndexableDocument.createFlagsIdField;
+import static org.apache.james.mailbox.lucene.search.LuceneIndexableDocument.createMessageIdField;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -137,6 +138,7 @@ import org.apache.lucene.search.SimpleCollector;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.SortedSetSortField;
+import org.apache.lucene.search.TermInSetQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.TopDocs;
@@ -421,12 +423,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         }
     }
 
+    /**
+     * A single term set query, whatever the number of mailboxes: one clause per mailbox would hit the boolean clause limit.
+     */
     private Query buildQueryFromMailboxes(Collection<MailboxId> mailboxIds) {
-        BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-        for (MailboxId id: mailboxIds) {
-            queryBuilder.add(mailboxQuery(id), BooleanClause.Occur.SHOULD);
-        }
-        return queryBuilder.build();
+        return new TermInSetQuery(MAILBOX_ID_FIELD, mailboxIds.stream()
+            .map(id -> new BytesRef(id.serialize()))
+            .toList());
     }
 
     private Query mailboxQuery(MailboxId mailboxId) {
@@ -716,25 +719,19 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             .toArray();
     }
 
+    /**
+     * Matches the flagged messages by their document id (mailbox and uid) in a single term set query, whatever the
+     * number of mailboxes and uids: one clause per mailbox or per uid range would hit the boolean clause limit.
+     */
     private Query flaggedMessagesQuery(Map<MailboxId, long[]> uidsByMailbox) {
-        BooleanQuery.Builder flaggedMessages = new BooleanQuery.Builder();
+        List<BytesRef> messageIds = new ArrayList<>();
         uidsByMailbox.forEach((mailboxId, uids) -> {
-            if (uids.length > 0) {
-                flaggedMessages.add(messagesQuery(mailboxId, uids), BooleanClause.Occur.SHOULD);
+            for (long uid : uids) {
+                messageIds.add(new BytesRef(createMessageIdField(mailboxId, uid)));
             }
         });
-        // An empty BooleanQuery matches no document
-        return flaggedMessages.build();
-    }
-
-    /**
-     * A single set query, whatever the number of uids: one range clause per uid gap would hit the boolean clause limit.
-     */
-    private Query messagesQuery(MailboxId mailboxId, long[] uids) {
-        return new BooleanQuery.Builder()
-            .add(mailboxQuery(mailboxId), BooleanClause.Occur.MUST)
-            .add(LongPoint.newSetQuery(UID_FIELD, uids), BooleanClause.Occur.MUST)
-            .build();
+        // An empty term set matches no document
+        return new TermInSetQuery(ID_FIELD, messageIds);
     }
 
     private static class UidCollector extends SimpleCollector {
