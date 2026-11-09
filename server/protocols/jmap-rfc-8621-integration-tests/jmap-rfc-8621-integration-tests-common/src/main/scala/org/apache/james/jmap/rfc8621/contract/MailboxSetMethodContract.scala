@@ -6638,7 +6638,7 @@ trait MailboxSetMethodContract {
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
-         |          "description": "Specified value do not match the expected JSON format: List((,List(JsonValidationError(List(error.expected.jsobject),List()))))",
+         |          "description": "Specified value do not match the expected JSON format: List((,List(JsonValidationError(List(error.expected.jsobject),ArraySeq()))))",
          |          "properties": ["sharedWith"]
          |        }
          |      }
@@ -7500,7 +7500,7 @@ trait MailboxSetMethodContract {
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
-         |                        "description": "Specified value do not match the expected JSON format: List(((0),List(JsonValidationError(List(Unknown right 'y'),List()))))",
+         |                        "description": "Specified value do not match the expected JSON format: List(((0),List(JsonValidationError(List(Unknown right 'y'),ArraySeq()))))",
          |                        "properties": [
          |                            "sharedWith/${andreUsername.asString()}"
          |                        ]
