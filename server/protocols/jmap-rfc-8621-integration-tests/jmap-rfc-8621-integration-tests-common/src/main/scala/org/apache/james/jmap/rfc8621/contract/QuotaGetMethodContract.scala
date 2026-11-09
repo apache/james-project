@@ -69,13 +69,12 @@ class QuotaGetMethodProbeModule extends AbstractModule {
 
 class QuotaGetMethodProbe @Inject()(quotaGetMethod: QuotaGetMethod) extends GuiceProbe {
   def forceDraftCompatibility(value: Boolean): Unit = {
-    val draftCompatibilityField = classOf[QuotaGetMethod].getDeclaredField("JMAP_QUOTA_DRAFT_COMPATIBILITY")
+    // Under Scala 3.10 the `private lazy val JMAP_QUOTA_DRAFT_COMPATIBILITY` compiles to a volatile
+    // Object slot named JMAP_QUOTA_DRAFT_COMPATIBILITY$lzy1 (no Scala 2.13 bitmap$0). Its getter takes
+    // a fast path when the slot holds the boxed value, so writing it forces the cached value.
+    val draftCompatibilityField = classOf[QuotaGetMethod].getDeclaredField("JMAP_QUOTA_DRAFT_COMPATIBILITY$lzy1")
     draftCompatibilityField.setAccessible(true)
-    draftCompatibilityField.setBoolean(quotaGetMethod, value)
-
-    val lazyValInitializedField = classOf[QuotaGetMethod].getDeclaredField("bitmap$0")
-    lazyValInitializedField.setAccessible(true)
-    lazyValInitializedField.setBoolean(quotaGetMethod, true)
+    draftCompatibilityField.set(quotaGetMethod, java.lang.Boolean.valueOf(value))
   }
 }
 
