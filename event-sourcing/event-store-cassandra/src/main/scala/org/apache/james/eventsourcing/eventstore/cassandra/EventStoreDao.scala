@@ -137,7 +137,7 @@ class EventStoreDao @Inject() (val session: CqlSession,
   private[cassandra] def getSnapshot(aggregateId: AggregateId): SMono[EventId] =
     SMono(cassandraAsyncExecutor.executeSingleRow(selectSnapshot.bind()
       .set(AGGREGATE_ID, aggregateId.asAggregateKey, TypeCodecs.TEXT)))
-      .map(row => EventId.fromSerialized(row.get[Integer](0, TypeCodecs.INT).intValue()))
+      .map(row => EventId.fromSerialized(row.get[Integer](0, TypeCodecs.INT)))
 
   def delete(aggregateId: AggregateId): SMono[Unit] =
     SMono(cassandraAsyncExecutor.executeVoid(deleteByAggregateId
