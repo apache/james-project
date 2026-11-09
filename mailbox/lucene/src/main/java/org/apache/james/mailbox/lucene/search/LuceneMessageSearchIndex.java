@@ -159,6 +159,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -201,6 +202,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * size, so two consecutive windows share a word and every pair of adjacent words is inside one window.
      */
     private static final int WINDOW_STEP = LenientImapSearchAnalyzer.DEFAULT_MAX_TOKEN_LENGTH - 1;
+
+    /**
+     * Up to this number of mailboxes holding flagged messages, a flag criterion matches each mailbox with a uid set
+     * (2 clauses per mailbox, no allocation per uid). Above it, it matches message ids in one term set, which keeps the
+     * query under the boolean clause limit whatever the number of mailboxes.
+     */
+    private static final int MAX_MAILBOXES_MATCHED_BY_UID_SET = 32;
 
     private static final String TOO_MANY_CLAUSES_MESSAGE = "Unable to search the mailbox: the search query has too many criteria or values";
 
@@ -719,18 +727,31 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             .toArray();
     }
 
-    /**
-     * Matches the flagged messages by their document id (mailbox and uid) in a single term set query, whatever the
-     * number of mailboxes and uids: one clause per mailbox or per uid range would hit the boolean clause limit.
-     */
     private Query flaggedMessagesQuery(Map<MailboxId, long[]> uidsByMailbox) {
+        Map<MailboxId, long[]> flaggedUidsByMailbox = Maps.filterValues(uidsByMailbox, uids -> uids.length > 0);
+        if (flaggedUidsByMailbox.size() <= MAX_MAILBOXES_MATCHED_BY_UID_SET) {
+            return uidSetsQuery(flaggedUidsByMailbox);
+        }
+        return messageIdsQuery(flaggedUidsByMailbox);
+    }
+
+    private Query uidSetsQuery(Map<MailboxId, long[]> uidsByMailbox) {
+        BooleanQuery.Builder flaggedMessages = new BooleanQuery.Builder();
+        uidsByMailbox.forEach((mailboxId, uids) -> flaggedMessages.add(new BooleanQuery.Builder()
+            .add(mailboxQuery(mailboxId), BooleanClause.Occur.MUST)
+            .add(LongPoint.newSetQuery(UID_FIELD, uids), BooleanClause.Occur.MUST)
+            .build(), BooleanClause.Occur.SHOULD));
+        // An empty BooleanQuery matches no document
+        return flaggedMessages.build();
+    }
+
+    private Query messageIdsQuery(Map<MailboxId, long[]> uidsByMailbox) {
         List<BytesRef> messageIds = new ArrayList<>();
         uidsByMailbox.forEach((mailboxId, uids) -> {
             for (long uid : uids) {
                 messageIds.add(new BytesRef(createMessageIdField(mailboxId, uid)));
             }
         });
-        // An empty term set matches no document
         return new TermInSetQuery(ID_FIELD, messageIds);
     }
 
