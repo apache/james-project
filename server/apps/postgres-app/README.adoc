@@ -60,7 +60,7 @@ is provided with some default values you may need to replace. You will need to u
 
 Also you might need to add the files like in the
 [sample directory](https://github.com/apache/james-project/tree/master/server/apps/postgres-app/sample-configuration-single)
-to index mails into an embedded Lucene index instead of OpenSearch, for a single node setup.
+to not have OpenSearch indexing enabled by default for the search.
 
 You also need to generate a keystore with the following command:
 
