@@ -66,12 +66,12 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import jakarta.annotation.PreDestroy;
@@ -115,19 +115,25 @@ import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.DocValues;
 import org.apache.lucene.index.IndexFormatTooOldException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.CollectorManager;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchNoDocsQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.ScoreMode;
+import org.apache.lucene.search.SimpleCollector;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.SortedSetSortField;
@@ -654,48 +660,66 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
             queryBuilder.add(bQuery.build(), BooleanClause.Occur.MUST);
         }
-        queryBuilder.add(buildQueryFromMailboxes(mailboxIds), BooleanClause.Occur.MUST);
+        Query flagsQuery = queryBuilder.build();
 
         try (IndexReader reader = DirectoryReader.open(writer)) {
             IndexSearcher searcher = new IndexSearcher(reader);
-            Map<String, MailboxId> mailboxIdsBySerialization = new HashMap<>();
-            Map<MailboxId, Set<MessageUid>> uidsByMailbox = new HashMap<>();
+            Map<MailboxId, long[]> uidsByMailbox = new HashMap<>();
             for (MailboxId mailboxId : mailboxIds) {
-                mailboxIdsBySerialization.put(mailboxId.serialize(), mailboxId);
-                uidsByMailbox.put(mailboxId, new HashSet<>());
-            }
-
-            // queryBuilder for all the documents sorted by uid
-            TopDocs docs = searcher.search(queryBuilder.build(), maxQueryResults, new Sort(UID_SORT));
-            ScoreDoc[] sDocs = docs.scoreDocs;
-            for (ScoreDoc sDoc : sDocs) {
-                Document doc = searcher.storedFields().document(sDoc.doc);
-                MessageUid uid = MessageUid.of(doc.getField(UID_FIELD).numericValue().longValue());
-                Optional.ofNullable(mailboxIdsBySerialization.get(doc.get(MAILBOX_ID_FIELD)))
-                    .ifPresent(mailboxId -> uidsByMailbox.get(mailboxId).add(uid));
-            }
-
-            // add or remove recent uids
-            if (flag.equalsIgnoreCase("\\RECENT")) {
-                for (Set<MessageUid> uids : uidsByMailbox.values()) {
-                    if (isSet) {
-                        uids.addAll(recentUids);
-                    } else {
-                        uids.removeAll(recentUids);
-                    }
+                long[] uids = flaggedUids(searcher, flagsQuery, mailboxId);
+                if (flag.equalsIgnoreCase("\\RECENT")) {
+                    uids = withRecentUids(uids, isSet, recentUids);
                 }
+                uidsByMailbox.put(mailboxId, uids);
             }
-
             return flaggedMessagesQuery(uidsByMailbox);
         } catch (IOException e) {
             throw new MailboxException("Unable to search mailboxes " + mailboxIds, e);
         }
     }
 
-    private Query flaggedMessagesQuery(Map<MailboxId, Set<MessageUid>> uidsByMailbox) {
+    /**
+     * Collects every matching flags document of the mailbox, reading its uid from doc values: no result cap and no
+     * stored document to load.
+     */
+    private long[] flaggedUids(IndexSearcher searcher, Query flagsQuery, MailboxId mailboxId) throws IOException {
+        Query query = new BooleanQuery.Builder()
+            .add(flagsQuery, BooleanClause.Occur.MUST)
+            .add(mailboxQuery(mailboxId), BooleanClause.Occur.MUST)
+            .build();
+        return searcher.search(query, new CollectorManager<UidCollector, long[]>() {
+            @Override
+            public UidCollector newCollector() {
+                return new UidCollector();
+            }
+
+            @Override
+            public long[] reduce(Collection<UidCollector> collectors) {
+                return collectors.stream()
+                    .flatMapToLong(UidCollector::uids)
+                    .toArray();
+            }
+        });
+    }
+
+    private long[] withRecentUids(long[] uids, boolean isSet, Collection<MessageUid> recentUids) {
+        Set<Long> recent = recentUids.stream()
+            .map(MessageUid::asLong)
+            .collect(ImmutableSet.toImmutableSet());
+        if (isSet) {
+            return LongStream.concat(LongStream.of(uids), recent.stream().mapToLong(Long::longValue))
+                .distinct()
+                .toArray();
+        }
+        return LongStream.of(uids)
+            .filter(uid -> !recent.contains(uid))
+            .toArray();
+    }
+
+    private Query flaggedMessagesQuery(Map<MailboxId, long[]> uidsByMailbox) {
         BooleanQuery.Builder flaggedMessages = new BooleanQuery.Builder();
         uidsByMailbox.forEach((mailboxId, uids) -> {
-            if (!uids.isEmpty()) {
+            if (uids.length > 0) {
                 flaggedMessages.add(messagesQuery(mailboxId, uids), BooleanClause.Occur.SHOULD);
             }
         });
@@ -703,15 +727,40 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         return flaggedMessages.build();
     }
 
-    private Query messagesQuery(MailboxId mailboxId, Set<MessageUid> uids) {
-        UidRange[] uidRanges = MessageRange.toRanges(new ArrayList<>(uids))
-            .stream()
-            .map(range -> new UidRange(range.getUidFrom(), range.getUidTo()))
-            .toArray(UidRange[]::new);
+    /**
+     * A single set query, whatever the number of uids: one range clause per uid gap would hit the boolean clause limit.
+     */
+    private Query messagesQuery(MailboxId mailboxId, long[] uids) {
         return new BooleanQuery.Builder()
             .add(mailboxQuery(mailboxId), BooleanClause.Occur.MUST)
-            .add(createUidQuery((UidCriterion) SearchQuery.uid(uidRanges)), BooleanClause.Occur.MUST)
+            .add(LongPoint.newSetQuery(UID_FIELD, uids), BooleanClause.Occur.MUST)
             .build();
+    }
+
+    private static class UidCollector extends SimpleCollector {
+        private final LongStream.Builder uids = LongStream.builder();
+        private NumericDocValues uidValues;
+
+        @Override
+        protected void doSetNextReader(LeafReaderContext context) throws IOException {
+            uidValues = DocValues.getNumeric(context.reader(), UID_FIELD);
+        }
+
+        @Override
+        public void collect(int doc) throws IOException {
+            if (uidValues.advanceExact(doc)) {
+                uids.add(uidValues.longValue());
+            }
+        }
+
+        @Override
+        public ScoreMode scoreMode() {
+            return ScoreMode.COMPLETE_NO_SCORES;
+        }
+
+        LongStream uids() {
+            return uids.build();
+        }
     }
 
     private Sort createSort(List<SearchQuery.Sort> sorts) {
