@@ -294,14 +294,17 @@ class LuceneMailboxMessageSearchIndexTest {
             TestId folderId = TestId.of(1000 + i);
             Mailbox folder = new Mailbox(MailboxPath.forUser(BOB, "folder" + i), UidValidity.of(26), folderId);
             MessageId messageId = factory.generate();
+            boolean labelled = i % 2 == 0;
             MessageBuilder builder = new MessageBuilder()
                 .header("Subject", "folder " + i)
-                .flags(new Flags("label1"))
+                .flags(labelled ? new Flags("label1") : new Flags())
                 .uid(MessageUid.of(1))
                 .mailboxId(folderId);
             index.add(session, folder, builder.build(messageId)).block();
             mailboxIds.add(folderId);
-            labelledMessages.add(messageId);
+            if (labelled) {
+                labelledMessages.add(messageId);
+            }
         }
 
         SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet("label1"));
