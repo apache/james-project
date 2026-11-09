@@ -55,8 +55,6 @@ import org.apache.james.modules.event.JMAPEventBusModule;
 import org.apache.james.modules.event.MailboxEventBusModule;
 import org.apache.james.modules.events.PostgresDeadLetterModule;
 import org.apache.james.modules.mailbox.DefaultEventModule;
-import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
-import org.apache.james.modules.mailbox.LuceneVarStoreDirectoryModule;
 import org.apache.james.modules.mailbox.PostgresDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.PostgresMailboxModule;
 import org.apache.james.modules.mailbox.PostgresMemoryContentDeletionEventBusModule;
@@ -192,9 +190,11 @@ public class PostgresJamesServerMain implements JamesServerMain {
     }
 
     public static GuiceJamesServer createServer(PostgresJamesConfiguration configuration) {
+        SearchConfiguration searchConfiguration = configuration.searchConfiguration();
+
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(POSTGRES_MODULE_AGGREGATE.apply(configuration))
-            .combineWith(chooseSearchModules(configuration.searchConfiguration()))
+            .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
             .combineWith(chooseUsersRepositoryModule(configuration))
             .combineWith(chooseBlobStoreModules(configuration))
             .combineWith(chooseDeletedMessageVaultModules(configuration.getDeletedMessageVaultConfiguration()))
@@ -202,16 +202,6 @@ public class PostgresJamesServerMain implements JamesServerMain {
             .overrideWith(chooseJmapModules(configuration))
             .overrideWith(chooseTaskManagerModules(configuration))
             .overrideWith(chooseDropListsModule(configuration));
-    }
-
-    private static List<Module> chooseSearchModules(SearchConfiguration searchConfiguration) {
-        if (searchConfiguration.getImplementation() == SearchConfiguration.Implementation.Lucene) {
-            return List.of(
-                Modules.override(new LuceneSearchMailboxModule()).with(new LuceneVarStoreDirectoryModule()),
-                new ReIndexingModule(),
-                new SearchModuleChooser.ScanningQuotaSearchModule());
-        }
-        return SearchModuleChooser.chooseModules(searchConfiguration);
     }
 
     private static List<Module> chooseUsersRepositoryModule(PostgresJamesConfiguration configuration) {

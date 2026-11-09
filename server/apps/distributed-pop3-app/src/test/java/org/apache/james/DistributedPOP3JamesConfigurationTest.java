@@ -21,13 +21,18 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.server.core.configuration.Configuration.ConfigurationPath;
 import org.junit.jupiter.api.Test;
 
-class SearchModuleChooserTest {
+class DistributedPOP3JamesConfigurationTest {
     @Test
-    void chooseModulesShouldRejectLucene() {
-        assertThatThrownBy(() -> SearchModuleChooser.chooseModules(SearchConfiguration.lucene()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("only supported by the Postgres app");
+    void buildShouldThrowWhenLuceneSearch() {
+        assertThatThrownBy(() -> DistributedPOP3JamesConfiguration.builder()
+                .workingDirectory("/path")
+                .configurationPath(new ConfigurationPath("file://myconf/"))
+                .searchConfiguration(SearchConfiguration.lucene())
+                .build())
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Lucene search is not supported by distributed-pop3-app: its index is local to each node.");
     }
 }

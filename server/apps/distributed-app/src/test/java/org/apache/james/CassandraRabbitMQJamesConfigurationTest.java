@@ -37,6 +37,17 @@ class CassandraRabbitMQJamesConfigurationTest {
     }
 
     @Test
+    void buildShouldThrowWhenLuceneSearch() {
+        assertThatThrownBy(() -> CassandraRabbitMQJamesConfiguration.builder()
+                .workingDirectory("/path")
+                .configurationPath(new ConfigurationPath("file://myconf/"))
+                .searchConfiguration(SearchConfiguration.lucene())
+                .build())
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Lucene search is not supported by distributed-app: its index is local to each node.");
+    }
+
+    @Test
     void useWorkingDirectoryEnvPropertyShouldThrowWhenEnvVariableIsUnspecified() {
         assertThatThrownBy(() ->
             CassandraRabbitMQJamesConfiguration.builder()
