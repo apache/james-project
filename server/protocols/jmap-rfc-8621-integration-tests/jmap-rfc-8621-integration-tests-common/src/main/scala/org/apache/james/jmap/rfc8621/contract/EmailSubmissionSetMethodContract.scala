@@ -2459,4 +2459,56 @@ trait EmailSubmissionSetMethodContract {
            |  "hasAttachment": true
            |}]""".stripMargin)
   }
+
+  @Test
+  def setShouldAcceptANonAsciiDisplayNameInFromMimeField(server: GuiceJamesServer): Unit = {
+    val message: String = s"From: Éléonore <${BOB.asString}>\r\n" +
+      s"To: ${ANDRE.asString}\r\n" +
+      "Subject: test\r\n" +
+      "\r\n" +
+      "testmail\r\n"
+
+    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+      .build(message))
+      .getMessageId
+
+    val requestBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "create": {
+         |         "k1490": {
+         |           "emailId": "${messageId.serialize}",
+         |           "envelope": {
+         |             "mailFrom": {"email": "${BOB.asString}"},
+         |             "rcptTo": [{"email": "${ANDRE.asString}"}]
+         |           }
+         |         }
+         |    }
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestBob)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      // Ids are randomly generated, and not stored, let's ignore it
+      .whenIgnoringPaths("methodResponses[0][1].created.k1490")
+      .inPath("methodResponses[0][1].created")
+      .isEqualTo("""{"k1490": {}}""")
+  }
+
 }
