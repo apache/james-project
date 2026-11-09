@@ -686,26 +686,32 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 }
             }
 
-            BooleanQuery.Builder flaggedMessages = new BooleanQuery.Builder();
-            for (Map.Entry<MailboxId, Set<MessageUid>> entry : uidsByMailbox.entrySet()) {
-                if (!entry.getValue().isEmpty()) {
-                    List<MessageRange> ranges = MessageRange.toRanges(new ArrayList<>(entry.getValue()));
-                    UidRange[] nRanges = new UidRange[ranges.size()];
-                    for (int i = 0; i < ranges.size(); i++) {
-                        MessageRange range = ranges.get(i);
-                        nRanges[i] = new UidRange(range.getUidFrom(), range.getUidTo());
-                    }
-                    flaggedMessages.add(new BooleanQuery.Builder()
-                        .add(mailboxQuery(entry.getKey()), BooleanClause.Occur.MUST)
-                        .add(createUidQuery((UidCriterion) SearchQuery.uid(nRanges)), BooleanClause.Occur.MUST)
-                        .build(), BooleanClause.Occur.SHOULD);
-                }
-            }
-            // An empty BooleanQuery matches no document
-            return flaggedMessages.build();
+            return flaggedMessagesQuery(uidsByMailbox);
         } catch (IOException e) {
             throw new MailboxException("Unable to search mailboxes " + mailboxIds, e);
         }
+    }
+
+    private Query flaggedMessagesQuery(Map<MailboxId, Set<MessageUid>> uidsByMailbox) {
+        BooleanQuery.Builder flaggedMessages = new BooleanQuery.Builder();
+        uidsByMailbox.forEach((mailboxId, uids) -> {
+            if (!uids.isEmpty()) {
+                flaggedMessages.add(messagesQuery(mailboxId, uids), BooleanClause.Occur.SHOULD);
+            }
+        });
+        // An empty BooleanQuery matches no document
+        return flaggedMessages.build();
+    }
+
+    private Query messagesQuery(MailboxId mailboxId, Set<MessageUid> uids) {
+        UidRange[] uidRanges = MessageRange.toRanges(new ArrayList<>(uids))
+            .stream()
+            .map(range -> new UidRange(range.getUidFrom(), range.getUidTo()))
+            .toArray(UidRange[]::new);
+        return new BooleanQuery.Builder()
+            .add(mailboxQuery(mailboxId), BooleanClause.Occur.MUST)
+            .add(createUidQuery((UidCriterion) SearchQuery.uid(uidRanges)), BooleanClause.Occur.MUST)
+            .build();
     }
 
     private Sort createSort(List<SearchQuery.Sort> sorts) {
