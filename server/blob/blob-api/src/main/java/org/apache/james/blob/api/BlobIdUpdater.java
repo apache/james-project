@@ -28,15 +28,17 @@ import reactor.core.publisher.Mono;
  * Replaces references without exposing the storage backend's metadata model.
  *
  * <p>Use a prepared updater for one pass over a completed generation. Preparation must finish before replacing
- * references. Callers must serialize passes affecting the same generation and must not delete an old object until
- * replacement completes successfully. No new authoritative references into that generation may be created during
- * the pass. The updater itself never writes or deletes blob payloads.</p>
+ * references. Callers must serialize passes affecting the same generation. Before deleting an old object, callers
+ * must wait for replacement to complete successfully and ensure no references outside the updater's scope still
+ * point to it. No new authoritative references into that generation may be created during the pass.
+ * The updater itself never writes or deletes blob payloads.</p>
  */
 public interface BlobIdUpdater {
     interface Factory {
         /**
-         * Scans authoritative metadata once, observing every reference (duplicates are allowed) and indexing
-         * references matching the predicate. Observers must be non-blocking. Each subscription prepares a new updater.
+         * Scans the metadata managed by this updater once, observing each reference in that scope (duplicates are
+         * allowed) and indexing references matching the predicate. Other stores may reference the same blobs.
+         * Observers must be non-blocking. Each subscription prepares a new updater.
          */
         Mono<BlobIdUpdater> forPredicate(Predicate<BlobId> generationCondition, Consumer<BlobId> referencedBlobIdObserver);
     }
