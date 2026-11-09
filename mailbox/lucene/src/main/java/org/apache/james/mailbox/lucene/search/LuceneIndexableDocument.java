@@ -140,7 +140,7 @@ public class LuceneIndexableDocument {
         doc.add(new NumericDocValuesField(SIZE_FIELD, message.getFullContentOctets()));
 
         // create a unique key for the document which can be used later on updates to find the document
-        doc.add(new StringField(ID_FIELD, message.getMailboxId().serialize().toUpperCase(Locale.US) + "-" + message.getUid().asLong(), Field.Store.YES));
+        doc.add(new StringField(ID_FIELD, createMessageIdField(message.getMailboxId(), message.getUid().asLong()), Field.Store.YES));
 
         Optional.ofNullable(SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message))
             .ifPresent(serializedMessageId -> doc.add(new StringField(MESSAGE_ID_FIELD, serializedMessageId, Field.Store.YES)));
@@ -248,6 +248,10 @@ public class LuceneIndexableDocument {
         }
 
         return doc;
+    }
+
+    public static String createMessageIdField(MailboxId mailboxId, long uid) {
+        return mailboxId.serialize().toUpperCase(Locale.US) + "-" + uid;
     }
 
     public static String createFlagsIdField(MailboxId mailboxId, MessageUid messageUid) {

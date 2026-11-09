@@ -44,6 +44,7 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchOptions;
@@ -283,6 +284,29 @@ class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flag.SEEN), SearchQuery.headerContains("Subject", "customerA"));
         Stream<MessageUid> result = index.search(session, archive, query).toStream();
         assertThat(result).containsExactly(MessageUid.of(14));
+    }
+
+    @Test
+    void flagSearchShouldMatchAcrossManyMailboxes() throws Exception {
+        ImmutableList.Builder<MailboxId> mailboxIds = ImmutableList.builder();
+        ImmutableList.Builder<MessageId> labelledMessages = ImmutableList.builder();
+        for (int i = 0; i < 1100; i++) {
+            TestId folderId = TestId.of(1000 + i);
+            Mailbox folder = new Mailbox(MailboxPath.forUser(BOB, "folder" + i), UidValidity.of(26), folderId);
+            MessageId messageId = factory.generate();
+            MessageBuilder builder = new MessageBuilder()
+                .header("Subject", "folder " + i)
+                .flags(new Flags("label1"))
+                .uid(MessageUid.of(1))
+                .mailboxId(folderId);
+            index.add(session, folder, builder.build(messageId)).block();
+            mailboxIds.add(folderId);
+            labelledMessages.add(messageId);
+        }
+
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet("label1"));
+        Stream<MessageId> result = index.search(session, mailboxIds.build(), query, SearchOptions.limit(Limit.limit(2000))).toStream();
+        assertThat(result).containsExactlyInAnyOrderElementsOf(labelledMessages.build());
     }
 
     @Test
