@@ -1,6 +1,6 @@
 = Distributed James Server &mdash; Search configuration
 :navtitle: Search configuration
-:pages-path: distributed
+:no-lucene:
 
 :sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration
 include::partial$configure/search.adoc[]
