@@ -31,6 +31,9 @@ import jakarta.mail.internet.MimeUtility;
 
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
+import org.apache.james.mime4j.stream.ParserCursor;
+import org.apache.james.mime4j.util.ByteSequence;
+import org.apache.james.mime4j.util.ContentUtil;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -77,7 +80,10 @@ public class AddressFields {
 
     private static Stream<String> mime4jMailboxes(String field) {
         try {
-            return LenientAddressParser.DEFAULT.parseAddressList(field)
+            // LenientAddressParser::parseAddressList(CharSequence) stops after field.length() bytes of the encoded
+            // field, leaving the end of a field holding non-ASCII characters unread
+            ByteSequence raw = ContentUtil.encode(field);
+            return LenientAddressParser.DEFAULT.parseAddressList(raw, new ParserCursor(0, raw.length()))
                 .flatten()
                 .stream()
                 .map(Mailbox::getAddress);

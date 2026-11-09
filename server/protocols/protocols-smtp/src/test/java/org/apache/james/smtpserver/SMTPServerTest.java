@@ -1725,6 +1725,76 @@ public class SMTPServerTest {
     }
 
     @Test
+    public void testAuthShouldAcceptANonAsciiDisplayNameInTheFromHeader() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient(UTF_8.name());
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", "localhost");
+
+        testSystem.usersRepository.addUser(Username.of(USER_LOCAL_DOMAIN), "pwd");
+
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + USER_LOCAL_DOMAIN + "\0pwd\0").getBytes(UTF_8)));
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
+
+        smtpProtocol.setSender(USER_LOCAL_DOMAIN);
+        smtpProtocol.addRecipient("mail@sample.com");
+        smtpProtocol.sendShortMessageData("From: Éléonore <" + USER_LOCAL_DOMAIN + ">\r\nSubject: test\r\n\r\nTest body\r\n");
+
+        assertThat(smtpProtocol.getReplyCode())
+            .as("mail accepted")
+            .isEqualTo(250);
+
+        smtpProtocol.quit();
+
+        assertThat(testSystem.queue.getLastMail())
+            .as("mail received by mail server")
+            .isNotNull();
+    }
+
+    @Test
+    public void testAuthShouldRejectAnotherAddressAfterANonAsciiDisplayNameInTheFromHeader() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient(UTF_8.name());
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", "localhost");
+
+        testSystem.usersRepository.addUser(Username.of(USER_LOCAL_DOMAIN), "pwd");
+
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + USER_LOCAL_DOMAIN + "\0pwd\0").getBytes(UTF_8)));
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
+
+        smtpProtocol.setSender(USER_LOCAL_DOMAIN);
+        smtpProtocol.addRecipient("mail@sample.com");
+        smtpProtocol.sendShortMessageData("From: ầầầầầầầầầầ <" + USER_LOCAL_DOMAIN + "> other@example.local\r\nSubject: test\r\n\r\nTest body\r\n");
+
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected error")
+            .isEqualTo(503);
+
+        smtpProtocol.quit();
+
+        assertThat(testSystem.queue.getLastMail())
+            .as("mail received by mail server")
+            .isNull();
+    }
+
+    @Test
     public void testAuthWithEmptySender() throws Exception {
         smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
         smtpConfiguration.setAuthorizingAnnounce();
