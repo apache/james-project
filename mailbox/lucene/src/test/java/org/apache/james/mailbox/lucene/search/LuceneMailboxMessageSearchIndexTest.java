@@ -247,6 +247,45 @@ class LuceneMailboxMessageSearchIndexTest {
     }
 
     @Test
+    void flagSearchShouldMatchWhenFlaggedUidsAreScattered() throws Exception {
+        TestId scatteredId = TestId.of(14);
+        Mailbox scattered = new Mailbox(MailboxPath.forUser(BOB, "scattered"), UidValidity.of(24), scatteredId);
+        for (int i = 1; i <= 2050; i++) {
+            MessageBuilder builder = new MessageBuilder()
+                .header("Subject", "scattered " + i)
+                .flags(i % 2 == 1 ? new Flags(Flag.SEEN) : new Flags())
+                .uid(MessageUid.of(i))
+                .mailboxId(scatteredId);
+            index.add(session, scattered, builder.build(factory.generate())).block();
+        }
+
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsUnSet(Flag.SEEN));
+        Stream<MessageUid> result = index.search(session, scattered, query).toStream();
+        assertThat(result).containsExactlyElementsOf(IntStream.rangeClosed(1, 1025)
+            .mapToObj(i -> MessageUid.of(2L * i))
+            .toList());
+    }
+
+    @Test
+    void flagSearchShouldNotBeTruncatedByMaxQueryResults() throws Exception {
+        TestId archiveId = TestId.of(15);
+        Mailbox archive = new Mailbox(MailboxPath.forUser(BOB, "archive"), UidValidity.of(25), archiveId);
+        for (int i = 1; i <= 15; i++) {
+            MessageBuilder builder = new MessageBuilder()
+                .header("Subject", i == 14 ? "customerA" : "other " + i)
+                .flags(new Flags(Flag.SEEN))
+                .uid(MessageUid.of(i))
+                .mailboxId(archiveId);
+            index.add(session, archive, builder.build(factory.generate())).block();
+        }
+        index.setMaxQueryResults(10);
+
+        SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flag.SEEN), SearchQuery.headerContains("Subject", "customerA"));
+        Stream<MessageUid> result = index.search(session, archive, query).toStream();
+        assertThat(result).containsExactly(MessageUid.of(14));
+    }
+
+    @Test
     void bodySearchShouldMatchPhraseInBody() throws Exception {
         SearchQuery query = SearchQuery.of(SearchQuery.bodyContains(CUSTARD));
         Stream<MessageUid> result = index.search(session, mailbox3, query).toStream();
