@@ -38,6 +38,7 @@ import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.vault.VaultConfiguration;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 
 public class DistributedPOP3JamesConfiguration implements Configuration {
     public static class Builder {
@@ -127,6 +128,7 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
 
             SearchConfiguration searchConfiguration = this.searchConfiguration.orElseGet(Throwing.supplier(
                 () -> SearchConfiguration.parse(propertiesProvider)));
+            Preconditions.checkState(searchConfiguration.getImplementation() != SearchConfiguration.Implementation.Lucene, "Lucene search is not supported by distributed-pop3-app: its index is local to each node.");
 
             FileConfigurationProvider configurationProvider = new FileConfigurationProvider(fileSystem, Basic.builder()
                 .configurationPath(configurationPath)
