@@ -343,6 +343,8 @@
                             <!-- Prevents Logjam (CVE-2015-4000) -->
                             <jvmFlag>-Djdk.tls.ephemeralDHKeySize=2048</jvmFlag>
                             <jvmFlag>-Dextra.props=/root/conf/jvm.properties</jvmFlag>
+                            <!-- Keeps the Lucene search index in the /root/var volume -->
+                            <jvmFlag>-Djames.lucene.index.folder=var/store/lucene</jvmFlag>
                         </jvmFlags>
                         <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
                         <volumes>

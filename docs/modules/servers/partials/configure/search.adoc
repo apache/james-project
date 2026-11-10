@@ -10,7 +10,8 @@ This configuration helps you configure the components used to back search.
  - *scanning* : Do not index documents and perform scanning search, scrolling mailbox for matching contents.
  This implementation can have a prohibitive cost.
 ifdef::lucene-search[]
- - *lucene* : Index and search mails into an embedded Lucene index under `var/store/lucene`. Single node only.
+ - *lucene* : Index and search mails into an embedded Lucene index, in the folder set by the `james.lucene.index.folder`
+ JVM property (`var/store/lucene` in the Docker image), else in the working directory. Single node only.
  Switching to it on existing mails starts with an empty index: run a full re-indexing.
 endif::[]
  - *opensearch-disabled* : Saves events to index into event dead letter. Make searches fails.

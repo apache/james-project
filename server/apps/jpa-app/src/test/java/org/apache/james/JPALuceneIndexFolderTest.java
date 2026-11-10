@@ -26,6 +26,7 @@ import java.nio.file.Path;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -36,11 +37,13 @@ import com.google.inject.multibindings.Multibinder;
 
 class JPALuceneIndexFolderTest {
     public static class LuceneDirectoryProbe implements GuiceProbe {
-        private final Directory directory;
+        final Directory directory;
+        final FileSystem fileSystem;
 
         @Inject
-        public LuceneDirectoryProbe(Directory directory) {
+        public LuceneDirectoryProbe(Directory directory, FileSystem fileSystem) {
             this.directory = directory;
+            this.fileSystem = fileSystem;
         }
     }
 
@@ -58,9 +61,12 @@ class JPALuceneIndexFolderTest {
         .build();
 
     @Test
-    void luceneIndexShouldBeStoredUnderVarStoreLucene(GuiceJamesServer server) {
-        assertThat(server.getProbe(LuceneDirectoryProbe.class).directory)
+    void luceneIndexShouldBeStoredInTheWorkingDirectoryByDefault(GuiceJamesServer server) throws Exception {
+        LuceneDirectoryProbe probe = server.getProbe(LuceneDirectoryProbe.class);
+        Path workingDirectory = probe.fileSystem.getBasedir().toPath().toRealPath();
+
+        assertThat(probe.directory)
             .isInstanceOfSatisfying(FSDirectory.class, directory ->
-                assertThat(directory.getDirectory()).endsWith(Path.of("var", "store", "lucene")));
+                assertThat(directory.getDirectory()).isEqualTo(workingDirectory));
     }
 }

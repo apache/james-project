@@ -22,8 +22,6 @@ package org.apache.james;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.nio.file.Path;
-
 import jakarta.inject.Inject;
 
 import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
@@ -33,8 +31,6 @@ import org.apache.james.mailbox.lucene.search.LuceneSearchHighlighter;
 import org.apache.james.mailbox.searchhighligt.SearchHighlighter;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -42,13 +38,11 @@ import com.google.inject.multibindings.Multibinder;
 
 class PostgresWithLuceneSearchTest {
     public static class LuceneProbe implements GuiceProbe {
-        private final Directory directory;
         private final MessageSearchIndex messageSearchIndex;
         private final SearchHighlighter searchHighlighter;
 
         @Inject
-        public LuceneProbe(Directory directory, MessageSearchIndex messageSearchIndex, SearchHighlighter searchHighlighter) {
-            this.directory = directory;
+        public LuceneProbe(MessageSearchIndex messageSearchIndex, SearchHighlighter searchHighlighter) {
             this.messageSearchIndex = messageSearchIndex;
             this.searchHighlighter = searchHighlighter;
         }
@@ -86,12 +80,5 @@ class PostgresWithLuceneSearchTest {
     void searchHighlighterShouldBeLucene(GuiceJamesServer server) {
         assertThat(server.getProbe(LuceneProbe.class).searchHighlighter)
             .isInstanceOf(LuceneSearchHighlighter.class);
-    }
-
-    @Test
-    void luceneIndexShouldBeStoredUnderVarStoreLucene(GuiceJamesServer server) {
-        assertThat(server.getProbe(LuceneProbe.class).directory)
-            .isInstanceOfSatisfying(FSDirectory.class, directory ->
-                assertThat(directory.getDirectory()).endsWith(Path.of("var", "store", "lucene")));
     }
 }

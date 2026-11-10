@@ -103,6 +103,19 @@ ifdef::lucene-in-var[]
 projection: losing it costs a re-indexing, not your emails.
 endif::[]
 
+ifdef::lucene-at-root[]
+== The Lucene index
+
+The xref:{xref-base}/architecture/index.adoc[Lucene] full text index is *not* written under `var`: its segment
+files - `segments_N`, `_0.cfs`, `write.lock`... - are created directly in the working directory. This is
+surprising, and worth knowing before you mistake them for junk and delete them. To keep them in a dedicated folder,
+for instance `var/store/lucene` in a volume, set the `james.lucene.index.folder` JVM property to that folder, relative
+to the working directory.
+
+The index is a derived projection: losing it costs a
+xref:{xref-base}/operate/cli.adoc#_re_indexing[re-indexing], not your emails.
+endif::[]
+
 ifdef::sieve-file-repository[]
 == sieve/
 
