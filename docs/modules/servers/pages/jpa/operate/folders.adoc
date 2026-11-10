@@ -6,7 +6,7 @@
 :server-name: JPA James server
 :backend-name: the relational database
 :rrt-error-repository:
-:lucene-at-root:
+:lucene-in-var:
 
 include::partial$jpa/deprecated.adoc[]
 
