@@ -21,6 +21,7 @@ package org.apache.james;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.EnumSet;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -161,7 +162,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                 () -> BlobStoreConfiguration.parse(propertiesProvider)));
 
             SearchConfiguration searchConfiguration = this.searchConfiguration.orElseGet(Throwing.supplier(
-                () -> SearchConfiguration.parse(propertiesProvider)));
+                () -> SearchConfiguration.parse(propertiesProvider, EnumSet.complementOf(EnumSet.of(SearchConfiguration.Implementation.Lucene)))));
             Preconditions.checkState(searchConfiguration.getImplementation() != SearchConfiguration.Implementation.Lucene, "Lucene search is not supported by distributed-app: its index is local to each node.");
 
             FileConfigurationProvider configurationProvider = new FileConfigurationProvider(fileSystem, Basic.builder()

@@ -895,7 +895,9 @@ class LuceneMailboxMessageSearchIndexTest {
             .map(uid -> Thread.currentThread().getName())
             .blockFirst();
 
-        assertThat(searchThread).isNotEqualTo(Thread.currentThread().getName());
+        assertThat(searchThread)
+            .isNotNull()
+            .isNotEqualTo(Thread.currentThread().getName());
     }
 
     @Test
@@ -906,7 +908,9 @@ class LuceneMailboxMessageSearchIndexTest {
             .map(messageId -> Thread.currentThread().getName())
             .blockFirst();
 
-        assertThat(searchThread).isNotEqualTo(Thread.currentThread().getName());
+        assertThat(searchThread)
+            .isNotNull()
+            .isNotEqualTo(Thread.currentThread().getName());
     }
 
     @Test
@@ -920,7 +924,9 @@ class LuceneMailboxMessageSearchIndexTest {
             .map(messageId -> Thread.currentThread().getName())
             .blockFirst();
 
-        assertThat(searchThread).isNotEqualTo(Thread.currentThread().getName());
+        assertThat(searchThread)
+            .isNotNull()
+            .isNotEqualTo(Thread.currentThread().getName());
     }
 
     @Test
