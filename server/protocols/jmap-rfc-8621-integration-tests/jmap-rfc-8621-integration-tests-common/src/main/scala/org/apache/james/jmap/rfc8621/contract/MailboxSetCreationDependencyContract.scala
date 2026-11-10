@@ -20,7 +20,7 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
-import io.restassured.RestAssured.given
+import io.restassured.RestAssured.`given`
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.Username
 import org.apache.james.jmap.rfc8621.contract.Fixture.ACCEPT_RFC8621_VERSION_HEADER
@@ -37,11 +37,11 @@ trait MailboxSetCreationDependencyContract {
   def bobAccountId: String
 
   private def execute(request: String): JsValue = {
-    Json.parse(given()
+    Json.parse(`given`()
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
       .when().post()
-      .then().statusCode(200)
+      .`then`().statusCode(200)
       .extract().asString())
   }
 
