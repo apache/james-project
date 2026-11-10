@@ -22,8 +22,10 @@ package org.apache.james.smtpserver;
 import static org.apache.james.protocols.smtp.SMTPRetCode.AUTH_REQUIRED;
 import static org.apache.james.protocols.smtp.SMTPRetCode.LOCAL_ERROR;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -46,12 +48,10 @@ import org.apache.james.jdkim.mailets.DKIMVerifier;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
-import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -107,37 +107,56 @@ public class DKIMHook implements JamesMessageHook {
                 .orElse(false);
         }
 
+        /**
+         * True when any mailbox of any From: field is in the domain. A From: that does not parse is checked when
+         * its raw value mentions the domain: an attacker should not skip the check by malforming the field.
+         */
         static DKIMCheckNeeded onlyForHeaderFromDomain(Domain domain) {
             return mail -> {
                 try {
-                    return StreamUtils.ofNullable(mail.getMessage().getFrom())
-                        .distinct()
-                        .flatMap(Throwing.function(DKIMCheckNeeded::parseMailAddress).sneakyThrow())
-                        .findFirst()
-                        .map(MailAddress::getDomain)
-                        .map(domain::equals)
-                        .orElse(false);
+                    Address[] from = mail.getMessage().getFrom();
+                    return from != null && Arrays.stream(from)
+                        .anyMatch(address -> isInDomain(address, domain));
                 } catch (MessagingException me) {
-                    try {
-                        LOGGER.info("Unable to parse the \"FROM\" header {}; ignoring.", mail.getMessage().getHeader("From"));
-                    } catch (MessagingException e) {
-                        LOGGER.info("Unable to parse the \"FROM\" header; ignoring.");
-                    }
+                    String[] rawFrom = rawFrom(mail);
+                    LOGGER.info("Unable to parse the \"FROM\" header {}; checking DKIM if it mentions {}.", rawFrom, domain.asString());
+                    return rawFrom != null && Arrays.stream(rawFrom)
+                        .anyMatch(value -> mentions(value, domain));
                 }
-                return false;
             };
         }
 
-        private static Stream<MailAddress> parseMailAddress(Address from) throws MessagingException {
-            if (from instanceof InternetAddress internetAddress) {
+        private static boolean isInDomain(Address from, Domain domain) {
+            if (!(from instanceof InternetAddress internetAddress)) {
+                return false;
+            }
+            if (internetAddress.isGroup()) {
                 try {
-                    return Stream.of(new MailAddress(internetAddress.getAddress()));
+                    InternetAddress[] members = internetAddress.getGroup(false);
+                    return members != null && Arrays.stream(members)
+                        .anyMatch(member -> isInDomain(member, domain));
                 } catch (AddressException e) {
-                    // Can happen when InternetAddress.getAddress() returns a malformed value (e.g. "addr>")
-                    throw new MessagingException("Failed parsing mail address", e);
+                    return mentions(internetAddress.getAddress(), domain);
                 }
             }
-            return Stream.empty();
+            try {
+                return new MailAddress(internetAddress.getAddress()).getDomain().equals(domain);
+            } catch (AddressException e) {
+                // Can happen when InternetAddress.getAddress() returns a malformed value (e.g. "addr>")
+                return mentions(internetAddress.getAddress(), domain);
+            }
+        }
+
+        private static boolean mentions(String value, Domain domain) {
+            return value != null && value.toLowerCase(Locale.US).contains("@" + domain.asString().toLowerCase(Locale.US));
+        }
+
+        private static String[] rawFrom(Mail mail) {
+            try {
+                return mail.getMessage().getHeader("From");
+            } catch (MessagingException e) {
+                return null;
+            }
         }
 
         DKIMCheckNeeded ALL = any -> true;
