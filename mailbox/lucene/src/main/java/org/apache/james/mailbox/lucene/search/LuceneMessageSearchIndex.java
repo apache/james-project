@@ -338,8 +338,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     public Flux<MessageUid> doSearch(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
 
-        return Mono.fromCallable(() -> searchMultimap(ImmutableList.of(mailbox.getMailboxId()), searchQuery))
-            .flatMapMany(Flux::fromIterable)
+        return Flux.defer(Throwing.supplier(() -> Flux.fromIterable(searchMultimap(ImmutableList.of(mailbox.getMailboxId()), searchQuery))).sneakyThrow())
             .map(SearchResult::getMessageUid)
             .subscribeOn(Schedulers.boundedElastic());
     }
