@@ -19,8 +19,13 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.CoreDataModule;
+import org.apache.james.util.date.DefaultZonedDateTimeProvider;
+import org.apache.james.util.date.ZonedDateTimeProvider;
+import org.apache.james.vacation.api.NotificationRegistry;
+import org.apache.james.vacation.memory.MemoryNotificationRegistry;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
 public class JPADataModule extends AbstractModule {
     @Override
@@ -29,5 +34,10 @@ public class JPADataModule extends AbstractModule {
         install(new JPADomainListModule());
         install(new JPARecipientRewriteTableModule());
         install(new JPAMailRepositoryModule());
+
+        bind(DefaultZonedDateTimeProvider.class).in(Scopes.SINGLETON);
+        bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
+        bind(MemoryNotificationRegistry.class).in(Scopes.SINGLETON);
+        bind(NotificationRegistry.class).to(MemoryNotificationRegistry.class);
     }
 }

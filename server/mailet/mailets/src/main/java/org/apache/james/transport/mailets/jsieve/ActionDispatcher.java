@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets.jsieve;
 
 import jakarta.mail.MessagingException;
 
+import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionDiscard;
 import org.apache.jsieve.mail.ActionFileInto;
@@ -29,6 +30,7 @@ import org.apache.jsieve.mail.ActionRedirect;
 import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.optional.ActionVacation;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.AutomaticallySentMailDetector;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -43,13 +45,17 @@ public class ActionDispatcher {
      * handle the Action.
      * {@code <Action, MailAction>}
      */
-    private final ImmutableMap<Class<?>, MailAction> mailActions = ImmutableMap.of(
+    private final ImmutableMap<Class<?>, MailAction> mailActions;
+
+    public ActionDispatcher(NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector) {
+        this.mailActions = ImmutableMap.of(
             ActionFileInto.class, new FileIntoAction(),
             ActionKeep.class, new KeepAction(),
             ActionRedirect.class, new RedirectAction(),
             ActionReject.class, new RejectAction(),
-            ActionVacation.class, new VacationAction(),
+            ActionVacation.class, new VacationAction(notificationRegistry, automaticallySentMailDetector),
             ActionDiscard.class, new DiscardAction());
+    }
 
     /**
      * Method execute executes the passed Action by invoking the method mapped by the

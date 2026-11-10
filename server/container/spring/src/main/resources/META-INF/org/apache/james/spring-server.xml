@@ -283,6 +283,13 @@
     <bean id="reindexermanagement" class="org.apache.james.adapter.mailbox.ReIndexerManagement"/>
     <bean id="sievemanagerbean" class="org.apache.james.sieverepository.lib.SieveRepositoryManagement"/>
 
+    <!-- Used by the Sieve mailet to answer a given sender once per vacation interval -->
+    <bean id="zonedDateTimeProvider" class="org.apache.james.util.date.DefaultZonedDateTimeProvider"/>
+    <bean id="notificationRegistry" class="org.apache.james.vacation.memory.MemoryNotificationRegistry">
+        <constructor-arg index="0" ref="zonedDateTimeProvider"/>
+    </bean>
+    <bean id="automaticallySentMailDetector" class="org.apache.james.mailetcontainer.AutomaticallySentMailDetectorImpl"/>
+
 
     <bean id="hostname" class="org.apache.james.task.Hostname" factory-method="fromLocalHostname" />
     <bean id="taskManager" class="org.apache.james.task.MemoryTaskManager">
