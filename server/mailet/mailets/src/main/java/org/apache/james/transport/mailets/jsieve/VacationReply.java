@@ -85,6 +85,8 @@ public class VacationReply {
 
             MimeMessage reply = (MimeMessage) originalMail.getMessage().reply(false);
             reply.setSubject(generateNotificationSubject());
+            // RFC 3834 section 5: lets other responders recognize the reply and not answer it
+            reply.setHeader("Auto-Submitted", "auto-replied");
             reply.setContent(generateNotificationContent());
 
             return new VacationReply(retrieveOriginalSender(), ImmutableList.of(originalMail.getMaybeSender().get()), reply);
