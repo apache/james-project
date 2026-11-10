@@ -30,6 +30,7 @@ import java.util.Optional;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
@@ -510,11 +511,48 @@ class SieveIntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"alice", "a@b, <"})
-    void rejectShouldNotDeliverWhenFromIsNotUsable(String from) throws Exception {
+    void rejectShouldAnswerTheEnvelopeSenderWhenFromIsNotUsable(String from) throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
 
         FakeMail mail = createMail();
         mail.getMessage().setHeader("From", from);
+        testee.service(mail);
+
+        assertThat(fakeMailContext.getSentMails())
+            .extracting(FakeMailContext.SentMail::getRecipients)
+            .containsExactly(ImmutableList.of(new MailAddress("sender@any.com")));
+        assertThat(mail.getRecipients()).isEmpty();
+    }
+
+    @Test
+    void rejectShouldOnlyAnswerTheEnvelopeSender() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
+
+        FakeMail mail = createMail();
+        mail.getMessage().setHeader("From", "from@other.com");
+        mail.getMessage().setHeader("Reply-To", "a@x.com, b@y.com, c@z.com");
+        testee.service(mail);
+
+        assertThat(fakeMailContext.getSentMails())
+            .extracting(FakeMailContext.SentMail::getRecipients)
+            .containsExactly(ImmutableList.of(new MailAddress("sender@any.com")));
+        assertThat(fakeMailContext.getSentMails().get(0).getMsg().getHeader("To"))
+            .containsExactly("sender@any.com");
+        assertThat(mail.getRecipients()).isEmpty();
+    }
+
+    @Test
+    void rejectShouldNotAnswerANullSender() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
+
+        FakeMail createdMail = createMail();
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .mimeMessage(createdMail.getMessage())
+            .state(Mail.DEFAULT)
+            .recipient(RECEIVER_DOMAIN_COM)
+            .sender(MaybeSender.nullSender())
+            .build();
         testee.service(mail);
 
         assertThat(fakeMailContext.getSentMails()).isEmpty();
@@ -522,15 +560,19 @@ class SieveIntegrationTest {
     }
 
     @Test
-    void rejectShouldStillAnswerTheUsableAddressWhenReplyToHoldsAnUnusableOne() throws Exception {
+    void rejectMDNShouldBeAReplyMarkedAsAutoReplied() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
 
         FakeMail mail = createMail();
-        mail.getMessage().setHeader("Reply-To", "sender@any.com, alice");
+        mail.getMessage().setHeader("Message-ID", "<original@any.com>");
         testee.service(mail);
 
         assertThat(fakeMailContext.getSentMails()).hasSize(1);
-        assertThat(mail.getRecipients()).isEmpty();
+        MimeMessage reply = fakeMailContext.getSentMails().get(0).getMsg();
+        assertThat(reply.getHeader("Auto-Submitted")).containsExactly("auto-replied");
+        assertThat(reply.getSubject()).isEqualTo("Re: Subject");
+        assertThat(reply.getHeader("In-Reply-To")).containsExactly("<original@any.com>");
+        assertThat(reply.getHeader("From")).containsExactly(RECEIVER_DOMAIN_COM);
     }
 
     @Test
