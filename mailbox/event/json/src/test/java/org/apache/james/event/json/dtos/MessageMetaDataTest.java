@@ -23,7 +23,6 @@ import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.DateTimeException;
 import java.time.Instant;
 import java.util.NoSuchElementException;
 
@@ -245,8 +244,8 @@ class MessageMetaDataTest {
         }
 
         @Test
-        void deSerializeShouldThrowWhenInternalDateIsMissingTimeZone() {
-            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+        void deSerializeShouldBeAJsErrorWhenInternalDateIsMissingTimeZone() {
+            assertThat(DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": 42," +
                     "        \"flags\": {" +
@@ -256,8 +255,8 @@ class MessageMetaDataTest {
                     "        \"internalDate\": \"2018-12-14T09:41:51.541\"," +
                     "        \"messageId\": \"42\"" +
                     "}"))
-                    .get())
-                .isInstanceOf(DateTimeException.class);
+                    .isError())
+                .isTrue();
         }
 
         @Test

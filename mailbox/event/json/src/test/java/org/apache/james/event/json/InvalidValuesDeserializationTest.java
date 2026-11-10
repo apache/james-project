@@ -110,4 +110,35 @@ class InvalidValuesDeserializationTest {
         assertThat(EVENT_SERIALIZER.fromJson(json).isError())
             .isTrue();
     }
+
+    @Test
+    void dateWithoutOffsetShouldBeAJsError() {
+        String json = "{\"Expunged\":{" +
+            "\"eventId\":\"" + VALID_EVENT_ID + "\"," +
+            "\"mailboxPath\":{\"namespace\":\"#private\",\"user\":\"bob\",\"name\":\"mailboxName\"}," +
+            "\"mailboxId\":\"18\",\"sessionId\":42,\"user\":\"user\"," +
+            "\"expunged\":{\"123456\":{\"uid\":123456,\"modSeq\":35,\"flags\":{\"systemFlags\":[],\"userFlags\":[]}," +
+            "\"size\":45,\"internalDate\":\"2018-12-14T09:41:51.541\",\"messageId\":\"42\",\"threadId\":\"42\"}}}}";
+
+        assertThat(EVENT_SERIALIZER.fromJson(json).isError())
+            .isTrue();
+    }
+
+    @Test
+    void dateWithoutOffsetShouldBeAJsErrorBeforeMissingFieldsAreReported() {
+        assertThat(EVENT_SERIALIZER.fromJson("{\"Added\":{\"added\":{\"1\":{\"internalDate\":\"2018-12-14T09:41:51.54\"}}}}").isError())
+            .isTrue();
+    }
+
+    @Test
+    void instantReadsShouldReadAnUtcDate() {
+        assertThat(DTO_JSON_SERIALIZE.instantReads().reads(new JsString("2018-12-14T09:41:51.541Z")).isSuccess())
+            .isTrue();
+    }
+
+    @Test
+    void instantReadsShouldGiveAJsErrorOnALocalDate() {
+        assertThat(DTO_JSON_SERIALIZE.instantReads().reads(new JsString("2018-12-14T09:41:51.54")).isError())
+            .isTrue();
+    }
 }
