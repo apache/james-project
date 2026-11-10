@@ -1177,6 +1177,151 @@ class SieveIntegrationTest {
     }
     
     @Test
+    void vacationReplyShouldBeMarkedAsAutoReplied() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        testee.service(createMail());
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+        assertThat(fakeMailContext.getSentMails().get(0).getMsg().getHeader("Auto-Submitted"))
+            .containsExactly("auto-replied");
+    }
+
+    @Test
+    void vacationShouldNotReplyToTheUser() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        FakeMail mail = createMailFrom(new MailAddress(RECEIVER_DOMAIN_COM));
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @Test
+    void vacationShouldNotReplyToAnAddressOfTheUser() throws Exception {
+        prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationDaysAddressesReason.script", DATE_CLOSE, DATE_NEW);
+
+        FakeMail mail = createMailFrom(new MailAddress("benwa@apache.org"));
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"auto-replied", "auto-generated", "AUTO-NOTIFIED", "auto-replied; owner-email=\"a@b.c\"", "auto-other (comment)"})
+    void vacationShouldNotReplyToAutoSubmittedMessages(String autoSubmitted) throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        FakeMail mail = createMail();
+        mail.getMessage().setHeader("Auto-Submitted", autoSubmitted);
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"no", "No", "no (sent by a person)"})
+    void vacationShouldReplyWhenAutoSubmittedIsNo(String autoSubmitted) throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        FakeMail mail = createMail();
+        mail.getMessage().setHeader("Auto-Submitted", autoSubmitted);
+        testee.service(mail);
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"bulk", "JUNK", "list"})
+    void vacationShouldNotReplyToBulkMessages(String precedence) throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        FakeMail mail = createMail();
+        mail.getMessage().setHeader("Precedence", precedence);
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"MAILER-DAEMON@any.com", "owner-list@any.com", "list-request@any.com", "listserv@any.com", "majordomo@any.com"})
+    void vacationShouldNotReplyToAutomatedSenders(String sender) throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        FakeMail mail = createMailFrom(new MailAddress(sender));
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @Test
+    void vacationShouldReplyOnlyOnceToTheSameSenderWithinTheInterval() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+        testee.service(createMail());
+
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+        FakeMail secondMail = createMail();
+        testee.service(secondMail);
+
+        assertThatAttribute(secondMail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+    }
+
+    @Test
+    void vacationShouldReplyToEachSender() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+        testee.service(createMail());
+
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+        FakeMail secondMail = createMailFrom(new MailAddress("other@any.com"));
+        testee.service(secondMail);
+
+        assertThat(fakeMailContext.getSentMails())
+            .extracting(FakeMailContext.SentMail::getRecipients)
+            .containsExactly(ImmutableList.of(new MailAddress("sender@any.com")), ImmutableList.of(new MailAddress("other@any.com")));
+    }
+
+    @Test
+    void vacationShouldReplyAgainToTheSameSenderAfterTheInterval() throws Exception {
+        prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReason.script", DATE_DEFAULT, DATE_DEFAULT);
+        testee.service(createMail());
+
+        prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReason.script", DATE_DEFAULT, DATE_DEFAULT.plusDays(7));
+        testee.service(createMail());
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(2);
+    }
+
+    @Test
+    void twoUsersInVacationShouldNotAnswerEachOtherForever() throws Exception {
+        MailAddress other = new MailAddress("other@domain.com");
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+        when(usersRepository.getUsername(other)).thenReturn(Username.of("other"));
+        when(resourceLocator.get(other)).thenAnswer(any -> new ResourceLocator.UserSieveInformation(DATE_DEFAULT, DATE_DEFAULT,
+            ClassLoader.getSystemResourceAsStream("org/apache/james/transport/mailets/delivery/vacationReason.script")));
+
+        FakeMail mail = createMailFrom(other);
+        testee.service(mail);
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+
+        FakeMailContext.SentMail reply = fakeMailContext.getSentMails().get(0);
+        testee.service(FakeMail.builder()
+            .name("reply")
+            .mimeMessage(reply.getMsg())
+            .state(Mail.DEFAULT)
+            .recipients(ImmutableList.copyOf(reply.getRecipients()))
+            .sender(reply.getSender())
+            .build());
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+    }
+
+    @Test
     void sieveErrorNotificationEmailsShouldNotBeProcessed() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
 
@@ -1204,8 +1349,19 @@ class SieveIntegrationTest {
         return createMailWithSubject("Subject");
     }
 
-    private FakeMail createMailWithSubject(String subject) throws MessagingException, IOException {
+    private FakeMail createMailWithSubject(String subject) throws MessagingException {
         return createMailWithSubjectAndHeaders(subject);
+    }
+
+    private FakeMail createMailFrom(MailAddress sender) throws MessagingException {
+        FakeMail mail = createMailWithSubject("Subject");
+        return FakeMail.builder()
+            .name("name")
+            .mimeMessage(mail.getMessage())
+            .state(Mail.DEFAULT)
+            .recipient(RECEIVER_DOMAIN_COM)
+            .sender(sender)
+            .build();
     }
 
     private FakeMail createMailWithSubjectAndHeaders(String subject, MimeMessageBuilder.Header... headers) throws MessagingException {

@@ -43,7 +43,7 @@ public class ActionDispatcher {
      * handle the Action.
      * <Action, MailAction>
      */
-    private static final ImmutableMap<Class<?>, MailAction> MAIL_ACTIONS = ImmutableMap.of(
+    private final ImmutableMap<Class<?>, MailAction> mailActions = ImmutableMap.of(
             ActionFileInto.class, new FileIntoAction(),
             ActionKeep.class, new KeepAction(),
             ActionRedirect.class, new RedirectAction(),
@@ -61,7 +61,7 @@ public class ActionDispatcher {
      * @throws MessagingException
      */
     public void execute(final Action anAction, final Mail aMail, final ActionContext context) throws MessagingException {
-        MAIL_ACTIONS.get(anAction.getClass())
+        mailActions.get(anAction.getClass())
                 .execute(anAction, aMail, context);
     }
 }
