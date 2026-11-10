@@ -115,6 +115,8 @@ trait MailboxSetCreationDependencyContract {
     assertThat((creationResponse \ "notCreated" \ "child" \ "type").as[String]).isEqualTo("invalidProperties")
     assertThat((creationResponse \ "notCreated" \ "child" \ "properties").as[Seq[String]])
       .isEqualTo(Seq("parentId"))
+    assertThat((creationResponse \ "notCreated" \ "child" \ "description").as[String])
+      .isEqualTo(s"parentId references unknown mailbox creation '#$unknownCreationId'")
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
       .doesNotContain("child")
   }
@@ -165,6 +167,8 @@ trait MailboxSetCreationDependencyContract {
       val error = creationResponse \ "notCreated" \ creationId
       assertThat((error \ "type").as[String]).isEqualTo("invalidProperties")
       assertThat((error \ "properties").as[Seq[String]]).isEqualTo(Seq("parentId"))
+      assertThat((error \ "description").as[String])
+        .isEqualTo("parentId cannot be resolved because this mailbox creation depends on a cycle")
     })
     assertThat((creationResponse \ "created").as[JsObject].keys).isEqualTo(Set("independent"))
     assertThat((creationResponse \ "created" \ "independent" \ "id").as[String])
@@ -195,6 +199,8 @@ trait MailboxSetCreationDependencyContract {
     assertThat((creationResponse \ "notCreated" \ "child" \ "type").as[String]).isEqualTo("invalidProperties")
     assertThat((creationResponse \ "notCreated" \ "child" \ "properties").as[Seq[String]])
       .isEqualTo(Seq("parentId"))
+    assertThat((creationResponse \ "notCreated" \ "child" \ "description").as[String])
+      .isEqualTo("parentId references failed mailbox creation '#parent'")
     assertThat((creationResponse \ "created").as[JsObject].keys).isEqualTo(Set("independent"))
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
       .doesNotContain("bad.name", "child")
@@ -268,7 +274,7 @@ trait MailboxSetCreationDependencyContract {
   }
 
   @Test
-  def createShouldNotUseAnOldMappingWhenTheSameCallParentFails(server: GuiceJamesServer): Unit = {
+  def createShouldReuseTheLastSuccessfulMappingWhenTheSameCallParentFails(server: GuiceJamesServer): Unit = {
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
@@ -300,8 +306,10 @@ trait MailboxSetCreationDependencyContract {
     val failedReplacement = responseFor(response, "failReplacement")
 
     assertThat((failedReplacement \ "notCreated" \ "parent" \ "type").as[String]).isEqualTo("invalidArguments")
-    assertThat((failedReplacement \ "notCreated" \ "child" \ "type").as[String]).isEqualTo("invalidProperties")
-    assertThat((failedReplacement \ "created").as[JsObject].keys).isEqualTo(Set("root"))
+    assertThat((failedReplacement \ "notCreated").as[JsObject].keys).isEqualTo(Set("parent"))
+    assertThat((failedReplacement \ "created").as[JsObject].keys).isEqualTo(Set("child", "root"))
+    assertThat((failedReplacement \ "created" \ "child" \ "id").as[String])
+      .isEqualTo(storedMailboxId(server, "old.child"))
 
     val laterCreation = responseFor(response, "reuseOldParent")
     assertThat((laterCreation \ "created" \ "later" \ "id").as[String])

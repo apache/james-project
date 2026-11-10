@@ -59,7 +59,7 @@ class CreateProcessorTest {
           Right((resolvedParents, serverId(input.id)))
         }
       }),
-      invalidDependency = (_: CreationInput) => "invalid dependency")
+      invalidDependency = (_: CreateProcessor.DependencyFailure) => "invalid dependency")
   }
 
   @Test
@@ -79,20 +79,24 @@ class CreateProcessorTest {
     val self = ClientId("self")
     val root = ClientId("root")
     val executions = new AtomicInteger()
+    val contextWithOldMappings = emptyContext
+      .recordCreatedId(parent, ServerId("old-parent"))
+      .recordCreatedId(child, ServerId("old-child"))
+      .recordCreatedId(self, ServerId("old-self"))
     val (results, _) = process(Seq(parent -> Set(child), child -> Set(parent), grandchild -> Set(child),
-      self -> Set(self), root -> Set.empty[ClientId]), executions = executions).block()
+      self -> Set(self), root -> Set.empty[ClientId]), contextWithOldMappings, executions = executions).block()
     Seq(parent, child, grandchild, self).foreach(id => assertThat(results(id)).isEqualTo(Left("invalid dependency")))
     assertThat(results(root)).isEqualTo(Right(Set.empty[ServerId]))
     assertThat(executions.get()).isEqualTo(1)
   }
 
   @Test
-  def shouldKeepTheOriginalFailureAndRejectDependentsEvenWhenAnOldMappingExists(): Unit = {
+  def shouldResolveAChildUsingThePreviousMappingWhenItsParentCreationFails(): Unit = {
     val oldContext = emptyContext.recordCreatedId(parent, ServerId("old-parent"))
     val (results, context) = process(Seq(child -> Set(parent), parent -> Set.empty[ClientId]), oldContext, Set(parent)).block()
     assertThat(results(parent)).isEqualTo(Left("domain failure"))
-    assertThat(results(child)).isEqualTo(Left("invalid dependency"))
-    assertThat(context).isEqualTo(oldContext)
+    assertThat(results(child)).isEqualTo(Right(Set(ServerId("old-parent"))))
+    assertThat(context.retrieveServerId(parent)).isEqualTo(Some(ServerId("old-parent")))
   }
 
   @Test
@@ -147,7 +151,7 @@ class CreateProcessorTest {
           SMono.just(Right((parents.map(id => context.retrieveServerId(id).get), serverId(child))))
         }
       },
-      invalidDependency = (_: Set[ClientId]) => "invalid dependency").toFuture
+      invalidDependency = (_: CreateProcessor.DependencyFailure) => "invalid dependency").toFuture
 
     assertThat(executions.get()).isEqualTo(1)
     assertThat(completion.isCompleted).isFalse()
