@@ -34,25 +34,6 @@ Change list:
  - [Domains with an A-label decoding to a capital unknown to IDNA2003 are rejected](#domains-with-an-a-label-decoding-to-a-capital-unknown-to-idna2003-are-rejected)
  - [Sieve vacation and reject follow RFC 5230 and RFC 5429](#sieve-vacation-and-reject-follow-rfc-5230-and-rfc-5429)
  - [DKIMHook checks every malformed From header](#dkimhook-checks-every-malformed-from-header)
- - [JAMES-4235 The Lucene index moves to var/store/lucene](#james-4235-the-lucene-index-moves-to-varstorelucene)
-
-### JAMES-4235 The Lucene index moves to var/store/lucene
-
-Date: 10/11/2026
-
-Concerned products: Guice JPA app
-
-JIRA: https://issues.apache.org/jira/browse/JAMES-4235
-
-The Lucene mailbox index is now written under `var/store/lucene` of the working directory, like the Spring app, instead
-of the working directory itself. In the Docker image the working directory `/root` is not a volume, so the index was lost
-whenever the container was recreated; `var/store/lucene` sits in the `/root/var` volume.
-
-After the upgrade James starts with an empty index. Outside Docker, you can stop James and move the index files
-(`segments_*`, `_*`) from the working directory into `var/store/lucene`. In Docker, the old index is gone once the
-container is recreated. Otherwise run a full
-[reindex of all mails](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails), in the default mode
-rather than `fixOutdated`.
 
 ### DKIMHook checks every malformed From header
 

@@ -20,6 +20,8 @@
 package org.apache.james.modules.mailbox;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Optional;
 
 import org.apache.james.events.EventListener;
 import org.apache.james.filesystem.api.FileSystem;
@@ -39,7 +41,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class LuceneSearchMailboxModule extends AbstractModule {
-    public static final String LUCENE_INDEX_FOLDER = "var/store/lucene";
+    public static final String LUCENE_INDEX_FOLDER_PROPERTY = "james.lucene.index.folder";
 
     @Override
     protected void configure() {
@@ -58,7 +60,10 @@ public class LuceneSearchMailboxModule extends AbstractModule {
     @Provides
     @Singleton
     Directory provideDirectory(FileSystem fileSystem) throws IOException {
-        return FSDirectory.open(fileSystem.getBasedir().toPath().resolve(LUCENE_INDEX_FOLDER));
+        Path workingDirectory = fileSystem.getBasedir().toPath();
+        return FSDirectory.open(Optional.ofNullable(System.getProperty(LUCENE_INDEX_FOLDER_PROPERTY))
+            .map(workingDirectory::resolve)
+            .orElse(workingDirectory));
     }
 
     @Provides
