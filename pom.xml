@@ -660,7 +660,7 @@
         <testcontainers.version>2.0.5</testcontainers.version>
         <testcontainers.modules.version>1.21.4</testcontainers.modules.version>
         <es-reporter.version>6.0.0-RC3</es-reporter.version>
-        <guava.version>33.4.8-jre</guava.version>
+        <guava.version>33.7.2-jre</guava.version>
         <jutf7.version>1.0.0</jutf7.version>
         <kerby.version>2.1.1</kerby.version>
         <apache.httpcomponents.version>4.5.14</apache.httpcomponents.version>
