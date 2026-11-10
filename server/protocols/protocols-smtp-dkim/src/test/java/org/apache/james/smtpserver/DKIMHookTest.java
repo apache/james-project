@@ -141,7 +141,7 @@ class DKIMHookTest {
         }
 
         @Test
-        void onlyForHeaderFromDomainShouldReturnFalseWhenFromAddressIsMalformed() throws Exception {
+        void onlyForHeaderFromDomainShouldReturnTrueWhenMalformedFromAddressMentionsTheDomain() throws Exception {
             System.setProperty("mail.mime.address.strict", "false");
             try {
                 var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
@@ -155,10 +155,96 @@ class DKIMHookTest {
                         .sender("offers@fedex.com")
                         .mimeMessage(mimeMessage)
                         .build()))
+                    .isTrue();
+            } finally {
+                System.clearProperty("mail.mime.address.strict");
+            }
+        }
+
+        @Test
+        void onlyForHeaderFromDomainShouldReturnFalseWhenMalformedFromAddressDoesNotMentionTheDomain() throws Exception {
+            System.setProperty("mail.mime.address.strict", "false");
+            try {
+                var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("This is my email")
+                    .build();
+                mimeMessage.setHeader("From", "offers@fedex.com>");
+
+                assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                    .test(FakeMail.builder()
+                        .name("mail")
+                        .sender("offers@fedex.com")
+                        .mimeMessage(mimeMessage)
+                        .build()))
                     .isFalse();
             } finally {
                 System.clearProperty("mail.mime.address.strict");
             }
+        }
+
+        @Test
+        void onlyForHeaderFromDomainShouldReturnTrueWhenAnyMailboxMatches() throws Exception {
+            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .setText("This is my email")
+                .build();
+            mimeMessage.setHeader("From", "bob@other.com, ceo@localhost");
+
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(mimeMessage)
+                    .build()))
+                .isTrue();
+        }
+
+        @Test
+        void onlyForHeaderFromDomainShouldReturnTrueWhenASecondFromFieldMatches() throws Exception {
+            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .setText("This is my email")
+                .build();
+            mimeMessage.setHeader("From", "bob@other.com");
+            mimeMessage.addHeader("From", "ceo@localhost");
+
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(mimeMessage)
+                    .build()))
+                .isTrue();
+        }
+
+        @Test
+        void onlyForHeaderFromDomainShouldReturnTrueWhenAGroupMemberMatches() throws Exception {
+            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .setText("This is my email")
+                .build();
+            mimeMessage.setHeader("From", "Board: ceo@localhost;");
+
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(mimeMessage)
+                    .build()))
+                .isTrue();
+        }
+
+        @Test
+        void onlyForHeaderFromDomainShouldReturnTrueWhenUnparsableFromMentionsTheDomain() throws Exception {
+            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .setText("This is my email")
+                .build();
+            mimeMessage.setHeader("From", "\"CEO <ceo@localhost>");
+
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(mimeMessage)
+                    .build()))
+                .isTrue();
         }
     }
 
