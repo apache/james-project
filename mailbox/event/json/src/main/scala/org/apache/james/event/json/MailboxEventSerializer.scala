@@ -314,6 +314,9 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     e => JsError(Option(e.getMessage).getOrElse(e.getClass.getName)),
     JsSuccess(_))
 
+  // Play reads a date-time without offset, then Instant.from throws on it instead of giving a JsError
+  implicit val instantReads: Reads[Instant] = json => safely(Reads.DefaultInstantReads.reads(json)).flatMap(identity)
+
   implicit val aclEntryKeyReads: Reads[JavaMailboxACL.EntryKey] = {
     case JsString(keyAsString) => safely(JavaMailboxACL.EntryKey.deserialize(keyAsString))
     case _ => JsError()
