@@ -26,6 +26,7 @@ import org.apache.james.jmap.core.{ClientId, Id, IdOrCreationReference, Properti
 import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.{IsSubscribed, MailboxCreationId, MailboxCreationRequest, MailboxCreationResponse, MailboxRights, MailboxSetRequest, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnparsedMailboxId}
 import org.apache.james.jmap.method.MailboxSetCreatePerformer.{MailboxCreationFailure, MailboxCreationResults, MailboxCreationSuccess}
+import org.apache.james.jmap.routes.CreateProcessor.{BlockedByCycle, DependencyFailure, FailedCreation}
 import org.apache.james.jmap.routes.{CreateProcessor, ProcessingContext, SessionSupplier}
 import org.apache.james.jmap.utils.quotas.QuotaLoaderWithPreloadedDefaultFactory
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
@@ -105,7 +106,7 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
       dependencies = (json: JsObject) => parentReference(json).toSet,
       create = (json: JsObject, context: ProcessingContext) => SMono.fromCallable(() =>
         createMailbox(mailboxSession, json, context, supportSharedMailbox)),
-      invalidDependency = (_: JsObject) => invalidParentReference)
+      invalidDependency = invalidCreationDependency)
       .map { case (results, context) => (toMailboxCreationResults(results), context) }
       .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
   }
@@ -125,9 +126,15 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
     (json \ "parentId").asOpt[IdOrCreationReference]
       .flatMap(_.creationId)
 
-  private def invalidParentReference: MailboxCreationParseException =
-    MailboxCreationParseException(SetError.invalidProperties(
-      SetErrorDescription("parentId refers to an unknown, failed or cyclic creation"), Some(Properties("parentId"))))
+  private def invalidCreationDependency(failure: DependencyFailure): MailboxCreationParseException = failure match {
+    case FailedCreation(id) =>
+      invalidParentReference(s"parentId references failed mailbox creation '#${id.value.value}'")
+    case BlockedByCycle =>
+      invalidParentReference("parentId cannot be resolved because this mailbox creation depends on a cycle")
+  }
+
+  private def invalidParentReference(description: String): MailboxCreationParseException =
+    MailboxCreationParseException(SetError.invalidProperties(SetErrorDescription(description), Some(Properties("parentId"))))
 
   private def createMailbox(mailboxSession: MailboxSession,
                             jsObject: JsObject,
@@ -146,7 +153,7 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
       case None => Right(request)
       case Some(parentCreationId) =>
         context.retrieveServerId(parentCreationId)
-          .toRight(invalidParentReference)
+          .toRight(invalidParentReference(s"parentId references unknown mailbox creation '#${parentCreationId.value.value}'"))
           .map(parentId => request.copy(parentId = Some(UnparsedMailboxId(parentId.value))))
     }
 
