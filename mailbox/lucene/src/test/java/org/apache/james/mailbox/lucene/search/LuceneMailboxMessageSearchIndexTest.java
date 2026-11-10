@@ -496,7 +496,8 @@ class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = SearchQuery.of(SearchQuery.and(IntStream.rangeClosed(1, 100)
             .mapToObj(first -> SearchQuery.mailContains(words(first, 35)))
             .collect(ImmutableList.toImmutableList())));
-        assertThatThrownBy(() -> index.search(session, veryLongText, query))
+        assertThatThrownBy(() -> index.search(session, veryLongText, query).collectList().block())
+            .cause()
             .isInstanceOf(MailboxException.class)
             .hasMessageContaining("too many")
             .hasCauseInstanceOf(IndexSearcher.TooManyClauses.class);
@@ -885,7 +886,43 @@ class LuceneMailboxMessageSearchIndexTest {
 
         assertThat(result).hasSize(limit);
     }
-    
+
+    @Test
+    void searchInOneMailboxShouldNotRunOnTheCallerThread() throws Exception {
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
+
+        String searchThread = index.search(session, mailbox2, query)
+            .map(uid -> Thread.currentThread().getName())
+            .blockFirst();
+
+        assertThat(searchThread).isNotEqualTo(Thread.currentThread().getName());
+    }
+
+    @Test
+    void searchInMailboxesShouldNotRunOnTheCallerThread() throws Exception {
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
+
+        String searchThread = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), query, LIMIT)
+            .map(messageId -> Thread.currentThread().getName())
+            .blockFirst();
+
+        assertThat(searchThread).isNotEqualTo(Thread.currentThread().getName());
+    }
+
+    @Test
+    void searchCollapsingThreadsShouldNotRunOnTheCallerThread() throws Exception {
+        SearchQuery query = SearchQuery.builder()
+            .andCriterion(SearchQuery.all())
+            .collapseThreads(true)
+            .build();
+
+        String searchThread = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), query, LIMIT)
+            .map(messageId -> Thread.currentThread().getName())
+            .blockFirst();
+
+        assertThat(searchThread).isNotEqualTo(Thread.currentThread().getName());
+    }
+
     @Test
     void flagSearchShouldMatch() throws Exception {
         SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flag.DELETED));

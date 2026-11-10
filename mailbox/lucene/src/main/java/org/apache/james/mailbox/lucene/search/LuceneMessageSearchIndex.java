@@ -163,6 +163,7 @@ import com.google.common.collect.Maps;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Lucene based {@link ListeningMessageSearchIndex} which offers message searching via a Lucene index
@@ -337,8 +338,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     public Flux<MessageUid> doSearch(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
 
-        return Flux.fromIterable(searchMultimap(ImmutableList.of(mailbox.getMailboxId()), searchQuery))
-            .map(SearchResult::getMessageUid);
+        return Mono.fromCallable(() -> searchMultimap(ImmutableList.of(mailbox.getMailboxId()), searchQuery))
+            .flatMapMany(Flux::fromIterable)
+            .map(SearchResult::getMessageUid)
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -348,10 +351,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return Flux.empty();
         }
 
-        if (searchQuery.shouldCollapseThreads()) {
-            return searchCollapseThreads(mailboxIds, searchQuery, searchOptions);
-        }
-        return searchWithoutCollapseThreads(mailboxIds, searchQuery, searchOptions);
+        return Flux.defer(Throwing.supplier(() -> {
+                if (searchQuery.shouldCollapseThreads()) {
+                    return searchCollapseThreads(mailboxIds, searchQuery, searchOptions);
+                }
+                return searchWithoutCollapseThreads(mailboxIds, searchQuery, searchOptions);
+            }).sneakyThrow())
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     private Flux<MessageId> searchWithoutCollapseThreads(Collection<MailboxId> mailboxIds, SearchQuery searchQuery, SearchOptions searchOptions) throws MailboxException {
