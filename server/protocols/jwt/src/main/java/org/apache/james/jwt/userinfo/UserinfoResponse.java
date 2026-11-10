@@ -54,8 +54,27 @@ public class UserinfoResponse {
         return email;
     }
 
+    /**
+     * The claim read as its text, whatever its JSON type: {@code null} gives "null", {@code 1} gives "1".
+     * Use {@link #textualClaim(String)} when the value is compared with configured strings.
+     */
     public Optional<String> claimByPropertyName(String propertyName) {
         return Optional.ofNullable(json.get(propertyName))
             .map(JsonNode::asText);
+    }
+
+    /**
+     * The claim only when it is a JSON string. A {@code null}, a number, a boolean, an object or an array
+     * is no string value: it is reported missing rather than read as its text, so that it can never be
+     * mistaken for the configured string it prints as.
+     */
+    public Optional<String> textualClaim(String propertyName) {
+        return Optional.ofNullable(json.get(propertyName))
+            .filter(JsonNode::isTextual)
+            .map(JsonNode::textValue);
+    }
+
+    public JsonNode json() {
+        return json;
     }
 }
