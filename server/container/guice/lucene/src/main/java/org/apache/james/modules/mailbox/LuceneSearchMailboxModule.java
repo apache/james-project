@@ -39,6 +39,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
 public class LuceneSearchMailboxModule extends AbstractModule {
+    public static final String LUCENE_INDEX_FOLDER = "var/store/lucene";
 
     @Override
     protected void configure() {
@@ -57,7 +58,7 @@ public class LuceneSearchMailboxModule extends AbstractModule {
     @Provides
     @Singleton
     Directory provideDirectory(FileSystem fileSystem) throws IOException {
-        return FSDirectory.open(fileSystem.getBasedir().toPath());
+        return FSDirectory.open(fileSystem.getBasedir().toPath().resolve(LUCENE_INDEX_FOLDER));
     }
 
     @Provides
