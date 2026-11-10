@@ -29,7 +29,9 @@ import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.delivery.SieveExecutor;
 import org.apache.james.transport.mailets.jsieve.delivery.SievePoster;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.GenericMailet;
 
 /**
@@ -39,16 +41,22 @@ public class Sieve extends GenericMailet {
 
     private final UsersRepository usersRepository;
     private final ResourceLocator resourceLocator;
+    private final NotificationRegistry notificationRegistry;
+    private final AutomaticallySentMailDetector automaticallySentMailDetector;
     private SieveExecutor sieveExecutor;
 
     @Inject
-    public Sieve(UsersRepository usersRepository, SieveRepository sieveRepository) {
-        this(usersRepository, new ResourceLocator(sieveRepository, usersRepository));
+    public Sieve(UsersRepository usersRepository, SieveRepository sieveRepository,
+                 NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector) {
+        this(usersRepository, new ResourceLocator(sieveRepository, usersRepository), notificationRegistry, automaticallySentMailDetector);
     }
 
-    public Sieve(UsersRepository usersRepository, ResourceLocator resourceLocator) {
+    public Sieve(UsersRepository usersRepository, ResourceLocator resourceLocator,
+                 NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector) {
         this.usersRepository = usersRepository;
         this.resourceLocator = resourceLocator;
+        this.notificationRegistry = notificationRegistry;
+        this.automaticallySentMailDetector = automaticallySentMailDetector;
     }
 
     @Override
@@ -62,6 +70,8 @@ public class Sieve extends GenericMailet {
             .resourceLocator(resourceLocator)
             .mailetContext(getMailetContext())
             .sievePoster(new SievePoster(usersRepository, MailboxConstants.INBOX))
+            .notificationRegistry(notificationRegistry)
+            .automaticallySentMailDetector(automaticallySentMailDetector)
             .build();
     }
 

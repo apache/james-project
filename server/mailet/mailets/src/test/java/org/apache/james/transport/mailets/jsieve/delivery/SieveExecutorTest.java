@@ -27,6 +27,8 @@ import static org.mockito.Mockito.mock;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
+import org.apache.james.vacation.api.NotificationRegistry;
+import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,8 @@ class SieveExecutorTest {
             .mailetContext(mailetContext)
             .sievePoster(mock(SievePoster.class))
             .resourceLocator(mock(ResourceLocator.class))
+            .notificationRegistry(mock(NotificationRegistry.class))
+            .automaticallySentMailDetector(mock(AutomaticallySentMailDetector.class))
             .build();
     }
 
