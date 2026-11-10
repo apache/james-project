@@ -20,14 +20,14 @@ package org.apache.james.transport.mailets.jsieve;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.Properties;
 
 import jakarta.mail.Address;
+import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
-import jakarta.mail.internet.AddressException;
+import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeUtility;
@@ -51,7 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Performs the rejection of a mail, with a reply to the sender. 
@@ -60,6 +59,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class RejectAction implements MailAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(RejectAction.class);
+    private static final String REPLY_PREFIX = "Re: ";
 
     @Override
     public void execute(Action action, Mail mail, ActionContext context)
@@ -87,6 +87,14 @@ public class RejectAction implements MailAction {
      */
     public void execute(ActionReject anAction, Mail aMail, ActionContext context) throws MessagingException {
         ActionUtils.detectAndHandleLocalLooping(aMail, context, "reject");
+
+        // RFC 5429 section 2.1: the MDN goes to the envelope sender, and never to a null one
+        Optional<MailAddress> returnPath = aMail.getMaybeSender().asOptional();
+        Optional<InternetAddress> returnPathAddress = returnPath.flatMap(MailAddress::toInternetAddress);
+        if (returnPath.isEmpty() || returnPathAddress.isEmpty()) {
+            LOGGER.info("Not sending a reject MDN to a null or unusable envelope sender");
+            return;
+        }
 
         // Create the MDN part
         StringBuilder humanText = new StringBuilder(128);
@@ -116,12 +124,12 @@ public class RejectAction implements MailAction {
 
         String finalRecipient = context.getRecipient().asString();
         // Original-Message-ID is optional (RFC 8098 3.2.5): omit it when the message has no usable Message-ID
-        Optional<OriginalMessageId> originalMessageId = Optional.ofNullable(aMail.getMessage().getMessageID())
+        Optional<String> messageId = Optional.ofNullable(aMail.getMessage().getMessageID())
             .map(MimeUtility::unfold)
             .map(String::trim)
-            .filter(messageId -> !messageId.isEmpty())
-            .filter(messageId -> messageId.indexOf('\r') < 0 && messageId.indexOf('\n') < 0)
-            .map(OriginalMessageId::new);
+            .filter(id -> !id.isEmpty())
+            .filter(id -> id.indexOf('\r') < 0 && id.indexOf('\n') < 0);
+        Optional<OriginalMessageId> originalMessageId = messageId.map(OriginalMessageId::new);
 
         MDNReport.Builder reportBuilder = MDNReport.builder();
         originalMessageId.ifPresent(reportBuilder::originalMessageIdField);
@@ -143,52 +151,33 @@ public class RejectAction implements MailAction {
             .build()
             .asMultipart();
 
-        // Send the message
-        MimeMessage reply;
-        try {
-            reply = (MimeMessage) aMail.getMessage().reply(false);
-        } catch (AddressException e) {
-            // The message is refused anyway: nothing to answer to
-            LOGGER.info("Unable to send reject MDN. Could not parse the recipient.", e);
-            return;
-        }
+        // Send the message. The From and Reply-To of the refused message are not used: anyone can write them.
+        MimeMessage reply = new MimeMessage(Session.getInstance(new Properties()));
+        replySubject(aMail.getMessage()).ifPresent(Throwing.<String>consumer(subject -> reply.setHeader("Subject", subject)).sneakyThrow());
+        messageId.ifPresent(Throwing.<String>consumer(id -> reply.setHeader("In-Reply-To", id)).sneakyThrow());
         context.getRecipient().toInternetAddress()
             .ifPresent(Throwing.<Address>consumer(reply::setFrom).sneakyThrow());
+        reply.setRecipient(Message.RecipientType.TO, returnPathAddress.get());
+        // RFC 3834 section 5: lets responders recognize the MDN and not answer it
+        reply.setHeader("Auto-Submitted", "auto-replied");
         reply.setContent(multipart);
         reply.saveChanges();
-        ImmutableList<MailAddress> recipients = usableRecipients(reply);
-        if (!recipients.isEmpty()) {
-            MailImpl mail = MailImpl.builder()
-                .name(MailImpl.getId())
-                .addRecipients(recipients)
-                .mimeMessage(reply)
-                .build();
-            try {
-                context.post(mail);
-            } finally {
-                LifecycleUtil.dispose(mail);
-            }
-        } else {
-            LOGGER.info("Unable to send reject MDN. Could not determine the recipient.");
-        }
-    }
 
-    private ImmutableList<MailAddress> usableRecipients(MimeMessage reply) throws MessagingException {
-        return Optional.ofNullable(reply.getAllRecipients())
-            .stream()
-            .flatMap(Arrays::stream)
-            .map(InternetAddress.class::cast)
-            .flatMap(this::asMailAddress)
-            .collect(ImmutableList.toImmutableList());
-    }
-
-    // Jakarta Mail accepts values in From and Reply-To that MailAddress refuses
-    private Stream<MailAddress> asMailAddress(InternetAddress address) {
+        MailImpl mail = MailImpl.builder()
+            .name(MailImpl.getId())
+            .addRecipient(returnPath.get())
+            .mimeMessage(reply)
+            .build();
         try {
-            return Stream.of(new MailAddress(address));
-        } catch (AddressException e) {
-            LOGGER.info("Ignoring an unusable recipient for the reject MDN: {}", address, e);
-            return Stream.empty();
+            context.post(mail);
+        } finally {
+            LifecycleUtil.dispose(mail);
         }
+    }
+
+    // Same subject as MimeMessage::reply
+    private Optional<String> replySubject(MimeMessage message) throws MessagingException {
+        return Optional.ofNullable(message.getHeader("Subject", null))
+            .map(subject -> subject.regionMatches(true, 0, REPLY_PREFIX, 0, REPLY_PREFIX.length()) ? subject : REPLY_PREFIX + subject);
     }
 }
