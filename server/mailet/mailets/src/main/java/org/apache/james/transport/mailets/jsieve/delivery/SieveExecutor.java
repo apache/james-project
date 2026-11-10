@@ -28,6 +28,7 @@ import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.jsieve.ActionDispatcher;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.SieveMailAdapter;
+import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.jsieve.ConfigurationManager;
 import org.apache.jsieve.SieveConfigurationException;
 import org.apache.jsieve.SieveFactory;
@@ -40,6 +41,7 @@ import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
+import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +60,18 @@ public class SieveExecutor {
         private MailetContext mailetContext;
         private SievePoster sievePoster;
         private ResourceLocator resourceLocator;
+        private NotificationRegistry notificationRegistry;
+        private AutomaticallySentMailDetector automaticallySentMailDetector;
+
+        public Builder notificationRegistry(NotificationRegistry notificationRegistry) {
+            this.notificationRegistry = notificationRegistry;
+            return this;
+        }
+
+        public Builder automaticallySentMailDetector(AutomaticallySentMailDetector automaticallySentMailDetector) {
+            this.automaticallySentMailDetector = automaticallySentMailDetector;
+            return this;
+        }
 
         public Builder sievePoster(SievePoster sievePoster) {
             this.sievePoster = sievePoster;
@@ -78,7 +92,9 @@ public class SieveExecutor {
             Preconditions.checkNotNull(mailetContext);
             Preconditions.checkNotNull(resourceLocator);
             Preconditions.checkNotNull(sievePoster);
-            return new SieveExecutor(mailetContext, sievePoster, resourceLocator);
+            Preconditions.checkNotNull(notificationRegistry);
+            Preconditions.checkNotNull(automaticallySentMailDetector);
+            return new SieveExecutor(mailetContext, sievePoster, resourceLocator, notificationRegistry, automaticallySentMailDetector);
         }
     }
 
@@ -89,12 +105,13 @@ public class SieveExecutor {
     private final ActionDispatcher actionDispatcher;
 
     public SieveExecutor(MailetContext mailetContext, SievePoster sievePoster,
-                         ResourceLocator resourceLocator) throws MessagingException {
+                         ResourceLocator resourceLocator, NotificationRegistry notificationRegistry,
+                         AutomaticallySentMailDetector automaticallySentMailDetector) throws MessagingException {
         this.mailetContext = mailetContext;
         this.sievePoster = sievePoster;
         this.resourceLocator = resourceLocator;
         this.factory = createFactory();
-        this.actionDispatcher = new ActionDispatcher();
+        this.actionDispatcher = new ActionDispatcher(notificationRegistry, automaticallySentMailDetector);
     }
 
     private SieveFactory createFactory() throws MessagingException {

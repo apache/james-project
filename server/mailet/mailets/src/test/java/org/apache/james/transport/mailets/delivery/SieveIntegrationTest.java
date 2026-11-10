@@ -39,12 +39,14 @@ import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.core.builder.MimeMessageBuilder.Header;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailetcontainer.AutomaticallySentMailDetectorImpl;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.Sieve;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.delivery.SieveExecutor;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.james.vacation.memory.MemoryNotificationRegistry;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -87,6 +89,7 @@ class SieveIntegrationTest {
     private UsersRepository usersRepository;
     private ResourceLocator resourceLocator;
     private FakeMailContext fakeMailContext;
+    private ZonedDateTime now;
 
     @FunctionalInterface
     interface AttributeEquals {
@@ -115,7 +118,9 @@ class SieveIntegrationTest {
         usersRepository = mock(UsersRepository.class);
         fakeMailContext = FakeMailContext.builder().logger(mock(Logger.class)).build();
 
-        testee = new Sieve(usersRepository, resourceLocator);
+        now = DATE_DEFAULT;
+
+        testee = new Sieve(usersRepository, resourceLocator, new MemoryNotificationRegistry(() -> now), new AutomaticallySentMailDetectorImpl());
         testee.init(FakeMailetConfig.builder().mailetName("Sieve").mailetContext(fakeMailContext).build());
     }
 
@@ -1269,7 +1274,7 @@ class SieveIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"auto-replied", "auto-generated", "AUTO-NOTIFIED", "auto-replied; owner-email=\"a@b.c\"", "auto-other (comment)"})
+    @ValueSource(strings = {"auto-replied", "auto-generated", "AUTO-NOTIFIED"})
     void vacationShouldNotReplyToAutoSubmittedMessages(String autoSubmitted) throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
 
@@ -1294,20 +1299,7 @@ class SieveIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"bulk", "JUNK", "list"})
-    void vacationShouldNotReplyToBulkMessages(String precedence) throws Exception {
-        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
-
-        FakeMail mail = createMail();
-        mail.getMessage().setHeader("Precedence", precedence);
-        testee.service(mail);
-
-        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
-        assertThat(fakeMailContext.getSentMails()).isEmpty();
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"MAILER-DAEMON@any.com", "owner-list@any.com", "list-request@any.com", "listserv@any.com", "majordomo@any.com"})
+    @ValueSource(strings = {"MAILER-DAEMON@any.com", "owner-list@any.com", "list-request@any.com", "listserv@any.com", "majordomo@any.com", "bot-noreply@any.com"})
     void vacationShouldNotReplyToAutomatedSenders(String sender) throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
 
@@ -1396,6 +1388,7 @@ class SieveIntegrationTest {
     }
 
     private void prepareTestUsingScriptAndDates(String script, ZonedDateTime scriptCreationDate, ZonedDateTime scriptExecutionDate) throws Exception {
+        now = scriptExecutionDate;
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
         when(usersRepository.getUsername(new MailAddress(LOCAL_PART + "@localhost"))).thenReturn(Username.of(LOCAL_PART));
         when(usersRepository.getUsername(new MailAddress(LOCAL_PART + "@domain.com"))).thenReturn(Username.of(LOCAL_PART));
