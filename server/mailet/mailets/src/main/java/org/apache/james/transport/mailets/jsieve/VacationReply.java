@@ -130,10 +130,20 @@ public class VacationReply {
             return multipart;
         }
 
+        // RFC 5230 section 4.2: the user should not use a :from that is not theirs, which would forge the envelope sender
         private MailAddress retrieveOriginalSender() {
             return Optional.ofNullable(from)
                 .flatMap(this::retrieveAddressFromString)
+                .filter(this::belongsToTheUser)
                 .orElse(context.getRecipient());
+        }
+
+        private boolean belongsToTheUser(MailAddress address) {
+            if (!address.equals(context.getRecipient())) {
+                LOGGER.warn("Ignoring the vacation :from {} of {}: it is not their address", address, context.getRecipient());
+                return false;
+            }
+            return true;
         }
 
         private Optional<MailAddress> retrieveAddressFromString(String address) {
