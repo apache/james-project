@@ -106,8 +106,9 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         if (maxLiteralSize > 0 && (readSoFar + size) > maxLiteralSize) {
             throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Specified literals total size is greater then the allowed size. " + (readSoFar + size) + " instead of " + maxLiteralSize + " limit.");
         }
-        // Check if we have enough data
-        if (size + crlf > buffer.readableBytes()) {
+        // Check if we have enough data. eol() accepts a bare LF after the literal: when it is the last byte
+        // received, waiting for a second end of line byte would wait for a byte the client will not send.
+        if (size + crlf > buffer.readableBytes() && !endsWithABareLf(size, extraCRLF)) {
             // ok let us throw a exception which till the decoder how many more
             // bytes we need
             throw new NotEnoughDataException(size + read + crlf, crlf);
@@ -129,6 +130,12 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         } catch (IOException e) {
             throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Can not read literal", e);
         }
+    }
+
+    private boolean endsWithABareLf(int size, boolean extraCRLF) {
+        return extraCRLF
+            && buffer.readableBytes() >= size + 1
+            && buffer.getByte(buffer.readerIndex() + size) == '\n';
     }
 
     /**

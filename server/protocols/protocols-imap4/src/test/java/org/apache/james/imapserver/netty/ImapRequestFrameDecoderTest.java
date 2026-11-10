@@ -201,4 +201,36 @@ class ImapRequestFrameDecoderTest {
             .hasSize(2)
             .last().asString().contains("tag=b, command=NOOP");
     }
+
+    @Test
+    void aLiteralEndingWithABareLfAtTheEndOfTheDataShouldBeDecoded() {
+        List<byte[]> chunks = List.of(
+            "a APPEND INBOX {5}\r\n".getBytes(StandardCharsets.US_ASCII),
+            "hello\n".getBytes(StandardCharsets.US_ASCII));
+
+        // inMemorySizeLimit 4096 > 5: the literal is read from memory
+        assertThat(decode(true, 4096, 5504, 3008, chunks))
+            .hasSize(1)
+            .first().asString().startsWith("AppendRequest{mailboxName=INBOX");
+    }
+
+    @Test
+    void aLiteralEndingWithABareLfAfterAFileBackedOneInTheSameSegmentShouldBeDecoded() {
+        List<byte[]> chunks = List.of(
+            ("a APPEND INBOX {40}\r\n" + "x".repeat(40) + "\r\n"
+                + "b APPEND INBOX {40}\r\n" + "x".repeat(40) + "\n").getBytes(StandardCharsets.US_ASCII));
+
+        assertThat(decode(true, 32, 5504, 3008, chunks))
+            .hasSize(2);
+    }
+
+    @Test
+    void aLiteralFollowedByACrOnlyShouldWaitForItsLf() {
+        List<byte[]> chunks = List.of(
+            "a APPEND INBOX {5}\r\n".getBytes(StandardCharsets.US_ASCII),
+            "hello\r".getBytes(StandardCharsets.US_ASCII));
+
+        assertThat(decode(true, 4096, 5504, 3008, chunks))
+            .isEmpty();
+    }
 }
