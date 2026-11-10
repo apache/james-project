@@ -48,9 +48,11 @@ The Lucene mailbox index is now written under `var/store/lucene` of the working 
 of the working directory itself. In the Docker image the working directory `/root` is not a volume, so the index was lost
 whenever the container was recreated; `var/store/lucene` sits in the `/root/var` volume.
 
-After the upgrade James starts with an empty index. Either stop James and move the index files (`segments_*`, `_*`,
-`write.lock`) from the working directory into `var/store/lucene`, or
-[reindex all mails](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails).
+After the upgrade James starts with an empty index. Outside Docker, you can stop James and move the index files
+(`segments_*`, `_*`) from the working directory into `var/store/lucene`. In Docker, the old index is gone once the
+container is recreated. Otherwise run a full
+[reindex of all mails](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails), in the default mode
+rather than `fixOutdated`.
 
 ### DKIMHook checks every malformed From header
 

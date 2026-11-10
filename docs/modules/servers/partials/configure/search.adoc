@@ -11,6 +11,7 @@ This configuration helps you configure the components used to back search.
  This implementation can have a prohibitive cost.
 ifdef::lucene-search[]
  - *lucene* : Index and search mails into an embedded Lucene index under `var/store/lucene`. Single node only.
+ Switching to it on existing mails starts with an empty index: run a full re-indexing.
 endif::[]
  - *opensearch-disabled* : Saves events to index into event dead letter. Make searches fails.
  This is useful to start James without OpenSearch while still tracking messages to index for later recovery. This

@@ -20,7 +20,9 @@
 package org.apache.james;
 
 import java.io.FileNotFoundException;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.Configuration;
@@ -54,9 +56,16 @@ public class SearchConfiguration {
     }
 
     public static SearchConfiguration parse(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        return parse(propertiesProvider, EnumSet.allOf(Implementation.class));
+    }
+
+    /**
+     * @param supportedImplementations the values suggested when the configured implementation is unknown
+     */
+    public static SearchConfiguration parse(PropertiesProvider propertiesProvider, Set<Implementation> supportedImplementations) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration(SEARCH_CONFIGURATION_NAME);
-            return SearchConfiguration.from(configuration);
+            return SearchConfiguration.from(configuration, supportedImplementations);
         } catch (FileNotFoundException e) {
             LOGGER.debug("Could not find {} configuration file, enabling opensearch by default", SEARCH_CONFIGURATION_NAME);
             return openSearch();
@@ -64,11 +73,15 @@ public class SearchConfiguration {
     }
 
     static SearchConfiguration from(Configuration configuration) throws ConfigurationException {
+        return from(configuration, EnumSet.allOf(Implementation.class));
+    }
+
+    static SearchConfiguration from(Configuration configuration, Set<Implementation> supportedImplementations) throws ConfigurationException {
         String searchOption = configuration.getString("implementation", Implementation.OpenSearch.name());
         return Implementation.parse(searchOption)
             .map(SearchConfiguration::new)
             .orElseThrow(() -> new ConfigurationException(String.format("'implementation' parameter in '%s.properties' should be '%s' ",
-                SEARCH_CONFIGURATION_NAME, Stream.of(Implementation.values())
+                SEARCH_CONFIGURATION_NAME, supportedImplementations.stream()
                     .map(v -> v.name)
                     .collect(ImmutableList.toImmutableList()))));
     }

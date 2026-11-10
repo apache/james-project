@@ -21,9 +21,14 @@ package org.apache.james.mailbox.lucene.search;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.mail.Flags;
 
@@ -34,14 +39,21 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.UidValidity;
+import org.apache.james.mailbox.searchhighligt.SearchHighlighterConfiguration;
+import org.apache.james.mailbox.searchhighligt.SearchSnippet;
 import org.apache.james.mailbox.store.MessageBuilder;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import reactor.core.publisher.Flux;
 
 class LuceneMailboxIdWithLettersTest {
     record LetterId(String value) implements MailboxId {
@@ -58,11 +70,14 @@ class LuceneMailboxIdWithLettersTest {
     Mailbox mailbox = new Mailbox(MailboxPath.forUser(Username.of("bob"), "box"), UidValidity.of(18), MAILBOX_ID);
     LuceneMessageSearchIndex index;
     MailboxSession session;
+    TestMessageId.Factory messageIdFactory;
+    MessageId messageId1;
 
     @BeforeEach
     void setUp() throws Exception {
         session = MailboxSessionUtil.create(Username.of("bob"));
-        TestMessageId.Factory messageIdFactory = new TestMessageId.Factory();
+        messageIdFactory = new TestMessageId.Factory();
+        messageId1 = messageIdFactory.generate();
         index = new LuceneMessageSearchIndex(null, LetterId::new, new ByteBuffersDirectory(), true, messageIdFactory, null, new JsoupTextExtractor());
 
         for (MessageUid uid : List.of(UID_1, UID_2)) {
@@ -74,7 +89,7 @@ class LuceneMailboxIdWithLettersTest {
                     .internalDate(new Date())
                     .body("Hello".getBytes(UTF_8))
                     .size(200)
-                    .build(messageIdFactory.generate()))
+                    .build(uid.equals(UID_1) ? messageId1 : messageIdFactory.generate()))
                 .block();
         }
     }
@@ -91,5 +106,20 @@ class LuceneMailboxIdWithLettersTest {
 
         assertThat(index.doSearch(session, mailbox, SearchQuery.of(SearchQuery.all())).collectList().block())
             .containsExactly(UID_2);
+    }
+
+    @Test
+    void highlightShouldReturnSnippetsOfAMailboxIdWithLowerCaseLetters() {
+        StoreMailboxManager mailboxManager = mock(StoreMailboxManager.class);
+        when(mailboxManager.getInMailboxIds(any(), any())).thenReturn(Flux.just(MAILBOX_ID));
+        LuceneSearchHighlighter highlighter = new LuceneSearchHighlighter(index, SearchHighlighterConfiguration.DEFAULT, messageIdFactory, mailboxManager);
+
+        MultimailboxesSearchQuery query = MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.subject("quarterly")))
+            .inMailboxes(MAILBOX_ID)
+            .build();
+
+        assertThat(highlighter.highlightSearch(List.of(messageId1), query, session).collectList().block())
+            .extracting(SearchSnippet::messageId, SearchSnippet::highlightedSubject)
+            .containsExactly(tuple(messageId1, Optional.of("<mark>Quarterly</mark> report")));
     }
 }
