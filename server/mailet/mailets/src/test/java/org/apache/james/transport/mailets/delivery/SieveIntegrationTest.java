@@ -1188,6 +1188,23 @@ class SieveIntegrationTest {
 
     @Test
     void vacationFromSubjectShouldWork() throws Exception {
+        prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationSubjectOwnFromReason.script", DATE_DEFAULT, DATE_NEW);
+
+        FakeMail mail = createMail();
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
+            .sender(new MailAddress(RECEIVER_DOMAIN_COM))
+            .recipient(new MailAddress("sender@any.com"))
+            .fromMailet()
+            .build();
+        assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
+        assertThat(fakeMailContext.getSentMails().get(0).getMsg().getSubject()).isEqualTo("Vacation time");
+    }
+
+    @Test
+    void vacationShouldNotUseAFromThatIsNotTheUserAsEnvelopeSender() throws Exception {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationSubjectFromReason.script", DATE_DEFAULT, DATE_NEW);
 
         FakeMail mail = createMail();
@@ -1195,7 +1212,7 @@ class SieveIntegrationTest {
 
         assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
         FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
-            .sender(new MailAddress("benwa@apache.org"))
+            .sender(new MailAddress(RECEIVER_DOMAIN_COM))
             .recipient(new MailAddress("sender@any.com"))
             .fromMailet()
             .build();
