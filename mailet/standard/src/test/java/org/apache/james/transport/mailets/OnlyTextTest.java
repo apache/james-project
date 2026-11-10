@@ -20,8 +20,10 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Properties;
 
 import jakarta.mail.MessagingException;
@@ -35,6 +37,8 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class OnlyTextTest {
 
@@ -199,4 +203,25 @@ class OnlyTextTest {
         assertThat(mailet.html2Text(html)).isEqualTo("Vediamo invece come andiamo con gli entities\nèà &grave;\n");
     }
 
+    @Test
+    void html2TextShouldRemoveFromAnOpeningBracketToTheFirstClosingOneOnTheSameLine() throws MessagingException {
+        OnlyText mailet = new OnlyText();
+        mailet.init(FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build());
+
+        assertThat(mailet.html2Text("a<b <i>c<br / >d<x\ny>e<<")).isEqualTo("ac\nd<x\ny>e<<");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"<br", "<li", "<dd", "<"})
+    void html2TextShouldBeFastOnUnclosedTagsFollowedByManySpaces(String opening) throws MessagingException {
+        OnlyText mailet = new OnlyText();
+        mailet.init(FakeMailetConfig.builder()
+                .mailetName("Test")
+                .build());
+        String html = opening + " ".repeat(100_000) + "x" + "<".repeat(100_000);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () -> mailet.html2Text(html));
+    }
 }
