@@ -56,6 +56,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
+import org.apache.james.protocols.netty.BoundedHAProxyMessageDecoder;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
@@ -76,7 +77,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.traffic.AbstractTrafficShapingHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
@@ -317,7 +317,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                 connectionPerIpLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_PER_IP_HANDLER, handler));
 
                 if (proxyRequired) {
-                    pipeline.addLast(HandlerConstants.PROXY_HANDLER, new HAProxyMessageDecoder());
+                    pipeline.addLast(HandlerConstants.PROXY_HANDLER, new BoundedHAProxyMessageDecoder());
                     pipeline.addLast("proxyInformationHandler", new HAProxyMessageHandler(connectionChecks));
                 }
 

@@ -28,6 +28,7 @@ import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
+import org.apache.james.protocols.netty.BoundedHAProxyMessageDecoder;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
@@ -39,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
-import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
@@ -97,7 +97,7 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
                 ChannelPipeline pipeline = channel.pipeline();
 
                 if (proxyRequired) {
-                    pipeline.addLast(HandlerConstants.PROXY_HANDLER, new HAProxyMessageDecoder());
+                    pipeline.addLast(HandlerConstants.PROXY_HANDLER, new BoundedHAProxyMessageDecoder());
                 }
 
                 // See also AbstractSSLAwareChannelPipelineFactory.

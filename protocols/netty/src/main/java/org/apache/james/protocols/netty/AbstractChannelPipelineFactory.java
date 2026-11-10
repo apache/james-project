@@ -25,7 +25,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.concurrent.EventExecutorGroup;
 
@@ -67,7 +66,7 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
         connectionPerIpLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_PER_IP_HANDLER, handler));
 
         if (proxyRequired) {
-            pipeline.addLast(HandlerConstants.PROXY_HANDLER, new HAProxyMessageDecoder());
+            pipeline.addLast(HandlerConstants.PROXY_HANDLER, new BoundedHAProxyMessageDecoder());
         }
 
         // Add the ChunkedWriteHandler to be able to write ChunkInput
