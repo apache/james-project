@@ -74,12 +74,14 @@ case class Subscriptions(subscribedNames: Set[MailboxPath]) {
   def isSubscribed(metaData: MailboxMetaData): IsSubscribed = isSubscribed(metaData.getPath)
 }
 
+object MailboxFactory {
+  def getRole(mailboxPath: MailboxPath, mailboxSession: MailboxSession): Option[Role] = Role.from(mailboxPath.getName)
+    .filter(_ => mailboxPath.belongsTo(mailboxSession)).toScala
+}
+
 class MailboxFactory @Inject() (mailboxManager: MailboxManager,
                                 namespaceFactory: NamespaceFactory,
                                 sortOrderProvider: SortOrderProvider) {
-
-  private def getRole(mailboxPath: MailboxPath, mailboxSession: MailboxSession): Option[Role] = Role.from(mailboxPath.getName)
-    .filter(_ => mailboxPath.belongsTo(mailboxSession)).toScala
 
   private def getSortOrder(role: Option[Role]): SortOrder = role.map(sortOrderProvider.retrieveSortOrder).getOrElse(SortOrder.defaultSortOrder)
 
@@ -130,7 +132,7 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
         SMono.fromPublisher(quotaLoader.getQuotas(mailboxMetaData.getPath))
           .map(quotas => {
             val id: MailboxId = mailboxMetaData.getId
-            val role: Option[Role] = getRole(mailboxMetaData.getPath, mailboxSession)
+            val role: Option[Role] = MailboxFactory.getRole(mailboxMetaData.getPath, mailboxSession)
             val sortOrder: SortOrder = getSortOrder(role)
             val rights: Rights = getRights(mailboxMetaData.getResolvedAcls)
             val namespace: MailboxNamespace = getNamespace(mailboxMetaData.getPath, mailboxSession)
@@ -180,7 +182,7 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
               SMono.fromPublisher(quotaLoader.getQuotas(messageManager.getMailboxPath)))
             .map(tuple2 => {
               val resolvedACL = messageManager.getResolvedAcl(mailboxSession)
-              val role: Option[Role] = getRole(messageManager.getMailboxPath, mailboxSession)
+              val role: Option[Role] = MailboxFactory.getRole(messageManager.getMailboxPath, mailboxSession)
               val sortOrder: SortOrder = getSortOrder(role)
               val rights: Rights = getRights(resolvedACL)
               val namespace: MailboxNamespace = getNamespace(messageManager.getMailboxPath, mailboxSession)

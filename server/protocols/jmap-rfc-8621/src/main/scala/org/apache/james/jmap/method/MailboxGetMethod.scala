@@ -59,6 +59,20 @@ case class MailboxGetResults(mailboxes: Set[Mailbox], notFound: NotFound) {
     notFound = notFound)
 }
 
+object MailboxGetMethod {
+  def mailboxQuery(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): MailboxQuery =
+    if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
+      MailboxQuery.builder
+        .matchesAllMailboxNames
+        .build
+    } else {
+      MailboxQuery.builder
+        .privateNamespace()
+        .user(mailboxSession.getUser)
+        .build
+    }
+}
+
 class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
                                   mailboxManager: MailboxManager,
                                   subscriptionManager: SubscriptionManager,
@@ -173,19 +187,7 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
 
   private def getAllMailboxesMetaData(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[Map[MailboxPath, MailboxMetaData]] =
       SFlux.fromPublisher(mailboxManager.search(
-          mailboxQuery(capabilities, mailboxSession),
+          MailboxGetMethod.mailboxQuery(capabilities, mailboxSession),
           mailboxSession))
         .collectMap(_.getPath)
-
-  private def mailboxQuery(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession) =
-    if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
-      MailboxQuery.builder
-        .matchesAllMailboxNames
-        .build
-    } else {
-      MailboxQuery.builder
-        .privateNamespace()
-        .user(mailboxSession.getUser)
-        .build
-    }
 }

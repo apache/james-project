@@ -31,7 +31,16 @@ case class MailboxQueryRequest(accountId: AccountId, filter: MailboxFilter) exte
 object MailboxFilter{
   val SUPPORTED: Set[String] = Set("role")
 }
-case class MailboxFilter(role: Role)
+
+sealed trait RoleCondition
+
+case object AnyRole extends RoleCondition
+
+case object NoRole extends RoleCondition
+
+case class WithRole(role: Role) extends RoleCondition
+
+case class MailboxFilter(role: RoleCondition)
 
 case class MailboxQueryResponse(accountId: AccountId,
                               queryState: QueryState,

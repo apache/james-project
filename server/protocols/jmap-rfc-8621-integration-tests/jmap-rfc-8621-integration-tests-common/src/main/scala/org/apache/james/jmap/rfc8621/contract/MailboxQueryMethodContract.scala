@@ -35,6 +35,7 @@ import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
@@ -639,6 +640,99 @@ trait MailboxQueryMethodContract {
       |  "type":"invalidArguments",
       |  "description":"'/filter/role' property is not valid: spam is not a valid role"
       |},"q1"]""".stripMargin)
+  }
+
+  @Test
+  def nullRoleShouldReturnMailboxesWithoutRole(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "Sent"))
+    val projectsId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "Projects"))
+    val inboxSentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "INBOX.Sent"))
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{"role":null}}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0]").isEqualTo(s"""["Mailbox/query",{
+      |  "accountId":"$bobAccountId",
+      |  "queryState":"${generateQueryState(inboxSentId, projectsId)}",
+      |  "canCalculateChanges":false,
+      |  "ids":["${inboxSentId.serialize}","${projectsId.serialize}"],
+      |  "position":0,
+      |  "limit":256
+      |},"q1"]""".stripMargin)
+  }
+
+  @Test
+  def nullRoleShouldReturnEmptyWhenEveryMailboxHasARole(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{"role":null}}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0]").isEqualTo(s"""["Mailbox/query",{
+      |  "accountId":"$bobAccountId",
+      |  "queryState":"${generateQueryState()}",
+      |  "canCalculateChanges":false,
+      |  "ids":[],
+      |  "position":0,
+      |  "limit":256
+      |},"q1"]""".stripMargin)
+  }
+
+  @Test
+  def nullRoleShouldNotReturnSharedMailboxesWithoutSharesCapability(server: GuiceJamesServer): Unit = {
+    val andreMailbox = MailboxPath.forUser(andreUsername, "Shared")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
+    val projectsId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, "Projects"))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailbox, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{"role":null}}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].ids").isEqualTo(s"""["${projectsId.serialize}"]""")
+  }
+
+  @Test
+  def nullRoleShouldReturnSharedMailboxesWithSharesCapability(server: GuiceJamesServer): Unit = {
+    val andreMailbox = MailboxPath.forUser(andreUsername, "Shared")
+    val andreMailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
+    val projectsId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, "Projects"))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailbox, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{"role":null}}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].ids")
+      .isEqualTo(s"""["${andreMailboxId.serialize}","${projectsId.serialize}"]""")
   }
 
   private def generateQueryState(ids: MailboxId*): String =
