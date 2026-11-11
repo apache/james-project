@@ -133,7 +133,7 @@ public interface Mailet {
     /**
      * @return the list of processors that needs to be present according to this mailet configuration.
      * <p>
-     * Needs to be called after {@link Mailet::init()}
+     * Needs to be called after {@link Mailet#init()}
      */
     default Collection<ProcessingState> requiredProcessingState() {
         return ImmutableList.of();

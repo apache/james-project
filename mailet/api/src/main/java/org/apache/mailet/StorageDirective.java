@@ -48,7 +48,7 @@ import com.google.common.primitives.Booleans;
  *             .build()
  *             .encodeAsAttributes(Username.of("bob@localhost")
  *             .forEach(mail::setAttribute);
- *      </code></code>
+ *      </code>
  * </pre>
  *
  * This will result in this mail to be placed for bob@localhost into the folder target,

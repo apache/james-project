@@ -30,7 +30,7 @@ public interface StructuredLogger {
      *
      * See https://issues.apache.org/jira/browse/JAMES-3587
      *
-     * Use {@link StructuredLogger::field} instead.
+     * Use {@link StructuredLogger#field} instead.
      */
     @Deprecated
     StructuredLogger addField(String name, Object value);

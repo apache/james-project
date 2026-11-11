@@ -19,7 +19,6 @@
 
 
 /**
- * </p>
  * A normal James server can contains a variety of
  * {@link org.apache.james.mailrepository.api.MailRepository MailRepositories},
  * usual examples include :
@@ -33,7 +32,6 @@
  * sense to have different data store technologies for different mail repositories.
  * This allows server operators to leverage the corresponding store
  * characteristics to optimize for cost or performance.
- * </p>
  *
  * <p>
  * This is why a mail repository is associated to a specific
