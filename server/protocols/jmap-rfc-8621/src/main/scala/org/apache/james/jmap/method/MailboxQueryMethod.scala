@@ -66,7 +66,7 @@ class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvi
       .map(response => Invocation(methodName = methodName, arguments = Arguments(MailboxQuerySerializer.serialize(response)), methodCallId = invocation.methodCallId))
 
   private def retrieveIds(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, request: MailboxQueryRequest): SMono[Seq[MailboxId]] =
-    request.filter.role match {
+    request.filter.map(_.role).getOrElse(AnyRole) match {
       case WithRole(role) => SFlux.fromPublisher(systemMailboxesProvider.getMailboxByRole(role, mailboxSession.getUser))
         .map(_.getId)
         .collectSeq()

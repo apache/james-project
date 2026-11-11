@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.json
 
-import org.apache.james.jmap.mail.{NoRole, WithRole}
+import org.apache.james.jmap.mail.{AnyRole, MailboxFilter, NoRole, WithRole}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -33,7 +33,7 @@ class MailboxQuerySerializerTest {
     val request = MailboxQuerySerializer.deserialize(Json.obj("accountId" -> "account", "filter" -> Json.obj("role" -> role)))
 
     assertThat(request.isSuccess).isTrue()
-    assertThat(request.get.filter.role.asInstanceOf[WithRole].role.serialize()).isEqualTo(role)
+    assertThat(request.get.filter.get.role.asInstanceOf[WithRole].role.serialize()).isEqualTo(role)
   }
 
   @ParameterizedTest
@@ -41,7 +41,7 @@ class MailboxQuerySerializerTest {
   def deserializeShouldAcceptFolderNames(role: String): Unit = {
     val request = MailboxQuerySerializer.deserialize(Json.obj("accountId" -> "account", "filter" -> Json.obj("role" -> role)))
 
-    assertThat(request.get.filter.role.asInstanceOf[WithRole].role.getDefaultMailbox).isEqualTo(role)
+    assertThat(request.get.filter.get.role.asInstanceOf[WithRole].role.getDefaultMailbox).isEqualTo(role)
   }
 
   @ParameterizedTest
@@ -64,14 +64,30 @@ class MailboxQuerySerializerTest {
   def deserializeShouldAcceptNullRole(): Unit = {
     val request = MailboxQuerySerializer.deserialize(Json.parse("""{"accountId":"account","filter":{"role":null}}"""))
 
-    assertThat(request.get.filter.role).isEqualTo(NoRole)
+    assertThat(request.get.filter.get.role).isEqualTo(NoRole)
   }
 
   @ParameterizedTest
   @ValueSource(strings = Array(
     """{"accountId":"account"}""",
-    """{"accountId":"account","filter":{}}""",
-    """{"accountId":"account","filter":{"role":"inbox","unsupported":true}}"""))
+    """{"accountId":"account","filter":null}"""))
+  def deserializeShouldAcceptMissingFilter(request: String): Unit = {
+    assertThat(MailboxQuerySerializer.deserialize(Json.parse(request)).get.filter).isEqualTo(None)
+  }
+
+  @Test
+  def deserializeShouldAcceptFilterWithoutRole(): Unit = {
+    val request = MailboxQuerySerializer.deserialize(Json.parse("""{"accountId":"account","filter":{}}"""))
+
+    assertThat(request.get.filter).isEqualTo(Some(MailboxFilter(AnyRole)))
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array(
+    """{"accountId":"account","filter":{"role":"inbox","unsupported":true}}""",
+    """{"accountId":"account","filter":{"unsupported":true}}""",
+    """{"accountId":"account","filter":"inbox"}""",
+    """{"accountId":"account","filter":[]}"""))
   def deserializeShouldRejectMalformedRequest(request: String): Unit = {
     assertThat(MailboxQuerySerializer.deserialize(Json.parse(request)).isError).isTrue()
   }
