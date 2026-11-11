@@ -27,8 +27,8 @@ public interface MailRepositoryStore {
     /**
      * Select the {@link MailRepository} for the given url.
      *
-     * If the repository is not referenced by {@link MailRepositoryStore::getUrls}, it will be created, and its URL referenced
-     * by {@link MailRepositoryStore::getUrls}.
+     * If the repository is not referenced by {@link MailRepositoryStore#getUrls}, it will be created, and its URL referenced
+     * by {@link MailRepositoryStore#getUrls}.
      */
     MailRepository select(MailRepositoryUrl url) throws MailRepositoryStoreException;
 
@@ -38,7 +38,7 @@ public interface MailRepositoryStore {
      * Create the {@link MailRepository} for the given url and return it. If the repository already exists,
      * then no new repository is created, the old one will be returned.
      *
-     * The URL of the created repository will be referenced by {@link MailRepositoryStore::getUrls}
+     * The URL of the created repository will be referenced by {@link MailRepositoryStore#getUrls}
      */
     default MailRepository create(MailRepositoryUrl url) throws MailRepositoryStoreException {
         return select(url);
@@ -47,19 +47,19 @@ public interface MailRepositoryStore {
     /**
      * Returns the {@link MailRepository} for the given url.
      *
-     * This mail repository will not be created if the URL is not referenced by {@link MailRepositoryStore::getUrls}.
+     * This mail repository will not be created if the URL is not referenced by {@link MailRepositoryStore#getUrls}.
      *
-     * If the repository is referenced by {@link MailRepositoryStore::getUrls}, and the repository do not exist locally, then
+     * If the repository is referenced by {@link MailRepositoryStore#getUrls}, and the repository do not exist locally, then
      * this repository will be created locally.
      */
     Optional<MailRepository> get(MailRepositoryUrl url) throws MailRepositoryStoreException;
 
     /**
-     * Returns all the {@link MailRepository} referenced by {@link MailRepositoryStore::getUrls} got a given path.
+     * Returns all the {@link MailRepository} referenced by {@link MailRepositoryStore#getUrls} got a given path.
      *
      * The corresponding mail repositories will not be created if they do not exist.
      *
-     * If the path matches URLs referenced by {@link MailRepositoryStore::getUrls}, and the repositories do not exist locally, then
+     * If the path matches URLs referenced by {@link MailRepositoryStore#getUrls}, and the repositories do not exist locally, then
      * these repositories will be created locally.
      */
     Stream<MailRepository> getByPath(MailRepositoryPath path) throws MailRepositoryStoreException;

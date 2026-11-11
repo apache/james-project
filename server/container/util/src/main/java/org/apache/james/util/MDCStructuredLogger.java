@@ -43,7 +43,7 @@ public class MDCStructuredLogger implements StructuredLogger {
      *
      * See https://issues.apache.org/jira/browse/JAMES-3587
      *
-     * Use {@link MDCStructuredLogger::field} instead
+     * Use {@link MDCStructuredLogger#field} instead
      */
     @Deprecated
     @Override

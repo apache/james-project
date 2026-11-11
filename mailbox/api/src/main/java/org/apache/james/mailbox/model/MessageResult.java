@@ -53,7 +53,7 @@ import org.apache.james.mailbox.exception.MailboxException;
  * <li>call Folder.getUid(Message)</li>
  * </ol>
  * <p>
- * This means creating a lazy-loading MimeMessage instance. </br> So why don't
+ * This means creating a lazy-loading MimeMessage instance. So why don't
  * call getMessages(MessageResult.UID | MessageResult.MSN |
  * MessageResult.FLAGS)? This would leave a lot of room for the implementation
  * to optimize

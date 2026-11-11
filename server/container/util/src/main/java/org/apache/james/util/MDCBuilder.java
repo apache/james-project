@@ -80,7 +80,7 @@ public class MDCBuilder {
      *
      * See https://issues.apache.org/jira/browse/JAMES-3587
      *
-     * Use {@link MDCBuilder::ofValue} instead.
+     * Use {@link MDCBuilder#ofValue} instead.
      */
     @Deprecated
     public static MDCBuilder of(String key, Object value) {
@@ -104,7 +104,7 @@ public class MDCBuilder {
      *
      * See https://issues.apache.org/jira/browse/JAMES-3587
      *
-     * Use {@link MDCBuilder::addToContext} instead.
+     * Use {@link MDCBuilder#addToContext} instead.
      */
     @Deprecated
     public MDCBuilder addContext(MDCBuilder nested) {
@@ -118,7 +118,7 @@ public class MDCBuilder {
      *
      * See https://issues.apache.org/jira/browse/JAMES-3587
      *
-     * Use {@link MDCBuilder::addToContext} instead.
+     * Use {@link MDCBuilder#addToContext} instead.
      */
     @Deprecated
     public MDCBuilder addContext(String key, Object value) {

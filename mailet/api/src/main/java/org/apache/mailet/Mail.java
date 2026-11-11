@@ -321,7 +321,7 @@ public interface Mail extends Serializable, Cloneable {
      *      if there was no such attribute (or if the attribute existed
      *      and its value was null)
      * @since Mailet API v2.1
-     * @deprecated see {@link #removeAttribute(AttributeName)
+     * @deprecated see {@link #removeAttribute(AttributeName)}
      */
     @Deprecated
     Serializable removeAttribute(String name);
@@ -358,7 +358,7 @@ public interface Mail extends Serializable, Cloneable {
      *      or null if there was no such attribute (or if the attribute existed
      *      and its value was null)
      * @since Mailet API v2.1
-     * @deprecated see {@link #setAttribute(Attribute)
+     * @deprecated see {@link #setAttribute(Attribute)}
      */
     @Deprecated
     Serializable setAttribute(String name, Serializable object);
