@@ -24,20 +24,23 @@ import org.apache.james.protocols.smtp.SMTPSession;
 
 /**
  * Abstract base class which makes it easier to handles lines be providing one method per message part.
- * </br>
- * </br>
+ * <br>
  * This is:
- * </br>
- * <strong>headers</strong></br>
- * <strong>separator</strong></br>
- * <strong>body</strong></br>
- * </br>
+ * <br>
+ * <strong>headers</strong>
+ * <br>
+ * <strong>separator</strong>
+ * <br>
+ * <strong>body</strong>
+ * <br>
  * 
  * Subclasses should override at least one of these methods:
- * </br>
- * {@link #onHeadersLine(SMTPSession, byte[], LineHandler)}</br>
- * {@link #onSeparatorLine(SMTPSession, byte[], LineHandler)}</br>
- * {@link #onBodyLine(SMTPSession, byte[], LineHandler)}</br>
+ * <br>
+ * {@link #onHeadersLine(SMTPSession, byte[], LineHandler)}
+ * <br>
+ * {@link #onSeparatorLine(SMTPSession, byte[], LineHandler)}
+ * <br>
+ * {@link #onBodyLine(SMTPSession, byte[], LineHandler)}
  * 
  *
  */

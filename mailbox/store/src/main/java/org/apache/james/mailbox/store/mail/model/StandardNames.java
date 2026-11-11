@@ -60,7 +60,7 @@ package org.apache.james.mailbox.store.mail.model;
  * <code>http://james.apache.org/rfc2045/Content-Type/</code>. 
  * It's parameters are spaced in 
  * <code>http://james.apache.org/rfc2045/Content-Type/params</code>.
- * </p><p>
+ * <p>
  * So, for <code>Content-Type: text/plain ; charset=us-ascii</code>:
  * </p>
  * <table>

@@ -55,7 +55,7 @@ public class POP3Response extends AbstractResponse {
     
     /**
      * Construct a new POP3Response. The given code can not be
-     * </code>null</code>, if <code>null</code> an {@link IllegalArgumentException} get thrown
+     * <code>null</code>, if <code>null</code> an {@link IllegalArgumentException} get thrown
      * 
      * @param code
      *            the returnCode

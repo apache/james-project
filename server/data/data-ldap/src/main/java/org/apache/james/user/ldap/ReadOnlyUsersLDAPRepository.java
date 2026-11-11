@@ -66,7 +66,7 @@ import reactor.core.publisher.Mono;
  * </p>
  * <p>
  * The following fragment of XML provides an example configuration to enable
- * this repository: </br>
+ * this repository:
  *
  * <pre>
  *  &lt;users-store&gt;
@@ -82,7 +82,6 @@ import reactor.core.publisher.Mono;
  *  &lt;/users-store&gt;
  * </pre>
  *
- * </br>
  *
  * Its constituent attributes are defined as follows:
  * <ul>
@@ -110,7 +109,6 @@ import reactor.core.publisher.Mono;
  * <li><b>maxWaitTime</b>: (optional, default = 1000) the number of milli seconds to wait before creating off-pool
  * connections, using a pool connection if released in time. This effectively smooth out traffic burst, thus in some case can help
  * not overloading the LDAP</li>
- * <li>
  * </ul>
  * </p>
  *

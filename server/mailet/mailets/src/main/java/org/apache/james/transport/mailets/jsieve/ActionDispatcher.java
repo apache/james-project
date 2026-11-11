@@ -41,7 +41,7 @@ public class ActionDispatcher {
     /**
      * A Map keyed by the type of Action. The values are the methods to invoke to
      * handle the Action.
-     * <Action, MailAction>
+     * {@code <Action, MailAction>}
      */
     private static final ImmutableMap<Class<?>, MailAction> MAIL_ACTIONS = ImmutableMap.of(
             ActionFileInto.class, new FileIntoAction(),

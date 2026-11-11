@@ -94,7 +94,7 @@ import com.google.common.base.Objects;
  *      At least one of the passwords must be provided.</li>
  * <li>&lt;keyStoreType&gt;: the type of the keystore. The default will use {@link java.security.KeyStore#getDefaultType}.</li>
  * <li>&lt;postmasterSigns&gt;: if <CODE>true</CODE> the message will be signed even if the sender is the Postmaster.
- * The default is <CODE>false</CODE>.</li></li>
+ * The default is <CODE>false</CODE>.</li>
  * <li>&lt;rebuildFrom&gt;: If <CODE>true</CODE> will modify the "From:" header.
  * For more info see {@link #isRebuildFrom}.
  * The default is <CODE>false</CODE>.</li>
@@ -376,8 +376,8 @@ public abstract class AbstractSign extends GenericMailet {
      * If true will modify the "From:" header.
      * <P>The modification is as follows:
      * assuming that the signer mail address in the signer certificate is <I>trusted-server@xxx.com&gt;</I>
-     * and that <I>From: "John Smith" <john.smith@xxx.com></I>
-     * we will get <I>From: "John Smith" <john.smith@xxx.com>" &lt;trusted-server@xxx.com&gt;</I>.</P>
+     * and that <I>From: "John Smith" &lt;john.smith@xxx.com&gt;</I>
+     * we will get <I>From: "John Smith" &lt;john.smith@xxx.com&gt;" &lt;trusted-server@xxx.com&gt;</I>.</P>
      * <P>If the "ReplyTo:" header is missing or empty it will be set to the original "From:" header.</P>
      * <P>Such modification is necessary to achieve a correct behaviour
      * with some mail clients (e.g. Microsoft Outlook Express).</P>

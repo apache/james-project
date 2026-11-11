@@ -202,7 +202,6 @@ import com.google.common.collect.ImmutableSet;
  * it will remove this header.<br>
  * Default: &quot;unaltered&quot;.</td>
  * </tr>
- * </tr>
  * <tr valign=top>
  * <td width="20%">&lt;reversePath&gt;</td>
  * <td width="80%">
