@@ -1441,10 +1441,57 @@ class SieveIntegrationTest {
         assertThat(fakeMailContext.getSentMails()).hasSize(1);
     }
 
+    @Test
+    void vacationShouldNotReplyNorCancelLaterActionsWhenTheRegistryThrows() throws Exception {
+        testee = sieveWithRegistry(throwingRegistry(true));
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReasonAndFileInto.script");
+
+        FakeMail mail = createMail();
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @Test
+    void vacationShouldReplyAndNotCancelLaterActionsWhenRegisteringThrows() throws Exception {
+        testee = sieveWithRegistry(throwingRegistry(false));
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReasonAndFileInto.script");
+
+        FakeMail mail = createMail();
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+    }
+
     private Sieve sieveWithRegistry(NotificationRegistry registry) throws MessagingException {
         Sieve sieve = new Sieve(usersRepository, resourceLocator, registry, new AutomaticallySentMailDetectorImpl());
         sieve.init(FakeMailetConfig.builder().mailetName("Sieve").mailetContext(fakeMailContext).build());
         return sieve;
+    }
+
+    // Throws before returning a Mono, as a registry rejecting the account id does
+    private NotificationRegistry throwingRegistry(boolean throwOnLookup) {
+        return new NotificationRegistry() {
+            @Override
+            public Mono<Void> register(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
+                throw new IllegalArgumentException("invalid account id");
+            }
+
+            @Override
+            public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
+                if (throwOnLookup) {
+                    throw new IllegalArgumentException("invalid account id");
+                }
+                return Mono.just(false);
+            }
+
+            @Override
+            public Mono<Void> flush(AccountId accountId) {
+                return Mono.empty();
+            }
+        };
     }
 
     private NotificationRegistry failingRegistry(Mono<Boolean> isRegistered) {
