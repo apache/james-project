@@ -40,7 +40,7 @@ public class Role {
     public static final Role SENT = new Role("sent", DefaultMailboxes.SENT, CASE_SENSITIVE_COMPARATOR);
     public static final Role TRASH = new Role("trash", DefaultMailboxes.TRASH, CASE_SENSITIVE_COMPARATOR);
     public static final Role ARCHIVE = new Role("archive", DefaultMailboxes.ARCHIVE, CASE_SENSITIVE_COMPARATOR);
-    public static final Role SPAM = new Role("spam", DefaultMailboxes.SPAM, CASE_SENSITIVE_COMPARATOR);
+    public static final Role SPAM = new Role("junk", DefaultMailboxes.SPAM, CASE_SENSITIVE_COMPARATOR);
     public static final Role TEMPLATES = new Role("templates", DefaultMailboxes.TEMPLATES, CASE_SENSITIVE_COMPARATOR);
     public static final Role RESTORED_MESSAGES =
         new Role("restored messages", DefaultMailboxes.RESTORED_MESSAGES, CASE_SENSITIVE_COMPARATOR);
@@ -66,6 +66,12 @@ public class Role {
 
     public static Optional<Role> from(String name) {
         return predefinedRole(name);
+    }
+
+    public static Optional<Role> fromName(String name) {
+        return ROLES.stream()
+                .filter(role -> role.name.equals(name))
+                .findFirst();
     }
 
     private static Optional<Role> predefinedRole(String name) {

@@ -40,7 +40,7 @@ import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import org.junit.jupiter.params.provider.{CsvSource, ValueSource}
 
 object MailboxQueryMethodContract {
   case class TestContext(bobUsername: Username, bobAccountId: String, andreUsername: Username)
@@ -574,6 +574,70 @@ trait MailboxQueryMethodContract {
     assertThatJson(response).inPath("methodResponses[0]").isEqualTo(s"""["error",{
       |  "type":"invalidArguments",
       |  "description":"'/filter/role' property is not valid: $role is not a valid role"
+      |},"q1"]""".stripMargin)
+  }
+
+  @ParameterizedTest
+  @CsvSource(Array(
+    "inbox, INBOX",
+    "drafts, Drafts",
+    "outbox, Outbox",
+    "sent, Sent",
+    "trash, Trash",
+    "archive, Archive",
+    "junk, Spam",
+    "templates, Templates",
+    "restored messages, Restored-Messages"))
+  def roleNameShouldRetrieveTheMailbox(roleName: String, folderName: String, server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, folderName))
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{"role":"$roleName"}}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].ids").isEqualTo(s"""["${mailboxId.serialize}"]""")
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array("Sent", "Spam", "Restored-Messages"))
+  def folderNameShouldStillRetrieveTheMailbox(folderName: String, server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, folderName))
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{"role":"$folderName"}}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].ids").isEqualTo(s"""["${mailboxId.serialize}"]""")
+  }
+
+  @Test
+  def spamShouldBeRejected(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "Spam"))
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{"role":"spam"}}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0]").isEqualTo("""["error",{
+      |  "type":"invalidArguments",
+      |  "description":"'/filter/role' property is not valid: spam is not a valid role"
       |},"q1"]""".stripMargin)
   }
 
