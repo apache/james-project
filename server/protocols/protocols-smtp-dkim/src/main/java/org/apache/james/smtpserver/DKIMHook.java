@@ -45,6 +45,9 @@ import org.apache.james.jdkim.api.PublicKeyRecordRetriever;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
 import org.apache.james.jdkim.mailets.DKIMVerifier;
+import org.apache.james.mime4j.dom.address.Mailbox;
+import org.apache.james.mime4j.field.address.LenientAddressParser;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
@@ -108,22 +111,32 @@ public class DKIMHook implements JamesMessageHook {
         }
 
         /**
-         * True when any mailbox of any From: field is in the domain. A From: that does not parse is checked when
-         * its raw value mentions the domain: an attacker should not skip the check by malforming the field.
+         * True when any mailbox of any From: field is in the domain, for Jakarta Mail or for the lenient mime4j
+         * parser. A From: that Jakarta Mail does not parse is also checked when its raw value mentions the domain:
+         * an attacker should not skip the check by malforming the field.
          */
         static DKIMCheckNeeded onlyForHeaderFromDomain(Domain domain) {
             return mail -> {
+                List<String> rawFrom = rawFrom(mail);
                 try {
                     Address[] from = mail.getMessage().getFrom();
-                    return from != null && Arrays.stream(from)
-                        .anyMatch(address -> isInDomain(address, domain));
+                    return (from != null && Arrays.stream(from).anyMatch(address -> isInDomain(address, domain)))
+                        || rawFrom.stream().anyMatch(value -> isInDomainForMime4j(value, domain));
                 } catch (MessagingException me) {
-                    String[] rawFrom = rawFrom(mail);
                     LOGGER.info("Unable to parse the \"FROM\" header {}; checking DKIM if it mentions {}.", rawFrom, domain.asString());
-                    return rawFrom != null && Arrays.stream(rawFrom)
-                        .anyMatch(value -> mentions(value, domain));
+                    return rawFrom.stream()
+                        .anyMatch(value -> isInDomainForMime4j(value, domain) || mentions(value, domain));
                 }
             };
+        }
+
+        private static boolean isInDomainForMime4j(String rawFrom, Domain domain) {
+            return LenientAddressParser.DEFAULT.parseAddressList(MimeUtil.unfold(rawFrom))
+                .flatten()
+                .stream()
+                .map(Mailbox::getDomain)
+                .filter(Objects::nonNull)
+                .anyMatch(mailboxDomain -> mailboxDomain.trim().equalsIgnoreCase(domain.asString()));
         }
 
         private static boolean isInDomain(Address from, Domain domain) {
@@ -151,11 +164,13 @@ public class DKIMHook implements JamesMessageHook {
             return value != null && value.toLowerCase(Locale.US).contains("@" + domain.asString().toLowerCase(Locale.US));
         }
 
-        private static String[] rawFrom(Mail mail) {
+        private static List<String> rawFrom(Mail mail) {
             try {
-                return mail.getMessage().getHeader("From");
+                return Optional.ofNullable(mail.getMessage().getHeader("From"))
+                    .map(Arrays::asList)
+                    .orElse(List.of());
             } catch (MessagingException e) {
-                return null;
+                return List.of();
             }
         }
 

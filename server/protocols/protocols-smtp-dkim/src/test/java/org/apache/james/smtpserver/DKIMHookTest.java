@@ -36,6 +36,8 @@ import org.apache.james.smtpserver.DKIMHook.Config.ValidatedEntity;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableList;
 
@@ -245,6 +247,40 @@ class DKIMHookTest {
                     .mimeMessage(mimeMessage)
                     .build()))
                 .isTrue();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"CEO <ceo@ localhost>", "ceo@(x)localhost", "ceo @ LocalHost", "Board: CEO <ceo@ localhost>;"})
+        void onlyForHeaderFromDomainShouldReturnTrueWhenAnUnparsableFromIsInTheDomainForMime4j(String from) throws Exception {
+            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .setText("This is my email")
+                .build();
+            mimeMessage.setHeader("From", from);
+
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(mimeMessage)
+                    .build()))
+                .isTrue();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"CEO <ceo@ other.com>", "ceo@(localhost)other.com"})
+        void onlyForHeaderFromDomainShouldReturnFalseWhenAnUnparsableFromIsInAnotherDomainForMime4j(String from) throws Exception {
+            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .setText("This is my email")
+                .build();
+            mimeMessage.setHeader("From", from);
+
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(mimeMessage)
+                    .build()))
+                .isFalse();
         }
     }
 
