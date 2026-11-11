@@ -164,7 +164,7 @@ class DKIMHookTest {
         }
 
         @Test
-        void onlyForHeaderFromDomainShouldReturnFalseWhenMalformedFromAddressDoesNotMentionTheDomain() throws Exception {
+        void onlyForHeaderFromDomainShouldReturnTrueWhenMalformedFromAddressIsInAnotherDomain() throws Exception {
             System.setProperty("mail.mime.address.strict", "false");
             try {
                 var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
@@ -178,7 +178,7 @@ class DKIMHookTest {
                         .sender("offers@fedex.com")
                         .mimeMessage(mimeMessage)
                         .build()))
-                    .isFalse();
+                    .isTrue();
             } finally {
                 System.clearProperty("mail.mime.address.strict");
             }
@@ -233,29 +233,16 @@ class DKIMHookTest {
                 .isTrue();
         }
 
-        @Test
-        void onlyForHeaderFromDomainShouldReturnTrueWhenUnparsableFromMentionsTheDomain() throws Exception {
-            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
-                .setText("This is my email")
-                .build();
-            mimeMessage.setHeader("From", "\"CEO <ceo@localhost>");
-
-            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
-                .test(FakeMail.builder()
-                    .name("mail")
-                    .sender("bob@other.com")
-                    .mimeMessage(mimeMessage)
-                    .build()))
-                .isTrue();
-        }
-
         @ParameterizedTest
-        @ValueSource(strings = {"CEO <ceo@ localhost>", "ceo@(x)localhost", "ceo @ LocalHost", "Board: CEO <ceo@ localhost>;",
+        @ValueSource(strings = {"\"CEO <ceo@localhost>", "CEO <ceo@ localhost>", "ceo@(x)localhost", "ceo @ LocalHost", "Board: CEO <ceo@ localhost>;",
             "CEO <ceo@ localhost.>", "ceo@(x)localhost.", "ceo@[localhost]", "CEO <ceo@[localhost]>", "ceo@[localhost.]", "ceo@[LOCALHOST.]",
             "ceo@[localhost].", "CEO <ceo@[localhost].>", "ceo@[localhost]..", "ceo@[localhost] .", "ceo@[localhost](x).",
             "ceo@[localhost.].", "ceo@[ localhost ].", "bob@other.com, ceo@[localhost].", "ceo@.localhost", "CEO <ceo@ .localhost>",
-            "ceo@[.localhost]", "ceo@.[localhost]"})
-        void onlyForHeaderFromDomainShouldReturnTrueWhenAnUnparsableFromIsInTheDomainForMime4j(String from) throws Exception {
+            "ceo@[.localhost]", "ceo@.[localhost]", "\"CEO <ceo@ localhost>", "\"CEO <ceo@\tLOCALHOST>", "\"CEO <ceo@[localhost]>",
+            "\"CEO <ceo@ [localhost] >", "ceo@ .localhost \"x", "\"CEO <ceo@ .localhost>", "\"CEO <ceo@(x)localhost>",
+            "\"CEO <ceo@local(x)host>", "ceo@\u0001localhost", "CEO <ceo@ other.com>", "ceo@(localhost)other.com", "\"CEO <ceo@other.com>",
+            "CEO <ceo@ xn--bcher-kva.example>", "ceo@(x)xn--bcher-kva.example", "CEO <ceo@ bücher.example>", "ceo@ .xn--bcher-kva.example \"x"})
+        void onlyForHeaderFromDomainShouldReturnTrueWhenTheFromIsMalformed(String from) throws Exception {
             var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
                 .setText("This is my email")
                 .build();
@@ -271,58 +258,9 @@ class DKIMHookTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"\"CEO <ceo@ localhost>", "\"CEO <ceo@\tLOCALHOST>", "\"CEO <ceo@[localhost]>", "\"CEO <ceo@ [localhost] >"})
-        void onlyForHeaderFromDomainShouldReturnTrueWhenAnUnparsableFromMentionsTheDomainAfterWhitespace(String from) throws Exception {
-            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
-                .setText("This is my email")
-                .build();
-            mimeMessage.setHeader("From", from);
-
-            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
-                .test(FakeMail.builder()
-                    .name("mail")
-                    .sender("bob@other.com")
-                    .mimeMessage(mimeMessage)
-                    .build()))
-                .isTrue();
-        }
-
-        @Test
-        void onlyForHeaderFromDomainShouldReturnTrueWhenAnUnparsableFromMentionsTheAsciiFormOfTheDomain() throws Exception {
-            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
-                .setText("This is my email")
-                .build();
-            mimeMessage.setHeader("From", "\"CEO <ceo@xn--bcher-kva.example>");
-
-            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.of("xn--bcher-kva.example"))
-                .test(FakeMail.builder()
-                    .name("mail")
-                    .sender("bob@other.com")
-                    .mimeMessage(mimeMessage)
-                    .build()))
-                .isTrue();
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"CEO <ceo@ xn--bcher-kva.example>", "ceo@(x)xn--bcher-kva.example", "CEO <ceo@ bücher.example>"})
-        void onlyForHeaderFromDomainShouldReturnTrueWhenAnUnparsableFromIsInAnInternationalizedDomain(String from) throws Exception {
-            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
-                .setText("This is my email")
-                .build();
-            mimeMessage.setHeader("From", from);
-
-            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.of("xn--bcher-kva.example"))
-                .test(FakeMail.builder()
-                    .name("mail")
-                    .sender("bob@other.com")
-                    .mimeMessage(mimeMessage)
-                    .build()))
-                .isTrue();
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"CEO <ceo@ other.com>", "ceo@(localhost)other.com"})
-        void onlyForHeaderFromDomainShouldReturnFalseWhenAnUnparsableFromIsInAnotherDomainForMime4j(String from) throws Exception {
+        @ValueSource(strings = {"CEO <ceo@other.com>", "ceo@other.com (localhost)", "\"ceo@localhost\" <ceo@other.com>", "Board: ceo@other.com;",
+            "bob@other.com, alice@example.com", "ceo@[127.0.0.1]"})
+        void onlyForHeaderFromDomainShouldReturnFalseWhenAWellFormedFromIsInAnotherDomain(String from) throws Exception {
             var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
                 .setText("This is my email")
                 .build();

@@ -33,6 +33,17 @@ Change list:
  - [Regex mappings are evaluated with RE2J](#regex-mappings-are-evaluated-with-re2j)
  - [Domains with an A-label decoding to a capital unknown to IDNA2003 are rejected](#domains-with-an-a-label-decoding-to-a-capital-unknown-to-idna2003-are-rejected)
  - [Sieve vacation and reject follow RFC 5230 and RFC 5429](#sieve-vacation-and-reject-follow-rfc-5230-and-rfc-5429)
+ - [DKIMHook checks every malformed From header](#dkimhook-checks-every-malformed-from-header)
+
+### DKIMHook checks every malformed From header
+
+Date: 11/11/2026
+
+Perimeter: the SMTP `DKIMHook` restricted to a header From domain
+
+When a `From` header cannot be parsed, or holds an invalid address, the DKIM signature is now checked whatever its domain.
+Previously such a mail was only checked when the header seemed to be in the protected domain, which a crafted header could
+avoid. An unsigned mail with a malformed `From` header, from any domain, is thus rejected when `signatureRequired` is set.
 
 ### Sieve vacation and reject follow RFC 5230 and RFC 5429
 
