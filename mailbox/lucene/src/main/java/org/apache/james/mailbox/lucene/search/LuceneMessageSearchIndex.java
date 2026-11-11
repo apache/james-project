@@ -354,7 +354,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             IndexSearcher searcher = new IndexSearcher(reader);
             Query query = buildQuery(mailboxIds, searchQuery);
 
-            GroupingSearch groupingSearch = new GroupingSearch(new TermGroupSelector(THREAD_ID_FIELD));
+            GroupingSearch groupingSearch = new GroupingSearch(() -> new TermGroupSelector(THREAD_ID_FIELD));
             Sort sort = createSort(searchQuery.getSorts());
             groupingSearch.setGroupSort(sort);
             groupingSearch.setSortWithinGroup(sort);
