@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.json
 
+import org.apache.james.jmap.mail.{NoRole, WithRole}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -32,7 +33,7 @@ class MailboxQuerySerializerTest {
     val request = MailboxQuerySerializer.deserialize(Json.obj("accountId" -> "account", "filter" -> Json.obj("role" -> role)))
 
     assertThat(request.isSuccess).isTrue()
-    assertThat(request.get.filter.role.serialize()).isEqualTo(role)
+    assertThat(request.get.filter.role.asInstanceOf[WithRole].role.serialize()).isEqualTo(role)
   }
 
   @ParameterizedTest
@@ -40,7 +41,7 @@ class MailboxQuerySerializerTest {
   def deserializeShouldAcceptFolderNames(role: String): Unit = {
     val request = MailboxQuerySerializer.deserialize(Json.obj("accountId" -> "account", "filter" -> Json.obj("role" -> role)))
 
-    assertThat(request.get.filter.role.getDefaultMailbox).isEqualTo(role)
+    assertThat(request.get.filter.role.asInstanceOf[WithRole].role.getDefaultMailbox).isEqualTo(role)
   }
 
   @ParameterizedTest
@@ -52,11 +53,18 @@ class MailboxQuerySerializerTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = Array("null", "123", "true", "{}", "[]"))
+  @ValueSource(strings = Array("123", "true", "{}", "[]"))
   def deserializeShouldRejectNonStringRole(role: String): Unit = {
     val request = MailboxQuerySerializer.deserialize(Json.obj("accountId" -> "account", "filter" -> Json.obj("role" -> Json.parse(role))))
 
     assertThat(request.isError).isTrue()
+  }
+
+  @Test
+  def deserializeShouldAcceptNullRole(): Unit = {
+    val request = MailboxQuerySerializer.deserialize(Json.parse("""{"accountId":"account","filter":{"role":null}}"""))
+
+    assertThat(request.get.filter.role).isEqualTo(NoRole)
   }
 
   @ParameterizedTest

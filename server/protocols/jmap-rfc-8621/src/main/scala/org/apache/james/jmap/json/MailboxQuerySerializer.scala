@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import org.apache.james.jmap.core.{CanCalculateChanges, QueryState}
-import org.apache.james.jmap.mail.{MailboxFilter, MailboxQueryChangesRequest, MailboxQueryRequest, MailboxQueryResponse}
+import org.apache.james.jmap.mail.{MailboxFilter, MailboxQueryChangesRequest, MailboxQueryRequest, MailboxQueryResponse, NoRole, RoleCondition, WithRole}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json._
@@ -33,10 +33,15 @@ object MailboxQuerySerializer {
 
   private implicit val mailboxIdWrites: Writes[MailboxId] = mailboxId => JsString(mailboxId.serialize)
 
-  private implicit val roleReads: Reads[Role] = {
+  private val roleReads: Reads[Role] = {
     case JsString(value) => Role.fromName(value).or(() => Role.from(value)).toScala.map(JsSuccess(_))
       .getOrElse(JsError(s"$value is not a valid role"))
     case _ => JsError("Expecting a JsString to be representing a role")
+  }
+
+  private val roleConditionReads: Reads[RoleCondition] = {
+    case JsNull => JsSuccess(NoRole)
+    case jsValue => roleReads.reads(jsValue).map(WithRole(_))
   }
 
   private implicit val filterReads: Reads[MailboxFilter] =  {
@@ -45,9 +50,12 @@ object MailboxQuerySerializer {
       if (unsupported.nonEmpty) {
         JsError(s"These '${unsupported.mkString("[", ", ", "]")}' was unsupported filter options")
       } else {
-        Json.reads[MailboxFilter].reads(jsObject)
+        (jsObject \ "role").toOption match {
+          case Some(role) => roleConditionReads.reads(role).repath(__ \ "role").map(MailboxFilter(_))
+          case None => JsError(__ \ "role", "error.path.missing")
+        }
       }
-    case jsValue: JsValue => Json.reads[MailboxFilter].reads(jsValue)
+    case _ => JsError("error.expected.jsobject")
   }
 
   private implicit val emailQueryRequestReads: Reads[MailboxQueryRequest] = Json.reads[MailboxQueryRequest]
