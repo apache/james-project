@@ -421,48 +421,30 @@ trait MailboxQueryMethodContract {
   }
 
   @Test
-  def roleShouldBeCompulsory(): Unit = {
-    val request =
-      s"""{
-         |  "using": [
-         |    "urn:ietf:params:jmap:core",
-         |    "urn:ietf:params:jmap:mail"],
-         |  "methodCalls": [[
-         |    "Mailbox/query",
-         |    {
-           |      "accountId": "$bobAccountId",
-         |      "filter": {}
-         |    },
-         |    "c1"]]
-         |}""".stripMargin
+  def emptyFilterShouldReturnAllMailboxes(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val inboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val spamId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "Spam"))
+    val projectsId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "Projects"))
+    val inboxSentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "INBOX.Sent"))
 
     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{}}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
 
-      assertThatJson(response)
-        .isEqualTo(
-        s"""{
-           |    "sessionState": "${SESSION_STATE.value}",
-           |    "methodResponses": [
-           |        [
-           |            "error",
-           |            {
-           |                "type": "invalidArguments",
-           |                "description": "Missing '/filter/role' property"
-           |            },
-           |            "c1"
-           |        ]
-           |    ]
-           |}""".stripMargin)
+    assertThatJson(response).inPath("methodResponses[0]").isEqualTo(s"""["Mailbox/query",{
+      |  "accountId":"$bobAccountId",
+      |  "queryState":"${generateQueryState(inboxId, inboxSentId, projectsId, spamId)}",
+      |  "canCalculateChanges":false,
+      |  "ids":["${inboxId.serialize}","${inboxSentId.serialize}","${projectsId.serialize}","${spamId.serialize}"],
+      |  "position":0,
+      |  "limit":256
+      |},"q1"]""".stripMargin)
   }
 
   @Test
@@ -514,48 +496,30 @@ trait MailboxQueryMethodContract {
   }
 
   @Test
-  def filterShouldBeCompulsory(): Unit = {
-    val request =
-      s"""{
-         |  "using": [
-         |    "urn:ietf:params:jmap:core",
-         |    "urn:ietf:params:jmap:mail"],
-         |  "methodCalls": [[
-         |    "Mailbox/query",
-         |    {
-           |      "accountId": "$bobAccountId"
-         |    },
-         |    "c1"]]
-         |}""".stripMargin
+  def missingFilterShouldReturnAllMailboxes(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val inboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val spamId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "Spam"))
+    val projectsId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "Projects"))
+    val inboxSentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "INBOX.Sent"))
 
     val response = `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .body(request)
-      .when
-        .post
-      .`then`
-        .statusCode(SC_OK)
-        .contentType(JSON)
-        .extract
-        .body
-        .asString
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId"}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
 
-      assertThatJson(response)
-        .isEqualTo(
-        s"""{
-           |    "sessionState": "${SESSION_STATE.value}",
-           |    "methodResponses": [
-           |        [
-           |            "error",
-           |            {
-           |                "type": "invalidArguments",
-           |                "description": "Missing '/filter' property"
-           |            },
-           |            "c1"
-           |        ]
-           |    ]
-           |}
-           |""".stripMargin)
+    assertThatJson(response).inPath("methodResponses[0]").isEqualTo(s"""["Mailbox/query",{
+      |  "accountId":"$bobAccountId",
+      |  "queryState":"${generateQueryState(inboxId, inboxSentId, projectsId, spamId)}",
+      |  "canCalculateChanges":false,
+      |  "ids":["${inboxId.serialize}","${inboxSentId.serialize}","${projectsId.serialize}","${spamId.serialize}"],
+      |  "position":0,
+      |  "limit":256
+      |},"q1"]""".stripMargin)
   }
 
   @ParameterizedTest
@@ -714,6 +678,27 @@ trait MailboxQueryMethodContract {
   }
 
   @Test
+  def emptyFilterShouldNotReturnSharedMailboxesWithoutSharesCapability(server: GuiceJamesServer): Unit = {
+    val andreMailbox = MailboxPath.forUser(andreUsername, "Shared")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
+    val projectsId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, "Projects"))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailbox, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{}}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].ids").isEqualTo(s"""["${projectsId.serialize}"]""")
+  }
+
+  @Test
   def nullRoleShouldReturnSharedMailboxesWithSharesCapability(server: GuiceJamesServer): Unit = {
     val andreMailbox = MailboxPath.forUser(andreUsername, "Shared")
     val andreMailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
@@ -727,6 +712,28 @@ trait MailboxQueryMethodContract {
       .body(s"""{
                |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
                |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{"role":null}}, "q1"]]
+               |}""".stripMargin)
+      .when.post
+      .`then`.statusCode(SC_OK).extract.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].ids")
+      .isEqualTo(s"""["${andreMailboxId.serialize}","${projectsId.serialize}"]""")
+  }
+
+  @Test
+  def emptyFilterShouldReturnSharedMailboxesWithSharesCapability(server: GuiceJamesServer): Unit = {
+    val andreMailbox = MailboxPath.forUser(andreUsername, "Shared")
+    val andreMailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andreMailbox)
+    val projectsId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, "Projects"))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailbox, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [["Mailbox/query", {"accountId":"$bobAccountId", "filter":{}}, "q1"]]
                |}""".stripMargin)
       .when.post
       .`then`.statusCode(SC_OK).extract.asString

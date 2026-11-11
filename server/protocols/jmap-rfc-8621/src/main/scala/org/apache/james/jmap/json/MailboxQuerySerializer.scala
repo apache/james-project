@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import org.apache.james.jmap.core.{CanCalculateChanges, QueryState}
-import org.apache.james.jmap.mail.{MailboxFilter, MailboxQueryChangesRequest, MailboxQueryRequest, MailboxQueryResponse, NoRole, RoleCondition, WithRole}
+import org.apache.james.jmap.mail.{AnyRole, MailboxFilter, MailboxQueryChangesRequest, MailboxQueryRequest, MailboxQueryResponse, NoRole, RoleCondition, WithRole}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json._
@@ -52,7 +52,7 @@ object MailboxQuerySerializer {
       } else {
         (jsObject \ "role").toOption match {
           case Some(role) => roleConditionReads.reads(role).repath(__ \ "role").map(MailboxFilter(_))
-          case None => JsError(__ \ "role", "error.path.missing")
+          case None => JsSuccess(MailboxFilter(AnyRole))
         }
       }
     case _ => JsError("error.expected.jsobject")
