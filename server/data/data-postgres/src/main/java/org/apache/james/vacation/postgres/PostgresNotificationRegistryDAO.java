@@ -50,13 +50,23 @@ public class PostgresNotificationRegistryDAO {
         LocalDateTime utcExpiryDate = expiryDate.map(zonedDateTime -> zonedDateTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime())
             .orElse(null);
 
-        return postgresExecutor.executeVoid(dsl -> Mono.from(dsl.insertInto(TABLE_NAME)
-            .set(ACCOUNT_ID, accountId.getIdentifier())
-            .set(RECIPIENT_ID, recipientId.getAsString())
-            .set(EXPIRY_DATE, utcExpiryDate)
-            .onConflict(ACCOUNT_ID, RECIPIENT_ID)
-            .doUpdate()
-            .set(EXPIRY_DATE, utcExpiryDate)));
+        return deleteExpired(accountId)
+            .then(postgresExecutor.executeVoid(dsl -> Mono.from(dsl.insertInto(TABLE_NAME)
+                .set(ACCOUNT_ID, accountId.getIdentifier())
+                .set(RECIPIENT_ID, recipientId.getAsString())
+                .set(EXPIRY_DATE, utcExpiryDate)
+                .onConflict(ACCOUNT_ID, RECIPIENT_ID)
+                .doUpdate()
+                .set(EXPIRY_DATE, utcExpiryDate))));
+    }
+
+    // Nothing else removes them: without this, every sender ever answered would stay until a flush
+    private Mono<Void> deleteExpired(AccountId accountId) {
+        LocalDateTime currentUTCTime = zonedDateTimeProvider.get().withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+
+        return postgresExecutor.executeVoid(dsl -> Mono.from(dsl.deleteFrom(TABLE_NAME)
+            .where(ACCOUNT_ID.eq(accountId.getIdentifier()),
+                EXPIRY_DATE.lt(currentUTCTime))));
     }
 
     public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
