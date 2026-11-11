@@ -51,10 +51,7 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case _ => JsError("mailboxId needs to be represented by a JsString")
   }
 
-  private implicit val roleWrites: Writes[Role] = Writes {
-    case Role.SPAM => JsString("junk")
-    case role => JsString(role.serialize())
-  }
+  private implicit val roleWrites: Writes[Role] = role => JsString(role.serialize())
   private implicit val sortOrderWrites: Writes[SortOrder] = valueWrites[SortOrder]
   private implicit val totalEmailsWrites: Writes[TotalEmails] = valueWrites[TotalEmails]
   private implicit val unreadEmailsWrites: Writes[UnreadEmails] = valueWrites[UnreadEmails]

@@ -34,7 +34,7 @@ object MailboxQuerySerializer {
   private implicit val mailboxIdWrites: Writes[MailboxId] = mailboxId => JsString(mailboxId.serialize)
 
   private implicit val roleReads: Reads[Role] = {
-    case JsString(value) => Role.from(value).toScala.map(JsSuccess(_))
+    case JsString(value) => Role.fromName(value).or(() => Role.from(value)).toScala.map(JsSuccess(_))
       .getOrElse(JsError(s"$value is not a valid role"))
     case _ => JsError("Expecting a JsString to be representing a role")
   }

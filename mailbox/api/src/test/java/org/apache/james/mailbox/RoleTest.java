@@ -22,12 +22,45 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class RoleTest {
+
+    static Stream<Arguments> roleNames() {
+        return Stream.of(
+            Arguments.of("inbox", Role.INBOX),
+            Arguments.of("drafts", Role.DRAFTS),
+            Arguments.of("outbox", Role.OUTBOX),
+            Arguments.of("sent", Role.SENT),
+            Arguments.of("trash", Role.TRASH),
+            Arguments.of("archive", Role.ARCHIVE),
+            Arguments.of("junk", Role.SPAM),
+            Arguments.of("templates", Role.TEMPLATES),
+            Arguments.of("restored messages", Role.RESTORED_MESSAGES));
+    }
+
+    @ParameterizedTest
+    @MethodSource("roleNames")
+    void fromNameShouldReturnTheRoleWithThisName(String name, Role role) {
+        assertThat(Role.fromName(name)).contains(role);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"INBOX", "Sent", "Spam", "Restored-Messages", "spam", "Junk", "x-custom", "", "jjjj"})
+    void fromNameShouldReturnEmptyWhenNotARoleName(String name) {
+        assertThat(Role.fromName(name)).isEmpty();
+    }
+
+    @Test
+    void spamRoleShouldBeSerializedAsJunk() {
+        assertThat(Role.SPAM.serialize()).isEqualTo("junk");
+    }
 
     @Test
     void fromShouldReturnEmptyWhenUnknownValue() {

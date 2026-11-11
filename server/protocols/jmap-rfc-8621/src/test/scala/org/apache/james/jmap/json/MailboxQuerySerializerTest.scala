@@ -27,7 +27,24 @@ import play.api.libs.json.Json
 
 class MailboxQuerySerializerTest {
   @ParameterizedTest
-  @ValueSource(strings = Array("x-custom", "x-", "X-custom", "Invalid", "", "junk"))
+  @ValueSource(strings = Array("inbox", "drafts", "outbox", "sent", "trash", "archive", "junk", "templates", "restored messages"))
+  def deserializeShouldAcceptRoleNames(role: String): Unit = {
+    val request = MailboxQuerySerializer.deserialize(Json.obj("accountId" -> "account", "filter" -> Json.obj("role" -> role)))
+
+    assertThat(request.isSuccess).isTrue()
+    assertThat(request.get.filter.role.serialize()).isEqualTo(role)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array("Sent", "Spam", "Restored-Messages"))
+  def deserializeShouldAcceptFolderNames(role: String): Unit = {
+    val request = MailboxQuerySerializer.deserialize(Json.obj("accountId" -> "account", "filter" -> Json.obj("role" -> role)))
+
+    assertThat(request.get.filter.role.getDefaultMailbox).isEqualTo(role)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = Array("x-custom", "x-", "X-custom", "Invalid", "", "spam"))
   def deserializeShouldRejectUnknownRole(role: String): Unit = {
     val request = MailboxQuerySerializer.deserialize(Json.obj("accountId" -> "account", "filter" -> Json.obj("role" -> role)))
 
