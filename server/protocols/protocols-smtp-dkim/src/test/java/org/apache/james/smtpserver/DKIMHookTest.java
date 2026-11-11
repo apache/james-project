@@ -250,7 +250,8 @@ class DKIMHookTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"CEO <ceo@ localhost>", "ceo@(x)localhost", "ceo @ LocalHost", "Board: CEO <ceo@ localhost>;"})
+        @ValueSource(strings = {"CEO <ceo@ localhost>", "ceo@(x)localhost", "ceo @ LocalHost", "Board: CEO <ceo@ localhost>;",
+            "CEO <ceo@ localhost.>", "ceo@(x)localhost.", "ceo@[localhost]", "CEO <ceo@[localhost]>"})
         void onlyForHeaderFromDomainShouldReturnTrueWhenAnUnparsableFromIsInTheDomainForMime4j(String from) throws Exception {
             var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
                 .setText("This is my email")
@@ -258,6 +259,23 @@ class DKIMHookTest {
             mimeMessage.setHeader("From", from);
 
             assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(mimeMessage)
+                    .build()))
+                .isTrue();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"CEO <ceo@ xn--bcher-kva.example>", "ceo@(x)xn--bcher-kva.example", "CEO <ceo@ bücher.example>"})
+        void onlyForHeaderFromDomainShouldReturnTrueWhenAnUnparsableFromIsInAnInternationalizedDomain(String from) throws Exception {
+            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .setText("This is my email")
+                .build();
+            mimeMessage.setHeader("From", from);
+
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.of("xn--bcher-kva.example"))
                 .test(FakeMail.builder()
                     .name("mail")
                     .sender("bob@other.com")

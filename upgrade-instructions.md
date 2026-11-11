@@ -32,6 +32,20 @@ Change list:
  - [JAMES-4235 Lucene ignores punctuation around words](#james-4235-lucene-ignores-punctuation-around-words)
  - [Regex mappings are evaluated with RE2J](#regex-mappings-are-evaluated-with-re2j)
  - [Domains with an A-label decoding to a capital unknown to IDNA2003 are rejected](#domains-with-an-a-label-decoding-to-a-capital-unknown-to-idna2003-are-rejected)
+ - [Sieve vacation and reject follow RFC 5230 and RFC 5429](#sieve-vacation-and-reject-follow-rfc-5230-and-rfc-5429)
+
+### Sieve vacation and reject follow RFC 5230 and RFC 5429
+
+Date: 11/11/2026
+
+Perimeter: the Sieve mailet
+
+The Sieve mailet now needs a `NotificationRegistry` to remember which senders a vacation answered. Every James app
+binds one; a custom Guice assembly using the Sieve mailet without the vacation data modules has to bind one too.
+
+A vacation answers a given sender once per `:days` (at most 365 days), never answers automatic mails, lists nor the
+user itself, and its replies are marked `Auto-Submitted: auto-replied`. A `:from` other than the user address is ignored.
+A reject MDN is only sent to the envelope sender.
 
 ### Domains with an A-label decoding to a capital unknown to IDNA2003 are rejected
 

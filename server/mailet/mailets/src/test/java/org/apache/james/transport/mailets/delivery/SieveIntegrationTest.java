@@ -47,6 +47,9 @@ import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.delivery.SieveExecutor;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.james.vacation.api.AccountId;
+import org.apache.james.vacation.api.NotificationRegistry;
+import org.apache.james.vacation.api.RecipientId;
 import org.apache.james.vacation.memory.MemoryNotificationRegistry;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -62,6 +65,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 class SieveIntegrationTest {
 
@@ -91,6 +96,7 @@ class SieveIntegrationTest {
     private ResourceLocator resourceLocator;
     private FakeMailContext fakeMailContext;
     private ZonedDateTime now;
+    private MemoryNotificationRegistry notificationRegistry;
 
     @FunctionalInterface
     interface AttributeEquals {
@@ -121,7 +127,8 @@ class SieveIntegrationTest {
 
         now = DATE_DEFAULT;
 
-        testee = new Sieve(usersRepository, resourceLocator, new MemoryNotificationRegistry(() -> now), new AutomaticallySentMailDetectorImpl());
+        notificationRegistry = new MemoryNotificationRegistry(() -> now);
+        testee = new Sieve(usersRepository, resourceLocator, notificationRegistry, new AutomaticallySentMailDetectorImpl());
         testee.init(FakeMailetConfig.builder().mailetName("Sieve").mailetContext(fakeMailContext).build());
     }
 
@@ -1366,6 +1373,100 @@ class SieveIntegrationTest {
     }
 
     @Test
+    void vacationShouldReplyAgainOnceItsDaysEnded() throws Exception {
+        ImmutableList<MailAddress> sender = ImmutableList.of(new MailAddress("sender@any.com"));
+
+        vacationReceivesMailsFrom(sender, "org/apache/james/transport/mailets/delivery/vacationDaysReason.script", DATE_DEFAULT);
+        vacationReceivesMailsFrom(sender, "org/apache/james/transport/mailets/delivery/vacationDaysReason.script", DATE_DEFAULT.plusDays(2));
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+
+        vacationReceivesMailsFrom(sender, "org/apache/james/transport/mailets/delivery/vacationDaysReason.script", DATE_DEFAULT.plusDays(3));
+        assertThat(fakeMailContext.getSentMails()).hasSize(2);
+    }
+
+    @Test
+    void vacationShouldReplyAgainAfterAYearWhenItsDaysAreLonger() throws Exception {
+        ImmutableList<MailAddress> sender = ImmutableList.of(new MailAddress("sender@any.com"));
+
+        vacationReceivesMailsFrom(sender, "org/apache/james/transport/mailets/delivery/vacationLongDaysReason.script", DATE_DEFAULT);
+        vacationReceivesMailsFrom(sender, "org/apache/james/transport/mailets/delivery/vacationLongDaysReason.script", DATE_DEFAULT.plusDays(366));
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(2);
+    }
+
+    @Test
+    void vacationRepliesShouldNotBeSeenByTheJmapVacation() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+        testee.service(createMail());
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+        assertThat(notificationRegistry.isRegistered(AccountId.fromString(RECEIVER_DOMAIN_COM),
+                RecipientId.fromMailAddress(new MailAddress("sender@any.com"))).block())
+            .isFalse();
+    }
+
+    @Test
+    void vacationShouldNotReplyAgainWhenTheJmapVacationIsFlushed() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+        testee.service(createMail());
+
+        notificationRegistry.flush(AccountId.fromString(RECEIVER_DOMAIN_COM)).block();
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+        testee.service(createMail());
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+    }
+
+    @Test
+    void vacationShouldNotReplyNorCancelLaterActionsWhenTheRegistryFails() throws Exception {
+        testee = sieveWithRegistry(failingRegistry(Mono.error(new RuntimeException("registry is down"))));
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReasonAndFileInto.script");
+
+        FakeMail mail = createMail();
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @Test
+    void vacationShouldReplyAndNotCancelLaterActionsWhenRegisteringFails() throws Exception {
+        testee = sieveWithRegistry(failingRegistry(Mono.just(false)));
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReasonAndFileInto.script");
+
+        FakeMail mail = createMail();
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+    }
+
+    private Sieve sieveWithRegistry(NotificationRegistry registry) throws MessagingException {
+        Sieve sieve = new Sieve(usersRepository, resourceLocator, registry, new AutomaticallySentMailDetectorImpl());
+        sieve.init(FakeMailetConfig.builder().mailetName("Sieve").mailetContext(fakeMailContext).build());
+        return sieve;
+    }
+
+    private NotificationRegistry failingRegistry(Mono<Boolean> isRegistered) {
+        return new NotificationRegistry() {
+            @Override
+            public Mono<Void> register(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
+                return Mono.error(new RuntimeException("registry is down"));
+            }
+
+            @Override
+            public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
+                return isRegistered;
+            }
+
+            @Override
+            public Mono<Void> flush(AccountId accountId) {
+                return Mono.empty();
+            }
+        };
+    }
+
+    @Test
     void twoUsersInVacationShouldNotAnswerEachOtherForever() throws Exception {
         MailAddress other = new MailAddress("other@domain.com");
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
@@ -1401,8 +1502,12 @@ class SieveIntegrationTest {
     }
 
     private void vacationReceivesMailsFrom(List<MailAddress> senders, ZonedDateTime scriptExecutionDate) throws Exception {
+        vacationReceivesMailsFrom(senders, "org/apache/james/transport/mailets/delivery/vacationReason.script", scriptExecutionDate);
+    }
+
+    private void vacationReceivesMailsFrom(List<MailAddress> senders, String script, ZonedDateTime scriptExecutionDate) throws Exception {
         for (MailAddress sender : senders) {
-            prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReason.script", DATE_DEFAULT, scriptExecutionDate);
+            prepareTestUsingScriptAndDates(script, DATE_DEFAULT, scriptExecutionDate);
             testee.service(createMailFrom(sender));
         }
     }

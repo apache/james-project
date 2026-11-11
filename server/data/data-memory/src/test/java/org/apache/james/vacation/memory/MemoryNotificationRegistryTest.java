@@ -19,14 +19,20 @@
 
 package org.apache.james.vacation.memory;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
 import org.apache.james.core.MailAddress;
 import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.NotificationRegistryContract;
 import org.apache.james.vacation.api.RecipientId;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class MemoryNotificationRegistryTest implements NotificationRegistryContract {
-    NotificationRegistry notificationRegistry;
+    MemoryNotificationRegistry notificationRegistry;
     RecipientId recipientId;
 
     @BeforeEach
@@ -43,5 +49,17 @@ class MemoryNotificationRegistryTest implements NotificationRegistryContract {
     @Override
     public RecipientId recipientId() {
         return recipientId;
+    }
+
+    @Test
+    void registerShouldDropTheExpiredEntriesOfTheAccount() throws Exception {
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
+        notificationRegistry.register(ACCOUNT_ID, RecipientId.fromMailAddress(new MailAddress("first@domain.tld")), Optional.of(ZONED_DATE_TIME_PLUS_4_SECONDS)).block();
+        notificationRegistry.register(ACCOUNT_ID, RecipientId.fromMailAddress(new MailAddress("second@domain.tld")), Optional.of(ZONED_DATE_TIME_PLUS_4_SECONDS)).block();
+
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_PLUS_8_SECONDS);
+        notificationRegistry.register(ACCOUNT_ID, RecipientId.fromMailAddress(new MailAddress("third@domain.tld")), Optional.of(ZONED_DATE_TIME_PLUS_8_SECONDS.plusDays(1))).block();
+
+        assertThat(notificationRegistry.registrationCount(ACCOUNT_ID)).isEqualTo(1);
     }
 }
