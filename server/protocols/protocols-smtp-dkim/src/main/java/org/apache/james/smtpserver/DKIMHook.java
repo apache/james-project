@@ -142,10 +142,12 @@ public class DKIMHook implements JamesMessageHook {
                 .anyMatch(domain::equals);
         }
 
+        // Brackets, dots and whitespace a lenient parser leaves around a domain, in any order
+        CharMatcher DOMAIN_DECORATION = CharMatcher.anyOf("[].").or(CharMatcher.whitespace());
+
         private static Stream<Domain> asDomain(String mailboxDomain) {
             try {
-                String withoutBrackets = CharMatcher.anyOf("[]").trimFrom(mailboxDomain.trim());
-                return Stream.of(Domain.of(CharMatcher.is('.').trimTrailingFrom(withoutBrackets)));
+                return Stream.of(Domain.of(DOMAIN_DECORATION.trimFrom(mailboxDomain)));
             } catch (IllegalArgumentException e) {
                 return Stream.empty();
             }
@@ -176,10 +178,10 @@ public class DKIMHook implements JamesMessageHook {
             if (value == null) {
                 return false;
             }
-            String withoutWhitespace = CharMatcher.whitespace().removeFrom(value).toLowerCase(Locale.US);
+            String undecorated = CharMatcher.anyOf("[]").or(CharMatcher.whitespace()).removeFrom(value).toLowerCase(Locale.US);
             return Stream.of(domain.asString(), IDN.toASCII(domain.asString(), IDN.ALLOW_UNASSIGNED))
                 .map(domainName -> "@" + domainName.toLowerCase(Locale.US))
-                .anyMatch(withoutWhitespace::contains);
+                .anyMatch(undecorated::contains);
         }
 
         private static List<String> rawFrom(Mail mail) {

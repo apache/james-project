@@ -251,7 +251,10 @@ class DKIMHookTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"CEO <ceo@ localhost>", "ceo@(x)localhost", "ceo @ LocalHost", "Board: CEO <ceo@ localhost>;",
-            "CEO <ceo@ localhost.>", "ceo@(x)localhost.", "ceo@[localhost]", "CEO <ceo@[localhost]>", "ceo@[localhost.]", "ceo@[LOCALHOST.]"})
+            "CEO <ceo@ localhost.>", "ceo@(x)localhost.", "ceo@[localhost]", "CEO <ceo@[localhost]>", "ceo@[localhost.]", "ceo@[LOCALHOST.]",
+            "ceo@[localhost].", "CEO <ceo@[localhost].>", "ceo@[localhost]..", "ceo@[localhost] .", "ceo@[localhost](x).",
+            "ceo@[localhost.].", "ceo@[ localhost ].", "bob@other.com, ceo@[localhost].", "ceo@.localhost", "CEO <ceo@ .localhost>",
+            "ceo@[.localhost]", "ceo@.[localhost]"})
         void onlyForHeaderFromDomainShouldReturnTrueWhenAnUnparsableFromIsInTheDomainForMime4j(String from) throws Exception {
             var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
                 .setText("This is my email")
@@ -268,7 +271,7 @@ class DKIMHookTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"\"CEO <ceo@ localhost>", "\"CEO <ceo@\tLOCALHOST>"})
+        @ValueSource(strings = {"\"CEO <ceo@ localhost>", "\"CEO <ceo@\tLOCALHOST>", "\"CEO <ceo@[localhost]>", "\"CEO <ceo@ [localhost] >"})
         void onlyForHeaderFromDomainShouldReturnTrueWhenAnUnparsableFromMentionsTheDomainAfterWhitespace(String from) throws Exception {
             var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
                 .setText("This is my email")
