@@ -58,9 +58,8 @@ import com.google.common.collect.ImmutableList;
 /**
  * <code>ManageSieveMailet</code> interprets mail from a local sender as
  * commands to manage Sieve scripts stored on the mail server. The commands are
- * a subset of those defined by <a
- * href=http://tools.ietf.org/html/rfc5804#section
- * -2>http://tools.ietf.org/html/rfc5804#section-2 "MessageToCoreToMessage"</a>.
+ * a subset of those defined by
+ * <a href="http://tools.ietf.org/html/rfc5804#section-2">http://tools.ietf.org/html/rfc5804#section-2 "MessageToCoreToMessage"</a>.
  * 
  * <p>
  * For each supported command and associated response, the format is the same as

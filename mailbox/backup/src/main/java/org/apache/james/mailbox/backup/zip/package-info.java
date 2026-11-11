@@ -46,7 +46,7 @@
  *</ul>
  *
  *
- * @see the unit test {@link= org.apache.james.mailbox.backup.ZipperTest} for more information about this format
+ * @see the unit test {@link org.apache.james.mailbox.backup.ZipperTest} for more information about this format
  *
  */
 package org.apache.james.mailbox.backup.zip;

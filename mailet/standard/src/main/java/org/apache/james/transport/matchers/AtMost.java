@@ -52,7 +52,7 @@ import com.google.common.collect.ImmutableList;
  * </ul>
  *
  * <p>The example below will match a mail with at most 3 executions on the mailet</p>
- * with attribute name <i>AT_MOST_EXECUTIONS</i></p>
+ * with attribute name <i>AT_MOST_EXECUTIONS</i>
  *
  * <pre><code>
  * &lt;mailet match=&quot;AtMost=AT_MOST_EXECUTIONS:3&quot; class=&quot;&lt;any-class&gt;&quot;&gt;

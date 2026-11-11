@@ -143,7 +143,7 @@ public class MailModifier {
      * Sets the "Reply-To:" header of <i>newMail</i> to <i>replyTo</i>.
      * </p>
      * If the requested value is <code>SpecialAddress.NULL</code> will remove
-     * the "Reply-To:" header. If the requested value is null does nothing.</p>
+     * the "Reply-To:" header. If the requested value is null does nothing.
      */
     public void setReplyTo(Optional<MailAddress> optionalReplyTo) throws MessagingException {
         optionalReplyTo.ifPresent(Throwing

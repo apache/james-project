@@ -43,7 +43,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>Implements the match method to check if the sender of the incoming mail is not listed in the DropList.
  * If the sender is not found in the DropList, the matcher will return all recipients of the mail for which the sender is allowed.</p>
- * </p>Note:</p>
+ * Note:
  * managing DropLists can be accomplished through <a href="http://james.apache.org/server/manage-webadmin.html">WebAdmin</a>.
  **/
 public class IsInDropList extends GenericMatcher {

@@ -30,7 +30,7 @@ import reactor.util.annotation.NonNull;
  * The full name of a namespaced property consists of 
  * a local part ({@link #getLocalName()}) and a namespace ({@link #getNamespace()()}). 
  * This is similar - in concept - the local part and namespace of a <code>QName</code>
- * in <abbr title='eXtensible Markup Language'>XML</a>. 
+ * in <abbr title='eXtensible Markup Language'>XML</abbr>. 
  * </p><p>
  * Conventionally, the namespace
  * is an <abbr title='Uniform Resource Identifier'>URI</abbr> 
