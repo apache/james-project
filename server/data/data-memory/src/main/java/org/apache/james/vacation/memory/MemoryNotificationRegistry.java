@@ -66,7 +66,10 @@ public class MemoryNotificationRegistry implements NotificationRegistry {
 
     @Override
     public Mono<Void> register(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
-        registrations.put(accountId, new Entry(recipientId, expiryDate));
+        synchronized (registrations) {
+            registrations.get(accountId).removeIf(entry -> entry.getRecipientId().equals(recipientId));
+            registrations.put(accountId, new Entry(recipientId, expiryDate));
+        }
         return Mono.empty();
     }
 

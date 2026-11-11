@@ -47,11 +47,16 @@ public class PostgresNotificationRegistryDAO {
     }
 
     public Mono<Void> register(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
+        LocalDateTime utcExpiryDate = expiryDate.map(zonedDateTime -> zonedDateTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime())
+            .orElse(null);
+
         return postgresExecutor.executeVoid(dsl -> Mono.from(dsl.insertInto(TABLE_NAME)
             .set(ACCOUNT_ID, accountId.getIdentifier())
             .set(RECIPIENT_ID, recipientId.getAsString())
-            .set(EXPIRY_DATE, expiryDate.map(zonedDateTime -> zonedDateTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime())
-                .orElse(null))));
+            .set(EXPIRY_DATE, utcExpiryDate)
+            .onConflict(ACCOUNT_ID, RECIPIENT_ID)
+            .doUpdate()
+            .set(EXPIRY_DATE, utcExpiryDate)));
     }
 
     public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {

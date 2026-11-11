@@ -25,11 +25,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.jupiter.api.Test;
+
+import com.github.fge.lambdas.Throwing;
 
 public interface NotificationRegistryContract {
     ZonedDateTime ZONED_DATE_TIME = ZonedDateTime.parse("2016-04-03T02:01:01+07:00[Asia/Vientiane]");
@@ -88,6 +93,35 @@ public interface NotificationRegistryContract {
         when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_PLUS_8_SECONDS);
 
         await().atMost(20, TimeUnit.SECONDS).until(() -> !notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block());
+    }
+
+    @Test
+    default void registerShouldWorkAgainAfterExpiracyDate() {
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
+        notificationRegistry().register(ACCOUNT_ID, recipientId(), Optional.of(ZONED_DATE_TIME_PLUS_4_SECONDS)).block();
+
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_PLUS_8_SECONDS);
+        notificationRegistry().register(ACCOUNT_ID, recipientId(), Optional.of(ZONED_DATE_TIME_PLUS_8_SECONDS.plusDays(1))).block();
+
+        assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block()).isTrue();
+    }
+
+    @Test
+    default void registerShouldReplaceThePreviousExpiracyDate() {
+        // Several recipients, so that a registry keeping both entries cannot pass by chance
+        List<RecipientId> recipientIds = IntStream.range(0, 20)
+            .mapToObj(i -> "sender" + i + "@domain.tld")
+            .map(Throwing.function(MailAddress::new))
+            .map(RecipientId::fromMailAddress)
+            .toList();
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
+        recipientIds.forEach(recipientId -> notificationRegistry().register(ACCOUNT_ID, recipientId, Optional.of(ZONED_DATE_TIME_PLUS_4_SECONDS)).block());
+
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_PLUS_8_SECONDS);
+        recipientIds.forEach(recipientId -> notificationRegistry().register(ACCOUNT_ID, recipientId, Optional.of(ZONED_DATE_TIME_PLUS_8_SECONDS.plusDays(1))).block());
+
+        assertThat(recipientIds)
+            .allSatisfy(recipientId -> assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId).block()).isTrue());
     }
 
     @Test
