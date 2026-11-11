@@ -22,11 +22,9 @@ package org.apache.james.smtpserver;
 import static org.apache.james.protocols.smtp.SMTPRetCode.AUTH_REQUIRED;
 import static org.apache.james.protocols.smtp.SMTPRetCode.LOCAL_ERROR;
 
-import java.net.IDN;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -46,7 +44,6 @@ import org.apache.james.jdkim.api.PublicKeyRecordRetriever;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
 import org.apache.james.jdkim.mailets.DKIMVerifier;
-import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -57,7 +54,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -114,84 +110,61 @@ public class DKIMHook implements JamesMessageHook {
 
         /**
          * True when any mailbox of any From: field is in the domain, for Jakarta Mail or for the lenient mime4j
-         * parser. A From: that Jakarta Mail does not parse is also checked when its raw value mentions the domain:
-         * an attacker should not skip the check by malforming the field.
+         * parser. A From: that one of them cannot parse is also checked, whatever its domain: an attacker should not
+         * skip the check by malforming the field.
          */
         static DKIMCheckNeeded onlyForHeaderFromDomain(Domain domain) {
             return mail -> {
-                List<String> rawFrom = rawFrom(mail);
                 try {
                     Address[] from = mail.getMessage().getFrom();
-                    return (from != null && Arrays.stream(from).anyMatch(address -> isInDomain(address, domain)))
-                        || rawFrom.stream().anyMatch(value -> isInDomainForMime4j(value, domain));
+                    return (from != null && Arrays.stream(from).anyMatch(address -> isInDomainOrMalformed(address, domain)))
+                        || rawFrom(mail).stream().anyMatch(value -> isInDomainOrMalformedForMime4j(value, domain));
                 } catch (MessagingException me) {
-                    LOGGER.info("Unable to parse the \"FROM\" header {}; checking DKIM if it mentions {}.", rawFrom, domain.asString());
-                    return rawFrom.stream()
-                        .anyMatch(value -> isInDomainForMime4j(value, domain) || mentions(value, domain));
+                    LOGGER.info("Unable to parse the \"FROM\" header; checking DKIM.", me);
+                    return true;
                 }
             };
         }
 
-        private static boolean isInDomainForMime4j(String rawFrom, Domain domain) {
+        private static boolean isInDomainOrMalformedForMime4j(String rawFrom, Domain domain) {
             return LenientAddressParser.DEFAULT.parseAddressList(MimeUtil.unfold(rawFrom))
                 .flatten()
                 .stream()
-                .map(Mailbox::getDomain)
-                .filter(Objects::nonNull)
-                .flatMap(DKIMCheckNeeded::asDomain)
-                .anyMatch(domain::equals);
+                .anyMatch(mailbox -> isInDomainOrMalformed(mailbox.getDomain(), domain));
         }
 
-        // Brackets, dots and whitespace a lenient parser leaves around a domain, in any order
-        CharMatcher DOMAIN_DECORATION = CharMatcher.anyOf("[].").or(CharMatcher.whitespace());
-
-        private static Stream<Domain> asDomain(String mailboxDomain) {
+        private static boolean isInDomainOrMalformed(String mailboxDomain, Domain domain) {
+            if (mailboxDomain == null) {
+                return true;
+            }
             try {
-                return Stream.of(Domain.of(DOMAIN_DECORATION.trimFrom(mailboxDomain)));
+                return Domain.of(mailboxDomain).equals(domain);
             } catch (IllegalArgumentException e) {
-                return Stream.empty();
+                return true;
             }
         }
 
-        private static boolean isInDomain(Address from, Domain domain) {
+        private static boolean isInDomainOrMalformed(Address from, Domain domain) {
             if (!(from instanceof InternetAddress internetAddress)) {
-                return false;
+                return true;
             }
-            if (internetAddress.isGroup()) {
-                try {
+            try {
+                if (internetAddress.isGroup()) {
                     InternetAddress[] members = internetAddress.getGroup(false);
                     return members != null && Arrays.stream(members)
-                        .anyMatch(member -> isInDomain(member, domain));
-                } catch (AddressException e) {
-                    return mentions(internetAddress.getAddress(), domain);
+                        .anyMatch(member -> isInDomainOrMalformed(member, domain));
                 }
-            }
-            try {
                 return new MailAddress(internetAddress.getAddress()).getDomain().equals(domain);
             } catch (AddressException e) {
                 // Can happen when InternetAddress.getAddress() returns a malformed value (e.g. "addr>")
-                return mentions(internetAddress.getAddress(), domain);
+                return true;
             }
         }
 
-        private static boolean mentions(String value, Domain domain) {
-            if (value == null) {
-                return false;
-            }
-            String undecorated = CharMatcher.anyOf("[]").or(CharMatcher.whitespace()).removeFrom(value).toLowerCase(Locale.US);
-            return Stream.of(domain.asString(), IDN.toASCII(domain.asString(), IDN.ALLOW_UNASSIGNED))
-                .map(domainName -> "@" + domainName.toLowerCase(Locale.US))
-                .anyMatch(undecorated::contains);
-        }
-
-        private static List<String> rawFrom(Mail mail) {
-            try {
-                return Optional.ofNullable(mail.getMessage().getHeader("From"))
-                    .map(Arrays::asList)
-                    .orElse(List.of());
-            } catch (MessagingException e) {
-                return List.of();
-            }
+        private static List<String> rawFrom(Mail mail) throws MessagingException {
+            return Optional.ofNullable(mail.getMessage().getHeader("From"))
+                .map(Arrays::asList)
+                .orElse(List.of());
         }
 
         DKIMCheckNeeded ALL = any -> true;
