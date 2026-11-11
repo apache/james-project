@@ -40,12 +40,14 @@ Date: 11/11/2026
 
 Perimeter: the Sieve mailet
 
-The Sieve mailet now needs a `NotificationRegistry` to remember which senders a vacation answered. Every James app
-binds one; a custom Guice assembly using the Sieve mailet without the vacation data modules has to bind one too.
+The Sieve mailet now needs a `NotificationRegistry`, to remember which senders a vacation answered, and an
+`AutomaticallySentMailDetector`. Every James app binds them; a custom Guice assembly using the Sieve mailet without the
+vacation data modules has to bind a `NotificationRegistry` too.
 
-A vacation answers a given sender once per `:days` (at most 365 days), never answers automatic mails, lists nor the
-user itself, and its replies are marked `Auto-Submitted: auto-replied`. A `:from` other than the user address is ignored.
-A reject MDN is only sent to the envelope sender.
+While a vacation is active, which still lasts `:days` after the script activation, it answers a given sender at most
+once per `:days` (capped to 365 days). It never answers automatic mails, lists nor the user itself, and its replies are
+marked `Auto-Submitted: auto-replied`. A `:from` other than the user address is ignored. A reject MDN is only sent to
+the envelope sender.
 
 ### Domains with an A-label decoding to a capital unknown to IDNA2003 are rejected
 

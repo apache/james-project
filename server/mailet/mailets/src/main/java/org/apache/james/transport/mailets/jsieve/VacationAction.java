@@ -142,7 +142,7 @@ public class VacationAction implements MailAction {
 
     private boolean alreadyAnswered(Mail mail, ActionContext context) {
         // Not knowing whether the sender was answered must not answer it again, nor cancel the other actions
-        boolean alreadyAnswered = notificationRegistry.isRegistered(accountId(context), recipientId(mail))
+        boolean alreadyAnswered = Mono.defer(() -> notificationRegistry.isRegistered(accountId(context), recipientId(mail)))
             .onErrorResume(e -> {
                 LOGGER.error("Cannot know whether {} was answered by the vacation of {}, not answering",
                     mail.getMaybeSender().asString(), context.getRecipient().asString(), e);
@@ -159,7 +159,7 @@ public class VacationAction implements MailAction {
     private void registerNotification(Mail mail, ActionVacation actionVacation, ActionContext context) {
         ZonedDateTime expiryDate = context.getScriptInterpretationDate()
             .plusDays(Math.min(actionVacation.getDuration(), MAXIMUM_DAYS_BETWEEN_REPLIES));
-        notificationRegistry.register(accountId(context), recipientId(mail), Optional.of(expiryDate))
+        Mono.defer(() -> notificationRegistry.register(accountId(context), recipientId(mail), Optional.of(expiryDate)))
             .onErrorResume(e -> {
                 LOGGER.error("Cannot record that the vacation of {} answered {}",
                     context.getRecipient().asString(), mail.getMaybeSender().asString(), e);

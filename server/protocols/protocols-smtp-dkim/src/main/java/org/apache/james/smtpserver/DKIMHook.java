@@ -144,7 +144,8 @@ public class DKIMHook implements JamesMessageHook {
 
         private static Stream<Domain> asDomain(String mailboxDomain) {
             try {
-                return Stream.of(Domain.of(CharMatcher.is('.').trimTrailingFrom(mailboxDomain.trim())));
+                String withoutBrackets = CharMatcher.anyOf("[]").trimFrom(mailboxDomain.trim());
+                return Stream.of(Domain.of(CharMatcher.is('.').trimTrailingFrom(withoutBrackets)));
             } catch (IllegalArgumentException e) {
                 return Stream.empty();
             }
