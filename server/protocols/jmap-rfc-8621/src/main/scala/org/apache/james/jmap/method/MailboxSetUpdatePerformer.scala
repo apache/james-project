@@ -62,7 +62,7 @@ object MailboxSetUpdatePerformer {
 
     def asMailboxSetError: SetError = exception match {
       case e: MailboxNotFoundException =>
-        LOGGER.info("Can't update mailbox: Mailbox not found: {}", e.getMessage)
+        LOGGER.info("Mailbox/set update failed: {}", e.getMessage)
         SetError.notFound(SetErrorDescription(e.getMessage))
       case e: MailboxNameException =>
         LOGGER.info("Invalid mailbox name: {}", e.getMessage)
@@ -74,7 +74,7 @@ object MailboxSetUpdatePerformer {
         LOGGER.info("Unsupported properties in Mailbox/set update: {}", e.getMessage)
         SetError.invalidArguments(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated"), Some(Properties(e.property)))
       case e: InvalidUpdateException =>
-        LOGGER.info("Invalid update in Mailbox/set update: {}", e.getMessage)
+        LOGGER.info("Mailbox/set update failed for target '{}' and property '{}': {}", mailboxId.id.value, e.property.value, e.cause)
         SetError.invalidArguments(SetErrorDescription(s"${e.cause}"), Some(Properties(e.property)))
       case e: ServerSetPropertyException =>
         LOGGER.info("Unsupported server-set properties in Mailbox/set update: {}", e.getMessage)

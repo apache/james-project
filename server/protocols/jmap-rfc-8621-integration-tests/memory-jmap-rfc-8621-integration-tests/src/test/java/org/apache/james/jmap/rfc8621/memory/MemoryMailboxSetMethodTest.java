@@ -20,6 +20,8 @@
 package org.apache.james.jmap.rfc8621.memory;
 
 import static io.restassured.RestAssured.given;
+import static io.restassured.http.ContentType.JSON;
+import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.james.jmap.rfc8621.contract.Fixture.ACCEPT_RFC8621_VERSION_HEADER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -56,14 +58,25 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
         given()
             .header("Accept", ACCEPT_RFC8621_VERSION_HEADER())
             .body("""
-                {"using":["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
-                 "methodCalls":[["Mailbox/set",{"accountId":"%s","update":{
-                   "%s":{"name":"first"},"%s":{"name":"second"},"%s":{"name":"success"}
-                 }},"set"]]}
+                {
+                  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                  "methodCalls": [
+                    ["Mailbox/set", {
+                      "accountId": "%s",
+                      "update": {
+                        "%s": {"name": "first"},
+                        "%s": {"name": "second"},
+                        "%s": {"name": "success"}
+                      }
+                    }, "updateAliases"]
+                  ]
+                }
                 """.formatted(bobAccountId(), id, alias, independent))
         .when().post()
         .then()
-            .statusCode(200)
+            .log().ifValidationFails()
+            .statusCode(SC_OK)
+            .contentType(JSON)
             .body("methodResponses[0][1].notUpdated.size()", equalTo(2))
             .body("methodResponses[0][1].notUpdated.'" + id + "'.type", equalTo("invalidArguments"))
             .body("methodResponses[0][1].notUpdated.'" + alias + "'.type", equalTo("invalidArguments"))
@@ -82,12 +95,21 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
         given()
             .header("Accept", ACCEPT_RFC8621_VERSION_HEADER())
             .body("""
-                {"using":["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
-                 "methodCalls":[["Mailbox/set",{"accountId":"%s","destroy":["%s","0%s"]},"set"]]}
+                {
+                  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                  "methodCalls": [
+                    ["Mailbox/set", {
+                      "accountId": "%s",
+                      "destroy": ["%s", "0%s"]
+                    }, "destroyAliases"]
+                  ]
+                }
                 """.formatted(bobAccountId(), id, id))
         .when().post()
         .then()
-            .statusCode(200)
+            .log().ifValidationFails()
+            .statusCode(SC_OK)
+            .contentType(JSON)
             .body("methodResponses[0][1].destroyed", equalTo(java.util.List.of(id)))
             .body("methodResponses[0][1].notDestroyed", nullValue());
 
@@ -103,12 +125,21 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
         given()
             .header("Accept", ACCEPT_RFC8621_VERSION_HEADER())
             .body("""
-                {"using":["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
-                 "methodCalls":[["Mailbox/set",{"accountId":"%s","destroy":["%s","%s"]},"set"]]}
+                {
+                  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                  "methodCalls": [
+                    ["Mailbox/set", {
+                      "accountId": "%s",
+                      "destroy": ["%s", "%s"]
+                    }, "destroySystemMailboxAliases"]
+                  ]
+                }
                 """.formatted(bobAccountId(), id, alias))
         .when().post()
         .then()
-            .statusCode(200)
+            .log().ifValidationFails()
+            .statusCode(SC_OK)
+            .contentType(JSON)
             .body("methodResponses[0][1].notDestroyed.size()", equalTo(2))
             .body("methodResponses[0][1].notDestroyed.'" + id + "'.type", equalTo("invalidArguments"))
             .body("methodResponses[0][1].notDestroyed.'" + alias + "'.type", equalTo("invalidArguments"))

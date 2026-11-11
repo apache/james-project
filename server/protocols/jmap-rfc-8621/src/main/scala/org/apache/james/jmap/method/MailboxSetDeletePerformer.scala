@@ -45,7 +45,7 @@ object MailboxSetDeletePerformer {
   case class MailboxDeletionFailure(mailboxId: UnparsedMailboxId, exception: Throwable) extends MailboxDeletionResult {
     def asMailboxSetError: SetError = exception match {
       case e: MailboxNotFoundException =>
-        LOGGER.info("Attempt to delete a non existing mailbox: {}", e.getMessage)
+        LOGGER.info("Mailbox/set destroy failed: {}", e.getMessage)
         SetError.notFound(SetErrorDescription(e.getMessage))
       case e: MailboxHasMailException =>
         LOGGER.info("Attempt to delete a mailbox with mails")
