@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import jakarta.mail.MessagingException;
@@ -1349,6 +1350,22 @@ class SieveIntegrationTest {
     }
 
     @Test
+    void vacationShouldReplyOnlyOnceToTheSameSenderWithinTheNextInterval() throws Exception {
+        // Several senders, so that a registry keeping the expired answers cannot pass by chance
+        ImmutableList.Builder<MailAddress> sendersBuilder = ImmutableList.builder();
+        for (int i = 0; i < 10; i++) {
+            sendersBuilder.add(new MailAddress("sender" + i + "@any.com"));
+        }
+        ImmutableList<MailAddress> senders = sendersBuilder.build();
+
+        vacationReceivesMailsFrom(senders, DATE_DEFAULT);
+        vacationReceivesMailsFrom(senders, DATE_DEFAULT.plusDays(7));
+        vacationReceivesMailsFrom(senders, DATE_DEFAULT.plusDays(7));
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(2 * senders.size());
+    }
+
+    @Test
     void twoUsersInVacationShouldNotAnswerEachOtherForever() throws Exception {
         MailAddress other = new MailAddress("other@domain.com");
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
@@ -1381,6 +1398,13 @@ class SieveIntegrationTest {
         testee.service(mail);
         // check that the Sieve mailet performs normally, and nothing gets into ATTRIBUTE_NAME
         assertThat(mail.getAttribute(ATTRIBUTE_NAME)).isEmpty();
+    }
+
+    private void vacationReceivesMailsFrom(List<MailAddress> senders, ZonedDateTime scriptExecutionDate) throws Exception {
+        for (MailAddress sender : senders) {
+            prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReason.script", DATE_DEFAULT, scriptExecutionDate);
+            testee.service(createMailFrom(sender));
+        }
     }
 
     private void prepareTestUsingScript(final String script) throws Exception {
