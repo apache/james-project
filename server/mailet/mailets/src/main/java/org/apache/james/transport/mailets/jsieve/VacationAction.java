@@ -47,9 +47,14 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import reactor.core.publisher.Mono;
+
 public class VacationAction implements MailAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(VacationAction.class);
     private static final String LIST_HEADER_PREFIX = "List-";
+    private static final String SIEVE_ACCOUNT_PREFIX = "sieve:";
+    // RFC 5230 section 4.1 lets sites bound :days; this also keeps the expiry date storable
+    private static final int MAXIMUM_DAYS_BETWEEN_REPLIES = 365;
 
     /**
      * Who was answered (RFC 5230 section 4.2): one reply per user and sender within :days.
@@ -136,7 +141,15 @@ public class VacationAction implements MailAction {
     }
 
     private boolean alreadyAnswered(Mail mail, ActionContext context) {
-        boolean alreadyAnswered = Boolean.TRUE.equals(notificationRegistry.isRegistered(accountId(context), recipientId(mail)).block());
+        // Not knowing whether the sender was answered must not answer it again, nor cancel the other actions
+        boolean alreadyAnswered = notificationRegistry.isRegistered(accountId(context), recipientId(mail))
+            .onErrorResume(e -> {
+                LOGGER.error("Cannot know whether {} was answered by the vacation of {}, not answering",
+                    mail.getMaybeSender().asString(), context.getRecipient().asString(), e);
+                return Mono.just(true);
+            })
+            .blockOptional()
+            .orElse(false);
         if (alreadyAnswered) {
             LOGGER.debug("{} was already answered by the vacation of {}", mail.getMaybeSender().asString(), context.getRecipient().asString());
         }
@@ -144,12 +157,20 @@ public class VacationAction implements MailAction {
     }
 
     private void registerNotification(Mail mail, ActionVacation actionVacation, ActionContext context) {
-        ZonedDateTime expiryDate = context.getScriptInterpretationDate().plusDays(actionVacation.getDuration());
-        notificationRegistry.register(accountId(context), recipientId(mail), Optional.of(expiryDate)).block();
+        ZonedDateTime expiryDate = context.getScriptInterpretationDate()
+            .plusDays(Math.min(actionVacation.getDuration(), MAXIMUM_DAYS_BETWEEN_REPLIES));
+        notificationRegistry.register(accountId(context), recipientId(mail), Optional.of(expiryDate))
+            .onErrorResume(e -> {
+                LOGGER.error("Cannot record that the vacation of {} answered {}",
+                    context.getRecipient().asString(), mail.getMaybeSender().asString(), e);
+                return Mono.empty();
+            })
+            .block();
     }
 
+    // Kept apart from the JMAP vacation, which flushes its own records whenever it is modified
     private AccountId accountId(ActionContext context) {
-        return AccountId.fromString(context.getRecipient().toString());
+        return AccountId.fromString(SIEVE_ACCOUNT_PREFIX + context.getRecipient().toString());
     }
 
     private RecipientId recipientId(Mail mail) {

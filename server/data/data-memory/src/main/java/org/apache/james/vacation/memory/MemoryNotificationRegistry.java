@@ -20,6 +20,8 @@
 package org.apache.james.vacation.memory;
 
 import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
@@ -29,46 +31,28 @@ import org.apache.james.vacation.api.AccountId;
 import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.RecipientId;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
+import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
 
 public class MemoryNotificationRegistry implements NotificationRegistry {
-
-    public static class Entry {
-        private final RecipientId recipientId;
-        private final Optional<ZonedDateTime> expiryDate;
-
-        public Entry(RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
-            this.recipientId = recipientId;
-            this.expiryDate = expiryDate;
-        }
-
-        public RecipientId getRecipientId() {
-            return recipientId;
-        }
-
-        public Optional<ZonedDateTime> getExpiryDate() {
-            return expiryDate;
-        }
-    }
-
     private final ZonedDateTimeProvider zonedDateTimeProvider;
-    private final Multimap<AccountId, Entry> registrations;
+    private final Map<AccountId, Map<RecipientId, Optional<ZonedDateTime>>> registrations;
 
     @Inject
     public MemoryNotificationRegistry(ZonedDateTimeProvider zonedDateTimeProvider) {
         this.zonedDateTimeProvider = zonedDateTimeProvider;
-        this.registrations = Multimaps.synchronizedMultimap(HashMultimap.create());
-}
+        this.registrations = new HashMap<>();
+    }
 
     @Override
     public Mono<Void> register(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
+        ZonedDateTime currentTime = zonedDateTimeProvider.get();
         synchronized (registrations) {
-            registrations.get(accountId).removeIf(entry -> entry.getRecipientId().equals(recipientId));
-            registrations.put(accountId, new Entry(recipientId, expiryDate));
+            Map<RecipientId, Optional<ZonedDateTime>> accountRegistrations = registrations.computeIfAbsent(accountId, any -> new HashMap<>());
+            // Nothing else removes them: without this, every sender ever answered would stay until a flush
+            accountRegistrations.values().removeIf(registrationEnd -> isExpired(currentTime, registrationEnd));
+            accountRegistrations.put(recipientId, expiryDate);
         }
         return Mono.empty();
     }
@@ -76,23 +60,32 @@ public class MemoryNotificationRegistry implements NotificationRegistry {
     @Override
     public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
         ZonedDateTime currentTime = zonedDateTimeProvider.get();
-        return Mono.just(
-            registrations.get(accountId)
-                .stream()
-                .filter(entry -> entry.getRecipientId().equals(recipientId))
-                .map(Entry::getExpiryDate)
-                .findAny()
-                .filter(optional -> optional.map(registrationEnd -> isStrictlyBefore(currentTime, registrationEnd)).orElse(true))
+        synchronized (registrations) {
+            return Mono.just(Optional.ofNullable(registrations.get(accountId))
+                .map(accountRegistrations -> accountRegistrations.get(recipientId))
+                .filter(registrationEnd -> !isExpired(currentTime, registrationEnd))
                 .isPresent());
+        }
     }
 
-    private boolean isStrictlyBefore(ZonedDateTime currentTime, ZonedDateTime registrationEnd) {
-        return currentTime.isBefore(registrationEnd);
+    private boolean isExpired(ZonedDateTime currentTime, Optional<ZonedDateTime> registrationEnd) {
+        return registrationEnd.map(end -> !currentTime.isBefore(end)).orElse(false);
+    }
+
+    @VisibleForTesting
+    int registrationCount(AccountId accountId) {
+        synchronized (registrations) {
+            return Optional.ofNullable(registrations.get(accountId))
+                .map(Map::size)
+                .orElse(0);
+        }
     }
 
     @Override
     public Mono<Void> flush(AccountId accountId) {
-        registrations.removeAll(accountId);
+        synchronized (registrations) {
+            registrations.remove(accountId);
+        }
         return Mono.empty();
     }
 }

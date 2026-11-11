@@ -22,6 +22,7 @@ package org.apache.james.smtpserver;
 import static org.apache.james.protocols.smtp.SMTPRetCode.AUTH_REQUIRED;
 import static org.apache.james.protocols.smtp.SMTPRetCode.LOCAL_ERROR;
 
+import java.net.IDN;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -56,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -136,7 +138,16 @@ public class DKIMHook implements JamesMessageHook {
                 .stream()
                 .map(Mailbox::getDomain)
                 .filter(Objects::nonNull)
-                .anyMatch(mailboxDomain -> mailboxDomain.trim().equalsIgnoreCase(domain.asString()));
+                .flatMap(DKIMCheckNeeded::asDomain)
+                .anyMatch(domain::equals);
+        }
+
+        private static Stream<Domain> asDomain(String mailboxDomain) {
+            try {
+                return Stream.of(Domain.of(CharMatcher.is('.').trimTrailingFrom(mailboxDomain.trim())));
+            } catch (IllegalArgumentException e) {
+                return Stream.empty();
+            }
         }
 
         private static boolean isInDomain(Address from, Domain domain) {
@@ -161,7 +172,13 @@ public class DKIMHook implements JamesMessageHook {
         }
 
         private static boolean mentions(String value, Domain domain) {
-            return value != null && value.toLowerCase(Locale.US).contains("@" + domain.asString().toLowerCase(Locale.US));
+            if (value == null) {
+                return false;
+            }
+            String withoutWhitespace = CharMatcher.whitespace().removeFrom(value).toLowerCase(Locale.US);
+            return Stream.of(domain.asString(), IDN.toASCII(domain.asString(), IDN.ALLOW_UNASSIGNED))
+                .map(domainName -> "@" + domainName.toLowerCase(Locale.US))
+                .anyMatch(withoutWhitespace::contains);
         }
 
         private static List<String> rawFrom(Mail mail) {
