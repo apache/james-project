@@ -20,7 +20,10 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
-import io.restassured.RestAssured.given
+import io.restassured.RestAssured.`given`
+import io.restassured.http.ContentType.JSON
+import io.restassured.response.ValidatableResponse
+import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.Username
 import org.apache.james.jmap.rfc8621.contract.Fixture.ACCEPT_RFC8621_VERSION_HEADER
@@ -28,27 +31,30 @@ import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.{MailboxACL, MailboxPath}
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.Matchers.{contains, containsInAnyOrder, equalTo, hasKey, not}
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
+import play.api.libs.json.Json
 
 trait MailboxSetPostCreateContract {
   def bobUsername: Username
   def bobAccountId: String
   def andreUsername: Username
 
-  private def execute(request: String): JsValue = Json.parse(given()
-    .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-    .body(request)
-    .when().post().then().statusCode(200).extract().asString())
+  private def execute(request: String): ValidatableResponse =
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
 
-  private def responseFor(response: JsValue, callId: String): JsValue = {
-    val methodResponses = (response \ "methodResponses").as[Seq[JsArray]]
-    val matchingResponse = methodResponses.find(call => call(2).as[String] == callId)
-      .getOrElse(throw new AssertionError(s"Missing response for call '$callId': $response"))
-    matchingResponse(1)
-  }
+  private def responseArgumentsPath(callId: String): String =
+    s"methodResponses.find { it[2] == '$callId' }[1]"
 
   private def mailboxId(server: GuiceJamesServer, path: String): String =
     server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", bobUsername.asString(), path).serialize()
@@ -68,12 +74,13 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val creation = responseArgumentsPath("createAndUpdate")
     val response = execute(request)
+    val createdId = mailboxId(server, "after")
 
-    val creationResponse = responseFor(response, "createAndUpdate")
-    val createdId = (creationResponse \ "created" \ creationId \ "id").as[String]
-    assertThat((creationResponse \ "updated").as[JsObject].keys).isEqualTo(Set(createdId))
-    assertThat(mailboxId(server, "after")).isEqualTo(createdId)
+    response
+      .body(s"$creation.created.'$creationId'.id", equalTo(createdId))
+      .body(s"$creation.updated.keySet().toList()", contains(createdId))
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("before")
   }
 
@@ -92,11 +99,11 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val creation = responseArgumentsPath("createAndDestroy")
     val response = execute(request)
+    val createdId = response.extract().path[String](s"$creation.created.'$creationId'.id")
 
-    val creationResponse = responseFor(response, "createAndDestroy")
-    val createdId = (creationResponse \ "created" \ creationId \ "id").as[String]
-    assertThat((creationResponse \ "destroyed").as[Seq[String]]).isEqualTo(Seq(createdId))
+    response.body(s"$creation.destroyed", contains(createdId))
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("before")
   }
 
@@ -111,15 +118,16 @@ trait MailboxSetPostCreateContract {
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
       |      "create": {"$parent": {"name": "parent"}},
-      |      "update": {"$child": {"parentId": "#$parent", "name": "renamed"}}
+      |      "update": {${Json.toJson(child)}: {"parentId": "#$parent", "name": "renamed"}}
       |    }, "createParentAndMoveChild"]
       |  ]
       |}""".stripMargin
 
-    val response = execute(request)
+    val move = responseArgumentsPath("createParentAndMoveChild")
+    execute(request)
+      .body(move, not(hasKey("notUpdated")))
+      .body(s"$move.updated.keySet().toList()", contains(child))
 
-    val moveResponse = responseFor(response, "createParentAndMoveChild")
-    assertThat((moveResponse \ "notUpdated").toOption).isEqualTo(None)
     assertThat(mailboxId(server, "parent.renamed")).isEqualTo(child)
   }
 
@@ -145,18 +153,20 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val original = responseArgumentsPath("createOriginals")
+    val replacement = responseArgumentsPath("replaceAndUpdate")
+    val fetched = responseArgumentsPath("getReplacement")
+    val deletion = responseArgumentsPath("destroyReplacement")
     val response = execute(request)
+    val newId = response.extract().path[String](s"$replacement.created.x.id")
+    val newParentId = response.extract().path[String](s"$replacement.created.p.id")
 
-    val originalResponse = responseFor(response, "createOriginals")
-    val replacementResponse = responseFor(response, "replaceAndUpdate")
-    val fetchedMailboxes = (responseFor(response, "getReplacement") \ "list").as[Seq[JsObject]]
-    val destroyedResponse = responseFor(response, "destroyReplacement")
-    val newId = (replacementResponse \ "created" \ "x" \ "id").as[String]
-    assertThat((replacementResponse \ "updated").as[JsObject].keys).isEqualTo(Set(newId))
-    assertThat((fetchedMailboxes.head \ "parentId").as[String])
-      .isEqualTo((replacementResponse \ "created" \ "p" \ "id").as[String])
-    assertThat((destroyedResponse \ "destroyed").as[Seq[String]]).isEqualTo(Seq(newId))
-    assertThat(mailboxId(server, "old")).isEqualTo((originalResponse \ "created" \ "x" \ "id").as[String])
+    response
+      .body(s"$original.created.x.id", equalTo(mailboxId(server, "old")))
+      .body(s"$replacement.updated.keySet().toList()", contains(newId))
+      .body(s"$fetched.list.id", contains(newId))
+      .body(s"$fetched.list.parentId", contains(newParentId))
+      .body(s"$deletion.destroyed", contains(newId))
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
       .doesNotContain("new", "newParent.renamed", "oldParent.renamed")
   }
@@ -175,13 +185,14 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val original = responseArgumentsPath("createOriginal")
+    val replacement = responseArgumentsPath("replaceAndDestroy")
     val response = execute(request)
+    val newId = response.extract().path[String](s"$replacement.created.x.id")
 
-    val replacementResponse = responseFor(response, "replaceAndDestroy")
-    val newId = (replacementResponse \ "created" \ "x" \ "id").as[String]
-    assertThat((replacementResponse \ "destroyed").as[Seq[String]]).isEqualTo(Seq(newId))
-    assertThat(mailboxId(server, "old"))
-      .isEqualTo((responseFor(response, "createOriginal") \ "created" \ "x" \ "id").as[String])
+    response
+      .body(s"$original.created.x.id", equalTo(mailboxId(server, "old")))
+      .body(s"$replacement.destroyed", contains(newId))
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("new")
   }
 
@@ -200,13 +211,15 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val original = responseArgumentsPath("createOriginal")
+    val replacement = responseArgumentsPath("failReplacementAndUpdate")
     val response = execute(request)
+    val oldId = mailboxId(server, "renamed")
 
-    val oldId = (responseFor(response, "createOriginal") \ "created" \ "x" \ "id").as[String]
-    val replacementResponse = responseFor(response, "failReplacementAndUpdate")
-    assertThat((replacementResponse \ "notCreated" \ "x" \ "type").as[String]).isEqualTo("invalidArguments")
-    assertThat((replacementResponse \ "updated").as[JsObject].keys).isEqualTo(Set(oldId))
-    assertThat(mailboxId(server, "renamed")).isEqualTo(oldId)
+    response
+      .body(s"$original.created.x.id", equalTo(oldId))
+      .body(s"$replacement.notCreated.x.type", equalTo("invalidArguments"))
+      .body(s"$replacement.updated.keySet().toList()", contains(oldId))
   }
 
   @Test
@@ -223,17 +236,20 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val update = responseArgumentsPath("updateTargets")
     val response = execute(request)
+      .body(s"$update.notCreated.bad.type", equalTo("invalidArguments"))
 
-    val operationResponse = responseFor(response, "updateTargets")
-    assertThat((operationResponse \ "notCreated" \ "bad" \ "type").as[String]).isEqualTo("invalidArguments")
     Seq("bad", unknownId).foreach(creationId => {
-      val error = operationResponse \ "notUpdated" \ ("#" + creationId)
-      assertThat((error \ "type").as[String]).isEqualTo("notFound")
-      assertThat((error \ "description").as[String])
-        .isEqualTo(s"Unable to resolve mailbox reference '#$creationId': no successful creation is recorded for creation ID '$creationId'")
+      val error = s"$update.notUpdated.'#$creationId'"
+      response
+        .body(s"$error.type", equalTo("notFound"))
+        .body(s"$error.description", equalTo(s"Unable to resolve mailbox reference '#$creationId': no successful creation is recorded for creation ID '$creationId'"))
     })
-    assertThat(mailboxId(server, "independent")).isEqualTo((operationResponse \ "created" \ "other" \ "id").as[String])
+    val independentId = mailboxId(server, "independent")
+    response
+      .body(s"$update.created.other.id", equalTo(independentId))
+      .body(s"$update.updated.keySet().toList()", contains(independentId))
   }
 
   @Test
@@ -250,18 +266,18 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val deletion = responseArgumentsPath("destroyTargets")
     val response = execute(request)
+      .body(s"$deletion.notCreated.bad.type", equalTo("invalidArguments"))
 
-    val operationResponse = responseFor(response, "destroyTargets")
-    assertThat((operationResponse \ "notCreated" \ "bad" \ "type").as[String]).isEqualTo("invalidArguments")
     Seq("bad", unknownId).foreach(creationId => {
-      val error = operationResponse \ "notDestroyed" \ ("#" + creationId)
-      assertThat((error \ "type").as[String]).isEqualTo("notFound")
-      assertThat((error \ "description").as[String])
-        .isEqualTo(s"Unable to resolve mailbox reference '#$creationId': no successful creation is recorded for creation ID '$creationId'")
+      val error = s"$deletion.notDestroyed.'#$creationId'"
+      response
+        .body(s"$error.type", equalTo("notFound"))
+        .body(s"$error.description", equalTo(s"Unable to resolve mailbox reference '#$creationId': no successful creation is recorded for creation ID '$creationId'"))
     })
-    val otherId = (operationResponse \ "created" \ "other" \ "id").as[String]
-    assertThat((operationResponse \ "destroyed").as[Seq[String]]).isEqualTo(Seq(otherId))
+    val otherId = response.extract().path[String](s"$deletion.created.other.id")
+    response.body(s"$deletion.destroyed", contains(otherId))
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("other")
   }
 
@@ -285,43 +301,43 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val update = responseArgumentsPath("updateWithMissingParent")
+    val fetched = responseArgumentsPath("getUnchangedMailbox")
     val response = execute(request)
-
-    val updateResponse = responseFor(response, "updateWithMissingParent")
-    val invalidParentError = updateResponse \ "notUpdated" \ "#good"
-    assertThat((invalidParentError \ "type").as[String]).isEqualTo("invalidArguments")
-    assertThat((invalidParentError \ "properties").as[Seq[String]]).isEqualTo(Seq("parentId"))
     val goodId = mailboxId(server, "good")
-    val fetchedMailboxes = (responseFor(response, "getUnchangedMailbox") \ "list").as[Seq[JsObject]]
-    assertThat((fetchedMailboxes.head \ "id").as[String]).isEqualTo(goodId)
-    assertThat((fetchedMailboxes.head \ "isSubscribed").as[Boolean]).isTrue()
-    assertThat(mailboxId(server, "independent")).isEqualTo((updateResponse \ "created" \ "other" \ "id").as[String])
+    val independentId = mailboxId(server, "independent")
+
+    response
+      .body(s"$update.notUpdated.'#good'.type", equalTo("invalidArguments"))
+      .body(s"$update.notUpdated.'#good'.properties", contains("parentId"))
+      .body(s"$update.created.other.id", equalTo(independentId))
+      .body(s"$fetched.list.id", contains(goodId))
+      .body(s"$fetched.list.isSubscribed", contains(true))
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("partial")
   }
 
   @Test
-  def postCreateShouldKeepDistinctTargetsWhenACreationIdIsReused(server: GuiceJamesServer): Unit = {
+  def postCreateShouldUpdateDistinctCreationReferenceAndRealIdTargets(server: GuiceJamesServer): Unit = {
     val originalId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(bobUsername, "original")).serialize()
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
-      |    ["Mailbox/get", {"accountId": ${Json.toJson(bobAccountId)}, "ids": ["$originalId"]}, "getOriginal"],
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"x": {"name": "unused"}},
-      |      "update": {"#x": {"name": "alias"}, "$originalId": {"name": "real"}}
+      |      "update": {"#x": {"name": "alias"}, ${Json.toJson(originalId)}: {"name": "real"}}
       |    }, "createAndUpdateDistinctTargets"]
       |  ]
       |}""".stripMargin
 
+    val update = responseArgumentsPath("createAndUpdateDistinctTargets")
     val response = execute(request)
+    val newId = mailboxId(server, "alias")
 
-    val updateResponse = responseFor(response, "createAndUpdateDistinctTargets")
-    val newId = (updateResponse \ "created" \ "x" \ "id").as[String]
-    // The creation reference and existing ID denote different mailboxes, so both patches must survive.
-    assertThat((updateResponse \ "updated").as[JsObject].keys).isEqualTo(Set(originalId, newId))
+    response
+      .body(s"$update.created.x.id", equalTo(newId))
+      .body(s"$update.updated.keySet().toList()", containsInAnyOrder(originalId, newId))
     assertThat(mailboxId(server, "real")).isEqualTo(originalId)
-    assertThat(mailboxId(server, "alias")).isEqualTo(newId)
   }
 
   @Test
@@ -338,12 +354,13 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val update = responseArgumentsPath("createAndUpdateFromResult")
     val response = execute(request)
+    val updatedId = mailboxId(server, "parent.after")
 
-    val updateResponse = responseFor(response, "createAndUpdateFromResult")
-    val id = (updateResponse \ "created" \ "x" \ "id").as[String]
-    assertThat((updateResponse \ "updated").as[JsObject].keys).isEqualTo(Set(id))
-    assertThat(mailboxId(server, "parent.after")).isEqualTo(id)
+    response
+      .body(s"$update.created.x.id", equalTo(updatedId))
+      .body(s"$update.updated.keySet().toList()", contains(updatedId))
   }
 
   @Test
@@ -358,13 +375,14 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val operation = responseArgumentsPath("createUpdateAndDestroy")
     val response = execute(request)
+    val createdId = response.extract().path[String](s"$operation.created.x.id")
 
-    val operationResponse = responseFor(response, "createUpdateAndDestroy")
-    val id = (operationResponse \ "created" \ "x" \ "id").as[String]
-    assertThat((operationResponse \ "updated").as[JsObject].keys).isEqualTo(Set(id))
-    assertThat((operationResponse \ "destroyed").as[Seq[String]]).isEqualTo(Seq(id))
-    assertThat((operationResponse \ "notDestroyed").toOption).isEqualTo(None)
+    response
+      .body(s"$operation.updated.keySet().toList()", contains(createdId))
+      .body(s"$operation.destroyed", contains(createdId))
+      .body(operation, not(hasKey("notDestroyed")))
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("before", "after")
   }
 
@@ -388,14 +406,15 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val original = responseArgumentsPath("createOriginals")
+    val replacement = responseArgumentsPath("replaceAndUpdateFromResult")
     val response = execute(request)
+    val updatedId = mailboxId(server, "newParent.after")
 
-    val replacementResponse = responseFor(response, "replaceAndUpdateFromResult")
-    val newId = (replacementResponse \ "created" \ "x" \ "id").as[String]
-    assertThat((replacementResponse \ "updated").as[JsObject].keys).isEqualTo(Set(newId))
-    assertThat(mailboxId(server, "newParent.after")).isEqualTo(newId)
-    assertThat(mailboxId(server, "old"))
-      .isEqualTo((responseFor(response, "createOriginals") \ "created" \ "x" \ "id").as[String])
+    response
+      .body(s"$original.created.x.id", equalTo(mailboxId(server, "old")))
+      .body(s"$replacement.created.x.id", equalTo(updatedId))
+      .body(s"$replacement.updated.keySet().toList()", contains(updatedId))
   }
 
   @Test
@@ -414,13 +433,14 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
+    val original = responseArgumentsPath("createOriginal")
+    val replacement = responseArgumentsPath("replaceAndDestroyFromResult")
     val response = execute(request)
+    val newId = response.extract().path[String](s"$replacement.created.x.id")
 
-    val replacementResponse = responseFor(response, "replaceAndDestroyFromResult")
-    val newId = (replacementResponse \ "created" \ "x" \ "id").as[String]
-    assertThat((replacementResponse \ "destroyed").as[Seq[String]]).isEqualTo(Seq(newId))
-    assertThat(mailboxId(server, "old"))
-      .isEqualTo((responseFor(response, "createOriginal") \ "created" \ "x" \ "id").as[String])
+    response
+      .body(s"$original.created.x.id", equalTo(mailboxId(server, "old")))
+      .body(s"$replacement.destroyed", contains(newId))
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("new")
   }
 
@@ -438,9 +458,9 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
-    val response = execute(request)
+    val invalidTarget = responseArgumentsPath("invalidTarget")
+    execute(request).body(s"$invalidTarget.type", equalTo("invalidArguments"))
 
-    assertThat((responseFor(response, "invalidTarget") \ "type").as[String]).isEqualTo("invalidArguments")
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("mustNotBeCreated")
   }
 
@@ -458,9 +478,9 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
-    val response = execute(request)
+    val invalidTarget = responseArgumentsPath("invalidTarget")
+    execute(request).body(s"$invalidTarget.type", equalTo("invalidArguments"))
 
-    assertThat((responseFor(response, "invalidTarget") \ "type").as[String]).isEqualTo("invalidArguments")
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("mustNotBeCreated")
   }
 
@@ -479,23 +499,27 @@ trait MailboxSetPostCreateContract {
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
       |      "create": {
-      |        "u": {"name": "u", "parentId": "$parent"}
+      |        "u": {"name": "u", "parentId": ${Json.toJson(parent)}}
       |      },
       |      "update": {"#u": {"name": "renamed"}}
       |    }, "createAndUpdateSharedMailbox"]
       |  ]
       |}""".stripMargin
 
-    val operationResponse = responseFor(execute(request), "createAndUpdateSharedMailbox")
+    val update = responseArgumentsPath("createAndUpdateSharedMailbox")
+    val response = execute(request)
 
     if (supportShares) {
-      assertThat((operationResponse \ "created").as[JsObject].keys).isEqualTo(Set("u"))
-      assertThat((operationResponse \ "notUpdated" \ "#u" \ "type").as[String]).isEqualTo("forbidden")
-      assertThat(probe.listUserMailboxes(andreUsername.asString())).contains("shared.u")
-      assertThat(probe.listUserMailboxes(andreUsername.asString())).doesNotContain("shared.renamed")
+      response
+        .body(s"$update.created.keySet().toList()", contains("u"))
+        .body(s"$update.notUpdated.'#u'.type", equalTo("forbidden"))
+      val mailboxPaths = probe.listUserMailboxes(andreUsername.asString())
+      assertThat(mailboxPaths).contains("shared.u")
+      assertThat(mailboxPaths).doesNotContain("shared.renamed")
     } else {
-      assertThat((operationResponse \ "notCreated").as[JsObject].keys).isEqualTo(Set("u"))
-      assertThat((operationResponse \ "notUpdated" \ "#u" \ "type").as[String]).isEqualTo("notFound")
+      response
+        .body(s"$update.notCreated.keySet().toList()", contains("u"))
+        .body(s"$update.notUpdated.'#u'.type", equalTo("notFound"))
       assertThat(probe.listUserMailboxes(andreUsername.asString())).doesNotContain("shared.u")
     }
   }
@@ -515,22 +539,25 @@ trait MailboxSetPostCreateContract {
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
       |      "create": {
-      |        "d": {"name": "d", "parentId": "$parent"}
+      |        "d": {"name": "d", "parentId": ${Json.toJson(parent)}}
       |      },
       |      "destroy": ["#d"]
       |    }, "createAndDestroySharedMailbox"]
       |  ]
       |}""".stripMargin
 
-    val operationResponse = responseFor(execute(request), "createAndDestroySharedMailbox")
+    val deletion = responseArgumentsPath("createAndDestroySharedMailbox")
+    val response = execute(request)
 
     if (supportShares) {
-      assertThat((operationResponse \ "created").as[JsObject].keys).isEqualTo(Set("d"))
-      assertThat((operationResponse \ "notDestroyed" \ "#d" \ "type").as[String]).isEqualTo("invalidArguments")
+      response
+        .body(s"$deletion.created.keySet().toList()", contains("d"))
+        .body(s"$deletion.notDestroyed.'#d'.type", equalTo("invalidArguments"))
       assertThat(probe.listUserMailboxes(andreUsername.asString())).contains("shared.d")
     } else {
-      assertThat((operationResponse \ "notCreated").as[JsObject].keys).isEqualTo(Set("d"))
-      assertThat((operationResponse \ "notDestroyed" \ "#d" \ "type").as[String]).isEqualTo("notFound")
+      response
+        .body(s"$deletion.notCreated.keySet().toList()", contains("d"))
+        .body(s"$deletion.notDestroyed.'#d'.type", equalTo("notFound"))
       assertThat(probe.listUserMailboxes(andreUsername.asString())).doesNotContain("shared.d")
     }
   }

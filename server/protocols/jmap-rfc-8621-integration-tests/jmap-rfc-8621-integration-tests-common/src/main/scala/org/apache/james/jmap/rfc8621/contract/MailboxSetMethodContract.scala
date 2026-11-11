@@ -3191,14 +3191,14 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
         |      ["Mailbox/set",
         |          {
         |               "accountId": "$bobAccountId",
-        |               "destroy": ["#C42"]
+        |               "destroy": ["#mailboxToDestroy"]
         |          },
         |   "c2"],
         |       ["Mailbox/set",
         |           {
         |                "accountId": "$bobAccountId",
         |                "create": {
-        |                    "C42": {
+        |                    "mailboxToDestroy": {
         |                      "name": "myMailbox"
         |                    }
         |                }
@@ -3235,16 +3235,16 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
          |    ["Mailbox/set", {
          |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
-         |        "#C42": {
+         |        "#mailboxToDestroy": {
          |          "type": "notFound",
-         |          "description": "Unable to resolve mailbox reference '#C42': no successful creation is recorded for creation ID 'C42'"
+         |          "description": "Unable to resolve mailbox reference '#mailboxToDestroy': no successful creation is recorded for creation ID 'mailboxToDestroy'"
          |        }
          |      }
          |    }, "c2"],
          |    ["Mailbox/set", {
          |      "accountId": "$bobAccountId",
          |      "created": {
-         |        "C42": {
+         |        "mailboxToDestroy": {
          |          "id": "$mailboxId",
          |          "sortOrder": 1000,
          |          "totalEmails": 0,
@@ -3280,7 +3280,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
         |      ["Mailbox/set",
         |          {
         |               "accountId": "$bobAccountId",
-        |               "destroy": ["#C42"]
+        |               "destroy": ["#mailboxToDestroy"]
         |          },
         |   "c2"]
         |   ]
@@ -3309,9 +3309,9 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
          |    ["Mailbox/set", {
          |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
-         |        "#C42": {
+         |        "#mailboxToDestroy": {
          |          "type": "notFound",
-         |          "description": "Unable to resolve mailbox reference '#C42': no successful creation is recorded for creation ID 'C42'"
+         |          "description": "Unable to resolve mailbox reference '#mailboxToDestroy': no successful creation is recorded for creation ID 'mailboxToDestroy'"
          |        }
          |      }
          |    }, "c2"]
@@ -8831,7 +8831,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
         |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
-        |                      "parentId": "#C42"
+        |                      "parentId": "#parent"
         |                    }
         |                }
         |           },
@@ -8865,7 +8865,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
-         |          "description": "no successful creation is recorded for creation ID 'C42'",
+         |          "description": "no successful creation is recorded for creation ID 'parent'",
          |          "properties": ["parentId"]
          |        }
          |      }
