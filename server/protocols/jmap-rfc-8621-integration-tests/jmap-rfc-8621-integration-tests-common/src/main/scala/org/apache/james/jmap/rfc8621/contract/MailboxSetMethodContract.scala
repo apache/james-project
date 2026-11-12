@@ -9182,7 +9182,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
   }
 
   @Test
-  def updateShouldSuccessWhenUpdateParentIdFromSharedMailboxAndHasRights(server: GuiceJamesServer): Unit = {
+  def updateShouldNotMoveSharedMailboxIntoTheCallerAccountWhenUpdateParentIdEvenWithAllRights(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = mailboxProbe.createMailbox(path)
@@ -9220,7 +9220,10 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
     .`then`
       .log().ifValidationFails()
       .statusCode(SC_OK)
-      .body("methodResponses[0][1].updated", hasKey(mailboxId.serialize))
+      .body("methodResponses[0][1].notUpdated", hasKey(mailboxId.serialize))
+
+    assertThat(mailboxProbe.getMailboxId("#private", andreUsername.asString(), "mailbox"))
+      .isEqualTo(mailboxId)
   }
 
   @Test
