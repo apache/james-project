@@ -25,11 +25,9 @@ import static org.apache.james.protocols.smtp.SMTPRetCode.LOCAL_ERROR;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
@@ -97,7 +95,6 @@ import com.google.common.collect.ImmutableSet;
  */
 public class DKIMHook implements JamesMessageHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(DKIMHook.class);
-    private static final Pattern LDH_LABEL = Pattern.compile("[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?");
 
     @FunctionalInterface
     interface DKIMCheckNeeded extends Predicate<Mail> {
@@ -148,31 +145,7 @@ public class DKIMHook implements JamesMessageHook {
             try {
                 return Domain.of(mailboxDomain).equals(domain);
             } catch (IllegalArgumentException e) {
-                return !isUndecodableALabelDomain(mailboxDomain);
-            }
-        }
-
-        /**
-         * True for a well-formed domain holding an A-label that Domain cannot decode: Domain follows IDNA2003, which
-         * refuses IDNA2008 labels such as xn--fa-hia (faß). Such a domain is never the protected one.
-         */
-        private static boolean isUndecodableALabelDomain(String mailboxDomain) {
-            List<String> labels = Splitter.on('.').splitToList(mailboxDomain.toLowerCase(Locale.US));
-            return labels.stream().allMatch(label -> LDH_LABEL.matcher(label).matches())
-                && labels.stream().anyMatch(label -> label.startsWith("xn--"));
-        }
-
-        private static boolean hasUndecodableALabelDomain(String address) {
-            int at = address == null ? -1 : address.lastIndexOf('@');
-            if (at <= 0) {
-                return false;
-            }
-            try {
-                // Validates the local part alone
-                new MailAddress(address.substring(0, at), Domain.LOCALHOST.asString());
-                return isUndecodableALabelDomain(address.substring(at + 1));
-            } catch (AddressException e) {
-                return false;
+                return true;
             }
         }
 
@@ -189,7 +162,7 @@ public class DKIMHook implements JamesMessageHook {
                 return new MailAddress(internetAddress.getAddress()).getDomain().equals(domain);
             } catch (AddressException e) {
                 // Can happen when InternetAddress.getAddress() returns a malformed value (e.g. "addr>")
-                return !hasUndecodableALabelDomain(internetAddress.getAddress());
+                return true;
             }
         }
 
