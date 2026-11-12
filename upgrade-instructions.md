@@ -60,8 +60,8 @@ The Sieve mailet now needs a `NotificationRegistry`, to remember which senders a
 `AutomaticallySentMailDetector`. Every James app binds them; a custom Guice assembly using the Sieve mailet without the
 vacation data modules has to bind a `NotificationRegistry` too.
 
-While a vacation is active, which still lasts `:days` after the script activation, it answers a given sender at most
-once per `:days` (capped to 365 days). It never answers automatic mails, lists nor the user itself, and its replies are
+While a vacation is active, which still lasts `:days` after the script activation, each of its responses, told apart
+by `:handle` or else by their content, answers a given sender at most once per `:days` (capped to 365 days). It never answers automatic mails, lists nor the user itself, and its replies are
 marked `Auto-Submitted: auto-replied`. A `:from` other than the user address is ignored. A reject MDN is only sent to
 the envelope sender.
 

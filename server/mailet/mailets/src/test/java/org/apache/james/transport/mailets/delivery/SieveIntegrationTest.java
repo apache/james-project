@@ -1385,6 +1385,42 @@ class SieveIntegrationTest {
     }
 
     @Test
+    void vacationShouldSendEachResponseOnceToTheSameSender() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationTwoResponses.script");
+        testee.service(createMailWithSubject("come over for dinner"));
+
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationTwoResponses.script");
+        testee.service(createMailWithSubject("Cyrus bug"));
+
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationTwoResponses.script");
+        testee.service(createMailWithSubject("Cyrus bug again"));
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(2);
+    }
+
+    @Test
+    void vacationShouldSendAResponseWithAnotherHandleToAnAlreadyAnsweredSender() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationHolidayHandle.script");
+        testee.service(createMail());
+
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationSickLeaveHandle.script");
+        testee.service(createMail());
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(2);
+    }
+
+    @Test
+    void vacationShouldNotSendAResponseWithTheSameHandleToAnAlreadyAnsweredSender() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationHolidayHandle.script");
+        testee.service(createMail());
+
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationHolidayHandleOtherReason.script");
+        testee.service(createMail());
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+    }
+
+    @Test
     void vacationShouldReplyAgainAfterAYearWhenItsDaysAreLonger() throws Exception {
         ImmutableList<MailAddress> sender = ImmutableList.of(new MailAddress("sender@any.com"));
 
