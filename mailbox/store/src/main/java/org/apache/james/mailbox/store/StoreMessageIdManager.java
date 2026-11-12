@@ -92,6 +92,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuple2;
 
 public class StoreMessageIdManager implements MessageIdManager {
 
@@ -141,14 +142,72 @@ public class StoreMessageIdManager implements MessageIdManager {
         return Flux.fromIterable(mailboxIds)
             .flatMap(mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)::findMailboxById, SET_FLAGS_CONCURRENCY)
             .collect(ImmutableList.toImmutableList())
-            .flatMapMany(Throwing.<List<Mailbox>, Flux<EventWithRegistrationKey>>function(targetMailboxes -> {
-                assertRightsOnMailboxes(targetMailboxes, mailboxSession, Right.Write);
+            .zipWith(storedFlags(messageId, replace, mailboxSession))
+            .flatMapMany(Throwing.<Tuple2<ImmutableList<Mailbox>, Map<MailboxId, Flags>>, Flux<EventWithRegistrationKey>>function(mailboxesAndStoredFlags -> {
+                List<Mailbox> targetMailboxes = mailboxesAndStoredFlags.getT1();
+                assertFlagsRightsOnMailboxes(targetMailboxes, newState, replace, mailboxesAndStoredFlags.getT2(), mailboxSession);
 
                 return mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession)
                     .setFlags(messageId, mailboxIds, newState, replace)
                     .flatMapIterable(updatedFlags -> updatedFlags.asMap().entrySet())
                     .concatMap(entry -> flagsChangedEvent(mailboxSession, entry.getKey(), ImmutableList.copyOf(entry.getValue()), targetMailboxes));
             }).sneakyThrow());
+    }
+
+    private Mono<Map<MailboxId, Flags>> storedFlags(MessageId messageId, MessageManager.FlagsUpdateMode updateMode, MailboxSession mailboxSession) {
+        if (updateMode != MessageManager.FlagsUpdateMode.REPLACE) {
+            return Mono.just(ImmutableMap.of());
+        }
+        return Flux.from(mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession).findMetadata(messageId))
+            .collectMap(metaData -> metaData.getComposedMessageId().getMailboxId(), ComposedMessageIdWithMetaData::getFlags);
+    }
+
+    private void assertFlagsRightsOnMailboxes(Collection<Mailbox> mailboxes, Flags newState, MessageManager.FlagsUpdateMode updateMode,
+                                              Map<MailboxId, Flags> storedFlags, MailboxSession mailboxSession) throws MailboxNotFoundException {
+        Optional<Mailbox> firstForbiddenMailbox = mailboxes.stream()
+            .filter(mailbox -> !canWriteFlags(rightManager.myRights(mailbox, mailboxSession),
+                flagsToWrite(newState, updateMode, Optional.ofNullable(storedFlags.get(mailbox.getMailboxId())))))
+            .findFirst();
+
+        if (firstForbiddenMailbox.isPresent()) {
+            MailboxId mailboxId = firstForbiddenMailbox.get().getMailboxId();
+            LOGGER.info("Missing rights to update flags {} in mailbox with Id {} for {}", newState, mailboxId, mailboxSession.getUser().asString());
+            throw new MailboxNotFoundException(firstForbiddenMailbox.get().generateAssociatedPath());
+        }
+    }
+
+    private static Flags flagsToWrite(Flags newState, MessageManager.FlagsUpdateMode updateMode, Optional<Flags> storedFlags) {
+        if (updateMode == MessageManager.FlagsUpdateMode.REPLACE) {
+            // Only the flags actually changed by the replacement need to be checked, as JMAP replaces the whole set of flags
+            return storedFlags
+                .map(stored -> UpdatedFlags.modifiedFlags(stored, newState))
+                .orElseGet(Flags::new);
+        }
+        return newState;
+    }
+
+    /**
+     * Mirrors StoreMessageManager::ensureFlagsWrite: 's' is needed for \Seen, 't' for \Deleted and 'w' for any other flag.
+     */
+    private static boolean canWriteFlags(MailboxACL.Rfc4314Rights myRights, Flags flags) {
+        boolean canWriteSomeFlag = myRights.contains(Right.Write)
+            || myRights.contains(Right.WriteSeenFlag)
+            || myRights.contains(Right.DeleteMessages);
+        if (!canWriteSomeFlag) {
+            return false;
+        }
+        if (flags.contains(Flags.Flag.SEEN) && !myRights.contains(Right.WriteSeenFlag)) {
+            return false;
+        }
+        if (flags.contains(Flags.Flag.DELETED) && !myRights.contains(Right.DeleteMessages)) {
+            return false;
+        }
+        boolean hasOtherFlagChanges = flags.getUserFlags().length > 0
+            || flags.contains(Flags.Flag.FLAGGED)
+            || flags.contains(Flags.Flag.DRAFT)
+            || flags.contains(Flags.Flag.ANSWERED)
+            || flags.contains(Flags.Flag.RECENT);
+        return !hasOtherFlagChanges || myRights.contains(Right.Write);
     }
 
     @Override

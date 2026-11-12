@@ -650,7 +650,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
             aliceSession);
         MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
 
-        Flags newFlags = new Flags(Flags.Flag.SEEN);
+        Flags newFlags = new Flags(Flags.Flag.FLAGGED);
         messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.REPLACE,
             messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession);
 
@@ -672,6 +672,28 @@ public abstract class AbstractMessageIdManagerStorageTest {
         MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
 
         assertThatThrownBy(() ->
+            messageIdManager.setFlags(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.REPLACE,
+                messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession))
+            .isInstanceOf(MailboxNotFoundException.class);
+
+        List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession);
+        assertThat(messages)
+            .extracting(MessageResult::getFlags)
+            .containsOnly(FLAGS);
+    }
+
+    @Test
+    void setFlagsShouldNotUpdateSeenFlagWhenOnlyWriteDelegated() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(BOB)
+                    .rights(new Rfc4314Rights(Right.Lookup, Right.Read, Right.Write))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        assertThatThrownBy(() ->
             messageIdManager.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.REPLACE,
                 messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession))
             .isInstanceOf(MailboxNotFoundException.class);
@@ -680,6 +702,72 @@ public abstract class AbstractMessageIdManagerStorageTest {
         assertThat(messages)
             .extracting(MessageResult::getFlags)
             .containsOnly(FLAGS);
+    }
+
+    @Test
+    void setFlagsShouldNotRemoveSeenFlagWhenOnlyWriteDelegated() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(BOB)
+                    .rights(new Rfc4314Rights(Right.Lookup, Right.Read, Right.Write))
+                    .asAddition()),
+            aliceSession);
+        Flags seen = new Flags(Flags.Flag.SEEN);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, seen, aliceSession);
+
+        assertThatThrownBy(() ->
+            messageIdManager.setFlags(new Flags(), MessageManager.FlagsUpdateMode.REPLACE,
+                messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession))
+            .isInstanceOf(MailboxNotFoundException.class);
+
+        List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession);
+        assertThat(messages)
+            .extracting(MessageResult::getFlags)
+            .containsOnly(seen);
+    }
+
+    @Test
+    void setFlagsShouldUpdateOtherFlagsWhenOnlyWriteDelegatedAndSeenUnchanged() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(BOB)
+                    .rights(new Rfc4314Rights(Right.Lookup, Right.Read, Right.Write))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, new Flags(Flags.Flag.SEEN), aliceSession);
+
+        Flags newFlags = new Flags(Flags.Flag.SEEN);
+        newFlags.add(Flags.Flag.FLAGGED);
+        messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.REPLACE,
+            messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession);
+
+        List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession);
+        assertThat(messages)
+            .extracting(MessageResult::getFlags)
+            .containsOnly(newFlags);
+    }
+
+    @Test
+    void setFlagsShouldUpdateSeenFlagWhenWriteSeenFlagDelegated() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(BOB)
+                    .rights(new Rfc4314Rights(Right.Lookup, Right.Read, Right.WriteSeenFlag))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        Flags newFlags = new Flags(Flags.Flag.SEEN);
+        messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.REPLACE,
+            messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession);
+
+        List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession);
+        assertThat(messages)
+            .extracting(MessageResult::getFlags)
+            .containsOnly(newFlags);
     }
 
     @Test
