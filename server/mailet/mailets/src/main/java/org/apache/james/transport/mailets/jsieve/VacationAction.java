@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets.jsieve;
 
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Enumeration;
@@ -44,8 +45,10 @@ import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hashing;
 
 import reactor.core.publisher.Mono;
 
@@ -57,7 +60,7 @@ public class VacationAction implements MailAction {
     private static final int MAXIMUM_DAYS_BETWEEN_REPLIES = 365;
 
     /**
-     * Who was answered (RFC 5230 section 4.2): one reply per user and sender within :days.
+     * Who was answered (RFC 5230 section 4.2): one reply per user, response and sender within :days.
      */
     private final NotificationRegistry notificationRegistry;
     private final AutomaticallySentMailDetector automaticallySentMailDetector;
@@ -83,7 +86,7 @@ public class VacationAction implements MailAction {
                 && !isMailingList(mail)
                 && !automaticallySentMailDetector.isAutomaticallySent(mail)
                 && !isNoReplySender(mail)
-                && !alreadyAnswered(mail, context)) {
+                && !alreadyAnswered(mail, actionVacation, context)) {
             sendVacationNotification(mail, actionVacation, context);
             registerNotification(mail, actionVacation, context);
         }
@@ -140,9 +143,9 @@ public class VacationAction implements MailAction {
             .endsWith("-noreply");
     }
 
-    private boolean alreadyAnswered(Mail mail, ActionContext context) {
+    private boolean alreadyAnswered(Mail mail, ActionVacation actionVacation, ActionContext context) {
         // Not knowing whether the sender was answered must not answer it again, nor cancel the other actions
-        boolean alreadyAnswered = Mono.defer(() -> notificationRegistry.isRegistered(accountId(context), recipientId(mail)))
+        boolean alreadyAnswered = Mono.defer(() -> notificationRegistry.isRegistered(accountId(actionVacation, context), recipientId(mail)))
             .onErrorResume(e -> {
                 LOGGER.error("Cannot know whether {} was answered by the vacation of {}, not answering",
                     mail.getMaybeSender().asString(), context.getRecipient().asString(), e);
@@ -159,7 +162,7 @@ public class VacationAction implements MailAction {
     private void registerNotification(Mail mail, ActionVacation actionVacation, ActionContext context) {
         ZonedDateTime expiryDate = context.getScriptInterpretationDate()
             .plusDays(Math.min(actionVacation.getDuration(), MAXIMUM_DAYS_BETWEEN_REPLIES));
-        Mono.defer(() -> notificationRegistry.register(accountId(context), recipientId(mail), Optional.of(expiryDate)))
+        Mono.defer(() -> notificationRegistry.register(accountId(actionVacation, context), recipientId(mail), Optional.of(expiryDate)))
             .onErrorResume(e -> {
                 LOGGER.error("Cannot record that the vacation of {} answered {}",
                     context.getRecipient().asString(), mail.getMaybeSender().asString(), e);
@@ -169,8 +172,18 @@ public class VacationAction implements MailAction {
     }
 
     // Kept apart from the JMAP vacation, which flushes its own records whenever it is modified
-    private AccountId accountId(ActionContext context) {
-        return AccountId.fromString(SIEVE_ACCOUNT_PREFIX + context.getRecipient().toString());
+    private AccountId accountId(ActionVacation actionVacation, ActionContext context) {
+        return AccountId.fromString(SIEVE_ACCOUNT_PREFIX + responseId(actionVacation) + ":" + context.getRecipient().toString());
+    }
+
+    // RFC 5230 section 4.2: a response is identified by its :handle, else by its :subject, :from, :mime and reason.
+    // Hashed, so that the account id keeps the user's domain last whatever the script writes.
+    private String responseId(ActionVacation actionVacation) {
+        String response = Optional.ofNullable(actionVacation.getHandle())
+            .map(handle -> Joiner.on('\0').join("handle", handle))
+            .orElseGet(() -> Joiner.on('\0').useForNull("").join("content", actionVacation.getSubject(), actionVacation.getFrom(),
+                actionVacation.getMime(), actionVacation.getReason()));
+        return Hashing.sha256().hashString(response, StandardCharsets.UTF_8).toString().substring(0, 16);
     }
 
     private RecipientId recipientId(Mail mail) {
