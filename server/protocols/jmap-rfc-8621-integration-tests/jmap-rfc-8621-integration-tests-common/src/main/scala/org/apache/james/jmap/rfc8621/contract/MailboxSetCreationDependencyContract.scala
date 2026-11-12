@@ -23,6 +23,9 @@ import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.`given`
 import io.restassured.http.ContentType.JSON
 import io.restassured.response.ValidatableResponse
+import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import net.javacrumbs.jsonunit.core.ConfigurationWhen.{path, paths, `then`}
+import net.javacrumbs.jsonunit.core.Option.{IGNORING_ARRAY_ORDER, IGNORING_EXTRA_FIELDS}
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.Username
@@ -30,7 +33,6 @@ import org.apache.james.jmap.rfc8621.contract.Fixture.ACCEPT_RFC8621_VERSION_HEA
 import org.apache.james.mailbox.model.MailboxPath
 import org.apache.james.modules.MailboxProbeImpl
 import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.Matchers.{contains, containsInAnyOrder, equalTo, hasKey, not}
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -53,6 +55,9 @@ trait MailboxSetCreationDependencyContract {
 
   private def responseArgumentsPath(callId: String): String =
     s"methodResponses.find { it[2] == '$callId' }[1]"
+
+  private def creationResultsPath(callId: String): String =
+    s"${responseArgumentsPath(callId)}.subMap(['created', 'notCreated'])"
 
   private def storedMailboxId(server: GuiceJamesServer, path: String): String =
     server.getProbe(classOf[MailboxProbeImpl])
@@ -79,21 +84,30 @@ trait MailboxSetCreationDependencyContract {
       |  ]
       |}""".stripMargin
 
-    val response = execute(request)
-
-    val creation = responseArgumentsPath("createHierarchy")
-    val fetchedMailboxes = s"${responseArgumentsPath("getHierarchy")}.list"
+    val response = execute(request).extract()
+    val creation = response.path[java.util.Map[String, Object]](creationResultsPath("createHierarchy"))
+    val fetchedMailboxes = response.path[java.util.List[Object]](s"${responseArgumentsPath("getHierarchy")}.list")
     val parentId = storedMailboxId(server, "parent")
     val childId = storedMailboxId(server, "parent.child")
     val grandchildId = storedMailboxId(server, "parent.child.grandchild")
 
-    response
-      .body(creation, not(hasKey("notCreated")))
-      .body(s"$creation.created.parent.id", equalTo(parentId))
-      .body(s"$creation.created.child.id", equalTo(childId))
-      .body(s"$creation.created.grandchild.id", equalTo(grandchildId))
-      .body(s"$fetchedMailboxes.find { it.id == '$childId' }.parentId", equalTo(parentId))
-      .body(s"$fetchedMailboxes.find { it.id == '$grandchildId' }.parentId", equalTo(childId))
+    assertThatJson(creation)
+      .when(paths("created.parent", "created.child", "created.grandchild"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "parent": {"id": ${Json.toJson(parentId)}},
+        |    "child": {"id": ${Json.toJson(childId)}},
+        |    "grandchild": {"id": ${Json.toJson(grandchildId)}}
+        |  }
+        |}""".stripMargin)
+
+    assertThatJson(fetchedMailboxes)
+      .withOptions(IGNORING_ARRAY_ORDER)
+      .isEqualTo(s"""[
+        |  {"id": ${Json.toJson(parentId)}, "parentId": null},
+        |  {"id": ${Json.toJson(childId)}, "parentId": ${Json.toJson(parentId)}},
+        |  {"id": ${Json.toJson(grandchildId)}, "parentId": ${Json.toJson(childId)}}
+        |]""".stripMargin)
   }
 
   @ParameterizedTest
@@ -112,11 +126,15 @@ trait MailboxSetCreationDependencyContract {
       |  ]
       |}""".stripMargin
 
-    val childError = s"${responseArgumentsPath("create")}.notCreated.child"
-    execute(request)
-      .body(s"$childError.type", equalTo("invalidProperties"))
-      .body(s"$childError.properties", contains("parentId"))
-      .body(s"$childError.description", equalTo(s"parentId references unknown mailbox creation '#$unknownCreationId'"))
+    val childError = execute(request).extract()
+      .path[java.util.Map[String, Object]](s"${responseArgumentsPath("create")}.notCreated.child")
+
+    assertThatJson(childError)
+      .isEqualTo(s"""{
+        |  "type": "invalidProperties",
+        |  "properties": ["parentId"],
+        |  "description": "parentId references unknown mailbox creation '#$unknownCreationId'"
+        |}""".stripMargin)
 
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
       .doesNotContain("child")
@@ -136,10 +154,15 @@ trait MailboxSetCreationDependencyContract {
       |  ]
       |}""".stripMargin
 
-    val selfError = s"${responseArgumentsPath("create")}.notCreated.self"
-    execute(request)
-      .body(s"$selfError.type", equalTo("invalidProperties"))
-      .body(s"$selfError.properties", contains("parentId"))
+    val selfError = execute(request).extract()
+      .path[java.util.Map[String, Object]](s"${responseArgumentsPath("create")}.notCreated.self")
+
+    assertThatJson(selfError)
+      .isEqualTo("""{
+        |  "type": "invalidProperties",
+        |  "properties": ["parentId"],
+        |  "description": "parentId cannot be resolved because this mailbox creation depends on a cycle"
+        |}""".stripMargin)
 
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
       .doesNotContain("self")
@@ -162,18 +185,32 @@ trait MailboxSetCreationDependencyContract {
       |  ]
       |}""".stripMargin
 
-    val creation = responseArgumentsPath("create")
-    val response = execute(request)
-      .body(s"$creation.created.keySet().toList()", contains("independent"))
+    val creation = execute(request).extract()
+      .path[java.util.Map[String, Object]](creationResultsPath("create"))
+    val independentId = storedMailboxId(server, "independent")
 
-    response.body(s"$creation.created.independent.id", equalTo(storedMailboxId(server, "independent")))
-    Seq("first", "second", "descendant").foreach(creationId => {
-      val error = s"$creation.notCreated.$creationId"
-      response
-        .body(s"$error.type", equalTo("invalidProperties"))
-        .body(s"$error.properties", contains("parentId"))
-        .body(s"$error.description", equalTo("parentId cannot be resolved because this mailbox creation depends on a cycle"))
-    })
+    assertThatJson(creation)
+      .when(path("created.independent"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {"independent": {"id": ${Json.toJson(independentId)}}},
+        |  "notCreated": {
+        |    "first": {
+        |      "type": "invalidProperties",
+        |      "properties": ["parentId"],
+        |      "description": "parentId cannot be resolved because this mailbox creation depends on a cycle"
+        |    },
+        |    "second": {
+        |      "type": "invalidProperties",
+        |      "properties": ["parentId"],
+        |      "description": "parentId cannot be resolved because this mailbox creation depends on a cycle"
+        |    },
+        |    "descendant": {
+        |      "type": "invalidProperties",
+        |      "properties": ["parentId"],
+        |      "description": "parentId cannot be resolved because this mailbox creation depends on a cycle"
+        |    }
+        |  }
+        |}""".stripMargin)
 
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
       .doesNotContain("first", "second", "descendant")
@@ -195,13 +232,25 @@ trait MailboxSetCreationDependencyContract {
       |  ]
       |}""".stripMargin
 
-    val creation = responseArgumentsPath("create")
-    execute(request)
-      .body(s"$creation.notCreated.parent.type", equalTo("invalidArguments"))
-      .body(s"$creation.notCreated.child.type", equalTo("invalidProperties"))
-      .body(s"$creation.notCreated.child.properties", contains("parentId"))
-      .body(s"$creation.notCreated.child.description", equalTo("parentId references failed mailbox creation '#parent'"))
-      .body(s"$creation.created.keySet().toList()", contains("independent"))
+    val creationResults = execute(request).extract()
+      .path[java.util.Map[String, Object]](creationResultsPath("create"))
+
+    assertThatJson(creationResults)
+      .when(path("notCreated.parent"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(
+        """{
+          |  "created": {
+          |    "independent": "${json-unit.ignore}"
+          |  },
+          |  "notCreated": {
+          |    "parent": {"type": "invalidArguments"},
+          |    "child": {
+          |      "type": "invalidProperties",
+          |      "properties": ["parentId"],
+          |      "description": "parentId references failed mailbox creation '#parent'"
+          |    }
+          |  }
+          |}""".stripMargin)
 
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
       .doesNotContain("bad.name", "child")
@@ -224,13 +273,21 @@ trait MailboxSetCreationDependencyContract {
       |  ]
       |}""".stripMargin
 
-    val creation = responseArgumentsPath("create")
-    val response = execute(request)
-    response
-      .body(creation, not(hasKey("notCreated")))
-      .body(s"$creation.created.keySet().toList()", containsInAnyOrder("root", "otherRoot", "sibling1", "sibling2"))
-      .body(s"$creation.created.sibling1.id", equalTo(storedMailboxId(server, "root.sibling1")))
-      .body(s"$creation.created.sibling2.id", equalTo(storedMailboxId(server, "root.sibling2")))
+    val creation = execute(request).extract()
+      .path[java.util.Map[String, Object]](creationResultsPath("create"))
+    val sibling1Id = storedMailboxId(server, "root.sibling1")
+    val sibling2Id = storedMailboxId(server, "root.sibling2")
+
+    assertThatJson(creation)
+      .when(paths("created.sibling1", "created.sibling2"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "root": "$${json-unit.ignore}",
+        |    "otherRoot": "$${json-unit.ignore}",
+        |    "sibling1": {"id": ${Json.toJson(sibling1Id)}},
+        |    "sibling2": {"id": ${Json.toJson(sibling2Id)}}
+        |  }
+        |}""".stripMargin)
   }
 
   @Test
@@ -257,14 +314,27 @@ trait MailboxSetCreationDependencyContract {
       |  ]
       |}""".stripMargin
 
-    val oldParentCreation = responseArgumentsPath("createOldParent")
-    val replacement = responseArgumentsPath("reuseParentIdAndCreateChild")
-    val response = execute(request)
-    response
-      .body(s"$oldParentCreation.created.parent.id", equalTo(storedMailboxId(server, "old")))
-      .body(replacement, not(hasKey("notCreated")))
-      .body(s"$replacement.created.child.id", equalTo(storedMailboxId(server, "new.child")))
-      .body(s"$replacement.created.parent.id", equalTo(storedMailboxId(server, "new")))
+    val response = execute(request).extract()
+    val oldParentCreation = response.path[java.util.Map[String, Object]](creationResultsPath("createOldParent"))
+    val replacement = response.path[java.util.Map[String, Object]](creationResultsPath("reuseParentIdAndCreateChild"))
+    val oldParentId = storedMailboxId(server, "old")
+    val newParentId = storedMailboxId(server, "new")
+    val childId = storedMailboxId(server, "new.child")
+
+    assertThatJson(oldParentCreation)
+      .when(path("created.parent"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {"parent": {"id": ${Json.toJson(oldParentId)}}}
+        |}""".stripMargin)
+
+    assertThatJson(replacement)
+      .when(paths("created.parent", "created.child"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "parent": {"id": ${Json.toJson(newParentId)}},
+        |    "child": {"id": ${Json.toJson(childId)}}
+        |  }
+        |}""".stripMargin)
   }
 
   @Test
@@ -295,15 +365,29 @@ trait MailboxSetCreationDependencyContract {
       |  ]
       |}""".stripMargin
 
-    val replacement = responseArgumentsPath("failReplacement")
-    val laterCreation = responseArgumentsPath("reuseOldParent")
-    val response = execute(request)
-    response
-      .body(s"$replacement.notCreated.parent.type", equalTo("invalidArguments"))
-      .body(s"$replacement.notCreated.keySet().toList()", contains("parent"))
-      .body(s"$replacement.created.keySet().toList()", containsInAnyOrder("child", "root"))
-      .body(s"$replacement.created.child.id", equalTo(storedMailboxId(server, "old.child")))
-      .body(s"$laterCreation.created.later.id", equalTo(storedMailboxId(server, "old.later")))
+    val response = execute(request).extract()
+    val replacement = response.path[java.util.Map[String, Object]](creationResultsPath("failReplacement"))
+    val laterCreation = response.path[java.util.Map[String, Object]](creationResultsPath("reuseOldParent"))
+    val childId = storedMailboxId(server, "old.child")
+    val laterId = storedMailboxId(server, "old.later")
+
+    assertThatJson(replacement)
+      .when(paths("created.child", "notCreated.parent"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "child": {"id": ${Json.toJson(childId)}},
+        |    "root": "$${json-unit.ignore}"
+        |  },
+        |  "notCreated": {
+        |    "parent": {"type": "invalidArguments"}
+        |  }
+        |}""".stripMargin)
+
+    assertThatJson(laterCreation)
+      .when(path("created.later"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {"later": {"id": ${Json.toJson(laterId)}}}
+        |}""".stripMargin)
   }
 
   @Test
@@ -324,11 +408,18 @@ trait MailboxSetCreationDependencyContract {
       |  ]
       |}""".stripMargin
 
-    val creation = responseArgumentsPath("create")
-    val response = execute(request)
-    response
-      .body(creation, not(hasKey("notCreated")))
-      .body(s"$creation.created.child.id", equalTo(storedMailboxId(server, "existing.parent.child")))
+    val creation = execute(request).extract()
+      .path[java.util.Map[String, Object]](creationResultsPath("create"))
+    val childId = storedMailboxId(server, "existing.parent.child")
+
+    assertThatJson(creation)
+      .when(path("created.child"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "child": {"id": ${Json.toJson(childId)}},
+        |    "$creationId": "$${json-unit.ignore}"
+        |  }
+        |}""".stripMargin)
   }
 
   @Test
@@ -358,15 +449,19 @@ trait MailboxSetCreationDependencyContract {
       |  ]
       |}""".stripMargin
 
-    val emailCreation = responseArgumentsPath("createEmail")
-    val fetchedEmails = s"${responseArgumentsPath("getEmail")}.list"
-    val response = execute(request)
-      .body(emailCreation, not(hasKey("notCreated")))
+    val response = execute(request).extract()
+    val emailCreation = response.path[java.util.Map[String, Object]](responseArgumentsPath("createEmail"))
+    val createdEmailId = response.path[String](s"${responseArgumentsPath("createEmail")}.created.shared.id")
+    val fetchedEmails = response.path[java.util.List[Object]](s"${responseArgumentsPath("getEmail")}.list")
+    val mailboxId = storedMailboxId(server, "mailbox")
 
-    val createdEmailId = response.extract().path[String](s"$emailCreation.created.shared.id")
-    val expectedMailboxIds = java.util.Map.of(storedMailboxId(server, "mailbox"), java.lang.Boolean.TRUE)
-    response
-      .body(s"$fetchedEmails.id", contains(createdEmailId))
-      .body(s"$fetchedEmails[0].mailboxIds", equalTo(expectedMailboxIds))
+    assertThatJson(emailCreation).node("notCreated").isAbsent()
+    assertThatJson(fetchedEmails)
+      .isEqualTo(s"""[
+        |  {
+        |    "id": ${Json.toJson(createdEmailId)},
+        |    "mailboxIds": {${Json.toJson(mailboxId)}: true}
+        |  }
+        |]""".stripMargin)
   }
 }
