@@ -71,7 +71,10 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     public void setConfiguration(RecipientRewriteTableConfiguration configuration) {
         Preconditions.checkState(this.configuration == null, "A configuration cannot be set twice");
         this.configuration = configuration;
-        this.userEntityValidator = new RecipientRewriteTableUserEntityValidator(this);
+        // Keep the injected validator: it also checks that the source is not a user (and other entities)
+        if (this.userEntityValidator == null) {
+            this.userEntityValidator = new RecipientRewriteTableUserEntityValidator(this);
+        }
     }
 
     @Inject
