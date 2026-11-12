@@ -694,7 +694,7 @@
         <doclint>none</doclint>
         <mockito.version>5.24.0</mockito.version>
         <ical4j.version>4.4.0</ical4j.version>
-        <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
         <javacrumbs.json-unit.version>6.4.0</javacrumbs.json-unit.version>
         <fastutil-core.version>8.5.19</fastutil-core.version>
         <git.useNativeGit>true</git.useNativeGit>
