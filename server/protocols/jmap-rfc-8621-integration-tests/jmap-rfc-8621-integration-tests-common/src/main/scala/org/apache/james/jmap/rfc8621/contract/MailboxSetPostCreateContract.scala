@@ -22,7 +22,10 @@ package org.apache.james.jmap.rfc8621.contract
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.`given`
 import io.restassured.http.ContentType.JSON
-import io.restassured.response.ValidatableResponse
+import io.restassured.response.{ExtractableResponse, Response, ValidatableResponse}
+import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import net.javacrumbs.jsonunit.core.ConfigurationWhen.{path, paths, `then`}
+import net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_FIELDS
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.Username
@@ -31,7 +34,6 @@ import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.{MailboxACL, MailboxPath}
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.Matchers.{contains, containsInAnyOrder, equalTo, hasKey, not}
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -56,6 +58,9 @@ trait MailboxSetPostCreateContract {
   private def responseArgumentsPath(callId: String): String =
     s"methodResponses.find { it[2] == '$callId' }[1]"
 
+  private def setResult(response: ExtractableResponse[Response], callId: String): java.util.Map[String, Object] =
+    response.path(s"${responseArgumentsPath(callId)}.subMap(['created', 'notCreated', 'updated', 'notUpdated', 'destroyed', 'notDestroyed'])")
+
   private def mailboxId(server: GuiceJamesServer, path: String): String =
     server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", bobUsername.asString(), path).serialize()
 
@@ -74,14 +79,23 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
-    val creation = responseArgumentsPath("createAndUpdate")
-    val response = execute(request)
+    val response = execute(request).extract()
+    val creation = setResult(response, "createAndUpdate")
     val createdId = mailboxId(server, "after")
 
-    response
-      .body(s"$creation.created.'$creationId'.id", equalTo(createdId))
-      .body(s"$creation.updated.keySet().toList()", contains(createdId))
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("before")
+    assertThatJson(creation)
+      .when(path(s"created.$creationId"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    ${Json.toJson(creationId)}: {"id": ${Json.toJson(createdId)}}
+        |  },
+        |  "updated": {
+        |    ${Json.toJson(createdId)}: "$${json-unit.ignore}"
+        |  }
+        |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
+      .doesNotContain("before")
   }
 
   @ParameterizedTest
@@ -99,36 +113,53 @@ trait MailboxSetPostCreateContract {
       |  ]
       |}""".stripMargin
 
-    val creation = responseArgumentsPath("createAndDestroy")
-    val response = execute(request)
-    val createdId = response.extract().path[String](s"$creation.created.'$creationId'.id")
+    val response = execute(request).extract()
+    val creation = setResult(response, "createAndDestroy")
+    val createdId = response.path[String](s"${responseArgumentsPath("createAndDestroy")}.created.'$creationId'.id")
 
-    response.body(s"$creation.destroyed", contains(createdId))
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("before")
+    assertThatJson(creation)
+      .when(path(s"created.$creationId"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    ${Json.toJson(creationId)}: {"id": ${Json.toJson(createdId)}}
+        |  },
+        |  "destroyed": [${Json.toJson(createdId)}]
+        |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
+      .doesNotContain("before")
   }
 
   @Test
   def postCreateShouldResolveParentAndRealTarget(server: GuiceJamesServer): Unit = {
-    val child = server.getProbe(classOf[MailboxProbeImpl])
+    val childId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(bobUsername, "child")).serialize()
-    val parent = "p" * 255
+    val parentCreationId = "p" * 255
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"$parent": {"name": "parent"}},
-      |      "update": {${Json.toJson(child)}: {"parentId": "#$parent", "name": "renamed"}}
+      |      "create": {"$parentCreationId": {"name": "parent"}},
+      |      "update": {${Json.toJson(childId)}: {"parentId": "#$parentCreationId", "name": "renamed"}}
       |    }, "createParentAndMoveChild"]
       |  ]
       |}""".stripMargin
 
-    val move = responseArgumentsPath("createParentAndMoveChild")
-    execute(request)
-      .body(move, not(hasKey("notUpdated")))
-      .body(s"$move.updated.keySet().toList()", contains(child))
+    val response = execute(request).extract()
+    val move = setResult(response, "createParentAndMoveChild")
 
-    assertThat(mailboxId(server, "parent.renamed")).isEqualTo(child)
+    assertThatJson(move)
+      .isEqualTo(s"""{
+        |  "created": {
+        |    ${Json.toJson(parentCreationId)}: "$${json-unit.ignore}"
+        |  },
+        |  "updated": {
+        |    ${Json.toJson(childId)}: "$${json-unit.ignore}"
+        |  }
+        |}""".stripMargin)
+
+    assertThat(mailboxId(server, "parent.renamed")).isEqualTo(childId)
   }
 
   @Test
@@ -138,35 +169,64 @@ trait MailboxSetPostCreateContract {
       |  "methodCalls": [
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"x": {"name": "old"}, "p": {"name": "oldParent"}}
+      |      "create": {"child": {"name": "old"}, "parent": {"name": "oldParent"}}
       |    }, "createOriginals"],
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"x": {"name": "new"}, "p": {"name": "newParent"}},
-      |      "update": {"#x": {"name": "renamed", "parentId": "#p"}}
+      |      "create": {"child": {"name": "new"}, "parent": {"name": "newParent"}},
+      |      "update": {"#child": {"name": "renamed", "parentId": "#parent"}}
       |    }, "replaceAndUpdate"],
       |    ["Mailbox/get", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "ids": ["#x"], "properties": ["id", "parentId"]
+      |      "ids": ["#child"], "properties": ["id", "parentId"]
       |    }, "getReplacement"],
-      |    ["Mailbox/set", {"accountId": ${Json.toJson(bobAccountId)}, "destroy": ["#x"]}, "destroyReplacement"]
+      |    ["Mailbox/set", {"accountId": ${Json.toJson(bobAccountId)}, "destroy": ["#child"]}, "destroyReplacement"]
       |  ]
       |}""".stripMargin
 
-    val original = responseArgumentsPath("createOriginals")
-    val replacement = responseArgumentsPath("replaceAndUpdate")
-    val fetched = responseArgumentsPath("getReplacement")
-    val deletion = responseArgumentsPath("destroyReplacement")
-    val response = execute(request)
-    val newId = response.extract().path[String](s"$replacement.created.x.id")
-    val newParentId = response.extract().path[String](s"$replacement.created.p.id")
+    val response = execute(request).extract()
+    val original = setResult(response, "createOriginals")
+    val replacement = setResult(response, "replaceAndUpdate")
+    val deletion = setResult(response, "destroyReplacement")
+    val fetched = response.path[java.util.List[Object]](s"${responseArgumentsPath("getReplacement")}.list")
+    val newId = response.path[String](s"${responseArgumentsPath("replaceAndUpdate")}.created.child.id")
+    val newParentId = response.path[String](s"${responseArgumentsPath("replaceAndUpdate")}.created.parent.id")
+    val oldId = mailboxId(server, "old")
 
-    response
-      .body(s"$original.created.x.id", equalTo(mailboxId(server, "old")))
-      .body(s"$replacement.updated.keySet().toList()", contains(newId))
-      .body(s"$fetched.list.id", contains(newId))
-      .body(s"$fetched.list.parentId", contains(newParentId))
-      .body(s"$deletion.destroyed", contains(newId))
+    assertThatJson(original)
+      .when(path("created.child"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "child": {"id": ${Json.toJson(oldId)}},
+        |    "parent": "$${json-unit.ignore}"
+        |  }
+        |}""".stripMargin)
+
+    assertThatJson(replacement)
+      .when(paths("created.child", "created.parent"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "child": {"id": ${Json.toJson(newId)}},
+        |    "parent": {"id": ${Json.toJson(newParentId)}}
+        |  },
+        |  "updated": {
+        |    ${Json.toJson(newId)}: "$${json-unit.ignore}"
+        |  }
+        |}""".stripMargin)
+
+    assertThatJson(fetched)
+      .isEqualTo(s"""[
+        |  {
+        |    "id": ${Json.toJson(newId)},
+        |    "parentId": ${Json.toJson(newParentId)}
+        |  }
+        |]""".stripMargin)
+
+    assertThatJson(deletion)
+      .isEqualTo(s"""{
+        |  "destroyed": [${Json.toJson(newId)}]
+        |}""".stripMargin)
+
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
       .doesNotContain("new", "newParent.renamed", "oldParent.renamed")
   }
@@ -177,23 +237,41 @@ trait MailboxSetPostCreateContract {
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
       |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"x": {"name": "old"}}
+      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"reusedMailbox": {"name": "old"}}
       |    }, "createOriginal"],
       |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"x": {"name": "new"}}, "destroy": ["#x"]
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {"reusedMailbox": {"name": "new"}},
+      |      "destroy": ["#reusedMailbox"]
       |    }, "replaceAndDestroy"]
       |  ]
       |}""".stripMargin
 
-    val original = responseArgumentsPath("createOriginal")
-    val replacement = responseArgumentsPath("replaceAndDestroy")
-    val response = execute(request)
-    val newId = response.extract().path[String](s"$replacement.created.x.id")
+    val response = execute(request).extract()
+    val original = setResult(response, "createOriginal")
+    val replacement = setResult(response, "replaceAndDestroy")
+    val oldId = mailboxId(server, "old")
+    val newId = response.path[String](s"${responseArgumentsPath("replaceAndDestroy")}.created.reusedMailbox.id")
 
-    response
-      .body(s"$original.created.x.id", equalTo(mailboxId(server, "old")))
-      .body(s"$replacement.destroyed", contains(newId))
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("new")
+    assertThatJson(original)
+      .when(path("created.reusedMailbox"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "reusedMailbox": {"id": ${Json.toJson(oldId)}}
+        |  }
+        |}""".stripMargin)
+
+    assertThatJson(replacement)
+      .when(path("created.reusedMailbox"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "reusedMailbox": {"id": ${Json.toJson(newId)}}
+        |  },
+        |  "destroyed": [${Json.toJson(newId)}]
+        |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
+      .doesNotContain("new")
   }
 
   @Test
@@ -202,24 +280,38 @@ trait MailboxSetPostCreateContract {
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
       |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"x": {"name": "old"}}
+      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"reusedMailbox": {"name": "old"}}
       |    }, "createOriginal"],
       |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"x": {"name": "bad.name"}},
-      |      "update": {"#x": {"name": "renamed"}}
+      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"reusedMailbox": {"name": "bad.name"}},
+      |      "update": {"#reusedMailbox": {"name": "renamed"}}
       |    }, "failReplacementAndUpdate"]
       |  ]
       |}""".stripMargin
 
-    val original = responseArgumentsPath("createOriginal")
-    val replacement = responseArgumentsPath("failReplacementAndUpdate")
-    val response = execute(request)
+    val response = execute(request).extract()
+    val original = setResult(response, "createOriginal")
+    val replacement = setResult(response, "failReplacementAndUpdate")
     val oldId = mailboxId(server, "renamed")
 
-    response
-      .body(s"$original.created.x.id", equalTo(oldId))
-      .body(s"$replacement.notCreated.x.type", equalTo("invalidArguments"))
-      .body(s"$replacement.updated.keySet().toList()", contains(oldId))
+    assertThatJson(original)
+      .when(path("created.reusedMailbox"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "reusedMailbox": {"id": ${Json.toJson(oldId)}}
+        |  }
+        |}""".stripMargin)
+
+    assertThatJson(replacement)
+      .when(path("notCreated.reusedMailbox"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "notCreated": {
+        |    "reusedMailbox": {"type": "invalidArguments"}
+        |  },
+        |  "updated": {
+        |    ${Json.toJson(oldId)}: "$${json-unit.ignore}"
+        |  }
+        |}""".stripMargin)
   }
 
   @Test
@@ -230,26 +322,43 @@ trait MailboxSetPostCreateContract {
       |  "methodCalls": [
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"bad": {"name": "bad.name"}, "other": {"name": "other"}},
-      |      "update": {"#bad": {"name": "badUpdate"}, "#$unknownId": {"name": "missing"}, "#other": {"name": "independent"}}
+      |      "create": {"failedMailbox": {"name": "bad.name"}, "independentMailbox": {"name": "other"}},
+      |      "update": {
+      |        "#failedMailbox": {"name": "badUpdate"},
+      |        "#$unknownId": {"name": "missing"},
+      |        "#independentMailbox": {"name": "independent"}
+      |      }
       |    }, "updateTargets"]
       |  ]
       |}""".stripMargin
 
-    val update = responseArgumentsPath("updateTargets")
-    val response = execute(request)
-      .body(s"$update.notCreated.bad.type", equalTo("invalidArguments"))
-
-    Seq("bad", unknownId).foreach(creationId => {
-      val error = s"$update.notUpdated.'#$creationId'"
-      response
-        .body(s"$error.type", equalTo("notFound"))
-        .body(s"$error.description", equalTo(s"Unable to resolve mailbox reference '#$creationId': no successful creation is recorded for creation ID '$creationId'"))
-    })
+    val response = execute(request).extract()
+    val update = setResult(response, "updateTargets")
     val independentId = mailboxId(server, "independent")
-    response
-      .body(s"$update.created.other.id", equalTo(independentId))
-      .body(s"$update.updated.keySet().toList()", contains(independentId))
+
+    assertThatJson(update)
+      .when(paths("created.independentMailbox", "notCreated.failedMailbox"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "independentMailbox": {"id": ${Json.toJson(independentId)}}
+        |  },
+        |  "updated": {
+        |    ${Json.toJson(independentId)}: "$${json-unit.ignore}"
+        |  },
+        |  "notCreated": {
+        |    "failedMailbox": {"type": "invalidArguments"}
+        |  },
+        |  "notUpdated": {
+        |    "#failedMailbox": {
+        |      "type": "invalidArguments",
+        |      "description": "Unable to resolve mailbox reference '#failedMailbox': no successful creation is recorded for creation ID 'failedMailbox'"
+        |    },
+        |    "#$unknownId": {
+        |      "type": "invalidArguments",
+        |      "description": "Unable to resolve mailbox reference '#$unknownId': no successful creation is recorded for creation ID '$unknownId'"
+        |    }
+        |  }
+        |}""".stripMargin)
   }
 
   @Test
@@ -260,25 +369,40 @@ trait MailboxSetPostCreateContract {
       |  "methodCalls": [
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"bad": {"name": "bad.name"}, "other": {"name": "other"}},
-      |      "destroy": ["#bad", "#$unknownId", "#other"]
+      |      "create": {"failedMailbox": {"name": "bad.name"}, "independentMailbox": {"name": "other"}},
+      |      "destroy": ["#failedMailbox", "#$unknownId", "#independentMailbox"]
       |    }, "destroyTargets"]
       |  ]
       |}""".stripMargin
 
-    val deletion = responseArgumentsPath("destroyTargets")
-    val response = execute(request)
-      .body(s"$deletion.notCreated.bad.type", equalTo("invalidArguments"))
+    val response = execute(request).extract()
+    val deletion = setResult(response, "destroyTargets")
+    val independentId = response.path[String](s"${responseArgumentsPath("destroyTargets")}.created.independentMailbox.id")
 
-    Seq("bad", unknownId).foreach(creationId => {
-      val error = s"$deletion.notDestroyed.'#$creationId'"
-      response
-        .body(s"$error.type", equalTo("notFound"))
-        .body(s"$error.description", equalTo(s"Unable to resolve mailbox reference '#$creationId': no successful creation is recorded for creation ID '$creationId'"))
-    })
-    val otherId = response.extract().path[String](s"$deletion.created.other.id")
-    response.body(s"$deletion.destroyed", contains(otherId))
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("other")
+    assertThatJson(deletion)
+      .when(paths("created.independentMailbox", "notCreated.failedMailbox"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "independentMailbox": {"id": ${Json.toJson(independentId)}}
+        |  },
+        |  "notCreated": {
+        |    "failedMailbox": {"type": "invalidArguments"}
+        |  },
+        |  "destroyed": [${Json.toJson(independentId)}],
+        |  "notDestroyed": {
+        |    "#failedMailbox": {
+        |      "type": "invalidArguments",
+        |      "description": "Unable to resolve mailbox reference '#failedMailbox': no successful creation is recorded for creation ID 'failedMailbox'"
+        |    },
+        |    "#$unknownId": {
+        |      "type": "invalidArguments",
+        |      "description": "Unable to resolve mailbox reference '#$unknownId': no successful creation is recorded for creation ID '$unknownId'"
+        |    }
+        |  }
+        |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
+      .doesNotContain("other")
   }
 
   @Test
@@ -289,31 +413,53 @@ trait MailboxSetPostCreateContract {
       |  "methodCalls": [
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"good": {"name": "good"}, "other": {"name": "other"}},
+      |      "create": {"child": {"name": "good"}, "independentMailbox": {"name": "other"}},
       |      "update": {
-      |        "#good": {"name": "partial", "parentId": "#$unknownId", "isSubscribed": false},
-      |        "#other": {"name": "independent"}
+      |        "#child": {"name": "partial", "parentId": "#$unknownId", "isSubscribed": false},
+      |        "#independentMailbox": {"name": "independent"}
       |      }
       |    }, "updateWithMissingParent"],
       |    ["Mailbox/get", {
-      |      "accountId": ${Json.toJson(bobAccountId)}, "ids": ["#good"], "properties": ["id", "name", "isSubscribed"]
+      |      "accountId": ${Json.toJson(bobAccountId)}, "ids": ["#child"], "properties": ["id", "name", "isSubscribed"]
       |    }, "getUnchangedMailbox"]
       |  ]
       |}""".stripMargin
 
-    val update = responseArgumentsPath("updateWithMissingParent")
-    val fetched = responseArgumentsPath("getUnchangedMailbox")
-    val response = execute(request)
-    val goodId = mailboxId(server, "good")
+    val response = execute(request).extract()
+    val update = setResult(response, "updateWithMissingParent")
+    val fetched = response.path[java.util.List[Object]](s"${responseArgumentsPath("getUnchangedMailbox")}.list")
+    val childId = mailboxId(server, "good")
     val independentId = mailboxId(server, "independent")
 
-    response
-      .body(s"$update.notUpdated.'#good'.type", equalTo("invalidArguments"))
-      .body(s"$update.notUpdated.'#good'.properties", contains("parentId"))
-      .body(s"$update.created.other.id", equalTo(independentId))
-      .body(s"$fetched.list.id", contains(goodId))
-      .body(s"$fetched.list.isSubscribed", contains(true))
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("partial")
+    assertThatJson(update)
+      .when(paths("created.independentMailbox", "notUpdated.#child"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "child": "$${json-unit.ignore}",
+        |    "independentMailbox": {"id": ${Json.toJson(independentId)}}
+        |  },
+        |  "updated": {
+        |    ${Json.toJson(independentId)}: "$${json-unit.ignore}"
+        |  },
+        |  "notUpdated": {
+        |    "#child": {
+        |      "type": "invalidArguments",
+        |      "properties": ["parentId"]
+        |    }
+        |  }
+        |}""".stripMargin)
+
+    assertThatJson(fetched)
+      .isEqualTo(s"""[
+        |  {
+        |    "id": ${Json.toJson(childId)},
+        |    "name": "good",
+        |    "isSubscribed": true
+        |  }
+        |]""".stripMargin)
+
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
+      .doesNotContain("partial")
   }
 
   @Test
@@ -324,19 +470,28 @@ trait MailboxSetPostCreateContract {
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
       |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"x": {"name": "unused"}},
-      |      "update": {"#x": {"name": "alias"}, ${Json.toJson(originalId)}: {"name": "real"}}
+      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"newMailbox": {"name": "unused"}},
+      |      "update": {"#newMailbox": {"name": "alias"}, ${Json.toJson(originalId)}: {"name": "real"}}
       |    }, "createAndUpdateDistinctTargets"]
       |  ]
       |}""".stripMargin
 
-    val update = responseArgumentsPath("createAndUpdateDistinctTargets")
-    val response = execute(request)
+    val response = execute(request).extract()
+    val update = setResult(response, "createAndUpdateDistinctTargets")
     val newId = mailboxId(server, "alias")
 
-    response
-      .body(s"$update.created.x.id", equalTo(newId))
-      .body(s"$update.updated.keySet().toList()", containsInAnyOrder(originalId, newId))
+    assertThatJson(update)
+      .when(path("created.newMailbox"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "newMailbox": {"id": ${Json.toJson(newId)}}
+        |  },
+        |  "updated": {
+        |    ${Json.toJson(originalId)}: "$${json-unit.ignore}",
+        |    ${Json.toJson(newId)}: "$${json-unit.ignore}"
+        |  }
+        |}""".stripMargin)
+
     assertThat(mailboxId(server, "real")).isEqualTo(originalId)
   }
 
@@ -345,22 +500,30 @@ trait MailboxSetPostCreateContract {
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
-      |    ["Core/echo", {"patches": {"#x": {"parentId": "#p", "name": "after"}}}, "echoPatches"],
+      |    ["Core/echo", {"patches": {"#child": {"parentId": "#parent", "name": "after"}}}, "echoPatches"],
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"x": {"name": "before"}, "p": {"name": "parent"}},
+      |      "create": {"child": {"name": "before"}, "parent": {"name": "parent"}},
       |      "#update": {"resultOf": "echoPatches", "name": "Core/echo", "path": "/patches"}
       |    }, "createAndUpdateFromResult"]
       |  ]
       |}""".stripMargin
 
-    val update = responseArgumentsPath("createAndUpdateFromResult")
-    val response = execute(request)
+    val response = execute(request).extract()
+    val update = setResult(response, "createAndUpdateFromResult")
     val updatedId = mailboxId(server, "parent.after")
 
-    response
-      .body(s"$update.created.x.id", equalTo(updatedId))
-      .body(s"$update.updated.keySet().toList()", contains(updatedId))
+    assertThatJson(update)
+      .when(path("created.child"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "child": {"id": ${Json.toJson(updatedId)}},
+        |    "parent": "$${json-unit.ignore}"
+        |  },
+        |  "updated": {
+        |    ${Json.toJson(updatedId)}: "$${json-unit.ignore}"
+        |  }
+        |}""".stripMargin)
   }
 
   @Test
@@ -369,21 +532,30 @@ trait MailboxSetPostCreateContract {
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
       |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"x": {"name": "before"}},
-      |      "update": {"#x": {"name": "after"}}, "destroy": ["#x", "#x"]
+      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"newMailbox": {"name": "before"}},
+      |      "update": {"#newMailbox": {"name": "after"}}, "destroy": ["#newMailbox", "#newMailbox"]
       |    }, "createUpdateAndDestroy"]
       |  ]
       |}""".stripMargin
 
-    val operation = responseArgumentsPath("createUpdateAndDestroy")
-    val response = execute(request)
-    val createdId = response.extract().path[String](s"$operation.created.x.id")
+    val response = execute(request).extract()
+    val operation = setResult(response, "createUpdateAndDestroy")
+    val createdId = response.path[String](s"${responseArgumentsPath("createUpdateAndDestroy")}.created.newMailbox.id")
 
-    response
-      .body(s"$operation.updated.keySet().toList()", contains(createdId))
-      .body(s"$operation.destroyed", contains(createdId))
-      .body(operation, not(hasKey("notDestroyed")))
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("before", "after")
+    assertThatJson(operation)
+      .when(path("created.newMailbox"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "newMailbox": {"id": ${Json.toJson(createdId)}}
+        |  },
+        |  "updated": {
+        |    ${Json.toJson(createdId)}: "$${json-unit.ignore}"
+        |  },
+        |  "destroyed": [${Json.toJson(createdId)}]
+        |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
+      .doesNotContain("before", "after")
   }
 
   @Test
@@ -392,29 +564,46 @@ trait MailboxSetPostCreateContract {
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
       |    ["Core/echo", {
-      |      "patches": {"#x": {"name": "after", "parentId": "#p"}}
+      |      "patches": {"#child": {"name": "after", "parentId": "#parent"}}
       |    }, "echoPatches"],
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"x": {"name": "old"}, "p": {"name": "oldParent"}}
+      |      "create": {"child": {"name": "old"}, "parent": {"name": "oldParent"}}
       |    }, "createOriginals"],
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"x": {"name": "new"}, "p": {"name": "newParent"}},
+      |      "create": {"child": {"name": "new"}, "parent": {"name": "newParent"}},
       |      "#update": {"resultOf": "echoPatches", "name": "Core/echo", "path": "/patches"}
       |    }, "replaceAndUpdateFromResult"]
       |  ]
       |}""".stripMargin
 
-    val original = responseArgumentsPath("createOriginals")
-    val replacement = responseArgumentsPath("replaceAndUpdateFromResult")
-    val response = execute(request)
+    val response = execute(request).extract()
+    val original = setResult(response, "createOriginals")
+    val replacement = setResult(response, "replaceAndUpdateFromResult")
+    val oldId = mailboxId(server, "old")
     val updatedId = mailboxId(server, "newParent.after")
 
-    response
-      .body(s"$original.created.x.id", equalTo(mailboxId(server, "old")))
-      .body(s"$replacement.created.x.id", equalTo(updatedId))
-      .body(s"$replacement.updated.keySet().toList()", contains(updatedId))
+    assertThatJson(original)
+      .when(path("created.child"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "child": {"id": ${Json.toJson(oldId)}},
+        |    "parent": "$${json-unit.ignore}"
+        |  }
+        |}""".stripMargin)
+
+    assertThatJson(replacement)
+      .when(path("created.child"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "child": {"id": ${Json.toJson(updatedId)}},
+        |    "parent": "$${json-unit.ignore}"
+        |  },
+        |  "updated": {
+        |    ${Json.toJson(updatedId)}: "$${json-unit.ignore}"
+        |  }
+        |}""".stripMargin)
   }
 
   @Test
@@ -422,26 +611,42 @@ trait MailboxSetPostCreateContract {
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
-      |    ["Core/echo", {"targets": ["#x"]}, "echoTargets"],
+      |    ["Core/echo", {"targets": ["#reusedMailbox"]}, "echoTargets"],
       |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"x": {"name": "old"}}
+      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"reusedMailbox": {"name": "old"}}
       |    }, "createOriginal"],
       |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"x": {"name": "new"}},
+      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"reusedMailbox": {"name": "new"}},
       |      "#destroy": {"resultOf": "echoTargets", "name": "Core/echo", "path": "/targets"}
       |    }, "replaceAndDestroyFromResult"]
       |  ]
       |}""".stripMargin
 
-    val original = responseArgumentsPath("createOriginal")
-    val replacement = responseArgumentsPath("replaceAndDestroyFromResult")
-    val response = execute(request)
-    val newId = response.extract().path[String](s"$replacement.created.x.id")
+    val response = execute(request).extract()
+    val original = setResult(response, "createOriginal")
+    val replacement = setResult(response, "replaceAndDestroyFromResult")
+    val oldId = mailboxId(server, "old")
+    val newId = response.path[String](s"${responseArgumentsPath("replaceAndDestroyFromResult")}.created.reusedMailbox.id")
 
-    response
-      .body(s"$original.created.x.id", equalTo(mailboxId(server, "old")))
-      .body(s"$replacement.destroyed", contains(newId))
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("new")
+    assertThatJson(original)
+      .when(path("created.reusedMailbox"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "reusedMailbox": {"id": ${Json.toJson(oldId)}}
+        |  }
+        |}""".stripMargin)
+
+    assertThatJson(replacement)
+      .when(path("created.reusedMailbox"), `then`(IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {
+        |    "reusedMailbox": {"id": ${Json.toJson(newId)}}
+        |  },
+        |  "destroyed": [${Json.toJson(newId)}]
+        |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
+      .doesNotContain("new")
   }
 
   @ParameterizedTest
@@ -452,16 +657,23 @@ trait MailboxSetPostCreateContract {
       |  "methodCalls": [
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"x": {"name": "mustNotBeCreated"}},
+      |      "create": {"mustNotBeCreated": {"name": "mustNotBeCreated"}},
       |      "update": {${Json.toJson(target)}: {"name": "invalid"}}
       |    }, "invalidTarget"]
       |  ]
       |}""".stripMargin
 
-    val invalidTarget = responseArgumentsPath("invalidTarget")
-    execute(request).body(s"$invalidTarget.type", equalTo("invalidArguments"))
+    val error = execute(request).extract()
+      .path[java.util.Map[String, Object]](responseArgumentsPath("invalidTarget"))
 
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("mustNotBeCreated")
+    assertThatJson(error)
+      .withOptions(IGNORING_EXTRA_FIELDS)
+      .isEqualTo("""{
+        |  "type": "invalidArguments"
+        |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
+      .doesNotContain("mustNotBeCreated")
   }
 
   @ParameterizedTest
@@ -472,16 +684,23 @@ trait MailboxSetPostCreateContract {
       |  "methodCalls": [
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"x": {"name": "mustNotBeCreated"}},
+      |      "create": {"mustNotBeCreated": {"name": "mustNotBeCreated"}},
       |      "destroy": [${Json.toJson(target)}]
       |    }, "invalidTarget"]
       |  ]
       |}""".stripMargin
 
-    val invalidTarget = responseArgumentsPath("invalidTarget")
-    execute(request).body(s"$invalidTarget.type", equalTo("invalidArguments"))
+    val error = execute(request).extract()
+      .path[java.util.Map[String, Object]](responseArgumentsPath("invalidTarget"))
 
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString())).doesNotContain("mustNotBeCreated")
+    assertThatJson(error)
+      .withOptions(IGNORING_EXTRA_FIELDS)
+      .isEqualTo("""{
+        |  "type": "invalidArguments"
+        |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
+      .doesNotContain("mustNotBeCreated")
   }
 
   @ParameterizedTest
@@ -499,28 +718,41 @@ trait MailboxSetPostCreateContract {
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
       |      "create": {
-      |        "u": {"name": "u", "parentId": ${Json.toJson(parent)}}
+      |        "sharedChild": {"name": "child", "parentId": ${Json.toJson(parent)}}
       |      },
-      |      "update": {"#u": {"name": "renamed"}}
+      |      "update": {"#sharedChild": {"name": "renamed"}}
       |    }, "createAndUpdateSharedMailbox"]
       |  ]
       |}""".stripMargin
 
-    val update = responseArgumentsPath("createAndUpdateSharedMailbox")
-    val response = execute(request)
+    val response = setResult(execute(request).extract(), "createAndUpdateSharedMailbox")
 
     if (supportShares) {
-      response
-        .body(s"$update.created.keySet().toList()", contains("u"))
-        .body(s"$update.notUpdated.'#u'.type", equalTo("forbidden"))
+      assertThatJson(response)
+        .when(path("notUpdated.#sharedChild"), `then`(IGNORING_EXTRA_FIELDS))
+        .isEqualTo("""{
+          |  "created": {
+          |    "sharedChild": "${json-unit.ignore}"
+          |  },
+          |  "notUpdated": {
+          |    "#sharedChild": {"type": "forbidden"}
+          |  }
+          |}""".stripMargin)
       val mailboxPaths = probe.listUserMailboxes(andreUsername.asString())
-      assertThat(mailboxPaths).contains("shared.u")
+      assertThat(mailboxPaths).contains("shared.child")
       assertThat(mailboxPaths).doesNotContain("shared.renamed")
     } else {
-      response
-        .body(s"$update.notCreated.keySet().toList()", contains("u"))
-        .body(s"$update.notUpdated.'#u'.type", equalTo("notFound"))
-      assertThat(probe.listUserMailboxes(andreUsername.asString())).doesNotContain("shared.u")
+      assertThatJson(response)
+        .when(path("notUpdated.#sharedChild"), `then`(IGNORING_EXTRA_FIELDS))
+        .isEqualTo("""{
+          |  "notCreated": {
+          |    "sharedChild": "${json-unit.ignore}"
+          |  },
+          |  "notUpdated": {
+          |    "#sharedChild": {"type": "invalidArguments"}
+          |  }
+          |}""".stripMargin)
+      assertThat(probe.listUserMailboxes(andreUsername.asString())).doesNotContain("shared.child")
     }
   }
 
@@ -539,26 +771,39 @@ trait MailboxSetPostCreateContract {
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
       |      "create": {
-      |        "d": {"name": "d", "parentId": ${Json.toJson(parent)}}
+      |        "sharedChild": {"name": "child", "parentId": ${Json.toJson(parent)}}
       |      },
-      |      "destroy": ["#d"]
+      |      "destroy": ["#sharedChild"]
       |    }, "createAndDestroySharedMailbox"]
       |  ]
       |}""".stripMargin
 
-    val deletion = responseArgumentsPath("createAndDestroySharedMailbox")
-    val response = execute(request)
+    val response = setResult(execute(request).extract(), "createAndDestroySharedMailbox")
 
     if (supportShares) {
-      response
-        .body(s"$deletion.created.keySet().toList()", contains("d"))
-        .body(s"$deletion.notDestroyed.'#d'.type", equalTo("invalidArguments"))
-      assertThat(probe.listUserMailboxes(andreUsername.asString())).contains("shared.d")
+      assertThatJson(response)
+        .when(path("notDestroyed.#sharedChild"), `then`(IGNORING_EXTRA_FIELDS))
+        .isEqualTo("""{
+          |  "created": {
+          |    "sharedChild": "${json-unit.ignore}"
+          |  },
+          |  "notDestroyed": {
+          |    "#sharedChild": {"type": "invalidArguments"}
+          |  }
+          |}""".stripMargin)
+      assertThat(probe.listUserMailboxes(andreUsername.asString())).contains("shared.child")
     } else {
-      response
-        .body(s"$deletion.notCreated.keySet().toList()", contains("d"))
-        .body(s"$deletion.notDestroyed.'#d'.type", equalTo("notFound"))
-      assertThat(probe.listUserMailboxes(andreUsername.asString())).doesNotContain("shared.d")
+      assertThatJson(response)
+        .when(path("notDestroyed.#sharedChild"), `then`(IGNORING_EXTRA_FIELDS))
+        .isEqualTo("""{
+          |  "notCreated": {
+          |    "sharedChild": "${json-unit.ignore}"
+          |  },
+          |  "notDestroyed": {
+          |    "#sharedChild": {"type": "invalidArguments"}
+          |  }
+          |}""".stripMargin)
+      assertThat(probe.listUserMailboxes(andreUsername.asString())).doesNotContain("shared.child")
     }
   }
 }

@@ -21,12 +21,12 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.james.jmap.rfc8621.contract.Fixture.ACCEPT_RFC8621_VERSION_HEADER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.nullValue;
 
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.GuiceJamesServer;
@@ -55,7 +55,7 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
         String alias = "0" + id;
         String independent = probe.createMailbox(MailboxPath.forUser(bobUsername(), "independent")).serialize();
 
-        given()
+        Map<String, Object> result = given()
             .header("Accept", ACCEPT_RFC8621_VERSION_HEADER())
             .body("""
                 {
@@ -77,10 +77,26 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
             .log().ifValidationFails()
             .statusCode(SC_OK)
             .contentType(JSON)
-            .body("methodResponses[0][1].notUpdated.size()", equalTo(2))
-            .body("methodResponses[0][1].notUpdated.'" + id + "'.type", equalTo("invalidArguments"))
-            .body("methodResponses[0][1].notUpdated.'" + alias + "'.type", equalTo("invalidArguments"))
-            .body("methodResponses[0][1].updated.size()", equalTo(1));
+            .extract()
+            .path("methodResponses.find { it[2] == 'updateAliases' }[1].subMap(['updated', 'notUpdated'])");
+
+        assertThatJson(result).isEqualTo("""
+            {
+              "updated": {
+                "%s": "${json-unit.ignore}"
+              },
+              "notUpdated": {
+                "%s": {
+                  "type": "invalidArguments",
+                  "description": "Multiple update keys resolve to the same mailbox: '%s', '%s'"
+                },
+                "%s": {
+                  "type": "invalidArguments",
+                  "description": "Multiple update keys resolve to the same mailbox: '%s', '%s'"
+                }
+              }
+            }
+            """.formatted(independent, id, alias, id, alias, alias, id));
 
         assertThat(probe.getMailboxId("#private", bobUsername().asString(), "original").serialize()).isEqualTo(id);
         assertThat(probe.getMailboxId("#private", bobUsername().asString(), "success").serialize()).isEqualTo(independent);
@@ -92,7 +108,7 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
         MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
         String id = probe.createMailbox(MailboxPath.forUser(bobUsername(), "deleted")).serialize();
 
-        given()
+        Map<String, Object> result = given()
             .header("Accept", ACCEPT_RFC8621_VERSION_HEADER())
             .body("""
                 {
@@ -110,8 +126,14 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
             .log().ifValidationFails()
             .statusCode(SC_OK)
             .contentType(JSON)
-            .body("methodResponses[0][1].destroyed", equalTo(java.util.List.of(id)))
-            .body("methodResponses[0][1].notDestroyed", nullValue());
+            .extract()
+            .path("methodResponses.find { it[2] == 'destroyAliases' }[1].subMap(['destroyed', 'notDestroyed'])");
+
+        assertThatJson(result).isEqualTo("""
+            {
+              "destroyed": ["%s"]
+            }
+            """.formatted(id));
 
         assertThat(probe.listUserMailboxes(bobUsername().asString())).doesNotContain("deleted");
     }
@@ -122,7 +144,7 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
         String id = probe.createMailbox(MailboxPath.forUser(bobUsername(), "INBOX")).serialize();
         String alias = "0" + id;
 
-        given()
+        Map<String, Object> result = given()
             .header("Accept", ACCEPT_RFC8621_VERSION_HEADER())
             .body("""
                 {
@@ -140,10 +162,23 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
             .log().ifValidationFails()
             .statusCode(SC_OK)
             .contentType(JSON)
-            .body("methodResponses[0][1].notDestroyed.size()", equalTo(2))
-            .body("methodResponses[0][1].notDestroyed.'" + id + "'.type", equalTo("invalidArguments"))
-            .body("methodResponses[0][1].notDestroyed.'" + alias + "'.type", equalTo("invalidArguments"))
-            .body("methodResponses[0][1].destroyed", nullValue());
+            .extract()
+            .path("methodResponses.find { it[2] == 'destroySystemMailboxAliases' }[1].subMap(['destroyed', 'notDestroyed'])");
+
+        assertThatJson(result).isEqualTo("""
+            {
+              "notDestroyed": {
+                "%s": {
+                  "type": "invalidArguments",
+                  "description": "System mailboxes cannot be destroyed"
+                },
+                "%s": {
+                  "type": "invalidArguments",
+                  "description": "System mailboxes cannot be destroyed"
+                }
+              }
+            }
+            """.formatted(id, alias));
 
         assertThat(probe.getMailboxId("#private", bobUsername().asString(), "INBOX").serialize()).isEqualTo(id);
     }
