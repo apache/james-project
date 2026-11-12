@@ -5865,6 +5865,135 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def shouldNotSetSeenKeywordInDelegatedMailboxWithoutWriteSeenFlagRight(server: GuiceJamesServer): Unit = {
+    val (messageId, response) = updateKeywordsInDelegatedMailbox(server,
+      rights = Set(Right.Lookup, Right.Read, Right.Write),
+      initialFlags = new Flags(),
+      patch = """{"keywords/$seen": true}""")
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notUpdated")
+      .isEqualTo(
+        s"""{
+           |  "${messageId.serialize}":{
+           |     "type": "notFound",
+           |     "description": "Mailbox not found"
+           |  }
+           |}""".stripMargin)
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list[0].keywords")
+      .isEqualTo("{}")
+  }
+
+  @Test
+  def shouldNotUnsetSeenKeywordInDelegatedMailboxWithoutWriteSeenFlagRight(server: GuiceJamesServer): Unit = {
+    val (messageId, response) = updateKeywordsInDelegatedMailbox(server,
+      rights = Set(Right.Lookup, Right.Read, Right.Write),
+      initialFlags = new Flags(Flags.Flag.SEEN),
+      patch = """{"keywords/$seen": null}""")
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notUpdated")
+      .isEqualTo(
+        s"""{
+           |  "${messageId.serialize}":{
+           |     "type": "notFound",
+           |     "description": "Mailbox not found"
+           |  }
+           |}""".stripMargin)
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list[0].keywords")
+      .isEqualTo("""{"$seen": true}""")
+  }
+
+  @Test
+  def shouldSetOtherKeywordsOfASeenEmailInDelegatedMailboxWithoutWriteSeenFlagRight(server: GuiceJamesServer): Unit = {
+    val (messageId, response) = updateKeywordsInDelegatedMailbox(server,
+      rights = Set(Right.Lookup, Right.Read, Right.Write),
+      initialFlags = new Flags(Flags.Flag.SEEN),
+      patch = """{"keywords": {"$seen": true, "$flagged": true}}""")
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].updated")
+      .isEqualTo(s"""{"${messageId.serialize}": null}""")
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list[0].keywords")
+      .isEqualTo("""{"$seen": true, "$flagged": true}""")
+  }
+
+  @Test
+  def shouldSetSeenKeywordInDelegatedMailboxWithWriteSeenFlagRight(server: GuiceJamesServer): Unit = {
+    val (messageId, response) = updateKeywordsInDelegatedMailbox(server,
+      rights = Set(Right.Lookup, Right.Read, Right.WriteSeenFlag),
+      initialFlags = new Flags(),
+      patch = """{"keywords/$seen": true}""")
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].updated")
+      .isEqualTo(s"""{"${messageId.serialize}": null}""")
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list[0].keywords")
+      .isEqualTo("""{"$seen": true}""")
+  }
+
+  private def updateKeywordsInDelegatedMailbox(server: GuiceJamesServer, rights: Set[Right], initialFlags: Flags, patch: String): (MessageId, String) = {
+    val andrePath = MailboxPath.forUser(andreUsername, "andrecustom")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+    val message: Message = Message.Builder
+      .of
+      .setSender(bobUsername.asString())
+      .setFrom(andreUsername.asString())
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(andreUsername.asString, andrePath, AppendCommand.builder()
+        .withFlags(initialFlags)
+        .build(message))
+      .getMessageId
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andrePath, bobUsername.asString, MailboxACL.Rfc4314Rights.of(rights.asJava))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail",
+         |    "urn:apache:james:params:jmap:mail:shares"],
+         |  "methodCalls": [
+         |  ["Email/set",
+         |    {
+         |      "accountId": "$bobAccountId",
+         |      "update": {
+         |        "${messageId.serialize}": $patch
+         |      }
+         |    },
+         |    "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$bobAccountId",
+         |       "ids": ["${messageId.serialize}"],
+         |       "properties": ["keywords"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    (messageId, response)
+  }
+
+  @Test
   def emailSetShouldPartiallyUpdateKeywords(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
 

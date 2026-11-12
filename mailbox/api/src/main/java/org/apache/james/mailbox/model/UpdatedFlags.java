@@ -260,10 +260,15 @@ public class UpdatedFlags {
         return modSeq;
     }
     
-    public static boolean flagsChanged(Flags flagsOld, Flags flagsNew) {
+    public static Flags modifiedFlags(Flags flagsOld, Flags flagsNew) {
         Flags modifiedFlags = new Flags();
         addModifiedSystemFlags(flagsOld, flagsNew, modifiedFlags);
         addModifiedUserFlags(flagsOld, flagsNew, modifiedFlags);
+        return modifiedFlags;
+    }
+
+    public static boolean flagsChanged(Flags flagsOld, Flags flagsNew) {
+        Flags modifiedFlags = modifiedFlags(flagsOld, flagsNew);
         return modifiedFlags.getSystemFlags().length > 0 || modifiedFlags.getUserFlags().length > 0;
     }
 
