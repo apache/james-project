@@ -23,8 +23,14 @@ import static org.apache.james.smtpserver.DKIMHook.Config.DEFAULT_VALIDATED_ENTI
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
+
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.Domain;
@@ -259,7 +265,7 @@ class DKIMHookTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"CEO <ceo@other.com>", "ceo@other.com (localhost)", "\"ceo@localhost\" <ceo@other.com>", "Board: ceo@other.com;",
-            "bob@other.com, alice@example.com", "ceo@[127.0.0.1]"})
+            "bob@other.com, alice@example.com", "ceo@[127.0.0.1]", "Info <info@xn--fa-hia.de>", "info@xn--strae-oqa.de"})
         void onlyForHeaderFromDomainShouldReturnFalseWhenAWellFormedFromIsInAnotherDomain(String from) throws Exception {
             var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
                 .setText("This is my email")
@@ -273,6 +279,52 @@ class DKIMHookTest {
                     .mimeMessage(mimeMessage)
                     .build()))
                 .isFalse();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"Иван Петров <ivan@other.com>", "张伟 <zhang@other.com>", "Zoë Müller <zoe@other.com>", "Nguyễn Văn Ánh <anh@other.com>"})
+        void onlyForHeaderFromDomainShouldReturnFalseWhenAFromWithAnUnencodedNameIsInAnotherDomain(String from) throws Exception {
+            var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .setText("This is my email")
+                .build();
+            mimeMessage.setHeader("From", from);
+
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(mimeMessage)
+                    .build()))
+                .isFalse();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"Иван Петров <ivan@other.com>", "张伟 <zhang@other.com>", "Zoë Müller <zoe@other.com>", "Nguyễn Văn Ánh <anh@other.com>"})
+        void onlyForHeaderFromDomainShouldReturnFalseWhenARawUtf8FromIsInAnotherDomain(String from) throws Exception {
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(rawUtf8Message(from))
+                    .build()))
+                .isFalse();
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"Иван Петров <ivan@localhost>", "张伟 <zhang@localhost>", "Zoë Müller <zoe@localhost>"})
+        void onlyForHeaderFromDomainShouldReturnTrueWhenARawUtf8FromIsInTheDomain(String from) throws Exception {
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(rawUtf8Message(from))
+                    .build()))
+                .isTrue();
+        }
+
+        private MimeMessage rawUtf8Message(String from) throws Exception {
+            byte[] content = ("From: " + from + "\r\nSubject: test\r\n\r\nThis is my email\r\n").getBytes(StandardCharsets.UTF_8);
+            return new MimeMessage(Session.getInstance(new Properties()), new ByteArrayInputStream(content));
         }
     }
 
