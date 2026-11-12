@@ -22,7 +22,6 @@ package org.apache.james.mailet;
 import java.util.List;
 
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
@@ -43,10 +42,6 @@ import org.apache.maven.project.MavenProject;
     requiresDependencyResolution = ResolutionScope.COMPILE,
     aggregator = true)
 public class AggregateMailetdocsReport extends AbstractMailetdocsReport {
-
-    @Parameter(defaultValue = "${reactorProjects}",
-            readonly = true)
-    private List<MavenProject> reactorProjects;
 
     /**
      * Build descriptors for mailets contained 

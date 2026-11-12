@@ -23,9 +23,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.maven.doxia.siterenderer.Renderer;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
@@ -40,21 +37,6 @@ import com.google.common.collect.ImmutableList;
 public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
     
     private static final String EXPERIMENTAL = " (Experimental)";
-
-    /**
-     * Directory where reports will go.
-     */
-    @Parameter(defaultValue = "${project.reporting.outputDirectory}",
-            required = true)
-    private String outputDirectory;
-
-    @Parameter(defaultValue = "${project}", 
-            required = true, 
-            readonly = true)
-    private MavenProject project;
-
-    @Component
-    private Renderer siteRenderer;
 
     @Override
     protected void executeReport(Locale locale) throws MavenReportException {
@@ -129,7 +111,7 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
 
     private List<MailetMatcherDescriptor> buildSortedDescriptors() {
         
-        final List<MailetMatcherDescriptor> descriptors = buildDescriptors(this.project);
+        final List<MailetMatcherDescriptor> descriptors = buildDescriptors(getProject());
         
         descriptors.sort(Comparator.comparing(MailetMatcherDescriptor::getName));
         logDescriptors(descriptors);
@@ -216,21 +198,6 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
     }
 
     @Override
-    protected MavenProject getProject() {
-        return project;
-    }
-
-    @Override
-    protected String getOutputDirectory() {
-        return outputDirectory;
-    }
-
-    @Override
-    protected Renderer getSiteRenderer() {
-        return siteRenderer;
-    }
-
-    @Override
     public String getDescription(Locale arg0) {
         return "Documentation about bundled mailets";
     }
@@ -243,24 +210,6 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
     @Override
     public String getOutputName() {
         return "mailet-report";
-    }
-
-    /**
-     * @param siteRenderer
-     *                The siteRenderer to set.
-     */
-    public void setSiteRenderer(Renderer siteRenderer) {
-        this.siteRenderer = siteRenderer;
-    }
-
-    /**
-     * For testing purpose only.
-     * 
-     * @param project
-     *                The project to set.
-     */
-    public void setProject(MavenProject project) {
-        this.project = project;
     }
 
 }
