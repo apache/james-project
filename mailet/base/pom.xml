@@ -92,6 +92,9 @@
             <plugin>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>mailetdocs-maven-plugin</artifactId>
+                <configuration>
+                    <outputDirectory>target/mailetdocs</outputDirectory>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
