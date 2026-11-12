@@ -27,6 +27,7 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.mail.{MailboxSetError, MailboxSetRequest, RemoveEmailsOnDestroy, UnparsedMailboxId}
 import org.apache.james.jmap.method.MailboxSetDeletePerformer.{MailboxDeletionFailure, MailboxDeletionResult, MailboxDeletionResults, MailboxDeletionSuccess}
 import org.apache.james.jmap.method.MailboxSetMethod.assertCapabilityIfSharedMailbox
+import org.apache.james.jmap.method.MailboxSetReferenceResolver.UnresolvedMailboxReferenceException
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageRange}
@@ -44,6 +45,9 @@ object MailboxSetDeletePerformer {
   case class MailboxDeletionSuccess(mailboxId: MailboxId) extends MailboxDeletionResult
   case class MailboxDeletionFailure(mailboxId: UnparsedMailboxId, exception: Throwable) extends MailboxDeletionResult {
     def asMailboxSetError: SetError = exception match {
+      case e: UnresolvedMailboxReferenceException =>
+        LOGGER.info("Mailbox/set destroy failed: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case e: MailboxNotFoundException =>
         LOGGER.info("Mailbox/set destroy failed: {}", e.getMessage)
         SetError.notFound(SetErrorDescription(e.getMessage))

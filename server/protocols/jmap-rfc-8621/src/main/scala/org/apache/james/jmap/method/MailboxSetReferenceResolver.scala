@@ -23,7 +23,6 @@ import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.IdOrCreationReference
 import org.apache.james.jmap.mail.{InvalidUpdateException, MailboxGet, MailboxPatchObject, MailboxSetRequest, UnparsedMailboxId}
 import org.apache.james.jmap.routes.ProcessingContext
-import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json.JsString
 
@@ -32,9 +31,12 @@ import play.api.libs.json.JsString
   * Keep operations in sequences: resolving aliases into a Map would silently drop patches.
   */
 object MailboxSetReferenceResolver {
+  case class UnresolvedMailboxReferenceException(reference: String, reason: String)
+    extends IllegalArgumentException(s"Unable to resolve mailbox reference '$reference': $reason")
+
   def target(id: UnparsedMailboxId, context: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Either[Throwable, MailboxId] =
     context.resolveId(id.id)
-      .left.map(cause => new MailboxNotFoundException(s"Unable to resolve mailbox reference '${id.id.value}': ${cause.getMessage}"))
+      .left.map(cause => UnresolvedMailboxReferenceException(id.id.value, cause.getMessage))
       .flatMap(serverId => MailboxGet.parseString(mailboxIdFactory)(serverId.value.value).toEither)
 
   def patch(patch: MailboxPatchObject, context: ProcessingContext): Either[Exception, MailboxPatchObject] =
@@ -50,17 +52,26 @@ object MailboxSetReferenceResolver {
     val resolvedTargets = request.update.toSeq.flatMap(_.toSeq).map { case (original, originalPatch) =>
       (original, target(original, context, mailboxIdFactory), originalPatch)
     }
-    val updateCountByMailboxId = resolvedTargets.flatMap(_._2.toOption).groupMapReduce(identity)(_ => 1)(_ + _)
+    val updateKeysByMailboxId = resolvedTargets.collect {
+      case (original, Right(mailboxId), _) => mailboxId -> original.id.value
+    }.groupMap(_._1)(_._2)
+
+    val conflictingUpdates = updateKeysByMailboxId.collect {
+      case (mailboxId, keys) if keys.size > 1 =>
+        // The same error is returned for each key, so keep its description bounded.
+        val sampleKeys = keys.sorted.take(2).map(key => s"'$key'").mkString(", ")
+        val remainingKeyCount = keys.size - 2
+        val additionalKeys = if (remainingKeyCount > 0) s" (and $remainingKeyCount more)" else ""
+        mailboxId -> new IllegalArgumentException(s"Multiple update keys resolve to the same mailbox: $sampleKeys$additionalKeys")
+    }
 
     resolvedTargets.map { case (original, resolvedTarget, originalPatch) =>
-      val resolvedUpdate = resolvedTarget.flatMap(mailboxId => {
-        val hasMultipleUpdates = updateCountByMailboxId(mailboxId) > 1
-        if (hasMultipleUpdates) {
-          Left(new IllegalArgumentException("Multiple update keys resolve to the same mailbox"))
-        } else {
-          patch(originalPatch, context).map(resolvedPatch => mailboxId -> resolvedPatch)
+      val resolvedUpdate = resolvedTarget.flatMap { mailboxId =>
+        conflictingUpdates.get(mailboxId) match {
+          case Some(error) => Left(error)
+          case None => patch(originalPatch, context).map(resolvedPatch => mailboxId -> resolvedPatch)
         }
-      })
+      }
       original -> resolvedUpdate
     }
   }

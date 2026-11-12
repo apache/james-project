@@ -95,7 +95,7 @@ object MailboxSetUpdatePerformer {
         LOGGER.info("Attempt to set a mailbox while having insufficient rights was rejected: {}", e.getMessage)
         SetError.forbidden(SetErrorDescription("Invalid change to a delegated mailbox"))
       case e: IllegalArgumentException =>
-        LOGGER.info("Illegal argument in Mailbox/set update", e)
+        LOGGER.info("Mailbox/set update failed for target '{}': {}", mailboxId.id.value, e.getMessage)
         SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
       case e: DifferentDomainException =>
         LOGGER.info("Invalid arguments in Mailbox/set update", e)
