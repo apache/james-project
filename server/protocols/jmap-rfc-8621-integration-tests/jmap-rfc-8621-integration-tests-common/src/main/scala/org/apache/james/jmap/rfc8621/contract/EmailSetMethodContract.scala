@@ -7254,6 +7254,118 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def updateShouldRejectAnEmptyMailboxIdsReset(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$bobAccountId",
+         |      "update": {
+         |        "${messageId.serialize}": {"mailboxIds": {}}
+         |      }
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "$bobAccountId",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties": ["mailboxIds"]
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notUpdated")
+      .isEqualTo(
+      s"""{
+         |  "${messageId.serialize}": {
+         |    "type": "invalidProperties",
+         |    "description": "An email must belong to at least one mailbox: use destroy to delete it",
+         |    "properties": ["mailboxIds"]
+         |  }
+         |}""".stripMargin)
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list[0].mailboxIds")
+      .isEqualTo(s"""{"${mailboxId.serialize}": true}""")
+  }
+
+  @Test
+  def updateShouldRejectRemovingTheLastMailbox(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$bobAccountId",
+         |      "update": {
+         |        "${messageId.serialize}": {"mailboxIds/${mailboxId.serialize}": null}
+         |      }
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "$bobAccountId",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties": ["mailboxIds"]
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notUpdated")
+      .isEqualTo(
+      s"""{
+         |  "${messageId.serialize}": {
+         |    "type": "invalidProperties",
+         |    "description": "An email must belong to at least one mailbox: use destroy to delete it",
+         |    "properties": ["mailboxIds"]
+         |  }
+         |}""".stripMargin)
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list[0].mailboxIds")
+      .isEqualTo(s"""{"${mailboxId.serialize}": true}""")
+  }
+
+  @Test
   def emailSetDestroySuccessAndFailureCanBeMixed(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
