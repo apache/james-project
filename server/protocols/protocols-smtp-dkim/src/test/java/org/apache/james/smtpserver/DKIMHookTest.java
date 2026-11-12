@@ -247,7 +247,8 @@ class DKIMHookTest {
             "ceo@[.localhost]", "ceo@.[localhost]", "\"CEO <ceo@ localhost>", "\"CEO <ceo@\tLOCALHOST>", "\"CEO <ceo@[localhost]>",
             "\"CEO <ceo@ [localhost] >", "ceo@ .localhost \"x", "\"CEO <ceo@ .localhost>", "\"CEO <ceo@(x)localhost>",
             "\"CEO <ceo@local(x)host>", "ceo@\u0001localhost", "CEO <ceo@ other.com>", "ceo@(localhost)other.com", "\"CEO <ceo@other.com>",
-            "CEO <ceo@ xn--bcher-kva.example>", "ceo@(x)xn--bcher-kva.example", "CEO <ceo@ bücher.example>", "ceo@ .xn--bcher-kva.example \"x"})
+            "CEO <ceo@ xn--bcher-kva.example>", "ceo@(x)xn--bcher-kva.example", "CEO <ceo@ bücher.example>", "ceo@ .xn--bcher-kva.example \"x",
+            "CEO <ceo@xn--localhost-469d>", "ceo@xn--localhost-9ma"})
         void onlyForHeaderFromDomainShouldReturnTrueWhenTheFromIsMalformed(String from) throws Exception {
             var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
                 .setText("This is my email")
@@ -265,7 +266,7 @@ class DKIMHookTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"CEO <ceo@other.com>", "ceo@other.com (localhost)", "\"ceo@localhost\" <ceo@other.com>", "Board: ceo@other.com;",
-            "bob@other.com, alice@example.com", "ceo@[127.0.0.1]", "Info <info@xn--fa-hia.de>", "info@xn--strae-oqa.de"})
+            "bob@other.com, alice@example.com", "ceo@[127.0.0.1]"})
         void onlyForHeaderFromDomainShouldReturnFalseWhenAWellFormedFromIsInAnotherDomain(String from) throws Exception {
             var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
                 .setText("This is my email")

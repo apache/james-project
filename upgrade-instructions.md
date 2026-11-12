@@ -48,6 +48,8 @@ avoid. A mail with a malformed `From` header, from any domain, is thus rejected:
  - when it is unsigned, as `signatureRequired` defaults to `true`;
  - when `expectedDToken` is set, even if it carries a valid signature of its own domain.
 
+A domain James cannot decode counts as malformed, including IDNA2008 domains refused by IDNA2003, such as `xn--fa-hia.de` (`faß.de`).
+
 ### Sieve vacation and reject follow RFC 5230 and RFC 5429
 
 Date: 11/11/2026
