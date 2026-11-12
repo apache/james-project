@@ -63,13 +63,9 @@ S: a52 NO RENAME failed. Mailbox already exists.
 C: a6 RENAME #user.boby.sharedMailbox.child1-eiklprstwx #user.boby.sharedMailbox.newChild1
 S: a6 OK RENAME completed.
 
-# Can move a shared mailbox to an owner’s mailbox if the user has the rights
+# Cannot move a shared mailbox out of its owner's namespace: that would transfer its ownership
 C: a7 RENAME #user.boby.sharedMailbox.newChild1 ownerChild1
-S: a7 OK RENAME completed.
-
-# Can move an owner's mailbox to a shared mailbox if the user has rights
-C: a8 RENAME ownerChild1 #user.boby.sharedMailbox.newChild1
-S: a8 OK RENAME completed.
+S: a7 NO RENAME failed. Insufficient rights.
 
 # Can rename a shared mailbox under a different parent if the user has rights
 C: a9 RENAME #user.boby.sharedMailbox.newChild1 #user.boby.otherSharedMailbox.newChild1
@@ -79,7 +75,7 @@ S: a9 OK RENAME completed.
 C: a11 RENAME #user.boby.otherSharedMailbox.newChild1 #user.boby.otherSharedMailbox.sub1.newChild1
 S: a11 OK RENAME completed.
 
-# Cannot move a shared mailbox to an owner's mailbox when a sub-mailbox lacks the "delete mailbox" right
+# Cannot move a shared mailbox tree out of its owner's namespace
 C: A110 RENAME #user.boby.sharedMailbox.child3 ownerChild3
 S: A110 NO RENAME failed. Insufficient rights.
 
