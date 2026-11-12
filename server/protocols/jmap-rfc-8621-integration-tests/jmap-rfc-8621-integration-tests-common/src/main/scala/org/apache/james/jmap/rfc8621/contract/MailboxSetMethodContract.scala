@@ -4100,6 +4100,46 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
   }
 
   @Test
+  def updateShouldNotMoveTopLevelSharedMailboxIntoTheCallerAccount(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(andreUsername, "previousName")
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, bobUsername.asString, MailboxACL.FULL_RIGHTS)
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+        |   "methodCalls": [
+        |       ["Mailbox/set",
+        |           {
+        |                "accountId": "$bobAccountId",
+        |                "update": {
+        |                    "${mailboxId1.serialize}": {
+        |                      "name": "newName"
+        |                    }
+        |                }
+        |           },
+        |    "c1"]]
+        |}
+        |""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("methodResponses[0][1].notUpdated", hasKey(mailboxId1.serialize))
+
+    assertThat(server.getProbe(classOf[MailboxProbeImpl])
+      .getMailboxId("#private", andreUsername.asString(), "previousName"))
+      .isEqualTo(mailboxId1)
+  }
+
+  @Test
   def updateShouldRenameSharedMailboxWhenHasRight(server: GuiceJamesServer): Unit = {
     val parentPath = MailboxPath.forUser(andreUsername, "parent")
     val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(parentPath)

@@ -2269,27 +2269,25 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
-        void renameMailboxByIdShouldReturnRenamedResultWhenOriginalIsSharedMailboxWithDeleteMailboxRight() throws Exception {
+        void renameMailboxByIdShouldThrowWhenMovingASharedMailboxOutOfItsOwnerNamespace() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
             session = mailboxManager.createSystemSession(USER_1);
             MailboxSession user2Session = mailboxManager.createSystemSession(USER_2);
 
-            MailboxPath destinationMailboxPath = MailboxPath.forUser(USER_1, "mbx1");
             MailboxPath sharedMailboxPath = MailboxPath.forUser(USER_2, "shared");
             Optional<MailboxId> sharedMailboxId = mailboxManager.createMailbox(sharedMailboxPath, user2Session);
 
-            // Given right on shared mailbox
             mailboxManager.setRights(sharedMailboxPath, MailboxACL.EMPTY.apply(MailboxACL.command()
                     .forUser(USER_1)
-                    .rights(MailboxACL.Right.DeleteMailbox)
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.DeleteMailbox)
                     .asAddition()),
                 user2Session);
 
-            List<MailboxRenamedResult> mailboxRenamedResults = mailboxManager.renameMailbox(sharedMailboxId.get(), destinationMailboxPath, session);
+            assertThatThrownBy(() -> mailboxManager.renameMailbox(sharedMailboxId.get(), MailboxPath.forUser(USER_1, "mbx1"), session))
+                .isInstanceOf(InsufficientRightsException.class);
 
-            assertThat(mailboxRenamedResults).hasSize(1);
-            assertThat(mailboxRenamedResults.getFirst().getDestinationPath()).isEqualTo(destinationMailboxPath);
-            assertThat(mailboxRenamedResults.getFirst().getOriginPath()).isEqualTo(sharedMailboxPath);
+            assertThat(mailboxManager.getMailbox(sharedMailboxId.get(), user2Session).getMailboxPath())
+                .isEqualTo(sharedMailboxPath);
         }
 
         @Test
@@ -2373,7 +2371,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
-        void renameMailboxByIdShouldRenameChildrenWhenDeleteMailboxRightOnEachOfThem() throws Exception {
+        void renameMailboxByIdShouldNotTransferOwnershipWhenDeleteMailboxRightOnEachMovedMailbox() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
             session = mailboxManager.createSystemSession(USER_1);
             MailboxSession user2Session = mailboxManager.createSystemSession(USER_2);
@@ -2381,7 +2379,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxPath sharedMailboxPath = MailboxPath.forUser(USER_2, "shared");
             MailboxPath childMailboxPath = sharedMailboxPath.child("child", user2Session.getPathDelimiter());
             Optional<MailboxId> sharedMailboxId = mailboxManager.createMailbox(sharedMailboxPath, user2Session);
-            mailboxManager.createMailbox(childMailboxPath, user2Session);
+            Optional<MailboxId> childMailboxId = mailboxManager.createMailbox(childMailboxPath, user2Session);
 
             MailboxACL acl = MailboxACL.EMPTY.apply(MailboxACL.command()
                 .forUser(USER_1)
@@ -2390,10 +2388,15 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.setRights(sharedMailboxPath, acl, user2Session);
             mailboxManager.setRights(childMailboxPath, acl, user2Session);
 
-            List<MailboxRenamedResult> mailboxRenamedResults = mailboxManager.renameMailbox(sharedMailboxId.get(), MailboxPath.forUser(USER_1, "mbx1"), session);
+            assertThatThrownBy(() -> mailboxManager.renameMailbox(sharedMailboxId.get(), MailboxPath.forUser(USER_1, "mbx1"), session))
+                .isInstanceOf(InsufficientRightsException.class);
 
-            assertThat(mailboxRenamedResults).extracting(MailboxRenamedResult::getDestinationPath)
-                .containsExactly(MailboxPath.forUser(USER_1, "mbx1"), MailboxPath.forUser(USER_1, "mbx1.child"));
+            MailboxPath sharedMailboxPathAfterRename = mailboxManager.getMailbox(sharedMailboxId.get(), user2Session).getMailboxPath();
+            MailboxPath childMailboxPathAfterRename = mailboxManager.getMailbox(childMailboxId.get(), user2Session).getMailboxPath();
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(sharedMailboxPathAfterRename).isEqualTo(sharedMailboxPath);
+                softly.assertThat(childMailboxPathAfterRename).isEqualTo(childMailboxPath);
+            });
         }
 
         @Test

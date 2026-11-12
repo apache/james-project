@@ -651,13 +651,10 @@ public class StoreMailboxManager implements MailboxManager {
         if (from.belongsTo(session) || from.getUser().equals(to.getUser())) {
             return Mono.just(mailboxes);
         }
-        // The renamed mailboxes change owner, and the owner has every right: require the DeleteMailbox right
-        // (RFC 4314) on each of them, inferiors included, not only on the mailbox the rename designates
-        if (mailboxes.stream().allMatch(mailbox -> storeRightManager.hasRight(mailbox, Right.DeleteMailbox, session))) {
-            return Mono.just(mailboxes);
-        }
+        // Moving another user's mailboxes out of their owner's namespace would make the caller owner of them,
+        // and the owner has every right. The DeleteMailbox right (RFC 4314) allows renaming, not taking ownership.
         return Mono.error(new InsufficientRightsException("user '" + session.getUser().asString()
-            + "' is not allowed to delete all the sub-mailboxes of '" + from.asString() + "'"));
+            + "' is not allowed to move '" + from.asString() + "' out of its owner's namespace"));
     }
 
     protected Flux<Mailbox> getMailboxWithPathLikeUponRename(MailboxMapper mapper, MailboxQuery.UserBound query) {
