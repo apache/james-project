@@ -67,12 +67,6 @@ public class PostgresLuceneEmailQueryMethodTest implements EmailQueryMethodContr
     @Test
     @Override
     @Disabled("JAMES-3377 Not supported by the Lucene search index")
-    public void emailQueryFilterByTextShouldIgnoreMarkupsInHtmlBody(GuiceJamesServer server) {
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-3377 Not supported by the Lucene search index")
     public void emailQueryFilterByTextShouldIgnoreAttachmentContent(GuiceJamesServer server) {
     }
 
