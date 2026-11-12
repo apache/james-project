@@ -269,7 +269,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
         .drop(1)
         .headOption
       originalParentPath.map(_.child(nameUpdate.newName, mailboxSession.getPathDelimiter))
-        .getOrElse(MailboxPath.forUser(mailboxSession.getUser, nameUpdate.newName))
+        .getOrElse(MailboxPath.forUser(originalPath.getUser, nameUpdate.newName))
     }).getOrElse(originalPath)
   }
 
