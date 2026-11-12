@@ -43,7 +43,10 @@ Perimeter: the SMTP `DKIMHook` restricted to a header From domain
 
 When a `From` header cannot be parsed, or holds an invalid address, the DKIM signature is now checked whatever its domain.
 Previously such a mail was only checked when the header seemed to be in the protected domain, which a crafted header could
-avoid. An unsigned mail with a malformed `From` header, from any domain, is thus rejected when `signatureRequired` is set.
+avoid. A mail with a malformed `From` header, from any domain, is thus rejected:
+
+ - when it is unsigned, as `signatureRequired` defaults to `true`;
+ - when `expectedDToken` is set, even if it carries a valid signature of its own domain.
 
 ### Sieve vacation and reject follow RFC 5230 and RFC 5429
 

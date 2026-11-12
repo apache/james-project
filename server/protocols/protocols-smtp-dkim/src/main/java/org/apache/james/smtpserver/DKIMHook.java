@@ -25,9 +25,11 @@ import static org.apache.james.protocols.smtp.SMTPRetCode.LOCAL_ERROR;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
@@ -45,6 +47,9 @@ import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
 import org.apache.james.jdkim.mailets.DKIMVerifier;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
+import org.apache.james.mime4j.stream.ParserCursor;
+import org.apache.james.mime4j.util.ByteSequence;
+import org.apache.james.mime4j.util.ContentUtil;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -70,7 +75,7 @@ import com.google.common.collect.ImmutableSet;
  * <ul>Supported configuration elements:
  *   <li><b>forceCRLF</b>: Should CRLF be forced when computing body hashes.</li>
  *   <li><b>onlyForSenderDomain</b>: If specified, the DKIM checks are applied just for the emails whose MAIL FROM specifies this domain. If unspecified, all emails are checked (default).</li>
- *   <li><b>signatureRequired</b>: If DKIM signature is checked, the absence of signature will generate failure. Defaults to false.</li>
+ *   <li><b>signatureRequired</b>: If DKIM signature is checked, the absence of signature will generate failure. Defaults to true.</li>
  *   <li><b>expectedDToken</b>: If DKIM signature is checked, the body should contain at least one DKIM signature with this d token. If unspecified, all d tokens are considered valid (default).</li>
  * </ul>
  *
@@ -92,6 +97,7 @@ import com.google.common.collect.ImmutableSet;
  */
 public class DKIMHook implements JamesMessageHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(DKIMHook.class);
+    private static final Pattern LDH_LABEL = Pattern.compile("[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?");
 
     @FunctionalInterface
     interface DKIMCheckNeeded extends Predicate<Mail> {
@@ -127,7 +133,9 @@ public class DKIMHook implements JamesMessageHook {
         }
 
         private static boolean isInDomainOrMalformedForMime4j(String rawFrom, Domain domain) {
-            return LenientAddressParser.DEFAULT.parseAddressList(MimeUtil.unfold(rawFrom))
+            // parseAddressList(CharSequence) bounds its cursor by chars, not bytes, and cuts a non-ASCII field short
+            ByteSequence rawBytes = ContentUtil.encode(MimeUtil.unfold(rawFrom));
+            return LenientAddressParser.DEFAULT.parseAddressList(rawBytes, new ParserCursor(0, rawBytes.length()))
                 .flatten()
                 .stream()
                 .anyMatch(mailbox -> isInDomainOrMalformed(mailbox.getDomain(), domain));
@@ -140,7 +148,31 @@ public class DKIMHook implements JamesMessageHook {
             try {
                 return Domain.of(mailboxDomain).equals(domain);
             } catch (IllegalArgumentException e) {
-                return true;
+                return !isUndecodableALabelDomain(mailboxDomain);
+            }
+        }
+
+        /**
+         * True for a well-formed domain holding an A-label that Domain cannot decode: Domain follows IDNA2003, which
+         * refuses IDNA2008 labels such as xn--fa-hia (faß). Such a domain is never the protected one.
+         */
+        private static boolean isUndecodableALabelDomain(String mailboxDomain) {
+            List<String> labels = Splitter.on('.').splitToList(mailboxDomain.toLowerCase(Locale.US));
+            return labels.stream().allMatch(label -> LDH_LABEL.matcher(label).matches())
+                && labels.stream().anyMatch(label -> label.startsWith("xn--"));
+        }
+
+        private static boolean hasUndecodableALabelDomain(String address) {
+            int at = address == null ? -1 : address.lastIndexOf('@');
+            if (at <= 0) {
+                return false;
+            }
+            try {
+                // Validates the local part alone
+                new MailAddress(address.substring(0, at), Domain.LOCALHOST.asString());
+                return isUndecodableALabelDomain(address.substring(at + 1));
+            } catch (AddressException e) {
+                return false;
             }
         }
 
@@ -157,7 +189,7 @@ public class DKIMHook implements JamesMessageHook {
                 return new MailAddress(internetAddress.getAddress()).getDomain().equals(domain);
             } catch (AddressException e) {
                 // Can happen when InternetAddress.getAddress() returns a malformed value (e.g. "addr>")
-                return true;
+                return !hasUndecodableALabelDomain(internetAddress.getAddress());
             }
         }
 
