@@ -20,13 +20,14 @@
 package org.apache.james.jmap.method
 
 import com.google.common.collect.ImmutableList
+import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import jakarta.mail.Flags
-import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
+import org.apache.james.jmap.core.{Properties, SetError}
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{EmailSet, EmailSetRequest, MailboxIds, UnparsedMessageId, ValidatedEmailSetUpdate}
+import org.apache.james.jmap.mail.{EmailSet, EmailSetRequest, EmailWithoutMailboxException, MailboxIds, UnparsedMessageId, ValidatedEmailSetUpdate}
 import org.apache.james.jmap.method.EmailSetUpdatePerformer.{EmailUpdateFailure, EmailUpdateResult, EmailUpdateResults, EmailUpdateSuccess, RANGE_THRESHOLD}
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode
 import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaException}
@@ -46,6 +47,9 @@ object EmailSetUpdatePerformer {
   case class EmailUpdateSuccess(messageId: MessageId) extends EmailUpdateResult
   case class EmailUpdateFailure(unparsedMessageId: UnparsedMessageId, e: Throwable) extends EmailUpdateResult {
     def asMessageSetError: SetError = e match {
+      case e: EmailWithoutMailboxException =>
+        LOGGER.info("Email/set update would leave an email in no mailbox")
+        SetError.invalidProperties(SetErrorDescription(e.getMessage), Some(Properties("mailboxIds")))
       case e: IllegalArgumentException =>
         LOGGER.info("Illegal argument in Email/set update", e)
         SetError.invalidPatch(SetErrorDescription(s"Message update is invalid: ${e.getMessage}"))
@@ -213,6 +217,8 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
 
     if (mailboxIds.value.isEmpty) {
       SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), MessageNotFoundException(messageId)))
+    } else if (update.update.isMailboxUpdate && update.mailboxIdsTransformation.apply(mailboxIds).value.isEmpty) {
+      SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), new EmailWithoutMailboxException()))
     } else {
       if (update.update.isMailboxUpdate && update.update.isFlagUpdate) {
         // JAMS-3728 Handling move nd flags update at once prevents data race
