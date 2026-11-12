@@ -524,15 +524,29 @@ public class MailAddress implements java.io.Serializable {
     /**
      * Returns a hash code value for this object.
      * <p/>
-     * This method is implemented by returning the hash code of the canonical
-     * string representation of this address, so that all instances representing
-     * the same address will return an identical hash code.
+     * The local part is case folded the same way {@link String#equalsIgnoreCase(String)}
+     * compares characters, so that all instances that are {@link #equals(Object)} return
+     * an identical hash code (including for characters like 'ſ' or 'İ' whose
+     * {@link String#toLowerCase(Locale)} differs from their case insensitive match).
      *
      * @return the hashcode.
      */
     @Override
     public final int hashCode() {
-        return toString().toLowerCase(Locale.US).hashCode();
+        if (isNullSender()) {
+            return 0;
+        }
+        return Objects.hash(caseFold(getLocalPart()), getDomain());
+    }
+
+    private static String caseFold(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.codePoints()
+            .map(codePoint -> Character.toLowerCase(Character.toUpperCase(codePoint)))
+            .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+            .toString();
     }
 
     private int parseQuotedLocalPart(StringBuilder lpSB, String address, int pos) throws AddressException {

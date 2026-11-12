@@ -287,6 +287,32 @@ class MailAddressTest {
             .verify();
     }
 
+    @ParameterizedTest
+    @MethodSource("caseInsensitiveEqualAddresses")
+    void equalAddressesShouldHaveTheSameHashCode(String address, String equalAddress) throws AddressException {
+        MailAddress mailAddress = new MailAddress(address);
+        MailAddress equalMailAddress = new MailAddress(equalAddress);
+
+        assertThat(mailAddress).isEqualTo(equalMailAddress);
+        assertThat(mailAddress.hashCode()).isEqualTo(equalMailAddress.hashCode());
+    }
+
+    static Stream<Arguments> caseInsensitiveEqualAddresses() {
+        return Stream.of(
+            Arguments.of("sam@domain.tld", "SAM@DOMAIN.TLD"),
+            Arguments.of("\"ſam\"@domain.tld", "\"sam\"@domain.tld"),
+            Arguments.of("\"ſam\"@domain.tld", "\"SAM\"@domain.tld"),
+            Arguments.of("\"İzmir\"@domain.tld", "\"izmir\"@domain.tld"),
+            Arguments.of("\"İzmir\"@domain.tld", "\"Izmir\"@domain.tld"),
+            Arguments.of("\"ſam x\"@domain.tld", "\"SAM X\"@domain.tld"));
+    }
+
+    @Test
+    void nullSenderShouldHaveAStableHashCode() {
+        assertThat(MailAddress.nullSender().hashCode())
+            .isEqualTo(MailAddress.nullSender().hashCode());
+    }
+
     @Test
     void getLocalPartDetailsShouldReturnDetails() throws AddressException {
         MailAddress mailAddress = new MailAddress("address+details@example.com");
