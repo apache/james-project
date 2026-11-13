@@ -58,11 +58,10 @@ public class JamesServerApplicationContext extends ClassPathXmlApplicationContex
     @Override
     public Resource getResource(String fileURL) {
         // delegate the loading to the resourceloader
-        Resource r = getResourceLoader().getResource(fileURL);
-        if (r == null) {
-            r = super.getResource(fileURL);
+        if (DefaultJamesResourceLoader.handles(fileURL)) {
+            return getResourceLoader().getResource(fileURL);
         }
-        return r;
+        return super.getResource(fileURL);
     }
 
     @Override
