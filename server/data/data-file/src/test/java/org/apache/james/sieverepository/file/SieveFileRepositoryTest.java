@@ -27,9 +27,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.core.Username;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
@@ -186,5 +188,26 @@ class SieveFileRepositoryTest implements SieveRepositoryContract {
     void putScriptShouldRejectANameContainingNul() {
         assertThatThrownBy(() -> sieveRepository().putScript(Username.of("test"), new ScriptName("a\0b"), SCRIPT_CONTENT))
             .isInstanceOf(StorageException.class);
+    }
+
+    @Test
+    void getDefaultQuotaShouldNotSeeAPartiallyWrittenQuota() throws Exception {
+        QuotaSizeLimit quota = QuotaSizeLimit.size(1048576);
+        sieveRepository().setDefaultQuota(quota);
+
+        CompletableFuture<Void> writer = CompletableFuture.runAsync(() -> {
+            for (int i = 0; i < 1000; i++) {
+                try {
+                    sieveRepository().setDefaultQuota(quota);
+                } catch (StorageException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        while (!writer.isDone()) {
+            assertThat(sieveRepository().getDefaultQuota()).isEqualTo(quota);
+        }
+        writer.join();
     }
 }
