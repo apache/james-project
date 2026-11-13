@@ -428,6 +428,23 @@ public class StoreMessageIdManager implements MessageIdManager {
             .flatMap(eventBus::dispatch);
     }
 
+    @Override
+    public Publisher<Void> updateEmail(MessageId messageId, List<MailboxId> targetMailboxIds, Flags flagsToAdd, Flags flagsToRemove, MailboxSession mailboxSession) {
+        return Flux.concat(
+                setInMailboxesWithoutEventPublishing(messageId, targetMailboxIds, mailboxSession),
+                updateFlagsIfAnyWithoutEventPublishing(flagsToRemove, MessageManager.FlagsUpdateMode.REMOVE, messageId, targetMailboxIds, mailboxSession),
+                updateFlagsIfAnyWithoutEventPublishing(flagsToAdd, MessageManager.FlagsUpdateMode.ADD, messageId, targetMailboxIds, mailboxSession))
+            .collectList()
+            .flatMap(eventBus::dispatch);
+    }
+
+    private Flux<EventWithRegistrationKey> updateFlagsIfAnyWithoutEventPublishing(Flags flags, MessageManager.FlagsUpdateMode updateMode, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) {
+        if (flags.getSystemFlags().length == 0 && flags.getUserFlags().length == 0) {
+            return Flux.empty();
+        }
+        return setFlagsReactiveWithoutEventPublishing(flags, updateMode, messageId, mailboxIds, mailboxSession);
+    }
+
     public Mono<Void> setInMailboxesNoCheck(MessageId messageId, MailboxId targetMailboxId, MailboxSession mailboxSession) {
         return findRelatedMailboxMessages(messageId, mailboxSession)
             .flatMap(currentMailboxMessages -> messageMovesWithMailbox(MessageMoves.builder()
