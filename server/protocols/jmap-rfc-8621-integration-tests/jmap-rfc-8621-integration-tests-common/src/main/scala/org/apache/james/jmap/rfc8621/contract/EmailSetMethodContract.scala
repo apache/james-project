@@ -6305,6 +6305,22 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def rangeMoveToTheCurrentMailboxShouldBeANoop(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(bobUsername)
+    val inboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val composed = (1 to 4).map(_ => server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+      AppendCommand.builder().withFlags(new Flags(Flags.Flag.FLAGGED)).build(Fixture.createTestMessage)))
+
+    postEmailSetUpdate(composed.map(c => s""""${c.getMessageId.serialize}": {"mailboxIds": {"${inboxId.serialize}": true}}""").mkString(","))
+
+    composed.foreach(c => {
+      val stored = server.getProbe(classOf[MessageIdProbe]).getMessages(c.getMessageId, bobUsername).asScala
+      assertThat(stored.map(_.getMailboxId).asJava).containsExactly(inboxId)
+      assertThat(stored.head.getUid).isEqualTo(c.getUid)
+    })
+  }
+
+  @Test
   def rangeMoveShouldUpdateMailboxId(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
 
