@@ -70,13 +70,12 @@ public abstract class AbstractConnectHandlerResultJMXMonitor<R extends Response,
     }
 
     @Override
-    @SuppressWarnings("unlikely-arg-type")
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (interfaceName.equals(ConnectHandler.class)) {
             // add stats for all hooks
             for (Object anExtension : extension) {
                 ConnectHandler<?> c = (ConnectHandler<?>) anExtension;
-                if (!equals(c)) {
+                if (c != this) {
                     String cName = c.getClass().getName();
                     try {
                         cStats.put(cName, new ConnectHandlerStats(jmxName, cName));

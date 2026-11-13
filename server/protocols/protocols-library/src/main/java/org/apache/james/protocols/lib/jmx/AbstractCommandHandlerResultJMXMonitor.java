@@ -61,13 +61,13 @@ public abstract class AbstractCommandHandlerResultJMXMonitor<S extends ProtocolS
     }
 
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes", "unlikely-arg-type" })
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (interfaceName.equals(CommandHandler.class)) {
             // add stats for all hooks
             for (Object anExtension : extension) {
                 CommandHandler c = (CommandHandler) anExtension;
-                if (!equals(c)) {
+                if (c != this) {
                     String cName = c.getClass().getName();
                     try {
                         cStats.put(cName, createCommandHandlerStats(c));
