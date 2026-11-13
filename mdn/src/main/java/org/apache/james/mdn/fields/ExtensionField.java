@@ -67,7 +67,17 @@ public class ExtensionField implements Field {
 
     @Override
     public String formattedValue() {
+        if (rawValue.isEmpty() || startsWithFoldingWhiteSpace(rawValue)) {
+            // A parsed raw value keeps its leading folding white space: adding a space would make it grow on each
+            // format / parse round trip. An empty value followed by a space can not be parsed back.
+            return fieldName + ":" + rawValue;
+        }
         return fieldName + ": " + rawValue;
+    }
+
+    private static boolean startsWithFoldingWhiteSpace(String value) {
+        char first = value.charAt(0);
+        return first == ' ' || first == '\t' || first == '\r';
     }
 
     @Override
