@@ -19,11 +19,22 @@
 
 package org.apache.james.mailbox.jpa.quota;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import jakarta.persistence.EntityManager;
+
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.jpa.JPAMailboxFixture;
+import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
+import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaManagerContract;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import reactor.core.publisher.Mono;
 
 class JPACurrentQuotaManagerTest implements CurrentQuotaManagerContract {
 
@@ -39,4 +50,17 @@ class JPACurrentQuotaManagerTest implements CurrentQuotaManagerContract {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.QUOTA_TABLES_NAMES);
     }
 
+    @Test
+    void setCurrentQuotasShouldNotWriteWhenQuotasAreUnchanged() {
+        QuotaOperation zeroQuotas = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(0), QuotaSizeUsage.size(0));
+
+        Mono.from(testee().setCurrentQuotas(zeroQuotas)).block();
+
+        EntityManager entityManager = JPA_TEST_CLUSTER.getEntityManagerFactory().createEntityManager();
+        try {
+            assertThat(entityManager.find(JpaCurrentQuota.class, QUOTA_ROOT.getValue())).isNull();
+        } finally {
+            entityManager.close();
+        }
+    }
 }
