@@ -6273,6 +6273,38 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def rangeFlagsRemovalShouldRemoveUserFlagSpellingOfTheKeyword(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(bobUsername)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val ids = (1 to 4).map(_ => server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+        AppendCommand.builder().withFlags(FlagsBuilder.builder().add("$SEEN", "a+b").build()).build(Fixture.createTestMessage))
+      .getMessageId)
+
+    postEmailSetUpdate(ids.map(id => s""""${id.serialize}": {"keywords/$$seen": null}""").mkString(","))
+
+    ids.foreach(id => {
+      val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(id, bobUsername).asScala.head.getFlags
+      assertThat(flags.contains(Flags.Flag.SEEN)).isFalse
+      assertThat(flags.getUserFlags).containsExactly("a+b")
+    })
+  }
+
+  @Test
+  def flagsRemovalShouldRemoveUserFlagSpellingOfTheKeyword(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(bobUsername)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+        AppendCommand.builder().withFlags(FlagsBuilder.builder().add("$SEEN", "a+b").build()).build(Fixture.createTestMessage))
+      .getMessageId
+
+    postEmailSetUpdate(s""""${messageId.serialize}": {"keywords/$$seen": null}""")
+
+    val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala.head.getFlags
+    assertThat(flags.contains(Flags.Flag.SEEN)).isFalse
+    assertThat(flags.getUserFlags).containsExactly("a+b")
+  }
+
+  @Test
   def rangeMoveShouldUpdateMailboxId(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
 
