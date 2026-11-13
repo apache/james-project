@@ -916,6 +916,87 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def inMailboxFilterWithSortedByReceivedAtShouldReturnEmptyForSharedMailboxesWithOnlyLookupRight(server: GuiceJamesServer): Unit =
+    inMailboxSortedByReceivedAtShouldReturnEmptyWithOnlyLookupRight(server, "")
+
+  @Test
+  def inMailboxAfterWithSortedByReceivedAtShouldReturnEmptyForSharedMailboxesWithOnlyLookupRight(server: GuiceJamesServer): Unit =
+    inMailboxSortedByReceivedAtShouldReturnEmptyWithOnlyLookupRight(server,
+      ", \"after\": \"" + UTCDate(ZonedDateTime.now().minusDays(1)).asUTC.format(UTC_DATE_FORMAT) + "\"")
+
+  @Test
+  def inMailboxBeforeWithSortedByReceivedAtShouldReturnEmptyForSharedMailboxesWithOnlyLookupRight(server: GuiceJamesServer): Unit =
+    inMailboxSortedByReceivedAtShouldReturnEmptyWithOnlyLookupRight(server,
+      ", \"before\": \"" + UTCDate(ZonedDateTime.now().plusDays(1)).asUTC.format(UTC_DATE_FORMAT) + "\"")
+
+  private def inMailboxSortedByReceivedAtShouldReturnEmptyWithOnlyLookupRight(server: GuiceJamesServer, additionalFilter: String): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
+    val messageId1: MessageId = mailboxProbe
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
+        AppendCommand.from(
+          Message.Builder
+            .of
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8)
+            .build))
+      .getMessageId
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail",
+         |		"urn:apache:james:params:jmap:mail:shares"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/query",
+         |			{
+         |				"accountId": "$bobAccountId",
+         |				"filter": {
+         |					"inMailbox": "${andreInboxId.serialize()}"$additionalFilter
+         |				},
+         |				"sort": [{
+         |					"isAscending": false,
+         |					"property": "receivedAt"
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    def queryIds(): String = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+    // With the Read right the message is listed: it is indexed
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      assertThatJson(queryIds())
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId1.serialize}"]""")
+    }
+
+    // With only the Lookup right it is not
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+    assertThatJson(queryIds())
+      .inPath("$.methodResponses[0][1].ids")
+      .isEqualTo("[]")
+  }
+
+  @Test
   def inMailboxFilterWithSortedBySentAtShouldReturnEmptyForSharedMailboxesWhenNoSharesExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
