@@ -21,8 +21,16 @@ package org.apache.james.mailbox.jpa.mail.model.openjpa;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+import jakarta.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.core.Username;
+import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
+import org.apache.james.mailbox.model.ByteContent;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.jupiter.api.Test;
 
 class JPAMailboxMessageTest {
@@ -54,4 +62,15 @@ class JPAMailboxMessageTest {
         assertThat(IOUtils.toByteArray(message.getFullContent())).containsExactly(EMPTY);
     }
 
+    @Test
+    void messagesWithTheSameMailboxAndUidShouldBeEqual() throws Exception {
+        JPAMailbox mailbox = new JPAMailbox(MailboxPath.inbox(Username.of("bob")), 42);
+        byte[] content = "Subject: test\r\n\r\nbody".getBytes(StandardCharsets.UTF_8);
+        JPAMailboxMessage message1 = new JPAMailboxMessage(mailbox, new Date(), content.length, new Flags(), new ByteContent(content), 15);
+        JPAMailboxMessage message2 = new JPAMailboxMessage(mailbox, new Date(), content.length, new Flags(), new ByteContent(content), 15);
+        message1.setUid(MessageUid.of(7));
+        message2.setUid(MessageUid.of(7));
+
+        assertThat(message1).isEqualTo(message2);
+    }
 }
