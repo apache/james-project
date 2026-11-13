@@ -3499,6 +3499,64 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void moveMessagesShouldThrowWithoutDeleteMessagesRightOnSource() throws Exception {
+            MailboxPath path = MailboxPath.forUser(USER_1, "shared");
+            mailboxManager.createMailbox(path, session);
+            mailboxManager.getMailbox(path, session)
+                .appendMessage(AppendCommand.builder().build(message), session);
+            mailboxManager.setRights(path, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.PerformExpunge)
+                    .asAddition()),
+                session);
+            MailboxPath destination = MailboxPath.inbox(session2);
+            mailboxManager.createMailbox(destination, session2);
+
+            assertThatThrownBy(() -> mailboxManager.moveMessages(MessageRange.all(), path, destination, session2))
+                .isInstanceOf(InsufficientRightsException.class);
+            assertThat(mailboxManager.getMailbox(path, session).getMessageCount(session)).isEqualTo(1);
+        }
+
+        @Test
+        void moveMessagesByRangesShouldThrowWithoutDeleteMessagesRightOnSource() throws Exception {
+            MailboxPath path = MailboxPath.forUser(USER_1, "shared");
+            MailboxId sourceId = mailboxManager.createMailbox(path, session).get();
+            mailboxManager.getMailbox(path, session)
+                .appendMessage(AppendCommand.builder().build(message), session);
+            mailboxManager.setRights(path, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.PerformExpunge)
+                    .asAddition()),
+                session);
+            MailboxId destinationId = mailboxManager.createMailbox(MailboxPath.inbox(session2), session2).get();
+
+            assertThatThrownBy(() -> Flux.from(mailboxManager.moveMessagesReactive(ImmutableList.of(MessageRange.all()), sourceId, destinationId, session2))
+                    .collectList().block())
+                .hasCauseInstanceOf(InsufficientRightsException.class);
+            assertThat(mailboxManager.getMailbox(path, session).getMessageCount(session)).isEqualTo(1);
+        }
+
+        @Test
+        void moveMessagesShouldSucceedWithPerformExpungeAndDeleteMessagesRightsOnSource() throws Exception {
+            MailboxPath path = MailboxPath.forUser(USER_1, "shared");
+            mailboxManager.createMailbox(path, session);
+            mailboxManager.getMailbox(path, session)
+                .appendMessage(AppendCommand.builder().build(message), session);
+            mailboxManager.setRights(path, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.PerformExpunge, MailboxACL.Right.DeleteMessages)
+                    .asAddition()),
+                session);
+            MailboxPath destination = MailboxPath.inbox(session2);
+            mailboxManager.createMailbox(destination, session2);
+
+            mailboxManager.moveMessages(MessageRange.all(), path, destination, session2);
+
+            assertThat(mailboxManager.getMailbox(path, session).getMessageCount(session)).isEqualTo(0);
+            assertThat(mailboxManager.getMailbox(destination, session2).getMessageCount(session2)).isEqualTo(1);
+        }
+
+        @Test
         void hasRightShouldThrowOnUnknownMailbox() {
             assertThatThrownBy(() -> mailboxManager.hasRight(
                     MailboxPath.forUser(USER_1, "notFound"),

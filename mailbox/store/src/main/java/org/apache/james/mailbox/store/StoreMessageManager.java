@@ -806,8 +806,8 @@ public class StoreMessageManager implements MessageManager {
         if (!isWriteable(session)) {
             return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
         }
-        if (!storeRightManager.myRights(mailbox, session).contains(MailboxACL.Right.PerformExpunge)) {
-            return Flux.error(new InsufficientRightsException("Deleting messages requires 'e' right"));
+        if (!storeRightManager.myRights(mailbox, session).contains(MailboxACL.Right.PerformExpunge, MailboxACL.Right.DeleteMessages)) {
+            return Flux.error(new InsufficientRightsException("Moving messages requires 'e' and 't' rights"));
         }
         if (!toMailbox.isWriteable(session)) {
             return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
@@ -826,8 +826,8 @@ public class StoreMessageManager implements MessageManager {
         if (!isWriteable(session)) {
             return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
         }
-        if (!storeRightManager.myRights(mailbox, session).contains(MailboxACL.Right.PerformExpunge)) {
-            return Flux.error(new InsufficientRightsException("Deleting messages requires 'e' right"));
+        if (!storeRightManager.myRights(mailbox, session).contains(MailboxACL.Right.PerformExpunge, MailboxACL.Right.DeleteMessages)) {
+            return Flux.error(new InsufficientRightsException("Moving messages requires 'e' and 't' rights"));
         }
         if (!toMailbox.isWriteable(session)) {
             return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
