@@ -98,8 +98,8 @@ class StoreMailboxManagerAnnotationTest {
 
         when(storeRightManager.hasRight(any(Mailbox.class), any(MailboxACL.Right.class), any(MailboxSession.class)))
             .thenReturn(true);
-        when(storeRightManager.hasRightReactive(any(MailboxPath.class), any(MailboxACL.Right.class), any(MailboxSession.class)))
-            .thenReturn(Mono.just(true));
+        when(storeRightManager.myRightsReactive(any(MailboxPath.class), any(MailboxSession.class)))
+            .thenReturn(Mono.just(MailboxACL.FULL_RIGHTS));
 
         annotationManager = spy(new StoreMailboxAnnotationManager(mailboxSessionMapperFactory,
             storeRightManager));
