@@ -653,7 +653,7 @@
         <jackson.version>2.23.0</jackson.version>
         <jackson.annotations.version>2.23</jackson.annotations.version>
         <jackson.databind.version>2.23.0</jackson.databind.version>
-        <feign.version>13.17</feign.version>
+        <feign.version>13.18</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
         <jjwt.version>0.13.0</jjwt.version>
         <metrics.version>4.2.40</metrics.version>
