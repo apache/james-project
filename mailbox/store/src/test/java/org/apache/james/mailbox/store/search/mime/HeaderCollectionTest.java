@@ -287,6 +287,16 @@ class HeaderCollectionTest {
     }
 
     @Test
+    void dateShouldBeAbsentWhenItsEncodedWordDecodesToALineBreak() {
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Date", "=?UTF-8?Q?a=0Db?="))
+            .build();
+
+        assertThat(headerCollection.getSentDate().isPresent())
+            .isFalse();
+    }
+
+    @Test
     void subjectsShouldBeWellRetrieved() {
         String subject = "A fantastic OpenSearch module will be available soon for JAMES";
         HeaderCollection headerCollection = HeaderCollection.builder()
