@@ -846,4 +846,113 @@ class AddFooterTest {
         assertThat((String) reparsed.getContent()).isEqualTo("hello\r\n" + footer);
         assertThat(new ContentType(reparsed.getContentType()).getParameter("charset")).isEqualTo("UTF-8");
     }
+
+    @Test
+    void shouldNotTurnInlineBoundaryTextIntoADelimiterWhenReencoding() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", "FOOTER-MARK")
+            .build());
+        String text = "This line is plain ASCII, long enough to keep the part mostly ASCII.\r\n"
+            + "é".repeat(25) + "--outer\r\n"
+            + "last line\r\n";
+        String message = "Subject: test\r\n"
+            + "MIME-Version: 1.0\r\n"
+            + "Content-Type: multipart/mixed; boundary=\"outer\"\r\n"
+            + "\r\n"
+            + "--outer\r\n"
+            + "Content-Type: text/plain; charset=UTF-8\r\n"
+            + "Content-Transfer-Encoding: 8bit\r\n"
+            + "\r\n"
+            + text
+            + "--outer\r\n"
+            + "Content-Type: application/octet-stream\r\n"
+            + "\r\n"
+            + "attachment\r\n"
+            + "--outer--\r\n";
+        Session session = Session.getDefaultInstance(new Properties());
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(new MimeMessage(session, new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8))))
+            .build();
+
+        mailet.service(mail);
+
+        MimeMultipart multipart = (MimeMultipart) reparse(mail).getContent();
+        assertThat(multipart.getCount()).isEqualTo(2);
+        assertThat((String) multipart.getBodyPart(0).getContent())
+            .isEqualTo(text + "FOOTER-MARK");
+    }
+
+    @Test
+    void shouldNotTurnInlineBoundaryTextOfAnAncestorIntoADelimiterWhenReencoding() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", "FOOTER-MARK")
+            .build());
+        String text = "This line is plain ASCII, long enough to keep the part mostly ASCII.\r\n"
+            + "é".repeat(25) + "--outer\r\n"
+            + "last line\r\n";
+        String message = "Subject: test\r\n"
+            + "MIME-Version: 1.0\r\n"
+            + "Content-Type: multipart/mixed; boundary=\"outer\"\r\n"
+            + "\r\n"
+            + "--outer\r\n"
+            + "Content-Type: multipart/alternative; boundary=\"inner\"\r\n"
+            + "\r\n"
+            + "--inner\r\n"
+            + "Content-Type: text/plain; charset=UTF-8\r\n"
+            + "Content-Transfer-Encoding: 8bit\r\n"
+            + "\r\n"
+            + text
+            + "--inner--\r\n"
+            + "--outer\r\n"
+            + "Content-Type: application/octet-stream\r\n"
+            + "\r\n"
+            + "attachment\r\n"
+            + "--outer--\r\n";
+        Session session = Session.getDefaultInstance(new Properties());
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(new MimeMessage(session, new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8))))
+            .build();
+
+        mailet.service(mail);
+
+        MimeMultipart multipart = (MimeMultipart) reparse(mail).getContent();
+        assertThat(multipart.getCount()).isEqualTo(2);
+        MimeMultipart alternative = (MimeMultipart) multipart.getBodyPart(0).getContent();
+        assertThat(alternative.getCount()).isEqualTo(1);
+        assertThat((String) alternative.getBodyPart(0).getContent())
+            .isEqualTo(text + "FOOTER-MARK");
+    }
+
+    @Test
+    void shouldKeepTheOtherContentTypeParametersOfARewrittenMultipart() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", "FOOTER-MARK")
+            .build());
+        Mail mail = FakeMail.fromMime(Joiner.on("\r\n").join(
+            "From: sender@example.com",
+            "MIME-Version: 1.0",
+            "Content-Type: multipart/related; boundary=\"rel\"; type=\"text/plain\"; start=\"<a@b>\"",
+            "",
+            "--rel",
+            "Content-Type: text/plain",
+            "Content-ID: <a@b>",
+            "",
+            "hello",
+            "--rel--",
+            ""), "UTF-8", "UTF-8");
+
+        mailet.service(mail);
+
+        ContentType contentType = new ContentType(reparse(mail).getContentType());
+        assertThat(contentType.getBaseType()).isEqualTo("multipart/related");
+        assertThat(contentType.getParameter("type")).isEqualTo("text/plain");
+        assertThat(contentType.getParameter("start")).isEqualTo("<a@b>");
+        assertThat(contentType.getParameter("boundary")).isNotEqualTo("rel");
+        assertThat(MailUtil.toString(mail, "UTF-8")).contains("hello", "FOOTER-MARK");
+    }
 }
