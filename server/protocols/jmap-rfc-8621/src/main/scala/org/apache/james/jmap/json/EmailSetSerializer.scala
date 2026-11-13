@@ -241,7 +241,18 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
 
   private implicit val subjectReads: Reads[Subject] = Json.valueReads[Subject]
   private implicit val emailerNameReads: Reads[EmailerName] = Json.valueReads[EmailerName]
-  private implicit val unvalidatedEmailReads: Reads[UncheckedEmail] = Json.valueReads[UncheckedEmail]
+  // Trim as MailAddress does, so that the address written is the one validated (non-drafts) and
+  // reject control characters, so that no address (drafts included) can carry a line break into the header
+  private implicit val unvalidatedEmailReads: Reads[UncheckedEmail] = {
+    case JsString(value) =>
+      val trimmed = value.trim
+      if (trimmed.exists(Character.isISOControl)) {
+        JsError("Invalid email address: control characters are not allowed")
+      } else {
+        JsSuccess(UncheckedEmail(trimmed))
+      }
+    case _ => JsError("Expecting a JsString to represent an email address")
+  }
 
   private implicit val headerMessageIdReads: Reads[HeaderMessageId] = Json.valueReads[HeaderMessageId]
   private implicit val emailAddressReads: Reads[EmailAddress] = Json.reads[EmailAddress]
