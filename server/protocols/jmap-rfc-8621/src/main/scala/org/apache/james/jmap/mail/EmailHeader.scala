@@ -33,6 +33,7 @@ import org.apache.james.mime4j.stream.{Field, RawField}
 import org.apache.james.mime4j.util.MimeUtil
 
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 object EmailHeader {
   def apply(field: Field): EmailHeader = EmailHeader(EmailHeaderName(field.getName), RawHeaderValue.from(field))
@@ -114,7 +115,10 @@ object MessageIdsHeaderValue {
 
 object DateHeaderValue {
   def from(field: Field, zoneId: ZoneId): DateHeaderValue =
-    Option(DateTimeFieldImpl.PARSER.parse(field, DecodeMonitor.SILENT).getDate)
+    // mime4j date parser can throw runtime exceptions (eg NumberFormatException on oversized numbers): treat them as unparsable dates
+    Try(DateTimeFieldImpl.PARSER.parse(field, DecodeMonitor.SILENT).getDate)
+      .toOption
+      .flatMap(Option(_))
       .map(date => DateHeaderValue(Some(UTCDate.from(date, zoneId))))
       .getOrElse(DateHeaderValue(None))
 }
