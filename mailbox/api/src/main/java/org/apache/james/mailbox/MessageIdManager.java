@@ -78,6 +78,12 @@ public interface MessageIdManager {
 
     Publisher<Void> updateEmail(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, FlagsUpdateMode replace, MailboxSession mailboxSession);
 
+    /**
+     * Moves the message to the given mailboxes, then removes flagsToRemove and adds flagsToAdd in each of these mailboxes,
+     * leaving their other flags untouched. Events for both operations are dispatched at once.
+     */
+    Publisher<Void> updateEmail(MessageId messageId, List<MailboxId> mailboxIds, Flags flagsToAdd, Flags flagsToRemove, MailboxSession mailboxSession);
+
     default List<MessageResult> getMessage(MessageId messageId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
         return getMessages(ImmutableList.of(messageId), fetchGroup, mailboxSession);
     }

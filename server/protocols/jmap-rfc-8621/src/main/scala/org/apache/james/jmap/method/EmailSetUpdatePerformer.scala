@@ -26,7 +26,7 @@ import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{EmailSet, EmailSetRequest, MailboxIds, UnparsedMessageId, ValidatedEmailSetUpdate}
+import org.apache.james.jmap.mail.{EmailSet, EmailSetRequest, Keyword, Keywords, MailboxIds, UnparsedMessageId, ValidatedEmailSetUpdate}
 import org.apache.james.jmap.method.EmailSetUpdatePerformer.{EmailUpdateFailure, EmailUpdateResult, EmailUpdateResults, EmailUpdateSuccess, RANGE_THRESHOLD}
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode
 import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaException}
@@ -78,6 +78,54 @@ object EmailSetUpdatePerformer {
       }.toMap)
         .filter(_.nonEmpty)
   }
+}
+
+/**
+ * Flags to remove then to add for a keyword update of a message, each mailbox of the message keeping its other flags:
+ * IMAP flags that are not JMAP keywords, \Deleted and \Recent.
+ */
+private case class FlagsDelta(toAdd: Flags, toRemove: Flags)
+
+private object FlagsDelta {
+  def of(update: ValidatedEmailSetUpdate, storedMetaData: Iterable[ComposedMessageIdWithMetaData]): FlagsDelta = {
+    val storedKeywords: Iterable[Set[Keyword]] = storedMetaData.map(m => keywordsOf(m.getFlags))
+    // Keywords set in at least one mailbox: this is the keywords of the message as JMAP reads them
+    val unionKeywords: Set[Keyword] = storedKeywords.foldLeft(Set[Keyword]())(_ ++ _)
+    // Keywords set in every mailbox: adding them is a no-op
+    val intersectionKeywords: Set[Keyword] = storedKeywords.reduceOption(_ intersect _).getOrElse(Set())
+    val newKeywords: Set[Keyword] = update.keywordsTransformation.apply(Keywords(unionKeywords)).getKeywords
+
+    val keywordsToAdd: Set[Keyword] = update.update.keywords
+      .map(_.getKeywords)
+      .orElse(update.update.keywordsToAdd.map(_.getKeywords))
+      .getOrElse(Set()) -- intersectionKeywords
+    val keywordsToRemove: Set[Keyword] = unionKeywords -- newKeywords
+
+    FlagsDelta(toAdd = Keywords(keywordsToAdd).asFlags,
+      toRemove = flagsToRemove(keywordsToRemove, storedFlags(storedMetaData)))
+  }
+
+  def storedFlags(storedMetaData: Iterable[ComposedMessageIdWithMetaData]): Flags =
+    storedMetaData.foldLeft(new Flags())((flags: Flags, m: ComposedMessageIdWithMetaData) => {
+      flags.add(m.getFlags)
+      flags
+    })
+
+  /**
+   * The flags JMAP reads as these keywords: their flag, plus the stored user flags JMAP reads as one of them,
+   * for instance the user flag $SEEN for the $seen keyword.
+   */
+  def flagsToRemove(keywords: Set[Keyword], storedFlags: Flags): Flags = {
+    val flags = Keywords(keywords).asFlags
+    storedFlags.getUserFlags
+      .filter(userFlag => Keyword.parse(userFlag).toOption.exists(keywords.contains))
+      .foreach(userFlag => flags.add(userFlag))
+    flags
+  }
+
+  def isEmpty(flags: Flags): Boolean = flags.getSystemFlags.isEmpty && flags.getUserFlags.isEmpty
+
+  private def keywordsOf(flags: Flags): Set[Keyword] = LENIENT_KEYWORDS_FACTORY.fromFlags(flags).get.getKeywords
 }
 
 class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
@@ -217,15 +265,8 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
       if (update.update.isMailboxUpdate && update.update.isFlagUpdate) {
         // JAMS-3728 Handling move nd flags update at once prevents data race
         val targetIds = update.mailboxIdsTransformation.apply(mailboxIds)
-        val originalFlags: Flags = storedMetaData
-          .foldLeft[Flags](new Flags())((flags: Flags, m: ComposedMessageIdWithMetaData) => {
-            flags.add(m.getFlags)
-            flags
-          })
-        val newFlags = update.keywordsTransformation
-          .apply(LENIENT_KEYWORDS_FACTORY.fromFlags(originalFlags).get)
-          .asFlagsWithRecentAndDeletedFrom(originalFlags)
-        SMono(messageIdManager.updateEmail(messageId, targetIds.value.asJava, newFlags, FlagsUpdateMode.REPLACE, session))
+        val flagsUpdate = FlagsDelta.of(update, storedMetaData)
+        SMono(messageIdManager.updateEmail(messageId, targetIds.value.asJava, flagsUpdate.toAdd, flagsUpdate.toRemove, session))
           .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
           .doOnSuccess(_ => auditMove(Seq(messageId), mailboxIds.value, targetIds.value, session))
           .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
@@ -272,19 +313,20 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
 
   private def updateFlags(messageId: MessageId, update: ValidatedEmailSetUpdate, mailboxIds: MailboxIds, storedMetaData: List[ComposedMessageIdWithMetaData], session: MailboxSession): SMono[EmailUpdateResult] =
     if (update.update.isFlagUpdate) {
-      val originalFlags: Flags = storedMetaData
-        .foldLeft[Flags](new Flags())((flags: Flags, m: ComposedMessageIdWithMetaData) => {
-          flags.add(m.getFlags)
-          flags
-        })
+      val flagsUpdate = FlagsDelta.of(update, storedMetaData)
+      val targetMailboxIds = ImmutableList.copyOf(mailboxIds.value.asJavaCollection)
 
-      val newFlags = update.keywordsTransformation
-        .apply(LENIENT_KEYWORDS_FACTORY.fromFlags(originalFlags).get)
-        .asFlagsWithRecentAndDeletedFrom(originalFlags)
-
-      SMono(messageIdManager.setFlagsReactive(newFlags, FlagsUpdateMode.REPLACE, messageId, ImmutableList.copyOf(mailboxIds.value.asJavaCollection), session))
+      setFlagsIfAny(flagsUpdate.toRemove, FlagsUpdateMode.REMOVE, messageId, targetMailboxIds, session)
+        .`then`(setFlagsIfAny(flagsUpdate.toAdd, FlagsUpdateMode.ADD, messageId, targetMailboxIds, session))
         .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
     } else {
       SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId))
+    }
+
+  private def setFlagsIfAny(flags: Flags, updateMode: FlagsUpdateMode, messageId: MessageId, mailboxIds: ImmutableList[MailboxId], session: MailboxSession): SMono[Unit] =
+    if (FlagsDelta.isEmpty(flags)) {
+      SMono.empty
+    } else {
+      SMono(messageIdManager.setFlagsReactive(flags, updateMode, messageId, mailboxIds, session)).`then`()
     }
 }

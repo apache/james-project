@@ -29,11 +29,13 @@ import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured
 import io.restassured.RestAssured.`given`
 import io.restassured.http.ContentType.JSON
+import jakarta.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.Username
 import org.apache.james.jmap.JMAPTestingConstants.{DOMAIN, LOCALHOST_IP}
+import org.apache.james.jmap.MessageIdProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB_PASSWORD, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.DefaultMailboxes
@@ -379,6 +381,46 @@ trait ImapKeywordsConsistencyContract {
     assertThatJson(response)
       .inPath("methodResponses[0][1].list[0].keywords")
       .isEqualTo("{\"$answered\": true}")
+  }
+
+  @Test
+  def emailSetShouldNotCopyDeletedFlagToOtherMailboxesOfTheMessage(server: GuiceJamesServer): Unit = {
+    val messageId = appendMessageToInbox(server)
+    copyMessageFromInboxToArchive(server, messageId)
+    awaitAtMostOneMinute.until(() => listMessageIdsArchive(server).size == 1)
+
+    imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
+      .login(bobUsername, BOB_PASSWORD)
+      .select(DefaultMailboxes.INBOX)
+    imapClient.setFlagsForAllMessagesInMailbox("\\Deleted")
+
+    emailSetFlags(messageId, "$Seen")
+
+    val archiveId = server.getProbe(classOf[MailboxProbeImpl])
+      .getMailboxId(MailboxConstants.USER_NAMESPACE, bobUsername.asString(), DefaultMailboxes.ARCHIVE)
+    val archiveFlags: Flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala
+      .filter(_.getMailboxId == archiveId)
+      .head.getFlags
+    assertThat(archiveFlags.contains(Flags.Flag.SEEN)).isTrue
+    assertThat(archiveFlags.contains(Flags.Flag.DELETED)).isFalse
+  }
+
+  @Test
+  def emailSetShouldPreserveImapFlagsThatAreNotKeywords(server: GuiceJamesServer): Unit = {
+    val messageId = appendMessageToInbox(server)
+
+    imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
+      .login(bobUsername, BOB_PASSWORD)
+      .select(DefaultMailboxes.INBOX)
+    imapClient.setFlagsForAllMessagesInMailbox("a+b Foo.Bar \\Flagged")
+
+    emailSetFlags(messageId, "$Seen")
+
+    val flags: Flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala.head.getFlags
+    assertThat(flags.contains(Flags.Flag.SEEN)).isTrue
+    assertThat(flags.contains(Flags.Flag.FLAGGED)).isFalse
+    assertThat(flags.contains("a+b")).isTrue
+    assertThat(flags.contains("Foo.Bar")).isTrue
   }
 
   private def appendMessageToInbox(server: GuiceJamesServer): MessageId = {
