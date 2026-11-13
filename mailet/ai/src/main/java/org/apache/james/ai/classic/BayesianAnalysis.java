@@ -166,7 +166,7 @@ public class BayesianAnalysis extends GenericMailet {
     /**
      * Holds value of property lastCorpusLoadTime.
      */
-    private long lastCorpusLoadTime;
+    private volatile long lastCorpusLoadTime;
 
     private SystemContext fs;
 
