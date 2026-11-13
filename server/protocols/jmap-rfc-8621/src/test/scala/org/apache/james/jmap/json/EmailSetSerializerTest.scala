@@ -83,5 +83,36 @@ class EmailSetSerializerTest extends AnyWordSpec with Matchers {
 
       assert(jsResult.isSuccess)
     }
+
+    "accept a specific header name made of printable US-ASCII characters" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-My_Header.1!~:asText":"value"}""")).isSuccess shouldBe true
+    }
+
+    "reject a specific header name holding CR LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A\r\nX-Injected:asText":"forged"}""")).isError shouldBe true
+    }
+
+    "reject a specific header name holding a space" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X A:asText":"value"}""")).isError shouldBe true
+    }
+
+    "reject a specific header name holding a non ASCII character" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-\u00e9:asText":"value"}""")).isError shouldBe true
+    }
+
+    "reject an empty specific header name" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header::asText":"value"}""")).isError shouldBe true
+    }
+
+    "reject a body part header name holding CR LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"bodyValues":{"a":{"value":"hi"}},
+          |"textBody":[{"partId":"a","type":"text/plain","header:X-A\r\nX-Injected":" v"}]}""".stripMargin)).isError shouldBe true
+    }
   }
 }
