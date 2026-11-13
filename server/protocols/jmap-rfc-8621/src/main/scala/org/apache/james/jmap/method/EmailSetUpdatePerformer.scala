@@ -227,10 +227,15 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
     val targetId: MailboxId = update.update.mailboxIds.get.value.headOption.get
     val messageIds = metaData.keys.toSeq
 
-    SMono(mailboxManager.moveMessagesReactive(ranges.asJava, mailboxId, targetId, session)).map(_ => ())
-      .`then`(SMono.just(messageIds.map(EmailUpdateSuccess)))
-      .doOnSuccess(_ => auditMove(messageIds, Seq(mailboxId), Seq(targetId), session))
-      .onErrorResume(e => SMono.just(messageIds.map(id => EmailUpdateFailure(EmailSet.asUnparsed(id), e))))
+    if (targetId.equals(mailboxId)) {
+      // The messages are already in the target mailbox: moving them onto themselves would only re-assign their UIDs
+      SMono.just(messageIds.map(EmailUpdateSuccess))
+    } else {
+      SMono(mailboxManager.moveMessagesReactive(ranges.asJava, mailboxId, targetId, session)).map(_ => ())
+        .`then`(SMono.just(messageIds.map(EmailUpdateSuccess)))
+        .doOnSuccess(_ => auditMove(messageIds, Seq(mailboxId), Seq(targetId), session))
+        .onErrorResume(e => SMono.just(messageIds.map(id => EmailUpdateFailure(EmailSet.asUnparsed(id), e))))
+    }
   }
 
   private def updateByRange(ranges: List[MessageRange],
