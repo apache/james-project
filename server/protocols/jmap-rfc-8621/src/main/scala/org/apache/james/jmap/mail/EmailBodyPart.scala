@@ -191,7 +191,7 @@ object Name {
         case _ => None
       }.map(Name.of(_)))
 
-  private val BIDI_CONTROL_CHARACTERS = "[\u200E\u200F\u202A-\u202E\u2066-\u2069]"
+  private val BIDI_CONTROL_CHARACTERS = "[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]"
 
   def normalize(value: String): String = value.replaceAll(BIDI_CONTROL_CHARACTERS, "")
 
