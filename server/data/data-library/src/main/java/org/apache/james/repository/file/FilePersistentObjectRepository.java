@@ -48,16 +48,13 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
             if (inputStream == null) {
                 throw new NullPointerException("Null input stream returned for key: " + key);
             }
-            try {
-                final ObjectInputStream stream = new ObjectInputStream(inputStream);
-
+            try (inputStream;
+                 ObjectInputStream stream = new ObjectInputStream(inputStream)) {
                 final Object object = stream.readObject();
                 if (DEBUG) {
                     LOGGER.debug("returning object {} for key {}", object, key);
                 }
                 return object;
-            } finally {
-                inputStream.close();
             }
         } catch (Throwable e) {
             throw new RuntimeException("Exception caught while retrieving an object", e);
@@ -73,17 +70,14 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
                 throw new NullPointerException("Null input stream returned for key: " + key);
             }
 
-            final ObjectInputStream stream = new ClassLoaderObjectInputStream(classLoader, inputStream);
-            try {
+            try (inputStream;
+                 ObjectInputStream stream = new ClassLoaderObjectInputStream(classLoader, inputStream)) {
                 final Object object = stream.readObject();
 
                 if (DEBUG) {
                     LOGGER.debug("returning object {} for key {}", object, key);
                 }
                 return object;
-            } finally {
-                stream.close();
-                inputStream.close();
             }
         } catch (Throwable e) {
             throw new RuntimeException("Exception caught while retrieving an object", e);
