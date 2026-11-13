@@ -768,6 +768,74 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             assertThat(mailboxManager.getAllAnnotations(inbox, session)).isEmpty();
         }
 
+        private MailboxPath shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights rights) throws Exception {
+            MailboxSession ownerSession = mailboxManager.createSystemSession(USER_1);
+            MailboxPath ownerInbox = MailboxPath.inbox(ownerSession);
+            mailboxManager.createMailbox(ownerInbox, ownerSession);
+            mailboxManager.updateAnnotations(ownerInbox, ownerSession, ImmutableList.of(sharedAnnotation));
+            mailboxManager.applyRightsCommand(ownerInbox,
+                MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(rights)
+                    .asAddition(), ownerSession);
+            return ownerInbox;
+        }
+
+        @Test
+        void updateAnnotationsShouldNotOverwriteWhenShareeHasOnlyReadRight() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read)));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+
+            assertThatThrownBy(() -> mailboxManager.updateAnnotations(ownerInbox, shareeSession,
+                    ImmutableList.of(MailboxAnnotation.newInstance(sharedKey, "Overwritten by sharee"))))
+                .isInstanceOf(InsufficientRightsException.class);
+
+            assertThat(mailboxManager.getAllAnnotations(ownerInbox, mailboxManager.createSystemSession(USER_1)))
+                .containsOnly(sharedAnnotation);
+        }
+
+        @Test
+        void deletingAnnotationsShouldFailWhenShareeHasOnlyReadRight() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read)));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+
+            assertThatThrownBy(() -> mailboxManager.updateAnnotations(ownerInbox, shareeSession,
+                    ImmutableList.of(MailboxAnnotation.nil(sharedKey))))
+                .isInstanceOf(InsufficientRightsException.class);
+
+            assertThat(mailboxManager.getAllAnnotations(ownerInbox, mailboxManager.createSystemSession(USER_1)))
+                .containsOnly(sharedAnnotation);
+        }
+
+        @Test
+        void shareeWithOnlyReadRightShouldStillReadAnnotations() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read)));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+
+            assertThat(mailboxManager.getAllAnnotations(ownerInbox, shareeSession))
+                .containsOnly(sharedAnnotation);
+        }
+
+        @Test
+        void updateAnnotationsShouldSucceedWhenShareeHasWriteRight() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.Write)));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+            MailboxAnnotation updated = MailboxAnnotation.newInstance(sharedKey, "Updated by sharee");
+
+            mailboxManager.updateAnnotations(ownerInbox, shareeSession, ImmutableList.of(updated));
+
+            assertThat(mailboxManager.getAllAnnotations(ownerInbox, mailboxManager.createSystemSession(USER_1)))
+                .containsOnly(updated);
+        }
+
         @Test
         void updateAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));

@@ -95,7 +95,7 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     @Override
     public Flux<MailboxAnnotation> getAllAnnotationsReactive(MailboxPath mailboxPath, MailboxSession session) {
         AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        return checkThenGetMailboxId(mailboxPath, session)
+        return checkThenGetMailboxId(mailboxPath, session, Right.Read)
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
             .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAllAnnotationsReactive(mailboxId))
                     .collectList())
@@ -112,7 +112,7 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     public Flux<MailboxAnnotation> getAnnotationsByKeysReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
         AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
 
-        return checkThenGetMailboxId(mailboxPath, session)
+        return checkThenGetMailboxId(mailboxPath, session, Right.Read)
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
             .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysReactive(mailboxId, keys))
                     .collectList())
@@ -128,7 +128,7 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     @Override
     public Mono<Void> updateAnnotationsReactive(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) {
         AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        return annotationMapper.executeReactive(checkThenGetMailboxId(mailboxPath, session)
+        return annotationMapper.executeReactive(checkThenGetMailboxId(mailboxPath, session, Right.Read, Right.Write)
                 .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
             .flatMapMany(mailboxId -> Flux.fromIterable(mailboxAnnotations)
                 .concatMap(annotation -> {
@@ -170,7 +170,7 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     @Override
     public Flux<MailboxAnnotation> getAnnotationsByKeysWithOneDepthReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
         AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        return checkThenGetMailboxId(mailboxPath, session)
+        return checkThenGetMailboxId(mailboxPath, session, Right.Read)
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
             .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysWithOneDepthReactive(mailboxId, keys))
                     .collectList())
@@ -186,16 +186,17 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     @Override
     public Flux<MailboxAnnotation> getAnnotationsByKeysWithAllDepthReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
         AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        return checkThenGetMailboxId(mailboxPath, session)
+        return checkThenGetMailboxId(mailboxPath, session, Right.Read)
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
             .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysWithAllDepthReactive(mailboxId, keys))
                     .collectList())
                 .flatMapIterable(Function.identity()));
     }
 
-    private Mono<MailboxId> checkThenGetMailboxId(MailboxPath mailboxPath, MailboxSession session) {
+    private Mono<MailboxId> checkThenGetMailboxId(MailboxPath mailboxPath, MailboxSession session, Right... requiredRights) {
         return mailboxSessionMapperFactory.getMailboxMapper(session).findMailboxByPath(mailboxPath)
-            .flatMap(mailbox -> Mono.from(rightManager.hasRightReactive(mailboxPath, Right.Read, session))
+            .flatMap(mailbox -> rightManager.myRightsReactive(mailboxPath, session)
+                .map(rights -> rights.contains(requiredRights))
                 .filter(FunctionalUtils.identityPredicate().negate())
                 .flatMap(hasRight -> Mono.<MailboxId>error(new InsufficientRightsException("Not enough rights on " + mailboxPath)))
                 .switchIfEmpty(Mono.just(mailbox.getMailboxId())));
