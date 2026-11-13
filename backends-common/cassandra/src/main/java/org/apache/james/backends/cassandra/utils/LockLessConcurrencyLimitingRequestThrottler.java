@@ -50,7 +50,7 @@ public class LockLessConcurrencyLimitingRequestThrottler implements RequestThrot
     // In flight + executing
     private final AtomicInteger concurrentRequests = new AtomicInteger(0);
     private final Queue<Throttled> queue = new ConcurrentLinkedQueue<>();
-    private boolean closed;
+    private volatile boolean closed;
 
     public LockLessConcurrencyLimitingRequestThrottler(DriverContext context) {
         this.logPrefix = context.getSessionName();
