@@ -606,4 +606,24 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         assertThat(wrapper.getMessageSize()).isEqualTo(out.size());
         LifecycleUtil.dispose(wrapper);
     }
+
+    @Test
+    void loadMessageShouldThrowMessagingExceptionWhenTheSourceCannotBeOpened() {
+        IOException failure = new IOException("boom");
+        MimeMessageWrapper wrapper = new MimeMessageWrapper(new MimeMessageSource() {
+            @Override
+            public String getSourceId() {
+                return "failing";
+            }
+
+            @Override
+            public InputStream getInputStream() throws IOException {
+                throw failure;
+            }
+        });
+
+        assertThatThrownBy(wrapper::loadMessage)
+            .isInstanceOf(MessagingException.class)
+            .hasCause(failure);
+    }
 }
