@@ -7184,6 +7184,102 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def partialKeywordUpdateShouldPreserveImapFlagsThatAreNotKeywords(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(bobUsername)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+      AppendCommand.builder()
+        .withFlags(FlagsBuilder.builder().add(Flags.Flag.FLAGGED).add("a+b", "Foo.Bar").build())
+        .build(Fixture.createTestMessage))
+      .getMessageId
+
+    postEmailSetUpdate(s""""${messageId.serialize}": {"keywords/$$seen": true}""")
+
+    val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala.head.getFlags
+    assertThat(flags.contains(Flags.Flag.SEEN)).isTrue
+    assertThat(flags.contains(Flags.Flag.FLAGGED)).isTrue
+    assertThat(flags.contains("a+b")).isTrue
+    assertThat(flags.contains("Foo.Bar")).isTrue
+  }
+
+  @Test
+  def keywordsResetShouldPreserveImapFlagsThatAreNotKeywords(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(bobUsername)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+      AppendCommand.builder()
+        .withFlags(FlagsBuilder.builder().add(Flags.Flag.FLAGGED).add("a+b", "music").build())
+        .build(Fixture.createTestMessage))
+      .getMessageId
+
+    postEmailSetUpdate(s""""${messageId.serialize}": {"keywords": {"$$seen": true}}""")
+
+    val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala.head.getFlags
+    assertThat(flags.contains(Flags.Flag.SEEN)).isTrue
+    assertThat(flags.contains(Flags.Flag.FLAGGED)).isFalse
+    assertThat(flags.contains("music")).isFalse
+    assertThat(flags.contains("a+b")).isTrue
+  }
+
+  @Test
+  def moveAndKeywordUpdateShouldPreserveImapFlagsThatAreNotKeywords(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(bobUsername)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val otherId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "other"))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+      AppendCommand.builder()
+        .withFlags(FlagsBuilder.builder().add(Flags.Flag.FLAGGED).add("a+b", "Foo.Bar", "music").build())
+        .build(Fixture.createTestMessage))
+      .getMessageId
+
+    postEmailSetUpdate(s""""${messageId.serialize}": {"mailboxIds": {"${otherId.serialize}": true}, "keywords/$$seen": true, "keywords/music": null}""")
+
+    val messages = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala
+    assertThat(messages.map(_.getMailboxId).asJava).containsExactly(otherId)
+    val flags = messages.head.getFlags
+    assertThat(flags.contains(Flags.Flag.SEEN)).isTrue
+    assertThat(flags.contains(Flags.Flag.FLAGGED)).isTrue
+    assertThat(flags.contains("music")).isFalse
+    assertThat(flags.contains("a+b")).isTrue
+    assertThat(flags.contains("Foo.Bar")).isTrue
+  }
+
+  @Test
+  def keywordUpdateShouldNotCopyDeletedFlagToOtherMailboxesOfTheMessage(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(bobUsername)
+    val inboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val otherId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "other"))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+      AppendCommand.builder().build(Fixture.createTestMessage))
+      .getMessageId
+    postEmailSetUpdate(s""""${messageId.serialize}": {"mailboxIds": {"${inboxId.serialize}": true, "${otherId.serialize}": true}}""")
+    server.getProbe(classOf[MessageIdProbe]).updateNewFlags(bobUsername, new Flags(Flags.Flag.DELETED), messageId, List(inboxId).asJava)
+
+    postEmailSetUpdate(s""""${messageId.serialize}": {"keywords/$$seen": true}""")
+
+    val flagsByMailbox = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala
+      .map(message => message.getMailboxId -> message.getFlags)
+      .toMap
+    assertThat(flagsByMailbox(inboxId).contains(Flags.Flag.DELETED)).isTrue
+    assertThat(flagsByMailbox(inboxId).contains(Flags.Flag.SEEN)).isTrue
+    assertThat(flagsByMailbox(otherId).contains(Flags.Flag.DELETED)).isFalse
+    assertThat(flagsByMailbox(otherId).contains(Flags.Flag.SEEN)).isTrue
+  }
+
+  private def postEmailSetUpdate(update: String): Unit =
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [["Email/set", {"accountId": "$bobAccountId", "update": {$update}}, "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body("methodResponses[0][1].notUpdated", Matchers.nullValue())
+
+  @Test
   def invalidPatchPropertyShouldFail(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
