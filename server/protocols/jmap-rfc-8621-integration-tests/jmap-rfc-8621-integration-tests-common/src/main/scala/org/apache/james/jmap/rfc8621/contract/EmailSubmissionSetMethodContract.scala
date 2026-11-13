@@ -1299,7 +1299,7 @@ trait EmailSubmissionSetMethodContract {
          |     ["EmailSubmission/set", {
          |       "accountId": "$bobAccountId",
          |       "create": {
-         |         "k1490": {
+         |         "submittedEmail": {
          |           "identityId": "${identityIdOf(bobUsername)}",
          |           "emailId": "${messageId.serialize}",
          |           "envelope": {
@@ -1309,45 +1309,45 @@ trait EmailSubmissionSetMethodContract {
          |         }
          |       },
          |       "onSuccessUpdateEmail": {
-         |         "#k1490": {
+         |         "#submittedEmail": {
          |           "keywords": {"$$sent":true}
          |         }
          |       }
-         |   }, "c1"],
+         |   }, "submitEmail"],
          |   ["Email/get",
          |     {
          |       "accountId": "$bobAccountId",
          |       "ids": ["${messageId.serialize}"],
          |       "properties": ["keywords"]
          |     },
-         |     "c2"]]
+         |     "getSentEmail"]]
          |}""".stripMargin
 
-    val response = `given`
+    val submissionResponse = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(requestBob)
     .when
       .post
     .`then`
+      .log().ifValidationFails()
       .statusCode(SC_OK)
       .contentType(JSON)
-      .extract
-      .body
-      .asString
+      .extract()
 
-    val json = play.api.libs.json.Json.parse(response)
-    val submissionId = (json \ "methodResponses")(0)(1)("created")("k1490")("id").as[String]
-    assertThatJson((json \ "createdIds").get.toString)
-      .isEqualTo(play.api.libs.json.Json.obj("initial" -> "initial-server", "k1490" -> submissionId).toString)
+    val submissionId = submissionResponse.path[String](
+      "methodResponses.find { it[2] == 'submitEmail' && it[0] == 'EmailSubmission/set' }[1].created.submittedEmail.id")
 
-    assertThatJson(response)
-      // Ids are randomly generated, and not stored, let's ignore it
-      .whenIgnoringPaths("createdIds", "methodResponses[0][1].created.k1490",
+    assertThatJson(submissionResponse.asString())
+      .whenIgnoringPaths(
         "methodResponses[1][1].newState",
         "methodResponses[1][1].oldState",
         "methodResponses[2][1].state")
       .isEqualTo(s"""{
                    |    "sessionState": "${SESSION_STATE.value}",
+                   |    "createdIds": {
+                   |        "initial": "initial-server",
+                   |        "submittedEmail": ${Json.toJson(submissionId)}
+                   |    },
                    |    "methodResponses": [
                    |        [
                    |            "EmailSubmission/set",
@@ -1355,10 +1355,13 @@ trait EmailSubmissionSetMethodContract {
                    |                "accountId": "$bobAccountId",
                    |                "newState": "${INSTANCE.value}",
                    |                "created": {
-                   |                    "k1490": "f0850507-bb63-4675-b14f-d560f8dca21f"
+                   |                    "submittedEmail": {
+                   |                        "id": ${Json.toJson(submissionId)},
+                   |                        "sendAt": "$${json-unit.any-string}"
+                   |                    }
                    |                }
                    |            },
-                   |            "c1"
+                   |            "submitEmail"
                    |        ],
                    |        [
                    |            "Email/set",
@@ -1369,7 +1372,7 @@ trait EmailSubmissionSetMethodContract {
                    |                    "${messageId.serialize}": null
                    |                }
                    |            },
-                   |            "c1"
+                   |            "submitEmail"
                    |        ],
                    |        [
                    |            "Email/get",
@@ -1383,7 +1386,7 @@ trait EmailSubmissionSetMethodContract {
                    |                ],
                    |                "notFound": []
                    |            },
-                   |            "c2"
+                   |            "getSentEmail"
                    |        ]
                    |    ]
                    |}""".stripMargin)

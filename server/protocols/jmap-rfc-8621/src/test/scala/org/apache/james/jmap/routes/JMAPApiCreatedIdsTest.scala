@@ -22,13 +22,14 @@ package org.apache.james.jmap.routes
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.MethodName
-import org.apache.james.jmap.core.{ClientId, JmapRfc8621Configuration, ServerId}
+import org.apache.james.jmap.core.{ClientId, JmapRfc8621Configuration, ResponseObject, ServerId}
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.method.{CoreEchoMethod, InvocationWithContext, Method}
 import org.apache.james.mailbox.MailboxSession
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import reactor.core.scala.publisher.SFlux
 
 class JMAPApiCreatedIdsTest {
@@ -39,12 +40,14 @@ class JMAPApiCreatedIdsTest {
     override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE)
 
     override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, session: MailboxSession): SFlux[InvocationWithContext] = {
-      val updated = invocation.copy(processingContext = invocation.processingContext
-        .recordCreatedId(ClientId("new"), ServerId("new-server")))
-      if ((invocation.invocation.arguments.value \ "failAfterCreate").asOpt[Boolean].contains(true)) {
-        SFlux.concat(SFlux.just(updated), SFlux.error[InvocationWithContext](new RuntimeException("Implicit call failed")))
+      val createdContext = invocation.processingContext.recordCreatedId(ClientId("new"), ServerId("new-server"))
+      val createdResponse = invocation.copy(processingContext = createdContext)
+      val shouldFailImplicitCall = (invocation.invocation.arguments.value \ "failAfterCreate").asOpt[Boolean].contains(true)
+      if (shouldFailImplicitCall) {
+        SFlux.concat(SFlux.just(createdResponse), SFlux.error[InvocationWithContext](new RuntimeException("Implicit call failed")))
       } else {
-        SFlux.just(updated, updated.copy(invocation = invocation.invocation.copy(methodName = MethodName("Test/implicit"))))
+        val implicitResponse = invocation.invocation.copy(methodName = MethodName("Test/implicit"))
+        SFlux.just(createdResponse, createdResponse.copy(invocation = implicitResponse))
       }
     }
   }
@@ -57,66 +60,132 @@ class JMAPApiCreatedIdsTest {
       SFlux.error(new RuntimeException("Failed call"))
   }
 
-  private def process(json: JsObject): JsObject = {
-    val request = ResponseSerializer.deserializeRequestObject(json).get
-    val api = new JMAPApi(Set(new CoreEchoMethod, createMethod, failingMethod), Set(JMAP_CORE), configuration)
-    ResponseSerializer.serialize(api.process(request, mock(classOf[MailboxSession])).block())
+  private val readMethod = new Method {
+    override val methodName: MethodName = MethodName("Test/read")
+    override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE)
+
+    override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, session: MailboxSession): SFlux[InvocationWithContext] =
+      SFlux.just(invocation)
   }
+
+  private def process(requestJson: String): ResponseObject = {
+    val request = ResponseSerializer.deserializeRequestObject(requestJson).get
+    val api = new JMAPApi(Set(new CoreEchoMethod, createMethod, failingMethod, readMethod), Set(JMAP_CORE), configuration)
+    api.process(request, mock(classOf[MailboxSession])).block()
+  }
+
+  private def argumentsOf(response: ResponseObject, callId: String, methodName: String): JsObject =
+    response.methodResponses.find(invocation =>
+      invocation.methodCallId.value.value == callId && invocation.methodName.value.value == methodName)
+      .map(_.arguments.value)
+      .getOrElse(throw new AssertionError(s"Missing response $methodName for call $callId"))
+
+  private def createdIdsOf(response: ResponseObject): JsValue =
+    (ResponseSerializer.serialize(response) \ "createdIds").get
 
   @Test
   def shouldReturnInitialIdsForEmptyRequest(): Unit = {
-    val result = process(Json.obj("using" -> Json.arr(JMAP_CORE.value), "methodCalls" -> Json.arr(), "createdIds" -> Json.obj("old" -> "old-server")))
-    assert((result \ "createdIds").as[JsObject] == Json.obj("old" -> "old-server"))
-    assert((result \ "methodResponses").as[Seq[JsObject]].isEmpty)
+    val response = process(
+      """{
+        |  "using": ["urn:ietf:params:jmap:core"],
+        |  "createdIds": {"old": "old-server"},
+        |  "methodCalls": []
+        |}""".stripMargin)
+
+    assertThat(createdIdsOf(response)).isEqualTo(Json.obj("old" -> "old-server"))
+    assertThat(response.methodResponses).isEqualTo(Seq.empty)
   }
 
   @Test
   def shouldReturnEmptyMapWhenRequested(): Unit = {
-    val result = process(Json.obj("using" -> Json.arr(JMAP_CORE.value), "methodCalls" -> Json.arr(), "createdIds" -> Json.obj()))
-    assert((result \ "createdIds").as[JsObject] == Json.obj())
+    val response = process(
+      """{
+        |  "using": ["urn:ietf:params:jmap:core"],
+        |  "createdIds": {},
+        |  "methodCalls": []
+        |}""".stripMargin)
+
+    assertThat(createdIdsOf(response)).isEqualTo(Json.obj())
   }
 
   @Test
   def shouldResolveInitialIdsAndKeepThemAfterAFailedCall(): Unit = {
-    val result = process(Json.obj("using" -> Json.arr(JMAP_CORE.value), "createdIds" -> Json.obj("old" -> "old-server"),
-      "methodCalls" -> Json.arr(Json.arr("Core/echo", Json.obj("id" -> "#old"), "echo"), Json.arr("Unknown/method", Json.obj(), "error"))))
-    assert((result \ "methodResponses")(0)(1)("id").as[String] == "old-server")
-    assert((result \ "methodResponses")(1)(1)("type").as[String] == "unknownMethod")
-    assert((result \ "createdIds").as[JsObject] == Json.obj("old" -> "old-server"))
+    val response = process(
+      """{
+        |  "using": ["urn:ietf:params:jmap:core"],
+        |  "createdIds": {"old": "old-server"},
+        |  "methodCalls": [
+        |    ["Test/read", {"id": "#old"}, "read"],
+        |    ["Unknown/method", {}, "unknown"]
+        |  ]
+        |}""".stripMargin)
+
+    assertThat(argumentsOf(response, "read", "Test/read")).isEqualTo(Json.obj("id" -> "old-server"))
+    assertThat(argumentsOf(response, "unknown", "error")).isEqualTo(Json.obj("type" -> "unknownMethod"))
+    assertThat(createdIdsOf(response)).isEqualTo(Json.obj("old" -> "old-server"))
   }
 
   @Test
   def shouldKeepLatestCreationAcrossMultipleResponsesAndAFinalError(): Unit = {
-    val result = process(Json.obj("using" -> Json.arr(JMAP_CORE.value), "createdIds" -> Json.obj("old" -> "old-server", "new" -> "obsolete"),
-      "methodCalls" -> Json.arr(Json.arr("Test/create", Json.obj(), "create"), Json.arr("Core/echo", Json.obj("id" -> "#new"), "echo"),
-        Json.arr("Core/echo", Json.obj("#id" -> Json.obj("resultOf" -> "missing", "name" -> "Core/echo", "path" -> "/id")), "error"))))
-    assert((result \ "methodResponses").as[Seq[play.api.libs.json.JsValue]].size == 4)
-    assert((result \ "methodResponses")(2)(1)("id").as[String] == "new-server")
-    assert((result \ "methodResponses")(3)(1)("type").as[String] == "invalidResultReference")
-    assert((result \ "createdIds").as[JsObject] == Json.obj("old" -> "old-server", "new" -> "new-server"))
+    val response = process(
+      """{
+        |  "using": ["urn:ietf:params:jmap:core"],
+        |  "createdIds": {"old": "old-server", "new": "obsolete"},
+        |  "methodCalls": [
+        |    ["Test/create", {}, "create"],
+        |    ["Test/read", {"id": "#new"}, "read"],
+        |    ["Core/echo", {"#id": {"resultOf": "missing", "name": "Core/echo", "path": "/id"}}, "invalid"]
+        |  ]
+        |}""".stripMargin)
+
+    assertThat(response.methodResponses.map(_.methodName.value.value))
+      .isEqualTo(Seq("Test/create", "Test/implicit", "Test/read", "error"))
+    assertThat(argumentsOf(response, "read", "Test/read")).isEqualTo(Json.obj("id" -> "new-server"))
+    assertThat((argumentsOf(response, "invalid", "error") \ "type").as[String]).isEqualTo("invalidResultReference")
+    assertThat(createdIdsOf(response)).isEqualTo(Json.obj("old" -> "old-server", "new" -> "new-server"))
   }
 
   @Test
   def shouldKeepCreationsWhenLastMethodFails(): Unit = {
-    val result = process(Json.obj("using" -> Json.arr(JMAP_CORE.value), "createdIds" -> Json.obj(),
-      "methodCalls" -> Json.arr(Json.arr("Test/create", Json.obj(), "create"), Json.arr("Test/fail", Json.obj(), "error"))))
-    assert((result \ "methodResponses")(2)(1)("type").as[String] == "serverFail")
-    assert((result \ "createdIds").as[JsObject] == Json.obj("new" -> "new-server"))
+    val response = process(
+      """{
+        |  "using": ["urn:ietf:params:jmap:core"],
+        |  "createdIds": {},
+        |  "methodCalls": [
+        |    ["Test/create", {}, "create"],
+        |    ["Test/fail", {}, "fail"]
+        |  ]
+        |}""".stripMargin)
+
+    assertThat((argumentsOf(response, "fail", "error") \ "type").as[String]).isEqualTo("serverFail")
+    assertThat(createdIdsOf(response)).isEqualTo(Json.obj("new" -> "new-server"))
   }
 
   @Test
   def shouldKeepCreationsWhenAnImplicitResponseFails(): Unit = {
-    val result = process(Json.obj("using" -> Json.arr(JMAP_CORE.value), "createdIds" -> Json.obj("new" -> "obsolete"),
-      "methodCalls" -> Json.arr(Json.arr("Test/create", Json.obj("failAfterCreate" -> true), "create"),
-        Json.arr("Core/echo", Json.obj("id" -> "#new"), "echo"))))
-    assert((result \ "methodResponses")(1)(1)("type").as[String] == "serverFail")
-    assert((result \ "methodResponses")(2)(1)("id").as[String] == "new-server")
-    assert((result \ "createdIds").as[JsObject] == Json.obj("new" -> "new-server"))
+    val response = process(
+      """{
+        |  "using": ["urn:ietf:params:jmap:core"],
+        |  "createdIds": {"new": "obsolete"},
+        |  "methodCalls": [
+        |    ["Test/create", {"failAfterCreate": true}, "create"],
+        |    ["Test/read", {"id": "#new"}, "read"]
+        |  ]
+        |}""".stripMargin)
+
+    assertThat((argumentsOf(response, "create", "error") \ "type").as[String]).isEqualTo("serverFail")
+    assertThat(argumentsOf(response, "read", "Test/read")).isEqualTo(Json.obj("id" -> "new-server"))
+    assertThat(createdIdsOf(response)).isEqualTo(Json.obj("new" -> "new-server"))
   }
 
   @Test
   def shouldOmitMapWhenNotRequestedEvenAfterCreation(): Unit = {
-    val result = process(Json.obj("using" -> Json.arr(JMAP_CORE.value), "methodCalls" -> Json.arr(Json.arr("Test/create", Json.obj(), "create"))))
-    assert(!result.keys.contains("createdIds"))
+    val response = process(
+      """{
+        |  "using": ["urn:ietf:params:jmap:core"],
+        |  "methodCalls": [["Test/create", {}, "create"]]
+        |}""".stripMargin)
+
+    assertThat(ResponseSerializer.serialize(response).keys.contains("createdIds")).isFalse()
   }
 }

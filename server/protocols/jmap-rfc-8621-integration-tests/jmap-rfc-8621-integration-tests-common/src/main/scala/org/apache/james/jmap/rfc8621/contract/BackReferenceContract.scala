@@ -24,8 +24,11 @@ import java.util.concurrent.atomic.AtomicReference
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
+import io.restassured.http.ContentType.JSON
 import io.restassured.path.json.JsonPath
+import io.restassured.response.ValidatableResponse
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import net.javacrumbs.jsonunit.core.ConfigurationWhen.{path, `then`}
 import net.javacrumbs.jsonunit.core.Option
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
@@ -41,8 +44,11 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.{BeforeEach, Test}
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.Json
+
+import scala.jdk.CollectionConverters._
 
 object BackReferenceContract {
   case class TestContext(bob: Username)
@@ -73,55 +79,216 @@ trait BackReferenceContract {
       .build
   }
 
-  private def requestWithCreatedIds(calls: JsValue, ids: JsObject): JsValue = {
-    val response = `given`
+  private def execute(request: String): ValidatableResponse =
+    `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(Json.obj("using" -> Json.arr("urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"),
-        "createdIds" -> ids, "methodCalls" -> calls).toString)
-      .post().`then`().statusCode(SC_OK).extract().asString()
-    Json.parse(response)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+
+  private def responseArgumentsPath(callId: String): String =
+    s"methodResponses.find { it[2] == '$callId' }[1]"
+
+  @Test
+  def createdIdsShouldChainRequests(): Unit = {
+    val createParentRequest = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "createdIds": {"initial": "initial-server"},
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "create": {"parent": {"name": "parent"}}
+      |    }, "createParent"]
+      |  ]
+      |}""".stripMargin
+
+    val createParentResponse = execute(createParentRequest).extract()
+    val parentId = createParentResponse.path[String](s"${responseArgumentsPath("createParent")}.created.parent.id")
+    val parentCreatedIds = createParentResponse.path[java.util.Map[String, String]]("createdIds")
+    val parentCreatedIdsJson = Json.toJson(parentCreatedIds.asScala.toMap)
+
+    val createChildRequest = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "createdIds": $parentCreatedIdsJson,
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "create": {"child": {"name": "child", "parentId": "#parent"}}
+      |    }, "createChild"],
+      |    ["Mailbox/get", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "ids": ["#child"],
+      |      "properties": ["id", "name", "parentId"]
+      |    }, "getChild"]
+      |  ]
+      |}""".stripMargin
+
+    val createChildResponse = execute(createChildRequest).extract()
+    val childId = createChildResponse.path[String](s"${responseArgumentsPath("createChild")}.created.child.id")
+    val childCreatedIds = createChildResponse.path[java.util.Map[String, String]]("createdIds")
+    val mailboxes = createChildResponse.path[java.util.List[Object]](s"${responseArgumentsPath("getChild")}.list")
+
+    assertThatJson(parentCreatedIds).isEqualTo(s"""{
+      |  "initial": "initial-server",
+      |  "parent": ${Json.toJson(parentId)}
+      |}""".stripMargin)
+    assertThatJson(childCreatedIds).isEqualTo(s"""{
+      |  "initial": "initial-server",
+      |  "parent": ${Json.toJson(parentId)},
+      |  "child": ${Json.toJson(childId)}
+      |}""".stripMargin)
+    assertThatJson(mailboxes).isEqualTo(s"""[
+      |  {"id": ${Json.toJson(childId)}, "name": "child", "parentId": ${Json.toJson(parentId)}}
+      |]""".stripMargin)
   }
 
   @Test
-  def createdIdsShouldChainRequestsAndKeepOnlySuccessfulCreations(): Unit = {
-    val first = requestWithCreatedIds(Json.arr(
-      Json.arr("Mailbox/set", Json.obj("accountId" -> BOB_ACCOUNT_ID,
-        "create" -> Json.obj("parent" -> Json.obj("name" -> "parent"), "failed" -> Json.obj("name" -> ""))), "create"),
-      Json.arr("Unknown/method", Json.obj(), "error")), Json.obj("initial" -> "initial-server"))
-    val parentId = (first \ "methodResponses")(0)(1)("created")("parent")("id").as[String]
-    val ids = (first \ "createdIds").as[JsObject]
-    assertThat(ids).isEqualTo(Json.obj("initial" -> "initial-server", "parent" -> parentId))
-    assertThat((first \ "methodResponses")(0)(1)("notCreated")("failed")("type").as[String]).isEqualTo("invalidArguments")
-    assertThat((first \ "methodResponses")(1)(1)("type").as[String]).isEqualTo("unknownMethod")
+  def createdIdsShouldIncludeOnlySuccessfulCreations(): Unit = {
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "createdIds": {},
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "create": {
+      |        "valid": {"name": "mailbox"},
+      |        "invalid": {"name": ""}
+      |      }
+      |    }, "createMailboxes"]
+      |  ]
+      |}""".stripMargin
 
-    val second = requestWithCreatedIds(Json.arr(
-      Json.arr("Mailbox/set", Json.obj("accountId" -> BOB_ACCOUNT_ID,
-        "create" -> Json.obj("child" -> Json.obj("name" -> "child", "parentId" -> "#parent"))), "create"),
-      Json.arr("Mailbox/get", Json.obj("accountId" -> BOB_ACCOUNT_ID, "ids" -> Json.arr("#child"),
-        "properties" -> Json.arr("id", "name", "parentId")), "get")), ids)
-    val childId = (second \ "methodResponses")(0)(1)("created")("child")("id").as[String]
-    assertThat((second \ "createdIds").as[JsObject]).isEqualTo(ids ++ Json.obj("child" -> childId))
-    assertThat((second \ "methodResponses")(1)(1)("list"))
-      .isEqualTo(Json.arr(Json.obj("id" -> childId, "name" -> "child", "parentId" -> parentId)))
+    val response = execute(request).extract()
+    val createMailboxesArgumentsPath = responseArgumentsPath("createMailboxes")
+    val mailboxId = response.path[String](s"$createMailboxesArgumentsPath.created.valid.id")
+    val creationResults = response.path[java.util.Map[String, Object]](s"$createMailboxesArgumentsPath.subMap(['created', 'notCreated'])")
+    val createdIds = response.path[java.util.Map[String, String]]("createdIds")
+
+    assertThatJson(creationResults)
+      .when(path("created.valid"), `then`(Option.IGNORING_EXTRA_FIELDS))
+      .isEqualTo(s"""{
+        |  "created": {"valid": {"id": ${Json.toJson(mailboxId)}}},
+        |  "notCreated": {
+        |    "invalid": {
+        |      "type": "invalidArguments",
+        |      "description": "'/name' property is not valid: Predicate isEmpty() did not fail."
+        |    }
+        |  }
+        |}""".stripMargin)
+    assertThatJson(createdIds).isEqualTo(s"""{
+      |  "valid": ${Json.toJson(mailboxId)}
+      |}""".stripMargin)
   }
 
   @Test
-  def createdIdsShouldUseLatestSuccessfulCreationWhenAKeyIsReused(): Unit = {
-    val response = requestWithCreatedIds(Json.arr(
-      Json.arr("Mailbox/set", Json.obj("accountId" -> BOB_ACCOUNT_ID,
-        "create" -> Json.obj("reused" -> Json.obj("name" -> "first"))), "first"),
-      Json.arr("Mailbox/set", Json.obj("accountId" -> BOB_ACCOUNT_ID,
-        "create" -> Json.obj("reused" -> Json.obj("name" -> "second"))), "second"),
-      Json.arr("Mailbox/set", Json.obj("accountId" -> BOB_ACCOUNT_ID,
-        "create" -> Json.obj("reused" -> Json.obj("name" -> ""))), "failed"),
-      Json.arr("Mailbox/get", Json.obj("accountId" -> BOB_ACCOUNT_ID, "ids" -> Json.arr("#reused"),
-        "properties" -> Json.arr("id", "name")), "get")), Json.obj("reused" -> "obsolete"))
-    val firstId = (response \ "methodResponses")(0)(1)("created")("reused")("id").as[String]
-    val latestId = (response \ "methodResponses")(1)(1)("created")("reused")("id").as[String]
-    assertThat(latestId).isNotEqualTo(firstId)
-    assertThat((response \ "createdIds").as[JsObject]).isEqualTo(Json.obj("reused" -> latestId))
-    assertThat((response \ "methodResponses")(2)(1)("notCreated")("reused")("type").as[String]).isEqualTo("invalidArguments")
-    assertThat((response \ "methodResponses")(3)(1)("list")).isEqualTo(Json.arr(Json.obj("id" -> latestId, "name" -> "second")))
+  def createdIdsShouldKeepSuccessfulCreationsAfterAFailedCall(): Unit = {
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "createdIds": {"initial": "initial-server"},
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "create": {"mailbox": {"name": "mailbox"}}
+      |    }, "createMailbox"],
+      |    ["Unknown/method", {}, "unknownMethod"]
+      |  ]
+      |}""".stripMargin
+
+    val response = execute(request)
+      .body(s"${responseArgumentsPath("unknownMethod")}.type", equalTo("unknownMethod"))
+      .extract()
+    val mailboxId = response.path[String](s"${responseArgumentsPath("createMailbox")}.created.mailbox.id")
+    val createdIds = response.path[java.util.Map[String, String]]("createdIds")
+
+    assertThatJson(createdIds).isEqualTo(s"""{
+      |  "initial": "initial-server",
+      |  "mailbox": ${Json.toJson(mailboxId)}
+      |}""".stripMargin)
+  }
+
+  @Test
+  def createdIdsShouldUseTheLatestCreationWhenAnIdIsReused(): Unit = {
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "createdIds": {"reused": "obsolete"},
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "create": {"reused": {"name": "first"}}
+      |    }, "createFirstMailbox"],
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "create": {"reused": {"name": "second"}}
+      |    }, "createSecondMailbox"],
+      |    ["Mailbox/get", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "ids": ["#reused"],
+      |      "properties": ["id", "name"]
+      |    }, "getLatestMailbox"]
+      |  ]
+      |}""".stripMargin
+
+    val response = execute(request).extract()
+    val firstMailboxId = response.path[String](s"${responseArgumentsPath("createFirstMailbox")}.created.reused.id")
+    val secondMailboxId = response.path[String](s"${responseArgumentsPath("createSecondMailbox")}.created.reused.id")
+    val createdIds = response.path[java.util.Map[String, String]]("createdIds")
+    val mailboxes = response.path[java.util.List[Object]](s"${responseArgumentsPath("getLatestMailbox")}.list")
+
+    assertThat(secondMailboxId).isNotEqualTo(firstMailboxId)
+    assertThatJson(createdIds).isEqualTo(s"""{
+      |  "reused": ${Json.toJson(secondMailboxId)}
+      |}""".stripMargin)
+    assertThatJson(mailboxes).isEqualTo(s"""[
+      |  {"id": ${Json.toJson(secondMailboxId)}, "name": "second"}
+      |]""".stripMargin)
+  }
+
+  @Test
+  def createdIdsShouldKeepThePreviousMappingWhenReplacementFails(): Unit = {
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "createdIds": {},
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "create": {"reused": {"name": "mailbox"}}
+      |    }, "createMailbox"],
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "create": {"reused": {"name": ""}}
+      |    }, "createInvalidReplacement"],
+      |    ["Mailbox/get", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "ids": ["#reused"],
+      |      "properties": ["id", "name"]
+      |    }, "getOriginalMailbox"]
+      |  ]
+      |}""".stripMargin
+
+    val response = execute(request).extract()
+    val mailboxId = response.path[String](s"${responseArgumentsPath("createMailbox")}.created.reused.id")
+    val replacementResults = response.path[java.util.Map[String, Object]](s"${responseArgumentsPath("createInvalidReplacement")}.subMap(['created', 'notCreated'])")
+    val createdIds = response.path[java.util.Map[String, String]]("createdIds")
+    val mailboxes = response.path[java.util.List[Object]](s"${responseArgumentsPath("getOriginalMailbox")}.list")
+
+    assertThatJson(replacementResults).isEqualTo("""{
+      |  "notCreated": {
+      |    "reused": {
+      |      "type": "invalidArguments",
+      |      "description": "'/name' property is not valid: Predicate isEmpty() did not fail."
+      |    }
+      |  }
+      |}""".stripMargin)
+    assertThatJson(createdIds).isEqualTo(s"""{
+      |  "reused": ${Json.toJson(mailboxId)}
+      |}""".stripMargin)
+    assertThatJson(mailboxes).isEqualTo(s"""[
+      |  {"id": ${Json.toJson(mailboxId)}, "name": "mailbox"}
+      |]""".stripMargin)
   }
 
   @Test
@@ -129,13 +296,32 @@ trait BackReferenceContract {
     val other = Username.fromLocalPartWithDomain(s"other${UUID.randomUUID().toString.take(8)}", DOMAIN)
     server.getProbe(classOf[DataProbeImpl]).addUser(other.asString, BOB_PASSWORD)
     val privateId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(other, "private"))
-    val ids = Json.obj("private" -> privateId.serialize, "missing" -> "nonexistent")
-    val response = requestWithCreatedIds(Json.arr(Json.arr("Mailbox/get", Json.obj("accountId" -> BOB_ACCOUNT_ID,
-      "ids" -> Json.arr("#private", "#missing"), "properties" -> Json.arr("id")), "get")), ids)
-    assertThat((response \ "methodResponses")(0)(1)("list")).isEqualTo(Json.arr())
-    assertThatJson((response \ "methodResponses")(0)(1)("notFound").toString)
-      .withOptions(Option.IGNORING_ARRAY_ORDER).isEqualTo(Json.arr(privateId.serialize, "nonexistent").toString)
-    assertThat((response \ "createdIds").as[JsObject]).isEqualTo(ids)
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "createdIds": {"private": ${Json.toJson(privateId.serialize)}, "missing": "nonexistent"},
+      |  "methodCalls": [
+      |    ["Mailbox/get", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "ids": ["#private", "#missing"],
+      |      "properties": ["id"]
+      |    }, "getMailboxes"]
+      |  ]
+      |}""".stripMargin
+
+    val response = execute(request).extract()
+    val mailboxes = response.path[java.util.Map[String, Object]](s"${responseArgumentsPath("getMailboxes")}.subMap(['list', 'notFound'])")
+    val createdIds = response.path[java.util.Map[String, String]]("createdIds")
+
+    assertThatJson(mailboxes)
+      .when(path("notFound"), `then`(Option.IGNORING_ARRAY_ORDER))
+      .isEqualTo(s"""{
+        |  "list": [],
+        |  "notFound": [${Json.toJson(privateId.serialize)}, "nonexistent"]
+        |}""".stripMargin)
+    assertThatJson(createdIds).isEqualTo(s"""{
+      |  "private": ${Json.toJson(privateId.serialize)},
+      |  "missing": "nonexistent"
+      |}""".stripMargin)
   }
 
   @Test
