@@ -233,4 +233,26 @@ class ImapRequestFrameDecoderTest {
         assertThat(decode(true, 4096, 5504, 3008, chunks))
             .isEmpty();
     }
+
+    @Test
+    void restOfALineRejectedForItsLengthShouldNotDependOnSegmentation() {
+        byte[] stream = ("a LOGIN {3}\r\nbob " + "x".repeat(300) + "\r\nc NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(false, 32, 0, 256, List.of(stream));
+        List<String> chunked = decode(false, 32, 0, 256, byteByByte(stream));
+
+        assertThat(whole).isEqualTo(chunked);
+        assertThat(whole).last().asString().contains("tag=c, command=NOOP");
+    }
+
+    @Test
+    void restOfAnUnterminatedQuotedStringRejectedForItsLengthShouldNotDependOnSegmentation() {
+        byte[] stream = ("a APPEND INBOX \"\r\n" + ("x".repeat(50) + "\r\n").repeat(5) + "c NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(true, 32, 1024, 256, List.of(stream));
+        List<String> chunked = decode(true, 32, 1024, 256, byteByByte(stream));
+
+        assertThat(whole).isEqualTo(chunked);
+        assertThat(whole).last().asString().contains("tag=c, command=NOOP");
+    }
 }
