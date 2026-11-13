@@ -19,12 +19,15 @@
 
 package org.apache.james.smtpserver;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeUtility;
 
 import org.apache.james.core.MailAddress;
@@ -42,6 +45,8 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.SaslAuthResultHook;
+import org.apache.james.server.core.InternetHeadersInputStream;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
@@ -114,6 +119,12 @@ public class SenderHeaderVerificationHook implements JamesMessageHook, SaslAuthR
             if (senderFields == null) {
                 return HookResult.DECLINED;
             }
+            if (headerBlockHoldsABareCarriageReturn(mail.getMessage())) {
+                // Jakarta Mail ends a header line at a bare CR, mime4j (used to display the message) does not: the
+                // Sender field checked here could differ from the one shown to recipients
+                LOGGER.warn("{} tried to send a mail with a bare CR in its header block alongside a Sender header", loggedInUser.asString());
+                return SENDER_MISMATCH;
+            }
             for (String senderField : senderFields) {
                 if (!disclosesOnly(senderField, loggedInUser)) {
                     LOGGER.warn("{} tried to send a mail with Sender header {}", loggedInUser.asString(), MimeUtility.unfold(senderField));
@@ -121,10 +132,47 @@ public class SenderHeaderVerificationHook implements JamesMessageHook, SaslAuthR
                 }
             }
             return HookResult.DECLINED;
-        } catch (MessagingException | UsersRepositoryException | DomainListException e) {
+        } catch (MessagingException | IOException | UsersRepositoryException | DomainListException e) {
             LOGGER.error("Could not verify the Sender header of a mail sent by {}", loggedInUser.asString(), e);
             return TEMPORARY_FAILURE;
         }
+    }
+
+    /**
+     * Reads the header block as it will be transmitted and stored: the raw bytes received as long as the message is
+     * not modified. A CR is only allowed as part of a CRLF (RFC 5322 section 2.2).
+     */
+    private static boolean headerBlockHoldsABareCarriageReturn(MimeMessage message) throws MessagingException, IOException {
+        try (InputStream in = new BufferedInputStream(rawStream(message))) {
+            boolean emptyLine = true;
+            int current = in.read();
+            while (current != -1) {
+                if (current == '\r') {
+                    if (in.read() != '\n') {
+                        return true;
+                    }
+                    current = '\n';
+                }
+                if (current == '\n') {
+                    if (emptyLine) {
+                        // End of the header block
+                        return false;
+                    }
+                    emptyLine = true;
+                } else {
+                    emptyLine = false;
+                }
+                current = in.read();
+            }
+            return false;
+        }
+    }
+
+    private static InputStream rawStream(MimeMessage message) throws MessagingException {
+        if (message instanceof MimeMessageWrapper wrapper) {
+            return wrapper.getMessageInputStream();
+        }
+        return new InternetHeadersInputStream(message.getAllHeaderLines());
     }
 
     private boolean disclosesOnly(String senderField, Username loggedInUser) throws UsersRepositoryException, DomainListException {
