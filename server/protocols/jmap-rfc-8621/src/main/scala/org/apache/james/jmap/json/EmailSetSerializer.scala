@@ -382,17 +382,31 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     case json: JsValue => UTCDateReads.reads(json).map(date => DateHeaderValue(Some(date)))
   }
 
+  // A CR or LF of a header value written as is must be part of a fold: CRLF followed by white space then by some text.
+  // Otherwise, it could end the header block (eg trailing CRLF) or start a new header field.
+  private def hasOnlyFoldingLineBreaks(value: String): Boolean = {
+    val lines = value.split("\r\n", -1)
+    def isWsp(c: Char): Boolean = c == ' ' || c == '\t'
+
+    lines.forall(line => !line.contains('\r') && !line.contains('\n')) &&
+      lines.tail.forall(line => line.headOption.exists(isWsp) && line.exists(c => !isWsp(c)))
+  }
+
+  private def checkLineBreaks[T](reads: Reads[T], value: T => String): Reads[T] = json => reads.reads(json)
+    .filter(JsError("Header values can only hold line breaks as CRLF followed by white space and text (folding)"))(
+      headerValue => hasOnlyFoldingLineBreaks(value(headerValue)))
+
   sealed trait HeaderValueReads extends Reads[EmailHeaderValue]
   case object RawReads extends HeaderValueReads {
-    val rawReads: Reads[RawHeaderValue] = valueReads[RawHeaderValue]
+    val rawReads: Reads[RawHeaderValue] = checkLineBreaks(valueReads[RawHeaderValue], _.value)
     override def reads(json: JsValue): JsResult[EmailHeaderValue] = rawReads.reads(json)
   }
   case object AllReads extends HeaderValueReads {
-    val rawReads: Reads[RawHeaderValue] = valueReads[RawHeaderValue]
+    val rawReads: Reads[RawHeaderValue] = checkLineBreaks(valueReads[RawHeaderValue], _.value)
     override def reads(json: JsValue): JsResult[EmailHeaderValue] = rawReads.reads(json)
   }
   case object TextReads extends HeaderValueReads {
-    val textReads: Reads[TextHeaderValue] = valueReads[TextHeaderValue]
+    val textReads: Reads[TextHeaderValue] = checkLineBreaks(valueReads[TextHeaderValue], _.value)
     override def reads(json: JsValue): JsResult[TextHeaderValue] = textReads.reads(json)
   }
   case object AddressesReads extends HeaderValueReads {
