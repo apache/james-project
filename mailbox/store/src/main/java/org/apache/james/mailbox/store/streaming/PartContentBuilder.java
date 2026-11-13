@@ -39,7 +39,7 @@ import org.apache.james.mime4j.stream.RecursionMode;
 
 public class PartContentBuilder {
 
-    private static final byte[] EMPTY = {};
+    private static final byte[] EMPTY_CONTENT = {};
 
     private final MimeTokenStream parser;
 
@@ -161,7 +161,7 @@ public class PartContentBuilder {
     private byte[] messageBodyContent() throws IOException, MimeException {
         final byte[] content;
         if (empty) {
-            content = EMPTY;
+            content = EMPTY_CONTENT;
         } else {
             boolean valid;
             try {
@@ -184,10 +184,10 @@ public class PartContentBuilder {
                 if (valid) {
                     content = IOUtils.toByteArray(parser.getInputStream());
                 } else {
-                    content = EMPTY;
+                    content = EMPTY_CONTENT;
                 }
             } else {
-                content = EMPTY;
+                content = EMPTY_CONTENT;
             }
         }
         return content;
@@ -201,7 +201,7 @@ public class PartContentBuilder {
     private byte[] mimeBodyContent() throws IOException, MimeException {
         final byte[] content;
         if (empty) {
-            content = EMPTY;
+            content = EMPTY_CONTENT;
         } else {
             parser.setRecursionMode(RecursionMode.M_FLAT);
             boolean valid = true;
@@ -216,7 +216,7 @@ public class PartContentBuilder {
             if (valid) {
                 content = IOUtils.toByteArray(parser.getInputStream());
             } else {
-                content = EMPTY;
+                content = EMPTY_CONTENT;
             }
         }
         return content;

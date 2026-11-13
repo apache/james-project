@@ -1856,16 +1856,16 @@ public class SearchQuery {
      */
     public static class BooleanOperator implements Operator {
 
-        private static final BooleanOperator SET = new BooleanOperator(true);
+        private static final BooleanOperator SET_OPERATOR = new BooleanOperator(true);
 
-        private static final BooleanOperator UNSET = new BooleanOperator(false);
+        private static final BooleanOperator UNSET_OPERATOR = new BooleanOperator(false);
 
         public static BooleanOperator set() {
-            return SET;
+            return SET_OPERATOR;
         }
 
         public static BooleanOperator unset() {
-            return UNSET;
+            return UNSET_OPERATOR;
         }
 
         private final boolean set;
