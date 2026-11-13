@@ -38,7 +38,7 @@ import org.apache.james.jmap.utils.search.MailboxFilter
 import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery.Namespace
-import org.apache.james.mailbox.model.{MailboxId, MessageId, MultimailboxesSearchQuery, SearchQuery}
+import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MessageId, MultimailboxesSearchQuery, SearchQuery}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.streams.{Limit => JavaLimit}
@@ -159,6 +159,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   private def fromQueryViewEntries(mailboxId: MailboxId, queryViewEntries: SFlux[MessageId], mailboxSession: MailboxSession, position: Position, limitToUse: Limit, namespace: Namespace): SMono[Seq[MessageId]] =
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
       .filter(messageManager => namespace.keepAccessible(messageManager.getMailboxEntity))
+      .filter(messageManager => mailboxManager.hasRight(messageManager.getMailboxEntity, MailboxACL.Right.Read, mailboxSession))
       .flatMap(_ => queryViewEntries
           .drop(position.value)
           .take(limitToUse.value)
