@@ -50,8 +50,16 @@ public class DefaultJamesResourceLoader extends DefaultResourceLoader implements
     }
     
     /**
-     * Return the {@link Resource} for the given url. If the resource can not be
-     * found null get returned
+     * Whether the given url uses a prefix this loader resolves itself (classpath: or file:).
+     * Other urls are resolved by the default Spring strategy.
+     */
+    public static boolean handles(String fileURL) {
+        return fileURL.startsWith(FileSystem.CLASSPATH_PROTOCOL) || fileURL.startsWith(FileSystem.FILE_PROTOCOL);
+    }
+
+    /**
+     * Return the {@link Resource} for the given url. Urls without a JAMES prefix are
+     * resolved by {@link DefaultResourceLoader}.
      */
     @Override
     public Resource getResource(String fileURL) {
@@ -73,7 +81,7 @@ public class DefaultJamesResourceLoader extends DefaultResourceLoader implements
             }
             r = new FileSystemResource(file);
         } else {
-            return null;
+            r = super.getResource(fileURL);
         }
         return r;
     }

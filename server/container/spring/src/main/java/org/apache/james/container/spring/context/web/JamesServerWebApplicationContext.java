@@ -88,11 +88,10 @@ public class JamesServerWebApplicationContext extends XmlWebApplicationContext i
     @Override
     public Resource getResource(String fileURL) {
         // delegate the loading to the resourceloader
-        Resource r = resourceLoader.getResource(fileURL);
-        if (r == null) {
-            r = super.getResource(fileURL);
+        if (DefaultJamesResourceLoader.handles(fileURL)) {
+            return resourceLoader.getResource(fileURL);
         }
-        return r;
+        return super.getResource(fileURL);
     }
 
     public void setRootDirectory(String rootDirectory) {
