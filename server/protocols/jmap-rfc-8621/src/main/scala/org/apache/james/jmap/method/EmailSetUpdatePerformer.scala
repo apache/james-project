@@ -188,7 +188,8 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
       if (update.update.isOnlyFlagAddition) {
         updateFlagsByRange(mailboxId, update.update.keywordsToAdd.get.asFlags, ranges, metaData, FlagsUpdateMode.ADD, session)
       } else if (update.update.isOnlyFlagRemoval) {
-        updateFlagsByRange(mailboxId, update.update.keywordsToRemove.get.asFlags, ranges, metaData, FlagsUpdateMode.REMOVE, session)
+        val flagsToRemove = FlagsDelta.flagsToRemove(update.update.keywordsToRemove.get.getKeywords, FlagsDelta.storedFlags(metaData.values.flatten))
+        updateFlagsByRange(mailboxId, flagsToRemove, ranges, metaData, FlagsUpdateMode.REMOVE, session)
       } else if (update.update.isOnlyMove) {
         moveByRange(mailboxId, update, ranges, metaData, session)
       } else {
