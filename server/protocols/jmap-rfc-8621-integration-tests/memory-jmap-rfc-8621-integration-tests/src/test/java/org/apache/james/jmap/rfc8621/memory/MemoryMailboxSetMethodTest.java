@@ -49,13 +49,67 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
     }
 
     @Test
-    void updateShouldRejectTokensThatParseToTheSameMailbox(GuiceJamesServer server) {
+    void updateShouldApplyBothPatchesForTokensThatParseToTheSameMailbox(GuiceJamesServer server) {
         MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
         String id = probe.createMailbox(MailboxPath.forUser(bobUsername(), "original")).serialize();
         String alias = "0" + id;
-        String independent = probe.createMailbox(MailboxPath.forUser(bobUsername(), "independent")).serialize();
 
-        Map<String, Object> result = given()
+        var response = given()
+            .header("Accept", ACCEPT_RFC8621_VERSION_HEADER())
+            .body("""
+                {
+                  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                  "methodCalls": [
+                    ["Mailbox/get", {
+                      "accountId": "%s",
+                      "ids": ["%s"],
+                      "properties": ["id", "name", "isSubscribed"]
+                    }, "getOriginalMailbox"],
+                    ["Mailbox/set", {
+                      "accountId": "%s",
+                      "update": {
+                        "%s": {"name": "renamed"},
+                        "%s": {"isSubscribed": true}
+                      }
+                    }, "updateAliases"],
+                    ["Mailbox/get", {
+                      "accountId": "%s",
+                      "ids": ["%s"],
+                      "properties": ["id", "name", "isSubscribed"]
+                    }, "getUpdatedMailbox"]
+                  ]
+                }
+                """.formatted(bobAccountId(), id, bobAccountId(), id, alias, bobAccountId(), id))
+        .when().post()
+        .then()
+            .log().ifValidationFails()
+            .statusCode(SC_OK)
+            .contentType(JSON)
+            .extract();
+
+        Object originalMailbox = response.path("methodResponses.find { it[2] == 'getOriginalMailbox' }[1].list");
+        assertThatJson(originalMailbox).isEqualTo("""
+            [{"id": "%s", "name": "original", "isSubscribed": false}]
+            """.formatted(id));
+
+        Map<String, Object> update = response.path("methodResponses.find { it[2] == 'updateAliases' }[1].subMap(['updated', 'notUpdated'])");
+        assertThatJson(update).isEqualTo("""
+            {"updated": {"%s": {}}}
+            """.formatted(id));
+
+        Object updatedMailbox = response.path("methodResponses.find { it[2] == 'getUpdatedMailbox' }[1].list");
+        assertThatJson(updatedMailbox).isEqualTo("""
+            [{"id": "%s", "name": "renamed", "isSubscribed": true}]
+            """.formatted(id));
+    }
+
+    @Test
+    void updateShouldKeepLeadingZeroInTheErrorKeyForARejectedPatch(GuiceJamesServer server) {
+        MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
+        String id = probe.createMailbox(MailboxPath.forUser(bobUsername(), "original")).serialize();
+        String alias = "0" + id;
+
+        Map<String, Object> update = given()
             .header("Accept", ACCEPT_RFC8621_VERSION_HEADER())
             .body("""
                 {
@@ -64,14 +118,13 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
                     ["Mailbox/set", {
                       "accountId": "%s",
                       "update": {
-                        "%s": {"name": "first"},
-                        "%s": {"name": "second"},
-                        "%s": {"name": "success"}
+                        "%s": {"name": "renamed"},
+                        "%s": {"sortOrder": 123}
                       }
                     }, "updateAliases"]
                   ]
                 }
-                """.formatted(bobAccountId(), id, alias, independent))
+                """.formatted(bobAccountId(), id, alias))
         .when().post()
         .then()
             .log().ifValidationFails()
@@ -80,7 +133,7 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
             .extract()
             .path("methodResponses.find { it[2] == 'updateAliases' }[1].subMap(['updated', 'notUpdated'])");
 
-        assertThatJson(result).isEqualTo("""
+        assertThatJson(update).isEqualTo("""
             {
               "updated": {
                 "%s": "${json-unit.ignore}"
@@ -88,25 +141,19 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
               "notUpdated": {
                 "%s": {
                   "type": "invalidArguments",
-                  "description": "Multiple update keys resolve to the same mailbox: '%s', '%s'"
-                },
-                "%s": {
-                  "type": "invalidArguments",
-                  "description": "Multiple update keys resolve to the same mailbox: '%s', '%s'"
+                  "description": "Can not modify server-set properties",
+                  "properties": ["sortOrder"]
                 }
               }
             }
-            """.formatted(independent, id, alias, id, alias, alias, id));
-
-        assertThat(probe.getMailboxId("#private", bobUsername().asString(), "original").serialize()).isEqualTo(id);
-        assertThat(probe.getMailboxId("#private", bobUsername().asString(), "success").serialize()).isEqualTo(independent);
-        assertThat(probe.listUserMailboxes(bobUsername().asString())).doesNotContain("first", "second");
+            """.formatted(id, alias));
+        assertThat(probe.getMailboxId("#private", bobUsername().asString(), "renamed").serialize()).isEqualTo(id);
     }
 
     @Test
-    void destroyShouldDeleteOnceForTokensThatParseToTheSameMailbox(GuiceJamesServer server) {
+    void destroyShouldKeepDistinctErrorKeysForTokensThatParseToTheSameMailbox(GuiceJamesServer server) {
         MailboxProbeImpl probe = server.getProbe(MailboxProbeImpl.class);
-        String id = probe.createMailbox(MailboxPath.forUser(bobUsername(), "deleted")).serialize();
+        String id = probe.createMailbox(MailboxPath.forUser(bobUsername(), "INBOX")).serialize();
 
         Map<String, Object> result = given()
             .header("Accept", ACCEPT_RFC8621_VERSION_HEADER())
@@ -131,11 +178,14 @@ public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements Ma
 
         assertThatJson(result).isEqualTo("""
             {
-              "destroyed": ["%s"]
+              "notDestroyed": {
+                "%s": {"type": "invalidArguments", "description": "System mailboxes cannot be destroyed"},
+                "0%s": {"type": "invalidArguments", "description": "System mailboxes cannot be destroyed"}
+              }
             }
-            """.formatted(id));
+            """.formatted(id, id));
 
-        assertThat(probe.listUserMailboxes(bobUsername().asString())).doesNotContain("deleted");
+        assertThat(probe.getMailboxId("#private", bobUsername().asString(), "INBOX").serialize()).isEqualTo(id);
     }
 
     @Test

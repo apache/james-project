@@ -78,6 +78,8 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
   }
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxSetRequest): SMono[InvocationWithContext] = for {
+    _ <- MailboxSetReferenceResolver.validateUpdateTargets(request, invocation.processingContext)
+      .fold(error => SMono.error[Unit](error), _ => SMono.just(()))
     oldState <- retrieveState(capabilities, mailboxSession)
     supportSharedMailbox = capabilities.contains(JAMES_SHARES)
     creationResults <- createPerformer.createMailboxes(mailboxSession, request, invocation.processingContext, supportSharedMailbox)
