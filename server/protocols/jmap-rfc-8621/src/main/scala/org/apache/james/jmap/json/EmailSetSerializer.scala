@@ -295,10 +295,21 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
           .flatMap(property => SpecificHeaderRequest.from(property)
             .left.map(_ => new IllegalArgumentException(s"$name is an invalid specific header")))
           .flatMap(_.validate)
+          .flatMap(validateHeaderName)
           .flatMap(specificHeaderRequest => asReads(specificHeaderRequest)
             .reads(value).asEither.left.map(e => new IllegalArgumentException(e.toString()))
             .map(headerValue => EmailHeader(EmailHeaderName(specificHeaderRequest.headerName), headerValue)))
     }.sequence
+
+  // RFC 5322 section 2.2: a field name is made of printable US-ASCII characters (33 to 126) except colon
+  private def isFieldNameChar(c: Char): Boolean = c >= '!' && c <= '~' && c != ':'
+
+  private def validateHeaderName(specificHeaderRequest: SpecificHeaderRequest): Either[IllegalArgumentException, SpecificHeaderRequest] =
+    if (specificHeaderRequest.headerName.nonEmpty && specificHeaderRequest.headerName.forall(isFieldNameChar)) {
+      scala.Right(specificHeaderRequest)
+    } else {
+      Left(new IllegalArgumentException("Invalid specific header name: header field names must only contain printable US-ASCII characters except colon"))
+    }
 
   private implicit val typeReads: Reads[Type] = Json.valueReads[Type]
   private implicit val clientPartIdReads: Reads[ClientPartId] = valueReads[ClientPartId]
