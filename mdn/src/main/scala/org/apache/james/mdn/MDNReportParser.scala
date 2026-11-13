@@ -288,7 +288,8 @@ class MDNReportParser(val input: ParserInput) extends Parser {
   private[mdn] def errorField: Rule1[Error] = rule { ("Error" ~ ":" ~ capture(zeroOrMore(fws.? ~ text))) ~> ((error: String) =>  new Error(Text.fromRawText(error))) }
 
   //    extension-field = extension-field-name ":" *([FWS] text)
-  private[mdn] def extentionField: Rule1[ExtensionField] = rule { capture(extensionFieldName) ~ ":" ~ capture(zeroOrMore(fws.? ~ text)) ~> ((extensionFieldName: String, text : String) =>
+  // Trailing whitespace is tolerated (and not captured): an empty value is formatted as "Name:" but other generators may write "Name: "
+  private[mdn] def extentionField: Rule1[ExtensionField] = rule { capture(extensionFieldName) ~ ":" ~ capture(zeroOrMore(fws.? ~ text)) ~ zeroOrMore(wsp) ~> ((extensionFieldName: String, text : String) =>
     ExtensionField.builder()
       .fieldName(extensionFieldName)
       .rawValue(text)

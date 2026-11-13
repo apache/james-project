@@ -69,4 +69,24 @@ class ExtensionFieldTest {
                 .formattedValue())
             .isEqualTo("name: rawValue");
     }
+
+    @Test
+    void formattedValueShouldNotEndWithASpaceWhenEmptyRawValue() {
+        assertThat(ExtensionField.builder()
+                .fieldName("name")
+                .rawValue("")
+                .build()
+                .formattedValue())
+            .isEqualTo("name:");
+    }
+
+    @Test
+    void formattedValueShouldNotAddASpaceBeforeALeadingWhiteSpace() {
+        assertThat(ExtensionField.builder()
+                .fieldName("name")
+                .rawValue(" rawValue")
+                .build()
+                .formattedValue())
+            .isEqualTo("name: rawValue");
+    }
 }
