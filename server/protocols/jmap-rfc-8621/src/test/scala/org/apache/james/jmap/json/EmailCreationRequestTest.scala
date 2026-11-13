@@ -113,6 +113,16 @@ class EmailCreationRequestTest extends AnyWordSpec with Matchers {
       reparsed.getBcc.flatten().get(0).getAddress shouldBe "bcc@example.com"
       reparsed.getReplyTo.flatten().get(0).getAddress shouldBe "reply@example.com"
     }
+
+    "accept a folded raw header value" in {
+      val message = toMessage(
+        """{"mailboxIds":{"1":true},"header:X-A:asRaw":" b\r\n c",
+          |"replyTo":[{"email":"reply@example.com"}]}""".stripMargin)
+
+      val reparsed = rewrite(message)
+      reparsed.getHeader.getField("X-A").getBody shouldBe "b c"
+      reparsed.getReplyTo.flatten().get(0).getAddress shouldBe "reply@example.com"
+    }
   }
 
   "deserializeCreationRequest" should {
@@ -129,6 +139,47 @@ class EmailCreationRequestTest extends AnyWordSpec with Matchers {
     "reject a draft address holding a control character" in {
       SERIALIZER.deserializeCreationRequest(Json.parse(
         """{"mailboxIds":{"1":true},"keywords":{"$draft":true},"to":[{"email":"to@example.com\u007f"}]}""")).isError shouldBe true
+    }
+
+    "reject a raw header value ending with CR LF on a body part" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"bodyValues":{"a":{"value":"hi"}},
+          |"textBody":[{"partId":"a","type":"text/plain","header:X-A":"b\r\n"}]}""".stripMargin)).isError shouldBe true
+    }
+
+    "reject a raw header value ending with CR LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asRaw":"b\r\n"}""")).isError shouldBe true
+    }
+
+    "reject a text header value ending with CR LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asText":"b\r\n"}""")).isError shouldBe true
+    }
+
+    "reject a header value holding CR LF not followed by white space" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asText":"b\r\nBcc: x@example.com"}""")).isError shouldBe true
+    }
+
+    "reject a header value holding a lone LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asRaw":"b\n c"}""")).isError shouldBe true
+    }
+
+    "reject a header value holding a lone CR" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asRaw":"b\r c"}""")).isError shouldBe true
+    }
+
+    "reject a header value holding a white space only continuation line" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asRaw":"b\r\n \r\n c"}""")).isError shouldBe true
+    }
+
+    "reject an :all header value ending with CR LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asText:all":["a", "b\r\n"]}""")).isError shouldBe true
     }
   }
 }
