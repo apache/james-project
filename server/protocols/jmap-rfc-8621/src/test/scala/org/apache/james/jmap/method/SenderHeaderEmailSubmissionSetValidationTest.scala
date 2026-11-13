@@ -32,7 +32,7 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError}
 import org.apache.james.lifecycle.api.LifecycleUtil
 import org.apache.james.mailbox.{MailboxSession, MailboxSessionUtil}
-import org.apache.james.server.core.MailImpl
+import org.apache.james.server.core.{MailImpl, MimeMessageInputStreamSource}
 import org.apache.james.user.memory.MemoryUsersRepository
 import org.apache.mailet.Mail
 import org.assertj.core.api.Assertions.assertThat
@@ -127,6 +127,37 @@ class SenderHeaderEmailSubmissionSetValidationTest {
       .isEqualTo(Some(SetError(EmailSubmissionSetMethod.forbiddenFrom,
         SetErrorDescription("Attempt to send a mail whose MimeMessage Sender field does not match the logged in user bob@domain.tld"),
         Some(Properties("sender")))))
+
+  private def validateRawAsBob(raw: String): Option[SetError] = {
+    val mail = MailImpl.builder()
+      .name("mail")
+      .sender("bob@domain.tld")
+      .addRecipient("andre@domain.tld")
+      .build()
+    try {
+      // Keeps the raw bytes, as the submitted draft does
+      mail.setMessageContent(MimeMessageInputStreamSource.create("mail", new ByteArrayInputStream(raw.getBytes(StandardCharsets.UTF_8))))
+      testee.validate(mail, MailboxSessionUtil.create(BOB)).block()
+    } finally {
+      LifecycleUtil.dispose(mail)
+    }
+  }
+
+  @Test
+  def shouldRejectABareCarriageReturnInSender(): Unit =
+    assertRejected(validateRawAsBob("From: bob@domain.tld\r\nSender: bob@domain.tld\r.other.tld\r\nSubject: test\r\n\r\nbody\r\n"))
+
+  @Test
+  def shouldRejectABareCarriageReturnInAnotherHeaderWhenSenderIsPresent(): Unit =
+    assertRejected(validateRawAsBob("From: bob@domain.tld\r\nSender: bob@domain.tld\r\nX-Custom: a\rb\r\n\r\nbody\r\n"))
+
+  @Test
+  def shouldAcceptABareCarriageReturnInTheBody(): Unit =
+    assertAccepted(validateRawAsBob("From: bob@domain.tld\r\nSender: bob@domain.tld\r\nSubject: test\r\n\r\nbody\rwith a bare CR\r\n"))
+
+  @Test
+  def shouldAcceptARawSenderBeingTheLoggedInUser(): Unit =
+    assertAccepted(validateRawAsBob("From: bob@domain.tld\r\nSender: bob@domain.tld\r\nSubject: test\r\n\r\nbody\r\n"))
 
   @Test
   def shouldRejectAnotherAddressAfterTheLoggedInUser(): Unit =
