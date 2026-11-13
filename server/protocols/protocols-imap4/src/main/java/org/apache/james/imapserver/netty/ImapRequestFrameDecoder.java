@@ -225,7 +225,22 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             // decoded do not depend on how the stream was split into segments.
             discardUntilEndOfLine = true;
         } catch (DecodingException e) {
-            // Silent
+            // The reader refuses to go further (eg the line length limit is exceeded): skip what is left
+            // of the line without it, so that the outcome does not depend on what was already received.
+            skipToEndOfLine(buffer);
+        }
+    }
+
+    private void skipToEndOfLine(ByteBuf buffer) {
+        if (endOfLineReached(buffer)) {
+            return;
+        }
+        int endOfLine = buffer.bytesBefore((byte) '\n');
+        if (endOfLine < 0) {
+            buffer.skipBytes(buffer.readableBytes());
+            discardUntilEndOfLine = true;
+        } else {
+            buffer.skipBytes(endOfLine + 1);
         }
     }
 
