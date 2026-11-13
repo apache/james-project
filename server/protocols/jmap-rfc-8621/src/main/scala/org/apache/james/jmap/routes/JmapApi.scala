@@ -45,17 +45,20 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
 
   def process(requestObject: RequestObject,
               mailboxSession: MailboxSession): SMono[ResponseObject] = {
-    val processingContext: ProcessingContext = ProcessingContext(requestObject.createdIds.map(_.value).getOrElse(Map.empty), Map.empty)
+    val initialCreationIds = requestObject.createdIds.map(_.value).getOrElse(Map.empty)
+    val initialContext = ProcessingContext(initialCreationIds, Map.empty)
     val capabilities: Set[CapabilityIdentifier] = requestObject.using
 
     val validatedRequestObject = for {
       _ <- validateCapabilities(requestObject)
       _ <- validateMaxCalls(requestObject)
     } yield {
-      processSequentiallyAndUpdateContext(requestObject, mailboxSession, processingContext, capabilities)
-        .map(invocations => ResponseObject(configuration.sessionState, invocations.map(_.invocation),
-          requestObject.createdIds.map(_ => invocations.lastOption
-            .map(_.processingContext).getOrElse(processingContext).createdIds)))
+      processSequentiallyAndUpdateContext(requestObject, mailboxSession, initialContext, capabilities)
+        .map { responses =>
+          val finalContext = responses.lastOption.map(_.processingContext).getOrElse(initialContext)
+          val responseCreatedIds = requestObject.createdIds.map(_ => finalContext.createdIds)
+          ResponseObject(configuration.sessionState, responses.map(_.invocation), responseCreatedIds)
+        }
     }
     validatedRequestObject.fold(e => SMono.error(e), obj => obj)
   }
@@ -106,8 +109,10 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
           description = s"Failed resolving back-reference: ${e.message}",
           methodCallId = invocation.invocation.methodCallId), invocation.processingContext))
         case Right(resolvedInvocation) => processMethodWithMatchName(capabilities, InvocationWithContext(resolvedInvocation, invocation.processingContext), mailboxSession)
+          // An implicit response can fail after the method has already emitted successful creations.
           .scan(invocation) { (previous, response) =>
-            val withContext = if (response.invocation.methodName.value.value == "error") {
+            val isErrorResponse = response.invocation.methodName.value.value == "error"
+            val withContext = if (isErrorResponse) {
               response.copy(processingContext = previous.processingContext)
             } else {
               response
