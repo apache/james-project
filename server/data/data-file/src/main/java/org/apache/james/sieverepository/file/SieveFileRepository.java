@@ -20,18 +20,17 @@
 
 package org.apache.james.sieverepository.file;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -79,7 +78,6 @@ public class SieveFileRepository implements SieveRepository {
     private static final String FILE_NAME_QUOTA = ".quota";
     private static final String FILE_NAME_ACTIVE = ".active";
     private static final List<String> SYSTEM_FILES = Arrays.asList(FILE_NAME_QUOTA, FILE_NAME_ACTIVE);
-    private static final int MAX_BUFF_SIZE = 32768;
     public static final String SIEVE_EXTENSION = ".sieve";
 
     private final FileSystem fileSystem;
@@ -103,45 +101,29 @@ public class SieveFileRepository implements SieveRepository {
         return script;
     }
 
+    /**
+     * Writes a temporary file then renames it over the target, so that a concurrent reader sees
+     * either the previous or the new content, never a truncated or partially written file.
+     */
     protected static void toFile(File file, String content) throws StorageException {
-        // Create a temporary file
-        int bufferSize = Math.min(content.length(), MAX_BUFF_SIZE);
-        File tmpFile = null;
-
+        Path tmpFile = null;
         try {
-            tmpFile = Files.createTempFile(file.getParentFile().toPath(), "", ".tmp").toFile();
-            try (Writer out = new OutputStreamWriter(new BufferedOutputStream(
-                    new FileOutputStream(tmpFile), bufferSize), UTF_8)) {
-                out.write(content);
-            }
+            tmpFile = Files.createTempFile(file.getParentFile().toPath(), "", ".tmp");
+            Files.writeString(tmpFile, content, StandardCharsets.UTF_8);
+            moveOver(tmpFile, file.toPath());
         } catch (IOException ex) {
-            FileUtils.deleteQuietly(tmpFile);
+            if (tmpFile != null) {
+                FileUtils.deleteQuietly(tmpFile.toFile());
+            }
             throw new StorageException(ex);
         }
+    }
 
-        // Does the file exist?
-        // If so, make a backup
-        File backupFile = new File(file.getParentFile(), file.getName() + ".bak");
-        if (file.exists()) {
-            try {
-                FileUtils.copyFile(file, backupFile);
-            } catch (IOException ex) {
-                throw new StorageException(ex);
-            }
-        }
-
-        // Copy the temporary file to its final name
+    private static void moveOver(Path source, Path target) throws IOException {
         try {
-            FileUtils.copyFile(tmpFile, file);
-        } catch (IOException ex) {
-            throw new StorageException(ex);
-        }
-        // Tidy up
-        if (tmpFile.exists()) {
-            FileUtils.deleteQuietly(tmpFile);
-        }
-        if (backupFile.exists()) {
-            FileUtils.deleteQuietly(backupFile);
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
@@ -459,23 +441,27 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public synchronized void removeQuota() throws QuotaNotFoundException, StorageException {
-        File file = getQuotaFile();
-        if (!file.exists()) {
-            return;
-        }
-        try {
-            FileUtils.forceDelete(file);
-        } catch (IOException ex) {
-            throw new StorageException(ex);
+    public void removeQuota() throws QuotaNotFoundException, StorageException {
+        synchronized (lock) {
+            File file = getQuotaFile();
+            if (!file.exists()) {
+                return;
+            }
+            try {
+                FileUtils.forceDelete(file);
+            } catch (IOException ex) {
+                throw new StorageException(ex);
+            }
         }
     }
 
     @Override
-    public synchronized void setDefaultQuota(QuotaSizeLimit quota) throws StorageException {
-        File file = getQuotaFile();
-        String content = Long.toString(quota.asLong());
-        toFile(file, content);
+    public void setDefaultQuota(QuotaSizeLimit quota) throws StorageException {
+        synchronized (lock) {
+            File file = getQuotaFile();
+            String content = Long.toString(quota.asLong());
+            toFile(file, content);
+        }
     }
 
     protected File getQuotaFile(Username username) throws StorageException {
