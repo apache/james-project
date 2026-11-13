@@ -24,7 +24,7 @@ import java.util.Objects;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 
-public class MailboxWithAnnotations {
+public final class MailboxWithAnnotations {
     public final Mailbox mailbox;
     public final List<MailboxAnnotation> annotations;
 
@@ -34,8 +34,8 @@ public class MailboxWithAnnotations {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (o instanceof MailboxAnnotation) {
+    public final boolean equals(Object o) {
+        if (o instanceof MailboxWithAnnotations) {
             MailboxWithAnnotations that = (MailboxWithAnnotations) o;
             return Objects.equals(mailbox, that.mailbox) &&
                 Objects.equals(annotations, that.annotations);
@@ -44,7 +44,7 @@ public class MailboxWithAnnotations {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(mailbox, annotations);
     }
 }
