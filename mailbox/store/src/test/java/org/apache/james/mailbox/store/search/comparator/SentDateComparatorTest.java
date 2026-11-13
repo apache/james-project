@@ -20,9 +20,22 @@
 package org.apache.james.mailbox.store.search.comparator;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
+import java.util.Date;
 
+import jakarta.mail.Flags;
+
+import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.model.ByteContent;
+import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.Test;
 
 class SentDateComparatorTest {
@@ -66,5 +79,44 @@ class SentDateComparatorTest {
     void toISODateShouldParseRFC5322InvalidHeader() {
         assertThat(SentDateComparator.toISODate("Fri,  5 Jun 2020 10:41:00 +0000 (UTC)"))
             .contains(ZonedDateTime.parse("2020-06-05T10:41Z"));
+    }
+
+    @Test
+    void toISODateShouldNotThrowWhenDecodedValueContainsLineBreak() {
+        // "=?UTF-8?Q?a=0Db?=" once unscrambled by HeaderCollection.Builder
+        assertThatCode(() -> SentDateComparator.toISODate("a\rb"))
+            .doesNotThrowAnyException();
+        assertThat(SentDateComparator.toISODate("a\rb")).isEmpty();
+        assertThat(SentDateComparator.toISODate("a\nb")).isEmpty();
+    }
+
+    @Test
+    void toISODateShouldParseADateHoldingALineBreakInItsComment() {
+        assertThat(SentDateComparator.toISODate("Fri, 5 Jun 2020 10:41:00 +0000 (a\rb").map(ZonedDateTime::toInstant))
+            .contains(ZonedDateTime.parse("2020-06-05T10:41Z").toInstant());
+    }
+
+    @Test
+    void compareShouldNotThrowWhenTheDateHeaderHoldsABareCarriageReturn() {
+        MailboxMessage withBareCr = message(1, "Date: a\rb\r\nSubject: test\r\n\r\nbody\r\n", new Date(1000));
+        MailboxMessage regular = message(2, "Date: Fri, 5 Jun 2020 10:41:00 +0000\r\nSubject: test\r\n\r\nbody\r\n", new Date(2000));
+
+        assertThat(SentDateComparator.SENTDATE.compare(withBareCr, regular)).isNegative();
+    }
+
+    private static MailboxMessage message(long id, String content, Date internalDate) {
+        byte[] bytes = content.getBytes(StandardCharsets.US_ASCII);
+        return SimpleMailboxMessage.builder()
+            .messageId(TestMessageId.of(id))
+            .threadId(ThreadId.fromBaseMessageId(TestMessageId.of(id)))
+            .mailboxId(TestId.of(18))
+            .uid(MessageUid.of(id))
+            .modseq(ModSeq.of(42))
+            .internalDate(internalDate)
+            .size(bytes.length)
+            .bodyStartOctet(content.indexOf("\r\n\r\n") + 4)
+            .content(new ByteContent(bytes))
+            .flags(new Flags())
+            .build();
     }
 }
