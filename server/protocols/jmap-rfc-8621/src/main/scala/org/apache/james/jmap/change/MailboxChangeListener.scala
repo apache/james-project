@@ -47,6 +47,36 @@ import scala.jdk.CollectionConverters._
 
 case class MailboxChangeListenerGroup() extends Group {}
 
+private[change] object Sharees {
+  val EMPTY: Sharees = Sharees(List.empty, Set.empty)
+
+  def from(mailboxACL: MailboxACL): Sharees = {
+    val entries: Map[MailboxACL.EntryKey, MailboxACL.Rfc4314Rights] = mailboxACL.getEntries.asScala.toMap
+    val userKeys: List[MailboxACL.EntryKey] = entries.keys
+      .filter(!_.isNegative)
+      .filter(_.getNameType == MailboxACL.NameType.user)
+      .toList
+
+    Sharees(
+      mailboxSharees = userKeys.map(key => AccountId.fromString(key.getName)),
+      emailSharees = userKeys
+        .filter(key => resolveRights(entries, key).contains(MailboxACL.Right.Read))
+        .map(key => AccountId.fromString(key.getName))
+        .toSet)
+  }
+
+  private def resolveRights(entries: Map[MailboxACL.EntryKey, MailboxACL.Rfc4314Rights], positiveKey: MailboxACL.EntryKey): MailboxACL.Rfc4314Rights =
+    entries.get(MailboxACL.EntryKey.createUserEntryKey(positiveKey.getName, true))
+      .map(negativeRights => entries(positiveKey).except(negativeRights))
+      .getOrElse(entries(positiveKey))
+}
+
+/**
+ * @param mailboxSharees users seeing the mailbox: they receive mailbox changes
+ * @param emailSharees users allowed to read the messages of the mailbox: they also receive email changes
+ */
+private[change] case class Sharees(mailboxSharees: List[AccountId], emailSharees: Set[AccountId])
+
 object MailboxChangeListener {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[MailboxChangeListener])
 }
@@ -98,22 +128,24 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
         SFlux.just(mailboxChangeFactory.fromMailboxAdded(mailboxAdded, now))
       case mailboxRenamed: MailboxRenamed =>
         getSharees(mailboxId, username)
-          .flatMapIterable(sharees => mailboxChangeFactory.fromMailboxRenamed(mailboxRenamed, now, sharees.asJava).asScala)
+          .flatMapIterable(sharees => mailboxChangeFactory.fromMailboxRenamed(mailboxRenamed, now, sharees.mailboxSharees.asJava).asScala)
       case mailboxACLUpdated: MailboxACLUpdated =>
         getSharees(mailboxId, username)
-          .flatMapIterable(sharees => mailboxChangeFactory.fromMailboxACLUpdated(mailboxACLUpdated, now, sharees.asJava).asScala)
+          .flatMapIterable(sharees => mailboxChangeFactory.fromMailboxACLUpdated(mailboxACLUpdated, now, sharees.mailboxSharees.asJava).asScala)
       case mailboxDeletion: MailboxDeletion =>
         SFlux.fromIterable(mailboxChangeFactory.fromMailboxDeletion(mailboxDeletion, now).asScala)
       case added: Added =>
         getSharees(mailboxId, username)
-          .flatMapIterable(sharees => emailChangeFactory.fromAdded(added, now, sharees.asJava).asScala)
+          .flatMapIterable(sharees => emailChangeFactory.fromAdded(added, now, sharees.mailboxSharees.asJava, sharees.emailSharees.asJava).asScala)
       case flagsUpdated: FlagsUpdated =>
         getSharees(mailboxId, username)
-          .flatMapIterable(sharees => emailChangeFactory.fromFlagsUpdated(flagsUpdated, now, sharees.asJava).asScala)
+          .flatMapIterable(sharees => emailChangeFactory.fromFlagsUpdated(flagsUpdated, now, sharees.mailboxSharees.asJava, sharees.emailSharees.asJava).asScala)
       case expunged: Expunged =>
         getSharees(mailboxId, username)
           .flatMapMany(sharees =>
-            SFlux(emailChangeFactory.fromExpunged(expunged, now, sharees.map(_.getIdentifier).map(Username.of).asJava)))
+            SFlux(emailChangeFactory.fromExpunged(expunged, now,
+              sharees.mailboxSharees.map(_.getIdentifier).map(Username.of).asJava,
+              sharees.emailSharees.map(_.getIdentifier).map(Username.of).asJava)))
       case subscribed: MailboxEvents.MailboxSubscribedEvent =>
         SFlux.just(mailboxChangeFactory.fromMailboxSubscribed(subscribed, now))
       case unSubscribed: MailboxEvents.MailboxUnsubscribedEvent =>
@@ -132,24 +164,18 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
   private def dispactChangeEvent(jmapChange: StateChangeEvent): Publisher[Void] =
     SMono(eventBus.dispatch(jmapChange, AccountIdRegistrationKey(AccountId.fromUsername(jmapChange.getUsername))))
 
-  private def getSharees(mailboxId: MailboxId, username: Username): SMono[List[AccountId]] = {
+  private def getSharees(mailboxId: MailboxId, username: Username): SMono[Sharees] = {
     val session = mailboxManager.createSystemSession(username)
     SMono(mailboxManager.getMailboxReactive(mailboxId, session))
       .map(mailbox => mailbox.getResolvedAcl(session))
-      .map(mailboxACL => mailboxACL.getEntries.keySet
-        .asScala
-        .filter(!_.isNegative)
-        .filter(_.getNameType == MailboxACL.NameType.user)
-        .map(_.getName)
-        .map(AccountId.fromString)
-        .toList)
+      .map(Sharees.from)
       .onErrorResume({
         case e: MailboxNotFoundException =>
           LOGGER.warn("Could not get sharees for mailbox {} as the mailbox was deleted", mailboxId)
-          SMono.just(List.empty)
+          SMono.just(Sharees.EMPTY)
         case e =>
           LOGGER.warn("Could not get sharees for mailbox {} when listening to change events", mailboxId, e)
-          SMono.just(List.empty)
+          SMono.just(Sharees.EMPTY)
       })
   }
 

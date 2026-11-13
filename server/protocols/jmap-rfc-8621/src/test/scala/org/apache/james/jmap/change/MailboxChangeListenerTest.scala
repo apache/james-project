@@ -444,6 +444,123 @@ class MailboxChangeListenerTest {
   }
 
   @Nested
+  class ShareeChangeEvents {
+    private val ALICE_ACCOUNT_ID: AccountId = AccountId.fromUsername(ALICE)
+
+    private def shareWithAlice(rights: MailboxACL.Rfc4314Rights): (MailboxId, MessageManager) = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val mailboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      mailboxManager.applyRightsCommand(path, MailboxACL.command().forUser(ALICE).rights(rights).asAddition(), mailboxSession)
+      (mailboxId, mailboxManager.getMailbox(mailboxId, mailboxSession))
+    }
+
+    private def aliceEmailChanges() =
+      emailChangeRepository.getSinceStateWithDelegation(ALICE_ACCOUNT_ID, State.INITIAL, None.toJava).block()
+
+    @Test
+    def appendShouldNotPropagateEmailChangeToLookupOnlySharee(): Unit = {
+      val (mailboxId, messageManager) = shareWithAlice(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup))
+
+      messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), MailboxSessionUtil.create(BOB))
+
+      SoftAssertions.assertSoftly(softly => {
+        val emailChanges = aliceEmailChanges()
+        softly.assertThat(emailChanges.getCreated).isEmpty()
+        softly.assertThat(emailChanges.getUpdated).isEmpty()
+        softly.assertThat(emailChanges.getDestroyed).isEmpty()
+        softly.assertThat(mailboxChangeRepository.getSinceStateWithDelegation(ALICE_ACCOUNT_ID, State.INITIAL, None.toJava).block().getUpdated)
+          .contains(mailboxId)
+      })
+    }
+
+    @Test
+    def appendShouldPropagateEmailChangeToShareeWithReadRight(): Unit = {
+      val (_, messageManager) = shareWithAlice(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read))
+
+      val appendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), MailboxSessionUtil.create(BOB))
+
+      assertThat(aliceEmailChanges().getCreated).containsExactly(appendResult.getId.getMessageId)
+    }
+
+    @Test
+    def appendShouldNotPropagateEmailChangeToShareeWhoseReadRightIsDenied(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val mailboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      mailboxManager.applyRightsCommand(path, MailboxACL.command().forUser(ALICE)
+        .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read).asAddition(), mailboxSession)
+      mailboxManager.applyRightsCommand(path, MailboxACL.command().key(MailboxACL.EntryKey.createUserEntryKey(ALICE, true))
+        .rights(MailboxACL.Right.Read).asAddition(), mailboxSession)
+
+      mailboxManager.getMailbox(mailboxId, mailboxSession)
+        .appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      assertThat(aliceEmailChanges().getCreated).isEmpty()
+    }
+
+    @Test
+    def flagsUpdateShouldNotPropagateEmailChangeToLookupOnlySharee(): Unit = {
+      val (_, messageManager) = shareWithAlice(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup))
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      messageManager.setFlags(new Flags(Flags.Flag.ANSWERED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val emailChanges = aliceEmailChanges()
+        softly.assertThat(emailChanges.getCreated).isEmpty()
+        softly.assertThat(emailChanges.getUpdated).isEmpty()
+        softly.assertThat(emailChanges.getDestroyed).isEmpty()
+      })
+    }
+
+    @Test
+    def flagsUpdateShouldPropagateEmailChangeToShareeWithReadRight(): Unit = {
+      val (_, messageManager) = shareWithAlice(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read))
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val appendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      messageManager.setFlags(new Flags(Flags.Flag.ANSWERED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      assertThat(aliceEmailChanges().getUpdated).containsExactly(appendResult.getId.getMessageId)
+    }
+
+    @Test
+    def expungeShouldNotPropagateEmailChangeToLookupOnlySharee(): Unit = {
+      val (mailboxId, messageManager) = shareWithAlice(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup))
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val appendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+      val state = mailboxChangeRepository.getLatestStateWithDelegation(ALICE_ACCOUNT_ID).block()
+
+      messageManager.delete(List(appendResult.getId.getUid).asJava, mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val emailChanges = aliceEmailChanges()
+        softly.assertThat(emailChanges.getCreated).isEmpty()
+        softly.assertThat(emailChanges.getUpdated).isEmpty()
+        softly.assertThat(emailChanges.getDestroyed).isEmpty()
+        softly.assertThat(mailboxChangeRepository.getSinceStateWithDelegation(ALICE_ACCOUNT_ID, state, None.toJava).block().getUpdated)
+          .containsExactly(mailboxId)
+      })
+    }
+
+    @Test
+    def expungeShouldPropagateEmailChangeToShareeWithReadRight(): Unit = {
+      val (_, messageManager) = shareWithAlice(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read))
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val appendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+      val state = emailChangeRepository.getLatestStateWithDelegation(ALICE_ACCOUNT_ID).block()
+
+      messageManager.delete(List(appendResult.getId.getUid).asJava, mailboxSession)
+
+      assertThat(emailChangeRepository.getSinceStateWithDelegation(ALICE_ACCOUNT_ID, state, None.toJava).block().getDestroyed)
+        .containsExactly(appendResult.getId.getMessageId)
+    }
+  }
+
+  @Nested
   class EmailChangeEvents {
     @Test
     def appendMessageToMailboxShouldStoreCreatedEvent(): Unit = {
