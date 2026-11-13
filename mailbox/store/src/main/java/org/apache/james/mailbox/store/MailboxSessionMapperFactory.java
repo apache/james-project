@@ -38,37 +38,37 @@ import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
  */
 public abstract class MailboxSessionMapperFactory implements RequestAware, MailboxMapperFactory, MessageMapperFactory, SubscriptionMapperFactory {
 
-    protected static final String MESSAGEMAPPER = "MESSAGEMAPPER";
-    protected static final String MESSAGEIDMAPPER = "MESSAGEIDMAPPER";
-    protected static final String MAILBOXMAPPER = "MAILBOXMAPPER";
+    protected static final String MESSAGE_MAPPER_KEY = "MESSAGEMAPPER";
+    protected static final String MESSAGE_ID_MAPPER_KEY = "MESSAGEIDMAPPER";
+    protected static final String MAILBOX_MAPPER_KEY = "MAILBOXMAPPER";
     protected static final String SUBSCRIPTIONMAPPER = "SUBSCRIPTIONMAPPER";
-    protected static final String ANNOTATIONMAPPER = "ANNOTATIONMAPPER";
+    protected static final String ANNOTATION_MAPPER_KEY = "ANNOTATIONMAPPER";
     
     
     @Override
     public MessageMapper getMessageMapper(MailboxSession session) {
-        MessageMapper mapper = (MessageMapper) session.getAttributes().get(MESSAGEMAPPER);
+        MessageMapper mapper = (MessageMapper) session.getAttributes().get(MESSAGE_MAPPER_KEY);
         if (mapper == null) {
             mapper = createMessageMapper(session);
-            session.getAttributes().put(MESSAGEMAPPER, mapper);
+            session.getAttributes().put(MESSAGE_MAPPER_KEY, mapper);
         }
         return mapper;
     }
 
     public MessageIdMapper getMessageIdMapper(MailboxSession session) {
-        MessageIdMapper mapper = (MessageIdMapper) session.getAttributes().get(MESSAGEIDMAPPER);
+        MessageIdMapper mapper = (MessageIdMapper) session.getAttributes().get(MESSAGE_ID_MAPPER_KEY);
         if (mapper == null) {
             mapper = createMessageIdMapper(session);
-            session.getAttributes().put(MESSAGEIDMAPPER, mapper);
+            session.getAttributes().put(MESSAGE_ID_MAPPER_KEY, mapper);
         }
         return mapper;
     }
 
     public AnnotationMapper getAnnotationMapper(MailboxSession session) {
-        AnnotationMapper mapper = (AnnotationMapper)session.getAttributes().get(ANNOTATIONMAPPER);
+        AnnotationMapper mapper = (AnnotationMapper)session.getAttributes().get(ANNOTATION_MAPPER_KEY);
         if (mapper == null) {
             mapper = createAnnotationMapper(session);
-            session.getAttributes().put(ANNOTATIONMAPPER, mapper);
+            session.getAttributes().put(ANNOTATION_MAPPER_KEY, mapper);
         }
         return mapper;
     }
@@ -87,10 +87,10 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
 
     @Override
     public MailboxMapper getMailboxMapper(MailboxSession session) {
-        MailboxMapper mapper = (MailboxMapper) session.getAttributes().get(MAILBOXMAPPER);
+        MailboxMapper mapper = (MailboxMapper) session.getAttributes().get(MAILBOX_MAPPER_KEY);
         if (mapper == null) {
             mapper = createMailboxMapper(session);
-            session.getAttributes().put(MAILBOXMAPPER, mapper);
+            session.getAttributes().put(MAILBOX_MAPPER_KEY, mapper);
         }
         return mapper;
     }
@@ -136,8 +136,8 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
         if (session == null) {
             return;
         }
-        MessageMapper messageMapper = (MessageMapper) session.getAttributes().get(MESSAGEMAPPER);
-        MailboxMapper mailboxMapper = (MailboxMapper) session.getAttributes().get(MAILBOXMAPPER);
+        MessageMapper messageMapper = (MessageMapper) session.getAttributes().get(MESSAGE_MAPPER_KEY);
+        MailboxMapper mailboxMapper = (MailboxMapper) session.getAttributes().get(MAILBOX_MAPPER_KEY);
         SubscriptionMapper subscriptionMapper = (SubscriptionMapper) session.getAttributes().get(SUBSCRIPTIONMAPPER);
         if (messageMapper != null) {
             messageMapper.endRequest();

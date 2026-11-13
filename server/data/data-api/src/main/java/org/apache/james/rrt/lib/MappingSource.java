@@ -34,14 +34,14 @@ import org.slf4j.LoggerFactory;
 public class MappingSource implements Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingSource.class);
-    private static final String WILDCARD = "*";
+    private static final String WILDCARD_SYMBOL = "*";
 
     private enum WildCard {
         WildCard
     }
 
     public static MappingSource fromDomain(Domain domain) {
-        if (domain.asString().equals(WILDCARD)) {
+        if (domain.asString().equals(WILDCARD_SYMBOL)) {
             return wildCard();
         }
         return new MappingSource(Optional.of(domain), Optional.empty(), Optional.empty());
@@ -61,7 +61,7 @@ public class MappingSource implements Serializable {
     }
 
     public static MappingSource fromUser(Username username) {
-        if (username.getLocalPart().equals(WILDCARD)) {
+        if (username.getLocalPart().equals(WILDCARD_SYMBOL)) {
             return MappingSource.fromDomain(username.getDomainPart().get());
         }
         return new MappingSource(Optional.empty(), Optional.of(username), Optional.empty());
@@ -73,10 +73,10 @@ public class MappingSource implements Serializable {
 
     public static MappingSource parse(String mappingSource) {
         switch (mappingSource) {
-            case WILDCARD:
+            case WILDCARD_SYMBOL:
                 return wildCard();
             default:
-                if (mappingSource.startsWith(WILDCARD + "@")) {
+                if (mappingSource.startsWith(WILDCARD_SYMBOL + "@")) {
                     return fromDomain(Domain.of(mappingSource.substring(2)));
                 }
                 return fromUser(Username.of(mappingSource));
@@ -121,13 +121,13 @@ public class MappingSource implements Serializable {
 
     public String getFixedUser() {
         return user.map(Username::getLocalPart)
-            .orElse(WILDCARD);
+            .orElse(WILDCARD_SYMBOL);
     }
 
     public String getFixedDomain() {
         return availableDomain()
             .map(Domain::asString)
-            .orElse(WILDCARD);
+            .orElse(WILDCARD_SYMBOL);
     }
 
     public Optional<Domain> availableDomain() {
