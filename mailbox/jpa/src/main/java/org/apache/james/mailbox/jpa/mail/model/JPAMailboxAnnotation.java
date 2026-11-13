@@ -40,7 +40,7 @@ public class JPAMailboxAnnotation {
 
     public static final String MAILBOX_ID = "MAILBOX_ID";
     public static final String ANNOTATION_KEY = "ANNOTATION_KEY";
-    public static final String VALUE = "VALUE";
+    public static final String ANNOTATION_VALUE = "VALUE";
 
     @Id
     @Column(name = MAILBOX_ID)
@@ -51,7 +51,7 @@ public class JPAMailboxAnnotation {
     private String key;
 
     @Basic()
-    @Column(name = VALUE)
+    @Column(name = ANNOTATION_VALUE)
     private String value;
 
     public JPAMailboxAnnotation() {
