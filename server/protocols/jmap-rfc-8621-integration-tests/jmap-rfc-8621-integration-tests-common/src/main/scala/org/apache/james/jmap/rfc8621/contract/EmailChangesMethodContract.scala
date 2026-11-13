@@ -687,6 +687,73 @@ trait EmailChangesMethodContract {
     }
   }
 
+  @Test
+  def emailChangesShouldNotReturnChangesOfMailboxesSharedWithOnlyLookupRight(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+    val lookupOnlyPath: MailboxPath = MailboxPath.forUser(bobUsername, "lookupOnly")
+    val readablePath: MailboxPath = MailboxPath.forUser(bobUsername, "readable")
+    mailboxProbe.createMailbox(lookupOnlyPath)
+    mailboxProbe.createMailbox(readablePath)
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(lookupOnlyPath, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(readablePath, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    mailboxProbe.appendMessage(bobUsername.asString(), lookupOnlyPath, AppendCommand.from(message))
+    val readableMessageId: MessageId = mailboxProbe.appendMessage(bobUsername.asString(), readablePath, AppendCommand.from(message)).getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
+         |  "methodCalls": [[
+         |    "Email/changes",
+         |    {
+         |      "accountId": "$andreAccountId",
+         |      "sinceState": "${State.INITIAL.getValue}"
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`(
+        baseRequestSpecBuilder(server)
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
+          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+          .setBody(request)
+          .build, new ResponseSpecBuilder().build)
+        .post
+        .`then`
+          .statusCode(SC_OK)
+          .contentType(JSON)
+          .extract
+          .body
+          .asString
+
+      assertThatJson(response)
+        .whenIgnoringPaths("methodResponses[0][1].newState")
+        .isEqualTo(
+          s"""{
+             |    "sessionState": "${SESSION_STATE.value}",
+             |    "methodResponses": [
+             |      [ "Email/changes", {
+             |        "accountId": "$andreAccountId",
+             |        "oldState": "${State.INITIAL.getValue}",
+             |        "hasMoreChanges": false,
+             |        "created": ["${readableMessageId.serialize}"],
+             |        "updated": [],
+             |        "destroyed": []
+             |      }, "c1"]
+             |    ]
+             |}""".stripMargin)
+    }
+  }
+
   @Nested
   class DelegationTest {
     @Test
