@@ -125,7 +125,7 @@ public class TopCmdHandler extends AbstractPOP3CommandHandler implements CapaCap
         private int lastChar;
         private final InputStream in;
         private boolean isBody = false; // starting from header
-        private boolean isEmptyLine = false;
+        private int lineLength = 0; // bytes read since the last CRLF
 
         /**
          * 
@@ -145,21 +145,19 @@ public class TopCmdHandler extends AbstractPOP3CommandHandler implements CapaCap
                 if (count <= limit) {
                     int a = in.read();
 
-                    // check for empty line
-                    if (!isBody && isEmptyLine && lastChar == '\r' && a == '\n') {
-                        // reached body
-                        isBody = true;
-                    }
-
                     if (lastChar == '\r' && a == '\n') {
-                        // reset empty line flag
-                        isEmptyLine = true;
-
+                        // A line is empty only when its CR was its first byte: a line starting with a
+                        // bare CR is not the blank line ending the headers.
+                        if (!isBody && lineLength == 1) {
+                            // reached body
+                            isBody = true;
+                        }
                         if (isBody) {
                             count++;
                         }
-                    } else if (lastChar == '\n' && a != '\r') {
-                        isEmptyLine = false;
+                        lineLength = 0;
+                    } else if (a != -1) {
+                        lineLength++;
                     }
 
                     lastChar = a;
