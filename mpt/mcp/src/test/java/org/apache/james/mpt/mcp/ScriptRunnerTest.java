@@ -192,6 +192,9 @@ class ScriptRunnerTest {
         JsonNode result = mapper.readTree(handler.handle(call).orElseThrow());
         assertThat(result.at("/result/structuredContent/status").asText()).isEqualTo("PASSED");
         assertThat(result.at("/result/isError").asBoolean()).isFalse();
+        JsonNode summary = mapper.readTree(result.at("/result/content/1/text").asText());
+        assertThat(summary.get("status").asText()).isEqualTo("PASSED");
+        assertThat(summary.has("transcript")).isFalse();
 
         String invalid = mapper.writeValueAsString(Map.of("jsonrpc", "2.0", "id", 3, "method", "tools/call",
             "params", Map.of("name", "validate_script", "arguments", Map.of("script", "X: nope"))));

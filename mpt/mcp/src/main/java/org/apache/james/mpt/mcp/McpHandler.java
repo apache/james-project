@@ -428,6 +428,12 @@ public class McpHandler {
         text.append("\nTranscript:\n").append(report.transcript().format());
 
         ObjectNode result = textResult(text.toString(), false);
+        // machine readable verdict for clients only reading 'content' (the transcript is in the first block)
+        ObjectNode summary = structured.deepCopy();
+        summary.remove("transcript");
+        ((ArrayNode) result.get("content")).addObject()
+            .put("type", "text")
+            .put("text", write(summary));
         result.set("structuredContent", structured);
         return result;
     }

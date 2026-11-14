@@ -17,6 +17,10 @@ a test bench. The agent can only reach the targets configured on the server.
 `run_script` arguments: `script`, `target` (default target of every session), `sessions` (per session override, e.g.
 `{"0": "smtps", "1": "imaps"}`), `variables`, `continueAfterFailure`, `timeoutSeconds`, `label` (archive name).
 
+`run_script` returns two text blocks: a human readable report with the transcript, then the JSON verdict
+(`status`, `runId`, `failures`, `capturedVariables`, `unreadServerLines`, `archive`...) for automated processing; the
+complete JSON, transcript included, is also in `structuredContent`.
+
 A non passing run always comes with a reason: the session, the last command actually sent with its script line, the
 expected and actual lines, the server lines left unread, and the sessions the server closed.
 
