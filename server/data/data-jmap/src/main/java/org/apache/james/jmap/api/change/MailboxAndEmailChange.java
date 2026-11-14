@@ -22,8 +22,10 @@ package org.apache.james.jmap.api.change;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 import jakarta.mail.Flags;
@@ -59,7 +61,12 @@ public class MailboxAndEmailChange implements JmapChange {
             this.sessionProvider = sessionProvider;
         }
 
-        public List<JmapChange> fromAdded(MailboxEvents.Added messageAdded, ZonedDateTime now, List<AccountId> sharees) {
+        /**
+         * @param sharees users seeing the mailbox: they receive the mailbox part of the change
+         * @param emailSharees users allowed to read the messages of the mailbox: they also receive the email part of the change.
+         *                     Should be a subset of sharees.
+         */
+        public List<JmapChange> fromAdded(MailboxEvents.Added messageAdded, ZonedDateTime now, List<AccountId> sharees, Set<AccountId> emailSharees) {
             AccountId accountId = AccountId.fromUsername(messageAdded.getUsername());
             EmailChange.Builder emailChangeBuilder = EmailChange.builder()
                 .accountId(accountId)
@@ -76,25 +83,53 @@ public class MailboxAndEmailChange implements JmapChange {
                 .build();
 
             if (messageAdded.isAppended()) {
-                return new MailboxAndEmailChange(accountId,
+                return propagateToSharees(new MailboxAndEmailChange(accountId,
                     emailChangeBuilder
                         .created(messageAdded.getMessageIds())
                         .build(),
-                    mailboxChange)
-                    .propagateToSharee(sharees, stateFactory);
+                    mailboxChange),
+                    sharees, emailSharees);
             }
-            return new MailboxAndEmailChange(accountId,
+            return propagateToSharees(new MailboxAndEmailChange(accountId,
                 emailChangeBuilder
                     .updated(messageAdded.getMessageIds())
                     .build(),
-                mailboxChange)
-                .propagateToSharee(sharees, stateFactory);
+                mailboxChange),
+                sharees, emailSharees);
         }
 
-        public List<JmapChange> fromFlagsUpdated(MailboxEvents.FlagsUpdated messageFlagUpdated, ZonedDateTime now, List<AccountId> sharees) {
+        /**
+         * @param sharees users seeing the mailbox: they receive the mailbox part of the change
+         * @param emailSharees users allowed to read the messages of the mailbox: they also receive the email part of the change.
+         *                     Should be a subset of sharees.
+         */
+        public List<JmapChange> fromFlagsUpdated(MailboxEvents.FlagsUpdated messageFlagUpdated, ZonedDateTime now, List<AccountId> sharees, Set<AccountId> emailSharees) {
             return flagUpdateChange(messageFlagUpdated, now)
-                .map(change -> change.propagateToSharee(sharees, stateFactory))
+                .map(change -> propagateToSharees(change, sharees, emailSharees))
                 .orElse(ImmutableList.of());
+        }
+
+        private ImmutableList<JmapChange> propagateToSharees(JmapChange change, List<AccountId> sharees, Set<AccountId> emailSharees) {
+            if (change.isNoop()) {
+                return ImmutableList.of();
+            }
+            return Stream.concat(Stream.of(change), sharees.stream()
+                    .flatMap(sharee -> forSharee(change, sharee, emailSharees.contains(sharee)).stream()))
+                .collect(ImmutableList.toImmutableList());
+        }
+
+        private Optional<JmapChange> forSharee(JmapChange change, AccountId sharee, boolean canReadEmails) {
+            if (canReadEmails) {
+                return Optional.of(change.forSharee(sharee, stateFactory::generate));
+            }
+            if (change instanceof MailboxAndEmailChange mailboxAndEmailChange) {
+                return Optional.of(mailboxAndEmailChange.getMailboxChange().forSharee(sharee, stateFactory::generate));
+            }
+            if (change instanceof MailboxChange mailboxChange) {
+                return Optional.of(mailboxChange.forSharee(sharee, stateFactory::generate));
+            }
+            // Email only change: not propagated to sharees that can not read the messages
+            return Optional.empty();
         }
 
         private Optional<JmapChange> flagUpdateChange(MailboxEvents.FlagsUpdated event, ZonedDateTime now) {
@@ -148,18 +183,24 @@ public class MailboxAndEmailChange implements JmapChange {
             };
         }
 
-        public Flux<JmapChange> fromExpunged(MailboxEvents.Expunged expunged, ZonedDateTime now, List<Username> sharees) {
+        /**
+         * @param sharees users seeing the mailbox: they receive the mailbox part of the change
+         * @param emailSharees users allowed to read the messages of the mailbox: they also receive the email part of the change.
+         *                     Should be a subset of sharees.
+         */
+        public Flux<JmapChange> fromExpunged(MailboxEvents.Expunged expunged, ZonedDateTime now, List<Username> sharees, Set<Username> emailSharees) {
             State state = stateFactory.generate();
             boolean delegated = true;
-            Mono<JmapChange> ownerChange = fromExpunged(expunged, now, expunged.getUsername(), state, !delegated);
+            boolean canReadEmails = true;
+            Mono<JmapChange> ownerChange = fromExpunged(expunged, now, expunged.getUsername(), state, !delegated, canReadEmails);
 
             Flux<JmapChange> shareeChanges = Flux.fromIterable(sharees)
-                .concatMap(shareeId -> fromExpunged(expunged, now, shareeId, state, delegated));
+                .concatMap(shareeId -> fromExpunged(expunged, now, shareeId, state, delegated, emailSharees.contains(shareeId)));
 
             return Flux.concat(ownerChange, shareeChanges);
         }
 
-        private Mono<JmapChange> fromExpunged(MailboxEvents.Expunged expunged, ZonedDateTime now, Username username, State state, boolean delegated) {
+        private Mono<JmapChange> fromExpunged(MailboxEvents.Expunged expunged, ZonedDateTime now, Username username, State state, boolean delegated, boolean canReadEmails) {
             AccountId accountId = AccountId.fromUsername(username);
             ImmutableSet<MessageId> changedMessageIds = expunged.getExpunged().values()
                 .stream()
@@ -179,6 +220,10 @@ public class MailboxAndEmailChange implements JmapChange {
                 .shared(delegated)
                 .updated(ImmutableList.of(expunged.getMailboxId()))
                 .build();
+
+            if (!canReadEmails) {
+                return Mono.just(mailboxChange);
+            }
 
             return Mono.from(messageIdManager.accessibleMessagesReactive(expunged.getMessageIds(), sessionProvider.createSystemSession(username)))
                 .<JmapChange>map(accessibleMessageIds -> new MailboxAndEmailChange(accountId,

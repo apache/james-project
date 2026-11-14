@@ -307,4 +307,51 @@ class MDNReportParserTest {
     assertThat(MDNReportParser.parse(mdnWithNestedComments(100000)).isFailure)
       .isTrue
   }
+
+  @Test
+  def formattedValueShouldRoundTripEmptyExtensionFields(): Unit = {
+    val report = "Final-Recipient: rfc822; a@b\r\n" +
+      "Disposition: automatic-action/MDN-sent-automatically; processed\r\n" +
+      "X-A:\r\n" +
+      "X-B: v\r\n"
+    val parsed = MDNReportParser.parse(report).get
+    assertThat(parsed.getExtensionFields).hasSize(2)
+
+    val reparsed = MDNReportParser.parse(parsed.formattedValue()).get
+    assertThat(reparsed.getExtensionFields).hasSize(2)
+    assertThat(reparsed).isEqualTo(parsed)
+  }
+
+  @Test
+  def parseShouldAcceptAnEmptyExtensionFieldFollowedByASpace(): Unit = {
+    val report = "Final-Recipient: rfc822; a@b\r\n" +
+      "Disposition: automatic-action/MDN-sent-automatically; processed\r\n" +
+      "X-A: \r\n" +
+      "X-B: v \r\n"
+
+    assertThat(MDNReportParser.parse(report).get.getExtensionFields)
+      .containsExactly(
+        ExtensionField.builder.fieldName("X-A").rawValue("").build,
+        ExtensionField.builder.fieldName("X-B").rawValue(" v").build)
+  }
+
+  @Test
+  def formattedValueShouldRoundTripExtensionFieldsBuiltWithoutLeadingSpace(): Unit = {
+    val report = MDNReport.builder
+      .finalRecipientField("a@b")
+      .dispositionField(Disposition.builder
+        .actionMode(DispositionActionMode.Automatic)
+        .sendingMode(DispositionSendingMode.Automatic)
+        .`type`(DispositionType.Processed)
+        .build)
+      .withExtensionField(ExtensionField.builder.fieldName("X-A").rawValue("").build)
+      .withExtensionField(ExtensionField.builder.fieldName("X-B").rawValue("v").build)
+      .build
+
+    val once = MDNReportParser.parse(report.formattedValue()).get
+    val twice = MDNReportParser.parse(once.formattedValue()).get
+
+    assertThat(once.getExtensionFields).hasSize(2)
+    assertThat(twice).isEqualTo(once)
+  }
 }

@@ -120,6 +120,33 @@ class SearchUtilTest {
     }
 
     @Test
+    void getBaseSubjectShouldBeFastOnManyBlobsNotFollowedByALeader() {
+        String subject = "[a] ".repeat(20_000) + "]Re: w";
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("]Re: w"));
+    }
+
+    @Test
+    void getBaseSubjectShouldNotRemoveALeaderAfterAStrayClosingBracket() {
+        // "[PATCH]" is a subj-blob; "] Re: fix" does not start with a subj-leader
+        assertThat(SearchUtil.getBaseSubject("[PATCH]] Re: fix")).isEqualTo("] Re: fix");
+    }
+
+    @Test
+    void getBaseSubjectShouldKeepTextAfterAnEmptyBlobAndAStrayClosingBracket() {
+        assertThat(SearchUtil.getBaseSubject("[]]RE :")).isEqualTo("]RE :");
+        assertThat(SearchUtil.getBaseSubject("[]]fw:(fwd)")).isEqualTo("]fw:");
+    }
+
+    @Test
+    void getBaseSubjectShouldStillRemoveBlobAndLeader() {
+        assertThat(SearchUtil.getBaseSubject("[list] Re: fix")).isEqualTo("fix");
+        assertThat(SearchUtil.getBaseSubject("[list]Re: fix")).isEqualTo("fix");
+        assertThat(SearchUtil.getBaseSubject("[list] [tag] Re: [list] fix")).isEqualTo("fix");
+    }
+
+    @Test
     void getBaseSubjectShouldBeFastOnManyForwardHeaders() {
         String subject = "[fwd: ".repeat(4_000) + "Test" + "]".repeat(4_000);
 

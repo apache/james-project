@@ -353,9 +353,14 @@ public class SieveFileRepository implements SieveRepository {
             throw new StorageException(new IllegalArgumentException("Script name should not collide with system file '" + name + "'"));
         }
         File file = new File(userDirectory, name);
-        Path parent = file.toPath().normalize().getParent();
-        if (!Objects.equals(parent, userDirectory.toPath().normalize())) {
+        Path resolved = file.toPath().normalize();
+        if (!Objects.equals(resolved.getParent(), userDirectory.toPath().normalize())) {
             throw new StorageException(new IllegalArgumentException("Script name should not allow path traversal outside of the user directory"));
+        }
+        // The name can be spelled so that it only resolves to a system file once normalised (eg '/.quota', './.quota', 'x/../.quota')
+        Path resolvedFileName = resolved.getFileName();
+        if (resolvedFileName == null || SYSTEM_FILES.contains(resolvedFileName.toString())) {
+            throw new StorageException(new IllegalArgumentException("Script name should not collide with system file '" + name + "'"));
         }
         enforceRoot(file);
         return file;

@@ -278,6 +278,10 @@ public class SearchUtil {
         // No bracket in [bracketSearchFrom, nextBracket), and nextBracket is a bracket or the subject length
         private int bracketSearchFrom = -1;
         private int nextBracket = -1;
+        // The blobs starting at any blob boundary within [blobRunFrom, blobRunEnd] end at blobRunEnd, for this end
+        private int blobRunFrom = -1;
+        private int blobRunEnd = -1;
+        private int blobRunLimit = -1;
 
         BaseSubjectExtractor(String subject) {
             this.subject = subject;
@@ -388,7 +392,7 @@ public class SearchUtil {
                 return position;
             }
 
-            position = removeSubjectBlob();
+            position = removeSubjectBlobs();
             if (startsWithIgnoreCase(position, RE)) {
                 position += RE.length();
             } else if (startsWithIgnoreCase(position, FWD)) {
@@ -414,7 +418,7 @@ public class SearchUtil {
         }
 
         /**
-         * Remove the subj-blob
+         * Remove the subj-blobs (*subj-blob) at the start of the subject
          *
          *     subj-blob = "[" *BLOBCHAR "]" *WSP
          *     subj-refwd = ("re" / ("fw" ["d"])) *WSP [subj-blob] ":"
@@ -422,17 +426,24 @@ public class SearchUtil {
          *     BLOBCHAR = %x01-5a / %x5c / %x5e-7f
          *     ; any CHAR except '[' and ']'
          *
-         * @return the start of the subject once the blob is removed
+         * @return the start of the subject once the blobs are removed
          */
-        private int removeSubjectBlob() {
-            if (start >= end || subject.charAt(start) != OPEN_SQUARE_BRACKED) {
-                return start;
+        private int removeSubjectBlobs() {
+            if (start >= blobRunFrom && start <= blobRunEnd && end == blobRunLimit) {
+                // Step (4) removes the blobs of a run not followed by a subj-refwd one at a time: the run from
+                // any of its blob boundaries still ends at the same place. Do not scan it again to stay linear.
+                return blobRunEnd;
             }
-            int afterBlob = removeBlob(start);
-            if (afterBlob < end && subject.charAt(afterBlob) == CLOSE_SQUARE_BRACKED) {
-                return skipWhiteSpaces(afterBlob + 1);
+            int position = start;
+            int afterBlob = removeBlob(position);
+            while (afterBlob > position) {
+                position = skipWhiteSpaces(afterBlob);
+                afterBlob = removeBlob(position);
             }
-            return start;
+            blobRunFrom = start;
+            blobRunEnd = position;
+            blobRunLimit = end;
+            return position;
         }
 
         /**

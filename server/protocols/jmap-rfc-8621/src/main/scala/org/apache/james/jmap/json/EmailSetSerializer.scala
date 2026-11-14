@@ -241,7 +241,18 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
 
   private implicit val subjectReads: Reads[Subject] = Json.valueReads[Subject]
   private implicit val emailerNameReads: Reads[EmailerName] = Json.valueReads[EmailerName]
-  private implicit val unvalidatedEmailReads: Reads[UncheckedEmail] = Json.valueReads[UncheckedEmail]
+  // Trim as MailAddress does, so that the address written is the one validated (non-drafts) and
+  // reject control characters, so that no address (drafts included) can carry a line break into the header
+  private implicit val unvalidatedEmailReads: Reads[UncheckedEmail] = {
+    case JsString(value) =>
+      val trimmed = value.trim
+      if (trimmed.exists(Character.isISOControl)) {
+        JsError("Invalid email address: control characters are not allowed")
+      } else {
+        JsSuccess(UncheckedEmail(trimmed))
+      }
+    case _ => JsError("Expecting a JsString to represent an email address")
+  }
 
   private implicit val headerMessageIdReads: Reads[HeaderMessageId] = Json.valueReads[HeaderMessageId]
   private implicit val emailAddressReads: Reads[EmailAddress] = Json.reads[EmailAddress]
@@ -284,10 +295,21 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
           .flatMap(property => SpecificHeaderRequest.from(property)
             .left.map(_ => new IllegalArgumentException(s"$name is an invalid specific header")))
           .flatMap(_.validate)
+          .flatMap(validateHeaderName)
           .flatMap(specificHeaderRequest => asReads(specificHeaderRequest)
             .reads(value).asEither.left.map(e => new IllegalArgumentException(e.toString()))
             .map(headerValue => EmailHeader(EmailHeaderName(specificHeaderRequest.headerName), headerValue)))
     }.sequence
+
+  // RFC 5322 section 2.2: a field name is made of printable US-ASCII characters (33 to 126) except colon
+  private def isFieldNameChar(c: Char): Boolean = c >= '!' && c <= '~' && c != ':'
+
+  private def validateHeaderName(specificHeaderRequest: SpecificHeaderRequest): Either[IllegalArgumentException, SpecificHeaderRequest] =
+    if (specificHeaderRequest.headerName.nonEmpty && specificHeaderRequest.headerName.forall(isFieldNameChar)) {
+      scala.Right(specificHeaderRequest)
+    } else {
+      Left(new IllegalArgumentException("Invalid specific header name: header field names must only contain printable US-ASCII characters except colon"))
+    }
 
   private implicit val typeReads: Reads[Type] = Json.valueReads[Type]
   private implicit val clientPartIdReads: Reads[ClientPartId] = valueReads[ClientPartId]
@@ -360,17 +382,31 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     case json: JsValue => UTCDateReads.reads(json).map(date => DateHeaderValue(Some(date)))
   }
 
+  // A CR or LF of a header value written as is must be part of a fold: CRLF followed by white space then by some text.
+  // Otherwise, it could end the header block (eg trailing CRLF) or start a new header field.
+  private def hasOnlyFoldingLineBreaks(value: String): Boolean = {
+    val lines = value.split("\r\n", -1)
+    def isWsp(c: Char): Boolean = c == ' ' || c == '\t'
+
+    lines.forall(line => !line.contains('\r') && !line.contains('\n')) &&
+      lines.tail.forall(line => line.headOption.exists(isWsp) && line.exists(c => !isWsp(c)))
+  }
+
+  private def checkLineBreaks[T](reads: Reads[T], value: T => String): Reads[T] = json => reads.reads(json)
+    .filter(JsError("Header values can only hold line breaks as CRLF followed by white space and text (folding)"))(
+      headerValue => hasOnlyFoldingLineBreaks(value(headerValue)))
+
   sealed trait HeaderValueReads extends Reads[EmailHeaderValue]
   case object RawReads extends HeaderValueReads {
-    val rawReads: Reads[RawHeaderValue] = valueReads[RawHeaderValue]
+    val rawReads: Reads[RawHeaderValue] = checkLineBreaks(valueReads[RawHeaderValue], _.value)
     override def reads(json: JsValue): JsResult[EmailHeaderValue] = rawReads.reads(json)
   }
   case object AllReads extends HeaderValueReads {
-    val rawReads: Reads[RawHeaderValue] = valueReads[RawHeaderValue]
+    val rawReads: Reads[RawHeaderValue] = checkLineBreaks(valueReads[RawHeaderValue], _.value)
     override def reads(json: JsValue): JsResult[EmailHeaderValue] = rawReads.reads(json)
   }
   case object TextReads extends HeaderValueReads {
-    val textReads: Reads[TextHeaderValue] = valueReads[TextHeaderValue]
+    val textReads: Reads[TextHeaderValue] = checkLineBreaks(valueReads[TextHeaderValue], _.value)
     override def reads(json: JsValue): JsResult[TextHeaderValue] = textReads.reads(json)
   }
   case object AddressesReads extends HeaderValueReads {

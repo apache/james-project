@@ -154,6 +154,39 @@ class SenderHeaderVerificationHookTest {
     }
 
     @Test
+    void bareCrInSenderShouldBeRejected() throws Exception {
+        start("smtpserver-sender-header-verification.xml");
+        SMTPClient smtpProtocol = authenticateAsBob();
+
+        send(smtpProtocol, BOB.asString(), "rcpt@example.com",
+            "From: " + BOB.asString() + "\r\nSender: " + BOB.asString() + "\r.other.tld\r\n");
+
+        assertRejected(smtpProtocol);
+    }
+
+    @Test
+    void bareCrInAnotherHeaderShouldBeRejectedWhenSenderIsPresent() throws Exception {
+        start("smtpserver-sender-header-verification.xml");
+        SMTPClient smtpProtocol = authenticateAsBob();
+
+        send(smtpProtocol, BOB.asString(), "rcpt@example.com",
+            "From: " + BOB.asString() + "\r\nSender: " + BOB.asString() + "\r\nX-Custom: a\rb\r\n");
+
+        assertRejected(smtpProtocol);
+    }
+
+    @Test
+    void bareCrInTheBodyShouldNotPreventSending() throws Exception {
+        start("smtpserver-sender-header-verification.xml");
+        SMTPClient smtpProtocol = authenticateAsBob();
+
+        send(smtpProtocol, BOB.asString(), "rcpt@example.com",
+            "From: " + BOB.asString() + "\r\nSender: " + BOB.asString() + "\r\n\r\nbody\rwith a bare CR");
+
+        assertAccepted(smtpProtocol);
+    }
+
+    @Test
     void otherUserShouldBeRejected() throws Exception {
         start("smtpserver-sender-header-verification.xml");
         SMTPClient smtpProtocol = authenticateAsBob();

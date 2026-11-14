@@ -768,6 +768,74 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             assertThat(mailboxManager.getAllAnnotations(inbox, session)).isEmpty();
         }
 
+        private MailboxPath shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights rights) throws Exception {
+            MailboxSession ownerSession = mailboxManager.createSystemSession(USER_1);
+            MailboxPath ownerInbox = MailboxPath.inbox(ownerSession);
+            mailboxManager.createMailbox(ownerInbox, ownerSession);
+            mailboxManager.updateAnnotations(ownerInbox, ownerSession, ImmutableList.of(sharedAnnotation));
+            mailboxManager.applyRightsCommand(ownerInbox,
+                MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(rights)
+                    .asAddition(), ownerSession);
+            return ownerInbox;
+        }
+
+        @Test
+        void updateAnnotationsShouldNotOverwriteWhenShareeHasOnlyReadRight() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read)));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+
+            assertThatThrownBy(() -> mailboxManager.updateAnnotations(ownerInbox, shareeSession,
+                    ImmutableList.of(MailboxAnnotation.newInstance(sharedKey, "Overwritten by sharee"))))
+                .isInstanceOf(InsufficientRightsException.class);
+
+            assertThat(mailboxManager.getAllAnnotations(ownerInbox, mailboxManager.createSystemSession(USER_1)))
+                .containsOnly(sharedAnnotation);
+        }
+
+        @Test
+        void deletingAnnotationsShouldFailWhenShareeHasOnlyReadRight() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read)));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+
+            assertThatThrownBy(() -> mailboxManager.updateAnnotations(ownerInbox, shareeSession,
+                    ImmutableList.of(MailboxAnnotation.nil(sharedKey))))
+                .isInstanceOf(InsufficientRightsException.class);
+
+            assertThat(mailboxManager.getAllAnnotations(ownerInbox, mailboxManager.createSystemSession(USER_1)))
+                .containsOnly(sharedAnnotation);
+        }
+
+        @Test
+        void shareeWithOnlyReadRightShouldStillReadAnnotations() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read)));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+
+            assertThat(mailboxManager.getAllAnnotations(ownerInbox, shareeSession))
+                .containsOnly(sharedAnnotation);
+        }
+
+        @Test
+        void updateAnnotationsShouldSucceedWhenShareeHasWriteRight() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.Write)));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+            MailboxAnnotation updated = MailboxAnnotation.newInstance(sharedKey, "Updated by sharee");
+
+            mailboxManager.updateAnnotations(ownerInbox, shareeSession, ImmutableList.of(updated));
+
+            assertThat(mailboxManager.getAllAnnotations(ownerInbox, mailboxManager.createSystemSession(USER_1)))
+                .containsOnly(updated);
+        }
+
         @Test
         void updateAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
@@ -3428,6 +3496,64 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.getMailbox(path, session2).delete(ImmutableList.of(messageId.getUid()), session2);
 
             assertThat(mailboxManager.getMailbox(path, session).getMessageCount(session)).isEqualTo(0);
+        }
+
+        @Test
+        void moveMessagesShouldThrowWithoutDeleteMessagesRightOnSource() throws Exception {
+            MailboxPath path = MailboxPath.forUser(USER_1, "shared");
+            mailboxManager.createMailbox(path, session);
+            mailboxManager.getMailbox(path, session)
+                .appendMessage(AppendCommand.builder().build(message), session);
+            mailboxManager.setRights(path, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.PerformExpunge)
+                    .asAddition()),
+                session);
+            MailboxPath destination = MailboxPath.inbox(session2);
+            mailboxManager.createMailbox(destination, session2);
+
+            assertThatThrownBy(() -> mailboxManager.moveMessages(MessageRange.all(), path, destination, session2))
+                .isInstanceOf(InsufficientRightsException.class);
+            assertThat(mailboxManager.getMailbox(path, session).getMessageCount(session)).isEqualTo(1);
+        }
+
+        @Test
+        void moveMessagesByRangesShouldThrowWithoutDeleteMessagesRightOnSource() throws Exception {
+            MailboxPath path = MailboxPath.forUser(USER_1, "shared");
+            MailboxId sourceId = mailboxManager.createMailbox(path, session).get();
+            mailboxManager.getMailbox(path, session)
+                .appendMessage(AppendCommand.builder().build(message), session);
+            mailboxManager.setRights(path, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.PerformExpunge)
+                    .asAddition()),
+                session);
+            MailboxId destinationId = mailboxManager.createMailbox(MailboxPath.inbox(session2), session2).get();
+
+            assertThatThrownBy(() -> Flux.from(mailboxManager.moveMessagesReactive(ImmutableList.of(MessageRange.all()), sourceId, destinationId, session2))
+                    .collectList().block())
+                .hasCauseInstanceOf(InsufficientRightsException.class);
+            assertThat(mailboxManager.getMailbox(path, session).getMessageCount(session)).isEqualTo(1);
+        }
+
+        @Test
+        void moveMessagesShouldSucceedWithPerformExpungeAndDeleteMessagesRightsOnSource() throws Exception {
+            MailboxPath path = MailboxPath.forUser(USER_1, "shared");
+            mailboxManager.createMailbox(path, session);
+            mailboxManager.getMailbox(path, session)
+                .appendMessage(AppendCommand.builder().build(message), session);
+            mailboxManager.setRights(path, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.PerformExpunge, MailboxACL.Right.DeleteMessages)
+                    .asAddition()),
+                session);
+            MailboxPath destination = MailboxPath.inbox(session2);
+            mailboxManager.createMailbox(destination, session2);
+
+            mailboxManager.moveMessages(MessageRange.all(), path, destination, session2);
+
+            assertThat(mailboxManager.getMailbox(path, session).getMessageCount(session)).isEqualTo(0);
+            assertThat(mailboxManager.getMailbox(destination, session2).getMessageCount(session2)).isEqualTo(1);
         }
 
         @Test

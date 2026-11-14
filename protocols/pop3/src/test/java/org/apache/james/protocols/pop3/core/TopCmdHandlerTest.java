@@ -154,4 +154,48 @@ public class TopCmdHandlerTest {
         assertThat(result).contains("line2");
         assertThat(result).doesNotContain("line3");
     }
+
+    private String top(String headers, String message, String argument) throws IOException {
+        POP3Session session = mock(POP3Session.class);
+        when(session.getHandlerState()).thenReturn(POP3Session.TRANSACTION);
+
+        Request request = mock(Request.class);
+        when(request.getArgument()).thenReturn(argument);
+
+        MessageMetaData data = new MessageMetaData("1234", 567);
+        when(session.getAttachment(POP3Session.UID_LIST, ProtocolSession.State.Transaction)).thenReturn(Optional.of(List.of(data)));
+
+        Mailbox mailbox = mock(Mailbox.class);
+        when(session.getUserMailbox()).thenReturn(mailbox);
+        when(mailbox.getMessageHeaders(data.getUid())).thenReturn(new ByteArrayInputStream(headers.getBytes(StandardCharsets.UTF_8)));
+        when(mailbox.getMessage(data.getUid())).thenReturn(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
+
+        Response response = new TopCmdHandler(new RecordingMetricFactory()).onCommand(session, request);
+        assertThat(response.getRetCode()).isEqualTo(POP3Response.OK_RESPONSE);
+        return IOUtils.toString(((POP3StreamResponse) response).getStream(), StandardCharsets.UTF_8);
+    }
+
+    @Test
+    void topZeroShouldReturnAllHeadersWhenAHeaderLineStartsWithABareCR() throws IOException {
+        String headers = "A: a\r\n\rB: b\r\nC: c\r\n\r\n";
+
+        assertThat(top(headers, headers + "body\r\n", "1 0"))
+            .isEqualTo(headers + ".\r\n");
+    }
+
+    @Test
+    void topShouldNotCountHeaderLinesAsBodyLinesWhenAHeaderLineStartsWithABareCR() throws IOException {
+        String headers = "A: a\r\n\rB: b\r\nC: c\r\n\r\n";
+
+        assertThat(top(headers, headers + "line1\r\nline2\r\n", "1 1"))
+            .isEqualTo(headers + "line1\r\n.\r\n");
+    }
+
+    @Test
+    void topShouldKeepAHeaderLineEndingWithABareCR() throws IOException {
+        String headers = ":a\r\n\r\u000b.b\r\r\nQUIT\r\n";
+
+        assertThat(top(headers, headers, "1 0"))
+            .isEqualTo(headers + ".\r\n");
+    }
 }

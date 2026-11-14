@@ -1,0 +1,46 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+# Moving messages deletes them from the source: the DeleteMessages right is required
+C: a0 CREATE moved
+S: a0 OK \[MAILBOXID \(.+\)\] CREATE completed.
+
+C: a1 SELECT #user.boby.sharedMailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 10 EXISTS
+S: \* \d+ RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS .*\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 11\].*
+S: a1 OK \[READ-WRITE\] SELECT completed.
+
+C: a2 UID MOVE 1:2 moved
+S: a2 NO MOVE processing failed.
+
+# The messages are neither removed from the shared mailbox nor added to the target one
+C: a3 UID SEARCH ALL
+S: \* SEARCH 1 2 3 4 5 6 7 8 9 10
+S: a3 OK SEARCH completed.
+
+C: a4 STATUS moved (MESSAGES)
+S: \* STATUS "moved" \(MESSAGES 0\)
+S: a4 OK STATUS completed.

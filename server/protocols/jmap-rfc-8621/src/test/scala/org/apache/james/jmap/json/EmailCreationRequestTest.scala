@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.json
 
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
+
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.json.EmailSetSerializerTest.SERIALIZER
 import org.apache.james.jmap.mail.EmailCreationRequest
@@ -26,6 +29,7 @@ import org.apache.james.jmap.routes.{BlobResolver, BlobResolvers}
 import org.apache.james.jmap.utils.JsoupHtmlTextExtractor
 import org.apache.james.mailbox.MailboxSessionUtil
 import org.apache.james.mime4j.dom.Message
+import org.apache.james.mime4j.message.{DefaultMessageBuilder, DefaultMessageWriter}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
@@ -39,6 +43,9 @@ class EmailCreationRequestTest extends AnyWordSpec with Matchers {
         MailboxSessionUtil.create(Username.of("bob@domain.tld")))
       .block()
   }
+
+  private def rewrite(message: Message): Message =
+    new DefaultMessageBuilder().parseMessage(new ByteArrayInputStream(DefaultMessageWriter.asBytes(message)))
 
   "toMime4JMessage" should {
     "accept an empty raw header value" in {
@@ -85,6 +92,94 @@ class EmailCreationRequestTest extends AnyWordSpec with Matchers {
 
       message.getFrom.get(0).getDomain shouldBe "d"
       new MailAddress(message.getFrom.get(0).getAddress) shouldBe new MailAddress("\"a@b\"@d")
+    }
+
+    "not end the header block on an address ending with CR LF" in {
+      val message = toMessage(
+        """{"mailboxIds":{"1":true},"to":[{"email":"to@example.com\r\n"}],
+          |"replyTo":[{"email":"reply@example.com"}]}""".stripMargin)
+
+      val reparsed = rewrite(message)
+      reparsed.getTo.flatten().get(0).getAddress shouldBe "to@example.com"
+      reparsed.getReplyTo.flatten().get(0).getAddress shouldBe "reply@example.com"
+    }
+
+    "not end the header block on a draft address ending with CR LF" in {
+      val message = toMessage(
+        """{"mailboxIds":{"1":true},"keywords":{"$draft":true},"bcc":[{"email":"bcc@example.com\r\n"}],
+          |"replyTo":[{"email":"reply@example.com"}]}""".stripMargin)
+
+      val reparsed = rewrite(message)
+      reparsed.getBcc.flatten().get(0).getAddress shouldBe "bcc@example.com"
+      reparsed.getReplyTo.flatten().get(0).getAddress shouldBe "reply@example.com"
+    }
+
+    "accept a folded raw header value" in {
+      val message = toMessage(
+        """{"mailboxIds":{"1":true},"header:X-A:asRaw":" b\r\n c",
+          |"replyTo":[{"email":"reply@example.com"}]}""".stripMargin)
+
+      val reparsed = rewrite(message)
+      reparsed.getHeader.getField("X-A").getBody shouldBe "b c"
+      reparsed.getReplyTo.flatten().get(0).getAddress shouldBe "reply@example.com"
+    }
+  }
+
+  "deserializeCreationRequest" should {
+    "reject an address holding CR LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"to":[{"email":"to@exa\r\nBcc: x@example.com"}]}""")).isError shouldBe true
+    }
+
+    "reject a draft address holding CR LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"keywords":{"$draft":true},"to":[{"email":"to\r\n@example.com"}]}""")).isError shouldBe true
+    }
+
+    "reject a draft address holding a control character" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"keywords":{"$draft":true},"to":[{"email":"to@example.com\u007f"}]}""")).isError shouldBe true
+    }
+
+    "reject a raw header value ending with CR LF on a body part" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"bodyValues":{"a":{"value":"hi"}},
+          |"textBody":[{"partId":"a","type":"text/plain","header:X-A":"b\r\n"}]}""".stripMargin)).isError shouldBe true
+    }
+
+    "reject a raw header value ending with CR LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asRaw":"b\r\n"}""")).isError shouldBe true
+    }
+
+    "reject a text header value ending with CR LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asText":"b\r\n"}""")).isError shouldBe true
+    }
+
+    "reject a header value holding CR LF not followed by white space" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asText":"b\r\nBcc: x@example.com"}""")).isError shouldBe true
+    }
+
+    "reject a header value holding a lone LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asRaw":"b\n c"}""")).isError shouldBe true
+    }
+
+    "reject a header value holding a lone CR" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asRaw":"b\r c"}""")).isError shouldBe true
+    }
+
+    "reject a header value holding a white space only continuation line" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asRaw":"b\r\n \r\n c"}""")).isError shouldBe true
+    }
+
+    "reject an :all header value ending with CR LF" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"header:X-A:asText:all":["a", "b\r\n"]}""")).isError shouldBe true
     }
   }
 }

@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.core.Username;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
@@ -39,6 +40,8 @@ import org.apache.james.sieverepository.lib.SieveRepositoryContract;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class SieveFileRepositoryTest implements SieveRepositoryContract {
 
@@ -186,5 +189,30 @@ class SieveFileRepositoryTest implements SieveRepositoryContract {
     void putScriptShouldRejectANameContainingNul() {
         assertThatThrownBy(() -> sieveRepository().putScript(Username.of("test"), new ScriptName("a\0b"), SCRIPT_CONTENT))
             .isInstanceOf(StorageException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/.quota", "./.quota", "x/../.quota", "/.active", "./.active", "x/../.active"})
+    void putScriptShouldNotAllowToOverwriteSystemFilesThroughANonNormalisedName(String name) throws Exception {
+        Username user = Username.of("test");
+        sieveRepository().setQuota(user, QuotaSizeLimit.size(2048));
+
+        assertThatThrownBy(() -> sieveRepository().putScript(user, new ScriptName(name), new ScriptContent("keep;")))
+            .isInstanceOf(StorageException.class);
+
+        assertThat(sieveRepository().getQuota(user)).isEqualTo(QuotaSizeLimit.size(2048));
+        assertThat(new File(fileSystem.getFile(SIEVE_ROOT), "test/.active")).doesNotExist();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/.quota", "./.quota", "x/../.quota"})
+    void deleteScriptShouldNotAllowToDeleteTheQuotaFileThroughANonNormalisedName(String name) throws Exception {
+        Username user = Username.of("test");
+        sieveRepository().setQuota(user, QuotaSizeLimit.size(2048));
+
+        assertThatThrownBy(() -> sieveRepository().deleteScript(user, new ScriptName(name)))
+            .isInstanceOf(StorageException.class);
+
+        assertThat(sieveRepository().hasQuota(user)).isTrue();
     }
 }

@@ -84,6 +84,18 @@ public abstract class SelectedState implements ImapTestConstants {
             .run("ReplaceExaminedMailbox");
     }
 
+    @Test
+    public void moveFromASharedMailboxShouldBeRejectedWithoutDeleteMessagesRight() throws Exception {
+        sharedMailboxScriptedTestProtocol("lrswipe")
+            .run("MoveSharedMailboxWithoutDeleteMessagesRight");
+    }
+
+    @Test
+    public void moveFromASharedMailboxShouldSucceedWithDeleteMessagesRight() throws Exception {
+        sharedMailboxScriptedTestProtocol("lrswipte")
+            .run("MoveSharedMailboxWithDeleteMessagesRight");
+    }
+
     private ImapScriptedTestProtocol sharedMailboxScriptedTestProtocol(String rights) throws Exception {
         ImapScriptedTestProtocol scriptedTestProtocol = new ImapScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
             .withUser(USER, PASSWORD)

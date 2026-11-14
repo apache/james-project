@@ -64,12 +64,18 @@ public class SentDateComparator extends AbstractHeaderComparator {
             // Fallback if possible to mime4j parsing - zoneId information is lost
             return OptionalUtils.executeIfEmpty(
                 Optional.ofNullable(DateTimeFieldLenientImpl.PARSER
-                    .parse(new RawField("Date", value), SILENT))
+                    .parse(dateField(value), SILENT))
                     .flatMap(field -> Optional.ofNullable(field.getDate()))
                     .map(Date::toInstant)
                     .map(instant -> ZonedDateTime.ofInstant(instant, ZoneId.of("UTC"))),
                 () -> LOGGER.info("Can not parse receive date {}", value));
         }
+    }
+
+    private static RawField dateField(String value) {
+        // The value can be decoded from encoded words or carry line breaks mime4j refuses as
+        // header injection: they have no meaning in a date, turn them into spaces.
+        return new RawField("Date", value.replace('\r', ' ').replace('\n', ' '));
     }
 
      @VisibleForTesting
@@ -91,8 +97,7 @@ public class SentDateComparator extends AbstractHeaderComparator {
 
     private Instant parseSentDate(MailboxMessage message) {
         String value = getHeaderValue("Date", message);
-        RawField field = new RawField("Date", value);
-        return Optional.ofNullable(DateTimeFieldLenientImpl.PARSER.parse(field, SILENT)
+        return Optional.ofNullable(DateTimeFieldLenientImpl.PARSER.parse(dateField(value), SILENT)
                 .getDate())
             .map(Date::toInstant)
             .orElse(message.getInternalDate().toInstant());
