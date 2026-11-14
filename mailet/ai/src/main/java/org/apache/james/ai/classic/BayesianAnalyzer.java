@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>
@@ -111,13 +112,13 @@ public class BayesianAnalyzer {
     private Map<String, Integer> spamTokenCounts = new HashMap<>();
 
     /** Number of ham messages analyzed. */
-    private int hamMessageCount = 0;
+    private final AtomicInteger hamMessageCount = new AtomicInteger(0);
 
     /** Number of spam messages analyzed. */
-    private int spamMessageCount = 0;
+    private final AtomicInteger spamMessageCount = new AtomicInteger(0);
 
     /** Final token/probability corpus. */
-    private Map<String, Double> corpus = new HashMap<>();
+    private volatile Map<String, Double> corpus = new HashMap<>();
 
     /**
      * Basic class constructor.
@@ -166,14 +167,14 @@ public class BayesianAnalyzer {
      *            The new spam message count.
      */
     public void setSpamMessageCount(int spamMessageCount) {
-        this.spamMessageCount = spamMessageCount;
+        this.spamMessageCount.set(spamMessageCount);
     }
 
     /**
      * Public getter for spamMessageCount.
      */
     public int getSpamMessageCount() {
-        return this.spamMessageCount;
+        return this.spamMessageCount.get();
     }
 
     /**
@@ -183,14 +184,14 @@ public class BayesianAnalyzer {
      *            The new ham message count.
      */
     public void setHamMessageCount(int hamMessageCount) {
-        this.hamMessageCount = hamMessageCount;
+        this.hamMessageCount.set(hamMessageCount);
     }
 
     /**
      * Public getter for hamMessageCount.
      */
     public int getHamMessageCount() {
-        return this.hamMessageCount;
+        return this.hamMessageCount.get();
     }
 
     /**
@@ -201,8 +202,8 @@ public class BayesianAnalyzer {
 
         tokenCountsClear();
 
-        hamMessageCount = 0;
-        spamMessageCount = 0;
+        hamMessageCount.set(0);
+        spamMessageCount.set(0);
     }
 
     /**
@@ -258,7 +259,7 @@ public class BayesianAnalyzer {
      */
     public void addHam(Reader stream) throws java.io.IOException {
         addTokenOccurrences(stream, hamTokenCounts);
-        hamMessageCount++;
+        hamMessageCount.incrementAndGet();
     }
 
     /**
@@ -271,7 +272,7 @@ public class BayesianAnalyzer {
      */
     public void addSpam(Reader stream) throws java.io.IOException {
         addTokenOccurrences(stream, spamTokenCounts);
-        spamMessageCount++;
+        spamMessageCount.incrementAndGet();
     }
 
     /**
@@ -368,8 +369,8 @@ public class BayesianAnalyzer {
             return 0.4;
         }
 
-        double spamFreq = Math.min(1.0, spamFactor / spamMessageCount);
-        double hamFreq = Math.min(1.0, hamFactor / hamMessageCount);
+        double spamFreq = Math.min(1.0, spamFactor / spamMessageCount.get());
+        double hamFreq = Math.min(1.0, hamFactor / hamMessageCount.get());
 
         return Math.max(minThreshold, Math.min(maxThreshold, (spamFreq / (hamFreq + spamFreq))));
     }

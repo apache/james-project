@@ -30,7 +30,7 @@ import jakarta.annotation.PreDestroy
 import jakarta.inject.{Inject, Named}
 import jakarta.mail.Address
 import jakarta.mail.Message.RecipientType
-import jakarta.mail.internet.{InternetAddress, MimeMessage}
+import jakarta.mail.internet.{AddressException, InternetAddress, MimeMessage}
 import org.apache.commons.lang3.StringUtils
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.model.Identity
@@ -459,15 +459,29 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
   private def validateMailAddressHeaderMimeMessage(mimeMessage: MimeMessage): SMono[MimeMessage] =
     SFlux.fromIterable(Map(
-        "to" -> Option(mimeMessage.getRecipients(RecipientType.TO)).toList.flatten,
-        "cc" -> Option(mimeMessage.getRecipients(RecipientType.CC)).toList.flatten,
-        "bcc" -> Option(mimeMessage.getRecipients(RecipientType.BCC)).toList.flatten,
-        "from" -> mimeMessage.getFrom.toList,
-        "sender" -> Option(mimeMessage.getSender).toList,
-        "replyTo" -> Option(mimeMessage.getReplyTo).toList.flatten))
+        "to" -> readAddresses(mimeMessage, "to", "To", () => mimeMessage.getRecipients(RecipientType.TO)),
+        "cc" -> readAddresses(mimeMessage, "cc", "Cc", () => mimeMessage.getRecipients(RecipientType.CC)),
+        "bcc" -> readAddresses(mimeMessage, "bcc", "Bcc", () => mimeMessage.getRecipients(RecipientType.BCC)),
+        "from" -> readAddresses(mimeMessage, "from", "From", () => mimeMessage.getFrom),
+        "sender" -> readAddresses(mimeMessage, "sender", "Sender", () => Option(mimeMessage.getSender).toArray),
+        "replyTo" -> readAddresses(mimeMessage, "replyTo", "Reply-To", () => mimeMessage.getReplyTo)))
       .doOnNext { case (headerName, addresses) => addresses.foreach(address => validateMailAddress(headerName, address)) }
       .thenEmpty(SMono.empty)
       .`then`(SMono.just(mimeMessage))
+
+  // A header jakarta.mail cannot parse (e.g. a non-ASCII address) is a client error naming the faulty address, not a server failure
+  private def readAddresses(mimeMessage: MimeMessage, headerName: String, rawHeaderName: String, read: () => Array[Address]): List[Address] =
+    Try(read()) match {
+      case Success(addresses) => Option(addresses).toList.flatten
+      case Failure(e: AddressException) =>
+        val rawHeader: String = Option(mimeMessage.getHeader(rawHeaderName, ",")).getOrElse("")
+        val faultyAddress: String = Try(InternetAddress.parseHeader(rawHeader, false).toList).getOrElse(List())
+          .find(address => Try(address.validate()).isFailure)
+          .map(_.getAddress)
+          .getOrElse(rawHeader)
+        throw new IllegalArgumentException(s"Invalid mail address: $faultyAddress in $headerName header", e)
+      case Failure(e) => throw e
+    }
 
   private def validateMailAddress(headName: String, address: Address): MailAddress =
     Try(new MailAddress(asString(address))) match {

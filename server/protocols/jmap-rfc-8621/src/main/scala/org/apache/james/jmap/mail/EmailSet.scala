@@ -521,6 +521,8 @@ case class EmailSetUpdate(keywords: Option[Keywords],
       Left(new IllegalArgumentException("Partial update and reset specified for mailboxIds"))
     } else if (keywords.isDefined && (keywordsToAdd.isDefined || keywordsToRemove.isDefined)) {
       Left(new IllegalArgumentException("Partial update and reset specified for keywords"))
+    } else if (mailboxIds.exists(_.value.isEmpty)) {
+      Left(new EmailWithoutMailboxException())
     } else {
       val mailboxIdsIdentity: Function[MailboxIds, MailboxIds] = ids => ids
       val mailboxIdsAddition: Function[MailboxIds, MailboxIds] = mailboxIdsToAdd
@@ -573,6 +575,9 @@ case class ValidatedEmailSetUpdate private[mail](keywordsTransformation: Functio
                                            update: EmailSetUpdate)
 
 class EmailUpdateValidationException() extends IllegalArgumentException
+
+// RFC 8621 section 4.1.1: an Email in the mail store MUST belong to one or more Mailboxes at all times
+class EmailWithoutMailboxException() extends IllegalArgumentException("An email must belong to at least one mailbox: use destroy to delete it")
 
 case class InvalidEmailPropertyException(property: String, cause: String) extends EmailUpdateValidationException
 

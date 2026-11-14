@@ -151,12 +151,63 @@ public class OnlyText extends GenericMailet {
     }
 
     public String html2Text(String html) {
-        return decodeEntities(html
-                .replaceAll("\\<([bB][rR]|[dD][lL])[ ]*[/]*[ ]*\\>", "\n")
-                .replaceAll("\\</([pP]|[hH]5|[dD][tT]|[dD][dD]|[dD][iI][vV])[ ]*\\>", "\n")
-                .replaceAll("\\<[lL][iI][ ]*[/]*[ ]*\\>", "\n* ")
-                .replaceAll("\\<[dD][dD][ ]*[/]*[ ]*\\>", " - ")
-                .replaceAll("\\<.*?\\>", ""));
+        // Possessive quantifiers: the space, slash and space runs are disjoint, so no backtracking is needed
+        return decodeEntities(removeTags(html
+                .replaceAll("<([bB][rR]|[dD][lL]) *+/*+ *+>", "\n")
+                .replaceAll("</([pP]|[hH]5|[dD][tT]|[dD][dD]|[dD][iI][vV]) *+>", "\n")
+                .replaceAll("<[lL][iI] *+/*+ *+>", "\n* ")
+                .replaceAll("<[dD][dD] *+/*+ *+>", " - ")));
+    }
+
+    /**
+     * Removes everything from a '<' to the next '>' on the same line, like replaceAll("<.*?>", "")
+     * but in linear time.
+     */
+    private static String removeTags(String text) {
+        StringBuilder result = new StringBuilder(text.length());
+        int noClosingBefore = -1;
+        int i = 0;
+        while (i < text.length()) {
+            char c = text.charAt(i);
+            if (c == '<' && i >= noClosingBefore) {
+                int closing = findClosingOnSameLine(text, i + 1);
+                if (closing >= 0) {
+                    i = closing + 1;
+                    continue;
+                }
+                noClosingBefore = endOfLine(text, i + 1);
+            }
+            result.append(c);
+            i++;
+        }
+        return result.toString();
+    }
+
+    private static int findClosingOnSameLine(String text, int from) {
+        for (int i = from; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '>') {
+                return i;
+            }
+            if (isLineTerminator(c)) {
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    private static int endOfLine(String text, int from) {
+        for (int i = from; i < text.length(); i++) {
+            if (isLineTerminator(text.charAt(i))) {
+                return i;
+            }
+        }
+        return text.length();
+    }
+
+    private static boolean isLineTerminator(char c) {
+        // Characters not matched by '.' in a java.util.regex.Pattern
+        return c == '\n' || c == '\r' || c == 0x85 || c == 0x2028 || c == 0x2029;
     }
 
     public String decodeEntities(String data) {

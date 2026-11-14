@@ -341,7 +341,7 @@ trait MDNSendMethodContract {
   @Test
   def mdnSendShouldBeSuccessWhenRequestAssignFinalRecipient(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping(davidUsername.getLocalPart, DOMAIN.asString, andreUsername.asString)
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("andre-alias", DOMAIN.asString, andreUsername.asString)
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(bobMailBoxPath)

@@ -296,7 +296,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         if (obj instanceof AbstractJPAMailboxMessage) {
             AbstractJPAMailboxMessage other = (AbstractJPAMailboxMessage) obj;
             return Objects.equal(getMailboxId(), other.getMailboxId())
-                && Objects.equal(uid, other.getUid());
+                && Objects.equal(getUid(), other.getUid());
         }
         return false;
     }
