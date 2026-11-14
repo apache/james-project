@@ -47,6 +47,16 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
     public static final String SET_TAG = "SET:";
     /** Defines a runtime variable holding a base64 encoded value (\0 = NUL): <code>SET-BASE64: name=value</code>. */
     public static final String SET_BASE64_TAG = "SET-BASE64:";
+    /** Skips server lines matching the pattern (when not matching the expected one): <code>IGNORE: regex</code>. */
+    public static final String IGNORE_TAG = "IGNORE:";
+    /** Literal content line, followed by CRLF. */
+    public static final String LITERAL_LINE_TAG = "L:";
+    /** Literal content line, not followed by CRLF. */
+    public static final String LITERAL_RAW_TAG = "L-:";
+    /** <code>POLL timeoutMs intervalMs {</code> ... <code>}</code> */
+    public static final String POLL_TAG = "POLL";
+    public static final String POLL_EXPECT_TAG = "EXPECT:";
+    public static final String POLL_END_TAG = "END:";
     /** Upgrades the current session to TLS. */
     public static final String STARTTLS = "STARTTLS";
 
@@ -111,6 +121,7 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
         private int sessionNumber = -1;
         private int lineNumber = 0;
         private String lastClientMsg = "";
+        private String pushedBack = null;
 
         Parser(BufferedReader reader, ProtocolSession session, String fileName) {
             this.reader = reader;
@@ -119,6 +130,12 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
         }
 
         private String nextLine() throws Exception {
+            if (pushedBack != null) {
+                String line = pushedBack;
+                pushedBack = null;
+                lineNumber++;
+                return line;
+            }
             String line = reader.readLine();
             if (line != null) {
                 lineNumber++;
@@ -146,8 +163,23 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                 if (next.length() > 3) {
                     clientMsg = next.substring(3);
                 }
-                session.cl(sessionNumber, clientMsg);
+                if (clientMsg.endsWith("{}") || clientMsg.endsWith("{+}")) {
+                    List<ProtocolSession.LiteralPart> parts = literalParts();
+                    if (!parts.isEmpty()) {
+                        session.literal(sessionNumber, clientMsg, parts, location);
+                        lastClientMsg = clientMsg;
+                        return;
+                    }
+                }
+                session.cl(sessionNumber, clientMsg, location);
                 lastClientMsg = clientMsg;
+            } else if (next.startsWith(LITERAL_LINE_TAG) || next.startsWith(LITERAL_RAW_TAG)) {
+                throw new Exception("'L:' and 'L-:' lines must follow a 'C:' line ending with '{}' or '{+}'");
+            } else if (next.startsWith(IGNORE_TAG)) {
+                String pattern = next.substring(IGNORE_TAG.length()).trim();
+                session.ignore(sessionNumber, pattern.isEmpty() ? null : validRegex(pattern));
+            } else if (next.startsWith(POLL_TAG + " ")) {
+                parsePoll(next, location);
             } else if (next.startsWith(SERVER_TAG)) {
                 String serverMsg = "";
                 if (next.length() > 3) {
@@ -235,6 +267,65 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                 }
                 throw new Exception("Invalid line prefix: " + prefix);
             }
+        }
+
+        private List<ProtocolSession.LiteralPart> literalParts() throws Exception {
+            List<ProtocolSession.LiteralPart> parts = new ArrayList<>();
+            while (true) {
+                String line = nextLine();
+                if (line == null) {
+                    return parts;
+                }
+                if (line.startsWith(LITERAL_RAW_TAG)) {
+                    parts.add(new ProtocolSession.LiteralPart(literalText(line, LITERAL_RAW_TAG), false));
+                } else if (line.startsWith(LITERAL_LINE_TAG)) {
+                    parts.add(new ProtocolSession.LiteralPart(literalText(line, LITERAL_LINE_TAG), true));
+                } else {
+                    pushedBack = line;
+                    lineNumber--;
+                    return parts;
+                }
+            }
+        }
+
+        private String literalText(String line, String tag) {
+            // like 'C:', one separator space after the tag is not part of the content
+            String text = line.substring(tag.length());
+            return text.startsWith(" ") ? text.substring(1) : text;
+        }
+
+        private void parsePoll(String header, String location) throws Exception {
+            String[] tokens = header.trim().split("\\s+");
+            if (tokens.length != 4 || !tokens[3].equals("{")) {
+                throw new Exception("Expecting 'POLL <timeoutMs> <intervalMs> {', got: " + header);
+            }
+            long timeout = Long.parseLong(tokens[1]);
+            long interval = Long.parseLong(tokens[2]);
+            if (timeout <= 0 || interval <= 0) {
+                throw new Exception("POLL timeout and interval must be positive");
+            }
+            List<String> commands = new ArrayList<>();
+            String expect = null;
+            String end = null;
+            String line;
+            while ((line = nextLine()) != null && !line.trim().equals(CLOSE_UNORDERED_BLOCK_TAG)) {
+                if (line.startsWith(CLIENT_TAG)) {
+                    commands.add(line.length() > 3 ? line.substring(3) : "");
+                } else if (line.startsWith(POLL_EXPECT_TAG)) {
+                    expect = validRegex(line.substring(POLL_EXPECT_TAG.length()).trim());
+                } else if (line.startsWith(POLL_END_TAG)) {
+                    end = validRegex(line.substring(POLL_END_TAG.length()).trim());
+                } else if (!line.startsWith(COMMENT_TAG) && !line.isBlank()) {
+                    throw new Exception("Only 'C:', 'EXPECT:' and 'END:' lines are permitted inside a POLL block (line " + lineNumber + ")");
+                }
+            }
+            if (line == null) {
+                throw new Exception("Unterminated POLL block");
+            }
+            if (commands.isEmpty() || expect == null || end == null) {
+                throw new Exception("A POLL block needs at least one 'C:' line, an 'EXPECT:' line and an 'END:' line");
+            }
+            session.poll(sessionNumber, timeout, interval, commands, expect, end, location);
         }
 
         private String validRegex(String regex) throws Exception {

@@ -42,7 +42,8 @@ class HttpTransportTest {
         McpMptConfiguration configuration = new McpMptConfiguration(
             Map.of("fake", Target.parse("fake", "imap://127.0.0.1:1")), Map.of(), true,
             Duration.ofSeconds(1), Duration.ofSeconds(1), Duration.ofSeconds(5), Duration.ofSeconds(5), 1, 100,
-            McpMptConfiguration.Transport.HTTP, 0, Optional.of("secret"));
+            McpMptConfiguration.Transport.HTTP, 0, Optional.of("secret"),
+            Optional.empty(), Optional.empty());
         transport = new HttpTransport(new McpHandler(new ScriptRunner(configuration)), 0, Optional.of("secret")).start();
     }
 

@@ -56,10 +56,13 @@ public class McpHandler {
     private final ObjectMapper mapper = new ObjectMapper();
     private final ScriptRunner runner;
     private final String syntax;
+    private final Optional<AccountManager> accounts;
 
     public McpHandler(ScriptRunner runner) {
         this.runner = runner;
         this.syntax = loadSyntax();
+        this.accounts = runner.configuration().webAdmin()
+            .map(webAdmin -> new AccountManager(webAdmin, runner.configuration().variables()));
     }
 
     private static String loadSyntax() {
@@ -220,6 +223,8 @@ public class McpHandler {
         variables.putObject("additionalProperties").put("type", "string");
         runProperties.putObject("continueAfterFailure").put("type", "boolean")
             .put("description", "Keep running after a mismatch and report all of them (default false)");
+        runProperties.putObject("label").put("type", "string")
+            .put("description", "Short label naming the run in the server side archive (when enabled)");
         runProperties.putObject("timeoutSeconds").put("type", "integer")
             .put("description", "Overall timeout (default " + runner.configuration().defaultScriptTimeout().toSeconds()
                 + "s, max " + runner.configuration().maxScriptTimeout().toSeconds() + "s)");
@@ -228,6 +233,22 @@ public class McpHandler {
         runAnnotations.put("readOnlyHint", false);
         runAnnotations.put("destructiveHint", true);
         runAnnotations.put("openWorldHint", false);
+
+        if (accounts.isPresent()) {
+            ObjectNode create = tool(tools, "create_account",
+                "Create an isolated account on the bench through WebAdmin (no Sieve script, subscription or mailbox attached). "
+                    + "Returns username and password, to pass to run_script as variables {\"user\": ..., \"password\": ...}. "
+                    + "Default: a random mpt-xxxx@" + accounts.get().defaultDomain().orElse("<domain>") + " account with a random password.");
+            ObjectNode createProperties = (ObjectNode) create.get("inputSchema").get("properties");
+            createProperties.putObject("username").put("type", "string").put("description", "Optional local part or full address");
+            createProperties.putObject("password").put("type", "string").put("description", "Optional password");
+            create.putObject("annotations").put("destructiveHint", false);
+
+            ObjectNode delete = tool(tools, "delete_account", "Delete an account previously created by create_account.");
+            ((ObjectNode) delete.get("inputSchema").get("properties")).putObject("username").put("type", "string");
+            ((ObjectNode) delete.get("inputSchema")).putArray("required").add("username");
+            delete.putObject("annotations").put("destructiveHint", true);
+        }
         return result;
     }
 
@@ -249,6 +270,8 @@ public class McpHandler {
             case "get_mpt_syntax" -> textResult(syntax, false);
             case "validate_script" -> validate(arguments);
             case "run_script" -> run(arguments);
+            case "create_account" -> createAccount(arguments);
+            case "delete_account" -> deleteAccount(arguments);
             default -> throw new JsonRpcException(INVALID_PARAMS, "Unknown tool: " + name);
         };
     }
@@ -269,7 +292,43 @@ public class McpHandler {
         ObjectNode variables = result.putObject("variables");
         runner.configuration().variables().forEach(variables::put);
         variables.put("runId", "<random per run>");
+        result.put("archive", runner.configuration().archiveDirectory().isPresent());
+        result.put("accountManagement", accounts.isPresent());
         return result;
+    }
+
+    private JsonNode createAccount(JsonNode arguments) throws JsonRpcException {
+        AccountManager manager = accounts.orElseThrow(() -> new JsonRpcException(INVALID_PARAMS, "Account management is not configured"));
+        try {
+            AccountManager.Account account = manager.create(optionalText(arguments, "username"), optionalText(arguments, "password"));
+            ObjectNode result = mapper.createObjectNode();
+            result.put("username", account.username());
+            result.put("password", account.password());
+            return toolResult(result, false);
+        } catch (RuntimeException e) {
+            return textResult(e.getMessage(), true);
+        }
+    }
+
+    private JsonNode deleteAccount(JsonNode arguments) throws JsonRpcException {
+        AccountManager manager = accounts.orElseThrow(() -> new JsonRpcException(INVALID_PARAMS, "Account management is not configured"));
+        Optional<String> username = optionalText(arguments, "username");
+        if (username.isEmpty()) {
+            return textResult("Missing 'username' argument", true);
+        }
+        try {
+            manager.delete(username.get());
+            return textResult("Deleted " + username.get(), false);
+        } catch (RuntimeException e) {
+            return textResult(e.getMessage(), true);
+        }
+    }
+
+    private Optional<String> optionalText(JsonNode arguments, String field) {
+        return Optional.ofNullable(arguments.get(field))
+            .filter(JsonNode::isTextual)
+            .map(JsonNode::asText)
+            .filter(value -> !value.isBlank());
     }
 
     private JsonNode validate(JsonNode arguments) {
@@ -312,7 +371,7 @@ public class McpHandler {
             .filter(JsonNode::canConvertToLong)
             .map(node -> Duration.ofSeconds(node.asLong()));
         ScriptRunner.RunRequest request = new ScriptRunner.RunRequest(script, target, sessionTargets, variables,
-            arguments.path("continueAfterFailure").asBoolean(false), timeout);
+            arguments.path("continueAfterFailure").asBoolean(false), timeout, optionalText(arguments, "label"));
 
         ScriptRunner.RunReport report;
         try {
@@ -332,6 +391,7 @@ public class McpHandler {
         ObjectNode structured = mapper.createObjectNode();
         structured.put("status", report.status().name());
         structured.put("durationMs", report.durationMs());
+        structured.put("runId", report.runId());
         ObjectNode sessions = structured.putObject("sessions");
         report.sessionTargets().forEach((index, name) -> sessions.put(String.valueOf(index), name));
         ArrayNode failures = structured.putArray("failures");
@@ -339,6 +399,10 @@ public class McpHandler {
         report.error().ifPresent(error -> structured.put("error", error));
         ObjectNode captured = structured.putObject("capturedVariables");
         report.capturedVariables().forEach(captured::put);
+        ObjectNode unread = structured.putObject("unreadServerLines");
+        report.unreadServerLines().forEach((index, lines) -> lines.forEach(unread.withArray(String.valueOf(index))::add));
+        report.sessionsClosedByServer().forEach(structured.putArray("sessionsClosedByServer")::add);
+        report.archive().ifPresent(path -> structured.put("archive", path));
         structured.put("transcript", report.transcript().format());
 
         StringBuilder text = new StringBuilder();
@@ -349,6 +413,15 @@ public class McpHandler {
             text.append("\nFailures:\n");
             report.failures().forEach(failure -> text.append(failure.trim()).append("\n---\n"));
         }
+        if (!report.unreadServerLines().isEmpty()) {
+            text.append("\nUnread server lines (sent by the server, not consumed by the script):\n");
+            report.unreadServerLines().forEach((index, lines) ->
+                lines.forEach(line -> text.append("  [").append(index).append("] ").append(line).append('\n')));
+        }
+        if (!report.sessionsClosedByServer().isEmpty()) {
+            text.append("Sessions closed by the server: ").append(report.sessionsClosedByServer()).append('\n');
+        }
+        report.archive().ifPresent(path -> text.append("Archived in: ").append(path).append('\n'));
         if (!report.capturedVariables().isEmpty()) {
             text.append("\nCaptured variables: ").append(report.capturedVariables()).append('\n');
         }

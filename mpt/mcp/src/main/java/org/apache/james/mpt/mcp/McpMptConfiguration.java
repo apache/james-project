@@ -20,6 +20,7 @@
 package org.apache.james.mpt.mcp;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -52,7 +53,17 @@ public record McpMptConfiguration(Map<String, Target> targets,
                                   int maxTranscriptLines,
                                   Transport transport,
                                   int httpPort,
-                                  Optional<String> authToken) {
+                                  Optional<String> authToken,
+                                  Optional<Path> archiveDirectory,
+                                  Optional<WebAdminConfiguration> webAdmin) {
+
+    /**
+     * WebAdmin access used to create isolated accounts.
+     *
+     * @param domain domain of the created accounts
+     */
+    public record WebAdminConfiguration(URI url, Optional<String> token, Optional<String> password, Optional<String> domain) {
+    }
 
     public enum Transport {
         STDIO, HTTP
@@ -82,7 +93,12 @@ public record McpMptConfiguration(Map<String, Target> targets,
         int maxTranscriptLines = Integer.parseInt(env.getOrDefault("MPT_MCP_MAX_TRANSCRIPT_LINES", "2000"));
         Transport transport = Transport.valueOf(env.getOrDefault("MPT_MCP_TRANSPORT", "stdio").toUpperCase(Locale.US));
         int httpPort = Integer.parseInt(env.getOrDefault("MPT_MCP_HTTP_PORT", "8080"));
-        Optional<String> authToken = Optional.ofNullable(env.get("MPT_MCP_AUTH_TOKEN")).filter(token -> !token.isBlank());
+        Optional<String> authToken = nonBlank(env.get("MPT_MCP_AUTH_TOKEN"));
+        Optional<Path> archiveDirectory = nonBlank(env.get("MPT_MCP_ARCHIVE_DIR")).map(Path::of);
+        Optional<WebAdminConfiguration> webAdmin = nonBlank(env.get("MPT_MCP_WEBADMIN_URL"))
+            .map(url -> new WebAdminConfiguration(URI.create(url.endsWith("/") ? url.substring(0, url.length() - 1) : url),
+                nonBlank(env.get("MPT_MCP_WEBADMIN_TOKEN")), nonBlank(env.get("MPT_MCP_WEBADMIN_PASSWORD")),
+                nonBlank(env.get("MPT_MCP_ACCOUNT_DOMAIN"))));
 
         String configFile = env.get("MPT_MCP_CONFIG");
         if (configFile != null && !configFile.isBlank()) {
@@ -106,6 +122,9 @@ public record McpMptConfiguration(Map<String, Target> targets,
             maxScriptTimeout = Duration.ofSeconds(json.path("maxScriptTimeoutSeconds").asLong(maxScriptTimeout.toSeconds()));
             maxConcurrentRuns = json.path("maxConcurrentRuns").asInt(maxConcurrentRuns);
             maxTranscriptLines = json.path("maxTranscriptLines").asInt(maxTranscriptLines);
+            if (json.hasNonNull("archiveDirectory")) {
+                archiveDirectory = Optional.of(Path.of(json.get("archiveDirectory").asText()));
+            }
         }
 
         if (targets.isEmpty()) {
@@ -113,7 +132,8 @@ public record McpMptConfiguration(Map<String, Target> targets,
         }
 
         return new McpMptConfiguration(targets, variables, trustAll, connectTimeout, readTimeout,
-            defaultScriptTimeout, maxScriptTimeout, maxConcurrentRuns, maxTranscriptLines, transport, httpPort, authToken);
+            defaultScriptTimeout, maxScriptTimeout, maxConcurrentRuns, maxTranscriptLines, transport, httpPort, authToken,
+            archiveDirectory, webAdmin);
     }
 
     public McpMptConfiguration {
@@ -129,7 +149,11 @@ public record McpMptConfiguration(Map<String, Target> targets,
             new Target("smtps", Protocol.SMTP, host, 465, true, "SMTP submission, implicit TLS"),
             new Target("imaps", Protocol.IMAP, host, 993, true, "IMAP, implicit TLS"),
             new Target("pop3s", Protocol.POP3, host, 995, true, "POP3, implicit TLS"),
-            new Target("managesieves", Protocol.MANAGESIEVE, host, 4190, true, "ManageSieve, implicit TLS"));
+            new Target("managesieves", Protocol.MANAGESIEVE, host, 4190, true, "ManageSieve, implicit TLS"),
+            new Target("smtp", Protocol.SMTP, host, 25, false, "SMTP relay, plain text, STARTTLS capable"),
+            new Target("submission", Protocol.SMTP, host, 587, false, "SMTP submission, plain text, STARTTLS capable"),
+            new Target("imap", Protocol.IMAP, host, 143, false, "IMAP, plain text, STARTTLS capable"),
+            new Target("pop3", Protocol.POP3, host, 110, false, "POP3, plain text, STLS capable"));
     }
 
     private static Target parseTarget(JsonNode node) {
@@ -164,6 +188,10 @@ public record McpMptConfiguration(Map<String, Target> targets,
                 result.put(entry.substring(0, separator).trim(), entry.substring(separator + 1).trim());
             });
         return result;
+    }
+
+    private static Optional<String> nonBlank(String value) {
+        return Optional.ofNullable(value).filter(v -> !v.isBlank());
     }
 
     private static Duration seconds(Map<String, String> env, String key, long defaultValue) {

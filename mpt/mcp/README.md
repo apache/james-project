@@ -11,10 +11,14 @@ a test bench. The agent can only reach the targets configured on the server.
 | `list_targets` | Configured targets (name, protocol, host, port, TLS) and predefined variables |
 | `get_mpt_syntax` | Script syntax reference (also exposed as resource `mpt://syntax` and in the `initialize` instructions) |
 | `validate_script` | Parse only: syntax errors with line numbers, number of sessions |
-| `run_script` | Run the script: `PASSED` / `FAILED` / `ERROR` / `TIMEOUT`, mismatches, captured variables, transcript |
+| `run_script` | Run the script: `PASSED` / `FAILED` / `ERROR` / `TIMEOUT`, failure reasons, captured variables, unread server lines, transcript |
+| `create_account` / `delete_account` | Only when WebAdmin is configured: isolated accounts per run (only accounts created by the server can be deleted) |
 
 `run_script` arguments: `script`, `target` (default target of every session), `sessions` (per session override, e.g.
-`{"0": "smtps", "1": "imaps"}`), `variables`, `continueAfterFailure`, `timeoutSeconds`.
+`{"0": "smtps", "1": "imaps"}`), `variables`, `continueAfterFailure`, `timeoutSeconds`, `label` (archive name).
+
+A non passing run always comes with a reason: the session, the last command actually sent with its script line, the
+expected and actual lines, the server lines left unread, and the sessions the server closed.
 
 ## MPT syntax extensions
 
@@ -23,6 +27,9 @@ On top of the classic `C:` / `S:` / `SUB {}` / `SESSION:` / `WAIT` / `REINIT` / 
 * runtime `${variables}`: verbatim in `C:` lines, regex-quoted in `S:` / `SUB` / `UNTIL:` lines;
 * captures: named groups of a matched line become variables, `S: \* OK \[UIDVALIDITY (?<uidvalidity>\d+)\].*`;
 * `UNTIL: <regex>`: skip server lines until one matches;
+* `IGNORE: <regex>`: tolerate unexpected lines (e.g. untagged IMAP responses) while checking expected ones;
+* literals with computed UTF-8 size: `C: A1 APPEND INBOX {}` (or `{+}`) followed by `L:` / `L-:` lines;
+* `POLL <timeoutMs> <intervalMs> { C: ... EXPECT: ... END: ... }`: wait for asynchronous deliveries;
 * `SET: name=value` and `SET-BASE64: name=value` (`\0` = NUL, for SASL PLAIN);
 * `STARTTLS`: upgrade the current connection to TLS;
 * accurate `script:<line>` locations in parse errors and failures, failures collected with `continueAfterFailure`.
@@ -47,10 +54,16 @@ Environment variables:
 | `MPT_MCP_TRANSPORT` | `stdio` (`http` in the image) | `stdio` or `http` |
 | `MPT_MCP_HTTP_PORT` | `8080` | HTTP transport port, endpoint `POST /mcp`, liveness `GET /health` |
 | `MPT_MCP_AUTH_TOKEN` | | When set, HTTP requests need `Authorization: Bearer <token>` |
+| `MPT_MCP_ARCHIVE_DIR` | | When set, every run is stored in `<dir>/<timestamp>_<label>_<runId>/` (`script.mpt`, `transcript.txt`, `report.json`) |
+| `MPT_MCP_WEBADMIN_URL` | | James WebAdmin URL (e.g. `http://james:8000`), enables `create_account` / `delete_account` |
+| `MPT_MCP_WEBADMIN_TOKEN` | | WebAdmin JWT, sent as `Authorization: Bearer` |
+| `MPT_MCP_WEBADMIN_PASSWORD` | | WebAdmin password, sent as the `Password` header |
+| `MPT_MCP_ACCOUNT_DOMAIN` | domain of `${user}` | Domain of the created accounts (must exist) |
 | `MPT_MCP_LOG_LEVEL` | `INFO` | Logs go to stderr |
 
 Default targets: `smtps=smtps://james:465`, `imaps=imaps://james:993`, `pop3s=pop3s://james:995`,
-`managesieves=sieves://james:4190`.
+`managesieves=sieves://james:4190`, and the plain text, STARTTLS capable `smtp=smtp://james:25`,
+`submission=smtp://james:587`, `imap=imap://james:143`, `pop3=pop3://james:110`.
 
 JSON file (mount it under `/root/conf`):
 

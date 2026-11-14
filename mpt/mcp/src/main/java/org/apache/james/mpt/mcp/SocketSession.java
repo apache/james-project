@@ -30,6 +30,8 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocket;
@@ -52,6 +54,7 @@ public class SocketSession implements Session {
     private final Transcript transcript;
 
     private Socket socket;
+    private volatile boolean closedByServer = false;
     private InputStream in;
     private OutputStream out;
 
@@ -68,6 +71,7 @@ public class SocketSession implements Session {
 
     @Override
     public void start() throws Exception {
+        closedByServer = false;
         transcript.record(id, Transcript.Direction.EVENT, "connecting to " + target.name() + " (" + target.uri() + ")");
         Socket plain = new Socket();
         plain.connect(new InetSocketAddress(target.host(), target.port()), (int) connectTimeout.toMillis());
@@ -113,12 +117,14 @@ public class SocketSession implements Session {
         while (true) {
             int next = in.read();
             if (next == -1) {
+                closedByServer = true;
                 if (buffer.size() > 0) {
                     String partial = buffer.toString(UTF_8);
                     transcript.record(id, Transcript.Direction.SERVER, partial);
                     transcript.record(id, Transcript.Direction.EVENT, "WARNING: last line not terminated by CRLF, connection closed by server");
                     return partial;
                 }
+                closedByServer = true;
                 transcript.record(id, Transcript.Direction.EVENT, "connection closed by server");
                 throw new EOFException("connection closed by server");
             }
@@ -142,6 +148,41 @@ public class SocketSession implements Session {
         transcript.record(id, Transcript.Direction.CLIENT, line);
         out.write((line + "\r\n").getBytes(UTF_8));
         out.flush();
+    }
+
+    @Override
+    public void write(String data) throws Exception {
+        transcript.record(id, Transcript.Direction.CLIENT, "<literal " + data.getBytes(UTF_8).length + " bytes> "
+            + data.replace("\r", "\\r").replace("\n", "\\n"));
+        out.write(data.getBytes(UTF_8));
+        out.flush();
+    }
+
+    public boolean isStarted() {
+        return socket != null;
+    }
+
+    public boolean isClosedByServer() {
+        return closedByServer;
+    }
+
+    /**
+     * Reads the lines the server already sent but the script did not consume.
+     */
+    public List<String> drainUnread(Duration wait, int maxLines) {
+        List<String> lines = new ArrayList<>();
+        if (socket == null || socket.isClosed() || closedByServer) {
+            return lines;
+        }
+        try {
+            socket.setSoTimeout((int) wait.toMillis());
+            while (lines.size() < maxLines) {
+                lines.add(readLine());
+            }
+        } catch (Exception e) {
+            // timeout or closed: nothing more to read
+        }
+        return lines;
     }
 
     @Override

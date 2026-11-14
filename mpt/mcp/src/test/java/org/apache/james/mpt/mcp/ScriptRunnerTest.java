@@ -28,13 +28,17 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,6 +49,9 @@ class ScriptRunnerTest {
      */
     private ServerSocket serverSocket;
     private ScriptRunner runner;
+
+    @TempDir
+    Path archiveDirectory;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -62,7 +69,8 @@ class ScriptRunnerTest {
         McpMptConfiguration configuration = new McpMptConfiguration(
             Map.of("fake", Target.parse("fake", "imap://127.0.0.1:" + serverSocket.getLocalPort())),
             Map.of("user", "bob"), true, Duration.ofSeconds(2), Duration.ofSeconds(2), Duration.ofSeconds(10),
-            Duration.ofSeconds(20), 2, 100, McpMptConfiguration.Transport.STDIO, 0, Optional.empty());
+            Duration.ofSeconds(20), 2, 100, McpMptConfiguration.Transport.STDIO, 0, Optional.empty(),
+            Optional.of(archiveDirectory), Optional.empty());
         runner = new ScriptRunner(configuration);
     }
 
@@ -130,6 +138,34 @@ class ScriptRunnerTest {
 
         assertThat(report.status()).isEqualTo(ScriptRunner.Status.PASSED);
         assertThat(report.sessionTargets()).containsOnlyKeys(0, 1);
+    }
+
+    @Test
+    void failureReasonShouldAlwaysBeReportedWithUnreadLines() throws Exception {
+        ScriptRunner.RunReport report = runner.run(request("""
+            S: \\* OK .*
+            C: A1 NOOP
+            S: A1 OK NOOP
+            """));
+
+        assertThat(report.status()).isEqualTo(ScriptRunner.Status.FAILED);
+        assertThat(report.failures()).singleElement().asString()
+            .contains("LastClientMsg: script:2: A1 NOOP")
+            .contains("Unread server lines on session 0: A1 OK NOOP");
+        assertThat(report.unreadServerLines()).containsEntry(0, List.of("A1 OK NOOP"));
+    }
+
+    @Test
+    void runsShouldBeArchived() throws Exception {
+        ScriptRunner.RunReport report = runner.run(new ScriptRunner.RunRequest("S: \\* OK .*\n", Optional.empty(), Map.of(), Map.of(),
+            false, Optional.empty(), Optional.of("my label/../x")));
+
+        Path archived = Path.of(report.archive().orElseThrow());
+        assertThat(archived.getParent()).isEqualTo(archiveDirectory);
+        assertThat(archived.getFileName().toString()).contains("_my_label_.._x_" + report.runId());
+        assertThat(Files.readString(archived.resolve("script.mpt"))).isEqualTo("S: \\* OK .*\n");
+        assertThat(Files.readString(archived.resolve("report.json"))).contains("\"status\" : \"PASSED\"");
+        assertThat(Files.readString(archived.resolve("transcript.txt"))).contains("[0] S: * OK [UIDVALIDITY 7] ready");
     }
 
     @Test

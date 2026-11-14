@@ -58,6 +58,11 @@ class ProtocolSessionSyntaxTest {
         }
 
         @Override
+        public void write(String data) {
+            written.add("RAW:" + data);
+        }
+
+        @Override
         public void start() {
         }
 
@@ -147,5 +152,70 @@ class ProtocolSessionSyntaxTest {
         assertThatThrownBy(() -> parse("C: a\n\nS: (\n"))
             .hasMessageContaining("test:3")
             .hasMessageContaining("Invalid regular expression");
+    }
+
+    @Test
+    void ignoredLinesShouldBeSkippedUnlessExpected() throws Exception {
+        ProtocolSession protocolSession = parse("""
+            IGNORE: \\* .*
+            C: A1 NOOP
+            S: \\* 3 EXISTS
+            S: A1 OK.*
+            """);
+
+        protocolSession.runSessions(new Session[] {new ScriptedSession("* 3 EXISTS", "* 1 RECENT", "* OK noise", "A1 OK NOOP")});
+    }
+
+    @Test
+    void literalSizeShouldBeComputedInUtf8Bytes() throws Exception {
+        ProtocolSession protocolSession = parse("""
+            C: A1 APPEND INBOX {+}
+            L: Subject: é
+            L:
+            C:
+            C: A2 LOGIN {}
+            L-: björn
+            C:  secret
+            """);
+        ScriptedSession session = new ScriptedSession("+ go");
+
+        protocolSession.runSessions(new Session[] {session});
+
+        assertThat(session.written).containsExactly(
+            "A1 APPEND INBOX {15+}", "RAW:Subject: é\r\n\r\n", "",
+            "A2 LOGIN {6}", "RAW:björn", " secret");
+    }
+
+    @Test
+    void pollShouldRetryUntilExpectedLine() throws Exception {
+        ProtocolSession protocolSession = parse("""
+            POLL 5000 10 {
+            C: A${pollAttempt} STATUS INBOX (MESSAGES)
+            EXPECT: \\* STATUS INBOX \\(MESSAGES (?<count>[1-9]\\d*)\\)
+            END: A\\d+ OK.*
+            }
+            """);
+        ScriptedSession session = new ScriptedSession(
+            "* STATUS INBOX (MESSAGES 0)", "A1 OK done",
+            "* STATUS INBOX (MESSAGES 2)", "A2 OK done");
+
+        protocolSession.runSessions(new Session[] {session});
+
+        assertThat(session.written).containsExactly("A1 STATUS INBOX (MESSAGES)", "A2 STATUS INBOX (MESSAGES)");
+        assertThat(protocolSession.getVariables()).containsEntry("count", "2");
+    }
+
+    @Test
+    void failuresShouldReportTheSubstitutedLastCommandWithItsLine() throws Exception {
+        ProtocolSession protocolSession = parse("""
+            S: \\* OK.*
+            C: A1 SELECT box-${runId}
+            S: A1 OK.*
+            """);
+        protocolSession.setVariable("runId", "42");
+
+        assertThatThrownBy(() -> protocolSession.runSessions(new Session[] {new ScriptedSession("* OK hi", "A1 NO nope")}))
+            .hasMessageContaining("LastClientMsg: test:2: A1 SELECT box-42")
+            .hasMessageContaining("Session: 0");
     }
 }

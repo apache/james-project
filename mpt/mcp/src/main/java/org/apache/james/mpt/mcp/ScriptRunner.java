@@ -62,21 +62,37 @@ public class ScriptRunner {
     }
 
     public record RunRequest(String script, Optional<String> target, Map<Integer, String> sessionTargets,
-                             Map<String, String> variables, boolean continueAfterFailure, Optional<Duration> timeout) {
+                             Map<String, String> variables, boolean continueAfterFailure, Optional<Duration> timeout,
+                             Optional<String> label) {
+        public RunRequest(String script, Optional<String> target, Map<Integer, String> sessionTargets,
+                          Map<String, String> variables, boolean continueAfterFailure, Optional<Duration> timeout) {
+            this(script, target, sessionTargets, variables, continueAfterFailure, timeout, Optional.empty());
+        }
     }
 
-    public record RunReport(Status status, long durationMs, Map<Integer, String> sessionTargets, List<String> failures,
-                            Optional<String> error, Map<String, String> capturedVariables, Transcript transcript) {
+    public record RunReport(Status status, long durationMs, String runId, Map<Integer, String> sessionTargets, List<String> failures,
+                            Optional<String> error, Map<String, String> capturedVariables,
+                            Map<Integer, List<String>> unreadServerLines, List<Integer> sessionsClosedByServer,
+                            Transcript transcript, Optional<String> archive) {
+        RunReport withArchive(String path) {
+            return new RunReport(status, durationMs, runId, sessionTargets, failures, error, capturedVariables,
+                unreadServerLines, sessionsClosedByServer, transcript, Optional.of(path));
+        }
     }
+
+    private static final Duration DRAIN_WAIT = Duration.ofMillis(300);
+    private static final int DRAIN_MAX_LINES = 50;
 
     private final McpMptConfiguration configuration;
     private final SSLSocketFactory sslSocketFactory;
     private final Semaphore concurrentRuns;
+    private final Optional<RunArchive> archive;
 
     public ScriptRunner(McpMptConfiguration configuration) throws Exception {
         this.configuration = configuration;
         this.sslSocketFactory = sslSocketFactory(configuration.trustAllCertificates());
         this.concurrentRuns = new Semaphore(configuration.maxConcurrentRuns());
+        this.archive = configuration.archiveDirectory().map(RunArchive::new);
     }
 
     public McpMptConfiguration configuration() {
@@ -118,7 +134,8 @@ public class ScriptRunner {
         Map<String, String> initialVariables = new LinkedHashMap<>(configuration.variables());
         byte[] runId = new byte[4];
         new SecureRandom().nextBytes(runId);
-        initialVariables.put("runId", HexFormat.of().formatHex(runId));
+        String runIdValue = HexFormat.of().formatHex(runId);
+        initialVariables.put("runId", runIdValue);
         initialVariables.putAll(request.variables());
         initialVariables.forEach(protocolSession::setVariable);
         protocolSession.setContinueAfterFailure(request.continueAfterFailure());
@@ -127,7 +144,7 @@ public class ScriptRunner {
             throw new IllegalStateException("Too many concurrent runs, try again later");
         }
         Transcript transcript = new Transcript(configuration.maxTranscriptLines());
-        Session[] sessions = new Session[targets.size()];
+        SocketSession[] sessions = new SocketSession[targets.size()];
         for (int i = 0; i < sessions.length; i++) {
             sessions[i] = new SocketSession(i, targets.get(i), sslSocketFactory, !configuration.trustAllCertificates(),
                 configuration.connectTimeout(), configuration.readTimeout(), transcript);
@@ -139,6 +156,8 @@ public class ScriptRunner {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Status status;
         Optional<String> error = Optional.empty();
+        Map<Integer, List<String>> unread = new LinkedHashMap<>();
+        List<Integer> closedByServer = new ArrayList<>();
         try {
             Future<?> execution = executor.submit(() -> {
                 for (Session session : sessions) {
@@ -163,6 +182,19 @@ public class ScriptRunner {
                 }
                 error = Optional.of(describe(cause));
             }
+            if (status != Status.TIMEOUT) {
+                for (int i = 0; i < sessions.length; i++) {
+                    if (sessions[i].isClosedByServer()) {
+                        closedByServer.add(i);
+                    }
+                    if (sessions[i].isStarted()) {
+                        List<String> lines = sessions[i].drainUnread(DRAIN_WAIT, DRAIN_MAX_LINES);
+                        if (!lines.isEmpty()) {
+                            unread.put(i, lines);
+                        }
+                    }
+                }
+            }
         } finally {
             for (Session session : sessions) {
                 try {
@@ -182,7 +214,19 @@ public class ScriptRunner {
             }
         });
         List<String> failures = new ArrayList<>(protocolSession.getFailures());
-        return new RunReport(status, (System.nanoTime() - start) / 1_000_000, targetNames, failures, error, captured, transcript);
+        if (status != Status.PASSED && failures.isEmpty()) {
+            StringBuilder reason = new StringBuilder(error.orElse("Unknown failure").trim());
+            closedByServer.forEach(index -> reason.append("\nSession ").append(index).append(" was closed by the server"));
+            unread.forEach((index, lines) -> reason.append("\nUnread server lines on session ").append(index).append(": ")
+                .append(String.join(" | ", lines)));
+            failures.add(reason.toString());
+        }
+        RunReport report = new RunReport(status, (System.nanoTime() - start) / 1_000_000, runIdValue, targetNames, failures,
+            error, captured, unread, closedByServer, transcript, Optional.empty());
+        if (archive.isPresent()) {
+            report = report.withArchive(archive.get().store(request, report));
+        }
+        return report;
     }
 
     private static String describe(Throwable throwable) {
