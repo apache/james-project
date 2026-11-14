@@ -92,7 +92,7 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
     private Response doEHLO(SMTPSession session, String argument) {
         SMTPResponse resp = new SMTPResponse(SMTPRetCode.MAIL_OK, new StringBuilder(session.getConfiguration().getHelloName()).append(" Hello ").append(argument)
                 .append(" [")
-                .append(session.getRemoteAddress().getAddress().getHostAddress()).append("])"));
+                .append(session.getRemoteAddress().getAddress().getHostAddress()).append("]"));
         
         session.setAttachment(SMTPSession.CURRENT_HELO_MODE,
                 COMMAND_NAME, State.Connection);
