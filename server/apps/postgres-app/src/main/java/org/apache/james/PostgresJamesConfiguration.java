@@ -191,6 +191,8 @@ public class PostgresJamesConfiguration implements Configuration {
                 () -> UsersRepositoryModuleChooser.Implementation.parse(configurationProvider));
 
             EventBusImpl eventBusImpl = this.eventBusImpl.orElseGet(() -> EventBusImpl.from(propertiesProvider));
+            Preconditions.checkState(!(searchConfiguration.getImplementation() == SearchConfiguration.Implementation.Lucene && eventBusImpl == EventBusImpl.RABBITMQ),
+                "Lucene search is not supported by postgres-app with the RabbitMQ event bus: its index is local to each node.");
 
             VaultConfiguration deletedMessageVaultConfiguration = this.deletedMessageVaultConfiguration.orElseGet(() -> {
                 try {

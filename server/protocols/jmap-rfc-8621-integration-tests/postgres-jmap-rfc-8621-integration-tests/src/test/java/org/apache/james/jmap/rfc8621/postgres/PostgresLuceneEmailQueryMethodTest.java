@@ -32,7 +32,6 @@ import org.apache.james.jmap.rfc8621.contract.EmailQueryMethodContract;
 import org.apache.james.jmap.rfc8621.contract.IdentityProbeModule;
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
 import org.apache.james.junit.categories.Unstable;
-import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.Disabled;
@@ -48,7 +47,7 @@ public class PostgresLuceneEmailQueryMethodTest implements EmailQueryMethodContr
             .configurationFromClasspath()
             .searchConfiguration(SearchConfiguration.lucene())
             .usersRepository(DEFAULT)
-            .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.RABBITMQ)
+            .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.IN_MEMORY)
             .blobStore(BlobStoreConfiguration.builder()
                 .postgres()
                 .disableCache()
@@ -56,7 +55,6 @@ public class PostgresLuceneEmailQueryMethodTest implements EmailQueryMethodContr
                 .noCryptoConfig())
             .build())
         .extension(PostgresExtension.empty())
-        .extension(new RabbitMQExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new DelegationProbeModule())

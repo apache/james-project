@@ -30,7 +30,6 @@ import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.jmap.rfc8621.contract.IdentityProbeModule;
 import org.apache.james.jmap.rfc8621.contract.SearchSnippetGetMethodContract;
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
-import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -43,7 +42,7 @@ public class PostgresLuceneSearchSnippetGetMethodTest implements SearchSnippetGe
             .configurationFromClasspath()
             .searchConfiguration(SearchConfiguration.lucene())
             .usersRepository(DEFAULT)
-            .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.RABBITMQ)
+            .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.IN_MEMORY)
             .blobStore(BlobStoreConfiguration.builder()
                 .postgres()
                 .disableCache()
@@ -51,7 +50,6 @@ public class PostgresLuceneSearchSnippetGetMethodTest implements SearchSnippetGe
                 .noCryptoConfig())
             .build())
         .extension(PostgresExtension.empty())
-        .extension(new RabbitMQExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new DelegationProbeModule())
