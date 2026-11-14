@@ -8408,7 +8408,7 @@ trait EmailSetMethodContract {
       .createMailbox(andreMailboxPath)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
     val message: Message = Fixture.createTestMessage
     server.getProbe(classOf[MailboxProbeImpl])
@@ -8464,7 +8464,7 @@ trait EmailSetMethodContract {
       .createMailbox(andreMailboxPath)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
     val message: Message = Fixture.createTestMessage
     server.getProbe(classOf[MailboxProbeImpl])
