@@ -20,14 +20,21 @@
 package org.apache.james.mpt.protocol;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.james.mpt.api.ProtocolInteractor;
 import org.apache.james.mpt.api.Session;
@@ -63,6 +70,87 @@ public class ProtocolSession implements ProtocolInteractor {
     private boolean continueAfterFailure = false;
 
     private Map<String, Stopwatch> timers = new HashMap<>();
+
+    /**
+     * Runtime variables. They are substituted (<code>${name}</code>) into client lines (verbatim)
+     * and into expected server lines (quoted as regex literals) when the element is executed.
+     * They are fed by {@link #setVariable(String, String)}, by <code>SET:</code> directives and
+     * by the named groups (<code>(?&lt;name&gt;...)</code>) of matched server lines.
+     */
+    private final Map<String, String> variables = new ConcurrentHashMap<>();
+
+    private final List<String> failures = new CopyOnWriteArrayList<>();
+
+    private static final Pattern VARIABLE_NAME = Pattern.compile("[A-Za-z][A-Za-z0-9_]*");
+
+    private static final int MAX_UNTIL_LINES = 10_000;
+
+    public void setVariable(String name, String value) {
+        if (!VARIABLE_NAME.matcher(name).matches()) {
+            throw new IllegalArgumentException("Invalid variable name '" + name + "'");
+        }
+        variables.put(name, value);
+    }
+
+    public Map<String, String> getVariables() {
+        return Collections.unmodifiableMap(variables);
+    }
+
+    /**
+     * Failures recorded while running with {@link #setContinueAfterFailure(boolean)} set to true.
+     */
+    public List<String> getFailures() {
+        return Collections.unmodifiableList(failures);
+    }
+
+    private String substitute(String line, boolean asRegex) {
+        if (variables.isEmpty() || !line.contains("${")) {
+            return line;
+        }
+        StringBuilder result = new StringBuilder();
+        int position = 0;
+        while (position < line.length()) {
+            int start = line.indexOf("${", position);
+            if (start < 0) {
+                break;
+            }
+            int end = line.indexOf('}', start);
+            if (end < 0) {
+                break;
+            }
+            String value = variables.get(line.substring(start + 2, end));
+            result.append(line, position, start);
+            if (value == null) {
+                result.append(line, start, end + 1);
+            } else if (asRegex) {
+                result.append(Pattern.quote(value));
+            } else {
+                result.append(value);
+            }
+            position = end + 1;
+        }
+        result.append(line.substring(position));
+        return result.toString();
+    }
+
+    private boolean matchAndCapture(String expected, String actual) {
+        Matcher matcher;
+        try {
+            matcher = Pattern.compile(expected).matcher(actual);
+        } catch (PatternSyntaxException e) {
+            throw new IllegalStateException("Invalid expected pattern (undefined variable?) '" + expected + "': " + e.getDescription(), e);
+        }
+        if (!matcher.matches()) {
+            return false;
+        }
+        matcher.pattern().namedGroups().keySet().forEach(name -> {
+            String value = matcher.group(name);
+            if (value != null) {
+                variables.put(name, value);
+            }
+        });
+        return true;
+    }
 
     public final boolean isContinueAfterFailure() {
         return continueAfterFailure;
@@ -223,9 +311,47 @@ public class ProtocolSession implements ProtocolInteractor {
     }
 
     /**
+     * Reads server lines, discarding them, until one matches the expected pattern.
+     */
+    public void until(int sessionNumber, String serverLine, String location, String lastClientMessage) {
+        this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
+        testElements.add(new UntilResponse(sessionNumber, serverLine, location, lastClientMessage));
+    }
+
+    /**
+     * Upgrades the session connection to TLS (to be used after the server accepted STARTTLS).
+     */
+    public void startTls(int sessionNumber) {
+        this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
+        testElements.add(new StartTlsElement(sessionNumber));
+    }
+
+    /**
+     * Defines a runtime variable. The value is itself subject to variable substitution.
+     */
+    public void set(String name, String value) {
+        set(name, value, false);
+    }
+
+    /**
+     * Defines a runtime variable holding the base64 encoding of the (substituted) UTF-8 value,
+     * where <code>\0</code> stands for the NUL character. Handy for SASL PLAIN.
+     */
+    public void setBase64(String name, String value) {
+        set(name, value, true);
+    }
+
+    private void set(String name, String value, boolean base64) {
+        if (!VARIABLE_NAME.matcher(name).matches()) {
+            throw new IllegalArgumentException("Invalid variable name '" + name + "'");
+        }
+        testElements.add(new SetElement(name, value, base64));
+    }
+
+    /**
      * A client request, which write the specified message to a Writer.
      */
-    private static class ClientRequest implements ProtocolElement {
+    private class ClientRequest implements ProtocolElement {
         private final int sessionNumber;
 
         private final String message;
@@ -268,8 +394,9 @@ public class ProtocolSession implements ProtocolInteractor {
         }
 
         private void writeMessage(Session session) throws Exception {
-            LOGGER.debug("C: {}", message);
-            session.writeLine(message);
+            String line = substitute(message, false);
+            LOGGER.debug("C: {}", line);
+            session.writeLine(line);
         }
 
         @Override
@@ -348,9 +475,10 @@ public class ProtocolSession implements ProtocolInteractor {
         protected void checkResponse(Session session, boolean continueAfterFailure) throws Exception {
             String testLine = readLine(session);
             LOGGER.debug("S: {}", testLine);
-            if (!match(expectedLine, testLine)) {
+            String expected = substitute(expectedLine, true);
+            if (!match(expected, testLine)) {
                 String errMsg = "\nLocation: " + location + "\nLastClientMsg: " + lastClientMessage + "\nExpected: '"
-                        + expectedLine + "'\nActual   : '" + testLine + "'";
+                        + expected + "'\nActual   : '" + testLine + "'";
                 handleFailure(continueAfterFailure, errMsg);
             }
         }
@@ -366,7 +494,7 @@ public class ProtocolSession implements ProtocolInteractor {
          * @return <code>true</code> if the actual matches the expected.
          */
         protected boolean match(String expected, String actual) {
-            return Pattern.matches(expected, actual);
+            return matchAndCapture(expected, actual);
         }
 
         /**
@@ -379,7 +507,8 @@ public class ProtocolSession implements ProtocolInteractor {
             try {
                 return session.readLine();
             } catch (IOException e) {
-                String errMsg = "\nLocation: " + location + "\nExpected: " + expectedLine + "\nReason: Server Timeout.";
+                String errMsg = "\nLocation: " + location + "\nLastClientMsg: " + lastClientMessage + "\nExpected: " + expectedLine
+                    + "\nReason: Server Timeout or connection closed (" + e.getMessage() + ")";
                 throw new InvalidServerResponseException(errMsg);
             }
         }
@@ -441,7 +570,9 @@ public class ProtocolSession implements ProtocolInteractor {
          */
         @Override
         protected void checkResponse(Session session, boolean continueAfterFailure) throws Exception {
-            List<String> testLines = new ArrayList<>(expectedLines);
+            List<String> testLines = new ArrayList<>(expectedLines.stream()
+                .map(line -> substitute(line, true))
+                .toList());
             while (testLines.size() > 0) {
                 String actualLine = readLine(session);
 
@@ -464,6 +595,7 @@ public class ProtocolSession implements ProtocolInteractor {
                     }
                     errMsg.append("\nActual: ").append(actualLine);
                     handleFailure(continueAfterFailure, errMsg.toString());
+                    return;
                 }
             }
         }
@@ -503,9 +635,88 @@ public class ProtocolSession implements ProtocolInteractor {
 
     private void handleFailure(boolean continueAfterFailure, String message) throws InvalidServerResponseException {
         if (continueAfterFailure) {
+            failures.add(message);
             LOGGER.warn(message);
         } else {
             throw new InvalidServerResponseException(message);
+        }
+    }
+
+    /**
+     * Reads (and discards) server lines until one of them matches the expected pattern.
+     */
+    private class UntilResponse extends ServerResponse {
+        private final String expectedPattern;
+
+        UntilResponse(int sessionNumber, String expectedPattern, String location, String lastClientMessage) {
+            super(sessionNumber, expectedPattern, location, lastClientMessage);
+            this.expectedPattern = expectedPattern;
+        }
+
+        @Override
+        protected void checkResponse(Session session, boolean continueAfterFailure) throws Exception {
+            String expected = substitute(expectedPattern, true);
+            for (int i = 0; i < MAX_UNTIL_LINES; i++) {
+                String actualLine = readLine(session);
+                LOGGER.debug("S: {}", actualLine);
+                if (match(expected, actualLine)) {
+                    return;
+                }
+            }
+            handleFailure(continueAfterFailure, "\nLocation: " + location + "\nExpected: '" + expected
+                + "'\nReason: no matching line within " + MAX_UNTIL_LINES + " lines");
+        }
+    }
+
+    private static class StartTlsElement implements ProtocolElement {
+        private final int sessionNumber;
+
+        StartTlsElement(int sessionNumber) {
+            this.sessionNumber = sessionNumber;
+        }
+
+        @Override
+        public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
+            if (sessionNumber < 0) {
+                for (Session session : sessions) {
+                    session.startTls();
+                }
+            } else {
+                sessions[sessionNumber].startTls();
+            }
+        }
+
+        @Override
+        public boolean isClient() {
+            return false;
+        }
+    }
+
+    private class SetElement implements ProtocolElement {
+        private final String name;
+        private final String value;
+        private final boolean base64;
+
+        SetElement(String name, String value, boolean base64) {
+            this.name = name;
+            this.value = value;
+            this.base64 = base64;
+        }
+
+        @Override
+        public void testProtocol(Session[] sessions, boolean continueAfterFailure) {
+            String substituted = substitute(value, false);
+            if (base64) {
+                byte[] bytes = substituted.replace("\\0", "\u0000").getBytes(StandardCharsets.UTF_8);
+                variables.put(name, Base64.getEncoder().encodeToString(bytes));
+            } else {
+                variables.put(name, substituted);
+            }
+        }
+
+        @Override
+        public boolean isClient() {
+            return false;
         }
     }
 

@@ -42,6 +42,7 @@
         <module>impl/imap-mailbox</module>
         <module>impl/managesieve</module>
         <module>impl/smtp</module>
+        <module>mcp</module>
         <module>mavenplugin</module>
     </modules>
 
