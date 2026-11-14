@@ -113,7 +113,10 @@ public class SieveScriptRoutes implements Routes {
     }
 
     private ScriptContent extractSieveScriptFromRequest(Request request) {
-        return new ScriptContent(request.body());
+        return Optional.ofNullable(request.body())
+            .filter(body -> !body.isEmpty())
+            .map(ScriptContent::new)
+            .orElseThrow(() -> throw400withInvalidArgument("Missing Sieve script"));
     }
 
     private boolean isActivated(String activateParam) {
