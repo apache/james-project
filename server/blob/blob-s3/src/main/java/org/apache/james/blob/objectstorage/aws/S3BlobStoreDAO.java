@@ -325,6 +325,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .flatMap(contentLength ->
                 Mono.usingWhen(Mono.fromCallable(content::openStream).subscribeOn(Schedulers.boundedElastic()),
                     stream -> save(resolvedBucketName, blobId, stream, contentLength, metadata),
+                    stream -> Mono.fromRunnable(Throwing.runnable(stream::close)),
+                    (stream, error) -> Mono.fromRunnable(Throwing.runnable(stream::close)),
                     stream -> Mono.fromRunnable(Throwing.runnable(stream::close))))
             .retryWhen(createBucketOnRetry(resolvedBucketName))
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
