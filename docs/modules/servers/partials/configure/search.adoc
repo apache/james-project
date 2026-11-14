@@ -11,7 +11,8 @@ This configuration helps you configure the components used to back search.
  This implementation can have a prohibitive cost.
 ifdef::lucene-search[]
  - *lucene* : Index and search mails into an embedded Lucene index, in the folder set by the `james.lucene.index.folder`
- JVM property (`var/store/lucene` in the Docker image), else in the working directory. Single node only.
+ JVM property (`var/store/lucene` in the Docker image), else in the working directory. Single node only: James refuses
+ to start when it is combined with the RabbitMQ event bus.
  Switching to it on existing mails starts with an empty index: run a full re-indexing.
 endif::[]
  - *opensearch-disabled* : Saves events to index into event dead letter. Make searches fails.
