@@ -29,6 +29,7 @@ import io.restassured.builder.RequestSpecBuilder
 import io.restassured.config.EncoderConfig.encoderConfig
 import io.restassured.config.RestAssuredConfig.newConfig
 import io.restassured.http.{ContentType, Header, Headers}
+import io.restassured.specification.RequestSpecification
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus
 import org.apache.james.core.{Domain, Username}
@@ -36,8 +37,7 @@ import org.apache.james.dnsservice.api.DNSService
 import org.apache.james.domainlist.lib.DomainListConfiguration
 import org.apache.james.domainlist.memory.MemoryDomainList
 import org.apache.james.jmap.JMAPUrls.JMAP
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
-import org.apache.james.jmap.core.Invocation.MethodName
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.{DefaultCapabilities, JmapRfc8621Configuration, RequestLevelErrorType}
 import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, UserProvisioning}
@@ -51,7 +51,7 @@ import org.apache.james.user.memory.MemoryUsersRepository
 import org.hamcrest
 import org.hamcrest.Matchers.equalTo
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{doReturn, mock, when}
+import org.mockito.Mockito.{doReturn, mock, spy}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -85,8 +85,23 @@ object JMAPApiRoutesTest {
     new JMAPServer(TEST_CONFIGURATION, routesHandler, versionParser)
   }
 
-  private val userBase64String: String = Base64.getEncoder.encodeToString("user1:password".getBytes(StandardCharsets.UTF_8))
+  private[routes] val userBase64String: String = Base64.getEncoder.encodeToString("user1:password".getBytes(StandardCharsets.UTF_8))
   
+  private[routes] def startServer(): JMAPServer = {
+    val server = newServer(Set(new CoreEchoMethod))
+    server.start()
+    server
+  }
+
+  private[routes] def requestSpec(server: JMAPServer): RequestSpecification =
+    new RequestSpecBuilder()
+      .setContentType(ContentType.JSON)
+      .setAccept(ContentType.JSON)
+      .setConfig(newConfig.encoderConfig(encoderConfig.defaultContentCharset(StandardCharsets.UTF_8)))
+      .setPort(server.getPort.getValue)
+      .setBasePath(JMAP)
+      .build
+
   private val REQUEST_OBJECT: String =
     """{
       |  "using": [
@@ -258,16 +273,8 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   var jmapServer: JMAPServer = _
 
   before {
-    jmapServer = newServer(Set(new CoreEchoMethod))
-    jmapServer.start()
-
-    RestAssured.requestSpecification = new RequestSpecBuilder()
-      .setContentType(ContentType.JSON)
-      .setAccept(ContentType.JSON)
-      .setConfig(newConfig.encoderConfig(encoderConfig.defaultContentCharset(StandardCharsets.UTF_8)))
-      .setPort(jmapServer.getPort.getValue)
-      .setBasePath(JMAP)
-      .build
+    jmapServer = startServer()
+    RestAssured.requestSpecification = requestSpec(jmapServer)
   }
 
   after {
@@ -421,17 +428,14 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   }
 
   "RFC-8621 with random error when processing request " should "return 200, with serverFail error, others method call proceed normally" in {
-    val mockCoreEchoMethod = mock(classOf[CoreEchoMethod])
+    val coreEchoMethod = spy(new CoreEchoMethod)
 
     doReturn(SFlux.error(new RuntimeException("Unexpected Exception occur, the others method may proceed normally")))
       .doCallRealMethod()
-      .when(mockCoreEchoMethod)
+      .when(coreEchoMethod)
       .process(any[Set[CapabilityIdentifier]], any(), any())
 
-    when(mockCoreEchoMethod.methodName).thenReturn(MethodName("Core/echo"))
-    when(mockCoreEchoMethod.requiredCapabilities).thenReturn(Set(JMAP_CORE))
-
-    val methods: Set[Method] = Set(mockCoreEchoMethod)
+    val methods: Set[Method] = Set(coreEchoMethod)
     val jmapRfc8621Configuration = JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")
     val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(methods, DefaultCapabilities.supported(jmapRfc8621Configuration).map(_.id()), jmapRfc8621Configuration))
     val routesHandler: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, apiRoute))

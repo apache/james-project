@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ErrorCode, Invocation, JmapRfc8621Configuration, PushSubscriptionSetRequest, PushSubscriptionSetResponse, SessionTranslator}
+import org.apache.james.jmap.core.{ClientId, ErrorCode, Invocation, JmapRfc8621Configuration, PushSubscriptionSetRequest, PushSubscriptionSetResponse, ServerId, SessionTranslator, UnparsedPushSubscriptionId}
 import org.apache.james.jmap.json.PushSubscriptionSerializer
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.lifecycle.api.Startable
@@ -73,5 +73,9 @@ class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCr
           destroyed = Some(destroyed.destroyed).filter(_.nonEmpty),
           notDestroyed = Some(destroyed.retrieveErrors).filter(_.nonEmpty)))),
         methodCallId = invocation.invocation.methodCallId),
-      processingContext = invocation.processingContext)
+      processingContext = created.created.getOrElse(Map.empty)
+        .foldLeft(invocation.processingContext) {
+          case (context, (creationId, response)) => context.recordCreatedId(
+            ClientId(creationId.id), ServerId(UnparsedPushSubscriptionId.of(response.id).id))
+        })
 }

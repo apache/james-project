@@ -192,16 +192,17 @@ trait EmailImportContract {
     val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
 
     val receivedAtString = UTCDate(receivedAt).asUTC.format(UTC_DATE_FORMAT)
-    val response = `given`
+    val importResponse = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(s"""{
+              |  "createdIds": {"initial":"initial-server"},
               |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
               |  "methodCalls": [
               |    ["Email/import",
               |      {
               |        "accountId": "$bobAccountId",
               |        "emails": {
-              |           "C42": {
+              |           "importedEmail": {
               |             "blobId": "$blobId",
               |             "mailboxIds": {
               |               "${mailboxId.serialize()}": true
@@ -213,37 +214,35 @@ trait EmailImportContract {
               |           }
               |         }
               |      },
-              |      "c1"],
+              |      "importEmail"],
               |    ["Email/get",
               |     {
               |       "accountId": "$bobAccountId",
-              |       "ids": ["#C42"],
+              |       "ids": ["#importedEmail"],
               |       "properties": ["keywords", "mailboxIds", "receivedAt", "subject", "size", "bodyValues", "htmlBody"],
               |       "fetchHTMLBodyValues": true
               |     },
-              |     "c2"]
+              |     "getImportedEmail"]
               |  ]
               |}""".stripMargin)
     .when
       .post
     .`then`
+      .log().ifValidationFails()
       .statusCode(SC_OK)
       .contentType(JSON)
-      .extract
-      .body
-      .asString
+      .extract()
 
-    val responseAsJson = Json.parse(response)
-      .\("methodResponses")
-      .\(0).\(1)
-      .\("created")
-      .\("C42")
+    val messageId = importResponse.path[String]("methodResponses.find { it[2] == 'importEmail' }[1].created.importedEmail.id")
+    val createdIds = importResponse.path[java.util.Map[String, String]]("createdIds")
 
-    val messageId = responseAsJson
-      .\("id")
-      .get.asInstanceOf[JsString].value
+    assertThatJson(createdIds).isEqualTo(
+      s"""{
+         |  "initial": "initial-server",
+         |  "importedEmail": ${Json.toJson(messageId)}
+         |}""".stripMargin)
 
-    assertThatJson(response)
+    assertThatJson(importResponse.asString())
       .whenIgnoringPaths("methodResponses[0][1].oldState", "methodResponses[0][1].newState", "methodResponses[1][1].state")
       .inPath("methodResponses")
       .isEqualTo(
@@ -252,14 +251,14 @@ trait EmailImportContract {
          |            {
          |                "accountId": "$bobAccountId",
          |                "created": {
-         |                    "C42": {
+         |                    "importedEmail": {
          |                        "id": "$messageId",
          |                        "blobId": "$messageId",
          |                        "threadId": "$messageId",
          |                        "size": 836
          |                    }
          |                }
-         |            }, "c1"],
+         |            }, "importEmail"],
          |        ["Email/get",
          |            {
          |                "accountId": "$bobAccountId",
@@ -295,7 +294,7 @@ trait EmailImportContract {
          |                        }
          |                    }
          |                ]
-         |            }, "c2"]
+         |            }, "getImportedEmail"]
          |    ]""".stripMargin)
   }
 

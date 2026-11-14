@@ -63,6 +63,7 @@ import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
 import org.mockserver.model.NottableString.string
 import org.mockserver.model.{HttpRequest, HttpResponse}
+import play.api.libs.json.Json
 import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
@@ -130,6 +131,51 @@ trait PushSubscriptionSetMethodContract {
 
   private def getPushServerUrl(pushServer: ClientAndServer) : String =
     s"http://127.0.0.1:${pushServer.getLocalPort}/subscribe"
+
+  @Test
+  def createdIdsShouldIncludeSuccessfulPushSubscriptions(pushServer: ClientAndServer): Unit = {
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core"],
+         |  "createdIds": {"initial": "initial-server"},
+         |  "methodCalls": [
+         |    ["PushSubscription/set", {
+         |      "create": {
+         |        "subscription": {"deviceClientId": "created-ids-device", "url": ${Json.toJson(getPushServerUrl(pushServer))}},
+         |        "failed": {"deviceClientId": "invalid", "url": "invalid"}
+         |      }
+         |    }, "subscribe"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .body(request)
+      .post().`then`()
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract()
+
+    val subscribeArgumentsPath = "methodResponses.find { it[2] == 'subscribe' }[1]"
+    val subscriptionId = response.path[String](s"$subscribeArgumentsPath.created.subscription.id")
+    val subscriptionResult = response.path[java.util.Map[String, Object]](subscribeArgumentsPath)
+    val createdIds = response.path[java.util.Map[String, String]]("createdIds")
+
+    assertThatJson(subscriptionResult).isEqualTo(
+      s"""{
+         |  "created": {
+         |    "subscription": {"id": ${Json.toJson(subscriptionId)}, "expires": "$${json-unit.any-string}"}
+         |  },
+         |  "notCreated": {
+         |    "failed": {"type": "invalidArguments", "description": "'/url' property is not valid"}
+         |  }
+         |}""".stripMargin)
+    assertThatJson(createdIds).isEqualTo(
+      s"""{
+         |  "initial": "initial-server",
+         |  "subscription": ${Json.toJson(subscriptionId)}
+         |}""".stripMargin)
+  }
 
   @Test
   def setMethodShouldNotRequireAccountId(): Unit = {
