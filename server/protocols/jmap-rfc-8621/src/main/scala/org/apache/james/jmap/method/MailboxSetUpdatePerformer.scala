@@ -26,8 +26,9 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JA
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError}
 import org.apache.james.jmap.json.MailboxSerializer
-import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, MailboxGet, MailboxPatchObject, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, ServerSetPropertyException, UnparsedMailboxId, UnsupportedPropertyUpdatedException, ValidatedMailboxPatchObject}
+import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, MailboxPatchObject, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, ServerSetPropertyException, UnparsedMailboxId, UnsupportedPropertyUpdatedException, ValidatedMailboxPatchObject}
 import org.apache.james.jmap.method.MailboxSetUpdatePerformer.{MailboxUpdateFailure, MailboxUpdateResult, MailboxUpdateResults, MailboxUpdateSuccess}
+import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxManager.{MailboxSearchFetchType, RenameOption}
 import org.apache.james.mailbox.exception.{DifferentDomainException, InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.search.{MailboxQuery, PrefixedWildcard}
@@ -61,7 +62,7 @@ object MailboxSetUpdatePerformer {
 
     def asMailboxSetError: SetError = exception match {
       case e: MailboxNotFoundException =>
-        LOGGER.info("Can't update mailbox: Mailbox not found: {}", e.getMessage)
+        LOGGER.info("Mailbox/set update failed: {}", e.getMessage)
         SetError.notFound(SetErrorDescription(e.getMessage))
       case e: MailboxNameException =>
         LOGGER.info("Invalid mailbox name: {}", e.getMessage)
@@ -73,7 +74,7 @@ object MailboxSetUpdatePerformer {
         LOGGER.info("Unsupported properties in Mailbox/set update: {}", e.getMessage)
         SetError.invalidArguments(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated"), Some(Properties(e.property)))
       case e: InvalidUpdateException =>
-        LOGGER.info("Invalid update in Mailbox/set update: {}", e.getMessage)
+        LOGGER.info("Mailbox/set update failed for target '{}' and property '{}': {}", mailboxId.id.value, e.property.value, e.cause)
         SetError.invalidArguments(SetErrorDescription(s"${e.cause}"), Some(Properties(e.property)))
       case e: ServerSetPropertyException =>
         LOGGER.info("Unsupported server-set properties in Mailbox/set update: {}", e.getMessage)
@@ -94,7 +95,7 @@ object MailboxSetUpdatePerformer {
         LOGGER.info("Attempt to set a mailbox while having insufficient rights was rejected: {}", e.getMessage)
         SetError.forbidden(SetErrorDescription("Invalid change to a delegated mailbox"))
       case e: IllegalArgumentException =>
-        LOGGER.info("Illegal argument in Mailbox/set update", e)
+        LOGGER.info("Mailbox/set update failed for target '{}': {}", mailboxId.id.value, e.getMessage)
         SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
       case e: DifferentDomainException =>
         LOGGER.info("Invalid arguments in Mailbox/set update", e)
@@ -124,15 +125,15 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
 
   def updateMailboxes(mailboxSession: MailboxSession,
                       mailboxSetRequest: MailboxSetRequest,
-                      capabilities: Set[CapabilityIdentifier]): SMono[MailboxUpdateResults] =
-    SFlux.fromIterable(mailboxSetRequest.update.getOrElse(Seq()))
+                      capabilities: Set[CapabilityIdentifier],
+                      processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)): SMono[MailboxUpdateResults] =
+    SFlux.fromIterable(MailboxSetReferenceResolver.updates(mailboxSetRequest, processingContext, mailboxIdFactory))
       .flatMap({
-        case (unparsedMailboxId: UnparsedMailboxId, patch: MailboxPatchObject) =>
-          MailboxGet.parse(mailboxIdFactory)(unparsedMailboxId)
-            .fold(
-              e => SMono.just(MailboxUpdateFailure(unparsedMailboxId, e, None)),
-              mailboxId => updateMailbox(mailboxSession, mailboxId, unparsedMailboxId, patch, capabilities))
-            .onErrorResume(e => SMono.just(MailboxUpdateFailure(unparsedMailboxId, e, None)))
+        case (errorKey, resolved) =>
+          resolved.fold(
+            e => SMono.just(MailboxUpdateFailure(errorKey, e, None)),
+            { case (mailboxId, patch) => updateMailbox(mailboxSession, mailboxId, errorKey, patch, capabilities) })
+            .onErrorResume(e => SMono.just(MailboxUpdateFailure(errorKey, e, None)))
       }, maxConcurrency = 5)
       .collectSeq()
       .map(MailboxUpdateResults)

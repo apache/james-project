@@ -59,6 +59,7 @@ import org.hamcrest.Matchers.{equalTo, hasEntry, hasKey, hasSize, not, notNullVa
 import org.junit.jupiter.api.{BeforeEach, RepeatedTest, Tag, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{CsvSource, ValueSource}
+import play.api.libs.json.Json
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.client.HttpClient
@@ -81,7 +82,7 @@ object MailboxSetMethodContract {
   val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
 }
 
-trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
+trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with MailboxSetPostCreateContract {
   def bobUsername: Username = MailboxSetMethodContract.currentContext.get().bobUsername
   def bobAccountId: String = MailboxSetMethodContract.currentContext.get().bobAccountId
   def andreUsername: Username = MailboxSetMethodContract.currentContext.get().andreUsername
@@ -3183,30 +3184,19 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
 
   @Test
   def creationIdReferencesShouldFailWhenWrongOrder(server: GuiceJamesServer): Unit = {
-    val request =
-      s"""
-        |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
-        |   "methodCalls": [
-        |      ["Mailbox/set",
-        |          {
-        |               "accountId": "$bobAccountId",
-        |               "destroy": ["#C42"]
-        |          },
-        |   "c2"],
-        |       ["Mailbox/set",
-        |           {
-        |                "accountId": "$bobAccountId",
-        |                "create": {
-        |                    "C42": {
-        |                      "name": "myMailbox"
-        |                    }
-        |                }
-        |           },
-        |    "c1"]
-        |   ]
-        |}
-        |""".stripMargin
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "destroy": ["#mailboxToDestroy"]
+      |    }, "destroyBeforeCreate"],
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {"mailboxToDestroy": {"name": "myMailbox"}}
+      |    }, "createMailbox"]
+      |  ]
+      |}""".stripMargin
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -3217,77 +3207,68 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
       .log().ifValidationFails()
       .statusCode(SC_OK)
       .contentType(JSON)
-      .extract
-      .body
-      .asString
+      .extract()
 
-    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+    val destroy = response.path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'destroyBeforeCreate' }[1]")
+    val creation = response.path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'createMailbox' }[1]")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .getMailboxId("#private", bobUsername.asString(), "myMailbox")
-      .serialize
+      .serialize()
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState",
-        "methodResponses[1][1].newState", "methodResponses[1][1].oldState")
-      .isEqualTo(
-      s"""{
-         |  "sessionState": "${SESSION_STATE.value}",
-         |  "methodResponses": [
-         |    ["Mailbox/set", {
-         |      "accountId": "$bobAccountId",
-         |      "notDestroyed": {
-         |        "#C42": {
-         |          "type": "invalidArguments",
-         |          "description": "#C42 is not a mailboxId: #C42 was not used in previously defined creationIds"
-         |        }
-         |      }
-         |    }, "c2"],
-         |    ["Mailbox/set", {
-         |      "accountId": "$bobAccountId",
-         |      "created": {
-         |        "C42": {
-         |          "id": "$mailboxId",
-         |          "sortOrder": 1000,
-         |          "totalEmails": 0,
-         |          "unreadEmails": 0,
-         |          "totalThreads": 0,
-         |          "unreadThreads": 0,
-         |          "myRights": {
-         |            "mayReadItems": true,
-         |            "mayAddItems": true,
-         |            "mayRemoveItems": true,
-         |            "maySetSeen": true,
-         |            "maySetKeywords": true,
-         |            "mayCreateChild": true,
-         |            "mayRename": true,
-         |            "mayDelete": true,
-         |            "maySubmit": true
-         |          },
-         |          "isSubscribed": true
-         |        }
-         |      }
-         |    }, "c1"]
-         |  ]
-         |}""".stripMargin)
+    assertThatJson(destroy)
+      .whenIgnoringPaths("oldState", "newState")
+      .isEqualTo(s"""{
+        |  "accountId": ${Json.toJson(bobAccountId)},
+        |  "notDestroyed": {
+        |    "#mailboxToDestroy": {
+        |      "type": "invalidArguments",
+        |      "description": "Unable to resolve mailbox reference '#mailboxToDestroy': no successful creation is recorded for creation ID 'mailboxToDestroy'"
+        |    }
+        |  }
+        |}""".stripMargin)
+
+    assertThatJson(creation)
+      .whenIgnoringPaths("oldState", "newState")
+      .isEqualTo(s"""{
+        |  "accountId": ${Json.toJson(bobAccountId)},
+        |  "created": {
+        |    "mailboxToDestroy": {
+        |      "id": ${Json.toJson(mailboxId)},
+        |      "sortOrder": 1000,
+        |      "totalEmails": 0,
+        |      "unreadEmails": 0,
+        |      "totalThreads": 0,
+        |      "unreadThreads": 0,
+        |      "myRights": {
+        |        "mayReadItems": true,
+        |        "mayAddItems": true,
+        |        "mayRemoveItems": true,
+        |        "maySetSeen": true,
+        |        "maySetKeywords": true,
+        |        "mayCreateChild": true,
+        |        "mayRename": true,
+        |        "mayDelete": true,
+        |        "maySubmit": true
+        |      },
+        |      "isSubscribed": true
+        |    }
+        |  }
+        |}""".stripMargin)
   }
 
   @Test
   def creationIdReferencesShouldFailWhenNone(): Unit = {
-    val request =
-      s"""
-        |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
-        |   "methodCalls": [
-        |      ["Mailbox/set",
-        |          {
-        |               "accountId": "$bobAccountId",
-        |               "destroy": ["#C42"]
-        |          },
-        |   "c2"]
-        |   ]
-        |}
-        |""".stripMargin
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "destroy": ["#mailboxToDestroy"]
+      |    }, "destroyMissingMailbox"]
+      |  ]
+      |}""".stripMargin
 
-    val response = `given`
+    val result = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
@@ -3296,27 +3277,20 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
       .log().ifValidationFails()
       .statusCode(SC_OK)
       .contentType(JSON)
-      .extract
-      .body
-      .asString
+      .extract()
+      .path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'destroyMissingMailbox' }[1]")
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
-      .isEqualTo(
-      s"""{
-         |  "sessionState": "${SESSION_STATE.value}",
-         |  "methodResponses": [
-         |    ["Mailbox/set", {
-         |      "accountId": "$bobAccountId",
-         |      "notDestroyed": {
-         |        "#C42": {
-         |          "type": "invalidArguments",
-         |          "description": "#C42 is not a mailboxId: #C42 was not used in previously defined creationIds"
-         |        }
-         |      }
-         |    }, "c2"]
-         |  ]
-         |}""".stripMargin)
+    assertThatJson(result)
+      .whenIgnoringPaths("oldState", "newState")
+      .isEqualTo(s"""{
+        |  "accountId": ${Json.toJson(bobAccountId)},
+        |  "notDestroyed": {
+        |    "#mailboxToDestroy": {
+        |      "type": "invalidArguments",
+        |      "description": "Unable to resolve mailbox reference '#mailboxToDestroy': no successful creation is recorded for creation ID 'mailboxToDestroy'"
+        |    }
+        |  }
+        |}""".stripMargin)
   }
 
   @Test
@@ -3365,17 +3339,19 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
 
   @Test
   def destroyShouldPreserveAnUnknownMaximumLengthCreationReference(): Unit = {
-    val reference = "#" + "c" * 255
-    val request =
-      s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-         |  "methodCalls": [["Mailbox/set", {
-         |    "accountId": "$bobAccountId",
-         |    "destroy": ["$reference"]
-         |  }, "c1"]]
-         |}""".stripMargin
+    val creationId = "c" * 255
+    val reference = s"#$creationId"
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "destroy": [${Json.toJson(reference)}]
+      |    }, "destroyMissingMailbox"]
+      |  ]
+      |}""".stripMargin
 
-    val response = `given`
+    val result = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
@@ -3384,25 +3360,20 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
       .log().ifValidationFails()
       .statusCode(SC_OK)
       .contentType(JSON)
-      .extract
-      .body
-      .asString
+      .extract()
+      .path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'destroyMissingMailbox' }[1]")
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
-      .isEqualTo(
-        s"""{
-           |  "sessionState": "${SESSION_STATE.value}",
-           |  "methodResponses": [["Mailbox/set", {
-           |    "accountId": "$bobAccountId",
-           |    "notDestroyed": {
-           |      "$reference": {
-           |        "type": "invalidArguments",
-           |        "description": "$reference is not a mailboxId: $reference was not used in previously defined creationIds"
-           |      }
-           |    }
-           |  }, "c1"]]
-           |}""".stripMargin)
+    assertThatJson(result)
+      .whenIgnoringPaths("oldState", "newState")
+      .isEqualTo(s"""{
+        |  "accountId": ${Json.toJson(bobAccountId)},
+        |  "notDestroyed": {
+        |    ${Json.toJson(reference)}: {
+        |      "type": "invalidArguments",
+        |      "description": "Unable to resolve mailbox reference '$reference': no successful creation is recorded for creation ID '$creationId'"
+        |    }
+        |  }
+        |}""".stripMargin)
   }
 
   @Test
@@ -8859,29 +8830,21 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
 
   @Test
   def updateShouldRejectUnresolvableCreationIds(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
-    val request = s"""
-        |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
-        |   "methodCalls": [
-        |       [
-        |           "Mailbox/set",
-        |           {
-        |                "accountId": "$bobAccountId",
-        |                "update": {
-        |                    "${mailboxId.serialize}": {
-        |                      "parentId": "#C42"
-        |                    }
-        |                }
-        |           },
-        |           "c2"
-        |       ]
-        |   ]
-        |}
-        |""".stripMargin
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox")).serialize()
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "update": {
+      |        ${Json.toJson(mailboxId)}: {"parentId": "#parent"}
+      |      }
+      |    }, "updateWithMissingParent"]
+      |  ]
+      |}""".stripMargin
 
-    val response = `given`
+    val result = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
@@ -8890,28 +8853,21 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
       .log().ifValidationFails()
       .statusCode(SC_OK)
       .contentType(JSON)
-      .extract
-      .body
-      .asString
+      .extract()
+      .path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'updateWithMissingParent' }[1]")
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
-      .isEqualTo(
-      s"""{
-         |  "sessionState": "${SESSION_STATE.value}",
-         |  "methodResponses": [
-         |    ["Mailbox/set", {
-         |      "accountId": "$bobAccountId",
-         |      "notUpdated": {
-         |        "${mailboxId.serialize}": {
-         |          "type": "invalidArguments",
-         |          "description": "#C42 was not used in previously defined creationIds",
-         |          "properties": ["parentId"]
-         |        }
-         |      }
-         |    }, "c2"]
-         |  ]
-         |}""".stripMargin)
+    assertThatJson(result)
+      .whenIgnoringPaths("oldState", "newState")
+      .isEqualTo(s"""{
+        |  "accountId": ${Json.toJson(bobAccountId)},
+        |  "notUpdated": {
+        |    ${Json.toJson(mailboxId)}: {
+        |      "type": "invalidArguments",
+        |      "description": "no successful creation is recorded for creation ID 'parent'",
+        |      "properties": ["parentId"]
+        |    }
+        |  }
+        |}""".stripMargin)
   }
 
   @Test
@@ -9610,57 +9566,42 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract {
   }
 
   @Test
-  def updateShouldHandleNotFoundClientId(server: GuiceJamesServer): Unit = {
-    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
+  def updateShouldRejectAnUnresolvedTargetCreationId(): Unit = {
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "methodCalls": [
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "update": {
+      |        "#missingMailbox": {"name": "newName"}
+      |      }
+      |    }, "updateMissingMailbox"]
+      |  ]
+      |}""".stripMargin
 
-    val response = `given`
+    val result = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(s"""{
-               |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
-               |  "methodCalls": [
-               |    [
-               |     "Mailbox/set",
-               |     {
-               |       "accountId": "$bobAccountId",
-               |       "update": {
-               |         "#invalid": {
-               |           "name": "newName"
-               |         }
-               |       }
-               |     },
-               |     "c1"]]
-               |}""".stripMargin)
+      .body(request)
     .when
       .post
     .`then`
+      .log().ifValidationFails()
       .statusCode(SC_OK)
       .contentType(JSON)
-      .extract
-      .body
-      .asString
+      .extract()
+      .path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'updateMissingMailbox' }[1]")
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
-      .isEqualTo(
-      s"""{
-         |    "sessionState": "${SESSION_STATE.value}",
-         |    "methodResponses": [
-         |        [
-         |            "Mailbox/set",
-         |            {
-         |                "accountId": "$bobAccountId",
-         |                "notUpdated": {
-         |                    "#invalid": {
-         |                        "type": "invalidArguments",
-         |                        "description": "#invalid was not used in previously defined creationIds"
-         |                    }
-         |                }
-         |            },
-         |            "c1"
-         |        ]
-         |    ]
-         |}""".stripMargin)
+    assertThatJson(result)
+      .whenIgnoringPaths("oldState", "newState")
+      .isEqualTo(s"""{
+        |  "accountId": ${Json.toJson(bobAccountId)},
+        |  "notUpdated": {
+        |    "#missingMailbox": {
+        |      "type": "invalidArguments",
+        |      "description": "Unable to resolve mailbox reference '#missingMailbox': no successful creation is recorded for creation ID 'missingMailbox'"
+        |    }
+        |  }
+        |}""".stripMargin)
   }
 
   @Test

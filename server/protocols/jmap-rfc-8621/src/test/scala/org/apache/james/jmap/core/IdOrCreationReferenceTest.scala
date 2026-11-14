@@ -27,7 +27,9 @@ import play.api.libs.json.{JsError, JsString, JsSuccess, Json}
 
 class IdOrCreationReferenceTest {
   @ParameterizedTest
-  @ValueSource(strings = Array("id", "012_Az-9", "a#b", "#created", "##created", "##"))
+  @ValueSource(strings = Array(
+    "i", "#c", // Minimum-length server ID and creation reference.
+    "id", "012_Az-9", "a#b", "#created", "##created", "##"))
   def shouldRoundTripValidatedTokens(value: String): Unit = {
     val token = IdOrCreationReference.validate(value).toOption.get
 
