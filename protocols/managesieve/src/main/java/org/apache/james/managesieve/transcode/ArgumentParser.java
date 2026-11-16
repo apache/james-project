@@ -20,8 +20,9 @@
 
 package org.apache.james.managesieve.transcode;
 
-import java.util.Iterator;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import jakarta.inject.Inject;
@@ -32,9 +33,8 @@ import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.util.ParserUtils;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 
 /**
  * Parses the user input and calls the underlying command processor
@@ -115,31 +115,29 @@ public class ArgumentParser {
     }
     
     public String checkScript(Session session, String args) {
-        Iterator<String> firstLine = Splitter.on("\r\n").split(args.trim()).iterator();
-        Iterator<String> arguments = Splitter.on(' ').split(firstLine.next().trim()).iterator();
+        CommandWithLiteral command = CommandWithLiteral.parse(args);
+        return withArguments(command.firstLine(), arguments -> {
+            Optional<String> content = readAnnouncedLiteral(arguments, command.followingData());
 
-        long size;
-        if (! arguments.hasNext()) {
-            return "NO : Missing argument: script size";
-        } else {
+            if (arguments.isEmpty()) {
+                return no("Missing argument: script size");
+            }
             try {
-                size = ParserUtils.getSize(arguments.next());
+                ParserUtils.getSize(arguments.get(0));
             } catch (ArgumentException e) {
                 return no(e.getMessage());
             }
-        }
-        if (arguments.hasNext()) {
-            return no("Extra arguments not supported");
-        } else {
-            String content = readContent(firstLine);
-            if (content.length() < size && validatePutSize) {
-                throw new NotEnoughDataException();
+            if (arguments.size() > 1) {
+                return no("Extra arguments not supported");
             }
-            if (Strings.isNullOrEmpty(content)) {
-                return no("Missing argument: script content");
-            }
-            return core.checkScript(session, content);
-        }
+            return content.map(script -> {
+                    if (Strings.isNullOrEmpty(script)) {
+                        return no("Missing argument: script content");
+                    }
+                    return core.checkScript(session, script);
+                })
+                .orElseGet(() -> no("Unexpected data after the script literal"));
+        });
     }
 
     public String haveSpace(Session session, String args) {
@@ -170,28 +168,26 @@ public class ArgumentParser {
     }
 
     public String putScript(Session session, String args) {
-        Iterator<String> lines = Splitter.on("\r\n").split(args.trim()).iterator();
-        return withArguments(lines.next().trim(), arguments -> {
+        CommandWithLiteral command = CommandWithLiteral.parse(args);
+        return withArguments(command.firstLine(), arguments -> {
+            Optional<String> content = readAnnouncedLiteral(arguments, command.followingData());
+
             if (arguments.isEmpty() || Strings.isNullOrEmpty(arguments.get(0))) {
                 return no("Missing argument: script name");
             }
             if (arguments.size() < 2) {
                 return no("Missing argument: script size");
             }
-            long size;
             try {
-                size = ParserUtils.getSize(arguments.get(1));
+                ParserUtils.getSize(arguments.get(1));
             } catch (ArgumentException e) {
                 return no(e.getMessage());
             }
             if (arguments.size() > 2) {
                 return no("Extra arguments not supported");
             }
-            String content = readContent(lines);
-            if (content.length() < size && validatePutSize) {
-                throw new NotEnoughDataException();
-            }
-            return core.putScript(session, arguments.get(0), content);
+            return content.map(script -> core.putScript(session, arguments.get(0), script))
+                .orElseGet(() -> no("Unexpected data after the script literal"));
         });
     }
 
@@ -238,12 +234,51 @@ public class ArgumentParser {
         }
     }
 
-    private String readContent(Iterator<String> remainingLines) {
-        String content = Joiner.on("\r\n").join(remainingLines);
-        if (validatePutSize) {
-            return content + "\r\n";
+    /**
+     * A command whose last argument is a literal: its first line holds the arguments, the literal octets follow.
+     */
+    private record CommandWithLiteral(String firstLine, String followingData) {
+        static CommandWithLiteral parse(String args) {
+            int firstLineEnd = args.indexOf("\r\n");
+            if (firstLineEnd < 0) {
+                return new CommandWithLiteral(args.trim(), "");
+            }
+            return new CommandWithLiteral(args.substring(0, firstLineEnd).trim(), args.substring(firstLineEnd + 2));
         }
-        return content;
+    }
+
+    /**
+     * RFC 5804 section 4: a literal is made of exactly the number of octets announced by its size, whatever they are.
+     *
+     * The literal announced as the last argument is read before the arguments get validated: a rejected command
+     * still consumes its literal, which otherwise would be interpreted as commands.
+     *
+     * @throws NotEnoughDataException when the announced octets did not all arrive yet
+     * @return the literal content, empty when more data than announced was received
+     */
+    private Optional<String> readAnnouncedLiteral(List<String> arguments, String followingData) {
+        if (!validatePutSize) {
+            return Optional.of(followingData.stripTrailing());
+        }
+        Optional<Long> announcedSize = Optional.ofNullable(Iterables.getLast(arguments, null))
+            .flatMap(ArgumentParser::literalSize);
+        long receivedOctets = followingData.getBytes(StandardCharsets.UTF_8).length;
+        long expectedOctets = announcedSize.orElse(0L);
+        if (receivedOctets < expectedOctets) {
+            throw new NotEnoughDataException();
+        }
+        if (receivedOctets > expectedOctets) {
+            return Optional.empty();
+        }
+        return Optional.of(followingData);
+    }
+
+    private static Optional<Long> literalSize(String argument) {
+        try {
+            return Optional.of(ParserUtils.getSize(argument));
+        } catch (ArgumentException e) {
+            return Optional.empty();
+        }
     }
 
     private static String no(String message) {

@@ -54,10 +54,21 @@ public class ManageSieveProcessor {
     }
 
     public String handleRequest(Session session, String request) throws ManageSieveException, SieveRepositoryException {
-        int firstWordEndIndex = request.indexOf(' ');
-        String arguments = parseArguments(request, firstWordEndIndex);
-        String command = parseCommand(request, firstWordEndIndex);
-        return matchCommandWithImplementation(session, arguments, command) + "\r\n";
+        String requestWithoutLineEnding = removeLineEnding(request);
+        int firstWordEndIndex = requestWithoutLineEnding.indexOf(' ');
+        String rawArguments = parseArguments(requestWithoutLineEnding, firstWordEndIndex);
+        String command = parseCommand(requestWithoutLineEnding, firstWordEndIndex);
+        return matchCommandWithImplementation(session, rawArguments, command) + "\r\n";
+    }
+
+    private String removeLineEnding(String request) {
+        if (request.endsWith("\r\n")) {
+            return request.substring(0, request.length() - 2);
+        }
+        if (request.endsWith("\n") || request.endsWith("\r")) {
+            return request.substring(0, request.length() - 1);
+        }
+        return request;
     }
 
     private String parseCommand(String request, int firstWordEndIndex) {
@@ -77,14 +88,16 @@ public class ManageSieveProcessor {
     }
 
     private String parseArguments(String request, int firstWordEndIndex) {
-        if (request.contains(" ")) {
-            return request.substring(firstWordEndIndex).trim();
+        if (firstWordEndIndex >= 0) {
+            // Not trimmed: the literal of PUTSCRIPT and CHECKSCRIPT is made of the exact octets sent by the client
+            return request.substring(firstWordEndIndex + 1);
         } else {
             return "";
         }
     }
 
-    private String matchCommandWithImplementation(Session session, String arguments, String command) throws SessionTerminatedException {
+    private String matchCommandWithImplementation(Session session, String rawArguments, String command) throws SessionTerminatedException {
+        String arguments = rawArguments.trim();
         if (session.getState() == Session.State.AUTHENTICATION_IN_PROGRESS) {
             return argumentParser.authenticate(session, arguments);
         }
@@ -102,7 +115,7 @@ public class ManageSieveProcessor {
         } else if (command.equalsIgnoreCase(CAPABILITY)) {
             return argumentParser.capability(session, arguments);
         } else if (command.equalsIgnoreCase(CHECKSCRIPT)) {
-            return argumentParser.checkScript(session, arguments);
+            return argumentParser.checkScript(session, rawArguments);
         } else if (command.equalsIgnoreCase(DELETESCRIPT)) {
             return argumentParser.deleteScript(session, arguments);
         } else if (command.equalsIgnoreCase(GETSCRIPT)) {
@@ -116,7 +129,7 @@ public class ManageSieveProcessor {
         } else if (command.equalsIgnoreCase(NOOP)) {
             return argumentParser.noop(arguments);
         } else if (command.equalsIgnoreCase(PUTSCRIPT)) {
-            return argumentParser.putScript(session, arguments);
+            return argumentParser.putScript(session, rawArguments);
         } else if (command.equalsIgnoreCase(RENAMESCRIPT)) {
             return argumentParser.renameScript(session, arguments);
         } else if (command.equalsIgnoreCase(SETACTIVE)) {

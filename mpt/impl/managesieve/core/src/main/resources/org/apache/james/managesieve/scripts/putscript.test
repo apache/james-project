@@ -45,6 +45,7 @@ S: OK
 
 C: PUTSCRIPT "new script" {7+}
 C: #test
+C:
 S: OK
 
 C: GETSCRIPT "new script"

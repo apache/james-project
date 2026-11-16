@@ -34,6 +34,7 @@ C:
 C: if envelope :contains "to" "tmartin+sent" {
 C:   fileinto "INBOX.sent";
 C: }
+C:
 S: OK
 
 C: PUTSCRIPT "toto1" {99+}
@@ -42,6 +43,7 @@ C:
 C: if envelope :contains "to" "tmartin+sent" {
 C:   fileinto "INBOX.sent";
 C: }
+C:
 S: OK
 
 C: PUTSCRIPT "toto2" {99+}
@@ -50,6 +52,7 @@ C:
 C: if envelope :contains "to" "tmartin+sent" {
 C:   fileinto "INBOX.sent";
 C: }
+C:
 S: OK
 
 C: LISTSCRIPTS

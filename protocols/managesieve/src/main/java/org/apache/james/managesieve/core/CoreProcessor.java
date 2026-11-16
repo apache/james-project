@@ -144,7 +144,8 @@ public class CoreProcessor implements CoreCommands {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
             String scriptContent = IOUtils.toString(sieveRepository.getScript(session.getUser(), new ScriptName(name)), StandardCharsets.UTF_8);
-            return "{" + scriptContent.length() + "}" + "\r\n" + scriptContent + "\r\nOK";
+            // RFC 5804 section 4: the size of a literal is counted in octets
+            return "{" + scriptContent.getBytes(StandardCharsets.UTF_8).length + "}" + "\r\n" + scriptContent + "\r\nOK";
         }, session);
     }
 

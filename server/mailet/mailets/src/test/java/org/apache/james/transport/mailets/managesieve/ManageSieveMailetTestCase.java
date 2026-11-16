@@ -272,7 +272,7 @@ class ManageSieveMailetTestCase {
         MimeMessage message = prepareMimeMessage("CHECKSCRIPT");
         Mail mail = createAuthentificatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: CHECKSCRIPT", "NO \" is an invalid size literal : it should be at least 4 char looking like {_+}\"");
+        ensureResponse("Re: CHECKSCRIPT", "NO \"Missing argument: script size\"");
     }
 
     @Test

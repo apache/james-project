@@ -37,6 +37,7 @@ C:
 C: if envelope :contains "to" "tmartin+sent" {
 C:   fileinto "INBOX.sent";
 C: }
+C:
 S: OK
 
 C: GETSCRIPT "mysievescript"
@@ -71,6 +72,7 @@ C:
 C: if envelope :contains "to" "tmartin+sent" {
 C:   fileinto "INBOX.sent";
 C: }
+C:
 S: OK
 
 C: RENAMESCRIPT "mysievescript" "mysievescriptbis"
