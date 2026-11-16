@@ -371,6 +371,28 @@ public class GetMetadataCommandParserTest {
     }
 
     @Test
+    void decodeMessageShouldAcceptOptionsBeforeTheMailbox() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream(("(DEPTH 1 MAXSIZE 1024) " + INBOX + " (\"/shared/comment\" /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        GetMetadataRequest request = (GetMetadataRequest)parser.decode(lineReader, TAG, session);
+
+        assertThat(request.getMailboxName()).isEqualTo(INBOX);
+        assertThat(request.getDepth()).isEqualTo(Depth.ONE);
+        assertThat(request.getMaxsize()).contains(1024);
+        assertThat(request.getKeys()).containsOnly(SHARED_KEY, PRIVATE_KEY);
+    }
+
+    @Test
+    void decodeMessageShouldRejectUnknownOptionsBeforeTheMailbox() {
+        InputStream inputStream = new ByteArrayInputStream(("(UNKNOWN 1) " + INBOX + " /private/comment\n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
     void decodeMessageShouldReturnRequestWithDefaultDepthOptionWhenCommandHasDoesNotHaveDepthOption() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);

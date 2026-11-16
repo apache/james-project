@@ -186,5 +186,14 @@ C: m07 CREATE mailboxTest
 S: m07 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: m08 GETMETADATA "mailboxTest"
-S: \* METADATA "mailboxTest"
 S: m08 OK GETMETADATA completed.
+
+C: m09 SETMETADATA mailboxTest (/bogus/comment "x")
+S: m09 BAD SETMETADATA failed. Illegal arguments.
+
+C: m10 SETMETADATA mailboxTest ("/private/comment" "quoted entry")
+S: m10 OK SETMETADATA completed.
+
+C: m11 GETMETADATA (DEPTH 1 MAXSIZE 100) "mailboxTest" ("/private/comment")
+S: \* METADATA "mailboxTest" \(\/private\/comment "quoted entry"\)
+S: m11 OK GETMETADATA completed.

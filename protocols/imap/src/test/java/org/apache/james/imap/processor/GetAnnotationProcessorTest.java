@@ -173,14 +173,14 @@ class GetAnnotationProcessorTest {
     }
 
     @Test
-    void processShouldGetAllAnnotationsAndReturnCompleteResponse() {
+    void processShouldNotSendAnEmptyMetadataResponseWhenNoAnnotation() {
         when(mockMailboxManager.getAllAnnotationsReactive(inbox, mailboxSession))
             .thenReturn(Flux.empty());
         processor.process(annotationRequestBuilder.build(), mockResponder, imapSession);
 
         verify(mockMailboxManager, times(1)).getAllAnnotationsReactive(inbox, mailboxSession);
         verify(mockStatusResponseFactory, times(1)).taggedOk(any(Tag.class), any(ImapCommand.class), humanTextCaptor.capture());
-        verify(mockResponder, times(2)).respond(captorAnnotationResponse.capture());
+        verify(mockResponder, times(1)).respond(captorAnnotationResponse.capture());
 
         verifyNoMoreInteractions(mockResponder);
 
@@ -188,14 +188,14 @@ class GetAnnotationProcessorTest {
     }
 
     @Test
-    void processShouldGetAnnotationsByKeysAndReturnCompleteResponse() {
+    void processShouldNotSendAnEmptyMetadataResponseWhenNoAnnotationMatchesTheKeys() {
         when(mockMailboxManager.getAnnotationsByKeysReactive(inbox, mailboxSession, keys))
             .thenReturn(Flux.empty());
         processor.process(annotationRequestBuilder.keys(keys).build(), mockResponder, imapSession);
 
         verify(mockMailboxManager, times(1)).getAnnotationsByKeysReactive(eq(inbox), eq(mailboxSession), eq(keys));
         verify(mockStatusResponseFactory, times(1)).taggedOk(any(Tag.class), any(ImapCommand.class), humanTextCaptor.capture());
-        verify(mockResponder, times(2)).respond(captorAnnotationResponse.capture());
+        verify(mockResponder, times(1)).respond(captorAnnotationResponse.capture());
         verifyNoMoreInteractions(mockResponder);
 
         assertThat(humanTextCaptor.getAllValues()).containsOnly(HumanReadableText.COMPLETED);
