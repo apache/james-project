@@ -335,6 +335,13 @@ class AuthenticateTest {
         assertThat(loggedOutResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
     }
 
+    @Test
+    void logoutShouldAnswerAQuotedTextTerminatedByCRLF() throws IOException {
+        this.client.sendCommand("LOGOUT");
+
+        assertThat(this.client.readUntilConnectionClosed()).isEqualTo("OK \"channel is closing\"\r\n");
+    }
+
     // The server actually disconnects but isConnected still returns True.
     // Even when adding a delay, it still returns True.
     // There is probably something else broken with this test.

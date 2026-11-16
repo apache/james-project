@@ -85,6 +85,15 @@ public class ManageSieveClient extends SocketClient {
         this.writer = null;
     }
 
+    public String readUntilConnectionClosed() throws IOException {
+        StringBuilder data = new StringBuilder();
+        int read;
+        while ((read = this.reader.read()) != -1) {
+            data.append((char) read);
+        }
+        return data.toString();
+    }
+
     public ServerResponse readResponse() throws IOException {
         ServerResponse response = null;
         ArrayList<String> lines = new ArrayList<>();
