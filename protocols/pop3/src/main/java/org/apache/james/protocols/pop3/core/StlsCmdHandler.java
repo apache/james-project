@@ -78,7 +78,7 @@ public class StlsCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
 
     @Override
     public Set<String> getImplementedCapabilities(POP3Session session) {
-        if (session.isStartTLSSupported() && session.getHandlerState() == POP3Session.AUTHENTICATION_READY) {
+        if (session.isStartTLSSupported() && session.getHandlerState() == POP3Session.AUTHENTICATION_READY && !session.isTLSStarted()) {
             return CAPS;
         } else {
             return Collections.emptySet();
