@@ -25,11 +25,22 @@ import org.apache.james.mailbox.model.search.MailboxNameExpression;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 
 public class MailboxExpressionBackwardCompatibility {
+    private static final String INBOX = "INBOX";
+    private static final String SQL_SINGLE_CHARACTER_WILDCARD = "_";
+
     public static String getPathLike(MailboxQuery mailboxQuery) {
         MailboxNameExpression nameExpression = mailboxQuery.getMailboxNameExpression();
-        return nameExpression.getCombinedName()
+        return ignoreInboxCase(nameExpression.getCombinedName())
             .replace(nameExpression.getFreeWildcard(), SQL_WILDCARD_CHAR)
             .replace(nameExpression.getLocalWildcard(), SQL_WILDCARD_CHAR)
             + SQL_WILDCARD_CHAR;
+    }
+
+    // INBOX is case-insensitive: let the name expression, applied afterward, filter the INBOX hierarchy
+    private static String ignoreInboxCase(String combinedName) {
+        if (combinedName.regionMatches(true, 0, INBOX, 0, INBOX.length()) && !combinedName.startsWith(INBOX)) {
+            return SQL_SINGLE_CHARACTER_WILDCARD.repeat(INBOX.length()) + combinedName.substring(INBOX.length());
+        }
+        return combinedName;
     }
 }
