@@ -110,6 +110,8 @@ public class MailboxPath {
     static String INVALID_CHARS = evaluateInvalidChars();
     @VisibleForTesting
     static CharMatcher INVALID_CHARS_MATCHER = CharMatcher.anyOf(INVALID_CHARS);
+    // RFC 9051 section 5.1: mailbox names should not contain control characters (Net-Unicode, RFC 5198)
+    private static final CharMatcher CONTROL_CHARS_MATCHER = CharMatcher.javaIsoControl();
     // This is the size that all mailbox backend should support
     public  static final int MAX_MAILBOX_NAME_LENGTH = 200;
 
@@ -236,7 +238,7 @@ public class MailboxPath {
                 String.format("'%s' has an empty part within its mailbox name considering %s as a delimiter", asString(), pathDelimiter));
         }
         if (nameContainsForbiddenCharacters()) {
-            throw new MailboxNameException(asString() + " contains one of the forbidden characters " + INVALID_CHARS.replace("\0", "\\0") + " or starts with #");
+            throw new MailboxNameException(asString() + " contains one of the forbidden characters " + INVALID_CHARS.replace("\0", "\\0") + ", a control character, or starts with #");
         }
         if (isMailboxNameTooLong()) {
             throw new TooLongMailboxNameException("Mailbox name exceeds maximum size of " + MAX_MAILBOX_NAME_LENGTH + " characters");
@@ -246,6 +248,7 @@ public class MailboxPath {
 
     private boolean nameContainsForbiddenCharacters() {
         return INVALID_CHARS_MATCHER.matchesAnyOf(name)
+            || CONTROL_CHARS_MATCHER.matchesAnyOf(name)
             || name.startsWith("#");
     }
 
