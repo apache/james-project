@@ -24,6 +24,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
@@ -57,7 +58,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
                 session.setRelayingAllowed(true);
                 return HookResult.builder()
                     .hookReturnCode(HookReturnCode.ok())
-                    .smtpDescription("Authentication Successful")
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.SECURITY_OTHER) + " Authentication Successful")
                     .build();
             }
         } catch (UsersRepositoryException e) {

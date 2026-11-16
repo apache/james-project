@@ -103,7 +103,7 @@ class AuthAnnounceTest {
         smtpProtocol.sendCommand("AUTH PLAIN");
 
         assertThat(smtpProtocol.getReplyString())
-                .isEqualTo("504 Unrecognized Authentication Type\r\n");
+                .isEqualTo("504 5.5.4 Unrecognized Authentication Type\r\n");
     }
 
     @Test
@@ -165,7 +165,7 @@ class AuthAnnounceTest {
         smtpProtocol.sendCommand("AUTH PLAIN");
 
         assertThat(smtpProtocol.getReplyString())
-            .isEqualTo("504 Unrecognized Authentication Type\r\n");
+            .isEqualTo("504 5.5.4 Unrecognized Authentication Type\r\n");
     }
 
     @Test
@@ -179,7 +179,7 @@ class AuthAnnounceTest {
         smtpProtocol.sendCommand("AUTH LOGIN");
 
         assertThat(smtpProtocol.getReplyString())
-            .isEqualTo("504 Unrecognized Authentication Type\r\n");
+            .isEqualTo("504 5.5.4 Unrecognized Authentication Type\r\n");
     }
 
     @Test

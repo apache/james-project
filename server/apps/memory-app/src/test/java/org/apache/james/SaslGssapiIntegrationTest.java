@@ -358,7 +358,7 @@ class SaslGssapiIntegrationTest {
 
                 // Verify authentication fails without closing or corrupting the SMTP session.
                 assertThat(replyCode).isEqualTo(SMTP_AUTH_FAILURE);
-                assertThat(smtpClient.getReplyString()).contains("535 Authentication Failed");
+                assertThat(smtpClient.getReplyString()).contains("535 5.7.8 Authentication Failed");
                 assertThat(smtpClient.noop()).isEqualTo(SMTP_OK);
             } finally {
                 smtpClient.disconnect();

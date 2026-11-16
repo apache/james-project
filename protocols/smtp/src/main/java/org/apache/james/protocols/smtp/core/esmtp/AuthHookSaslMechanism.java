@@ -38,6 +38,7 @@ import org.apache.james.protocols.api.sasl.SaslStep;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
@@ -235,9 +236,9 @@ class AuthHookSaslMechanism implements SaslMechanism {
 
         private String defaultSmtpDescription(HookReturnCode.Action action) {
             return switch (action) {
-                case OK -> "Authentication Successful";
-                case DENY -> "Authentication Failed";
-                case DENYSOFT -> "Temporary problem. Please try again later";
+                case OK -> DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.SECURITY_OTHER) + " Authentication Successful";
+                case DENY -> DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH_CREDENTIALS_INVALID) + " Authentication Failed";
+                case DENYSOFT -> DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.SECURITY_OTHER) + " Temporary problem. Please try again later";
                 case DECLINED, NONE -> throw new IllegalArgumentException("No SMTP response for declined AuthHook result");
             };
         }

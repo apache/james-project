@@ -32,6 +32,7 @@ import org.apache.james.core.Username;
 import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
@@ -109,7 +110,7 @@ public class ConfigurationAuthHook implements AuthHook {
 
         return HookResult.builder()
             .hookReturnCode(HookReturnCode.ok())
-            .smtpDescription("Authentication Successful")
+            .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.SECURITY_OTHER) + " Authentication Successful")
             .build();
     }
 

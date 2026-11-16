@@ -1522,7 +1522,7 @@ public class SMTPServerTest {
         // RFC 4954 distinguishes malformed AUTH exchange data from invalid credentials:
         // this payload has no valid PLAIN separators, so 501 is more accurate than 535.
         assertThat(smtpProtocol.getReplyString())
-            .contains("501 Could not decode parameters for AUTH PLAIN");
+            .contains("501 5.5.2 Could not decode parameters for AUTH PLAIN");
     }
 
     @Test
