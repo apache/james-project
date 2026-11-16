@@ -79,4 +79,15 @@ class CoreProcessorTest {
         assertThat(processor.unauthenticate(session)).isEqualTo("NO \"UNAUTHENTICATE command must be issued in authenticated state\"");
         assertThat(processor.startTLS(session)).isEqualTo("NO \"STARTTLS is not available\"");
     }
+
+    @Test
+    void syntaxErrorShouldBeAnsweredOnASingleLineWithAQuotedText() throws Exception {
+        CoreProcessor processor = new CoreProcessor(null, new Parser(), ImmutableList.of());
+        SettableSession session = new SettableSession();
+        session.setUser(Username.of("bob"));
+        session.setState(Session.State.AUTHENTICATED);
+
+        assertThat(processor.checkScript(session, "if header :contains \"subject\" {\r\n"))
+            .isEqualTo("NO \"Syntax Error: Encountered \\\"<EOF>\\\" at line 1, column 33.\"");
+    }
 }
