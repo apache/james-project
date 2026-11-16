@@ -190,6 +190,24 @@ public class POP3ServerTest {
     }
 
     @Test
+    void connectionShouldBeClosedAfterTooManyAuthenticationFailures() throws Exception {
+        finishSetUp(pop3Configuration);
+
+        pop3Client = new POP3Client();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        usersRepository.addUser(Username.of("known"), "test2");
+
+        assertThat(pop3Client.login("known", "wrong")).isFalse();
+        assertThat(pop3Client.getReplyString()).startsWith("-ERR Authentication failed.");
+        assertThat(pop3Client.login("known", "wrong")).isFalse();
+        assertThat(pop3Client.getReplyString()).startsWith("-ERR Authentication failed.");
+        assertThat(pop3Client.login("known", "wrong")).isFalse();
+        assertThat(pop3Client.getReplyString()).startsWith("-ERR Too many authentication failures, closing connection");
+    }
+
+    @Test
     void testUnknownUser() throws Exception {
         finishSetUp(pop3Configuration);
 
