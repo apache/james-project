@@ -20,6 +20,9 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+
+import java.time.Duration;
 
 import org.junit.jupiter.api.Test;
 
@@ -195,6 +198,20 @@ public class UnwrapTextTest {
                         "> Prova per vedere se effettivamente il testo viene wrappato come dovrebbe. \r\n";
 
         assertThat(UnwrapText.unwrap(input, 79)).isEqualTo(output);
+    }
+
+    @Test
+    void unwrapShouldBeLinearOnLongSpaceLines() {
+        String text = "x".repeat(50) + "\r\n" + " ".repeat(200_000) + "\r\n" + "end";
+
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () -> UnwrapText.unwrap(text));
+    }
+
+    @Test
+    void unwrapShouldBeLinearOnLongQuotePrefixLines() {
+        String text = "x".repeat(50) + "\r\n" + ">" + " ".repeat(200_000) + "\r\n" + "end";
+
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () -> UnwrapText.unwrap(text));
     }
 
 }
