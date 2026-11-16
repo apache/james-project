@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Username;
 import org.apache.james.jwt.OidcSASLConfiguration;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -77,6 +78,11 @@ public class AuthCmdHandler
     private static final Logger AUTHENTICATION_DEDICATED_LOGGER = LoggerFactory.getLogger("org.apache.james.protocols.smtp.AUTHENTICATION");
     private static final String[] MAIL_PARAMS = { "AUTH" };
     private static final String AUTH_TYPES_DELIMITER = " ";
+
+    private static final ProtocolSession.AttachmentKey<Integer> AUTHENTICATION_FAILURES =
+        ProtocolSession.AttachmentKey.of("SMTP_AUTHENTICATION_FAILURES", Integer.class);
+    // Same limit as the IMAP server
+    static final int MAX_AUTHENTICATION_FAILURES = 3;
 
     private static final Response AUTH_ABORTED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " Authentication aborted").immutable();
     private static final Response ALREADY_AUTH = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER) + " User has previously authenticated. "
@@ -398,6 +404,7 @@ public class AuthCmdHandler
                 if (res != null) {
                     if (SMTPRetCode.AUTH_FAILED.equals(res.getRetCode())) {
                         AUTHENTICATION_DEDICATED_LOGGER.info("AUTH method {} failed", authType);
+                        return onCredentialFailure(session, res);
                     } else if (SMTPRetCode.AUTH_OK.equals(res.getRetCode())) {
                         // TODO: Make this string a more useful debug message
                         AUTHENTICATION_DEDICATED_LOGGER.debug("AUTH method {} succeeded", authType);
@@ -426,7 +433,29 @@ public class AuthCmdHandler
             .parameters(() -> ImmutableMap.of("authType", authType))
             .log("SMTP Authentication failed.");
 
-        return AUTH_FAILED;
+        return onCredentialFailure(session, AUTH_FAILED);
+    }
+
+    private Response onCredentialFailure(SMTPSession session, Response response) {
+        if (recordAuthenticationFailure(session) >= MAX_AUTHENTICATION_FAILURES) {
+            // Do not offer an unthrottled password guessing channel: the connection gets closed
+            LOGGER.info("Too many SMTP authentication failures, closing the connection");
+            return tooManyAuthenticationFailures();
+        }
+        return response;
+    }
+
+    private static int recordAuthenticationFailure(SMTPSession session) {
+        int failures = session.getAttachment(AUTHENTICATION_FAILURES, ProtocolSession.State.Connection).orElse(0) + 1;
+        session.setAttachment(AUTHENTICATION_FAILURES, failures, ProtocolSession.State.Connection);
+        return failures;
+    }
+
+    private static Response tooManyAuthenticationFailures() {
+        SMTPResponse response = new SMTPResponse(SMTPRetCode.SERVICE_NOT_AVAILABLE,
+            DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.SECURITY_OTHER) + " Too many authentication failures, closing connection");
+        response.setEndSession(true);
+        return response;
     }
 
     private Response executeHook(SMTPSession session, AuthHook rawHook, Function<AuthHook, HookResult> tc) {

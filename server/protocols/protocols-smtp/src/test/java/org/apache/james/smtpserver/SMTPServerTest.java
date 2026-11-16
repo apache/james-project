@@ -42,6 +42,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.smtp.SMTPClient;
+import org.apache.commons.net.smtp.SMTPConnectionClosedException;
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -1417,6 +1418,32 @@ public class SMTPServerTest {
         assertThat(smtpProtocol.getReplyCode())
             .as("authenticated")
             .isEqualTo(235);
+    }
+
+    @Test
+    public void connectionShouldBeClosedAfterTooManyAuthenticationFailures() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        String userName = USER_LOCALHOST;
+        testSystem.usersRepository.addUser(Username.of(userName), "password");
+        String wrongCredentials = Base64.getEncoder().encodeToString(("\0" + userName + "\0wrong").getBytes(UTF_8));
+
+        smtpProtocol.sendCommand("AUTH PLAIN " + wrongCredentials);
+        assertThat(smtpProtocol.getReplyCode()).isEqualTo(535);
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand(wrongCredentials);
+        assertThat(smtpProtocol.getReplyCode()).isEqualTo(535);
+        // commons-net reports the 421 reply as the server closing the connection
+        assertThatThrownBy(() -> smtpProtocol.sendCommand("AUTH PLAIN " + wrongCredentials))
+            .isInstanceOf(SMTPConnectionClosedException.class);
+        assertThat(smtpProtocol.getReplyString()).isEqualTo("421 4.7.0 Too many authentication failures, closing connection\r\n");
     }
 
     @Test
