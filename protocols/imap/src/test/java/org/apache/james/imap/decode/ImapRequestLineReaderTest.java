@@ -145,4 +145,12 @@ class ImapRequestLineReaderTest {
 
         assertThat(lineReader.flagList().getUserFlags()).containsExactly("$Label1");
     }
+
+    @Test
+    void astringShouldRejectAQuotedStringNotTerminatedOnItsLine() {
+        inputStream = new ByteArrayInputStream("\"INBOX\r\nA2 NOOP\"\r\n".getBytes(StandardCharsets.US_ASCII));
+        lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> lineReader.astring()).isInstanceOf(DecodingException.class);
+    }
 }

@@ -213,6 +213,10 @@ public abstract class ImapRequestLineReader {
                 decoder.reset();
                 char next = request.nextChar();
                 while (next != '"') {
+                    if (next == '\r' || next == '\n') {
+                        // RFC 9051 section 4.3: a quoted string can not span several lines
+                        throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unterminated quoted string");
+                    }
                     // fill up byte buffer before decoding
                     if (!buffer.hasRemaining()) {
                         decodeByteBufferToCharacterBuffer(false);
