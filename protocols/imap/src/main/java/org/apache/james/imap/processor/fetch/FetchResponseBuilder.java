@@ -43,6 +43,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageSequenceNumber;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -252,7 +253,9 @@ public final class FetchResponseBuilder {
                 .then(Mono.fromCallable(() -> {
                     flags.add(Flags.Flag.SEEN);
                     return true;
-                }));
+                }))
+                // RFC 4314 section 4: without the 's' right, FETCH succeeds but does not set \Seen
+                .onErrorResume(InsufficientRightsException.class, e -> Mono.just(false));
         }
         return Mono.just(false);
     }
