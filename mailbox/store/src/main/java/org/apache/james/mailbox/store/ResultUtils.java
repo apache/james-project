@@ -21,6 +21,10 @@ package org.apache.james.mailbox.store;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -115,6 +119,36 @@ public class ResultUtils {
         }
     }
 
+    /**
+     * Raw header values are UTF-8 when the message uses RFC 6532 internationalized headers, and are otherwise
+     * decoded byte per byte as before.
+     */
+    @VisibleForTesting
+    static String decodeRawValue(ByteSequence raw, int offset, int length) {
+        if (isAscii(raw, offset, length)) {
+            return ContentUtil.decode(raw, offset, length);
+        }
+        byte[] bytes = raw.toByteArray();
+        try {
+            return StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(bytes, offset, length))
+                .toString();
+        } catch (CharacterCodingException e) {
+            return ContentUtil.decode(raw, offset, length);
+        }
+    }
+
+    private static boolean isAscii(ByteSequence raw, int offset, int length) {
+        for (int i = offset; i < offset + length; i++) {
+            if ((raw.byteAt(i) & 0x80) != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static List<Header> createHeaders(MailboxMessage document) throws IOException {
         List<Header> results = new ArrayList<>();
         MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE, null, NoopBodyDescriptor.INSTANCE);
@@ -137,7 +171,7 @@ public class ResultUtils {
                         off++;
                     }
                 
-                    fieldValue = ContentUtil.decode(raw, off, len - off);
+                    fieldValue = decodeRawValue(raw, off, len - off);
                 } else {
                     fieldValue = field.getBody();
                 }
