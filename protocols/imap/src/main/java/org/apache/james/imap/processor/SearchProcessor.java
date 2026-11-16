@@ -109,8 +109,8 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                 .flatMap(Throwing.function(mailbox -> performUidSearch(mailbox, query, msession)
                     .flatMap(uids -> computeHighestModSeqIfNeeded(session, responder, mailbox, msession, uids)
                         .doOnNext(highestModSeq -> {
-                            ImapResponseMessage response = toResponse(request, session, uids, highestModSeq);
-                            responder.respond(response);
+                            toResponse(request, session, uids, highestModSeq)
+                                .ifPresent(responder::respond);
                         }))
                     .then(unsolicitedResponses(session, responder, omitExpunged, useUids))))
                 .then(Mono.fromRunnable(() -> {
@@ -156,18 +156,18 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         }
     }
 
-    private ImapResponseMessage toResponse(SearchRequest request, ImapSession session, Collection<MessageUid> uids, Optional<ModSeq> highestModSeq) {
+    private Optional<ImapResponseMessage> toResponse(SearchRequest request, ImapSession session, Collection<MessageUid> uids, Optional<ModSeq> highestModSeq) {
         LongList ids = asResults(session, request.isUseUids(), uids);
 
         List<SearchResultOption> resultOptions = request.getSearchOperation().getResultOptions();
         if (resultOptions == null || resultOptions.isEmpty()) {
-            return new SearchResponse(ids, highestModSeq.orElse(null));
+            return Optional.of(new SearchResponse(ids, highestModSeq.orElse(null)));
         } else {
             return handleResultOptions(request, session, highestModSeq.orElse(null), ids);
         }
     }
 
-    private ImapResponseMessage handleResultOptions(SearchRequest request, ImapSession session, ModSeq highestModSeq, LongList ids) {
+    private Optional<ImapResponseMessage> handleResultOptions(SearchRequest request, ImapSession session, ModSeq highestModSeq, LongList ids) {
         List<SearchResultOption> resultOptions = request.getSearchOperation().getResultOptions();
 
         IdRange[] idRanges = asRanges(
@@ -212,13 +212,13 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                     SearchResUtil.saveSequenceSet(session, savedRanges.toArray(IdRange[]::new));
                 }
             }
-            return new ESearchResponse(min, max, count,
+            return Optional.of(new ESearchResponse(min, max, count,
                 allRange(resultOptions, idRanges),
-                partialRange(resultOptions, idRanges), highestModSeq, request.getTag(), request.isUseUids(), resultOptions, request.getSearchOperation().getPartialRange());
+                partialRange(resultOptions, idRanges), highestModSeq, request.getTag(), request.isUseUids(), resultOptions, request.getSearchOperation().getPartialRange()));
         } else {
-            // Just save the returned sequence-set as this is not SEARCHRES + ESEARCH
+            // RFC 5182 section 2.1: with SAVE as the only result option, the result is saved but not returned
             SearchResUtil.saveSequenceSet(session, idRanges);
-            return new SearchResponse(ids, highestModSeq);
+            return Optional.empty();
         }
     }
 

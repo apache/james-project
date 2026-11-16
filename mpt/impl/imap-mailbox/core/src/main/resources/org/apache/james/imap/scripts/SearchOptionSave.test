@@ -49,7 +49,6 @@ C: b STORE 1:* +FLAGS.SILENT (\FLAGGED)
 S: b OK STORE completed.
 
 C: c SEARCH RETURN (SAVE) FLAGGED
-S: \* SEARCH 1
 S: c OK SEARCH completed.
 
 C: c FETCH $ FLAGS
