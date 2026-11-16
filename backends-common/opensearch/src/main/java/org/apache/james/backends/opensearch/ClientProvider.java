@@ -25,6 +25,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -35,21 +36,29 @@ import jakarta.inject.Provider;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.conn.ssl.DefaultHostnameVerifier;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.ssl.TrustStrategy;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.config.TlsConfig;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.ClientTlsStrategyBuilder;
+import org.apache.hc.client5.http.ssl.DefaultHostnameVerifier;
+import org.apache.hc.client5.http.ssl.HostnameVerificationPolicy;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.nio.ssl.TlsStrategy;
+import org.apache.hc.core5.http2.HttpVersionPolicy;
+import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.apache.hc.core5.ssl.TrustStrategy;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.opensearch.client.RestClient;
-import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
-import org.opensearch.client.transport.rest_client.RestClientTransport;
+import org.opensearch.client.transport.OpenSearchTransport;
+import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +69,11 @@ import reactor.util.retry.Retry;
 public class ClientProvider implements Provider<ReactorOpenSearchClient> {
 
     private static class HttpAsyncClientConfigurer {
-
+        // Same defaults as the OpenSearch low level clients. Building our own connection manager would otherwise
+        // fall back to HttpClient 5 defaults (5 per route / 25 total), throttling concurrent requests.
+        private static final int DEFAULT_MAX_CONN_PER_ROUTE = ApacheHttpClient5TransportBuilder.DEFAULT_MAX_CONN_PER_ROUTE;
+        private static final int DEFAULT_MAX_CONN_TOTAL = ApacheHttpClient5TransportBuilder.DEFAULT_MAX_CONN_TOTAL;
+        private static final AuthScope ANY = new AuthScope(null, -1);
         private static final TrustStrategy TRUST_ALL = (x509Certificates, authType) -> true;
         private static final HostnameVerifier ACCEPT_ANY_HOSTNAME = (hostname, sslSession) -> true;
 
@@ -72,25 +85,39 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
 
         private HttpAsyncClientBuilder configure(HttpAsyncClientBuilder builder) {
             configureAuthentication(builder);
-            configureHostScheme(builder);
-            configureTimeout(builder);
 
-            configuration.getMaxConnections().ifPresent(builder::setMaxConnTotal);
-            configuration.getMaxConnectionsPerHost().ifPresent(builder::setMaxConnPerRoute);
-
-            builder.setThreadFactory(NamedThreadFactory.withName("OpenSearch-driver"));
+            builder.setConnectionManager(connectionManager())
+                .setDefaultRequestConfig(requestConfig())
+                .setThreadFactory(NamedThreadFactory.withName("OpenSearch-driver"));
 
             return builder;
         }
 
-        private void configureHostScheme(HttpAsyncClientBuilder builder) {
+        private PoolingAsyncClientConnectionManager connectionManager() {
+            PoolingAsyncClientConnectionManagerBuilder builder = PoolingAsyncClientConnectionManagerBuilder.create()
+                .setMaxConnTotal(configuration.getMaxConnections().orElse(DEFAULT_MAX_CONN_TOTAL))
+                .setMaxConnPerRoute(configuration.getMaxConnectionsPerHost().orElse(DEFAULT_MAX_CONN_PER_ROUTE))
+                // STRICT enforces both limits. LAX would silently ignore the total limit (opensearch.max.connections)
+                .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
+                .setDefaultConnectionConfig(connectionConfig())
+                // OpenSearch REST API is consumed over HTTP/1.1, skip HTTP/2 negotiation over TLS
+                .setDefaultTlsConfig(TlsConfig.custom()
+                    .setVersionPolicy(HttpVersionPolicy.FORCE_HTTP_1)
+                    .build());
+
+            configureHostScheme(builder);
+
+            return builder.build();
+        }
+
+        private void configureHostScheme(PoolingAsyncClientConnectionManagerBuilder builder) {
             OpenSearchConfiguration.HostScheme scheme = configuration.getHostScheme();
 
             switch (scheme) {
                 case HTTP:
                     return;
                 case HTTPS:
-                    configureSSLOptions(builder);
+                    builder.setTlsStrategy(tlsStrategy());
                     return;
                 default:
                     throw new NotImplementedException(
@@ -98,18 +125,18 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
             }
         }
 
-        private void configureSSLOptions(HttpAsyncClientBuilder builder) {
+        private TlsStrategy tlsStrategy() {
             try {
-                builder
-                    .setSSLContext(sslContext())
-                    .setSSLHostnameVerifier(hostnameVerifier());
+                return ClientTlsStrategyBuilder.create()
+                    .setSslContext(sslContext())
+                    .setHostnameVerifier(hostnameVerifier())
+                    // Only rely on our HostnameVerifier: the default (BOTH) also enables JSSE built-in endpoint
+                    // identification, which would reject hosts accepted by ACCEPT_ANY_HOSTNAME
+                    .setHostVerificationPolicy(HostnameVerificationPolicy.CLIENT)
+                    .build();
             } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException | CertificateException | IOException e) {
                 throw new RuntimeException("Cannot set SSL options to the builder", e);
             }
-        }
-
-        private void configureTimeout(HttpAsyncClientBuilder builder) {
-            builder.setDefaultRequestConfig(requestConfig());
         }
 
         private SSLContext sslContext() throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException,
@@ -150,12 +177,24 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
             }
         }
 
+        private ConnectionConfig connectionConfig() {
+            Timeout timeout = requestTimeout();
+            return ConnectionConfig.custom()
+                .setConnectTimeout(timeout)
+                .setSocketTimeout(timeout)
+                .build();
+        }
+
         private RequestConfig requestConfig() {
+            Timeout timeout = requestTimeout();
             return RequestConfig.custom()
-                    .setConnectTimeout(Math.toIntExact(configuration.getRequestTimeout().toMillis()))
-                    .setConnectionRequestTimeout(Math.toIntExact(configuration.getRequestTimeout().toMillis()))
-                    .setSocketTimeout(Math.toIntExact(configuration.getRequestTimeout().toMillis()))
-                    .build();
+                .setConnectionRequestTimeout(timeout)
+                .setResponseTimeout(timeout)
+                .build();
+        }
+
+        private Timeout requestTimeout() {
+            return Timeout.of(configuration.getRequestTimeout());
         }
 
         private SSLContextBuilder applyTrustStore(SSLContextBuilder sslContextBuilder) throws CertificateException, NoSuchAlgorithmException,
@@ -172,9 +211,9 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
         private void configureAuthentication(HttpAsyncClientBuilder builder) {
             configuration.getCredential()
                 .ifPresent(credential -> {
-                    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                    credentialsProvider.setCredentials(AuthScope.ANY,
-                        new UsernamePasswordCredentials(credential.getUsername(), String.valueOf(credential.getPassword())));
+                    BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                    credentialsProvider.setCredentials(ANY,
+                        new UsernamePasswordCredentials(credential.getUsername(), credential.getPassword()));
                     builder.setDefaultCredentialsProvider(credentialsProvider);
                 });
         }
@@ -183,7 +222,7 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProvider.class);
 
     private final OpenSearchConfiguration configuration;
-    private final RestClient lowLevelRestClient;
+    private final OpenSearchTransport transport;
     private final OpenSearchAsyncClient openSearchClient;
     private final HttpAsyncClientConfigurer httpAsyncClientConfigurer;
     private final ReactorOpenSearchClient client;
@@ -192,13 +231,13 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
     public ClientProvider(OpenSearchConfiguration configuration) {
         this.httpAsyncClientConfigurer = new HttpAsyncClientConfigurer(configuration);
         this.configuration = configuration;
-        this.lowLevelRestClient = buildRestClient();
+        this.transport = buildTransport();
         this.openSearchClient = connect();
-        this.client = new ReactorOpenSearchClient(this.openSearchClient, lowLevelRestClient);
+        this.client = new ReactorOpenSearchClient(this.openSearchClient);
     }
 
-    private RestClient buildRestClient() {
-        return RestClient.builder(hostsToHttpHosts())
+    private OpenSearchTransport buildTransport() {
+        return ApacheHttpClient5TransportBuilder.builder(hostsToHttpHosts())
             .setHttpClientConfigCallback(httpAsyncClientConfigurer::configure)
             .build();
     }
@@ -218,14 +257,13 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
     private OpenSearchAsyncClient connectToCluster() {
         LOGGER.info("Trying to connect to OpenSearch service at {}", LocalDateTime.now());
 
-        RestClientTransport transport = new RestClientTransport(lowLevelRestClient, new JacksonJsonpMapper());
-
         return new OpenSearchAsyncClient(transport);
     }
 
     private HttpHost[] hostsToHttpHosts() {
+        String scheme = configuration.getHostScheme().name().toLowerCase(Locale.US);
         return configuration.getHosts().stream()
-            .map(host -> new HttpHost(host.getHostName(), host.getPort(), configuration.getHostScheme().name()))
+            .map(host -> new HttpHost(scheme, host.getHostName(), host.getPort()))
             .toArray(HttpHost[]::new);
     }
 
@@ -236,6 +274,6 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
 
     @PreDestroy
     public void close() throws IOException {
-        lowLevelRestClient.close();
+        transport.close();
     }
 }
