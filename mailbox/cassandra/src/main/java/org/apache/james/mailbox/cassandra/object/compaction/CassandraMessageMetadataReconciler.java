@@ -61,6 +61,7 @@ public class CassandraMessageMetadataReconciler {
         ComposedMessageId id = metadata.getComposedMessageId().getComposedMessageId();
         // Compare-and-set avoids recreating deleted COPY/MOVE rows or overwriting a newer repair.
         return metadata.getHeaderContent()
+            .filter(oldId -> !oldId.equals(headerId))
             .map(oldId -> messageIdDao.replaceHeaderContent(id, oldId, headerId)
                 .then(imapUidDao.replaceHeaderContent(id, oldId, headerId)))
             .orElseGet(Mono::empty);
