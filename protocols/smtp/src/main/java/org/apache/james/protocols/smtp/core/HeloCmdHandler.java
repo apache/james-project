@@ -75,7 +75,7 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
         StringBuilder response = new StringBuilder();
         response.append(session.getConfiguration().getHelloName()).append(
                 " Hello ").append(parameters).append(" [").append(
-                session.getRemoteAddress().getAddress().getHostAddress()).append("])");
+                session.getRemoteAddress().getAddress().getHostAddress()).append("]");
 
         LOGGER.debug("HELO {} {}", StringUtils.abbreviate(command, 80), StringUtils.abbreviate(parameters, 80));
         return new SMTPResponse(SMTPRetCode.MAIL_OK, response);
