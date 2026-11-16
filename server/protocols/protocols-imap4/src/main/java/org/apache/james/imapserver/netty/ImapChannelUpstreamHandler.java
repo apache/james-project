@@ -402,6 +402,14 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        channelRead(ctx, msg, false);
+    }
+
+    /**
+     * @param handedOver true when the request was queued and the request that completed before it handed it
+     *                   its execution slot: it runs right away, ahead of the requests read meanwhile.
+     */
+    private void channelRead(ChannelHandlerContext ctx, Object msg, boolean handedOver) {
         imapCommandsMetric.increment();
         ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
         Attribute<Disposable> disposableAttribute = ctx.channel().attr(REQUEST_IN_FLIGHT_ATTRIBUTE_KEY);
@@ -411,7 +419,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
         ImapLinerarizer linearalizer = ctx.channel().attr(LINEARIZER_ATTRIBUTE_KEY).get();
         synchronized (linearalizer) {
-            if (linearalizer.isExecutingRequest.get()) {
+            if (!handedOver && linearalizer.isExecutingRequest.get()) {
                 linearalizer.throttled.add(msg);
                 return;
             }
@@ -452,8 +460,10 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     }
                     Object waitingMessage;
                     synchronized (linearalizer) {
-                        linearalizer.isExecutingRequest.set(false);
                         waitingMessage = linearalizer.throttled.poll();
+                        // RFC 9051 section 5.5: keep the slot for the next queued request, so that a request read
+                        // before it runs does not overtake it
+                        linearalizer.isExecutingRequest.set(waitingMessage != null && signal.isOnComplete());
                     }
                     if (signal.isOnComplete() || signal.isOnError()) {
                         afterIDLEUponProcessing(ctx);
@@ -467,7 +477,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     if (signal.isOnComplete() || signal.isOnError()) {
                         if (waitingMessage != null && signal.isOnComplete()) {
                             ctx.channel().eventLoop().execute(
-                                () -> channelRead(ctx, waitingMessage));
+                                () -> channelRead(ctx, waitingMessage, true));
                         }
                     }
                 }))
