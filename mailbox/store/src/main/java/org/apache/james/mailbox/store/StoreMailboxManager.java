@@ -626,6 +626,9 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     private Mono<List<Mailbox>> retrieveSubMailboxes(MailboxPath from, MailboxPath to, MailboxSession fromSession, MailboxMapper mapper) {
+        if (!to.equals(from) && to.getHierarchyLevels(fromSession.getPathDelimiter()).contains(from)) {
+            return Mono.error(new MailboxNameException("Can not rename " + from.asString() + " into its own sub-tree: " + to.asString()));
+        }
         MailboxQuery.UserBound query = MailboxQuery.builder()
             .userAndNamespaceFrom(from)
             .expression(new PrefixedWildcard(from.getName()))

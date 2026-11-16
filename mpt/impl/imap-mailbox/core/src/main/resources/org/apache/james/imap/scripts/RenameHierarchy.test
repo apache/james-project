@@ -95,3 +95,13 @@ S: \* LIST \(\\HasNoChildren\) "\." "selected"
 S: A19 OK LIST completed\.
 C: A20 DELETE aleph
 S: A20 NO DELETE failed. No such mailbox\.
+
+# A mailbox can not be renamed into its own sub-tree
+C: A21 CREATE g.child
+S: A21 OK \[MAILBOXID \(.+\)\] CREATE completed\.
+C: A22 RENAME g g.child.x
+S: A22 NO RENAME .*
+C: A23 LIST "" "g*"
+S: \* LIST \(\\HasChildren\) "\." "g"
+S: \* LIST \(\\HasNoChildren\) "\." "g\.child"
+S: A23 OK LIST completed\.
