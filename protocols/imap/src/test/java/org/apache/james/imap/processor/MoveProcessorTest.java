@@ -23,6 +23,7 @@ import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -59,6 +60,7 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.stubbing.Answer;
 
 import reactor.core.publisher.Flux;
@@ -124,8 +126,10 @@ public class MoveProcessorTest {
         Mailbox mailbox = mock(Mailbox.class);
         when(mailbox.getUidValidity()).thenReturn(UID_VALIDITY);
         when(targetMessageManager.getMailboxEntity()).thenReturn(mailbox);
+        StatusResponse copyUidResponse = mock(StatusResponse.class);
+        when(mockStatusResponseFactory.untaggedOk(eq(HumanReadableText.MOVED_UIDS), any(StatusResponse.ResponseCode.class))).thenReturn(copyUidResponse);
         StatusResponse okResponse = mock(StatusResponse.class);
-        when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
+        when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class))).thenReturn(okResponse);
         when(mockMailboxManager.moveMessagesReactive(eq(MessageRange.range(MessageUid.of(4), MessageUid.of(6))), any(MailboxId.class), any(MailboxId.class), eq(mailboxSession)))
             .thenReturn(Flux.just(MessageRange.range(MessageUid.of(4), MessageUid.of(6))));
 
@@ -137,7 +141,10 @@ public class MoveProcessorTest {
         verify(mockMailboxManager).getMailboxReactive(INBOX, mailboxSession);
         verify(mockMailboxManager).moveMessagesReactive(eq(MessageRange.range(MessageUid.of(4), MessageUid.of(6))), any(MailboxId.class), any(MailboxId.class), eq(mailboxSession));
         verify(targetMessageManager).getMailboxEntity();
-        verify(mockResponder).respond(okResponse);
+        // RFC 6851 section 4.3: COPYUID comes in an untagged OK, before the tagged one
+        InOrder inOrder = inOrder(mockResponder);
+        inOrder.verify(mockResponder).respond(copyUidResponse);
+        inOrder.verify(mockResponder).respond(okResponse);
     }
 
     @Test

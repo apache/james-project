@@ -27,6 +27,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
@@ -65,6 +66,16 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
             return Mono.empty();
         }
         return super.processRequestReactive(request, session, responder);
+    }
+
+    /**
+     * RFC 6851 section 4.3: COPYUID is sent in an untagged OK, before the EXPUNGE responses of the moved messages.
+     */
+    @Override
+    protected Mono<Void> respondCompletion(MoveRequest request, ImapSession session, Responder responder, StatusResponse.ResponseCode copyUid) {
+        return Mono.fromRunnable(() -> responder.respond(getStatusResponseFactory().untaggedOk(HumanReadableText.MOVED_UIDS, copyUid)))
+            .then(unsolicitedResponses(session, responder, request.isUseUids()))
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)));
     }
 
     @Override

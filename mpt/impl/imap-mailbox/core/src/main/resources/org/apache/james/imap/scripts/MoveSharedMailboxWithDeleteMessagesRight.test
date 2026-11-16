@@ -33,9 +33,10 @@ S: \* OK \[UIDNEXT 11\].*
 S: a1 OK \[READ-WRITE\] SELECT completed.
 
 C: a2 UID MOVE 1:2 moved
+S: \* OK \[COPYUID \d+ 1:2 \d+:\d+\] Moved UIDs.
 S: \* 1 EXPUNGE
 S: \* 1 EXPUNGE
-S: a2 OK (\[.+\] )?MOVE completed.
+S: a2 OK MOVE completed.
 
 C: a3 UID SEARCH ALL
 S: \* SEARCH 3 4 5 6 7 8 9 10

@@ -140,6 +140,7 @@ public class HumanReadableText {
     public static final HumanReadableText BAD_IO_ENCODING = new HumanReadableText("org.apache.james.imap.BAD_IO_ENCODING", "failed. Illegal encoding.");
     public static final HumanReadableText COMPLETED = new HumanReadableText("org.apache.james.imap.COMPLETED", "completed.");
     public static final HumanReadableText REPLACE_READY = new HumanReadableText("org.apache.james.imap.REPLACE", "Replacement Message ready");
+    public static final HumanReadableText MOVED_UIDS = new HumanReadableText("org.apache.james.imap.MOVED_UIDS", "Moved UIDs.");
 
     public static final HumanReadableText INVALID_LOGIN = new HumanReadableText("org.apache.james.imap.INVALID_LOGIN", "failed. Invalid login/password.");
 
