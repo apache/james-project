@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 
@@ -1257,6 +1258,17 @@ class SieveIntegrationTest {
         assertThat(fakeMailContext.getSentMails()).hasSize(1);
         assertThat(fakeMailContext.getSentMails().get(0).getMsg().getHeader("Auto-Submitted"))
             .containsExactly("auto-replied");
+    }
+
+    @Test
+    void vacationReplyShouldBeFromTheUser() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        testee.service(createMail());
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+        assertThat(fakeMailContext.getSentMails().get(0).getMsg().getFrom())
+            .containsExactly(new InternetAddress(RECEIVER_DOMAIN_COM));
     }
 
     @Test
