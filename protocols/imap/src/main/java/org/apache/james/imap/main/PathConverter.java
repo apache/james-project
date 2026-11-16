@@ -114,9 +114,7 @@ public interface PathConverter {
                     return new MailboxPath(MailboxConstants.USER_NAMESPACE, null, sanitizeMailboxName(mailboxName));
                 }
                 String username = mailboxPathParts.get(USER);
-                String unescapedUsername = username.replace("__", String.valueOf(MailboxConstants.FOLDER_DELIMITER))
-                    .replace("_-", "_");
-                Username user = parseUsername(unescapedUsername, session);
+                Username user = parseUsername(unescapeUsername(username), session);
                 String mailboxName = Joiner.on(session.getPathDelimiter()).join(Iterables.skip(mailboxPathParts, 2));
                 return new MailboxPath(MailboxConstants.USER_NAMESPACE, user, sanitizeMailboxName(mailboxName));
 
@@ -134,13 +132,9 @@ public interface PathConverter {
             }
         }
 
-        private Username parseQueriedUsername(String username) {
-            try {
-                return Username.of(username);
-            } catch (IllegalArgumentException e) {
-                // The user segment is client supplied: reject invalid usernames like an unknown namespace
-                throw new DeniedAccessOnSharedMailboxException();
-            }
+        private String unescapeUsername(String username) {
+            return username.replace("__", String.valueOf(MailboxConstants.FOLDER_DELIMITER))
+                .replace("_-", "_");
         }
 
         private String sanitizeMailboxName(String mailboxName) {
@@ -220,8 +214,8 @@ public interface PathConverter {
 
                 int separatorPosition = decodedMailboxName.indexOf(mailboxSession.getPathDelimiter());
                 if (separatorPosition >= 0) {
-                    // interpret first part as the user
-                    Username username = parseQueriedUsername(decodedMailboxName.substring(0, separatorPosition));
+                    // interpret first part as the user, named as in the mailbox names returned (see joinMailboxPath)
+                    Username username = parseUsername(unescapeUsername(decodedMailboxName.substring(0, separatorPosition)), mailboxSession);
                     return MailboxQuery.builder()
                         .namespace(MailboxConstants.USER_NAMESPACE)
                         .username(username)

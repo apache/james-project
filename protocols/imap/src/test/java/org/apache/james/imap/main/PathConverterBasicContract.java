@@ -266,6 +266,15 @@ public abstract class PathConverterBasicContract extends MailboxFolderDelimiterA
         }
 
         @Test
+        public void mailboxQueryShouldQualifyTheQueriedUserWithTheSessionDomain() {
+            FakeImapSession session = new FakeImapSession();
+            session.setMailboxSession(mailboxWithEmailSession);
+
+            assertThat(pathConverter().mailboxQuery("", adjustToActiveFolderDelimiter("#user.username2.abc"), session).getUser())
+                .contains(USERNAME2_WITH_MAIL);
+        }
+
+        @Test
         public void mailboxNameShouldReturnNameOnlyWhenRelativeAndUserMailbox() {
             assertThat(pathConverter().mailboxName(RELATIVE, MailboxPath.forUser(USERNAME_WITH_MAIL, "abc"), mailboxWithEmailSession))
                 .contains("abc");
