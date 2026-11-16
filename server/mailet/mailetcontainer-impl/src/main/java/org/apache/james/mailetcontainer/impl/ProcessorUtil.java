@@ -19,8 +19,6 @@
 
 package org.apache.james.mailetcontainer.impl;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Collection;
 
 import jakarta.mail.MessagingException;
@@ -49,22 +47,10 @@ public class ProcessorUtil {
      */
     public static void handleException(Throwable me, Mail mail, String offendersName, String nextState, Logger logger) {
         mail.setState(nextState);
-        StringWriter sout = new StringWriter();
-        PrintWriter out = new PrintWriter(sout, true);
-        String exceptionBuffer = "Exception calling " + offendersName + ": " + me.getMessage();
-        out.println(exceptionBuffer);
-        Throwable e = me;
-        while (e != null) {
-            e.printStackTrace(out);
-            if (e instanceof MessagingException) {
-                e = ((MessagingException) e).getNextException();
-            } else {
-                e = null;
-            }
-        }
-        String errorString = sout.toString();
+        // The error message may be sent outside, for instance in a bounce: the stack trace only goes to the logs
+        String errorString = "Exception calling " + offendersName + ": " + me.getMessage();
         mail.setErrorMessage(errorString);
-        logger.error(errorString);
+        logger.error(errorString, me);
         mail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofUnserializable(me)));
     }
 
