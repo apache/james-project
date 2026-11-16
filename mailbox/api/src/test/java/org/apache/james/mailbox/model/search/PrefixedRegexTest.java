@@ -281,6 +281,21 @@ class PrefixedRegexTest {
         }
 
         @Test
+        void isExpressionMatchShouldMatchInboxCaseInsensitively() {
+            assertThat(new PrefixedRegex(EMPTY_PREFIX, "inbox", folderDelimiter()).isExpressionMatch("INBOX")).isTrue();
+            assertThat(new PrefixedRegex(EMPTY_PREFIX, "Inbox", folderDelimiter()).isExpressionMatch("INBOX")).isTrue();
+            assertThat(new PrefixedRegex(EMPTY_PREFIX, "InBoX*", folderDelimiter()).isExpressionMatch("INBOX")).isTrue();
+            assertThat(new PrefixedRegex(EMPTY_PREFIX, "inbox%", folderDelimiter()).isExpressionMatch("INBOX")).isTrue();
+            assertThat(new PrefixedRegex(EMPTY_PREFIX, "inbox*", folderDelimiter()).isExpressionMatch("INBOX" + folderDelimiter() + "sub")).isTrue();
+        }
+
+        @Test
+        void isExpressionMatchShouldMatchOtherNamesCaseSensitively() {
+            assertThat(new PrefixedRegex(EMPTY_PREFIX, "inbox*", folderDelimiter()).isExpressionMatch("INBOXES")).isFalse();
+            assertThat(new PrefixedRegex(EMPTY_PREFIX, "inbox%", folderDelimiter()).isExpressionMatch("INBOX" + folderDelimiter() + "sub")).isFalse();
+        }
+
+        @Test
         void isExpressionMatchShouldReturnFalseWhenNullExpression() {
             PrefixedRegex testee = new PrefixedRegex(PREFIX, null, folderDelimiter());
 
