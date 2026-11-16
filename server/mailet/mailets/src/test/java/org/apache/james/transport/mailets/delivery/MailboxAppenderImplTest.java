@@ -101,6 +101,19 @@ class MailboxAppenderImplTest {
     }
 
     @Test
+    void appendShouldDeliverToInboxWhenTheFolderCanNotBeCreated() throws Exception {
+        Mono.from(testee.append(mimeMessage, USER, StorageDirective.builder()
+            .targetFolder("#user.bob.INBOX")
+            .build())).block();
+
+        MessageResultIterator messages = mailboxManager.getMailbox(MailboxPath.inbox(USER), session)
+            .getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session);
+
+        assertThat(messages).toIterable()
+            .hasSize(1);
+    }
+
+    @Test
     void appendShouldNotAppendToEmptyFolder() {
         assertThatThrownBy(() -> Mono.from(testee.append(mimeMessage, USER, StorageDirective.builder()
             .targetFolder(EMPTY_FOLDER)

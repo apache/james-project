@@ -35,10 +35,12 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.AppendResult;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
+import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.server.core.MimeMessageInputStream;
@@ -72,7 +74,20 @@ public class MailboxAppenderImpl implements MailboxAppender {
 
         return append(mail, user, targetFolder, storageDirective.getFlags(), session)
             .map(AppendResult::getId)
-            .flatMap(id -> copyToExtraMailboxes(storageDirective, session, targetFolder, id));
+            .flatMap(id -> copyToExtraMailboxes(storageDirective, session, targetFolder, id))
+            .onErrorResume(e -> isInvalidMailboxName(e) && !targetFolder.equalsIgnoreCase(MailboxConstants.INBOX), e -> {
+                // RFC 5228 section 2.10.6: when an action (like a Sieve fileinto) fails, the implicit keep is done
+                LOGGER.warn("Cannot deliver mail to the {} folder of {}, delivering it to INBOX instead", targetFolder, user.asString(), e);
+                return append(mail, user, MailboxConstants.INBOX, storageDirective.getFlags(), session)
+                    .map(AppendResult::getId);
+            });
+    }
+
+    /**
+     * Such folders can never be created: delivering again would fail again.
+     */
+    private static boolean isInvalidMailboxName(Throwable e) {
+        return e instanceof MailboxNameException || e.getCause() instanceof MailboxNameException;
     }
 
     // Avoids using the MessageIdManager for JPA compatibility
