@@ -119,8 +119,8 @@ class IMAPServerSaslExchangeLifecycleTest extends AbstractIMAPServerTest {
         try {
             assertThat(client.sendCommand("AUTHENTICATE RECORDING")).isEqualTo(IMAPReply.CONT);
             assertThat(client.getReplyString()).contains("+ " + CHALLENGE);
-            assertThat(client.sendData("*")).isEqualTo(IMAPReply.NO);
-            assertThat(client.getReplyString()).contains("NO AUTHENTICATE failed.");
+            assertThat(client.sendData("*")).isEqualTo(IMAPReply.BAD);
+            assertThat(client.getReplyString()).contains("BAD AUTHENTICATE failed. Authentication cancelled.");
         } finally {
             client.disconnect();
         }
