@@ -50,8 +50,10 @@ import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.imap.message.request.AbstractImapRequest;
+import org.apache.james.imap.message.request.StartTLSRequest;
 import org.apache.james.imap.message.response.ImmutableStatusResponse;
 import org.apache.james.metrics.api.Metric;
+import org.apache.james.protocols.netty.AllButStartTlsLineBasedChannelHandler;
 import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
@@ -456,6 +458,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             .setUtf8Accepted(session.utf8Enabled());
         writer.setFlushCallback(response::flush);
         ImapMessage message = (ImapMessage) msg;
+        clearRefusedStartTls(ctx, session, message);
 
         beforeIDLEUponProcessing(ctx);
         ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
@@ -518,6 +521,14 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             }))
             .subscribe();
         disposableAttribute.set(disposable);
+    }
+
+    private void clearRefusedStartTls(ChannelHandlerContext ctx, ImapSession session, ImapMessage message) {
+        // StartTLSProcessor refuses STARTTLS when it is not supported: the session goes on unencrypted, and
+        // the commands following the refused STARTTLS must be processed.
+        if (message instanceof StartTLSRequest && !session.supportStartTLS()) {
+            AllButStartTlsLineBasedChannelHandler.clearStartTlsInFlight(ctx.channel());
+        }
     }
 
     private void beforeIDLEUponProcessing(ChannelHandlerContext ctx) {
