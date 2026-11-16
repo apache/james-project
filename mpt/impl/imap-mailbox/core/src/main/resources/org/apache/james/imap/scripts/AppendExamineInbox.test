@@ -50,7 +50,7 @@ S: \* 2 EXISTS
 S: \* 2 RECENT
 S: \* OK \[UIDVALIDITY \d+\].*
 S: \* OK \[UNSEEN 1\].*
-S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[PERMANENTFLAGS \(\)\] No permanent flags permitted
 S: \* OK \[HIGHESTMODSEQ \d+\].*
 S: \* OK \[UIDNEXT 3\].*
 S: abcd OK \[READ-ONLY\] EXAMINE completed.
@@ -63,7 +63,7 @@ S: \* 2 EXISTS
 S: \* 2 RECENT
 S: \* OK \[UIDVALIDITY \d+\].*
 S: \* OK \[UNSEEN 1\].*
-S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[PERMANENTFLAGS \(\)\] No permanent flags permitted
 S: \* OK \[HIGHESTMODSEQ \d+\].*
 S: \* OK \[UIDNEXT 3\].*
 S: abcd OK \[READ-ONLY\] EXAMINE completed.
