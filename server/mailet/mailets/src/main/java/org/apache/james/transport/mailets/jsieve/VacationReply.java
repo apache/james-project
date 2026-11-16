@@ -27,6 +27,7 @@ import jakarta.activation.DataHandler;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
@@ -83,11 +84,17 @@ public class VacationReply {
             Preconditions.checkState(eitherReasonOrMime());
             ActionUtils.detectAndHandleLocalLooping(originalMail,  context, "vacation");
 
+            MailAddress sender = retrieveOriginalSender();
             MimeMessage reply = (MimeMessage) originalMail.getMessage().reply(false);
+            // RFC 5322 section 3.6: From is mandatory, reply() does not set it. RFC 5230 section 4.2: the reply comes from the user
+            Optional<InternetAddress> fromAddress = sender.toInternetAddress();
+            if (fromAddress.isPresent()) {
+                reply.setFrom(fromAddress.get());
+            }
             reply.setSubject(generateNotificationSubject());
             reply.setContent(generateNotificationContent());
 
-            return new VacationReply(retrieveOriginalSender(), ImmutableList.of(originalMail.getMaybeSender().get()), reply);
+            return new VacationReply(sender, ImmutableList.of(originalMail.getMaybeSender().get()), reply);
         }
 
         private boolean eitherReasonOrMime() {

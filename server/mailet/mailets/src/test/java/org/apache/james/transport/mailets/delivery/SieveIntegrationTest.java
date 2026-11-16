@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -1212,4 +1213,16 @@ class SieveIntegrationTest {
     private static String expressMailboxNameWithSlash(String name) {
         return '/' + name.replace('.', '/');
     }
+
+    @Test
+    void vacationReplyShouldBeFromTheUser() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        testee.service(createMail());
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+        assertThat(fakeMailContext.getSentMails().get(0).getMsg().getFrom())
+            .containsExactly(new InternetAddress(RECEIVER_DOMAIN_COM));
+    }
+
 }
