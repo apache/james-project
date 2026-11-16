@@ -69,8 +69,10 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
         }
         SelectedMailbox selected = session.getSelected();
 
-        return deselect(session, selected, mailboxPath)
-            .then(mailboxManager.deleteMailboxReactive(mailboxPath, session.getMailboxSession()))
+        // Deselect only once the deletion succeeded: a refused DELETE must leave the selection untouched
+        return isSelected(selected, mailboxPath)
+            .flatMap(wasSelected -> mailboxManager.deleteMailboxReactive(mailboxPath, session.getMailboxSession())
+                .then(Mono.defer(() -> deselectIf(session, wasSelected))))
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .then()
@@ -91,17 +93,20 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
             });
     }
 
-    private Mono<Void> deselect(ImapSession session, SelectedMailbox selected, MailboxPath mailboxPath) {
+    private Mono<Boolean> isSelected(SelectedMailbox selected, MailboxPath mailboxPath) {
         if (selected == null) {
-            return Mono.empty();
+            return Mono.just(false);
         }
         return selected.getPathReactive()
-            .flatMap(selectedPath -> {
-                if (selectedPath.equals(mailboxPath)) {
-                    return session.deselect();
-                }
-                return Mono.empty();
-            });
+            .map(mailboxPath::equals)
+            .defaultIfEmpty(false);
+    }
+
+    private Mono<Void> deselectIf(ImapSession session, boolean wasSelected) {
+        if (wasSelected) {
+            return session.deselect();
+        }
+        return Mono.empty();
     }
 
     @Override
