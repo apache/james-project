@@ -37,8 +37,10 @@ import org.apache.james.imap.message.request.SetMetadataRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.AnnotationException;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -85,14 +87,16 @@ public class SetMetadataProcessor extends AbstractMailboxProcessor<SetMetadataRe
         final MailboxSession mailboxSession = session.getMailboxSession();
         final String mailboxName = request.getMailboxName();
 
-        return Mono.from(mailboxManager.updateAnnotationsReactive(
-                pathConverterFactory.forSession(session).buildFullPath(mailboxName),
-                mailboxSession, request.getMailboxAnnotations()))
+        final MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName);
+
+        return Mono.from(mailboxManager.updateAnnotationsReactive(mailboxPath, mailboxSession, request.getMailboxAnnotations()))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)).then())
             .doOnEach(logOnError(MailboxException.class,
                 e -> LOGGER.info("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e)))
             .onErrorResume(MailboxNotFoundException.class,
                 error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate())))
+            .onErrorResume(InsufficientRightsException.class,
+                error -> respondInsufficientRights(request, responder, mailboxPath, mailboxSession, Optional.of(StatusResponse.ResponseCode.tryCreate())))
             .onErrorResume(AnnotationException.class,
                 error -> Mono.fromRunnable(() -> no(request, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, error.getMessage()))))
             .onErrorResume(MailboxException.class,
