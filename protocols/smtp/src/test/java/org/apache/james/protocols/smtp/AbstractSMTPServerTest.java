@@ -1149,7 +1149,7 @@ public abstract class AbstractSMTPServerTest {
                 "QUIT\r\n");
 
             assertThat(replies)
-                .contains("504 Unrecognized or unsupported option: NO?TIFY")
+                .contains("555 5.5.4 Unrecognized or unsupported option: NO?TIFY")
                 .doesNotContain("NO\rTIFY");
         } finally {
             if (server != null) {
