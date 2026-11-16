@@ -97,7 +97,7 @@ class SmtpRequireTlsMessageHookTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(client.getReplyCode()).isEqualTo(501);
-            softly.assertThat(client.getReplyString()).contains("501 The Mail parameter cannot contain more than one REQUIRETLS parameter at the same time");
+            softly.assertThat(client.getReplyString()).contains("501 5.5.4 Duplicated parameter REQUIRETLS");
         });
     }
 

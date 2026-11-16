@@ -119,7 +119,7 @@ class SmtpMtPriorityMessageHookTest {
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> MT-PRIORITY=3 MT-PRIORITY=4");
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(501);
-            softly.assertThat(smtpProtocol.getReplyString()).contains("501 The Mail parameter cannot contain more than one MT-PRIORITY parameter at the same time");
+            softly.assertThat(smtpProtocol.getReplyString()).contains("501 5.5.4 Duplicated parameter MT-PRIORITY");
         });
     }
 

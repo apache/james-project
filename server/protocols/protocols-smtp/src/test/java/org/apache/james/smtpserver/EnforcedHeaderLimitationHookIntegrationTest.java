@@ -61,7 +61,7 @@ public class EnforcedHeaderLimitationHookIntegrationTest {
         authenticate(smtpProtocol);
 
         smtpProtocol.sendCommand("EHLO localhost");
-        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost>");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
 
         StringBuilder headers = new StringBuilder();
@@ -89,7 +89,7 @@ public class EnforcedHeaderLimitationHookIntegrationTest {
         authenticate(smtpProtocol);
 
         smtpProtocol.sendCommand("EHLO localhost");
-        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost>");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
 
         StringBuilder headers = new StringBuilder();
@@ -116,7 +116,7 @@ public class EnforcedHeaderLimitationHookIntegrationTest {
         authenticate(smtpProtocol);
 
         smtpProtocol.sendCommand("EHLO localhost");
-        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost>");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
         smtpProtocol.sendShortMessageData("From: bob@localhost\r\nFrom: bob@localhost\r\nto: aziz@localhost\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
