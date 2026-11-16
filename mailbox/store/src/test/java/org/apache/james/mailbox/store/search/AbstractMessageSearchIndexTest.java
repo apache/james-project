@@ -602,6 +602,28 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void mailContainsShouldMatchTheHeaders() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "textInHeaders");
+        storeMailboxManager.createMailbox(mailboxPath, session);
+
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+        ComposedMessageId message = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .build(Message.Builder.of()
+                .setFrom("carol@headeronly.org")
+                .setSubject("hdronlyword")
+                .setBody("plain body words", StandardCharsets.UTF_8)),
+            session).getId();
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
+
+        // RFC 9051 section 6.4.4: TEXT matches the header or the body of the message
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.mailContains("hdronlyword")), session)).toStream())
+            .containsOnly(message.getUid());
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.mailContains("carol@headeronly.org")), session)).toStream())
+            .containsOnly(message.getUid());
+    }
+
+    @Test
     void bodyShouldMatchMoreThanFourWords() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "longBody");
         storeMailboxManager.createMailbox(mailboxPath, session);
