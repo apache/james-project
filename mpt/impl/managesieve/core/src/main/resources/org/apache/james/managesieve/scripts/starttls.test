@@ -21,7 +21,7 @@ C: STARTTLS
 S: OK
 
 C: STARTTLS
-S: NO You can't enable two time SSL encryption
+S: NO "You can't enable two time SSL encryption"
 
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
@@ -29,6 +29,6 @@ C:  user password
 S: OK
 
 C: STARTTLS
-S: NO command STARTTLS is issued in the wrong state. It must be issued as you are unauthenticated
+S: NO "command STARTTLS is issued in the wrong state. It must be issued as you are unauthenticated"
 
 C: LOGOUT

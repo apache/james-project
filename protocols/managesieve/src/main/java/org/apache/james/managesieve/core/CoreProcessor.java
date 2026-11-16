@@ -259,7 +259,7 @@ public class CoreProcessor implements CoreCommands {
             session.setUser(null);
             return "OK";
         } else {
-            return "NO UNAUTHENTICATE command must be issued in authenticated state";
+            return no("UNAUTHENTICATE command must be issued in authenticated state");
         }
     }
 
@@ -272,12 +272,12 @@ public class CoreProcessor implements CoreCommands {
     public String startTLS(Session session) {
         if (session.getState() == Session.State.UNAUTHENTICATED) {
             if (session.isSslEnabled()) {
-                return "NO You can't enable two time SSL encryption";
+                return no("You can't enable two time SSL encryption");
             }
             session.setState(Session.State.SSL_NEGOCIATION);
             return "OK";
         } else {
-            return "NO command STARTTLS is issued in the wrong state. It must be issued as you are unauthenticated";
+            return no("command STARTTLS is issued in the wrong state. It must be issued as you are unauthenticated");
         }
     }
 
@@ -285,7 +285,7 @@ public class CoreProcessor implements CoreCommands {
         try {
             return commandWrapper.execute();
         } catch (AuthenticationException e) {
-            return "NO Authentication failed with " + e.getCause().getClass() + " : " + e.getMessage();
+            return no("Authentication failed with " + e.getCause().getClass() + " : " + e.getMessage());
         } catch (QuotaExceededException ex) {
             return "NO (QUOTA/MAXSIZE) \"Quota exceeded\"";
         } catch (AuthenticationRequiredException ex) {
@@ -297,7 +297,7 @@ public class CoreProcessor implements CoreCommands {
         } catch (IsActiveException ex) {
             return "NO (ACTIVE) \"You may not delete an active script\"";
         } catch (StorageException e) {
-            return "NO : Storage Exception : " + e.getMessage();
+            return no("Storage Exception : " + e.getMessage());
         } catch (SyntaxException e) {
             return sanitizeString("NO \"Syntax Error: " + e.getMessage() + "\"");
         } catch (ManageSieveException e) {
@@ -343,6 +343,13 @@ public class CoreProcessor implements CoreCommands {
             .join(Lists.transform(
                 Arrays.asList(SupportedMechanism.values()),
                 Enum::toString));
+    }
+
+    /**
+     * RFC 5804 section 4: the human readable text of a response is a quoted string.
+     */
+    private static String no(String message) {
+        return "NO " + ParserUtils.quote(message);
     }
 
     private String sanitizeString(String message) {

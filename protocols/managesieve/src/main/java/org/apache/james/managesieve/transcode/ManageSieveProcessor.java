@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.james.managesieve.api.ManageSieveException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
+import org.apache.james.managesieve.util.ParserUtils;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 
 public class ManageSieveProcessor {
@@ -139,7 +140,7 @@ public class ManageSieveProcessor {
         } else if (command.equalsIgnoreCase(UNAUTHENTICATE)) {
             return argumentParser.unauthenticate(session, arguments);
         }
-        return "NO unknown " + command + " command";
+        return "NO " + ParserUtils.quote("unknown " + command + " command");
     }
 
     public String getAdvertisedCapabilities() {

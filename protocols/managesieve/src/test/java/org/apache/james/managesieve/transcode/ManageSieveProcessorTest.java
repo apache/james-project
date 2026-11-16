@@ -124,4 +124,16 @@ class ManageSieveProcessorTest {
         assertThat(response).startsWith("NO ");
         assertThat(calls).isEmpty();
     }
+
+    @Test
+    void unknownCommandShouldBeAnsweredWithAQuotedText() throws Exception {
+        assertThat(processor.handleRequest(session, "FO\"O{3}"))
+            .isEqualTo("NO \"unknown FO\\\"O{3} command\"\r\n");
+    }
+
+    @Test
+    void unauthenticateWithArgumentsShouldBeAnsweredWithAQuotedText() throws Exception {
+        assertThat(processor.handleRequest(session, "UNAUTHENTICATE foo"))
+            .isEqualTo("NO \"UNAUTHENTICATE do not take arguments\"\r\n");
+    }
 }

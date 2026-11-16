@@ -21,10 +21,10 @@ C: GETSCRIPT any
 S: NO
 
 C: UNAUTHENTICATE arg
-S: NO UNAUTHENTICATE do not take arguments
+S: NO "UNAUTHENTICATE do not take arguments"
 
 C: UNAUTHENTICATE
-S: NO UNAUTHENTICATE command must be issued in authenticated state
+S: NO "UNAUTHENTICATE command must be issued in authenticated state"
 
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
