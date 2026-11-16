@@ -59,6 +59,8 @@ import reactor.util.retry.Retry;
 import reactor.util.retry.RetryBackoffSpec;
 
 public class CassandraUidProvider implements UidProvider {
+    // UIDs handed out in a mailbox without any are above this value
+    private static final long NO_UID_YET = 0;
     private static final String CONDITION = "Condition";
 
     private final CassandraAsyncExecutor executor;
@@ -142,14 +144,18 @@ public class CassandraUidProvider implements UidProvider {
 
         return updateUid
             .switchIfEmpty(tryInsert(cassandraId, count)
-                .map(highest -> range(MessageUid.MIN_VALUE, highest)))
+                .map(highest -> range(NO_UID_YET, highest)))
             .switchIfEmpty(updateUid)
             .single()
             .retryWhen(retrySpec);
     }
 
     private List<MessageUid> range(MessageUid lowerExclusive, MessageUid higherInclusive) {
-        return LongStream.range(lowerExclusive.asLong() + 1, higherInclusive.asLong() + 1)
+        return range(lowerExclusive.asLong(), higherInclusive);
+    }
+
+    private List<MessageUid> range(long lowerExclusive, MessageUid higherInclusive) {
+        return LongStream.range(lowerExclusive + 1, higherInclusive.asLong() + 1)
             .mapToObj(MessageUid::of)
             .map(uid -> uid.add(cassandraConfiguration.getUidModseqIncrement()))
             .collect(ImmutableList.toImmutableList());
@@ -206,9 +212,10 @@ public class CassandraUidProvider implements UidProvider {
     private Mono<MessageUid> tryInsert(CassandraId mailboxId, int count) {
         return executor.executeReturnApplied(
                 insertStatement.bind()
-                    .setLong(NEXT_UID, MessageUid.MIN_VALUE.next(count).asLong())
+                    .setLong(NEXT_UID, count)
                     .setUuid(MAILBOX_ID, mailboxId.asUuid()))
-            .map(success -> successToUid(MessageUid.MIN_VALUE.next(count), success))
+            // The first UIDs of a mailbox are 1 to count, like for a single UID (MIN_VALUE)
+            .map(success -> successToUid(MessageUid.of(count), success))
             .handle(publishIfPresent());
     }
 

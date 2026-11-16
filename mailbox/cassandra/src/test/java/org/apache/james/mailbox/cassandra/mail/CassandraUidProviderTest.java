@@ -100,6 +100,14 @@ class CassandraUidProviderTest {
     }
 
     @Test
+    void nextUidsShouldStartAtOneInAnEmptyMailbox() throws Exception {
+        assertThat(uidProvider.nextUids(mailbox.getMailboxId(), 2).block())
+            .containsExactly(MessageUid.of(1), MessageUid.of(2));
+        assertThat(uidProvider.nextUid(mailbox))
+            .isEqualTo(MessageUid.of(3));
+    }
+
+    @Test
     void nextUidsShouldGenerateUniqueValuesWhenParallelCalls() throws Exception {
         int threadCount = 10;
         int nbOperations = 100;
