@@ -151,6 +151,8 @@ public class HumanReadableText {
     public static final HumanReadableText UNSUPPORTED_AUTHENTICATION_MECHANISM = new HumanReadableText("org.apache.james.imap.UNSUPPORTED_AUTHENTICATION_MECHANISM", "failed. Authentication mechanism is unsupported.");
     public static final HumanReadableText AUTHENTICATION_FAILED = new HumanReadableText("org.apache.james.imap.AUTHENTICATION_FAILED", "failed. Authentication failed.");
 
+    public static final HumanReadableText AUTHENTICATION_CANCELLED = new HumanReadableText("org.apache.james.imap.AUTHENTICATION_CANCELLED", "failed. Authentication cancelled.");
+
     public static final HumanReadableText UNKNOWN_COMMAND = new HumanReadableText("org.apache.james.imap.UNKNOWN_COMMAND", "failed. Unknown command.");
 
     public static final HumanReadableText BAD_CHARSET = new HumanReadableText("org.apache.james.imap.BAD_CHARSET", "failed. Charset is unsupported.");
