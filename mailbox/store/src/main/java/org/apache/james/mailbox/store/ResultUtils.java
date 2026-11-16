@@ -149,6 +149,31 @@ public class ResultUtils {
         return true;
     }
 
+    /**
+     * Keeps the value as stored, so that raw 8-bit and UTF-8 (RFC 6532) values are returned unchanged. Same trimming
+     * as the decoded value, which only removes ASCII characters.
+     */
+    private static Header headerOf(Field field, String fieldValue) {
+        if (!(field instanceof RawField)) {
+            return new Header(field.getName(), fieldValue);
+        }
+        ByteSequence raw = field.getRaw();
+        int len = raw.length();
+        int off = ((RawField) field).getDelimiterIdx() + 1;
+        if (len > off + 1 && (raw.byteAt(off) & 0xff) == 0x20) {
+            off++;
+        }
+        if (len - off >= 2 && raw.byteAt(len - 2) == '\r' && raw.byteAt(len - 1) == '\f') {
+            len -= 2;
+        }
+        if (len > off && raw.byteAt(off) == ' ') {
+            off++;
+        }
+        byte[] valueBytes = new byte[len - off];
+        System.arraycopy(raw.toByteArray(), off, valueBytes, 0, len - off);
+        return new Header(field.getName(), fieldValue, valueBytes);
+    }
+
     public static List<Header> createHeaders(MailboxMessage document) throws IOException {
         List<Header> results = new ArrayList<>();
         MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE, null, NoopBodyDescriptor.INSTANCE);
@@ -182,7 +207,7 @@ public class ResultUtils {
                     fieldValue = fieldValue.substring(1);
                 }
                 
-                Header header = new Header(field.getName(), fieldValue);
+                Header header = headerOf(field, fieldValue);
                 results.add(header);
             }
         });

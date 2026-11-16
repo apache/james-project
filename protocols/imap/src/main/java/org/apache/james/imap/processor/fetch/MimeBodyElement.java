@@ -88,7 +88,7 @@ public class MimeBodyElement implements BodyElement {
         for (Header header : headers) {
             out.write(header.getName().getBytes(US_ASCII));
             out.write(NAME_DELIMITER_BYTES);
-            out.write(header.getValue().getBytes(US_ASCII));
+            out.write(header.getValueBytes());
             out.write(LINE_END_BYTES);
         }
         // no empty line with CRLF for MIME headers. See IMAP-297
