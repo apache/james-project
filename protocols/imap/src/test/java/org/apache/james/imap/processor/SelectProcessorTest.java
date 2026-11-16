@@ -20,6 +20,11 @@
 package org.apache.james.imap.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 import java.io.ByteArrayOutputStream;
 
@@ -44,6 +49,7 @@ import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -53,6 +59,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 class SelectProcessorTest {
     private static final Username BOB = Username.of("bob");
@@ -116,6 +124,45 @@ class SelectProcessorTest {
 
         assertThat(new String(outputStream.toByteArray()))
             .doesNotContain("* VANISHED (EARLIER) 1:4");
+    }
+
+    @Test
+    void uidNextShouldBeGreaterThanTheUidOfTheSelectedMessages() throws Exception {
+        MessageManager mailbox = mailboxManager.getMailbox(MailboxPath.inbox(BOB), mailboxSession);
+        mailbox.appendMessage(MessageManager.AppendCommand.builder()
+            .build(new SharedByteArrayInputStream("header: value\r\n\r\nbody".getBytes())), mailboxSession);
+
+        // The metadata read after the selected messages misses the message delivered in between
+        MessageManager staleMailbox = spy(mailbox);
+        doAnswer(invocation -> mailbox.getMetaDataReactive(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2))
+                .map(metaData -> new MessageManager.MailboxMetaData(metaData.getRecent(), metaData.getPermanentFlags(), metaData.getUidValidity(),
+                    MessageUid.MIN_VALUE, metaData.getHighestModSeq(), metaData.getMessageCount(), metaData.getUnseenCount(), metaData.getFirstUnseen(),
+                    metaData.isWriteable(), metaData.getACL())))
+            .when(staleMailbox).getMetaDataReactive(any(), any(), any());
+        InMemoryMailboxManager spiedMailboxManager = spy(mailboxManager);
+        doReturn(Mono.just(staleMailbox)).when(spiedMailboxManager).getMailboxReactive(eq(MailboxPath.inbox(BOB)), any(MailboxSession.class));
+        SelectProcessor processor = new SelectProcessor(spiedMailboxManager,
+            InMemoryIntegrationResources.defaultResources().getEventBus(),
+            new UnpooledStatusResponseFactory(),
+            new RecordingMetricFactory(),
+            PathConverter.Factory.DEFAULT,
+            null);
+
+        FakeImapSession session = new FakeImapSession();
+        session.authenticated();
+        session.setMailboxSession(mailboxSession);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImapResponseComposerImpl composer = new ImapResponseComposerImpl(new OutputStreamImapResponseWriter(outputStream));
+        processor.process(new SelectRequest("INBOX", false,
+                AbstractMailboxSelectionRequest.ClientSpecifiedUidValidity.UNKNOWN,
+                null, null, null, null, new Tag("AA")),
+            new ResponseEncoder(new DefaultImapEncoderFactory(new DefaultLocalizer(), true).buildImapEncoder(), composer),
+            session);
+        composer.flush();
+
+        assertThat(new String(outputStream.toByteArray()))
+            .contains("* 1 EXISTS")
+            .contains("[UIDNEXT 2]");
     }
 
     @Test
