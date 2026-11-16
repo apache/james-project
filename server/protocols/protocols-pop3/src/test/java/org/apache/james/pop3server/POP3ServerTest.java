@@ -1027,6 +1027,34 @@ public class POP3ServerTest {
     }
 
     @Test
+    void connectionShouldBeClosedAfterTooManyAuthenticationFailures() throws Exception {
+        finishSetUp(pop3Configuration);
+        usersRepository.addUser(Username.of("auth-user"), "secret");
+
+        try (Socket socket = connectToPop3Server();
+             BufferedReader reader = reader(socket);
+             BufferedWriter writer = writer(socket)) {
+            assertThat(reader.readLine()).startsWith("+OK");
+
+            send(writer, "USER auth-user");
+            assertThat(reader.readLine()).startsWith("+OK");
+            send(writer, "PASS wrong");
+            assertThat(reader.readLine()).isEqualTo("-ERR Authentication failed.");
+            // Malformed requests are not credential failures
+            send(writer, "AUTH PLAIN " + encoded("malformed"));
+            assertThat(reader.readLine()).isEqualTo("-ERR Invalid AUTH request.");
+            send(writer, "AUTH PLAIN " + plainInitialResponse("auth-user", "wrong"));
+            assertThat(reader.readLine()).isEqualTo("-ERR Authentication failed.");
+            send(writer, "USER auth-user");
+            assertThat(reader.readLine()).startsWith("+OK");
+            send(writer, "PASS wrong");
+            assertThat(reader.readLine()).isEqualTo("-ERR Too many authentication failures, closing connection");
+
+            assertThat(reader.readLine()).isNull();
+        }
+    }
+
+    @Test
     void malformedAuthShouldPreserveUserPassAuthentication() throws Exception {
         finishSetUp(pop3Configuration);
         usersRepository.addUser(Username.of("auth-user"), "secret");

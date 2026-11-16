@@ -96,7 +96,7 @@ public abstract class AbstractPassCmdHandler extends RsetCmdHandler {
                 return  new POP3Response(POP3Response.OK_RESPONSE, responseBuffer.toString());
             } else {
                 session.setHandlerState(POP3Session.AUTHENTICATION_READY);
-                return AUTH_FAILED;
+                return AuthenticationFailures.recordFailure(session, AUTH_FAILED);
             }
         } catch (Exception e) {
             LOGGER.error("Unexpected error accessing mailbox for {}", session.getUsername(), e);
