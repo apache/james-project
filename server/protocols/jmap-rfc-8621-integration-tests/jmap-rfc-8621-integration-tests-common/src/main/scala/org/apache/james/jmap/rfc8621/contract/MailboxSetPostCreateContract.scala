@@ -343,57 +343,34 @@ trait MailboxSetPostCreateContract {
   }
 
   @Test
-  def postCreateShouldRejectKnownUpdateConflictsFromIncomingCreatedIds(server: GuiceJamesServer): Unit = {
-    val probe = server.getProbe(classOf[MailboxProbeImpl])
-    val originalId = probe.createMailbox(MailboxPath.forUser(bobUsername, "original")).serialize()
-    val destroyId = probe.createMailbox(MailboxPath.forUser(bobUsername, "keep")).serialize()
-    val request = s"""{
-      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      |  "createdIds": {"alias": ${Json.toJson(originalId)}},
-      |  "methodCalls": [
-      |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"untouched": {"name": "untouched"}},
-      |      "update": {"#alias": {"name": "renamed"}, ${Json.toJson(originalId)}: {"isSubscribed": false}},
-      |      "destroy": [${Json.toJson(destroyId)}]
-      |    }, "conflictingUpdate"]
-      |  ]
-      |}""".stripMargin
-
-    val response = execute(request).extract()
-    assertThatJson(response.path[Object]("methodResponses.find { it[2] == 'conflictingUpdate' }")).isEqualTo(s"""[
-      |  "error", {
-      |    "type": "invalidArguments",
-      |    "description": ${Json.toJson(s"Multiple update keys resolve to the same mailbox: '#alias', '$originalId'")}
-      |  }, "conflictingUpdate"
-      |]""".stripMargin)
-
-    assertThat(mailboxId(server, "original")).isEqualTo(originalId)
-    assertThat(mailboxId(server, "keep")).isEqualTo(destroyId)
-    assertThat(probe.listUserMailboxes(bobUsername.asString())).doesNotContain("untouched", "renamed")
-  }
-
-  @Test
   def postCreateShouldRejectKnownUpdateConflictsInResultReferences(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[MailboxProbeImpl])
-    val originalId = probe.createMailbox(MailboxPath.forUser(bobUsername, "original")).serialize()
-    // Echo resolves its keys once, so its result supplies the literal "#alias" to Mailbox/set.
+    val mailboxToKeepId = probe.createMailbox(MailboxPath.forUser(bobUsername, "keep")).serialize()
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      |  "createdIds": {"alias": ${Json.toJson(originalId)}, "echoAlias": "#alias"},
       |  "methodCalls": [
+      |    ["Core/echo", {"renamePatch": {"name": "renamed"}}, "prepareRenamePatch"],
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {"alias": {"name": "original"}}
+      |    }, "createOriginal"],
       |    ["Core/echo", {
-      |      "patches": {"#echoAlias": {"name": "renamed"}, ${Json.toJson(originalId)}: {"isSubscribed": false}}
+      |      "patches": {
+      |        "##alias": {"resultOf": "prepareRenamePatch", "name": "Core/echo", "path": "/renamePatch"},
+      |        "#alias": {"isSubscribed": false}
+      |      }
       |    }, "echoPatches"],
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
       |      "create": {"untouched": {"name": "untouched"}},
-      |      "#update": {"resultOf": "echoPatches", "name": "Core/echo", "path": "/patches"}
+      |      "#update": {"resultOf": "echoPatches", "name": "Core/echo", "path": "/patches"},
+      |      "destroy": [${Json.toJson(mailboxToKeepId)}]
       |    }, "updateFromResult"]
       |  ]
       |}""".stripMargin
 
     val response = execute(request).extract()
+    val originalId = response.path[String](s"${responseArgumentsPath("createOriginal")}.created.alias.id")
     assertThatJson(response.path[Object]("methodResponses.find { it[2] == 'updateFromResult' }")).isEqualTo(s"""[
       |  "error", {
       |    "type": "invalidArguments",
@@ -402,29 +379,37 @@ trait MailboxSetPostCreateContract {
       |]""".stripMargin)
 
     assertThat(mailboxId(server, "original")).isEqualTo(originalId)
+    assertThat(mailboxId(server, "keep")).isEqualTo(mailboxToKeepId)
     assertThat(probe.listUserMailboxes(bobUsername.asString())).doesNotContain("untouched", "renamed")
   }
 
   @Test
   def postCreateShouldApplyBothUpdatesWhenReplacementSeparatesTheirTargets(server: GuiceJamesServer): Unit = {
-    val probe = server.getProbe(classOf[MailboxProbeImpl])
-    val oldId = probe.createMailbox(MailboxPath.forUser(bobUsername, "old")).serialize()
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      |  "createdIds": {"reusedMailbox": ${Json.toJson(oldId)}},
       |  "methodCalls": [
+      |    ["Core/echo", {"aliasPatch": {"name": "renamedReplacement"}}, "preparePatches"],
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {"reusedMailbox": {"name": "old"}}
+      |    }, "createOriginal"],
+      |    ["Core/echo", {
+      |      "patches": {
+      |        "##reusedMailbox": {"resultOf": "preparePatches", "name": "Core/echo", "path": "/aliasPatch"},
+      |        "#reusedMailbox": {"name": "renamedOriginal"}
+      |      }
+      |    }, "echoPatches"],
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
       |      "create": {"reusedMailbox": {"name": "replacement"}},
-      |      "update": {
-      |        "#reusedMailbox": {"name": "renamedReplacement"},
-      |        ${Json.toJson(oldId)}: {"name": "renamedOriginal"}
-      |      }
+      |      "#update": {"resultOf": "echoPatches", "name": "Core/echo", "path": "/patches"}
       |    }, "replaceAndUpdate"]
       |  ]
       |}""".stripMargin
 
-    val update = setResult(execute(request).extract(), "replaceAndUpdate")
+    val response = execute(request).extract()
+    val oldId = response.path[String](s"${responseArgumentsPath("createOriginal")}.created.reusedMailbox.id")
+    val update = setResult(response, "replaceAndUpdate")
     val newId = mailboxId(server, "renamedReplacement")
 
     assertThatJson(update)
@@ -440,24 +425,32 @@ trait MailboxSetPostCreateContract {
   @Test
   def postCreateShouldIsolateConflictsRevealedByAFailedReplacement(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[MailboxProbeImpl])
-    val oldId = probe.createMailbox(MailboxPath.forUser(bobUsername, "old")).serialize()
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      |  "createdIds": {"reusedMailbox": ${Json.toJson(oldId)}},
       |  "methodCalls": [
+      |    ["Core/echo", {"aliasPatch": {"name": "aliasRename"}, "independentPatch": {"name": "after"}}, "preparePatches"],
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {"reusedMailbox": {"name": "old"}}
+      |    }, "createOriginal"],
+      |    ["Core/echo", {
+      |      "patches": {
+      |        "##reusedMailbox": {"resultOf": "preparePatches", "name": "Core/echo", "path": "/aliasPatch"},
+      |        "#reusedMailbox": {"name": "literalRename"},
+      |        "##independent": {"resultOf": "preparePatches", "name": "Core/echo", "path": "/independentPatch"}
+      |      }
+      |    }, "echoPatches"],
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
       |      "create": {"reusedMailbox": {"name": "bad.name"}, "independent": {"name": "before"}},
-      |      "update": {
-      |        "#reusedMailbox": {"name": "aliasRename"},
-      |        ${Json.toJson(oldId)}: {"name": "literalRename"},
-      |        "#independent": {"name": "after"}
-      |      }
+      |      "#update": {"resultOf": "echoPatches", "name": "Core/echo", "path": "/patches"}
       |    }, "replaceAndUpdate"]
       |  ]
       |}""".stripMargin
 
-    val update = setResult(execute(request).extract(), "replaceAndUpdate")
+    val response = execute(request).extract()
+    val oldId = response.path[String](s"${responseArgumentsPath("createOriginal")}.created.reusedMailbox.id")
+    val update = setResult(response, "replaceAndUpdate")
     val independentId = mailboxId(server, "after")
 
     assertThatJson(update)
@@ -508,21 +501,23 @@ trait MailboxSetPostCreateContract {
   }
 
   @Test
-  def postCreateShouldReportOneDestroyFailureForAliases(server: GuiceJamesServer): Unit = {
-    val inboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX")).serialize()
+  def postCreateShouldReportOneDestroyFailureForRepeatedReferences(server: GuiceJamesServer): Unit = {
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      |  "createdIds": {"inbox": ${Json.toJson(inboxId)}},
       |  "methodCalls": [
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "destroy": ["#inbox", "#missingMailbox", ${Json.toJson(inboxId)}]
+      |      "create": {"inbox": {"name": "INBOX"}}
+      |    }, "createInbox"],
+      |    ["Mailbox/set", {
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "destroy": ["#inbox", "#missingMailbox", "#inbox"]
       |    }, "destroyInbox"]
       |  ]
       |}""".stripMargin
 
     val response = execute(request).extract()
+    val inboxId = response.path[String](s"${responseArgumentsPath("createInbox")}.created.inbox.id")
     assertThatJson(setResult(response, "destroyInbox")).isEqualTo(s"""{
       |  "notDestroyed": {
       |    ${Json.toJson(inboxId)}: {"type": "invalidArguments", "description": "System mailboxes cannot be destroyed"},
