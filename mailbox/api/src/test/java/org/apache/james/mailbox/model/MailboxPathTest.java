@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
@@ -208,6 +209,13 @@ class MailboxPathTest {
         @Test
         void shouldThrowWhenNul() {
             assertThatThrownBy(() -> MailboxPath.forUser(USER, "a\0b").assertAcceptable(folderDelimiter()))
+                    .isInstanceOf(MailboxNameException.class);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0x01, 0x09, 0x1B, 0x7F, 0x85})
+        void shouldThrowWhenControlCharacter(int controlCharacter) {
+            assertThatThrownBy(() -> MailboxPath.forUser(USER, "a" + (char) controlCharacter + "b").assertAcceptable(folderDelimiter()))
                     .isInstanceOf(MailboxNameException.class);
         }
 
