@@ -133,7 +133,8 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         responder.respond(new FlagsResponse(selected.getApplicableFlags()));
     }
 
-    protected void permanentFlags(Responder responder, Flags permanentFlags, SelectedMailbox selected) {
+    protected void permanentFlags(Responder responder, Flags mailboxPermanentFlags, SelectedMailbox selected, MailboxSession mailboxSession) {
+        Flags permanentFlags = grantedPermanentFlags(mailboxPermanentFlags, selected, mailboxSession);
         if (permanentFlags.contains(Flags.Flag.USER)) {
             permanentFlags.add(selected.getApplicableFlags());
         }
@@ -141,6 +142,43 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         responder.respond(untaggedOk);
     }
     
+    /**
+     * RFC 9051 section 7.1: PERMANENTFLAGS lists the flags the client can change permanently. None in a mailbox
+     * selected read-only, and only those its rights allow otherwise (RFC 4314 section 4: \Seen needs the 's'
+     * right, \Deleted the 't' right, the other flags and the keywords the 'w' right).
+     */
+    private Flags grantedPermanentFlags(Flags permanentFlags, SelectedMailbox selected, MailboxSession mailboxSession) {
+        if (selected.isReadOnly()) {
+            return new Flags();
+        }
+        MailboxACL.Rfc4314Rights rights;
+        try {
+            rights = getMailboxManager().myRights(selected.getMessageManager().getMailboxEntity(), mailboxSession);
+        } catch (MailboxException e) {
+            LOGGER.warn("Could not read the rights on mailbox {}", selected.getMailboxId().serialize(), e);
+            return permanentFlags;
+        }
+        Flags granted = new Flags();
+        grantIf(granted, permanentFlags, Flags.Flag.SEEN, rights.contains(MailboxACL.Right.WriteSeenFlag));
+        grantIf(granted, permanentFlags, Flags.Flag.DELETED, rights.contains(MailboxACL.Right.DeleteMessages));
+        if (rights.contains(MailboxACL.Right.Write)) {
+            grantIf(granted, permanentFlags, Flags.Flag.ANSWERED, true);
+            grantIf(granted, permanentFlags, Flags.Flag.FLAGGED, true);
+            grantIf(granted, permanentFlags, Flags.Flag.DRAFT, true);
+            grantIf(granted, permanentFlags, Flags.Flag.USER, true);
+            for (String userFlag : permanentFlags.getUserFlags()) {
+                granted.add(userFlag);
+            }
+        }
+        return granted;
+    }
+
+    private void grantIf(Flags granted, Flags permanentFlags, Flags.Flag flag, boolean hasRight) {
+        if (hasRight && permanentFlags.contains(flag)) {
+            granted.add(flag);
+        }
+    }
+
     protected Mono<Void> unsolicitedResponses(ImapSession session, ImapProcessor.Responder responder, boolean useUids) {
         return unsolicitedResponses(session, responder, false, useUids);
     }
@@ -241,7 +279,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         // See IMAP-303
         if (selected.hasNewApplicableFlags()) {
             flags(responder, selected);
-            permanentFlags(responder, messageManager.getPermanentFlags(mailboxSession), selected);
+            permanentFlags(responder, messageManager.getPermanentFlags(mailboxSession), selected, mailboxSession);
             selected.resetNewApplicableFlags();
         }
     }
