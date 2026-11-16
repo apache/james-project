@@ -53,12 +53,14 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -366,5 +368,28 @@ class SelectedMailboxImplTest {
                 .oldFlags(oldFlags)
                 .newFlags(newFlags)
                 .build();
+    }
+
+    @Test
+    void updatesShouldNoLongerBeTrackedOnceTheReadRightIsRevoked() throws Exception {
+        SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(
+            mailboxManager,
+            eventBus,
+            MailboxSessionUtil.create(BOB),
+            messageManager);
+        MailboxACL sharedWithBob = MailboxACL.EMPTY.apply(MailboxACL.command()
+            .forUser(BOB)
+            .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read)
+            .asAddition());
+
+        Mono.from(selectedMailbox.reactiveEvent(EventFactory.aclUpdated()
+            .randomEventId()
+            .mailboxSession(MailboxSessionUtil.create(Username.of("tellier@linagora.com")))
+            .mailbox(mailbox)
+            .aclDiff(ACLDiff.computeDiff(sharedWithBob, MailboxACL.EMPTY))
+            .build())).block();
+        Mono.from(selectedMailbox.reactiveEvent(event())).block();
+
+        assertThat(selectedMailbox.getLastUid()).isEmpty();
     }
 }
