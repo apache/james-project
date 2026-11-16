@@ -29,6 +29,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.LongStream;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
@@ -101,6 +102,7 @@ class CopyProcessorTest {
         MailboxPath selected = new MailboxPath(INBOX, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
+        when(selectedMailbox.allUids()).thenReturn(LongStream.rangeClosed(1, 8).mapToObj(MessageUid::of).toList());
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
         imapSession.selected(selectedMailbox).block();
@@ -122,6 +124,40 @@ class CopyProcessorTest {
         verify(mockMailboxManager).mailboxExists(INBOX, mailboxSession);
         verify(mockMailboxManager).getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class));
         verify(mockMailboxManager).copyMessagesReactive(eq(List.of(MessageRange.range(MessageUid.of(4), MessageUid.of(6)))), any(MailboxId.class), any(MailboxId.class), eq(mailboxSession));
+        verify(targetMessageManager).getMailboxEntity();
+        verify(mockResponder).respond(okResponse);
+    }
+
+    @Test
+    void processShouldNotSendCopyUidWhenNothingWasCopied() throws Exception {
+        CopyRequest copyRequest = new CopyRequest(new IdRange[] {new IdRange(9999, 9999)}, ImapConstants.INBOX_NAME, true, TAG);
+
+        MailboxPath selected = new MailboxPath(INBOX, "selected");
+        SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
+        when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
+        when(selectedMailbox.allUids()).thenReturn(LongStream.rangeClosed(1, 8).mapToObj(MessageUid::of).toList());
+        when(selectedMailbox.existsCount()).thenReturn(8L);
+        when(selectedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
+        imapSession.selected(selectedMailbox).block();
+        when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.just(true));
+        MessageManager targetMessageManager = mock(MessageManager.class);
+        when(targetMessageManager.getId()).thenReturn(MAILBOX_ID);
+        when(mockMailboxManager.getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class))).thenReturn(Mono.just(targetMessageManager));
+        Mailbox mailbox = mock(Mailbox.class);
+        when(mailbox.getUidValidity()).thenReturn(UID_VALIDITY);
+        when(targetMessageManager.getMailboxEntity()).thenReturn(mailbox);
+        StatusResponse okResponse = mock(StatusResponse.class);
+        // RFC 4315 section 3: COPYUID lists the copied messages, its uid-sets can not be empty
+        when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class))).thenReturn(okResponse);
+        when(mockMailboxManager.copyMessagesReactive(eq(List.of(MessageRange.range(MessageUid.of(9999), MessageUid.of(9999)))), any(MailboxId.class), any(MailboxId.class), eq(mailboxSession)))
+            .thenReturn(Flux.empty());
+
+        testee.process(copyRequest, mockResponder, imapSession);
+
+        verify(mockMailboxManager).manageProcessing(any(), any());
+        verify(mockMailboxManager).mailboxExists(INBOX, mailboxSession);
+        verify(mockMailboxManager).getMailboxReactive(any(MailboxPath.class), any(MailboxSession.class));
+        verify(mockMailboxManager).copyMessagesReactive(eq(List.of(MessageRange.range(MessageUid.of(9999), MessageUid.of(9999)))), any(MailboxId.class), any(MailboxId.class), eq(mailboxSession));
         verify(targetMessageManager).getMailboxEntity();
         verify(mockResponder).respond(okResponse);
     }

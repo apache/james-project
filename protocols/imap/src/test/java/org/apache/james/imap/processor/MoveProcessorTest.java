@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.LongStream;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
@@ -117,6 +118,7 @@ public class MoveProcessorTest {
         MailboxPath selected = new MailboxPath(INBOX, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(8)));
+        when(selectedMailbox.allUids()).thenReturn(LongStream.rangeClosed(1, 8).mapToObj(MessageUid::of).toList());
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getMailboxId()).thenReturn(TestId.of(234));
         imapSession.selected(selectedMailbox).block();

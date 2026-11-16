@@ -60,5 +60,14 @@ S: \* 2 FETCH \(FLAGS \(\\Deleted \\Recent\)\)
 S: \* 3 FETCH \(FLAGS \(\\Recent\)\)
 S: a8 OK FETCH completed.
 
+# COPYUID lists the messages actually copied, and is omitted when there is none (RFC 4315 section 3)
+C: a81 UID COPY 3:9999 copied
+S: \* 4 EXISTS
+S: \* 4 RECENT
+S: a81 OK \[COPYUID \d+ 3 4\] COPY completed.
+
+C: a82 UID COPY 9999 copied
+S: a82 OK COPY completed.
+
 C: a9 DELETE copied
 S: a9 OK DELETE completed.

@@ -21,6 +21,7 @@ package org.apache.james.imap.processor;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -33,6 +34,7 @@ import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.AbstractMessageRangeRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.MessageRangeException;
@@ -124,14 +126,28 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
     }
 
     /**
-     * COPY (RFC 4315 section 3) carries COPYUID in its tagged OK.
+     * COPY (RFC 4315 section 3) carries COPYUID in its tagged OK, when messages were copied.
      */
-    protected Mono<Void> respondCompletion(R request, ImapSession session, Responder responder, StatusResponse.ResponseCode copyUid) {
+    protected Mono<Void> respondCompletion(R request, ImapSession session, Responder responder, Optional<StatusResponse.ResponseCode> copyUid) {
         return unsolicitedResponses(session, responder, request.isUseUids())
-            .then(Mono.fromRunnable(() -> okComplete(request, copyUid, responder)));
+            .then(Mono.fromRunnable(() -> copyUid.ifPresentOrElse(
+                code -> okComplete(request, code, responder),
+                () -> okComplete(request, responder))));
     }
 
-    private Mono<StatusResponse.ResponseCode> handleRanges(R request, ImapSession session, MailboxPath targetMailbox, MailboxSession mailboxSession) {
+    private Optional<StatusResponse.ResponseCode> copyUid(UidValidity uidValidity, List<MessageUid> sourceUids, List<IdRange> copiedRanges) {
+        if (copiedRanges.isEmpty() || sourceUids.isEmpty()) {
+            // Nothing was copied: no COPYUID, whose uid-sets can not be empty
+            return Optional.empty();
+        }
+        IdRange[] sourceRanges = IdRange.mergeRanges(MessageRange.toRanges(sourceUids).stream()
+                .map(IdRange::from)
+                .collect(ImmutableList.toImmutableList()))
+            .toArray(IdRange[]::new);
+        return Optional.of(StatusResponse.ResponseCode.copyUid(uidValidity, sourceRanges, copiedRanges.toArray(IdRange[]::new)));
+    }
+
+    private Mono<Optional<StatusResponse.ResponseCode>> handleRanges(R request, ImapSession session, MailboxPath targetMailbox, MailboxSession mailboxSession) {
         return Mono.from(getMailboxManager()
             .getMailboxReactive(targetMailbox, mailboxSession))
             .flatMap(target -> {
@@ -144,20 +160,26 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                             .sneakyThrow())
                         .filter(Objects::nonNull)
                         .collectList()
-                        .flatMapMany(ranges -> processAll(target.getId(), session.getSelected(), mailboxSession, ranges)
-                            .doOnEach(ReactorUtils.logFinally(() -> AuditTrail.entry()
-                                .username(() -> mailboxSession.getUser().asString())
-                                .sessionId(() -> session.sessionId().asString())
-                                .protocol("IMAP")
-                                .action(getOperationName())
-                                .parameters(() -> ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
-                                    "targetId", target.getId().serialize(),
-                                    "selectedMailboxId", session.getSelected().getMailboxId().serialize()))
-                                .log("IMAP " + getOperationName() + " succeeded.")))
-                            .map(IdRange::from))
-                        .collect(ImmutableList.<IdRange>toImmutableList())
-                        .map(IdRange::mergeRanges)
-                        .map(ranges -> StatusResponse.ResponseCode.copyUid(uidValidity, request.getIdSet(), ranges.toArray(IdRange[]::new)));
+                        .flatMap(ranges -> {
+                            // RFC 4315 section 3: COPYUID lists the source UIDs of the messages copied, not the requested set
+                            List<MessageUid> sourceUids = session.getSelected().allUids().stream()
+                                .filter(uid -> ranges.stream().anyMatch(range -> range.includes(uid)))
+                                .collect(ImmutableList.toImmutableList());
+                            return processAll(target.getId(), session.getSelected(), mailboxSession, ranges)
+                                .doOnEach(ReactorUtils.logFinally(() -> AuditTrail.entry()
+                                    .username(() -> mailboxSession.getUser().asString())
+                                    .sessionId(() -> session.sessionId().asString())
+                                    .protocol("IMAP")
+                                    .action(getOperationName())
+                                    .parameters(() -> ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
+                                        "targetId", target.getId().serialize(),
+                                        "selectedMailboxId", session.getSelected().getMailboxId().serialize()))
+                                    .log("IMAP " + getOperationName() + " succeeded.")))
+                                .map(IdRange::from)
+                                .collect(ImmutableList.<IdRange>toImmutableList())
+                                .map(IdRange::mergeRanges)
+                                .map(copiedRanges -> copyUid(uidValidity, sourceUids, copiedRanges));
+                        });
                 } catch (MailboxException e) {
                     return Mono.error(e);
                 }
