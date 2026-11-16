@@ -39,7 +39,7 @@ S: \* 1 EXISTS
 S: \* \d+ RECENT
 S: \* OK \[UIDVALIDITY \d+\].*
 S: \* OK \[UNSEEN 1\].*
-S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[PERMANENTFLAGS \(\)\] No permanent flags permitted
 S: \* OK \[HIGHESTMODSEQ \d+\].*
 S: \* OK \[UIDNEXT 2\].*
 S: ro1 OK \[READ-ONLY\] EXAMINE completed.

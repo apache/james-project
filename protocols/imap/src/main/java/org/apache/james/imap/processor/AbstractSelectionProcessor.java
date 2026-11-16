@@ -155,7 +155,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             .thenReturn(metadata))
             .flatMap(metaData -> {
                 SelectedMailbox selected = session.getSelected();
-                permanentFlags(responder, metaData.getPermanentFlags(), selected);
+                permanentFlags(responder, metaData.getPermanentFlags(), selected, session.getMailboxSession());
                 selected.resetNewApplicableFlags();
                 highestModSeq(responder, metaData);
                 uidNext(responder, metaData);

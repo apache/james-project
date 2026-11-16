@@ -295,7 +295,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         // See IMAP-303
         if (selected.hasNewApplicableFlags()) {
             flags(responder, selected);
-            permanentFlags(responder, mailbox.getPermanentFlags(mailboxSession), selected);
+            permanentFlags(responder, mailbox.getPermanentFlags(mailboxSession), selected, mailboxSession);
             selected.resetNewApplicableFlags();
         }
     }

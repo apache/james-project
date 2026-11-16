@@ -74,7 +74,7 @@ S: \* .* EXISTS
 S: \* .* RECENT
 S: \* OK \[UIDVALIDITY .*\] UIDs valid
 S: \* OK \[UNSEEN 1\] MailboxMessage 1 is first unseen
-S: \* OK \[PERMANENTFLAGS .*\] Limited
+S: \* OK \[PERMANENTFLAGS \(\)\] No permanent flags permitted
 S: \* OK \[HIGHESTMODSEQ .*\] Highest
 S: \* OK \[UIDNEXT .*\] Predicted next UID
 S: a3 OK \[READ-ONLY\] SELECT completed.

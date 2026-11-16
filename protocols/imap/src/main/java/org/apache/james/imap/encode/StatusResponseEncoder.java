@@ -83,7 +83,8 @@ public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatu
             if (number > -1) {
                 composer.message(number);
             }
-            if (parameters != null && !parameters.isEmpty()) {
+            // RFC 9051: "PERMANENTFLAGS" SP "(" [flag-perm *(SP flag-perm)] ")" keeps its parentheses when empty
+            if (parameters != null && (!parameters.isEmpty() || code.equals("PERMANENTFLAGS"))) {
                 if (useParens) {
                     composer.openParen();
                 }
