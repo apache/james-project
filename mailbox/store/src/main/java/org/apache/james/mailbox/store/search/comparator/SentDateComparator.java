@@ -26,8 +26,6 @@ import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -49,11 +47,6 @@ public class SentDateComparator extends AbstractHeaderComparator {
     private static final Logger LOGGER = LoggerFactory.getLogger(SentDateComparator.class);
     // Some sent e-mail have this form : Wed,  3 Jun 2015 09:05:46 +0000 (UTC)
     // Java 8 Time library RFC_1123_DATE_TIME corresponds to Wed,  3 Jun 2015 09:05:46 +0000 only
-    // This REGEXP is here to match ( in order to remove ) the possible invalid end of a header date
-    // Example of matching patterns :
-    //  (UTC)
-    //  (CEST)
-    private static final Pattern DATE_SANITIZING_PATTERN = Pattern.compile(" *\\(.*\\) *");
 
     public static Optional<ZonedDateTime> toISODate(String value) {
         try {
@@ -83,9 +76,11 @@ public class SentDateComparator extends AbstractHeaderComparator {
         // Some sent e-mail have this form : Wed,  3 Jun 2015 09:05:46 +0000 (UTC)
         // Java 8 Time library RFC_1123_DATE_TIME corresponds to Wed,  3 Jun 2015 09:05:46 +0000 only
         // This method is here to convert the first date into something parsable by RFC_1123_DATE_TIME DateTimeFormatter
-        Matcher sanitizerMatcher = DATE_SANITIZING_PATTERN.matcher(value);
-        if (sanitizerMatcher.find()) {
-            return StringUtils.normalizeSpace(value.substring(0, sanitizerMatcher.start()));
+        // The possible invalid end of a header date, like (UTC) or (CEST), is removed: a linear scan, as a regex
+        // would backtrack quadratically on a crafted value.
+        int open = value.indexOf('(');
+        if (open >= 0 && value.lastIndexOf(')') > open) {
+            return StringUtils.normalizeSpace(value.substring(0, open));
         }
         return StringUtils.normalizeSpace(value);
     }
