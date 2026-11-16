@@ -175,4 +175,9 @@ public class SMTPRetCode {
      */
     public static final String TRANSACTION_FAILED = "554";
 
+    /**
+     * MAIL FROM/RCPT TO parameters not recognized or not implemented (RFC 5321 section 4.2.3)
+     */
+    public static final String PARAMETERS_NOT_RECOGNIZED = "555";
+
 }
