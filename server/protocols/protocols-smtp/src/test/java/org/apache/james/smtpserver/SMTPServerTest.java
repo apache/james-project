@@ -680,6 +680,30 @@ public class SMTPServerTest {
     }
 
     @Test
+    public void duplicatedRecipientsShouldBeMergedInTheEnqueuedMail() throws Exception {
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.helo("localhost");
+        smtpProtocol.setSender("mail@localhost");
+        smtpProtocol.addRecipient("mail@localhost");
+        smtpProtocol.addRecipient("other@localhost");
+        smtpProtocol.addRecipient("MAIL@localhost");
+        assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+
+        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body\r\n.\r\n");
+
+        smtpProtocol.quit();
+        smtpProtocol.disconnect();
+
+        assertThat(testSystem.queue.getLastMail().getRecipients())
+            .containsExactly(new MailAddress("mail@localhost"), new MailAddress("other@localhost"));
+    }
+
+    @Test
     public void testTwoSimultaneousMails() throws Exception {
         init(smtpConfiguration);
 

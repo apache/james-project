@@ -160,10 +160,12 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
         List<MailAddress> recipientCollection = session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction).orElse(ImmutableList.of());
         MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
 
+        // RFC 5321 section 3.3: a recipient given twice gets a single copy. Duplicated recipients
+        // would otherwise be rejected later by Mail::updateRecipients, losing the mail for everyone.
         return MailImpl.builder()
             .name(mailName)
             .sender(sender)
-            .addRecipients(recipientCollection)
+            .addRecipients(recipientCollection.stream().distinct().collect(ImmutableList.toImmutableList()))
             .build();
     }
 
