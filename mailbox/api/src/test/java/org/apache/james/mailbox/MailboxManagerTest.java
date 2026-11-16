@@ -2425,17 +2425,25 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(sharedMailboxPath, user2Session);
             mailboxManager.createMailbox(childMailboxPath, user2Session);
 
+            MailboxPath otherMailboxPath = MailboxPath.forUser(USER_2, "other");
+            mailboxManager.createMailbox(otherMailboxPath, user2Session);
+
             mailboxManager.setRights(sharedMailboxPath, MailboxACL.EMPTY.apply(MailboxACL.command()
                     .forUser(USER_1)
-                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.DeleteMailbox, MailboxACL.Right.CreateMailbox)
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.DeleteMailbox)
+                    .asAddition()),
+                user2Session);
+            mailboxManager.setRights(otherMailboxPath, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_1)
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.CreateMailbox)
                     .asAddition()),
                 user2Session);
 
             List<MailboxRenamedResult> mailboxRenamedResults = mailboxManager.renameMailbox(sharedMailboxPath,
-                sharedMailboxPath.child("renamed", user2Session.getPathDelimiter()), session);
+                otherMailboxPath.child("renamed", user2Session.getPathDelimiter()), session);
 
             assertThat(mailboxRenamedResults).extracting(MailboxRenamedResult::getDestinationPath)
-                .containsExactly(MailboxPath.forUser(USER_2, "shared.renamed"), MailboxPath.forUser(USER_2, "shared.renamed.child"));
+                .containsExactly(MailboxPath.forUser(USER_2, "other.renamed"), MailboxPath.forUser(USER_2, "other.renamed.child"));
         }
 
         @Test
