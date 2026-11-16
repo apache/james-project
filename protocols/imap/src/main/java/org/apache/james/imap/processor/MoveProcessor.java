@@ -24,6 +24,7 @@ import java.util.List;
 import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -41,6 +42,7 @@ import org.apache.james.util.MDCBuilder;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> implements CapabilityImplementingProcessor {
 
@@ -51,6 +53,18 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
                          MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(MoveRequest.class, mailboxManager, factory, metricFactory, pathConverterFactory);
         moveCapabilitySupported = mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move);
+    }
+
+    @Override
+    protected Mono<Void> processRequestReactive(MoveRequest request, ImapSession session, Responder responder) {
+        // RFC 6851 section 3.3: MOVE expunges the source messages, which a mailbox selected read-only
+        // (EXAMINE, RFC 9051 section 6.3.3) does not permit
+        SelectedMailbox selected = session.getSelected();
+        if (selected != null && selected.isReadOnly()) {
+            no(request, responder, HumanReadableText.MAILBOX_IS_READ_ONLY);
+            return Mono.empty();
+        }
+        return super.processRequestReactive(request, session, responder);
     }
 
     @Override
