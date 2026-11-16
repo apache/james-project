@@ -127,7 +127,7 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
                 // See also JAMES-1190
                 ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get().write("NO Maximum command line length exceeded");
             } else if (cause instanceof SessionTerminatedException) {
-                ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get().write("OK channel is closing");
+                ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get().write("OK \"channel is closing\"\r\n");
                 logout(ctx);
             }
         }

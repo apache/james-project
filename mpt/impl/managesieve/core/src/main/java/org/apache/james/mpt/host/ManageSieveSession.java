@@ -61,7 +61,7 @@ public class ManageSieveSession implements Session {
                 response = manageSieveProcessor.handleRequest(settableSession, request);
             } catch (SessionTerminatedException e) {
                 LOGGER.info("Session is terminated");
-                response = "OK channel is closing\r\n";
+                response = "OK \"channel is closing\"\r\n";
             }
             out.write(response);
             isReadLast = true;
