@@ -254,7 +254,13 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     case _ => JsError("Expecting a JsString to represent an email address")
   }
 
-  private implicit val headerMessageIdReads: Reads[HeaderMessageId] = Json.valueReads[HeaderMessageId]
+  // Message ids and URLs hold no white space: a control character, line breaks included, would be written as is in the
+  // header and start a new header field
+  private def rejectControlCharacters[T](reads: Reads[T], value: T => String): Reads[T] = json => reads.reads(json)
+    .filter(JsError("Control characters are not allowed"))(parsed => !value(parsed).exists(Character.isISOControl))
+
+  private implicit val headerMessageIdReads: Reads[HeaderMessageId] =
+    rejectControlCharacters(Json.valueReads[HeaderMessageId], _.value)
   private implicit val emailAddressReads: Reads[EmailAddress] = Json.reads[EmailAddress]
   private implicit val unvalidatedEmailAddressReads: Reads[UncheckedEmailAddress] = Json.reads[UncheckedEmailAddress]
   private implicit val unvalidatedAddressesHeaderValueReads: Reads[UncheckedAddressesHeaderValue] = Json.valueReads[UncheckedAddressesHeaderValue]
@@ -373,7 +379,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
       attachments = attachments)
   }
 
-  private implicit val headerUrlReads: Reads[HeaderURL] = Json.valueReads[HeaderURL]
+  private implicit val headerUrlReads: Reads[HeaderURL] = rejectControlCharacters(Json.valueReads[HeaderURL], _.value)
   private implicit val groupNameReads: Reads[GroupName] = Json.valueReads[GroupName]
   private implicit val groupReads: Reads[EmailAddressGroup] = Json.reads[EmailAddressGroup]
 
