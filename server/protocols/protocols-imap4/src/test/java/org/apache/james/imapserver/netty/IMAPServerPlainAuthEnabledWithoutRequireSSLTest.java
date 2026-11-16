@@ -22,6 +22,9 @@ package org.apache.james.imapserver.netty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+
 import org.apache.james.core.Username;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,5 +82,22 @@ class IMAPServerPlainAuthEnabledWithoutRequireSSLTest extends AbstractIMAPServer
             testIMAPClient.connect("127.0.0.1", port)
                 .authenticatePlain(user1.asString(), user1Password))
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void thirdLoginFailureShouldSendByeBeforeClosingTheConnection() throws Exception {
+        try (Socket socket = new Socket("127.0.0.1", port)) {
+            socket.setSoTimeout(10000);
+            String commands = "a1 LOGIN user@domain.org wrong1\r\n"
+                + "a2 LOGIN user@domain.org wrong2\r\n"
+                + "a3 LOGIN user@domain.org wrong3\r\n";
+            socket.getOutputStream().write(commands.getBytes(StandardCharsets.US_ASCII));
+            socket.getOutputStream().flush();
+
+            // The server closes the connection after the third failure: read everything it sent until then
+            String received = new String(socket.getInputStream().readAllBytes(), StandardCharsets.US_ASCII);
+
+            assertThat(received).contains("* BYE Login failed too many times.");
+        }
     }
 }

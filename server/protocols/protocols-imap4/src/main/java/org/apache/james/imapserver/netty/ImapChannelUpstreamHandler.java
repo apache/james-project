@@ -466,6 +466,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 .doOnEach(Throwing.consumer(signal -> {
                     if (session.getState() == ImapSessionState.LOGOUT) {
                         // Make sure we close the channel after all the buffers were flushed out
+                        // Write the pending responses (eg the BYE of a third authentication failure) before closing
+                        response.flush();
                         Channel channel = ctx.channel();
                         if (channel.isActive()) {
                             channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
