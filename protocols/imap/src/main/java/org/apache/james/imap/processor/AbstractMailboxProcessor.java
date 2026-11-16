@@ -61,6 +61,9 @@ import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.exception.OverQuotaException;
+import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.metrics.api.MetricFactory;
@@ -381,6 +384,28 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
 
     protected StatusResponseFactory getStatusResponseFactory() {
         return factory;
+    }
+
+    /**
+     * RFC 4314 section 4: the existence of a mailbox the user has no Lookup right on must not be revealed.
+     * Answers like for a missing mailbox in that case, with an insufficient rights text otherwise.
+     */
+    protected Mono<Void> respondInsufficientRights(ImapRequest request, ImapProcessor.Responder responder, MailboxPath mailboxPath,
+                                                   MailboxSession mailboxSession, Optional<ResponseCode> notFoundCode) {
+        return Mono.from(getMailboxManager().myRightsReactive(mailboxPath, mailboxSession))
+            .map(rights -> rights.contains(MailboxACL.Right.Lookup))
+            .onErrorResume(MailboxException.class, e -> Mono.just(false))
+            .defaultIfEmpty(false)
+            .doOnNext(canLookup -> {
+                if (canLookup) {
+                    no(request, responder, HumanReadableText.UNSUFFICIENT_RIGHTS);
+                } else {
+                    notFoundCode.ifPresentOrElse(
+                        code -> no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, code),
+                        () -> no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX));
+                }
+            })
+            .then();
     }
 
     protected Mono<MessageManager> getSelectedMailboxReactive(ImapSession session, Mono<MessageManager> ifEmpty) {

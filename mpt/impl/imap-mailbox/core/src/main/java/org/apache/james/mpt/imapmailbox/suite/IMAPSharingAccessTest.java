@@ -66,7 +66,8 @@ public abstract class IMAPSharingAccessTest implements ImapTestConstants {
             .withFilledMailbox(MailboxPath.forUser(OTHER_USER_NAME, "mailbox-lrte")) // todo
             .withRights(MailboxPath.forUser(OTHER_USER_NAME, "mailbox-lrte"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("lrte"))
             .withFilledMailbox(MailboxPath.forUser(OTHER_USER_NAME, "mailbox-lra"))
-            .withRights(MailboxPath.forUser(OTHER_USER_NAME, "mailbox-lra"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("lra"));
+            .withRights(MailboxPath.forUser(OTHER_USER_NAME, "mailbox-lra"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("lra"))
+            .withFilledMailbox(MailboxPath.forUser(OTHER_USER_NAME, "mailbox-none"));
         BasicImapCommands.welcome(scriptedTestProtocol);
         BasicImapCommands.authenticate(scriptedTestProtocol);
     }
@@ -139,5 +140,12 @@ public abstract class IMAPSharingAccessTest implements ImapTestConstants {
         scriptedTestProtocol
             .withLocale(Locale.US)
             .run("SharingAccessLRTE");
+    }
+
+    @Test
+    public void commandsShouldNotRevealMailboxesWithoutLookupRight() throws Exception {
+        scriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("SharingAccessNoRight");
     }
 }

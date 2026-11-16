@@ -33,6 +33,7 @@ import org.apache.james.imap.message.request.AbstractMessageRangeRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.MailboxId;
@@ -85,6 +86,12 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                         .flatMap(code -> unsolicitedResponses(session, responder, request.isUseUids())
                             .then(Mono.fromRunnable(() -> okComplete(request, code, responder))));
                 }
+            })
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                // The target exists but the user has no Lookup right on it: do not reveal its existence (RFC 4314 section 4)
+                no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
+                return ReactorUtils.logAsMono(() -> LOGGER.info("{} failed from mailbox {} to {}: {}",
+                    getOperationName(), selectedMailboxId(session), targetMailbox, e.getMessage()));
             })
             .onErrorResume(MessageRangeException.class, e -> {
                 taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);

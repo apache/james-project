@@ -60,7 +60,7 @@ C: a6 UNSELECT
 S: a6 OK UNSELECT completed.
 
 C: a5 DELETE #user.boby.mailbox-lra
-S: a5 NO DELETE processing failed.
+S: a5 NO DELETE failed. Insufficient rights.
 
 C: a5 SETACL #user.boby.mailbox-lra imapuser lra
 S: a5 OK SETACL completed.

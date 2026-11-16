@@ -1,0 +1,58 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+# Without the Lookup right, commands answer as if the mailbox did not exist (RFC 4314 section 4)
+C: a1 DELETE #user.boby.mailbox-none
+S: a1 NO DELETE failed. No such mailbox.
+
+C: a2 DELETE #user.boby.mailbox-nonexisting
+S: a2 NO DELETE failed. No such mailbox.
+
+C: a3 GETMETADATA #user.boby.mailbox-none /private/comment
+S: a3 NO \[TRYCREATE\] GETMETADATA failed. No such mailbox.
+
+C: a4 GETMETADATA #user.boby.mailbox-nonexisting /private/comment
+S: a4 NO \[TRYCREATE\] GETMETADATA failed. No such mailbox.
+
+C: a5 SETMETADATA #user.boby.mailbox-none (/private/comment "x")
+S: a5 NO \[TRYCREATE\] SETMETADATA failed. No such mailbox.
+
+C: a6 SETMETADATA #user.boby.mailbox-nonexisting (/private/comment "x")
+S: a6 NO \[TRYCREATE\] SETMETADATA failed. No such mailbox.
+
+C: a7 SELECT INBOX
+S: \* OK \[MAILBOXID \(.*\)\] Ok
+S: \* FLAGS \(.*\)
+S: \* .* EXISTS
+S: \* .* RECENT
+S: \* OK \[UIDVALIDITY .*\] UIDs valid
+S: \* OK \[UNSEEN 1\] MailboxMessage 1 is first unseen
+S: \* OK \[PERMANENTFLAGS \(.*\)\] Limited
+S: \* OK \[HIGHESTMODSEQ .*\] Highest
+S: \* OK \[UIDNEXT .*\] Predicted next UID
+S: a7 OK \[READ-WRITE\] SELECT completed.
+
+C: a8 COPY 1 #user.boby.mailbox-none
+S: a8 NO \[TRYCREATE\] COPY failed. No such mailbox.
+
+C: a9 COPY 1 #user.boby.mailbox-nonexisting
+S: a9 NO \[TRYCREATE\] COPY failed. No such mailbox.
+
+C: a10 MOVE 1 #user.boby.mailbox-none
+S: a10 NO \[TRYCREATE\] MOVE failed. No such mailbox.
