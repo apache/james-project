@@ -19,10 +19,12 @@
 
 package org.apache.james.protocols.smtp.core.esmtp;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession;
@@ -49,7 +51,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailSizeEsmtpExtension.class);
 
-    private static final ProtocolSession.AttachmentKey<Integer> MESG_SIZE = ProtocolSession.AttachmentKey.of("MESG_SIZE", Integer.class); // The size of the
+    private static final ProtocolSession.AttachmentKey<Long> MESG_SIZE = ProtocolSession.AttachmentKey.of("MESG_SIZE", Long.class); // The size of the
     private static final String[] MAIL_PARAMS = { "SIZE" };
     
     private static final HookResult SYNTAX_ERROR = HookResult.builder()
@@ -57,6 +59,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
         .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
         .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Syntactically incorrect value for SIZE parameter")
         .build();
+    private static final Pattern SIZE_VALUE = Pattern.compile("[0-9]{1,20}");
     public static final int SINGLE_CHARACTER_LINE = 3;
     public static final int DOT_BYTE = 46;
 
@@ -112,15 +115,15 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
      */
     private HookResult doMailSize(SMTPSession session,
             String mailOptionValue, MaybeSender tempSender) {
-        int size = 0;
-        try {
-            size = Integer.parseInt(mailOptionValue);
-        } catch (NumberFormatException pe) {
+        // RFC 1870: size-value ::= 1*20DIGIT
+        if (!SIZE_VALUE.matcher(mailOptionValue).matches()) {
             LOGGER.error("Rejected syntactically incorrect value for SIZE parameter.");
             
             // This is a malformed option value. We return an error
             return SYNTAX_ERROR;
         }
+        // A value beyond the long range is anyway above any size limit
+        long size = new BigInteger(mailOptionValue).min(BigInteger.valueOf(Long.MAX_VALUE)).longValueExact();
         LOGGER.debug("MAIL command option SIZE received with value {}.", size);
         long maxMessageSize = session.getConfiguration().getMaxMessageSize();
         if ((maxMessageSize > 0) && (size > maxMessageSize)) {

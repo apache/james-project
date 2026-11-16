@@ -23,8 +23,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.protocols.api.ProtocolSession.State;
+import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
+import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
 
 /**
@@ -42,9 +45,18 @@ public class SMTPUTF8Extension implements MailParametersHook, EhloExtension {
 
     private static final String[] MAIL_PARAMS = { "SMTPUTF8" };
     private static final List<String> FEATURES = Collections.singletonList("SMTPUTF8");
+    // RFC 6531 section 3.4: the SMTPUTF8 parameter takes no value
+    private static final HookResult VALUE_NOT_ALLOWED = HookResult.builder()
+        .hookReturnCode(HookReturnCode.deny())
+        .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
+        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " SMTPUTF8 parameter takes no value")
+        .build();
 
     @Override
     public HookResult doMailParameter(SMTPSession session, String paramName, String paramValue) {
+        if (!paramValue.isEmpty()) {
+            return VALUE_NOT_ALLOWED;
+        }
         session.setAttachment(SMTPSession.SMTPUTF8_REQUESTED, Boolean.TRUE, State.Transaction);
         return null;
     }

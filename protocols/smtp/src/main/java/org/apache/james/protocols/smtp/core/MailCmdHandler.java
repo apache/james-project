@@ -21,9 +21,11 @@ package org.apache.james.protocols.smtp.core;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import jakarta.inject.Inject;
@@ -80,6 +82,10 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
     private static final Response INVALID_IDN_SENDER = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
             DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.ADDRESS_SYNTAX_SENDER)
                     + " Invalid A-label (xn--) in sender domain").immutable();
+    // RFC 6152: the BODY parameter of the advertised 8BITMIME extension
+    private static final String BODY_PARAMETER = "BODY";
+    private static final Set<String> SUPPORTED_BODY_TYPES = ImmutableSet.of("7BIT", "8BITMIME");
+
     /**
      * A map of parameterHooks
      */
@@ -189,10 +195,11 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
 
                 StringTokenizer optionTokenizer = new StringTokenizer(
                         mailOptionString, " ");
+                Set<String> seenOptionNames = new HashSet<>();
                 while (optionTokenizer.hasMoreElements()) {
                     String mailOption = optionTokenizer.nextToken();
                     int equalIndex = mailOption.indexOf('=');
-                    String mailOptionName = mailOption;
+                    String mailOptionName = mailOption.toUpperCase(Locale.US);
                     String mailOptionValue = "";
                     if (equalIndex > 0) {
                         mailOptionName = mailOption.substring(0, equalIndex)
@@ -200,17 +207,26 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                         mailOptionValue = mailOption.substring(equalIndex + 1);
                     }
 
-                    // Handle the SIZE extension keyword
+                    if (!seenOptionNames.add(mailOptionName)) {
+                        LOGGER.debug("MAIL command had duplicated option {}", mailOptionName);
+                        return invalidArgument(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, "Duplicated parameter " + mailOptionName);
+                    }
 
-                    if (paramHooks.containsKey(mailOptionName)) {
+                    if (mailOptionName.equals(BODY_PARAMETER)) {
+                        if (!SUPPORTED_BODY_TYPES.contains(mailOptionValue.toUpperCase(Locale.US))) {
+                            LOGGER.debug("MAIL command had unsupported BODY value {}", mailOptionValue);
+                            return invalidArgument(SMTPRetCode.PARAMETERS_NOT_RECOGNIZED, "Unsupported BODY type");
+                        }
+                    } else if (paramHooks.containsKey(mailOptionName)) {
                         MailParametersHook hook = paramHooks.get(mailOptionName);
                         SMTPResponse res = calcDefaultSMTPResponse(hook.doMailParameter(session, mailOptionName, mailOptionValue));
                         if (res != null) {
                             return res;
                         }
                     } else {
-                        // Unexpected option attached to the Mail command
+                        // RFC 5321 section 4.1.1.11: unrecognized parameters are answered with 555
                         LOGGER.debug("MAIL command had unrecognized/unexpected option {} with value {}", mailOptionName, mailOptionValue);
+                        return invalidArgument(SMTPRetCode.PARAMETERS_NOT_RECOGNIZED, "Unrecognized or unsupported option: " + mailOptionName);
                     }
                 }
             }
@@ -243,6 +259,12 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
             }
         }
         return null;
+    }
+
+    private static Response invalidArgument(String retCode, String description) {
+        return new SMTPResponse(retCode,
+            DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG)
+                + " " + CharMatcher.javaIsoControl().replaceFrom(description, '?'));
     }
 
     private MaybeSender toMaybeSender(String senderAsString) throws AddressException {
