@@ -24,6 +24,7 @@ import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
@@ -118,6 +119,19 @@ class CassandraMessageMetadataReconcilerTest {
 
         assertThat(messageIds.retrieve(mailboxId, uid).block()).contains(metadata(messageId, NEW));
         assertThat(imapUids.retrieve(messageId, Optional.of(mailboxId)).single().block()).isEqualTo(metadata(messageId, NEW));
+    }
+
+    @Test
+    void shouldNotRepairWhenHeaderReferenceIsAlreadyCurrent() {
+        CassandraMessageIdDAO messageIdDao = mock(CassandraMessageIdDAO.class);
+        CassandraMessageIdToImapUidDAO imapUidDao = mock(CassandraMessageIdToImapUidDAO.class);
+        CassandraMessageMetadata current = metadata(messageId, NEW);
+        CassandraMessageMetadataReconciler reconciler = new CassandraMessageMetadataReconciler(messages, messageIdDao, imapUidDao);
+        when(messages.retrieveMessage(current.getComposedMessageId(), FetchType.HEADERS)).thenReturn(Mono.just(canonical));
+
+        assertThat(reconciler.reconcile(current, FetchType.HEADERS).block()).isSameAs(canonical);
+
+        verifyNoInteractions(messageIdDao, imapUidDao);
     }
 
     @Test
