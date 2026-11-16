@@ -63,11 +63,10 @@ public class PostgresSieveScriptDAO {
             .set(IS_ACTIVE, sieveScript.isActive())
             .set(ACTIVATION_DATE_TIME, sieveScript.getActivationDateTime())
             .onConflict(USERNAME, SCRIPT_NAME)
+            // Replacing a script keeps its activation state
             .doUpdate()
             .set(SCRIPT_SIZE, sieveScript.getScriptSize())
-            .set(SCRIPT_CONTENT, sieveScript.getScriptContent())
-            .set(IS_ACTIVE, sieveScript.isActive())
-            .set(ACTIVATION_DATE_TIME, sieveScript.getActivationDateTime())));
+            .set(SCRIPT_CONTENT, sieveScript.getScriptContent())));
     }
 
     public Mono<PostgresSieveScript> getScript(Username username, ScriptName scriptName) {

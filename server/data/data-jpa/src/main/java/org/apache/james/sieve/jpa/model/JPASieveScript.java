@@ -165,6 +165,11 @@ public class JPASieveScript {
         this.activationDateTime = null;
     }
 
+    public void updateContent(ScriptContent content) {
+        this.scriptContent = content.getValue();
+        this.scriptSize = content.length();
+    }
+
     public void renameTo(ScriptName newName) {
         this.scriptName = newName.getValue();
     }
