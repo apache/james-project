@@ -149,7 +149,7 @@ class SMTPSaslTest {
 
         client.sendCommand("AUTH OAUTHBEARER " + VALID_OAUTHBEARER_TOKEN);
 
-        assertThat(client.getReplyString()).contains("235 Authentication Successful");
+        assertThat(client.getReplyString()).contains("235 2.7.0 Authentication Successful");
 
         client.sendCommand("NOOP");
         assertThat(client.getReplyString()).contains("250 2.0.0 OK");
@@ -163,7 +163,7 @@ class SMTPSaslTest {
         assertThat(client.getReplyString()).contains("334");
         client.sendCommand(VALID_OAUTHBEARER_TOKEN);
 
-        assertThat(client.getReplyString()).contains("235 Authentication Successful");
+        assertThat(client.getReplyString()).contains("235 2.7.0 Authentication Successful");
 
         client.sendCommand("NOOP");
         assertThat(client.getReplyString()).contains("250 2.0.0 OK");
@@ -177,7 +177,7 @@ class SMTPSaslTest {
         assertThat(client.getReplyString()).contains("334");
         client.sendCommand(OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN));
 
-        assertThat(client.getReplyString()).contains("235 Authentication Successful");
+        assertThat(client.getReplyString()).contains("235 2.7.0 Authentication Successful");
 
         client.sendCommand("NOOP");
         assertThat(client.getReplyString()).contains("250 2.0.0 OK");
@@ -189,7 +189,7 @@ class SMTPSaslTest {
 
         client.sendCommand("AUTH XOAUTH2 " + OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN));
 
-        assertThat(client.getReplyString()).contains("235 Authentication Successful");
+        assertThat(client.getReplyString()).contains("235 2.7.0 Authentication Successful");
     }
 
     @Test
@@ -204,7 +204,7 @@ class SMTPSaslTest {
             .doesNotContain("OAUTHBEARER");
 
         client.sendCommand("AUTH OAUTHBEARER " + VALID_OAUTHBEARER_TOKEN);
-        assertThat(client.getReplyString()).contains("504 Unrecognized Authentication Type");
+        assertThat(client.getReplyString()).contains("504 5.5.4 Unrecognized Authentication Type");
     }
 
     @Test
@@ -215,7 +215,7 @@ class SMTPSaslTest {
         assertThat(client.getReplyString()).contains("334 " + FAIL_RESPONSE_TOKEN);
 
         client.sendCommand("AQ==");
-        assertThat(client.getReplyString()).contains("535 Authentication Failed");
+        assertThat(client.getReplyString()).contains("535 5.7.8 Authentication Failed");
     }
 
     @Test
@@ -272,7 +272,7 @@ class SMTPSaslTest {
         SMTPSClient client = initSMTPSClient();
 
         client.sendCommand("AUTH OAUTHBEARER " + VALID_OAUTHBEARER_TOKEN);
-        assertThat(client.getReplyString()).contains("504 Unrecognized Authentication Type");
+        assertThat(client.getReplyString()).contains("504 5.5.4 Unrecognized Authentication Type");
     }
 
     @Test
@@ -359,7 +359,7 @@ class SMTPSaslTest {
         assertThat(client.getReplyString()).contains("334 " + FAIL_RESPONSE_TOKEN);
 
         client.sendCommand("AQ==");
-        assertThat(client.getReplyString()).contains("535 Authentication Failed");
+        assertThat(client.getReplyString()).contains("535 5.7.8 Authentication Failed");
 
     }
 
@@ -384,7 +384,7 @@ class SMTPSaslTest {
 
         client.sendCommand("AUTH OAUTHBEARER " + VALID_OAUTHBEARER_TOKEN);
 
-        assertThat(client.getReplyString()).contains("235 Authentication Successful");
+        assertThat(client.getReplyString()).contains("235 2.7.0 Authentication Successful");
     }
 
     @Test
@@ -432,7 +432,7 @@ class SMTPSaslTest {
 
         client.sendCommand("AUTH OAUTHBEARER " + VALID_OAUTHBEARER_TOKEN);
 
-        assertThat(client.getReplyString()).contains("235 Authentication Successful");
+        assertThat(client.getReplyString()).contains("235 2.7.0 Authentication Successful");
     }
 
     @Test
@@ -464,7 +464,7 @@ class SMTPSaslTest {
         String tokenWithImpersonation = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse("another@domain.org", OidcTokenFixture.VALID_TOKEN);
         client.sendCommand("AUTH OAUTHBEARER " + tokenWithImpersonation);
 
-        assertThat(client.getReplyString()).contains("535 Authentication Failed");
+        assertThat(client.getReplyString()).contains("535 5.7.8 Authentication Failed");
     }
 
     @Test
@@ -473,7 +473,7 @@ class SMTPSaslTest {
         String tokenWithImpersonation = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER2.asString(), OidcTokenFixture.VALID_TOKEN);
         client.sendCommand("AUTH OAUTHBEARER " + tokenWithImpersonation);
 
-        assertThat(client.getReplyString()).contains("235 Authentication Successful");
+        assertThat(client.getReplyString()).contains("235 2.7.0 Authentication Successful");
     }
 
     @Test
@@ -546,7 +546,7 @@ class SMTPSaslTest {
 
         client.sendCommand("AUTH PLAIN " + plainInitialResponse(SMTPServerTestSystem.BOB.asString(), SMTPServerTestSystem.PASSWORD));
 
-        assertThat(client.getReplyString()).contains("504 Unrecognized Authentication Type");
+        assertThat(client.getReplyString()).contains("504 5.5.4 Unrecognized Authentication Type");
     }
 
     @Test
@@ -556,7 +556,7 @@ class SMTPSaslTest {
 
         client.sendCommand("AUTH PLAIN " + plainInitialResponse(SMTPServerTestSystem.BOB.asString(), SMTPServerTestSystem.PASSWORD));
 
-        assertThat(client.getReplyString()).contains("235 Authentication Successful");
+        assertThat(client.getReplyString()).contains("235 2.7.0 Authentication Successful");
     }
 
     @Test
@@ -568,7 +568,7 @@ class SMTPSaslTest {
         assertThat(client.getReplyString()).contains("334 ");
         client.sendCommand(plainInitialResponse(SMTPServerTestSystem.BOB.asString(), SMTPServerTestSystem.PASSWORD));
 
-        assertThat(client.getReplyString()).contains("235 Authentication Successful");
+        assertThat(client.getReplyString()).contains("235 2.7.0 Authentication Successful");
     }
 
     @Test
@@ -583,7 +583,7 @@ class SMTPSaslTest {
         assertThat(client.getReplyString()).contains("334 UGFzc3dvcmQ6");
         client.sendCommand(base64(SMTPServerTestSystem.PASSWORD));
 
-        assertThat(client.getReplyString()).contains("235 Authentication Successful");
+        assertThat(client.getReplyString()).contains("235 2.7.0 Authentication Successful");
     }
 
     @Test
@@ -598,7 +598,7 @@ class SMTPSaslTest {
         assertThat(client.getReplyString()).contains("334 UGFzc3dvcmQ6");
         client.sendCommand(base64("bad-password"));
 
-        assertThat(client.getReplyString()).contains("535 Authentication Failed");
+        assertThat(client.getReplyString()).contains("535 5.7.8 Authentication Failed");
     }
 
     @Test
@@ -608,7 +608,7 @@ class SMTPSaslTest {
 
         client.sendCommand("AUTH PLAIN " + plainInitialResponse(SMTPServerTestSystem.BOB.asString(), "bad-password"));
 
-        assertThat(client.getReplyString()).contains("535 Authentication Failed");
+        assertThat(client.getReplyString()).contains("535 5.7.8 Authentication Failed");
     }
 
     @Test
@@ -620,7 +620,7 @@ class SMTPSaslTest {
         assertThat(client.getReplyString()).contains("334 " + base64("server-data"));
 
         client.sendCommand("");
-        assertThat(client.getReplyString()).contains("235 Authentication Successful");
+        assertThat(client.getReplyString()).contains("235 2.7.0 Authentication Successful");
     }
 
     @Test
@@ -663,7 +663,7 @@ class SMTPSaslTest {
         client.sendCommand("AUTH RECORDING");
         assertThat(client.getReplyString()).contains("334 " + base64("challenge"));
         client.sendCommand(base64("response"));
-        assertThat(client.getReplyString()).contains("535 Authentication Failed");
+        assertThat(client.getReplyString()).contains("535 5.7.8 Authentication Failed");
         client.disconnect();
 
         Awaitility.await().during(Duration.ofMillis(100)).atMost(Duration.ofSeconds(2))
@@ -680,7 +680,7 @@ class SMTPSaslTest {
         assertThat(client.getReplyString()).doesNotContain("250-AUTH LOGIN PLAIN");
 
         client.sendCommand("AUTH PLAIN " + plainInitialResponse(SMTPServerTestSystem.BOB.asString(), SMTPServerTestSystem.PASSWORD));
-        assertThat(client.getReplyString()).contains("504 Unrecognized Authentication Type");
+        assertThat(client.getReplyString()).contains("504 5.5.4 Unrecognized Authentication Type");
     }
 
     private void resetWithMechanisms(ImmutableList<SaslMechanism> saslMechanisms) throws Exception {

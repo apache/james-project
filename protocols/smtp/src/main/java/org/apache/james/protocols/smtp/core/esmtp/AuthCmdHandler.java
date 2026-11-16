@@ -82,10 +82,11 @@ public class AuthCmdHandler
     private static final Response ALREADY_AUTH = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER) + " User has previously authenticated. "
             + " Further authentication is not required!").immutable();
     private static final Response SYNTAX_ERROR = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_INVALID_ARG) + " Usage: AUTH (authentication type) <challenge>").immutable();
-    private static final Response AUTH_SUCCEEDED = new SMTPResponse(SMTPRetCode.AUTH_OK, "Authentication Successful").immutable();
-    private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, "Authentication Failed").immutable();
-    private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, "Unrecognized Authentication Type").immutable();
-    private static final Response SERVER_ERROR = new SMTPResponse(SMTPRetCode.LOCAL_ERROR, "Unable to process request").immutable();
+    // RFC 4954 section 6 enhanced status codes
+    private static final Response AUTH_SUCCEEDED = new SMTPResponse(SMTPRetCode.AUTH_OK, DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.SECURITY_OTHER) + " Authentication Successful").immutable();
+    private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH_CREDENTIALS_INVALID) + " Authentication Failed").immutable();
+    private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Unrecognized Authentication Type").immutable();
+    private static final Response SERVER_ERROR = new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.SECURITY_OTHER) + " Unable to process request").immutable();
 
     private ImmutableList<SaslMechanism> saslMechanisms = ImmutableList.of();
     private Optional<SaslAuthenticator> saslAuthenticator = Optional.empty();
@@ -144,7 +145,7 @@ public class AuthCmdHandler
             return handleFirstSaslStep(session, authType, exchange);
         } catch (IllegalArgumentException e) {
             LOGGER.info("Could not decode parameters for AUTH {}", authType, e);
-            return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, "Could not decode parameters for AUTH " + authType);
+            return undecodableParameters(authType);
         }
     }
 
@@ -188,7 +189,7 @@ public class AuthCmdHandler
             LOGGER.info("Could not decode parameters for AUTH {}", authType, e);
             session.popLineHandler();
             closeExchange(session);
-            return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, "Could not decode parameters for AUTH " + authType);
+            return undecodableParameters(authType);
         } catch (RuntimeException e) {
             session.popLineHandler();
             closeExchange(session);
@@ -235,7 +236,7 @@ public class AuthCmdHandler
                 return AUTH_ABORTED;
             }
             if (!SaslCodec.isEmptyClientResponse(bytes)) {
-                return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, "Could not decode parameters for AUTH " + authType);
+                return undecodableParameters(authType);
             }
             return applySaslSuccess(session, authType, exchange, success);
         } finally {
@@ -278,7 +279,7 @@ public class AuthCmdHandler
 
             return AuthHookSaslMechanism.terminalResponse(exchange)
                 .orElseGet(() -> switch (failure.type()) {
-                    case MALFORMED -> new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, "Could not decode parameters for AUTH " + authType);
+                    case MALFORMED -> undecodableParameters(authType);
                     case SERVER_ERROR -> SERVER_ERROR;
                     case INVALID_CREDENTIALS, AUTHENTICATION_FAILED, USER_DOES_NOT_EXIST, DELEGATION_FORBIDDEN -> AUTH_FAILED;
                 });
@@ -303,6 +304,11 @@ public class AuthCmdHandler
             session.removeAttachment(ACTIVE_SASL_EXCHANGE, ProtocolSession.State.Connection)
                 .ifPresent(SaslExchange::close);
         }
+    }
+
+    private static Response undecodableParameters(String authType) {
+        return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
+            DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Could not decode parameters for AUTH " + authType);
     }
 
     private Response challengeResponse(Optional<byte[]> payload) {

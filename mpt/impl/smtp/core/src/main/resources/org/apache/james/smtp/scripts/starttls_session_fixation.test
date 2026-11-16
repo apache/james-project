@@ -14,7 +14,7 @@ S: 334 VXNlcm5hbWU6
 C: Ym9iQG15ZG9tYWluLnRsZA==
 S: 334 UGFzc3dvcmQ6
 C: c2VjcmV0
-S: 235 Authentication Successful
+S: 235 2.7.0 Authentication Successful
 
 
 C: mail from:<bob@mydomain.tld>

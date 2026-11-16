@@ -248,7 +248,7 @@ class CrowdsecIntegrationTest {
                     smtpProtocol.sendCommand("AUTH PLAIN");
                     smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + BOB + "\0" + BAD_PASSWORD + "\0").getBytes(UTF_8)));
                     assertThat(smtpProtocol.getReplyString())
-                        .contains("535 Authentication Failed");
+                        .contains("535 5.7.8 Authentication Failed");
                 }));
 
             // THEN SMTP usage from the IP would be blocked upon the EHLO command. CrowdSec takes time to processing the ban decision therefore the await below.
@@ -271,7 +271,7 @@ class CrowdsecIntegrationTest {
                     smtpProtocol.sendCommand("AUTH PLAIN");
                     smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + BOB + "\0" + BAD_PASSWORD + "\0").getBytes(UTF_8)));
                     assertThat(smtpProtocol.getReplyString())
-                        .contains("535 Authentication Failed");
+                        .contains("535 5.7.8 Authentication Failed");
                 }));
 
             // THEN SMTP usage from the client would be blocked upon the EHLO command.
@@ -294,7 +294,7 @@ class CrowdsecIntegrationTest {
                     smtpProtocol.sendCommand("AUTH PLAIN");
                     smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + BOB + "\0" + BAD_PASSWORD + "\0").getBytes(UTF_8)));
                     assertThat(smtpProtocol.getReplyString())
-                        .contains("535 Authentication Failed");
+                        .contains("535 5.7.8 Authentication Failed");
                 }));
 
             CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)

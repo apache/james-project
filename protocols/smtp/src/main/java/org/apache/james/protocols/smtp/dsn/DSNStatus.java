@@ -341,6 +341,11 @@ public class DSNStatus {
      */
     public static final String SECURITY_INTEGRITY = "7.7";
 
+    /**
+     * Authentication credentials invalid (RFC 4954 section 6)
+     */
+    public static final String SECURITY_AUTH_CREDENTIALS_INVALID = "7.8";
+
 
     // get methods
 
