@@ -1045,6 +1045,45 @@ public abstract class AbstractSMTPServerTest {
     }
 
     @Test
+    void refusedSecondMailFromShouldNotResetTheTransaction() throws Exception {
+        TestMessageHook hook = new TestMessageHook();
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(hook));
+            server.bind();
+
+            SMTPClient client = createClient();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+            client.sendCommand(greetingCommand(), "localhost");
+
+            client.setSender(SENDER);
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).as("Reply=" + client.getReplyString()).isTrue();
+            client.addRecipient(RCPT1);
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).as("Reply=" + client.getReplyString()).isTrue();
+
+            client.setSender("other@sender");
+            assertThat(client.getReplyCode()).as("Reply=" + client.getReplyString()).isEqualTo(503);
+
+            client.addRecipient(RCPT2);
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).as("Reply=" + client.getReplyString()).isTrue();
+            client.sendShortMessageData(MSG1);
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode())).as("Reply=" + client.getReplyString()).isTrue();
+
+            client.quit();
+            client.disconnect();
+
+            Iterator<MailEnvelope> queued = hook.getQueued().iterator();
+            assertThat(queued.hasNext()).isTrue();
+            checkEnvelope(queued.next(), SENDER, Arrays.asList(RCPT1, RCPT2), MSG1);
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
     void mailFromWithNonAsciiSenderShouldBeRejectedWhenSmtpUtf8NotAsserted() throws Exception {
         ProtocolServer server = null;
         try {
