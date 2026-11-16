@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import jakarta.mail.Flags;
 
@@ -55,13 +54,14 @@ import com.google.common.collect.ImmutableSet;
  */
 public interface StatusResponse extends ImapResponseMessage {
 
+    // RFC 9051 section 7.1: BADCHARSET lists the supported charsets, once each: their canonical names only,
+    // without the Java aliases nor the non standard "x-" charsets
     Set<String> AVAILABLE_CHARSET_NAMES =
         Charset.availableCharsets()
             .values()
             .stream()
-            .flatMap(charset -> Stream.concat(
-                Stream.of(charset.name()),
-                charset.aliases().stream()))
+            .map(Charset::name)
+            .filter(name -> !name.regionMatches(true, 0, "x-", 0, 2))
             .collect(ImmutableSet.toImmutableSet());
 
     /**
