@@ -68,6 +68,10 @@ public class StatusCommandParser extends AbstractImapCommandParser {
             request.nextWordChar();
         }
         request.consumeChar(')');
+        // RFC 9051 section 9: "(" status-att *(SP status-att) ")" holds at least one item (as does RFC 5819 LIST-STATUS)
+        if (words.isEmpty()) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "At least one status item is expected");
+        }
         return words;
     }
 
