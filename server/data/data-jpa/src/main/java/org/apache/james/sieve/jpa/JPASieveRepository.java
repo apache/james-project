@@ -106,12 +106,17 @@ public class JPASieveRepository implements SieveRepository {
         transactionRunner.runAndHandleException(Throwing.<EntityManager>consumer(entityManager -> {
             try {
                 haveSpace(username, name, content.length());
-                JPASieveScript jpaSieveScript = JPASieveScript.builder()
+                Optional<JPASieveScript> existingScript = findSieveScript(username, name, entityManager);
+                if (existingScript.isPresent()) {
+                    // Replacing a script keeps its activation state
+                    existingScript.get().updateContent(content);
+                } else {
+                    entityManager.persist(JPASieveScript.builder()
                         .username(username.asString())
                         .scriptName(name.getValue())
                         .scriptContent(content)
-                        .build();
-                entityManager.persist(jpaSieveScript);
+                        .build());
+                }
             } catch (QuotaExceededException | StorageException e) {
                 rollbackTransactionIfActive(entityManager.getTransaction());
                 throw e;

@@ -115,12 +115,13 @@ public class CassandraSieveRepository implements SieveRepository {
     public void putScript(Username username, ScriptName name, ScriptContent content) throws QuotaExceededException {
         Function<Long, Mono<Void>> updateAndInsert = spaceUsed -> Flux.merge(
                 updateSpaceUsed(username, spaceUsed),
-                cassandraSieveDAO.insertScript(username,
+                isActive(username, name)
+                    .flatMap(isActive -> cassandraSieveDAO.insertScript(username,
                         Script.builder()
                                 .name(name)
                                 .content(content)
-                                .isActive(false)
-                                .build()))
+                                .isActive(isActive)
+                                .build())))
                 .then();
 
         reThrowQuotaExceededException(() ->
@@ -170,6 +171,11 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public void setActive(Username username, ScriptName name) throws ScriptNotFoundException {
+        // RFC 5804 section 2.8: the active script stays active when the script to activate does not exist
+        if (!name.equals(SieveRepository.NO_SCRIPT_NAME)
+            && !cassandraSieveDAO.getScript(username, name).hasElement().block()) {
+            throw new ScriptNotFoundException();
+        }
         Mono<Boolean> activateNewScript =
             unActivateOldScript(username)
                 .then(updateScriptActivation(username, name, true))
@@ -179,6 +185,15 @@ public class CassandraSieveRepository implements SieveRepository {
         if (activateNewScript.blockOptional().isEmpty()) {
             throw new ScriptNotFoundException();
         }
+    }
+
+    /**
+     * The active script table is the source of truth: replacing the active script keeps it active.
+     */
+    private Mono<Boolean> isActive(Username username, ScriptName name) {
+        return cassandraActiveScriptDAO.getActiveScriptInfo(username)
+            .map(activeScriptInfo -> activeScriptInfo.getName().equals(name))
+            .defaultIfEmpty(false);
     }
 
     private Mono<Void> unActivateOldScript(Username username) {
