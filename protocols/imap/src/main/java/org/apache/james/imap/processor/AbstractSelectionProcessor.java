@@ -31,6 +31,8 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import jakarta.mail.Flags;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.events.EventBus;
 import org.apache.james.imap.api.ImapConstants;
@@ -50,6 +52,7 @@ import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest.ClientSpecifiedUidValidity;
 import org.apache.james.imap.message.response.ExistsResponse;
+import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.imap.message.response.RecentResponse;
 import org.apache.james.imap.processor.base.SelectedMailboxImpl;
 import org.apache.james.mailbox.MailboxCounterCorrector;
@@ -181,7 +184,13 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                                 .flatMap(mailbox -> respondVanished(selected, ranges, metaData.getUidNext(), mailbox, session.getMailboxSession(), responder)))
                             .orElse(Mono.empty());
 
+                        Mono<Void> changedFlagsResponses = uidSet(request, metaData)
+                            .map(uidSet -> Mono.from(getMailboxManager().getMailboxReactive(selected.getMailboxId(), session.getMailboxSession()))
+                                .flatMap(mailbox -> respondChangedFlags(selected, uidSet, request.getKnownModSeq(), mailbox, session.getMailboxSession(), responder)))
+                            .orElse(Mono.empty());
+
                         return vanishedResponses
+                            .then(changedFlagsResponses)
                             .then(Mono.fromRunnable(() -> {
                                 taggedOk(responder, request, metaData, HumanReadableText.SELECT);
                                 resetSavedSequenceSet(session);
@@ -196,6 +205,32 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
                 resetSavedSequenceSet(session);
                 return Mono.<Void>empty();
+            })
+            .then();
+    }
+
+    /**
+     * RFC 7162 section 3.2.5.1: FETCH responses, with UIDs, for the messages whose flags changed since the
+     * mod-sequence known by the client.
+     */
+    private Mono<Void> respondChangedFlags(SelectedMailbox selected, UidRange[] uidSet, long knownModSeq,
+                                           MessageManager mailbox, MailboxSession mailboxSession, Responder responder) {
+        return Flux.fromArray(uidSet)
+            .map(UidRange::toMessageRange)
+            .concatMap(range -> Flux.from(mailbox.listMessagesMetadata(range, mailboxSession)))
+            .filter(metaData -> metaData.getModSeq().asLong() > knownModSeq)
+            .doOnNext(metaData -> {
+                MessageUid uid = metaData.getComposedMessageId().getUid();
+                selected.msn(uid).foldSilent(() -> null, msn -> {
+                    Flags flags = metaData.getFlags();
+                    if (selected.isRecent(uid)) {
+                        flags.add(Flags.Flag.RECENT);
+                    } else {
+                        flags.remove(Flags.Flag.RECENT);
+                    }
+                    responder.respond(new FetchResponse(msn, flags, uid, null, metaData.getModSeq(), null, null, null, null, null, null, null, null));
+                    return null;
+                });
             })
             .then();
     }
