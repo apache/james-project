@@ -2698,7 +2698,7 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed."));
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE %d) +FLAGS.SILENT (\\Seen)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
-            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 35] STORE failed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 35] STORE failed.")))
                 .isNotNull();
         }
 
@@ -2718,7 +2718,7 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed."));
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE 0) +FLAGS.SILENT (dcustom)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
-            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 35] STORE failed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 35] STORE failed.")))
                 .isNotNull();
         }
 
@@ -2738,7 +2738,7 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed."));
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 STORE 35 (UNCHANGEDSINCE 0) +FLAGS.SILENT (dcustom)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
-            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 35] STORE failed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 35] STORE failed.")))
                 .isNotNull();
         }
 
@@ -2758,7 +2758,7 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed."));
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE 0) +FLAGS.SILENT (\\Answered)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
-            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 35] STORE failed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 35] STORE failed.")))
                 .isNotNull();
         }
 
@@ -2780,7 +2780,7 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed."));
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 5,7,9 (UNCHANGEDSINCE %d) +FLAGS.SILENT (\\Seen)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
-            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 5,7,9] STORE failed.")))
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 5,7,9] STORE failed.")))
                 .filteredOn(s -> s.contains("FETCH"))
                 .isEmpty();
         }
