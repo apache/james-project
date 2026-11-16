@@ -23,6 +23,7 @@ package org.apache.james.managesieve.jsieve;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
@@ -61,7 +62,7 @@ public class Parser implements SieveParser {
             throw ex;
         } catch (ParseException | RuntimeException | Error ex) {
             // jSieve also reports invalid scripts as unchecked exceptions (number overflow) or errors (lexical errors, invalid escapes)
-            throw new SyntaxException(ex);
+            throw new SyntaxException(Optional.ofNullable(ex.getMessage()).orElseGet(ex::toString), ex);
         }
         return EMPTY_WARNINGS;
     }

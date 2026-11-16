@@ -54,6 +54,7 @@ import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.user.api.UsersRepository;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -68,6 +69,7 @@ public class CoreProcessor implements CoreCommands {
 
     public static final String IMPLEMENTATION_DESCRIPTION = "Apache ManageSieve v1.0";
     public static final String MANAGE_SIEVE_VERSION = "1.0";
+    private static final Splitter LINE_SPLITTER = Splitter.on(CharMatcher.anyOf("\r\n")).trimResults().omitEmptyStrings();
 
     private final SieveRepository sieveRepository;
     private final SieveParser parser;
@@ -299,13 +301,13 @@ public class CoreProcessor implements CoreCommands {
         } catch (StorageException e) {
             return no("Storage Exception : " + e.getMessage());
         } catch (SyntaxException e) {
-            return sanitizeString("NO \"Syntax Error: " + e.getMessage() + "\"");
+            return no("Syntax Error: " + e.getMessage());
         } catch (ManageSieveException e) {
-            return sanitizeString("NO \"ManageSieveException: " + e.getMessage() + "\"");
+            return no("ManageSieveException: " + e.getMessage());
         } catch (SieveRepositoryException e) {
-            return sanitizeString("NO \"SieveRepositoryException: " + e.getMessage() + "\"");
+            return no("SieveRepositoryException: " + e.getMessage());
         }  catch (IOException e) {
-            return "NO \"" + e.getMessage() + "\"";
+            return no(String.valueOf(e.getMessage()));
         }
     }
 
@@ -346,13 +348,13 @@ public class CoreProcessor implements CoreCommands {
     }
 
     /**
-     * RFC 5804 section 4: the human readable text of a response is a quoted string.
+     * RFC 5804 section 4: the human readable text of a response is a quoted string, which can not span several lines.
+     * Only the first line of multi-line messages (like jSieve parse errors) is kept.
      */
     private static String no(String message) {
-        return "NO " + ParserUtils.quote(message);
-    }
-
-    private String sanitizeString(String message) {
-        return Joiner.on("\r\n").join(Splitter.on('\n').split(message));
+        String firstLine = LINE_SPLITTER.splitToStream(message)
+            .findFirst()
+            .orElse("");
+        return "NO " + ParserUtils.quote(firstLine);
     }
 }

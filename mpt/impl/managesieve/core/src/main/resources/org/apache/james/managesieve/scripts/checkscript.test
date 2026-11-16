@@ -51,5 +51,4 @@ C: CHECKSCRIPT {31+}
 C: #comment
 C: InvalidSieveCommand
 C:
-S: NO "Syntax Error: org.apache.jsieve.parser.generated.ParseException: Encountered "<EOF>" at line 2, column 21.
-
+S: NO "Syntax Error: Encountered \\"<EOF>\\" at line 2, column 21\."
