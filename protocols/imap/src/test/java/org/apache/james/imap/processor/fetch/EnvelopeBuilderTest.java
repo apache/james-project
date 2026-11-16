@@ -29,6 +29,8 @@ import java.util.List;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.model.Headers;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.DecoderUtil;
 import org.junit.jupiter.api.Test;
 
 class EnvelopeBuilderTest {
@@ -69,5 +71,19 @@ class EnvelopeBuilderTest {
             new Header("From", "=?UTF-8?Q?Ren=C3=A9?= <rene@domain.tld>")));
 
         assertThat(envelope.getFrom()[0].getPersonalName()).startsWith("=?").endsWith("?=");
+    }
+
+    @Test
+    void rawUtf8HeadersShouldBeDecoded() throws Exception {
+        FetchResponse.Envelope envelope = new EnvelopeBuilder().buildEnvelope(headers(
+            new Header("From", "Ålice <alice@tmail.local>"),
+            new Header("Subject", "é 日本")));
+
+        assertThat(envelope.getFrom()[0].getHostName()).isEqualTo("tmail.local");
+        assertThat(envelope.getFrom()[0].getMailboxName()).isEqualTo("alice");
+        assertThat(DecoderUtil.decodeEncodedWords(envelope.getFrom()[0].getPersonalName(), DecodeMonitor.SILENT))
+            .isEqualTo("Ålice");
+        assertThat(DecoderUtil.decodeEncodedWords(envelope.getSubject(), DecodeMonitor.SILENT))
+            .isEqualTo("é 日本");
     }
 }

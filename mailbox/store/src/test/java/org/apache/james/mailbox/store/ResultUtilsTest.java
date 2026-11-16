@@ -21,12 +21,16 @@ package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.FetchGroup.Profile;
 import org.apache.james.mailbox.model.PartContentDescriptor;
+import org.apache.james.mime4j.util.ByteSequence;
+import org.apache.james.mime4j.util.ContentUtil;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -63,4 +67,17 @@ class ResultUtilsTest {
         assertThat(ResultUtils.haveValidContent(fetchGroup)).isFalse();
     }
 
+    @Test
+    void decodeRawValueShouldDecodeUtf8() {
+        ByteSequence raw = ContentUtil.encode(StandardCharsets.UTF_8, "Subject: é");
+
+        assertThat(ResultUtils.decodeRawValue(raw, 9, raw.length() - 9)).isEqualTo("é");
+    }
+
+    @Test
+    void decodeRawValueShouldFallbackToIso88591WhenNotUtf8() {
+        ByteSequence raw = ContentUtil.encode(StandardCharsets.ISO_8859_1, "Subject: é");
+
+        assertThat(ResultUtils.decodeRawValue(raw, 9, raw.length() - 9)).isEqualTo("é");
+    }
 }
