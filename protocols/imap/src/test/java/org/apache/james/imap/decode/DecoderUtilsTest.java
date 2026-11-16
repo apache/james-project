@@ -111,6 +111,27 @@ class DecoderUtilsTest {
             .isInstanceOf(DecodingException.class);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "31-Feb-2026 10:00:00 +0000",
+        "29-Feb-2026 10:00:00 +0000",
+        "31-Apr-2026 10:00:00 +0000",
+        "00-Jan-2026 10:00:00 +0000",
+        "32-Jan-2026 10:00:00 +0000",
+        "01-Jan-2026 24:00:00 +0000",
+        "01-Jan-2026 10:60:00 +0000",
+        "01-Jan-2026 10:00:61 +0000"
+    })
+    void decodeShouldThrowOnImpossibleDateTime(String datetime) {
+        assertThatThrownBy(() -> DecoderUtils.decodeDateTime(datetime))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeShouldAcceptLeapDays() throws Exception {
+        assertThat(DecoderUtils.decodeDateTime("29-Feb-2024 10:00:00 +0000")).isNotNull();
+    }
+
     @Test
     void decodeDateTimeShouldThrowOnNull() {
         assertThatThrownBy(() -> DecoderUtils.decodeDateTime(null))
