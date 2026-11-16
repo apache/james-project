@@ -20,6 +20,7 @@
 package org.apache.james.imap.decode;
 
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -124,15 +125,20 @@ public final class DecoderUtils {
 
             char hourHigh = chars.charAt(12);
             char hourLow = chars.charAt(13);
-            int hour = applyHourOffset(offset, decodeNumber(hourHigh, hourLow));
+            int rawHour = decodeNumber(hourHigh, hourLow);
 
             char minuteHigh = chars.charAt(15);
             char minuteLow = chars.charAt(16);
-            int minute = applyMinuteOffset(offset, decodeNumber(minuteHigh, minuteLow));
+            int rawMinute = decodeNumber(minuteHigh, minuteLow);
 
             char secondHigh = chars.charAt(18);
             char secondLow = chars.charAt(19);
             int second = decodeNumber(secondHigh, secondLow);
+
+            // The calendar is lenient: reject impossible values rather than silently rolling them over
+            assertValidDateTime(chars, year, month, day, rawHour, rawMinute, second);
+            int hour = applyHourOffset(offset, rawHour);
+            int minute = applyMinuteOffset(offset, rawMinute);
 
             GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("GMT"), Locale.US);
             calendar.clear();
@@ -170,6 +176,13 @@ public final class DecoderUtils {
 
     private static int applyHourOffset(int offset, int hours) {
         return hours - (offset / 100);
+    }
+
+    private static void assertValidDateTime(CharSequence chars, int year, int calendarMonth, int day, int hour, int minute, int second) throws DecodingException {
+        int lengthOfMonth = YearMonth.of(year, calendarMonth + 1).lengthOfMonth();
+        if (day < 1 || day > lengthOfMonth || hour > 23 || minute > 59 || second > 60) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid date-time " + chars);
+        }
     }
 
     public static int decodeNumber(char high, char low) throws DecodingException {
