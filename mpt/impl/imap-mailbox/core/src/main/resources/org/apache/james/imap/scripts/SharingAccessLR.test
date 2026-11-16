@@ -102,3 +102,13 @@ S: F11 OK FETCH completed.
 
 C: F15 EXPUNGE
 S: F15 NO EXPUNGE failed. Mailbox is read only.
+
+# Without the 's' right, a FETCH of the body succeeds without setting \Seen (RFC 4314 section 4)
+C: F16 FETCH 1 (BODY[]<0.4>)
+S: \* 1 FETCH \(BODY\[\]<0> \{4\}
+S: .{4}\)
+S: F16 OK FETCH completed.
+
+C: F17 FETCH 1 FLAGS
+S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
+S: F17 OK FETCH completed.
