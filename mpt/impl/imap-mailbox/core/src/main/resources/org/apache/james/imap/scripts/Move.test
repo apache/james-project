@@ -43,6 +43,7 @@ C: a4 MOVE 2:3 moved
 S: \* OK \[COPYUID \d+ \d+:\d+ \d+:\d+\] Moved UIDs.
 S: \* 2 EXPUNGE
 S: \* 2 EXPUNGE
+S: \* 2 RECENT
 S: a4 OK MOVE completed.
 
 # Check there's 2 messages in the moved mailbox
