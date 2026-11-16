@@ -275,6 +275,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
                             .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                             .build()
                             .toQuery())
+                        .should(headersContain(textCriterion.getOperator().getValue()))
                         .build()
                         .toQuery();
                 } else {
@@ -305,6 +306,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
                             .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                             .build()
                             .toQuery())
+                        .should(headersContain(textCriterion.getOperator().getValue()))
                         .build()
                         .toQuery();
                 }
@@ -560,6 +562,32 @@ public class DefaultCriterionConverter implements CriterionConverter {
             .field(JsonMessageConstants.UID)
             .lte(JsonData.of(numericRange.getHighValue().asLong()))
             .gte(JsonData.of(numericRange.getLowValue().asLong()))
+            .build()
+            .toQuery();
+    }
+
+    /**
+     * RFC 9051 section 6.4.4: TEXT matches the header or the body of the message.
+     */
+    protected Query headersContain(String value) {
+        return new BoolQuery.Builder()
+            .should(new MatchQuery.Builder()
+                .field(JsonMessageConstants.SUBJECT)
+                .query(new FieldValue.Builder().stringValue(value).build())
+                .operator(Operator.And)
+                .build()
+                .toQuery())
+            .should(new NestedQuery.Builder()
+                .path(JsonMessageConstants.HEADERS)
+                .query(new MatchQuery.Builder()
+                    .field(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.VALUE)
+                    .query(new FieldValue.Builder().stringValue(value).build())
+                    .operator(Operator.And)
+                    .build()
+                    .toQuery())
+                .scoreMode(ChildScoreMode.Avg)
+                .build()
+                .toQuery())
             .build()
             .toQuery();
     }
