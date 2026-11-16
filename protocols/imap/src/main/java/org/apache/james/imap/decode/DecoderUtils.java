@@ -83,6 +83,9 @@ public final class DecoderUtils {
                 //
                 // See IMAP-316
                 throw new DecodingException(HumanReadableText.INVALID_SYSTEM_FLAG, "\\Recent flag is now allowed to set.");
+            } else if (flagString.indexOf('\\', 1) >= 0) {
+                // flag-keyword = atom and flag-extension = "\" atom: a backslash can only start a flag
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid flag " + flagString);
             } else {
                 // RFC3501 allows novel flags
                 flags.add(flagString);

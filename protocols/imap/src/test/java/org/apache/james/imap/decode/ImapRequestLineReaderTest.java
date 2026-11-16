@@ -128,4 +128,21 @@ class ImapRequestLineReaderTest {
 
         assertThat(lineReader.consumeQuoted()).isEqualTo(value);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"(bad\"kw)", "(bad(paren)", "(\\Bogus\\x)"})
+    void flagListShouldRejectFlagsThatAreNotAtoms(String flagList) {
+        inputStream = new ByteArrayInputStream((flagList + "\r\n").getBytes(StandardCharsets.US_ASCII));
+        lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> lineReader.flagList()).isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void flagListShouldAcceptSystemFlagsAndKeywords() throws Exception {
+        inputStream = new ByteArrayInputStream("(\\Seen $Label1 \\Draft)\r\n".getBytes(StandardCharsets.US_ASCII));
+        lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThat(lineReader.flagList().getUserFlags()).containsExactly("$Label1");
+    }
 }

@@ -132,6 +132,18 @@ public abstract class ImapRequestLineReader {
         }
     }
 
+    /**
+     * flag = "\" atom / atom: ATOM-CHARs, the backslash being accepted to introduce system flags.
+     */
+    public static class FlagCharValidator extends AtomCharValidator {
+        public static CharacterValidator INSTANCE = new FlagCharValidator();
+
+        @Override
+        public boolean isValid(char chr) {
+            return chr == '\\' || super.isValid(chr);
+        }
+    }
+
     public static class TagCharValidator extends AtomCharValidator {
         public static CharacterValidator INSTANCE = new TagCharValidator();
 
@@ -772,7 +784,7 @@ public abstract class ImapRequestLineReader {
         nextWordChar();
         consumeChar('(');
         while (nextChar() != ')') {
-            String nextWord = consumeWord(NoopCharValidator.INSTANCE, true);
+            String nextWord = consumeWord(FlagCharValidator.INSTANCE, true);
             if (nextWord.isEmpty()) {
                 // Throw to avoid an infinite loop...
                 throw new DecodingException(HumanReadableText.FAILED, "Empty word encountered");
@@ -792,7 +804,7 @@ public abstract class ImapRequestLineReader {
         Flags flags = new Flags();
         nextWordChar();
 
-        String nextFlag = consumeWord(NoopCharValidator.INSTANCE);
+        String nextFlag = consumeWord(FlagCharValidator.INSTANCE);
         DecoderUtils.setFlag(nextFlag, flags);
         return flags;
     }
