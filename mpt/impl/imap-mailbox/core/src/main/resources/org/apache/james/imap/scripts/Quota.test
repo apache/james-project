@@ -114,7 +114,7 @@ S: \* QUOTA #private&imapuser \(STORAGE 1 5242880\)
 S: A007 OK GETQUOTA completed.
 
 C: A007 SETQUOTA #private&imapuser (MESSAGE 4096) (STORAGE 5242880)
-S: A007 NO SETQUOTA You need the Full admin rights right to perform command SETQUOTA on mailbox Can not perform SETQUOTA commands.
+S: A007 NO SETQUOTA failed. Insufficient rights.
 
 C: A005 APPEND #private.imapuser.test (\Seen \Draft) "09-Apr-2008 15:17:51 +0200" {310+}
 C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
