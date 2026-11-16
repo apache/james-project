@@ -3293,6 +3293,28 @@ class IMAPServerTest {
         }
 
         @Test
+        void selectShouldReturnTheMessagesWhoseFlagsChangedSinceTheKnownModSeq() throws Exception {
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            // A first selection clears \Recent, which changes the mod-sequences
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\na3 UNSELECT\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a3 OK UNSELECT completed."));
+
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
+            UidValidity uidValidity = inbox.getMailboxEntity().getUidValidity();
+            inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(5)), mailboxSession);
+
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            String responses = String.join("", readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
+                .replace("\u0000", "");
+            assertThat(responses).containsOnlyOnce(" FETCH ");
+            assertThat(responses).containsPattern("\\* 5 FETCH \\(MODSEQ \\(\\d+\\) FLAGS \\(\\\\Answered[^)]*\\) UID 5\\)");
+        }
+
+        @Test
         void enableQRESYNCShouldReturnHighestModseq() throws Exception {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
