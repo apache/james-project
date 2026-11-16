@@ -89,7 +89,8 @@ class AllowedUnauthenticatedSenderTest {
 
         @Test
         void authenticatedUserShouldBypassAllowedSenderRestriction() throws Exception {
-            try (SmtpClient client = SmtpClient.connectWithProxy(testSystem.getBindedAddress(), "127.0.0.1")) {
+            // AUTH is only announced, hence accepted, outside the authorized networks
+            try (SmtpClient client = SmtpClient.connectWithProxy(testSystem.getBindedAddress(), "192.0.2.10")) {
                 client.authenticate();
                 client.sendCommand("EHLO localhost");
                 assertThat(client.sendCommand("MAIL FROM: <forbidden@example.com>")).isEqualTo(250);

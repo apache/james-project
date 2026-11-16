@@ -16,6 +16,7 @@ Changes to apply between 3.9.x and 3.10.0 will be reported here.
 
 Change list:
  - [SMTP authentication requires TLS by default](#smtp-authentication-requires-tls-by-default)
+ - [SMTP AUTH is refused when not announced](#smtp-auth-is-refused-when-not-announced)
  - [Adding metadata column to blob tables](#adding-metadata-column-to-blob-tables)
  - [Adding thread_id column to Cassandra email_query_view_sent_at and email_query_view_received_at tables](#adding-thread_id-column-to-cassandra-email_query_view_sent_at-and-email_query_view_received_at-tables)
  - [Adding thread_id column to Postgresql email_query_view table](#adding-thread_id-column-to-postgresql-email_query_view-table)
@@ -68,6 +69,33 @@ Deployments that intentionally allow clear-text SMTP authentication must add the
 ```xml
 <auth>
     <requireSSL>false</requireSSL>
+</auth>
+```
+
+### SMTP AUTH is refused when not announced
+
+Date: 17/11/2026
+
+Concerned products: SMTP servers whose clients authenticate although `auth.announce` (or the deprecated
+`authRequired`) does not announce authentication to them
+
+The SMTP `AUTH` command used to be accepted even when authentication was not announced in the `EHLO` reply.
+It is now only accepted on connections to which authentication is announced. Otherwise it is answered
+`502 5.5.1 Authentication not available`, or `538 5.7.11 Encryption required for requested authentication mechanism`
+when authentication would be announced once the connection is encrypted.
+
+This concerns:
+
+ - servers that do not set `auth.announce` nor `authRequired`: the default maps to `never`.
+ - servers using `forUnauthorizedAddresses`: clients within `authorizedAddresses` can no longer authenticate.
+
+The sample configurations now announce authentication with `always` on the submission ports (465 and 587), so that
+clients within `authorizedAddresses` (`127.0.0.0/8`) can still authenticate there. Deployments whose clients are
+expected to authenticate must set, on each concerned `smtpserver.xml` entry:
+
+```xml
+<auth>
+    <announce>always</announce>
 </auth>
 ```
 
