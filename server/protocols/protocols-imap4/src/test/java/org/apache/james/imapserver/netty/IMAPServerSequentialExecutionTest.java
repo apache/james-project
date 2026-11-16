@@ -134,6 +134,28 @@ class IMAPServerSequentialExecutionTest extends AbstractIMAPServerTest {
     }
 
     @Test
+    void aRequestReadWhileTheQueuedOnesWaitShouldNotOvertakeThem() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+
+        for (int i = 0; i < 20; i++) {
+            String tag = "A" + i;
+            String mailbox = "p" + i;
+            StringBuilder replies = new StringBuilder();
+            clientConnection.write(ByteBuffer.wrap((tag + "a CREATE " + mailbox + "\r\n"
+                + tag + "b CREATE " + mailbox + ".c\r\n"
+                + tag + "c DELETE " + mailbox + "\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> replies.append(s).indexOf(tag + "a OK") >= 0);
+            clientConnection.write(ByteBuffer.wrap((tag + "d LIST \"\" \"" + mailbox + "*\"\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> replies.append(s).indexOf(tag + "c OK") >= 0 && replies.indexOf(tag + "d OK") >= 0);
+
+            String answers = replies.toString();
+            assertThat(answers.indexOf(tag + "b OK")).isLessThan(answers.indexOf(tag + "c OK"));
+            assertThat(answers.indexOf(tag + "c OK")).isLessThan(answers.indexOf(tag + "d OK"));
+        }
+    }
+
+    @Test
     void fetchShouldBackPressureWhenNoRead() throws Exception {
         String msgIn = "MIME-Version: 1.0\r\n\r\nCONTENT\r\n\r\n" + "0123456789\r\n0123456789\r\n0123456789\r\n".repeat(1024);
         IntStream.range(0, 500)
