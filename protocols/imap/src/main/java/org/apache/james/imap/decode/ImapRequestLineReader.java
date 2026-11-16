@@ -62,6 +62,12 @@ import com.google.common.base.CharMatcher;
  * lookahead=1 on the underlying character stream. TODO need to look at encoding
  */
 public abstract class ImapRequestLineReader {
+    public record LiteralHeader(long size, boolean synchronizing, boolean continuationSent) {
+        public boolean isSentByTheClient() {
+            return !synchronizing || continuationSent;
+        }
+    }
+
     /**
      * Provides the ability to ensure characters are part of a permitted set.
      */
@@ -304,6 +310,7 @@ public abstract class ImapRequestLineReader {
         return (chr == '"' || chr == '\\');
     }
 
+    private Optional<LiteralHeader> unreadLiteral = Optional.empty();
     protected char nextChar; // unknown
     protected boolean nextSeen = false;
     private final StringBuilder stringBuilder = new StringBuilder();
@@ -706,19 +713,59 @@ public abstract class ImapRequestLineReader {
         consumeChar('}');
         consumeCRLF();
 
+        long announcedSize = parseLiteralSize(stringBuilder.toString());
+        unreadLiteral = Optional.of(new LiteralHeader(announcedSize, synchronizedLiteral, false));
+        // Check the size before inviting the client to send the literal
+        if (announcedSize > Integer.MAX_VALUE) {
+            throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Literal size " + announcedSize + " is too big");
+        }
+        int size = (int) announcedSize;
+        assertLiteralSizeAccepted(size);
+
         if (synchronizedLiteral) {
             commandContinuationRequest();
+            unreadLiteral = Optional.of(new LiteralHeader(announcedSize, true, true));
         }
 
+        Literal literal = read(size, extraCRLF);
+        unreadLiteral = Optional.empty();
+        return ImmutablePair.of(size, literal);
+    }
+
+    private long parseLiteralSize(String size) throws DecodingException {
         try {
-            int size = Integer.parseInt(stringBuilder.toString());
-            if (size < 0) {
+            long result = Long.parseLong(size);
+            if (result < 0) {
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a valid positive number as literal size");
             }
-            return ImmutablePair.of(size, read(size, extraCRLF));
+            return result;
         } catch (NumberFormatException e) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a valid positive number as literal size");
         }
+    }
+
+    /**
+     * Called before the command continuation request: throw to reject a literal size before the client sends the literal.
+     */
+    protected void assertLiteralSizeAccepted(int size) throws DecodingException {
+
+    }
+
+    /**
+     * To be called by {@link #read(int, boolean)} implementations once they start consuming the literal content.
+     */
+    protected void literalContentConsumed() {
+        unreadLiteral = Optional.empty();
+    }
+
+    /**
+     * The literal whose header was read but whose content was not, if any.
+     *
+     * When the command is rejected, the client still sends the content of a non synchronizing literal, or of a
+     * synchronizing literal it was invited to send: it is not part of the next command.
+     */
+    public Optional<LiteralHeader> unreadLiteral() {
+        return unreadLiteral;
     }
 
     private String decode(Charset charset, ByteBuffer buffer) throws DecodingException {

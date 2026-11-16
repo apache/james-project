@@ -87,6 +87,14 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         return nextChar;
     }
 
+    @Override
+    protected void assertLiteralSizeAccepted(int size) throws DecodingException {
+        int readSoFar = buffer.readerIndex() - initialReaderIndex;
+        if (maxLiteralSize > 0 && ((long) readSoFar + size) > maxLiteralSize) {
+            throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Specified literals total size is greater then the allowed size. " + ((long) readSoFar + size) + " instead of " + maxLiteralSize + " limit.");
+        }
+    }
+
     /**
      * Return a {@link ByteBufInputStream} if the wrapped
      * {@link ByteBuf} contains enough data. If not it will throw a
@@ -117,6 +125,7 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         // Unset the next char.
         nextSeen = false;
         nextChar = 0;
+        literalContentConsumed();
 
 
         try {
