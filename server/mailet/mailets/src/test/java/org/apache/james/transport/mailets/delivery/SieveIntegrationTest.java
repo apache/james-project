@@ -1272,6 +1272,34 @@ class SieveIntegrationTest {
     }
 
     @Test
+    void vacationShouldNotReplyWhenTheUserIsNotARecipientOfTheMessageHeaders() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        testee.service(createMailWithRecipientHeader("To", "undisclosed-recipients:;"));
+
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Cc", "Bcc", "Resent-To", "Resent-Cc", "Resent-Bcc"})
+    void vacationShouldReplyWhenTheUserIsARecipientOfTheMessageHeaders(String headerName) throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        testee.service(createMailWithRecipientHeader(headerName, "Receiver <" + RECEIVER_DOMAIN_COM + ">, other@any.com"));
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+    }
+
+    @Test
+    void vacationShouldReplyWhenTheUserIsInAGroupOfTheMessageHeaders() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        testee.service(createMailWithRecipientHeader("To", "friends: " + RECEIVER_DOMAIN_COM + ", other@any.com;"));
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+    }
+
+    @Test
     void vacationShouldNotReplyToTheUser() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
 
@@ -1637,6 +1665,21 @@ class SieveIntegrationTest {
             .state(Mail.DEFAULT)
             .recipient(RECEIVER_DOMAIN_COM)
             .sender(sender)
+            .build();
+    }
+
+    private FakeMail createMailWithRecipientHeader(String headerName, String headerValue) throws MessagingException {
+        return FakeMail.builder()
+            .name("name")
+            .mimeMessage(
+                MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("Subject")
+                    .setSender("sender@any.com")
+                    .addHeader(headerName, headerValue)
+                    .setText("A text"))
+            .state(Mail.DEFAULT)
+            .recipient(RECEIVER_DOMAIN_COM)
+            .sender("sender@any.com")
             .build();
     }
 
