@@ -28,6 +28,13 @@ import org.junit.jupiter.api.Test;
 
 class StatusResponseTest  {
     @Test
+    void badCharsetShouldListEachCharsetOnceByItsCanonicalName() {
+        assertThat(StatusResponse.ResponseCode.badCharset().getParameters())
+            .contains("UTF-8", "US-ASCII", "ISO-8859-1")
+            .doesNotContain("UTF8", "utf8", "unicode-1-1-utf-8", "X-MODIFIED-UTF-7");
+    }
+
+    @Test
     void testResponseCodeExtension() {
         assertThat(StatusResponse.ResponseCode.createExtension("XEXTENSION")
                         .getCode()).describedAs("Preserve names beginning with X").isEqualTo("XEXTENSION");
