@@ -54,6 +54,9 @@ import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.user.api.UsersRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -62,6 +65,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class CoreProcessor implements CoreCommands {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CoreProcessor.class);
+    // Same limit as the IMAP server
+    static final int MAX_AUTHENTICATION_FAILURES = 3;
 
     interface CommandWrapper {
         String execute() throws ManageSieveException, SieveRepositoryException, IOException;
@@ -245,13 +251,23 @@ public class CoreProcessor implements CoreCommands {
             } else {
                 session.setState(Session.State.UNAUTHENTICATED);
                 session.setUser(null);
-                return "NO authentication failed";
+                return authenticationFailure(session, "NO authentication failed");
             }
         } catch (AuthenticationException e) {
-            return "NO Authentication failed with " + e.getCause().getClass() + " : " + e.getMessage();
+            return authenticationFailure(session, "NO Authentication failed with " + e.getCause().getClass() + " : " + e.getMessage());
         } catch (SyntaxException e) {
             return "NO ManageSieve syntax is incorrect : " + e.getMessage();
         }
+    }
+
+    private String authenticationFailure(Session session, String response) {
+        if (session.recordAuthenticationFailure() >= MAX_AUTHENTICATION_FAILURES) {
+            // Do not offer an unthrottled password guessing channel: the connection gets closed
+            LOGGER.info("Too many ManageSieve authentication failures, closing the connection");
+            session.setState(Session.State.TERMINATED);
+            return "BYE \"Too many authentication failures\"";
+        }
+        return response;
     }
 
     @Override

@@ -51,4 +51,11 @@ public interface Session {
 
     boolean isSslEnabled();
 
+    /**
+     * Records a failed authentication attempt.
+     *
+     * @return the count of failed authentication attempts of this session
+     */
+    int recordAuthenticationFailure();
+
 }

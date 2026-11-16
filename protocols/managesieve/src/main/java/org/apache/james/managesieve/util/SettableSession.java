@@ -30,6 +30,7 @@ public class SettableSession implements Session {
     private State state;
     private Authenticate.SupportedMechanism choosedAuthenticationMechanism;
     private boolean sslEnabled;
+    private int authenticationFailures;
 
     public SettableSession() {
         this.state = State.UNAUTHENTICATED;
@@ -80,4 +81,10 @@ public class SettableSession implements Session {
     public boolean isSslEnabled() {
         return sslEnabled;
     }
+
+    @Override
+    public int recordAuthenticationFailure() {
+        return ++authenticationFailures;
+    }
+
 }
