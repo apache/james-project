@@ -61,3 +61,17 @@ S: ro2 NO REPLACE failed. Mailbox is read only.
 C: ro3 UID SEARCH ALL
 S: \* SEARCH 1
 S: ro3 OK SEARCH completed.
+
+# MOVE expunges the source messages: it is refused as well (RFC 6851 section 3.3)
+C: ro4 CREATE moved
+S: ro4 OK \[MAILBOXID \(.+\)\] CREATE completed.
+
+C: ro5 MOVE 1 moved
+S: ro5 NO MOVE failed. Mailbox is read only.
+
+C: ro6 UID MOVE 1 moved
+S: ro6 NO MOVE failed. Mailbox is read only.
+
+C: ro7 UID SEARCH ALL
+S: \* SEARCH 1
+S: ro7 OK SEARCH completed.
