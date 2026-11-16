@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import org.apache.james.imap.api.Tag;
@@ -33,6 +34,14 @@ import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.junit.jupiter.api.Test;
 
 class StatusCommandParserTest {
+    @Test
+    void decodeShouldRejectAnEmptyStatusItemList() {
+        assertThatThrownBy(() -> new StatusCommandParser(new UnpooledStatusResponseFactory())
+            .decode(new ImapRequestStreamLineReader(new ByteArrayInputStream("INBOX ()\r\n".getBytes(StandardCharsets.US_ASCII)),
+                new ByteArrayOutputStream()), new Tag("A3"), new FakeImapSession()))
+            .isInstanceOf(DecodingException.class);
+    }
+
     @Test
     void fuzzingInputShouldNotLeadToOutOfMemoryException() {
         String base64Input = "MiAgKH8MSU4kQiBOJEIgICMAf15Df39/f39/f39/f39/f39/f39/f39/f0NDRTogP19GbT8JCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCT0NAAAAAAAAAD0/TkNPAAAAAAhlAAAAAAA=";
