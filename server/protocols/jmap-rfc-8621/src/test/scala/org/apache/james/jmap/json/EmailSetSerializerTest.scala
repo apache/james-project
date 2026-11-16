@@ -114,5 +114,26 @@ class EmailSetSerializerTest extends AnyWordSpec with Matchers {
         """{"mailboxIds":{"1":true},"bodyValues":{"a":{"value":"hi"}},
           |"textBody":[{"partId":"a","type":"text/plain","header:X-A\r\nX-Injected":" v"}]}""".stripMargin)).isError shouldBe true
     }
+
+    "reject message ids holding a line break" in {
+      List("messageId", "inReplyTo", "references", "header:X-Ids:asMessageIds", "header:X-Ids:asMessageIds:all").foreach(property =>
+        withClue(property) {
+          SERIALIZER.deserializeCreationRequest(Json.parse(
+            s"""{"mailboxIds":{"1":true},"$property":["a@b.c\\nX-Injected: forged"]}""")).isError shouldBe true
+        })
+    }
+
+    "reject URLs holding a line break" in {
+      List("header:X-Url:asURLs", "header:X-Url:asURLs:all").foreach(property =>
+        withClue(property) {
+          SERIALIZER.deserializeCreationRequest(Json.parse(
+            s"""{"mailboxIds":{"1":true},"$property":["http://a.b\\r\\nX-Injected: forged"]}""")).isError shouldBe true
+        })
+    }
+
+    "accept regular message ids and URLs" in {
+      SERIALIZER.deserializeCreationRequest(Json.parse(
+        """{"mailboxIds":{"1":true},"messageId":["a@b.c"],"header:X-Url:asURLs":["http://a.b"]}""")).isSuccess shouldBe true
+    }
   }
 }
