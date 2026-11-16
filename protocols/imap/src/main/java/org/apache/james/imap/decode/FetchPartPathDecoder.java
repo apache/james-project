@@ -78,6 +78,10 @@ public class FetchPartPathDecoder {
                 break;
 
             case '0':
+                if (partial == 0) {
+                    // section-part = nz-number *("." nz-number)
+                    throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Part numbers must be non-zero numbers.");
+                }
                 result = digit(at, sectionSpecification, 0);
                 break;
 
@@ -328,6 +332,10 @@ public class FetchPartPathDecoder {
         names = new ArrayList<>();
         int firstWordStart = skipSpaces(at, sectionSpecification);
         readHeaderNames(firstWordStart, firstWordStart, sectionSpecification);
+        if (names.isEmpty()) {
+            // header-list = "(" header-fld-name *(SP header-fld-name) ")"
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Header list must name at least one field.");
+        }
     }
 
     private void readHeaderNames(int at, int lastWordStart, CharSequence sectionSpecification) throws DecodingException {
@@ -351,7 +359,7 @@ public class FetchPartPathDecoder {
     }
 
     private void readName(int wordStart, int wordFinish, CharSequence sectionSpecification) {
-        if (wordStart <= wordFinish) {
+        if (wordStart < wordFinish) {
             CharSequence word = sectionSpecification.subSequence(wordStart, wordFinish);
             String name = word.toString();
             names.add(name);
