@@ -52,11 +52,13 @@ import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxACLUpdated;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxEvent;
 import org.apache.james.mailbox.events.MailboxEvents.MessageEvent;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -138,6 +140,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     private final AtomicBoolean sizeChanged = new AtomicBoolean(false);
     private final AtomicBoolean silentFlagChanges = new AtomicBoolean(false);
     private final AtomicBoolean readOnly = new AtomicBoolean(false);
+    private final AtomicBoolean readRightRevoked = new AtomicBoolean(false);
     private ApplicableFlags applicableFlags = ApplicableFlags.from(new Flags());
 
     public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, MailboxSession session, MessageManager messageManager) {
@@ -424,6 +427,10 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     private void mailboxEvent(MailboxEvent mailboxEvent) {
         // Check if the event was for the mailbox we are observing
         if (mailboxEvent.getMailboxId().equals(getMailboxId())) {
+            if (readRightRevoked.get() && !(mailboxEvent instanceof MailboxDeletion)) {
+                // The user may no longer read this mailbox: its updates must not reach him
+                return;
+            }
             Match(mailboxEvent).of(
                 Case($(instanceOf(Added.class)),
                     this::handleAddition),
@@ -433,6 +440,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
                     this::handleMailboxExpunge),
                 Case($(instanceOf(MailboxDeletion.class)),
                     this::handleMailboxDeletion),
+                Case($(instanceOf(MailboxACLUpdated.class)),
+                    this::handleAclUpdate),
                 Case($(), VOID)
             );
         }
@@ -447,6 +456,23 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
 
     private boolean isFromOtherSession(MailboxEvent mailboxDeletion) {
         return mailboxDeletion.getSessionId() != mailboxSession.getSessionId();
+    }
+
+    private Void handleAclUpdate(MailboxACLUpdated aclUpdated) {
+        if (aclUpdated.getMailboxPath().belongsTo(mailboxSession)) {
+            return VOID;
+        }
+        MailboxACL.EntryKey userKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser());
+        if (canRead(aclUpdated.getAclDiff().getOldACL(), userKey) && !canRead(aclUpdated.getAclDiff().getNewACL(), userKey)) {
+            readRightRevoked.set(true);
+        }
+        return VOID;
+    }
+
+    private boolean canRead(MailboxACL acl, MailboxACL.EntryKey userKey) {
+        return Optional.ofNullable(acl.getEntries().get(userKey))
+            .map(rights -> rights.contains(MailboxACL.Right.Read))
+            .orElse(false);
     }
 
     private Void handleMailboxExpunge(MessageEvent messageEvent) {
