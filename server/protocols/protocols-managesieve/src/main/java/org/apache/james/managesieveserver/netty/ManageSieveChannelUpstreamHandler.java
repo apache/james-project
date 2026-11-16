@@ -127,7 +127,7 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
             if (cause instanceof TooLongFrameException) {
                 handleTooLongFrame(ctx);
             } else if (cause instanceof SessionTerminatedException) {
-                ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get().write("OK channel is closing");
+                ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get().write("OK \"channel is closing\"\r\n");
                 logout(ctx);
             } else {
                 LOGGER.warn("Error while processing ManageSieve request", cause);

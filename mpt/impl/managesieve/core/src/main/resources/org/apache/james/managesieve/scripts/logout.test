@@ -18,4 +18,4 @@
 ################################################################
 
 C: LOGOUT
-S: OK channel is closing
+S: OK "channel is closing"
