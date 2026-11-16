@@ -35,6 +35,9 @@
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <authRequired>false</authRequired>
+        <auth>
+            <requireSSL>false</requireSSL>
+        </auth>
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
@@ -62,6 +65,9 @@
            Authorize only local users
         -->
         <authRequired>true</authRequired>
+        <auth>
+            <requireSSL>false</requireSSL>
+        </auth>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
@@ -90,6 +96,9 @@
            Authorize only local users
         -->
         <authRequired>true</authRequired>
+        <auth>
+            <requireSSL>false</requireSSL>
+        </auth>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>

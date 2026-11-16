@@ -183,6 +183,33 @@ class AuthAnnounceTest {
     }
 
     @Test
+    void authShouldNotBeAnnouncedOnPlainChannelsByDefault() throws Exception {
+        configureAndInit("smtpserver-requireSSL-default.xml");
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smtpProtocol.sendCommand("EHLO localhost");
+
+        assertThat(smtpProtocol.getReplyString())
+            .doesNotContain("AUTH");
+    }
+
+    @Test
+    void plainAuthShouldRequireEncryptionByDefault() throws Exception {
+        configureAndInit("smtpserver-requireSSL-default.xml");
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("AUTH PLAIN");
+
+        assertThat(smtpProtocol.getReplyString())
+            .isEqualTo("538 5.7.11 Encryption required for requested authentication mechanism\r\n");
+    }
+
+    @Test
     void shouldStartWithPreviousConfiguration() throws Exception {
         configureAndInit("smtpserver-noauth.xml");
 
