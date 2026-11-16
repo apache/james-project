@@ -56,15 +56,7 @@ public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest>
 
     @Override
     protected Mono<Void> processRequestReactive(SetQuotaRequest request, ImapSession session, Responder responder) {
-        return Mono.fromRunnable(() -> {
-            Object[] params = new Object[]{
-                "Full admin rights",
-                request.getCommand().getName(),
-                "Can not perform SETQUOTA commands"
-            };
-            HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-            no(request, responder, humanReadableText);
-        });
+        return Mono.fromRunnable(() -> no(request, responder, HumanReadableText.UNSUFFICIENT_RIGHTS));
     }
 
     @Override
