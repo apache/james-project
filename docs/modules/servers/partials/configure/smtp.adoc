@@ -140,13 +140,17 @@ This is an optional string with the following possible values:
 
 If not configured, it uses the value of `authRequired` (of which the default maps to `never`) as fallback.
 
-Note that this configures only the **announcement** of authentication capabilities.
+This configures the **announcement** of authentication capabilities, which also decides whether authentication is accepted.
 `auth.requireSSL` also has an influence on whether authentication capabilities are announced.
 
-Even if authentication capabilities are not announced, clients can still use the SMTP AUTH command.
-However, if authentication capabilities are not announced, only the mechanisms `PLAIN` and `LOGIN` are available
-(and only over a secure connection when `auth.requireSSL` is `true`).
-`XOAUTH2` and `OAUTHBEARER` are disabled if authentication capabilities are not announced.
+The SMTP AUTH command is only accepted on connections to which authentication capabilities are announced.
+Otherwise it is refused with `502 5.5.1 Authentication not available`, or with
+`538 5.7.11 Encryption required for requested authentication mechanism` when authentication would be announced
+once the connection is secured (see `auth.requireSSL`).
+As the default maps to `never`, an SMTP server meant to accept authenticated clients must set `auth.announce`.
+
+Note that `forUnauthorizedAddresses` refuses authentication to clients within `authorizedAddresses`.
+Use `always` on servers where such clients are expected to authenticate, typically submission ports (465, 587).
 
 | `auth.requireSSL`
 | Configures whether authentication requires a secure connection (TLS or STARTTLS).

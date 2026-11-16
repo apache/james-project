@@ -92,6 +92,7 @@ public class AuthCmdHandler
     private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH_CREDENTIALS_INVALID) + " Authentication Failed").immutable();
     private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Unrecognized Authentication Type").immutable();
     private static final Response ENCRYPTION_REQUIRED = new SMTPResponse(SMTPRetCode.AUTH_ENCRYPTION_REQUIRED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_ENCRYPTION_REQUIRED) + " Encryption required for requested authentication mechanism").immutable();
+    private static final Response AUTH_NOT_AVAILABLE = new SMTPResponse(SMTPRetCode.UNIMPLEMENTED_COMMAND, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_CMD) + " Authentication not available").immutable();
     private static final Response SERVER_ERROR = new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.SECURITY_OTHER) + " Unable to process request").immutable();
 
     private ImmutableList<SaslMechanism> saslMechanisms = ImmutableList.of();
@@ -126,6 +127,8 @@ public class AuthCmdHandler
     private Response doAUTH(SMTPSession session, String argument) {
         if (session.getUsername() != null) {
             return ALREADY_AUTH;
+        } else if (!session.isAuthAnnounced()) {
+            return authNotAnnounced(session);
         } else if (argument == null) {
             return SYNTAX_ERROR;
         } else {
@@ -357,6 +360,17 @@ public class AuthCmdHandler
             .filter(mechanism -> mechanism.name().equalsIgnoreCase(authType))
             .filter(mechanism -> mechanism.isAvailableOnTransport(session.isTLSStarted()))
             .findFirst();
+    }
+
+    // AUTH is only accepted when advertised in the EHLO reply of this connection
+    private Response authNotAnnounced(SMTPSession session) {
+        if (!session.isTLSStarted()
+            && session.getConfiguration().isAuthAnnounced(session.getRemoteAddress().getAddress().getHostAddress(), true)) {
+            LOGGER.info("AUTH refused on a cleartext connection");
+            return ENCRYPTION_REQUIRED;
+        }
+        LOGGER.info("AUTH refused as authentication is not announced to this client");
+        return AUTH_NOT_AVAILABLE;
     }
 
     // RFC 4954 section 6: 538 when the mechanism is only available once the connection is encrypted

@@ -31,6 +31,8 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class AuthAnnounceTest {
     private final SMTPServerTestSystem testSystem = new SMTPServerTestSystem();
@@ -180,6 +182,21 @@ class AuthAnnounceTest {
 
         assertThat(smtpProtocol.getReplyString())
             .isEqualTo("538 5.7.11 Encryption required for requested authentication mechanism\r\n");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"smtpserver-authAnnounceNever.xml", "smtpserver-authAnnounceSometimeMatching.xml"})
+    void authShouldBeRefusedWhenNotAnnounced(String configurationName) throws Exception {
+        configureAndInit(configurationName);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("AUTH PLAIN");
+
+        assertThat(smtpProtocol.getReplyString())
+            .isEqualTo("502 5.5.1 Authentication not available\r\n");
     }
 
     @Test
