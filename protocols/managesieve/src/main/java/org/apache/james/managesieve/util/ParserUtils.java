@@ -41,7 +41,7 @@ public class ParserUtils {
         WITHIN_ATOM,
         /** Within an argument enclosed in quotes: white spaces belong to it, only the closing quote ends it. */
         WITHIN_QUOTES,
-        /** Right after a backslash within quotes: the next character is taken literally, be it a quote or a backslash. */
+        /** Right after a backslash within quotes: the next character, a quote or a backslash, is taken literally. */
         AFTER_ESCAPE
     }
 
@@ -90,6 +90,10 @@ public class ParserUtils {
                     yield SplitState.WITHIN_QUOTES;
                 }
                 case AFTER_ESCAPE -> {
+                    // RFC 5804 section 4: QUOTED-CHAR = SAFE-UTF8-CHAR / "\" QUOTED-SPECIALS, QUOTED-SPECIALS = DQUOTE / "\"
+                    if (current != QUOTE && current != ESCAPE) {
+                        throw new ArgumentException("Invalid escape sequence in quoted string: only \\\" and \\\\ are allowed");
+                    }
                     pending.append(current);
                     yield SplitState.WITHIN_QUOTES;
                 }
