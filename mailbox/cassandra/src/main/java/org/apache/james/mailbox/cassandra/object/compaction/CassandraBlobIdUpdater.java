@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.object.compaction;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -58,7 +60,7 @@ public class CassandraBlobIdUpdater implements BlobIdUpdater {
                 updater -> updater.createIndex.flatMap(dao -> references.listReferences()
                     .doOnNext(reference -> referencedBlobIdObserver.accept(reference.blobId()))
                     .filter(reference -> generationCondition.test(reference.blobId()))
-                    .concatMap(dao::store)
+                    .flatMap(dao::store, DEFAULT_CONCURRENCY)
                     .then(Mono.just((BlobIdUpdater) updater))),
                 updater -> Mono.empty(),
                 (updater, failure) -> updater.cleanup(),
