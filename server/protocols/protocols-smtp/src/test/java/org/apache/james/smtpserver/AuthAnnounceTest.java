@@ -165,7 +165,7 @@ class AuthAnnounceTest {
         smtpProtocol.sendCommand("AUTH PLAIN");
 
         assertThat(smtpProtocol.getReplyString())
-            .isEqualTo("504 5.5.4 Unrecognized Authentication Type\r\n");
+            .isEqualTo("538 5.7.11 Encryption required for requested authentication mechanism\r\n");
     }
 
     @Test
@@ -179,7 +179,7 @@ class AuthAnnounceTest {
         smtpProtocol.sendCommand("AUTH LOGIN");
 
         assertThat(smtpProtocol.getReplyString())
-            .isEqualTo("504 5.5.4 Unrecognized Authentication Type\r\n");
+            .isEqualTo("538 5.7.11 Encryption required for requested authentication mechanism\r\n");
     }
 
     @Test

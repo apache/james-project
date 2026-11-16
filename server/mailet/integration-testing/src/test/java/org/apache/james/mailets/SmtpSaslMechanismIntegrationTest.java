@@ -131,7 +131,7 @@ class SmtpSaslMechanismIntegrationTest {
             assertThat(smtpClient.getReplyCode()).isEqualTo(250);
 
             smtpClient.sendCommand("AUTH", "PLAIN " + plainInitialResponse(USER, PASSWORD));
-            assertThat(smtpClient.getReplyCode()).isEqualTo(504);
+            assertThat(smtpClient.getReplyCode()).isEqualTo(538);
         } finally {
             if (smtpClient.isConnected()) {
                 smtpClient.disconnect();

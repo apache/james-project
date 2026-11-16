@@ -204,7 +204,7 @@ class SMTPSaslTest {
             .doesNotContain("OAUTHBEARER");
 
         client.sendCommand("AUTH OAUTHBEARER " + VALID_OAUTHBEARER_TOKEN);
-        assertThat(client.getReplyString()).contains("504 5.5.4 Unrecognized Authentication Type");
+        assertThat(client.getReplyString()).contains("538 5.7.11 Encryption required for requested authentication mechanism");
     }
 
     @Test
@@ -671,7 +671,7 @@ class SMTPSaslTest {
     }
 
     @Test
-    void mechanismUnavailableOnClearTransportShouldNotBeAdvertisedAndShouldBeRejected() throws Exception {
+    void mechanismUnavailableOnClearTransportShouldNotBeAdvertisedAndShouldRequireEncryption() throws Exception {
         PlainSaslMechanism plain = new PlainSaslMechanism(true, true);
         resetWithMechanisms(smtpPlainAndLoginMechanisms(plain));
         SMTPClient client = connectedClient();
@@ -680,7 +680,7 @@ class SMTPSaslTest {
         assertThat(client.getReplyString()).doesNotContain("250-AUTH LOGIN PLAIN");
 
         client.sendCommand("AUTH PLAIN " + plainInitialResponse(SMTPServerTestSystem.BOB.asString(), SMTPServerTestSystem.PASSWORD));
-        assertThat(client.getReplyString()).contains("504 5.5.4 Unrecognized Authentication Type");
+        assertThat(client.getReplyString()).contains("538 5.7.11 Encryption required for requested authentication mechanism");
     }
 
     private void resetWithMechanisms(ImmutableList<SaslMechanism> saslMechanisms) throws Exception {

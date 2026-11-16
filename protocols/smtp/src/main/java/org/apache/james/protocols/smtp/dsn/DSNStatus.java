@@ -346,6 +346,11 @@ public class DSNStatus {
      */
     public static final String SECURITY_AUTH_CREDENTIALS_INVALID = "7.8";
 
+    /**
+     * Encryption required for requested authentication mechanism (RFC 4954 section 6)
+     */
+    public static final String SECURITY_ENCRYPTION_REQUIRED = "7.11";
+
 
     // get methods
 

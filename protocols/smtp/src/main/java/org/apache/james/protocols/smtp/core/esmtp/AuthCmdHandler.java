@@ -86,6 +86,7 @@ public class AuthCmdHandler
     private static final Response AUTH_SUCCEEDED = new SMTPResponse(SMTPRetCode.AUTH_OK, DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.SECURITY_OTHER) + " Authentication Successful").immutable();
     private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH_CREDENTIALS_INVALID) + " Authentication Failed").immutable();
     private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Unrecognized Authentication Type").immutable();
+    private static final Response ENCRYPTION_REQUIRED = new SMTPResponse(SMTPRetCode.AUTH_ENCRYPTION_REQUIRED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_ENCRYPTION_REQUIRED) + " Encryption required for requested authentication mechanism").immutable();
     private static final Response SERVER_ERROR = new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.SECURITY_OTHER) + " Unable to process request").immutable();
 
     private ImmutableList<SaslMechanism> saslMechanisms = ImmutableList.of();
@@ -136,6 +137,10 @@ public class AuthCmdHandler
     private Response handleSaslAuthentication(SMTPSession session, String authType, Optional<String> initialResponse) {
         Optional<SaslMechanism> maybeMechanism = findAvailableMechanism(session, authType);
         if (maybeMechanism.isEmpty()) {
+            if (requiresEncryption(session, authType)) {
+                LOGGER.info("AUTH method {} refused on a cleartext connection", authType);
+                return ENCRYPTION_REQUIRED;
+            }
             return doUnknownAuth(authType);
         }
 
@@ -321,6 +326,14 @@ public class AuthCmdHandler
             .filter(mechanism -> mechanism.name().equalsIgnoreCase(authType))
             .filter(mechanism -> mechanism.isAvailableOnTransport(session.isTLSStarted()))
             .findFirst();
+    }
+
+    // RFC 4954 section 6: 538 when the mechanism is only available once the connection is encrypted
+    private boolean requiresEncryption(SMTPSession session, String authType) {
+        return !session.isTLSStarted() && effectiveSaslMechanisms(session)
+            .stream()
+            .filter(mechanism -> mechanism.name().equalsIgnoreCase(authType))
+            .anyMatch(mechanism -> !mechanism.isAvailableOnTransport(false) && mechanism.isAvailableOnTransport(true));
     }
 
     private SaslExchange startExchange(SaslMechanism mechanism, SaslInitialRequest request) {
