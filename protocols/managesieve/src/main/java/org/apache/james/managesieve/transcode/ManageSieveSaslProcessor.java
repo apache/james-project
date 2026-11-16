@@ -38,6 +38,9 @@ import com.google.common.collect.ImmutableList;
 class ManageSieveSaslProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveSaslProcessor.class);
 
+    // Same limit as the IMAP server
+    static final int MAX_AUTHENTICATION_FAILURES = 3;
+
     private final ImmutableList<SaslMechanism> saslMechanisms;
     private final SaslAuthenticator saslAuthenticator;
 
@@ -191,11 +194,19 @@ class ManageSieveSaslProcessor {
     }
 
     private String handleFailure(Session session, SaslStep.Failure failure) {
+        String response;
         try {
-            return authenticationFailure(failure.failure());
+            response = authenticationFailure(failure.failure());
         } finally {
             closeAndReset(session);
         }
+        if (session.recordAuthenticationFailure() >= MAX_AUTHENTICATION_FAILURES) {
+            // Do not offer an unthrottled password guessing channel: the connection gets closed
+            LOGGER.info("Too many ManageSieve authentication failures, closing the connection");
+            session.setState(Session.State.TERMINATED);
+            return "BYE \"Too many authentication failures\"";
+        }
+        return response;
     }
 
     private Optional<SaslMechanism> findMechanism(String mechanismName) {

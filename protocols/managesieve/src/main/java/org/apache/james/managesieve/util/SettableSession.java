@@ -32,6 +32,7 @@ public class SettableSession implements Session {
     private Optional<ActiveSaslExchange> activeSaslExchange = Optional.empty();
     private boolean sslEnabled;
     private boolean startTlsSupported;
+    private int authenticationFailures;
 
     public SettableSession() {
         this.state = State.UNAUTHENTICATED;
@@ -98,6 +99,11 @@ public class SettableSession implements Session {
     @Override
     public boolean supportStartTLS() {
         return startTlsSupported;
+    }
+
+    @Override
+    public int recordAuthenticationFailure() {
+        return ++authenticationFailures;
     }
 
 }

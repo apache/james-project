@@ -153,6 +153,21 @@ class AuthenticateTest {
     }
 
     @Test
+    void connectionShouldBeClosedAfterTooManyAuthenticationFailures() throws IOException {
+        String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD + "wrong";
+        String wrongAuthentication = "AUTHENTICATE \"PLAIN\" \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"";
+
+        this.client.sendCommand(wrongAuthentication);
+        assertThat(this.client.readResponse().responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+        this.client.sendCommand(wrongAuthentication);
+        assertThat(this.client.readResponse().responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+        this.client.sendCommand(wrongAuthentication);
+        assertThat(this.client.readResponse().responseType()).isEqualTo(ManageSieveClient.ResponseType.BYE);
+
+        assertThat(this.client.readUntilConnectionClosed()).isEmpty();
+    }
+
+    @Test
     void plainLoginWithNotExistingUserShouldNotSucceed() throws IOException {
         String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "not-existing" + "\0" + "pwd";
         this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
