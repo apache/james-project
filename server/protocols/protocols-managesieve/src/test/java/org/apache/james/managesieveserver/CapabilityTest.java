@@ -112,6 +112,21 @@ class CapabilityTest {
     }
 
     @Test
+    void shouldProcessCommandsSentAfterARefusedStartTls() throws Exception {
+        this.testSystem.setUp();
+
+        ManageSieveClient client = new ManageSieveClient();
+        client.connect(this.testSystem.getBindedIP(), this.testSystem.getBindedPort());
+        client.readResponse();
+
+        client.sendCommand("STARTTLS");
+        assertThat(client.readResponse().responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+
+        client.sendCommand("NOOP");
+        assertThat(client.readResponse().responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
+    }
+
+    @Test
     void shouldNotHangConnectionWhenAnotherCommandFollowsRejectedStartTls() throws Exception {
         this.testSystem.setUp();
 

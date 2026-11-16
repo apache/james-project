@@ -28,6 +28,7 @@ import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.transcode.NotEnoughDataException;
 import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.protocols.api.ProxyInformation;
+import org.apache.james.protocols.netty.AllButStartTlsLineBasedChannelHandler;
 import org.apache.james.protocols.netty.Encryption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,6 +93,9 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
                 // RFC-5804 section 1.7 returning capabilities is mandated after STARTTLS
                 String capabilities = manageSieveProcessor.handleRequest(manageSieveSession, "CAPABILITY");
                 attachment.write(capabilities);
+            } else {
+                // The command was answered without starting TLS: a refused STARTTLS must not block the next commands
+                AllButStartTlsLineBasedChannelHandler.clearStartTlsInFlight(ctx.channel());
             }
         } catch (NotEnoughDataException ex) {
             // Do nothing will keep the cumulation
