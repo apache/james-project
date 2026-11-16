@@ -149,6 +149,19 @@ class MailAddressTest {
             .isInstanceOf(AddressException.class);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"@example.com:alice@james.apache.org", "@a.example,@b.example:alice@james.apache.org"})
+    void sourceRouteShouldBeIgnored(String address) throws AddressException {
+        assertThat(new MailAddress(address).asString()).isEqualTo("alice@james.apache.org");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"@:alice@james.apache.org", "@a.example,:alice@james.apache.org", "@a.example alice@james.apache.org"})
+    void malformedSourceRouteShouldBeRejected(String address) {
+        assertThatThrownBy(() -> new MailAddress(address))
+            .isInstanceOf(AddressException.class);
+    }
+
     @Test
     void testGoodMailAddressWithLocalPartAndDomain() {
         assertThatCode(() -> new MailAddress("local-part", "domain"))

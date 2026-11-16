@@ -22,6 +22,8 @@ package org.apache.james.core;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
@@ -77,6 +79,9 @@ public class MailAddress implements java.io.Serializable {
 
     private static final char[] SPECIAL =
             {'<', '>', '(', ')', '[', ']', '\\', '.', ',', ';', ':', '@', '\"'};
+
+    // RFC 5321 section 4.1.2: A-d-l = At-domain *( "," At-domain ) followed by ":"
+    private static final Pattern SOURCE_ROUTE = Pattern.compile("@[^@,:\\s]+(?:,@[^@,:\\s]+)*:");
 
     public static final String NULL_SENDER_AS_STRING = "<>";
 
@@ -146,21 +151,17 @@ public class MailAddress implements java.io.Serializable {
     }
 
     /**
-     * Strips source routing. According to RFC-2821 it is a valid approach
-     * to handle mails containing RFC-821 source-route information.
+     * Strips source routing. According to RFC-5321 section 4.1.1.3 and appendix C, servers MUST accept
+     * the RFC-821 source-route syntax ({@code @one.example,@two.example:user@domain}) and SHOULD ignore the route.
      *
      * @param address the address to strip
      * @param pos     current position
      * @return new pos
      */
     private int stripSourceRoute(String address, int pos) {
-        if (pos < address.length()) {
-            if (address.charAt(pos) == '@') {
-                int i = address.indexOf(':');
-                if (i != -1) {
-                    pos = i + 1;
-                }
-            }
+        Matcher matcher = SOURCE_ROUTE.matcher(address);
+        if (matcher.region(pos, address.length()).lookingAt()) {
+            return matcher.end();
         }
         return pos;
     }
@@ -177,7 +178,7 @@ public class MailAddress implements java.io.Serializable {
 
         // Test if mail address has source routing information (RFC-821) and get rid of it!!
         //must be called first!! (or at least prior to updating pos)
-        stripSourceRoute(address, pos);
+        pos = stripSourceRoute(address, pos);
 
         StringBuilder localPartSB = new StringBuilder();
         StringBuilder domainSB = new StringBuilder();
