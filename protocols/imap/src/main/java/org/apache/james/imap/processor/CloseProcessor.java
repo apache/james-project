@@ -54,14 +54,20 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
         MailboxSession mailboxSession = session.getMailboxSession();
         return getSelectedMailboxReactive(session)
             .flatMap(Throwing.function(mailbox -> {
-                if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
-                    return mailbox.expungeReactive(MessageRange.all(), mailboxSession)
-                        .then(session.deselect())
-                        // Don't send HIGHESTMODSEQ when close. Like correct in the ERRATA of RFC5162
-                        // See http://www.rfc-editor.org/errata_search.php?rfc=5162
+                // https://datatracker.ietf.org/doc/html/rfc3501#section-6.4.2
+                //      no messages are removed, and no error is given, if the mailbox is selected by an
+                //      EXAMINE command or is otherwise selected read-only.
+                //      The same applies when the user lacks the right to expunge the mailbox.
+                if (session.getSelected().isReadOnly()
+                    || !getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
+                    return session.deselect()
                         .then(Mono.fromRunnable(() -> okComplete(request, responder)));
                 }
-                return Mono.empty();
+                return mailbox.expungeReactive(MessageRange.all(), mailboxSession)
+                    .then(session.deselect())
+                    // Don't send HIGHESTMODSEQ when close. Like correct in the ERRATA of RFC5162
+                    // See http://www.rfc-editor.org/errata_search.php?rfc=5162
+                    .then(Mono.fromRunnable(() -> okComplete(request, responder)));
             }))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
