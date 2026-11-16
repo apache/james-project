@@ -78,6 +78,11 @@ public class AuthCmdHandler
     private static final ProtocolSession.AttachmentKey<SaslExchange> ACTIVE_SASL_EXCHANGE =
         ProtocolSession.AttachmentKey.of("SMTP_ACTIVE_SASL_EXCHANGE", SaslExchange.class);
 
+    private static final ProtocolSession.AttachmentKey<Integer> AUTHENTICATION_FAILURES =
+        ProtocolSession.AttachmentKey.of("SMTP_AUTHENTICATION_FAILURES", Integer.class);
+    // Same limit as the IMAP server
+    static final int MAX_AUTHENTICATION_FAILURES = 3;
+
     private static final Response AUTH_ABORTED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " Authentication aborted").immutable();
     private static final Response ALREADY_AUTH = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_OTHER) + " User has previously authenticated. "
             + " Further authentication is not required!").immutable();
@@ -282,15 +287,41 @@ public class AuthCmdHandler
                 .parameters(() -> ImmutableMap.of("authType", authType))
                 .log("SMTP Authentication failed."));
 
-            return AuthHookSaslMechanism.terminalResponse(exchange)
+            Response response = AuthHookSaslMechanism.terminalResponse(exchange)
                 .orElseGet(() -> switch (failure.type()) {
                     case MALFORMED -> undecodableParameters(authType);
                     case SERVER_ERROR -> SERVER_ERROR;
                     case INVALID_CREDENTIALS, AUTHENTICATION_FAILED, USER_DOES_NOT_EXIST, DELEGATION_FORBIDDEN -> AUTH_FAILED;
                 });
+            if (isCredentialFailure(failure) && recordAuthenticationFailure(session) >= MAX_AUTHENTICATION_FAILURES) {
+                // Do not offer an unthrottled password guessing channel: the connection gets closed
+                LOGGER.info("Too many SMTP authentication failures, closing the connection");
+                return tooManyAuthenticationFailures();
+            }
+            return response;
         } finally {
             closeExchange(session);
         }
+    }
+
+    private static boolean isCredentialFailure(SaslFailure failure) {
+        return switch (failure.type()) {
+            case INVALID_CREDENTIALS, AUTHENTICATION_FAILED, USER_DOES_NOT_EXIST, DELEGATION_FORBIDDEN -> true;
+            case MALFORMED, SERVER_ERROR -> false;
+        };
+    }
+
+    private static int recordAuthenticationFailure(SMTPSession session) {
+        int failures = session.getAttachment(AUTHENTICATION_FAILURES, ProtocolSession.State.Connection).orElse(0) + 1;
+        session.setAttachment(AUTHENTICATION_FAILURES, failures, ProtocolSession.State.Connection);
+        return failures;
+    }
+
+    private static Response tooManyAuthenticationFailures() {
+        SMTPResponse response = new SMTPResponse(SMTPRetCode.SERVICE_NOT_AVAILABLE,
+            DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.SECURITY_OTHER) + " Too many authentication failures, closing connection");
+        response.setEndSession(true);
+        return response;
     }
 
     private void registerExchange(SMTPSession session, SaslExchange exchange) {
