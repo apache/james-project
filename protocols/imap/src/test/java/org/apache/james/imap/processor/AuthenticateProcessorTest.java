@@ -22,7 +22,9 @@ package org.apache.james.imap.processor;
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -48,6 +50,7 @@ import org.apache.james.protocols.api.sasl.SaslMechanism;
 import org.apache.james.protocols.api.sasl.SaslStep;
 import org.apache.james.protocols.sasl.JamesSaslAuthenticator;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.google.common.collect.ImmutableList;
 
@@ -248,6 +251,26 @@ class AuthenticateProcessorTest {
 
         // THEN the exchange is still closed before the failure is rethrown
         assertThat(session.popCount).isEqualTo(1);
+        assertThat(exchange.closed).isTrue();
+    }
+
+    @Test
+    void continuationShouldAnswerBadWhenTheClientCancels() {
+        // GIVEN an active continuation
+        ThrowingContinuationExchange exchange = new ThrowingContinuationExchange();
+        RecordingLineHandlerImapSession session = new RecordingLineHandlerImapSession();
+        testee.configureSaslMechanisms(ImmutableList.of(new TestSaslMechanism(exchange)));
+        ImapProcessor.Responder responder = mock(ImapProcessor.Responder.class);
+        testee.processRequest(new AuthenticateRequest(BROKEN_MECHANISM, TAG), session, responder);
+        ImapLineHandler lineHandler = session.lineHandler;
+
+        // WHEN the client cancels the exchange
+        Mono.from(lineHandler.onLine(session, "*\r\n".getBytes(StandardCharsets.US_ASCII))).block();
+
+        // THEN the command is rejected with a tagged BAD (RFC 9051 section 6.2.2)
+        ArgumentCaptor<ImapResponseMessage> captor = ArgumentCaptor.forClass(ImapResponseMessage.class);
+        verify(responder, atLeastOnce()).respond(captor.capture());
+        assertThat(captor.getValue()).matches(StatusResponseTypeMatcher.BAD_RESPONSE_MATCHER::matches);
         assertThat(exchange.closed).isTrue();
     }
 

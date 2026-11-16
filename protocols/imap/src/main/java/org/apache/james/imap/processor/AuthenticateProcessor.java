@@ -205,7 +205,8 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     private void handleContinuationLine(SaslExchange exchange, ImapSession session, AuthenticateRequest request, Responder responder, byte[] data) {
         if (isAbort(exchange, session, data)) {
             closeActiveContinuation(exchange, session);
-            no(request, responder, HumanReadableText.AUTHENTICATION_FAILED);
+            // RFC 9051 section 6.2.2: the server MUST reject a cancelled AUTHENTICATE with a tagged BAD
+            taggedBad(request, responder, HumanReadableText.AUTHENTICATION_CANCELLED);
             responder.flush();
             return;
         }
@@ -321,7 +322,8 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                                                   AuthenticateRequest request, Responder responder, byte[] data) {
         if (isAbort(exchange, session, data)) {
             closeActiveContinuation(exchange, session);
-            no(request, responder, HumanReadableText.AUTHENTICATION_FAILED);
+            // RFC 9051 section 6.2.2: the server MUST reject a cancelled AUTHENTICATE with a tagged BAD
+            taggedBad(request, responder, HumanReadableText.AUTHENTICATION_CANCELLED);
             responder.flush();
             return;
         }
