@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.jsieve;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Optional;
@@ -31,6 +32,8 @@ import java.util.stream.Stream;
 import jakarta.mail.Header;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -46,8 +49,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 
 import reactor.core.publisher.Mono;
@@ -58,6 +61,7 @@ public class VacationAction implements MailAction {
     private static final String SIEVE_ACCOUNT_PREFIX = "sieve:";
     // RFC 5230 section 4.1 lets sites bound :days; this also keeps the expiry date storable
     private static final int MAXIMUM_DAYS_BETWEEN_REPLIES = 365;
+    private static final ImmutableList<String> RECIPIENT_HEADERS = ImmutableList.of("To", "Cc", "Bcc", "Resent-To", "Resent-Cc", "Resent-Bcc");
 
     /**
      * Who was answered (RFC 5230 section 4.2): one reply per user, response and sender within :days.
@@ -117,14 +121,50 @@ public class VacationAction implements MailAction {
         return dayDifference >= 0 && dayDifference <= actionVacation.getDuration();
     }
 
-    private boolean isValidForReply(final Mail mail, ActionVacation actionVacation, final ActionContext context) {
-        Set<MailAddress> currentMailAddresses = ImmutableSet.copyOf(mail.getRecipients());
+    // RFC 5230 section 4.5: MUST NOT respond unless the user's address (or one of the :addresses) is in a To, Cc, Bcc,
+    // Resent-To, Resent-Cc or Resent-Bcc header of the message. The envelope recipient is always the user, Bcc copies,
+    // bulk mails and mails with a forged To are not addressed to them.
+    private boolean isValidForReply(final Mail mail, ActionVacation actionVacation, final ActionContext context) throws MessagingException {
         Set<MailAddress> allowedMailAddresses = Stream
             .concat(
                 actionVacation.getAddresses().stream().flatMap(this::retrieveAddressFromString),
                 Stream.of(context.getRecipient()))
             .collect(ImmutableSet.toImmutableSet());
-        return !Sets.intersection(currentMailAddresses, allowedMailAddresses).isEmpty();
+        return headerRecipients(mail.getMessage())
+            .anyMatch(allowedMailAddresses::contains);
+    }
+
+    private Stream<MailAddress> headerRecipients(MimeMessage message) throws MessagingException {
+        ImmutableList.Builder<String> headerValues = ImmutableList.builder();
+        for (String headerName : RECIPIENT_HEADERS) {
+            Optional.ofNullable(message.getHeader(headerName, ","))
+                .ifPresent(headerValues::add);
+        }
+        return headerValues.build().stream()
+            .flatMap(this::parseAddresses)
+            .flatMap(this::expandGroup)
+            .flatMap(address -> retrieveAddressFromString(address.getAddress()));
+    }
+
+    private Stream<InternetAddress> parseAddresses(String headerValue) {
+        try {
+            return Arrays.stream(InternetAddress.parseHeader(headerValue, false));
+        } catch (AddressException e) {
+            LOGGER.debug("Cannot parse addresses of {}", headerValue, e);
+            return Stream.empty();
+        }
+    }
+
+    private Stream<InternetAddress> expandGroup(InternetAddress address) {
+        if (!address.isGroup()) {
+            return Stream.of(address);
+        }
+        try {
+            return Arrays.stream(address.getGroup(false));
+        } catch (AddressException e) {
+            LOGGER.debug("Cannot parse the group {}", address, e);
+            return Stream.empty();
+        }
     }
 
     // RFC 5230 section 4.5: never answer the user's own addresses
