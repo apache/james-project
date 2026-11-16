@@ -2490,7 +2490,7 @@
             <dependency>
                 <groupId>io.cucumber</groupId>
                 <artifactId>messages</artifactId>
-                <version>34.2.1</version>
+                <version>35.0.0</version>
             </dependency>
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>
