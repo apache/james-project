@@ -43,7 +43,7 @@ public class GetQuotaCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        final String quotaRoot = request.atom();
+        final String quotaRoot = request.astring();
         request.eol();
         return new GetQuotaRequest(tag, quotaRoot);
     }
