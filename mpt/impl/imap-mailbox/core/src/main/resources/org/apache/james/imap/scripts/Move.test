@@ -40,9 +40,10 @@ S: a5 OK STATUS completed.
 
 # move messages 2-3
 C: a4 MOVE 2:3 moved
+S: \* OK \[COPYUID \d+ \d+:\d+ \d+:\d+\] Moved UIDs.
 S: \* 2 EXPUNGE
 S: \* 2 EXPUNGE
-S: a4 OK (\[.+\] )?MOVE completed.
+S: a4 OK MOVE completed.
 
 # Check there's 2 messages in the moved mailbox
 C: a5 STATUS moved (MESSAGES)

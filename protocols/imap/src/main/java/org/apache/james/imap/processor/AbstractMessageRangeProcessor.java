@@ -92,8 +92,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                     return Mono.empty();
                 } else {
                     return handleRanges(request, session, targetMailbox, mailboxSession)
-                        .flatMap(code -> unsolicitedResponses(session, responder, request.isUseUids())
-                            .then(Mono.fromRunnable(() -> okComplete(request, code, responder))));
+                        .flatMap(code -> respondCompletion(request, session, responder, code));
                 }
             })
             .onErrorResume(MailboxNotFoundException.class, e -> {
@@ -122,6 +121,14 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                 return ReactorUtils.logAsMono(() -> LOGGER.error("{} failed from mailbox {} to {} for sequence-set {}",
                     getOperationName(), selectedMailboxId(session), targetMailbox, request.getIdSet(), e.getCause()));
             }).then();
+    }
+
+    /**
+     * COPY (RFC 4315 section 3) carries COPYUID in its tagged OK.
+     */
+    protected Mono<Void> respondCompletion(R request, ImapSession session, Responder responder, StatusResponse.ResponseCode copyUid) {
+        return unsolicitedResponses(session, responder, request.isUseUids())
+            .then(Mono.fromRunnable(() -> okComplete(request, copyUid, responder)));
     }
 
     private Mono<StatusResponse.ResponseCode> handleRanges(R request, ImapSession session, MailboxPath targetMailbox, MailboxSession mailboxSession) {
