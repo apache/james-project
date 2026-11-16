@@ -202,6 +202,18 @@ class IMAPServerCondStoreTest extends AbstractIMAPServerTest {
     }
 
     @Test
+    void enableShouldEnableCondstore() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+
+        clientConnection.write(ByteBuffer.wrap(("a1 ENABLE CONDSTORE\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed.")))
+            .filteredOn(s -> s.contains("* ENABLED CONDSTORE"))
+            .hasSize(1);
+    }
+
+    @Test
     void selectShouldAcceptCondstore() throws Exception {
         clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
         readBytes(clientConnection);

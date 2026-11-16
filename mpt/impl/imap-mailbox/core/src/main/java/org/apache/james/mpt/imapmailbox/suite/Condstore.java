@@ -48,9 +48,9 @@ public abstract class Condstore implements ImapTestConstants {
     
 
     @Test
-    public void condstoreShouldBeDisableByDefault() throws Exception {
+    public void condstoreShouldBeEnableByDefault() throws Exception {
         system.configure(ImapConfiguration.builder().isProvisionDefaultMailboxes(false).build());
-        simpleScriptedTestProtocol.run("CondstoreDisable");
+        simpleScriptedTestProtocol.run("CondstoreEnable");
     }
 
     @Test

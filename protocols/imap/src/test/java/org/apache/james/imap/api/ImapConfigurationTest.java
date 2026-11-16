@@ -159,10 +159,10 @@ class ImapConfigurationTest {
     }
 
     @Test
-    void isCondstoreEnableShouldBeFalseWhenNoSetting() {
+    void isCondstoreEnableShouldBeTrueWhenNoSetting() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder().build();
 
-        assertThat(imapConfiguration.isCondstoreEnable()).isFalse();
+        assertThat(imapConfiguration.isCondstoreEnable()).isTrue();
    }
 
     @Test
