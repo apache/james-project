@@ -87,6 +87,13 @@ public abstract class Listing implements ImapTestConstants {
     }
 
     @Test
+    public void listShouldMatchInboxCaseInsensitively() throws Exception {
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("ListInboxCaseInsensitive");
+    }
+
+    @Test
     public void testXList() throws Exception {
         simpleScriptedTestProtocol
             .withLocale(Locale.ITALY)

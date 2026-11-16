@@ -27,6 +27,8 @@ import com.google.re2j.Pattern;
 
 public class PrefixedRegex implements MailboxNameExpression {
 
+    private static final String INBOX = "INBOX";
+
     private final String prefix;
     private final String regex;
     private final Pattern pattern;
@@ -43,9 +45,24 @@ public class PrefixedRegex implements MailboxNameExpression {
     public boolean isExpressionMatch(String name) {
         if (name.startsWith(prefix)) {
             String nameSubstring = sanitizeSubstring(name.substring(prefix.length()));
-            return regexMatching(nameSubstring);
+            return regexMatching(nameSubstring)
+                || withInboxCaseOfRegex(nameSubstring).map(this::regexMatching).orElse(false);
         }
         return false;
+    }
+
+    /**
+     * INBOX is case-insensitive (RFC 9051 section 5.1): when the pattern starts with INBOX in another case, match
+     * the INBOX hierarchy as if it was written with the case of the pattern.
+     */
+    private Optional<String> withInboxCaseOfRegex(String name) {
+        int inboxLength = INBOX.length();
+        boolean nameIsInInboxHierarchy = name.startsWith(INBOX)
+            && (name.length() == inboxLength || name.charAt(inboxLength) == pathDelimiter);
+        if (prefix.isEmpty() && nameIsInInboxHierarchy && regex.regionMatches(true, 0, INBOX, 0, inboxLength)) {
+            return Optional.of(regex.substring(0, inboxLength) + name.substring(inboxLength));
+        }
+        return Optional.empty();
     }
 
     private String sanitizeSubstring(String name) {
