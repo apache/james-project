@@ -63,6 +63,9 @@ public class GetMetadataCommandParser extends AbstractImapCommandParser {
 
     private ImapMessage buildAnnotationRequest(ImapRequestLineReader requestReader, Tag tag) throws DecodingException {
         GetMetadataRequest.Builder builder = GetMetadataRequest.builder().tag(tag);
+        if (requestReader.nextWordChar() == '(') {
+            consumeOptions(requestReader, builder);
+        }
         builder.mailboxName(requestReader.mailbox());
 
         consumeOptionsAndKeys(requestReader, builder);
@@ -93,6 +96,25 @@ public class GetMetadataCommandParser extends AbstractImapCommandParser {
         }
     }
 
+    /**
+     * RFC 5464 section 5: getmetadata = "GETMETADATA" [SP getmetadata-options] SP mailbox SP entries
+     * where getmetadata-options = "(" getmetadata-option *(SP getmetadata-option) ")"
+     */
+    private void consumeOptions(ImapRequestLineReader requestReader, GetMetadataRequest.Builder builder) throws DecodingException {
+        requestReader.consumeChar('(');
+        do {
+            String option = requestReader.atom();
+            if (option.equalsIgnoreCase(MAXSIZE)) {
+                builder.maxsize(Optional.of((int) requestReader.number(STOP_ON_PAREN)));
+            } else if (option.equalsIgnoreCase(DEPTH)) {
+                builder.depth(Depth.fromString(requestReader.atom()));
+            } else {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown GETMETADATA option " + option);
+            }
+        } while (requestReader.nextWordChar() != ')');
+        requestReader.consumeChar(')');
+    }
+
     private void consumeDepthOpt(ImapRequestLineReader requestReader, GetMetadataRequest.Builder builder) throws DecodingException {
         if (!requestReader.atom().equalsIgnoreCase(DEPTH)) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Wrong on, it should be DEPTH");
@@ -112,7 +134,7 @@ public class GetMetadataCommandParser extends AbstractImapCommandParser {
     }
 
     private void consumeKey(ImapRequestLineReader requestReader, GetMetadataRequest.Builder builder) throws DecodingException {
-        builder.keys(ImmutableSet.of(new MailboxAnnotationKey(requestReader.atom())));
+        builder.keys(ImmutableSet.of(new MailboxAnnotationKey(requestReader.astring())));
         requestReader.eol();
     }
 
@@ -120,7 +142,7 @@ public class GetMetadataCommandParser extends AbstractImapCommandParser {
         Builder<MailboxAnnotationKey> keys = ImmutableSet.builder();
 
         do {
-            keys.add(new MailboxAnnotationKey(requestReader.atom()));
+            keys.add(new MailboxAnnotationKey(requestReader.astring()));
         } while (requestReader.nextWordChar() != ')');
 
         builder.keys(keys.build());

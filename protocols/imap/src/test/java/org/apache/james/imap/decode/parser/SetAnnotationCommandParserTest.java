@@ -67,6 +67,15 @@ class SetAnnotationCommandParserTest {
     }
 
     @Test
+    void decodeMessageShouldThrowDecodingExceptionWhenEntryIsNeitherPrivateNorShared() {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/bogus/comment \"This is my comment\") \n").getBytes());
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, null))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
     void decodeMessageShouldThrowDecodingExceptionWhenQuotedValueHoldsNul() {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"a\0b\") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);

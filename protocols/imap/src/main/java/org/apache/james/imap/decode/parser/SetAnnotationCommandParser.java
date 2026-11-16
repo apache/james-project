@@ -40,6 +40,8 @@ import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import com.google.common.collect.ImmutableList;
 
 public class SetAnnotationCommandParser extends AbstractImapCommandParser {
+    private static final String PRIVATE_PREFIX = "/private/";
+    private static final String SHARED_PREFIX = "/shared/";
 
     @Inject
     public SetAnnotationCommandParser(StatusResponseFactory statusResponseFactory) {
@@ -68,7 +70,11 @@ public class SetAnnotationCommandParser extends AbstractImapCommandParser {
 
     private MailboxAnnotation readNextAnnotation(ImapRequestLineReader request) throws DecodingException {
         try {
-            String key = request.atom();
+            String key = request.astring();
+            // RFC 5464 section 3.2: entries live in the /private or the /shared namespace
+            if (!hasPrefix(key, PRIVATE_PREFIX) && !hasPrefix(key, SHARED_PREFIX)) {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Entry names must start with /private/ or /shared/");
+            }
             String value = request.nstring();
             // RFC 5464: only a literal8, which is not supported, can carry a NUL
             if (value != null && value.indexOf('\0') >= 0) {
@@ -81,6 +87,10 @@ public class SetAnnotationCommandParser extends AbstractImapCommandParser {
         } catch (IllegalArgumentException e) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "The key is not valid: " + e.getMessage());
         }
+    }
+
+    private boolean hasPrefix(String key, String prefix) {
+        return key.regionMatches(true, 0, prefix, 0, prefix.length());
     }
 
     private Function<String, MailboxAnnotation> transforMailboxAnnotation(final String key) {

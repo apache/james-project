@@ -117,7 +117,10 @@ public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRe
             responder.respond(new MetadataResponse(mailboxName, filterItemsBySize(mailboxAnnotations, maxsize)));
             okComplete(request, ResponseCode.longestMetadataEntry(maximumOversizedSize.get()), responder);
         } else {
-            responder.respond(new MetadataResponse(mailboxName, mailboxAnnotations));
+            // RFC 5464 section 5: a METADATA response carries a non-empty entry list
+            if (!mailboxAnnotations.isEmpty()) {
+                responder.respond(new MetadataResponse(mailboxName, mailboxAnnotations));
+            }
             okComplete(request, responder);
         }
     }
