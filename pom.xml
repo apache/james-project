@@ -687,7 +687,7 @@
         <io.micrometer.core.version>1.17.2</io.micrometer.core.version>
         <io.micrometer.tracing.version>1.7.2</io.micrometer.tracing.version>
 
-        <bouncycastle.version>1.86</bouncycastle.version>
+        <bouncycastle.version>1.87</bouncycastle.version>
         <scala.base>3.10</scala.base>
         <scala.binary>3</scala.binary>
         <scala.version>${scala.base}.0</scala.version>
@@ -2887,7 +2887,7 @@
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk18on</artifactId>
-                <version>1.86</version>
+                <version>1.87</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
