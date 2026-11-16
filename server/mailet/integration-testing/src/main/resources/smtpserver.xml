@@ -33,11 +33,12 @@
         <connectiontimeout>360</connectiontimeout>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
-        <authRequired>{{authRequired}}</authRequired>
 {{#hasAuthorizedAddresses}}
         <authorizedAddresses>{{authorizedAddresses}}</authorizedAddresses>
 {{/hasAuthorizedAddresses}}
         <auth>
+            <!-- AUTH is only accepted when announced: tests authenticating without requiring authentication rely on 'always' -->
+            <announce>{{authAnnounce}}</announce>
             <required>{{forbidUnauthenticatedSenders}}</required>
             <requireSSL>{{authRequireSSL}}</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>

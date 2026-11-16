@@ -8,7 +8,8 @@
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
-            <announce>forUnauthorizedAddresses</announce>
+            <!-- AUTH is only accepted when announced: announce it to every client, authorizedAddresses included -->
+            <announce>always</announce>
             <plainAuthEnabled>true</plainAuthEnabled>
             <oidc>
                 <oidcConfigurationURL>http://sso.example.com:8080/auth/realms/oidc/.well-known/openid-configuration</oidcConfigurationURL>
