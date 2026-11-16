@@ -60,28 +60,27 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
                 // https://datatracker.ietf.org/doc/html/rfc3501#section-6.4.2
                 //      no messages are removed, and no error is given, if the mailbox is selected by an
                 //      EXAMINE command or is otherwise selected read-only.
-                if (session.getSelected().isReadOnly()) {
+                //      The same applies when the user lacks the right to expunge the mailbox.
+                if (session.getSelected().isReadOnly()
+                    || !getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
                     return session.deselect()
                         .then(Mono.fromRunnable(() -> okComplete(request, responder)));
                 }
-                if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
-                    return mailbox.expungeReactive(MessageRange.all(), mailboxSession)
-                        .count()
-                        .flatMap(count -> ReactorUtils.logAsMono(() -> AuditTrail.entry()
-                            .username(() -> mailboxSession.getUser().asString())
-                            .sessionId(() -> session.sessionId().asString())
-                            .protocol("IMAP")
-                            .action("CLOSE")
-                            .parameters(() -> ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
-                                "mailboxId", mailbox.getId().serialize()))
-                            .log(String.format("IMAP CLOSE succeeded. %d message expunged.", count)))
-                            .thenReturn(count))
-                        .then(session.deselect())
-                        // Don't send HIGHESTMODSEQ when close. Like correct in the ERRATA of RFC5162
-                        // See http://www.rfc-editor.org/errata_search.php?rfc=5162
-                        .then(Mono.fromRunnable(() -> okComplete(request, responder)));
-                }
-                return Mono.empty();
+                return mailbox.expungeReactive(MessageRange.all(), mailboxSession)
+                    .count()
+                    .flatMap(count -> ReactorUtils.logAsMono(() -> AuditTrail.entry()
+                        .username(() -> mailboxSession.getUser().asString())
+                        .sessionId(() -> session.sessionId().asString())
+                        .protocol("IMAP")
+                        .action("CLOSE")
+                        .parameters(() -> ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
+                            "mailboxId", mailbox.getId().serialize()))
+                        .log(String.format("IMAP CLOSE succeeded. %d message expunged.", count)))
+                        .thenReturn(count))
+                    .then(session.deselect())
+                    // Don't send HIGHESTMODSEQ when close. Like correct in the ERRATA of RFC5162
+                    // See http://www.rfc-editor.org/errata_search.php?rfc=5162
+                    .then(Mono.fromRunnable(() -> okComplete(request, responder)));
             }))
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
