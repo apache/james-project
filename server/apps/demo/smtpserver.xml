@@ -62,7 +62,8 @@
            Authorize only local users
         -->
         <auth>
-            <announce>forUnauthorizedAddresses</announce>
+            <!-- AUTH is only accepted when announced: announce it to every client, authorizedAddresses included -->
+            <announce>always</announce>
             <requireSSL>false</requireSSL>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
@@ -91,7 +92,8 @@
            Authorize only local users
         -->
         <auth>
-            <announce>forUnauthorizedAddresses</announce>
+            <!-- AUTH is only accepted when announced: announce it to every client, authorizedAddresses included -->
+            <announce>always</announce>
             <requireSSL>false</requireSSL>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>

@@ -220,7 +220,7 @@ public class SmtpConfiguration implements SerializableAsXml {
         HashMap<String, Object> scopes = new HashMap<>();
         scopes.put("hasAuthorizedAddresses", authorizedAddresses.isPresent());
         authorizedAddresses.ifPresent(value -> scopes.put("authorizedAddresses", value));
-        scopes.put("authRequired", authRequired);
+        scopes.put("authAnnounce", authRequired ? "forUnauthorizedAddresses" : "always");
         scopes.put("verifyIdentity", verifyIndentity.toString());
         scopes.put("forbidUnauthenticatedSenders", Boolean.toString(!allowUnauthenticatedSenders));
         scopes.put("maxmessagesize", maxMessageSize);

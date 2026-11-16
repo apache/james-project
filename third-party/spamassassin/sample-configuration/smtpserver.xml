@@ -85,7 +85,8 @@
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
-            <announce>forUnauthorizedAddresses</announce>
+            <!-- AUTH is only accepted when announced: announce it to every client, authorizedAddresses included -->
+            <announce>always</announce>
             <requireSSL>true</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
             <!-- Sample OIDC configuration -->
@@ -134,7 +135,8 @@
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
-            <announce>forUnauthorizedAddresses</announce>
+            <!-- AUTH is only accepted when announced: announce it to every client, authorizedAddresses included -->
+            <announce>always</announce>
             <requireSSL>true</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
             <!-- Sample OIDC configuration -->

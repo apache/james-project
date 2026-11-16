@@ -70,8 +70,8 @@ public class SmtpConfigurationTest {
                 .requireAuthentication()
                 .build()
                 .serializeAsXml(),
-            hasXPath("/smtpservers/smtpserver/authRequired/text()",
-                is("true")));
+            hasXPath("/smtpservers/smtpserver[1]/auth/announce/text()",
+                is("forUnauthorizedAddresses")));
     }
 
     @Test
@@ -123,12 +123,12 @@ public class SmtpConfigurationTest {
     }
 
     @Test
-    public void authenticationCanBeDisabled() throws IOException {
+    public void authenticationShouldBeAnnouncedWhenNotRequired() throws IOException {
         assertThat(SmtpConfiguration.builder()
                 .build()
                 .serializeAsXml(),
-            hasXPath("/smtpservers/smtpserver/authRequired/text()",
-                is("false")));
+            hasXPath("/smtpservers/smtpserver[1]/auth/announce/text()",
+                is("always")));
     }
 
     @Test
@@ -175,8 +175,8 @@ public class SmtpConfigurationTest {
     @Test
     public void authenticationShouldNotBeRequiredByDefault() throws IOException {
         assertThat(SmtpConfiguration.DEFAULT.serializeAsXml(),
-            hasXPath("/smtpservers/smtpserver/authRequired/text()",
-                is("false")));
+            hasXPath("/smtpservers/smtpserver[1]/auth/announce/text()",
+                is("always")));
     }
 
     @Test
