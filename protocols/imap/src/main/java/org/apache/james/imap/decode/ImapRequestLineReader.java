@@ -62,7 +62,7 @@ import com.google.common.base.CharMatcher;
  * lookahead=1 on the underlying character stream. TODO need to look at encoding
  */
 public abstract class ImapRequestLineReader {
-    public record LiteralHeader(long size, boolean synchronizing, boolean continuationSent) {
+    public record LiteralHeader(long size, boolean synchronizing, boolean continuationSent, boolean sizeAccepted) {
         public boolean isSentByTheClient() {
             return !synchronizing || continuationSent;
         }
@@ -714,17 +714,18 @@ public abstract class ImapRequestLineReader {
         consumeCRLF();
 
         long announcedSize = parseLiteralSize(stringBuilder.toString());
-        unreadLiteral = Optional.of(new LiteralHeader(announcedSize, synchronizedLiteral, false));
+        unreadLiteral = Optional.of(new LiteralHeader(announcedSize, synchronizedLiteral, false, false));
         // Check the size before inviting the client to send the literal
         if (announcedSize > Integer.MAX_VALUE) {
             throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Literal size " + announcedSize + " is too big");
         }
         int size = (int) announcedSize;
         assertLiteralSizeAccepted(size);
+        unreadLiteral = Optional.of(new LiteralHeader(announcedSize, synchronizedLiteral, false, true));
 
         if (synchronizedLiteral) {
             commandContinuationRequest();
-            unreadLiteral = Optional.of(new LiteralHeader(announcedSize, true, true));
+            unreadLiteral = Optional.of(new LiteralHeader(announcedSize, true, true, true));
         }
 
         Literal literal = read(size, extraCRLF);

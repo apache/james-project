@@ -36,6 +36,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -284,15 +285,33 @@ class ImapRequestFrameDecoderTest {
     }
 
     @Test
-    void aNonSynchronizingLiteralTooBigForTheServerShouldNotBeDecodedAsCommands() {
-        List<byte[]> chunks = List.of(
-            "a APPEND INBOX {9+}\r\n".getBytes(StandardCharsets.US_ASCII),
-            "x1 NOOP\r\n\r\nb NOOP\r\n".getBytes(StandardCharsets.US_ASCII));
-
+    void aNonSynchronizingLiteralTooBigForTheServerShouldBeRejectedAndCloseTheConnection() {
+        Collector collector = new Collector();
+        EmbeddedChannel channel = new EmbeddedChannel();
+        FakeImapSession session = new FakeImapSession() {
+            @Override
+            public boolean needsCommandInjectionDetection() {
+                return false;
+            }
+        };
+        session.authenticated();
+        channel.attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).set(session);
+        channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(new ConcurrentHashMap<>());
+        channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), 3008, false));
         // literalSizeLimit 8 < 9
-        assertThat(decode(true, 1024, 8, 3008, chunks))
-            .hasSize(2)
-            .last().asString().contains("tag=b, command=NOOP");
+        channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(),
+            1024, 8, 3008));
+        channel.pipeline().addLast("collector", collector);
+
+        channel.writeInbound(Unpooled.wrappedBuffer(
+            "a APPEND INBOX {9+}\r\nx1 NOOP\r\n\r\nb NOOP\r\n".getBytes(StandardCharsets.US_ASCII)));
+
+        assertThat(collector.messages).noneMatch(message -> message.toString().contains("command=NOOP"));
+        ByteBuf answer = channel.readOutbound();
+        assertThat(answer.toString(StandardCharsets.US_ASCII)).startsWith("a BAD APPEND");
+        answer.release();
+        assertThat(channel.isOpen()).isFalse();
+        channel.finishAndReleaseAll();
     }
 
     @Test
