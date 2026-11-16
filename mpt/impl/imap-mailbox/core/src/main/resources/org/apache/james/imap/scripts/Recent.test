@@ -50,5 +50,25 @@ C: A6 FETCH 1 (FLAGS)
 S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
 S: A6 OK FETCH completed\.
 
+C: A7 APPEND testmailbox {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C: 
+C: This is a very simple email.
+C: 
+S: \* 2 EXISTS
+S: \* 2 RECENT
+S: A7 OK .*
+
+# A \Recent message expunged by MOVE is no longer counted as recent: RECENT never exceeds EXISTS
+C: A8 MOVE 1 testmailbox
+S: \* OK \[COPYUID .*\] Moved UIDs\.
+S: \* 3 EXISTS
+S: \* 1 EXPUNGE
+S: \* 2 RECENT
+S: A8 OK MOVE completed\.
+
 C: A9 DELETE testmailbox
 S: A9 OK DELETE completed\.

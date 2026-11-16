@@ -329,6 +329,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     
     @Override
     public synchronized void resetExpungedUids() {
+        // The expunged messages are no longer \Recent: forget them before forgetting the expunged UIDs
+        checkExpungedRecents();
         expungedUids.clear();
     }
 
