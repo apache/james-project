@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.util.Optional;
+
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -29,6 +31,7 @@ import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.DeleteRequest;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
@@ -76,6 +79,8 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
                 return ReactorUtils.logAsMono(() -> LOGGER.debug("Delete failed for mailbox {} as it doesn't exist", mailboxPath, e));
             })
+            .onErrorResume(InsufficientRightsException.class, e -> respondInsufficientRights(request, responder, mailboxPath, session.getMailboxSession(), Optional.empty())
+                .then(ReactorUtils.logAsMono(() -> LOGGER.info("Delete failed for mailbox {}: {}", mailboxPath, e.getMessage()))))
             .onErrorResume(TooLongMailboxNameException.class, e -> {
                 taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
                 return ReactorUtils.logAsMono(() -> LOGGER.debug("The mailbox name length is over limit: {}", mailboxPath.getName(), e));

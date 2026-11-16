@@ -41,6 +41,7 @@ import org.apache.james.imap.message.request.GetMetadataRequest;
 import org.apache.james.imap.message.response.MetadataResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -102,6 +103,8 @@ public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRe
                 e -> LOGGER.info("The command: {} is failed because not found mailbox {}", request.getCommand().getName(), request.getMailboxName())))
             .onErrorResume(MailboxNotFoundException.class,
                 error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate())))
+            .onErrorResume(InsufficientRightsException.class,
+                error -> respondInsufficientRights(request, responder, mailboxPath, session.getMailboxSession(), Optional.of(ResponseCode.tryCreate())))
             .doOnEach(logOnError(MailboxException.class,
                 e -> LOGGER.error("GetAnnotation on mailbox {} failed for user {}", request.getMailboxName(), session.getUserName(), e)))
             .onErrorResume(MailboxException.class,
