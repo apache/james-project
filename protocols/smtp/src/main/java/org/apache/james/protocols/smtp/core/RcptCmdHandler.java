@@ -181,8 +181,9 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
                         parameter.getKey(), parameter.getValue(), getContext(session, recipientAddress, recipient));
 
                     return new SMTPResponse(
-                        SMTPRetCode.PARAMETER_NOT_IMPLEMENTED,
-                        "Unrecognized or unsupported option: "
+                        SMTPRetCode.PARAMETERS_NOT_RECOGNIZED,
+                        DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG)
+                            + " Unrecognized or unsupported option: "
                             + CharMatcher.javaIsoControl().replaceFrom(parameter.getKey(), '?'));
                 }
                 if (parameters.putIfAbsent(parameter.getKey(), parameter.getValue()) != null) {
