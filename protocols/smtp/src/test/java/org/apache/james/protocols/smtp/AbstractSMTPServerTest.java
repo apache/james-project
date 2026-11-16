@@ -1084,6 +1084,38 @@ public abstract class AbstractSMTPServerTest {
     }
 
     @Test
+    void mailFromShouldRejectUnknownOrInvalidParameters() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String replies = rawUtf8Exchange(bindedAddress,
+                greetingCommand() + " localhost\r\n",
+                "MAIL FROM:<" + SENDER + "> XFOO=1\r\n",
+                "MAIL FROM:<" + SENDER + "> BODY=BINARYMIME\r\n",
+                "MAIL FROM:<" + SENDER + "> BODY=8BITMIME BODY=7BIT\r\n",
+                "MAIL FROM:<" + SENDER + "> SMTPUTF8=yes\r\n",
+                "MAIL FROM:<" + SENDER + "> SIZE=-5\r\n",
+                "MAIL FROM:<" + SENDER + "> BODY=8bitmime SIZE=3000000000 smtputf8\r\n",
+                "QUIT\r\n");
+
+            assertThat(replies)
+                .contains("555 5.5.4 Unrecognized or unsupported option: XFOO")
+                .contains("555 5.5.4 Unsupported BODY type")
+                .contains("501 5.5.4 Duplicated parameter BODY")
+                .contains("501 5.5.4 SMTPUTF8 parameter takes no value")
+                .contains("501 5.5.4 Syntactically incorrect value for SIZE parameter")
+                .containsOnlyOnce("250 2.1.0 Sender <" + SENDER + "> OK");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
     void mailFromWithNonAsciiSenderShouldBeRejectedWhenSmtpUtf8NotAsserted() throws Exception {
         ProtocolServer server = null;
         try {
