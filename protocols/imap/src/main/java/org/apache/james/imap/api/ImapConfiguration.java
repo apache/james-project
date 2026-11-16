@@ -54,7 +54,7 @@ public class ImapConfiguration {
             return !StringUtils.isBlank(disableCap);
         }
 
-        private static final boolean DEFAULT_CONDSTORE_DISABLE = false;
+        private static final boolean DEFAULT_CONDSTORE_ENABLE = true;
 
         private Optional<Long> idleTimeInterval;
         private Optional<Long> appendLimit;
@@ -188,7 +188,7 @@ public class ImapConfiguration {
                 maxQueueSize.orElse(DEFAULT_QUEUE_SIZE),
                 idleTimeIntervalUnit.orElse(DEFAULT_HEARTBEAT_INTERVAL_UNIT),
                 normalizeDisableCaps,
-                isCondstoreEnable.orElse(DEFAULT_CONDSTORE_DISABLE),
+                isCondstoreEnable.orElse(DEFAULT_CONDSTORE_ENABLE),
                 provisionDefaultMailboxes.orElse(DEFAULT_PROVISION_DEFAULT_MAILBOXES),
                 customProperties.orElseGet(Properties::new),
                 additionalConnectionChecks,

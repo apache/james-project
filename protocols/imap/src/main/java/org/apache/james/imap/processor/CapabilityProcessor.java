@@ -80,12 +80,13 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     public void configure(ImapConfiguration imapConfiguration) {
         super.configure(imapConfiguration);
 
-        disabledCaps.addAll(imapConfiguration.getDisabledCaps());
         if (imapConfiguration.isCondstoreEnable()) {
             disabledCaps.remove(SUPPORTS_CONDSTORE);
         } else {
             disabledCaps.add(SUPPORTS_CONDSTORE);
         }
+        // CONDSTORE, enabled by default, can still be disabled like any other capability
+        disabledCaps.addAll(imapConfiguration.getDisabledCaps());
         if (!getMailboxManager().getSupportedMessageCapabilities().contains(UniqueID)) {
             disabledCaps.add(SUPPORTS_OBJECTID);
         }
