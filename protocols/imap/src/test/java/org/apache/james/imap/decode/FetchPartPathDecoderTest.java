@@ -20,6 +20,7 @@
 package org.apache.james.imap.decode;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 
 import java.util.Collection;
@@ -61,25 +62,44 @@ class FetchPartPathDecoderTest {
     @Test
     void testShouldDetectHeaderFields() throws Exception {
         assertThat(decoder
-                .decode("HEADER.FIELDS ()")).isEqualTo(SectionType.HEADER_FIELDS);
+                .decode("HEADER.FIELDS (Subject)")).isEqualTo(SectionType.HEADER_FIELDS);
         assertThat(decoder
-                .decode("4.HEADER.FIELDS ()")).isEqualTo(SectionType.HEADER_FIELDS);
+                .decode("4.HEADER.FIELDS (Subject)")).isEqualTo(SectionType.HEADER_FIELDS);
         assertThat(decoder
-                .decode("10.1.HEADER.FIELDS ()")).isEqualTo(SectionType.HEADER_FIELDS);
+                .decode("10.1.HEADER.FIELDS (Subject)")).isEqualTo(SectionType.HEADER_FIELDS);
         assertThat(decoder
-                .decode("8.3.5.11.HEADER.FIELDS ()")).isEqualTo(SectionType.HEADER_FIELDS);
+                .decode("8.3.5.11.HEADER.FIELDS (Subject)")).isEqualTo(SectionType.HEADER_FIELDS);
     }
 
     @Test
     void testShouldDetectHeaderFieldsNot() throws Exception {
         assertThat(decoder
-                .decode("HEADER.FIELDS.NOT ()")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
+                .decode("HEADER.FIELDS.NOT (Subject)")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
         assertThat(decoder
-                .decode("4.HEADER.FIELDS.NOT ()")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
+                .decode("4.HEADER.FIELDS.NOT (Subject)")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
         assertThat(decoder
-                .decode("10.1.HEADER.FIELDS.NOT ()")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
+                .decode("10.1.HEADER.FIELDS.NOT (Subject)")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
         assertThat(decoder
-                .decode("8.3.5.11.HEADER.FIELDS.NOT ()")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
+                .decode("8.3.5.11.HEADER.FIELDS.NOT (Subject)")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
+    }
+
+    @Test
+    void decodeShouldRejectEmptyHeaderLists() {
+        assertThatThrownBy(() -> decoder.decode("HEADER.FIELDS ()")).isInstanceOf(DecodingException.class);
+        assertThatThrownBy(() -> decoder.decode("1.HEADER.FIELDS.NOT ()")).isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeShouldRejectZeroPartNumbers() {
+        assertThatThrownBy(() -> decoder.decode("0")).isInstanceOf(DecodingException.class);
+        assertThatThrownBy(() -> decoder.decode("1.0")).isInstanceOf(DecodingException.class);
+        assertThatThrownBy(() -> decoder.decode("01.TEXT")).isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeShouldAcceptPartNumbersContainingZeros() throws Exception {
+        assertThat(decoder.decode("10.20")).isEqualTo(SectionType.CONTENT);
+        assertThat(decoder.getPath()).containsExactly(10, 20);
     }
 
     @Test
@@ -221,8 +241,8 @@ class FetchPartPathDecoderTest {
         checkPath(values, base + ".TEXT");
         checkPath(values, base + ".HEADER");
         checkPath(values, base + ".MIME");
-        checkPath(values, base + ".HEADER.FIELDS.NOT ()");
-        checkPath(values, base + ".HEADER.FIELDS ()");
+        checkPath(values, base + ".HEADER.FIELDS.NOT (Subject)");
+        checkPath(values, base + ".HEADER.FIELDS (Subject)");
     }
 
     private void checkPath(int[] expected, String encoded) throws Exception {
