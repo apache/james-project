@@ -57,6 +57,13 @@ class DecoderUtilsTest {
             .isInstanceOf(DecodingException.class);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"\\Bogus\\x", "\\Junk\\\\y", "bad\\kw"})
+    void setFlagShouldRejectBackslashesInsideFlags(String flag) {
+        assertThatThrownBy(() -> DecoderUtils.setFlag(flag, new Flags()))
+            .isInstanceOf(DecodingException.class);
+    }
+
     @Test
     void customFlagShouldBeAdded() throws Exception {
         Flags flags = new Flags();
