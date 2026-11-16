@@ -33,22 +33,34 @@ public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLine
     private static final Supplier<ByteBuf> CONTINUATION_REQUEST = () -> Unpooled.wrappedUnmodifiableBuffer(Unpooled.wrappedBuffer("+ Ok\r\n".getBytes(StandardCharsets.US_ASCII)));
 
     private final Channel channel;
-    private final boolean retry;
+    // Continuation requests already sent for this command by the previous parse attempts
+    private final int continuationRequestsAlreadySent;
+    private int continuationRequests = 0;
 
     public AbstractNettyImapRequestLineReader(Channel channel, boolean retry) {
-        this.channel = channel;
-        this.retry = retry;
+        this(channel, retry ? Integer.MAX_VALUE : 0);
+    }
 
+    public AbstractNettyImapRequestLineReader(Channel channel, int continuationRequestsAlreadySent) {
+        this.channel = channel;
+        this.continuationRequestsAlreadySent = continuationRequestsAlreadySent;
     }
 
     @Override
     protected void commandContinuationRequest() {
-        // only write the request out if this is not a retry to process the
-        // request..
-
-        if (!retry) {
+        // A command is parsed again from its start once more data arrived: only invite the client to send
+        // the synchronizing literals it was not invited to send yet (RFC 9051 section 7.5)
+        continuationRequests++;
+        if (continuationRequests > continuationRequestsAlreadySent) {
             channel.writeAndFlush(CONTINUATION_REQUEST.get());
         }
+    }
+
+    /**
+     * @return the number of synchronizing literals the client was invited to send for this command so far
+     */
+    public int continuationRequests() {
+        return Math.max(continuationRequests, continuationRequestsAlreadySent);
     }
 
     @Override

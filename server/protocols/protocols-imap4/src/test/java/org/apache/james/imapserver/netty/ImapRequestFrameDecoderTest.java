@@ -118,6 +118,38 @@ class ImapRequestFrameDecoderTest {
     }
 
     @Test
+    void eachSynchronizingLiteralOfACommandShouldGetItsContinuationRequest() {
+        Collector collector = new Collector();
+        EmbeddedChannel channel = new EmbeddedChannel();
+        channel.attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).set(new FakeImapSession() {
+            @Override
+            public boolean needsCommandInjectionDetection() {
+                return false;
+            }
+        });
+        channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(new ConcurrentHashMap<>());
+        channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), 2304, false));
+        channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(), 16, 0, 2304));
+        channel.pipeline().addLast("collector", collector);
+
+        // RFC 9051 section 7.5: the client sends a synchronizing literal once invited to
+        channel.writeInbound(Unpooled.wrappedBuffer("a LOGIN {3}\r\n".getBytes(StandardCharsets.US_ASCII)));
+        channel.writeInbound(Unpooled.wrappedBuffer("bob {6}\r\n".getBytes(StandardCharsets.US_ASCII)));
+        channel.writeInbound(Unpooled.wrappedBuffer("secret\r\n".getBytes(StandardCharsets.US_ASCII)));
+
+        List<String> continuationRequests = new ArrayList<>();
+        Object outbound;
+        while ((outbound = channel.readOutbound()) != null) {
+            continuationRequests.add(((ByteBuf) outbound).toString(StandardCharsets.US_ASCII));
+        }
+        channel.finishAndReleaseAll();
+
+        assertThat(continuationRequests).containsExactly("+ Ok\r\n", "+ Ok\r\n");
+        assertThat(collector.messages).hasSize(1)
+            .first().asString().contains("LoginRequest", "localPart=bob");
+    }
+
+    @Test
     void decodeShouldNotFailWhenARetriedLiteralCommandIsRejectedBeforeTheLastChunk() {
         List<byte[]> chunks = List.of(
             "b APPEND INBOX {5}\r\n".getBytes(StandardCharsets.US_ASCII),

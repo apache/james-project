@@ -74,6 +74,7 @@ import reactor.core.scheduler.Schedulers;
 public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements NettyConstants, LineHandlerAware {
     @VisibleForTesting
     static final String NEEDED_DATA = "NEEDED_DATA";
+    static final String CONTINUATION_REQUESTS_SENT = "CONTINUATION_REQUESTS_SENT";
     private static final boolean RETRY = true;
     private static final String TRAILING_EOL_SIZE = "TRAILING_EOL_SIZE";
     private static final String SINK = "SINK";
@@ -235,6 +236,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 return Optional.of(message);
             } catch (NettyImapRequestLineReader.NotEnoughDataException e) {
                 // this exception was thrown because we don't have enough data yet
+                if (attempt.reader() instanceof AbstractNettyImapRequestLineReader nettyReader) {
+                    attachment.put(CONTINUATION_REQUESTS_SENT, nettyReader.continuationRequests());
+                }
                 requestMoreData(ctx, in, attachment, e, readerIndex);
             }
         } else {
@@ -457,7 +461,8 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         int pendingSize = pending.stream().mapToInt(bytes -> bytes.length).sum();
         ByteBuf buffer = pendingFollowedBy(in);
         ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-        ImapRequestLineReader reader = new NettyImapRequestLineReader(ctx.channel(), buffer, retry, 0, literalSizeLimit(session), maxFrameLength);
+        int continuationRequestsSent = (Integer) attachment.getOrDefault(CONTINUATION_REQUESTS_SENT, 0);
+        ImapRequestLineReader reader = new NettyImapRequestLineReader(ctx.channel(), buffer, continuationRequestsSent, 0, literalSizeLimit(session), maxFrameLength);
         return new ParseAttempt(reader, size, buffer, pendingSize);
     }
 
