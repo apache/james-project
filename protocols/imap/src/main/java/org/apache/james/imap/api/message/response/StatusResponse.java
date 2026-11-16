@@ -183,14 +183,14 @@ public interface StatusResponse extends ImapResponseMessage {
         public static ResponseCode condStore(IdRange[] failedRanges) {
             String failed = formatRanges(failedRanges);
 
-            return new ResponseCode("MODIFIED", Arrays.asList(failed), 0, false);
+            return new ResponseCode("MODIFIED", Arrays.asList(failed), NO_NUMBER, false);
         }
         
         /** RFC4551 <code>Conditional STORE</code> response code */
         public static ResponseCode condStore(UidRange[] failedRanges) {
             String failed = formatRanges(failedRanges);
 
-            return new ResponseCode("MODIFIED", Arrays.asList(failed), 0, false);
+            return new ResponseCode("MODIFIED", Arrays.asList(failed), NO_NUMBER, false);
         }
         
         private static String formatRanges(IdRange[] ranges) {

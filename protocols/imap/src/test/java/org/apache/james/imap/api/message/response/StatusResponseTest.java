@@ -21,6 +21,8 @@ package org.apache.james.imap.api.message.response;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.imap.api.message.UidRange;
+import org.apache.james.mailbox.MessageUid;
 import org.junit.jupiter.api.Test;
 
 
@@ -37,5 +39,13 @@ class StatusResponseTest  {
     void responseCodeShouldBuildTheLongestEntryForMetadata() {
         assertThat(StatusResponse.ResponseCode.longestMetadataEntry(1024).getCode()).isEqualTo("METADATA LONGENTRIES");
         assertThat(StatusResponse.ResponseCode.longestMetadataEntry(1024).getNumber()).isEqualTo(1024);
+    }
+
+    @Test
+    void condStoreShouldNotCarryANumber() {
+        StatusResponse.ResponseCode code = StatusResponse.ResponseCode.condStore(new UidRange[] {new UidRange(MessageUid.of(1))});
+
+        assertThat(code.getNumber()).isEqualTo(StatusResponse.ResponseCode.NO_NUMBER);
+        assertThat(code.getParameters()).containsExactly("1");
     }
 }
