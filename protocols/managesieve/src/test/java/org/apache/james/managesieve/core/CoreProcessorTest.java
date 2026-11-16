@@ -70,4 +70,13 @@ class CoreProcessorTest {
 
         assertThat(processor.getScript(session, "script")).isEqualTo("{11}\r\n# é\r\nkeep;\r\nOK");
     }
+
+    @Test
+    void refusalsShouldBeAnsweredWithAQuotedText() throws Exception {
+        CoreProcessor processor = new CoreProcessor(null, new Parser(), ImmutableList.of());
+        SettableSession session = new SettableSession();
+
+        assertThat(processor.unauthenticate(session)).isEqualTo("NO \"UNAUTHENTICATE command must be issued in authenticated state\"");
+        assertThat(processor.startTLS(session)).isEqualTo("NO \"STARTTLS is not available\"");
+    }
 }
