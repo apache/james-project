@@ -105,7 +105,7 @@
                     <reuseForks>true</reuseForks>
                     <forkCount>1C</forkCount>
                     <argLine>-Djava.library.path=
-                        -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
+                        -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=includes=org.apache.james.*:org.apache.mailet.*:org.apache.mailbox.*,destfile=${basedir}/target/jacoco.exec
                         -Xms512m -Xmx1024m -Dopenjpa.Multithreaded=true</argLine>
                 </configuration>
             </plugin>
