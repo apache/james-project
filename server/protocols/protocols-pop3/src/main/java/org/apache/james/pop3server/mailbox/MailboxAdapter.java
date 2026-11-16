@@ -34,6 +34,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.protocols.pop3.mailbox.ImapMessageMetaData;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
@@ -93,7 +94,8 @@ public class MailboxAdapter implements Mailbox {
             List<MessageMetaData> mList = new ArrayList<>();
             while (results.hasNext()) {
                 MessageResult result = results.next();
-                MessageMetaData metaData = new MessageMetaData(String.valueOf(result.getUid().asLong()), result.getSize());
+                // The UIDL unique-id includes the UIDVALIDITY so that it is never reused should the mailbox be recreated (RFC 1939 section 7)
+                MessageMetaData metaData = new ImapMessageMetaData(result.getUid().asLong(), result.getSize());
                 mList.add(metaData);
             }
             return ImmutableList.copyOf(mList);
