@@ -2180,6 +2180,15 @@ class IMAPServerTest {
         }
 
         @Test
+        void commandsShouldBeProcessedAfterARefusedStartTls() throws Exception {
+            clientConnection.getOutputStream().write("a0 STARTTLS\r\n".getBytes(StandardCharsets.UTF_8));
+            assertThat(readString(clientConnection)).startsWith("a0 BAD STARTTLS failed. Unknown command.");
+
+            clientConnection.getOutputStream().write("a1 NOOP\r\n".getBytes(StandardCharsets.UTF_8));
+            assertThat(readString(clientConnection)).startsWith("a1 OK NOOP completed.");
+        }
+
+        @Test
         void startTlsCapabilityShouldNotBeAdvertisedWhenSSLSocket() throws Exception {
             clientConnection.getOutputStream().write("a0 CAPABILITY\r\n".getBytes(StandardCharsets.UTF_8));
             assertThat(readString(clientConnection)).doesNotContain("STARTTLS");

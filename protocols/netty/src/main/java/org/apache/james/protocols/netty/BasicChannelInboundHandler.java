@@ -203,7 +203,10 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                     // TODO: This kind of sucks but I was able to come up with something more elegant here
                     ((ProtocolSessionImpl) pSession).getProtocolTransport().writeResponse(response, pSession);
                 }
-
+                if (pSession.needsCommandInjectionDetection()) {
+                    // The line was processed without starting TLS: a refused STARTTLS must not block the next commands
+                    AllButStartTlsLineBasedChannelHandler.clearStartTlsInFlight(ctx.channel());
+                }
             }
 
             super.channelReadComplete(ctx);

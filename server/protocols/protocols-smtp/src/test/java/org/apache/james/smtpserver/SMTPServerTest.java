@@ -481,6 +481,23 @@ public class SMTPServerTest {
         smtpProtocol.disconnect();
     }
 
+    @Test
+    public void commandsShouldBeProcessedAfterARefusedStartTls() throws Exception {
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
+        smtpProtocol.sendCommand("STARTTLS");
+        assertThat(smtpProtocol.getReplyCode()).isEqualTo(500);
+        smtpProtocol.sendCommand("NOOP");
+        assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+
+        smtpProtocol.disconnect();
+    }
+
     protected SMTPClient newSMTPClient() throws IOException {
         SMTPClient smtp = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();

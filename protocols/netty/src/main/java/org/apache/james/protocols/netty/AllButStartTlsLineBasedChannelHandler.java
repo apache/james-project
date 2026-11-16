@@ -29,6 +29,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.LineBasedFrameDecoder;
@@ -45,6 +46,17 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
 
     private static final AttributeKey<CommandDetectionSession> sessionAttributeKey =
             AttributeKey.valueOf("session");
+
+    /**
+     * Ends the STARTTLS in flight window opened when the STARTTLS command was framed.
+     *
+     * Protocol handlers call it once a command was answered without starting TLS: a refused
+     * STARTTLS leaves the session as it was (RFC 3207 section 4, RFC 2595 sections 3.1 and 4,
+     * RFC 5804 section 2.2), thus the following commands need to be processed.
+     */
+    public static void clearStartTlsInFlight(Channel channel) {
+        channel.attr(ATTRIBUTE_KEY).set(false);
+    }
 
     public AllButStartTlsLineBasedChannelHandler(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter, String pattern) {
         super(maxFrameLength, stripDelimiter, !FAIL_FAST);

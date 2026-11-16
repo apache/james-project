@@ -147,6 +147,19 @@ public class POP3ServerTest {
         }
 
         @Test
+        void commandsShouldBeProcessedAfterARefusedSTLS() throws Exception {
+            pop3Configuration.setProperty("tls.[@startTLS]", false);
+            finishSetUp(pop3Configuration);
+
+            pop3Client = new POP3Client();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+            pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+            assertThat(pop3Client.sendCommand("STLS")).isEqualTo(POP3Reply.ERROR);
+            assertThat(pop3Client.sendCommand("CAPA")).isEqualTo(POP3Reply.OK);
+        }
+
+        @Test
         void connectionAreClosedWhenSTLSFollowedByText() throws Exception {
             finishSetUp(pop3Configuration);
 
