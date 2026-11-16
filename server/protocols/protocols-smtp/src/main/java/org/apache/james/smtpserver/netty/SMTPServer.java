@@ -115,7 +115,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     }
 
     public static class AuthAnnouncementConfiguration {
-        public static final boolean REQUIRE_SSL_DEFAULT = false;
+        public static final boolean REQUIRE_SSL_DEFAULT = true;
 
         public static AuthAnnouncementConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
             return new AuthAnnouncementConfiguration(

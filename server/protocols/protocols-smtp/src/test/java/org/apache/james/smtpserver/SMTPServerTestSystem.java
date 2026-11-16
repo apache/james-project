@@ -119,7 +119,7 @@ class SMTPServerTestSystem {
     void configureSaslMechanisms(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         PlainSaslMechanism plain = new PlainSaslMechanism(
             configuration.getBoolean("auth.plainAuthEnabled", true),
-            configuration.getBoolean("auth.requireSSL", false));
+            configuration.getBoolean("auth.requireSSL", SMTPServer.AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT));
         SaslMechanism login = new LoginSaslMechanismFactory(ignored -> plain).create(configuration);
         smtpServer.setSaslMechanisms(ImmutableList.of(login, plain));
     }

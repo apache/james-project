@@ -15,6 +15,7 @@ Note: this section is in progress. It will be updated during all the development
 Changes to apply between 3.9.x and 3.10.0 will be reported here.
 
 Change list:
+ - [SMTP authentication requires TLS by default](#smtp-authentication-requires-tls-by-default)
  - [Adding metadata column to blob tables](#adding-metadata-column-to-blob-tables)
  - [Adding thread_id column to Cassandra email_query_view_sent_at and email_query_view_received_at tables](#adding-thread_id-column-to-cassandra-email_query_view_sent_at-and-email_query_view_received_at-tables)
  - [Adding thread_id column to Postgresql email_query_view table](#adding-thread_id-column-to-postgresql-email_query_view-table)
@@ -34,6 +35,27 @@ Change list:
  - [Domains with an A-label decoding to a capital unknown to IDNA2003 are rejected](#domains-with-an-a-label-decoding-to-a-capital-unknown-to-idna2003-are-rejected)
  - [Sieve vacation and reject follow RFC 5230 and RFC 5429](#sieve-vacation-and-reject-follow-rfc-5230-and-rfc-5429)
  - [DKIMHook checks every malformed From header](#dkimhook-checks-every-malformed-from-header)
+
+### SMTP authentication requires TLS by default
+
+Date: 16/11/2026
+
+Concerned products: SMTP servers whose `smtpserver.xml` entries do not set `auth.requireSSL`
+
+`auth.requireSSL` now defaults to `true` for SMTP, as it already did for IMAP and POP3. Unless a server entry
+sets it, authentication is no longer announced on clear-text connections, and the `PLAIN` and `LOGIN` mechanisms
+are refused until `STARTTLS` succeeded. A mechanism refused for this reason is now answered
+`538 5.7.11 Encryption required for requested authentication mechanism` (RFC 4954) instead of
+`504 Unrecognized Authentication Type`.
+
+Deployments that intentionally allow clear-text SMTP authentication must add the following to each concerned
+`smtpserver.xml` entry:
+
+```xml
+<auth>
+    <requireSSL>false</requireSSL>
+</auth>
+```
 
 ### DKIMHook checks every malformed From header
 
