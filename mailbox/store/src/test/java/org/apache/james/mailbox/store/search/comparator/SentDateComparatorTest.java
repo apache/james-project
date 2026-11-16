@@ -21,8 +21,10 @@ package org.apache.james.mailbox.store.search.comparator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
@@ -39,6 +41,20 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.Test;
 
 class SentDateComparatorTest {
+    @Test
+    void toISODateShouldBeLinearOnLongUnclosedParentheses() {
+        String value = "Thu, 18 Jun 2015 04:09:35 +0200 " + "(".repeat(200_000);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () -> SentDateComparator.toISODate(value));
+    }
+
+    @Test
+    void toISODateShouldBeLinearOnLongSpaceRuns() {
+        String value = " ".repeat(200_000) + "x";
+
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () -> SentDateComparator.toISODate(value));
+    }
+
     @Test
     void sanitizeDateStringHeaderValueShouldRemoveCESTPart() {
         assertThat(SentDateComparator.sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200 (CEST)"))
