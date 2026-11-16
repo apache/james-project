@@ -393,6 +393,35 @@ public class POP3ServerTest {
     }
 
     @Test
+    void uidlShouldNotBeReusedWhenInboxIsRecreated() throws Exception {
+        finishSetUp(pop3Configuration);
+
+        Username username = Username.of("foo");
+        usersRepository.addUser(username, "bar");
+        MailboxPath mailboxPath = MailboxPath.inbox(username);
+        MailboxSession session = mailboxManager.authenticate(username, "bar").withoutDelegation();
+        mailboxManager.createMailbox(mailboxPath, session);
+        setupTestMails(session, mailboxManager.getMailbox(mailboxPath, session));
+
+        pop3Client = new POP3Client();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        pop3Client.login("foo", "bar");
+        String firstUniqueId = pop3Client.listUniqueIdentifier(1).identifier;
+        assertThat(firstUniqueId).isEqualTo(mailboxManager.getMailbox(mailboxPath, session).getMailboxEntity().getUidValidity().asLong() + "-1");
+        pop3Client.logout();
+        pop3Client.disconnect();
+
+        mailboxManager.deleteMailbox(mailboxPath, session);
+        mailboxManager.createMailbox(mailboxPath, session);
+        setupTestMails(session, mailboxManager.getMailbox(mailboxPath, session));
+
+        pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        pop3Client.login("foo", "bar");
+        assertThat(pop3Client.listUniqueIdentifier(1).identifier).isNotEqualTo(firstUniqueId);
+    }
+
+    @Test
     void testMiscCommandsWithWithoutAuth() throws Exception {
         finishSetUp(pop3Configuration);
 

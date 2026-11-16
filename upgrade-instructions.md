@@ -34,6 +34,20 @@ Change list:
  - [Domains with an A-label decoding to a capital unknown to IDNA2003 are rejected](#domains-with-an-a-label-decoding-to-a-capital-unknown-to-idna2003-are-rejected)
  - [Sieve vacation and reject follow RFC 5230 and RFC 5429](#sieve-vacation-and-reject-follow-rfc-5230-and-rfc-5429)
  - [DKIMHook checks every malformed From header](#dkimhook-checks-every-malformed-from-header)
+ - [POP3 UIDL unique-ids include the mailbox UIDVALIDITY](#pop3-uidl-unique-ids-include-the-mailbox-uidvalidity)
+
+### POP3 UIDL unique-ids include the mailbox UIDVALIDITY
+
+Date: 16/11/2026
+
+Perimeter: the POP3 server of the Guice apps using the default `MailboxAdapter` (memory, JPA, Postgres, Cassandra...).
+The distributed POP3 app, relying on message ids, is not concerned.
+
+The `UIDL` unique-id of a message used to be its bare IMAP UID, which got reused for another message once the INBOX was
+recreated, breaking RFC 1939 section 7. It is now `<UIDVALIDITY>-<UID>` (for instance `1234567890-1`).
+
+As every unique-id changes, POP3 clients keeping messages on the server will download every message of their INBOX once
+more after the upgrade.
 
 ### DKIMHook checks every malformed From header
 
