@@ -84,9 +84,11 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
 
     @Override
     public Response onCommand(SMTPSession session, Request request) {
+        // A MAIL command refused because a transaction is already open must not alter it (RFC 5321 section 4.1.1)
+        boolean transactionAlreadyOpen = session.getAttachment(SMTPSession.SENDER, State.Transaction).isPresent();
         Response response = super.onCommand(session, request);
         // Check if the response was not ok
-        if (response.getRetCode().equals(SMTPRetCode.MAIL_OK) == false) {
+        if (!transactionAlreadyOpen && response.getRetCode().equals(SMTPRetCode.MAIL_OK) == false) {
             // cleanup the session
             session.removeAttachment(SMTPSession.SENDER, State.Transaction);
         }
