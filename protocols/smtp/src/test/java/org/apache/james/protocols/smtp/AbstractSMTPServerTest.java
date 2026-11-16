@@ -1021,6 +1021,30 @@ public abstract class AbstractSMTPServerTest {
     }
 
     @Test
+    void heloAndEhloRepliesShouldHaveBalancedBrackets() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String replies = rawUtf8Exchange(bindedAddress,
+                "EHLO localhost\r\n",
+                "HELO localhost\r\n",
+                "QUIT\r\n");
+
+            assertThat(replies)
+                .containsPattern("250-\\S+ Hello localhost \\[[^\\]]+\\]\r\n")
+                .containsPattern("250 \\S+ Hello localhost \\[[^\\]]+\\]\r\n")
+                .doesNotContain("])");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
     void mailFromWithNonAsciiSenderShouldBeRejectedWhenSmtpUtf8NotAsserted() throws Exception {
         ProtocolServer server = null;
         try {
