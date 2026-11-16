@@ -93,11 +93,37 @@ public class UnwrapText extends GenericMailet {
         return unwrap(text, - 10);
     }
 
+    /**
+     * Linear equivalent of {@code ([> ]*)(.*[^ .?!][ ]*)$} applied with {@code matches()}: returns the quote prefix
+     * and the remainder of the line, or null when the line does not match.
+     */
+    private static String[] splitQuote(String l) {
+        int end = l.length();
+        while (end > 0 && l.charAt(end - 1) == ' ') {
+            end--;
+        }
+        if (end == 0 || ".?!".indexOf(l.charAt(end - 1)) >= 0) {
+            return null;
+        }
+        // '.' does not match line terminators, which can only be matched by the last non space character
+        for (int i = 0; i < end - 1; i++) {
+            if (isLineTerminator(l.charAt(i))) {
+                return null;
+            }
+        }
+        int prefix = 0;
+        while (prefix < end - 1 && (l.charAt(prefix) == '>' || l.charAt(prefix) == ' ')) {
+            prefix++;
+        }
+        return new String[] {l.substring(0, prefix), l.substring(prefix)};
+    }
+
+    private static boolean isLineTerminator(char c) {
+        return c == '\n' || c == '\r' || c == 0x85 || c == 0x2028 || c == 0x2029;
+    }
+
     public static String unwrap(String text, int qwidth) {
         String[] lines = text.split("\r\n|\n", -1);
-        
-        //P1: Manage spaces without trims
-        Pattern p1 = Pattern.compile("([> ]*)(.*[^ .?!][ ]*)$", 0);
         
         //P2: Quotation char at the begin of a line and the first word starts with a lowercase char or a number. The word ends with a space, a tab or a lineend. 
         Pattern p2 = Pattern.compile("^([> ]*)(([a-zàèéìòù][^ \t\r\n]*|[0-9][0-9,.]*)([ \t].*$|$))", 0);
@@ -131,22 +157,22 @@ public class UnwrapText extends GenericMailet {
                 }
             }
             String l = lines[i];
-            Matcher m1 = p1.matcher(l);
+            String[] q1 = splitQuote(l);
             Matcher m2 = i < lines.length - 1 ? p2.matcher(lines[i + 1]) : null;
             boolean b;
             int w;
             // if patterns match, the quote level are identical and if the line length added to the length of the following word is greater than width then it is a wrapped line.
-            if (m1.matches() && i < lines.length - 1 && m2.matches() && (
+            if (q1 != null && i < lines.length - 1 && m2.matches() && (
                     // The following line has the same quoting of the previous.
-                    ((b = m1.group(1).trim().equals(m2.group(1).trim())) && l.length() + m2.group(3).length() + 1 > width)
+                    ((b = q1[0].trim().equals(m2.group(1).trim())) && l.length() + m2.group(3).length() + 1 > width)
                     ||
                     // The following line has no quoting (while the previous yes)
                     (!b && m2.group(1).trim().equals("") && (w = l.length() + m2.group(2).trim().length() + 1) > width && w <= qwidth)
                 )) {
                 
                 if (b) {
-                    if (prevWrapped > 0 && m1.groupCount() >= 2) {
-                        result.append(m1.group(2));
+                    if (prevWrapped > 0) {
+                        result.append(q1[1]);
                     } else {
                         result.append(l);
                     }
