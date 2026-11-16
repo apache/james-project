@@ -112,3 +112,11 @@ S: F16 OK FETCH completed.
 C: F17 FETCH 1 FLAGS
 S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
 S: F17 OK FETCH completed.
+
+# A refused DELETE of the selected mailbox leaves it selected
+C: F18 DELETE #user.boby.mailbox-lr
+S: F18 NO DELETE .*
+
+C: F19 FETCH 1 FLAGS
+S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
+S: F19 OK FETCH completed.
