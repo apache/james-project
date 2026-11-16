@@ -67,7 +67,7 @@ public class ArgumentParser {
         if (Strings.isNullOrEmpty(args)) {
             return core.unauthenticate(session);
         } else {
-            return "NO UNAUTHENTICATE do not take arguments";
+            return no("UNAUTHENTICATE do not take arguments");
         }
     }
 
