@@ -157,7 +157,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 SelectedMailbox selected = session.getSelected();
                 permanentFlags(responder, metaData.getPermanentFlags(), selected, session.getMailboxSession());
                 highestModSeq(responder, metaData);
-                uidNext(responder, metaData);
+                uidNext(responder, metaData, selected);
 
                 if (request.getCondstore()) {
                     condstoreEnablingCommand(session, responder, metaData, false);
@@ -386,8 +386,13 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         responder.respond(untaggedOk);        
     }
 
-    private void uidNext(Responder responder, MailboxMetaData metaData) {
-        final MessageUid uid = metaData.getUidNext();
+    private void uidNext(Responder responder, MailboxMetaData metaData, SelectedMailbox selected) {
+        // RFC 9051 section 2.3.1.1: UIDNEXT is greater than the UID of every message announced. The metadata is read
+        // after the selected messages: a message delivered meanwhile can be known by one and not by the other.
+        final MessageUid uid = selected.getLastUid()
+            .map(MessageUid::next)
+            .filter(nextOfLastKnown -> nextOfLastKnown.compareTo(metaData.getUidNext()) > 0)
+            .orElse(metaData.getUidNext());
         final StatusResponse untaggedOk = statusResponseFactory.untaggedOk(HumanReadableText.UIDNEXT, ResponseCode.uidNext(uid));
         responder.respond(untaggedOk);
     }
