@@ -75,7 +75,7 @@ public class FullByteContent implements Content {
             if (header != null) {
                 out.write(header.getName().getBytes(StandardCharsets.US_ASCII));
                 out.write(NAME_DELIMITER_BYTES);
-                out.write(header.getValue().getBytes(StandardCharsets.US_ASCII));
+                out.write(header.getValueBytes());
                 out.write(END_OF_LINE_BYTES);
             }
         }
