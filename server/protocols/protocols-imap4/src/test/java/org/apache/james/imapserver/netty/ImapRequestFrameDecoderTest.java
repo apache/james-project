@@ -255,4 +255,66 @@ class ImapRequestFrameDecoderTest {
         assertThat(whole).isEqualTo(chunked);
         assertThat(whole).last().asString().contains("tag=c, command=NOOP");
     }
+
+    @Test
+    void aNonSynchronizingLiteralOfARejectedCommandShouldNotBeDecodedAsCommands() {
+        byte[] stream = ("a APPEND INBOX \"99-Foo-2026 10:00:00 +0000\" {24+}\r\n"
+            + "x1 NOOP\r\n"
+            + "x2 CREATE pwn\r\n"
+            + "\r\n"
+            + "b NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(true, 1024, 5504, 3008, List.of(stream));
+        assertThat(whole)
+            .hasSize(2)
+            .last().asString().contains("tag=b, command=NOOP");
+        assertThat(decode(true, 1024, 5504, 3008, byteByByte(stream)))
+            .isEqualTo(whole);
+    }
+
+    @Test
+    void aBinaryLiteralOfARejectedCommandShouldNotBeDecodedAsCommands() {
+        List<byte[]> chunks = List.of(
+            "a APPEND INBOX (\\Seen) \"14-Nov-2026 10:00:00 +0000\" ~{24+}\r\n".getBytes(StandardCharsets.US_ASCII),
+            "x1 NOOP\r\nx2 CREATE pwn\r\n\r\nb NOOP\r\n".getBytes(StandardCharsets.US_ASCII));
+
+        assertThat(decode(true, 1024, 5504, 3008, chunks))
+            .hasSize(2)
+            .last().asString().contains("tag=b, command=NOOP");
+    }
+
+    @Test
+    void aNonSynchronizingLiteralTooBigForTheServerShouldNotBeDecodedAsCommands() {
+        List<byte[]> chunks = List.of(
+            "a APPEND INBOX {9+}\r\n".getBytes(StandardCharsets.US_ASCII),
+            "x1 NOOP\r\n\r\nb NOOP\r\n".getBytes(StandardCharsets.US_ASCII));
+
+        // literalSizeLimit 8 < 9
+        assertThat(decode(true, 1024, 8, 3008, chunks))
+            .hasSize(2)
+            .last().asString().contains("tag=b, command=NOOP");
+    }
+
+    @Test
+    void aSynchronizingLiteralTooBigForTheServerShouldBeRejectedBeforeTheContinuationRequest() {
+        EmbeddedChannel channel = new EmbeddedChannel();
+        FakeImapSession session = new FakeImapSession() {
+            @Override
+            public boolean needsCommandInjectionDetection() {
+                return false;
+            }
+        };
+        session.authenticated();
+        channel.attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).set(session);
+        channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(new ConcurrentHashMap<>());
+        channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), 3008, false));
+        channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(),
+            1024, 5504, 3008));
+
+        channel.writeInbound(Unpooled.wrappedBuffer("a APPEND INBOX {999999999999}\r\n".getBytes(StandardCharsets.US_ASCII)));
+
+        assertThat((Object) channel.readOutbound()).isNull();
+        assertThat(channel.readInbound().toString()).contains("BAD");
+        channel.finishAndReleaseAll();
+    }
 }
