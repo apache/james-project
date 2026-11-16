@@ -61,6 +61,14 @@ class ImapRequestLineReaderTest {
     }
 
     @Test
+    void astringShouldRejectAQuotedStringNotTerminatedOnItsLine() {
+        inputStream = new ByteArrayInputStream("\"INBOX\r\nA2 NOOP\"\r\n".getBytes(StandardCharsets.US_ASCII));
+        lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> lineReader.astring()).isInstanceOf(DecodingException.class);
+    }
+
+    @Test
     void mailboxShouldDecodeModifiedUtf7WhenUtf8AcceptNotEnabled() throws Exception {
         // Wire form "a&--b" is the Modified UTF-7 encoding of "a&-b".
         inputStream = new ByteArrayInputStream("\"a&--b\" ".getBytes(StandardCharsets.US_ASCII));
