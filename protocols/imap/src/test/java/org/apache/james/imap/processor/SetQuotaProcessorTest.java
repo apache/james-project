@@ -28,7 +28,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
+import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
+import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.SetQuotaRequest;
@@ -76,6 +78,8 @@ class SetQuotaProcessorTest {
         assertThat(imapResponseMessageArgumentCaptor.getAllValues())
             .hasSize(1)
             .allMatch(StatusResponseTypeMatcher.NO_RESPONSE_MATCHER::matches);
+        assertThat(((StatusResponse) imapResponseMessageArgumentCaptor.getValue()).getTextKey())
+            .isEqualTo(HumanReadableText.UNSUFFICIENT_RIGHTS);
         verifyNoMoreInteractions(mockedResponder);
     }
 }

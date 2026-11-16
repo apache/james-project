@@ -34,6 +34,7 @@ import java.util.EnumSet;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
+import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.main.PathConverter;
@@ -136,6 +137,8 @@ class GetACLProcessorTest {
             .hasSize(1);
         assertThat(argumentCaptor.getAllValues().get(0))
             .matches(StatusResponseTypeMatcher.NO_RESPONSE_MATCHER::matches);
+        assertThat(((StatusResponse) argumentCaptor.getAllValues().get(0)).getTextKey().getParameters())
+            .contains(MAILBOX_NAME.asString());
     }
     
     @Test

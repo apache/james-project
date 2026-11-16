@@ -35,6 +35,7 @@ import java.util.List;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
+import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.main.PathConverter;
@@ -135,9 +136,9 @@ class ListRightsProcessorTest {
     
     @Test
     void testNoAdminRight() throws Exception {
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
+        when(mailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Lookup), eq(mailboxSession)))
             .thenReturn(true);
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
+        when(mailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Administer), eq(mailboxSession)))
             .thenReturn(false);
 
         subject.doProcess(listRightsRequest, responder, imapSession).block();
@@ -149,6 +150,8 @@ class ListRightsProcessorTest {
             .hasSize(1);
         assertThat(argumentCaptor.getAllValues().get(0))
             .matches(StatusResponseTypeMatcher.NO_RESPONSE_MATCHER::matches);
+        assertThat(((StatusResponse) argumentCaptor.getAllValues().get(0)).getTextKey().getParameters())
+            .contains(MAILBOX_NAME.asString());
     }
     
     @Test

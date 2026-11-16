@@ -99,7 +99,7 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
                     Object[] params = new Object[] {
                         MailboxACL.Right.Administer.toString(),
                         request.getCommand().getName(),
-                        mailboxName
+                        mailboxName.asString()
                     };
                     HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
                     no(request, responder, text);
