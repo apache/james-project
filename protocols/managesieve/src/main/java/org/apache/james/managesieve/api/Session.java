@@ -62,4 +62,11 @@ public interface Session {
 
     boolean supportStartTLS();
 
+    /**
+     * Records a failed authentication attempt.
+     *
+     * @return the count of failed authentication attempts of this session
+     */
+    int recordAuthenticationFailure();
+
 }

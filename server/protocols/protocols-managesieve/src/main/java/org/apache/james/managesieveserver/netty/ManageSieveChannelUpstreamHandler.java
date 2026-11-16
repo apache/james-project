@@ -84,6 +84,10 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
             String responseString = manageSieveProcessor.handleRequest(manageSieveSession, request);
             attachment.resetCumulation();
             attachment.write(responseString);
+            if (manageSieveSession.getState() == Session.State.TERMINATED) {
+                logout(ctx);
+                return;
+            }
             if (manageSieveSession.getState() == Session.State.SSL_NEGOCIATION) {
                 turnSSLon(ctx.channel());
                 manageSieveSession.setSslEnabled(true);
