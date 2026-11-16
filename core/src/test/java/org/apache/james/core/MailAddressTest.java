@@ -163,6 +163,16 @@ class MailAddressTest {
     }
 
     @Test
+    void longSourceRouteShouldBeParsedInLinearTime() throws AddressException {
+        String route = "@a.example,".repeat(100_000);
+
+        assertThatThrownBy(() -> new MailAddress(route + "alice@james.apache.org"))
+            .isInstanceOf(AddressException.class);
+        assertThat(new MailAddress(route + "@b.example:alice@james.apache.org").asString())
+            .isEqualTo("alice@james.apache.org");
+    }
+
+    @Test
     void testGoodMailAddressWithLocalPartAndDomain() {
         assertThatCode(() -> new MailAddress("local-part", "domain"))
             .doesNotThrowAnyException();

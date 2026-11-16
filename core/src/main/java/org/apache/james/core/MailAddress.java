@@ -22,8 +22,6 @@ package org.apache.james.core;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
@@ -81,8 +79,6 @@ public class MailAddress implements java.io.Serializable {
             {'<', '>', '(', ')', '[', ']', '\\', '.', ',', ';', ':', '@', '\"'};
 
     // RFC 5321 section 4.1.2: A-d-l = At-domain *( "," At-domain ) followed by ":"
-    private static final Pattern SOURCE_ROUTE = Pattern.compile("@[^@,:\\s]+(?:,@[^@,:\\s]+)*:");
-
     public static final String NULL_SENDER_AS_STRING = "<>";
 
     private static final MailAddress NULL_SENDER = new MailAddress() {
@@ -159,11 +155,31 @@ public class MailAddress implements java.io.Serializable {
      * @return new pos
      */
     private int stripSourceRoute(String address, int pos) {
-        Matcher matcher = SOURCE_ROUTE.matcher(address);
-        if (matcher.region(pos, address.length()).lookingAt()) {
-            return matcher.end();
+        // Single linear scan of A-d-l ":" (RFC 5321 section 4.1.2): no regex, hence no backtracking nor
+        // recursion on long attacker-supplied routes.
+        int i = pos;
+        while (i < address.length() && address.charAt(i) == '@') {
+            int domainStart = ++i;
+            while (i < address.length() && !isSourceRouteDelimiter(address.charAt(i))) {
+                i++;
+            }
+            if (i == domainStart || i == address.length()) {
+                return pos;
+            }
+            char delimiter = address.charAt(i);
+            if (delimiter == ':') {
+                return i + 1;
+            }
+            if (delimiter != ',') {
+                return pos;
+            }
+            i++;
         }
         return pos;
+    }
+
+    private static boolean isSourceRouteDelimiter(char c) {
+        return c == '@' || c == ',' || c == ':' || Character.isWhitespace(c);
     }
 
     /**
