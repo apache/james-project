@@ -43,7 +43,7 @@ public class SetQuotaCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        final String quotaRoot = request.atom();
+        final String quotaRoot = request.astring();
         SetQuotaRequest setQuotaRequest = new SetQuotaRequest(tag, quotaRoot);
         // We now parse resource limit declaration
         // It has the following shape : (RESOURCE1 1024000) (RESOURCE2 2048000)\n

@@ -46,4 +46,14 @@ class GetQuotaParserTest {
         GetQuotaRequest expected = new GetQuotaRequest(TAG, "quotaRoot");
         assertThat(request.getQuotaRoot()).isEqualTo(expected.getQuotaRoot());
     }
+
+    @Test
+    void quotaRootShouldAcceptQuotedStrings() throws DecodingException {
+        GetQuotaCommandParser parser = new GetQuotaCommandParser(mock(StatusResponseFactory.class));
+        String commandString = "\"#private&alice@domain.tld\"\n";
+        InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
+        GetQuotaRequest request = (GetQuotaRequest) parser.decode(lineReader, TAG, null);
+        assertThat(request.getQuotaRoot()).isEqualTo("#private&alice@domain.tld");
+    }
 }

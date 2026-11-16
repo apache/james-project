@@ -52,4 +52,15 @@ class SetQuotaCommandParserTest {
         assertThat(list.get(1).getLimit()).isEqualTo(1024);
         assertThat(list.size()).isEqualTo(2);
     }
+
+    @Test
+    void quotaRootShouldAcceptQuotedStrings() throws DecodingException {
+        SetQuotaCommandParser parser = new SetQuotaCommandParser(mock(StatusResponseFactory.class));
+        String commandString = "\"#private&alice@domain.tld\" (STORAGE 512)\n";
+        InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
+        SetQuotaRequest request = (SetQuotaRequest) parser.decode(lineReader, TAG, null);
+        assertThat(request.getQuotaRoot()).isEqualTo("#private&alice@domain.tld");
+        assertThat(request.getResourceLimits()).hasSize(1);
+    }
 }
