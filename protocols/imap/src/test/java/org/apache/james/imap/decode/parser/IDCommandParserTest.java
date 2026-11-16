@@ -21,6 +21,7 @@ package org.apache.james.imap.decode.parser;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
@@ -30,9 +31,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
+import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.IDRequest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class IDCommandParserTest {
     @Test
@@ -45,5 +49,25 @@ class IDCommandParserTest {
         IDRequest request = (IDRequest) parser.decode(lineReader, TAG, null);
 
         assertThat(request.getParameters()).isEqualTo(Optional.of(Map.of("name", "b")));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"(\"name\")", "(\"name\" \"x\" \"version\")"})
+    void idShouldRejectFieldsWithoutAValue(String parameters) {
+        assertThatThrownBy(() -> decode(parameters))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void idShouldAcceptAnEmptyList() throws Exception {
+        assertThat(decode("()").getParameters()).isEqualTo(Optional.of(Map.of()));
+    }
+
+    private IDRequest decode(String parameters) throws DecodingException {
+        IDCommandParser parser = new IDCommandParser(mock(StatusResponseFactory.class));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(
+            new ByteArrayInputStream((parameters + "\r\n").getBytes(StandardCharsets.US_ASCII)),
+            new ByteArrayOutputStream());
+        return (IDRequest) parser.decode(lineReader, TAG, null);
     }
 }

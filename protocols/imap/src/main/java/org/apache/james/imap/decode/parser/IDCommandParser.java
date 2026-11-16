@@ -25,6 +25,7 @@ import jakarta.inject.Inject;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
@@ -57,6 +58,8 @@ public class IDCommandParser extends AbstractImapCommandParser {
             }
         }
         request.consumeChar('(');
+        // The list may be empty: id_params_list ::= "(" #(string SPACE nstring) ")" / nil
+        c = request.nextWordChar();
 
         ImmutableMap.Builder<String, String> parameters = ImmutableMap.builder();
         boolean first = true;
@@ -80,6 +83,10 @@ public class IDCommandParser extends AbstractImapCommandParser {
                 parameters.put(field, value);
             } else {
                 String value = request.atom();
+                if (value.isEmpty()) {
+                    // Each field must be followed by a value. Be lenient with atoms (NIL, unquoted values sent by some clients)
+                    throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expecting a value for ID field " + field);
+                }
                 parameters.put(field, value);
             }
 
