@@ -52,6 +52,7 @@ import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.core.AbstractPOP3CommandHandler;
+import org.apache.james.protocols.pop3.core.AuthenticationFailures;
 import org.apache.james.protocols.pop3.core.CapaCapability;
 import org.apache.james.protocols.pop3.core.MDCConstants;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
@@ -345,7 +346,7 @@ public class AuthCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
         try {
             return switch (failure.type()) {
                 case MALFORMED -> INVALID_AUTH_REQUEST;
-                case INVALID_CREDENTIALS, AUTHENTICATION_FAILED, USER_DOES_NOT_EXIST, DELEGATION_FORBIDDEN -> AUTH_FAILED;
+                case INVALID_CREDENTIALS, AUTHENTICATION_FAILED, USER_DOES_NOT_EXIST, DELEGATION_FORBIDDEN -> AuthenticationFailures.recordFailure(session, AUTH_FAILED);
                 case SERVER_ERROR -> {
                     failure.cause()
                         .ifPresentOrElse(

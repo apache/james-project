@@ -73,22 +73,30 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
 
     @Override
     public Response onCommand(POP3Session session, Request request) {
-        boolean authenticationRequiresTls = authenticationRequiresTls(session, request);
-        Response response =  super.onCommand(session, request);
-        if (authenticationRequiresTls) {
-            response = AUTH_REQUIRES_TLS;
+        if (authenticationUnavailable(session, request)) {
+            // Not a credential failure: rejected without counting it as a failed authentication attempt
+            LOGGER.warn("PASS rejected because authentication is unavailable on the current transport");
+            session.setHandlerState(POP3Session.AUTHENTICATION_READY);
+            if (authenticationRequiresTls(session)) {
+                return AUTH_REQUIRES_TLS;
+            }
+            return AUTH_FAILED;
         }
+        Response response =  super.onCommand(session, request);
         if (POP3Response.OK_RESPONSE.equals(response.getRetCode())) {
             POP3BeforeSMTPHelper.addIPAddress(session.getRemoteAddress().getAddress().getHostAddress());
         }
         return response;
     }
 
-    private boolean authenticationRequiresTls(POP3Session session, Request request) {
+    private boolean authenticationUnavailable(POP3Session session, Request request) {
         return session.getHandlerState() == POP3Session.AUTHENTICATION_USERSET
             && request.getArgument() != null
-            && !session.isTLSStarted()
-            && availablePlainSaslMechanism(session).isEmpty()
+            && availablePlainSaslMechanism(session).isEmpty();
+    }
+
+    private boolean authenticationRequiresTls(POP3Session session) {
+        return !session.isTLSStarted()
             && plainSaslMechanism.filter(mechanism -> mechanism.isAvailableOnTransport(true)).isPresent();
     }
 
