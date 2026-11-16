@@ -116,8 +116,8 @@ public class ArgumentParser {
     
     public String checkScript(Session session, String args) {
         CommandWithLiteral command = CommandWithLiteral.parse(args);
-        return withArguments(command.firstLine(), arguments -> {
-            Optional<String> content = readAnnouncedLiteral(arguments, command.followingData());
+        return withLiteralArguments(command, arguments -> {
+            Optional<String> content = readLiteral(announcedLiteralSize(arguments), command.followingData());
 
             if (arguments.isEmpty()) {
                 return no("Missing argument: script size");
@@ -169,8 +169,8 @@ public class ArgumentParser {
 
     public String putScript(Session session, String args) {
         CommandWithLiteral command = CommandWithLiteral.parse(args);
-        return withArguments(command.firstLine(), arguments -> {
-            Optional<String> content = readAnnouncedLiteral(arguments, command.followingData());
+        return withLiteralArguments(command, arguments -> {
+            Optional<String> content = readLiteral(announcedLiteralSize(arguments), command.followingData());
 
             if (arguments.isEmpty() || Strings.isNullOrEmpty(arguments.get(0))) {
                 return no("Missing argument: script name");
@@ -256,12 +256,10 @@ public class ArgumentParser {
      * @throws NotEnoughDataException when the announced octets did not all arrive yet
      * @return the literal content, empty when more data than announced was received
      */
-    private Optional<String> readAnnouncedLiteral(List<String> arguments, String followingData) {
+    private Optional<String> readLiteral(Optional<Long> announcedSize, String followingData) {
         if (!validatePutSize) {
             return Optional.of(followingData.stripTrailing());
         }
-        Optional<Long> announcedSize = Optional.ofNullable(Iterables.getLast(arguments, null))
-            .flatMap(ArgumentParser::literalSize);
         long receivedOctets = followingData.getBytes(StandardCharsets.UTF_8).length;
         long expectedOctets = announcedSize.orElse(0L);
         if (receivedOctets < expectedOctets) {
@@ -271,6 +269,27 @@ public class ArgumentParser {
             return Optional.empty();
         }
         return Optional.of(followingData);
+    }
+
+    /**
+     * Same as {@link #withArguments(String, Function)}, but a command line violating the string syntax still
+     * consumes the literal it announces.
+     */
+    private String withLiteralArguments(CommandWithLiteral command, Function<List<String>, String> handler) {
+        List<String> arguments;
+        try {
+            arguments = ParserUtils.splitArguments(command.firstLine());
+        } catch (ArgumentException e) {
+            String lastToken = command.firstLine().substring(command.firstLine().lastIndexOf(' ') + 1);
+            readLiteral(literalSize(lastToken), command.followingData());
+            return no(e.getMessage());
+        }
+        return handler.apply(arguments);
+    }
+
+    private static Optional<Long> announcedLiteralSize(List<String> arguments) {
+        return Optional.ofNullable(Iterables.getLast(arguments, null))
+            .flatMap(ArgumentParser::literalSize);
     }
 
     private static Optional<Long> literalSize(String argument) {

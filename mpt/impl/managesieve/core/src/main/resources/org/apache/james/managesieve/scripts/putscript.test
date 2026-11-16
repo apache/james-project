@@ -65,6 +65,8 @@ C: DELETESCRIPT "renamed script"
 S: OK
 
 C: PUTSCRIPT "unterminated script {7+}
+C: #test
+C:
 S: NO "Unterminated quoted string"
 
 C: PUTSCRIPT "mysievescript" {97+}

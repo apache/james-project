@@ -126,6 +126,20 @@ class ManageSieveProcessorTest {
     }
 
     @Test
+    void putScriptShouldRejectInvalidEscapesInTheScriptName() throws Exception {
+        String response = processor.handleRequest(session, "PUTSCRIPT \"a\\x01b\" {5+}\r\nkeep;\r\n");
+
+        assertThat(response).startsWith("NO \"Invalid escape sequence");
+        assertThat(calls).isEmpty();
+    }
+
+    @Test
+    void putScriptWithAnInvalidNameShouldConsumeItsLiteral() {
+        assertThatThrownBy(() -> processor.handleRequest(session, "PUTSCRIPT \"a\\x01b\" {5+}\r\n"))
+            .isInstanceOf(NotEnoughDataException.class);
+    }
+
+    @Test
     void unknownCommandShouldBeAnsweredWithAQuotedText() throws Exception {
         assertThat(processor.handleRequest(session, "FO\"O{3}"))
             .isEqualTo("NO \"unknown FO\\\"O{3} command\"\r\n");

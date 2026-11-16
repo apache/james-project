@@ -87,6 +87,12 @@ class ParserUtilsTest {
     }
 
     @Test
+    void splitArgumentsShouldRejectInvalidEscapes() {
+        assertThatThrownBy(() -> ParserUtils.splitArguments("\"a\\x01b\" {5+}"))
+            .isInstanceOf(ArgumentException.class);
+    }
+
+    @Test
     void quoteShouldEscapeQuotes() {
         assertThat(ParserUtils.quote("For input string: \"error\"")).isEqualTo("\"For input string: \\\"error\\\"\"");
     }
