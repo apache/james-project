@@ -18,7 +18,7 @@
 ################################################################
 
 C: CHECKSCRIPT
-S: NO " is an invalid size literal : it should be at least 4 char looking like \{_\+\}"
+S: NO "Missing argument: script size"
 
 C: CHECKSCRIPT unquoted
 S: NO "unquoted is an invalid size literal : it should be at least 4 char looking like .*"
@@ -44,6 +44,7 @@ C:
 C: if envelope :contains "to" "tmartin+sent" {
 C:   fileinto "INBOX.sent";
 C: }
+C:
 S: OK
 
 C: CHECKSCRIPT {31+}

@@ -63,9 +63,9 @@ public class ManageSieveProcessor {
         }
 
         int firstWordEndIndex = requestWithoutLineEnding.indexOf(' ');
-        String arguments = parseArguments(requestWithoutLineEnding, firstWordEndIndex);
+        String rawArguments = parseArguments(requestWithoutLineEnding, firstWordEndIndex);
         String command = parseCommand(requestWithoutLineEnding, firstWordEndIndex);
-        return matchCommandWithImplementation(session, arguments, command) + "\r\n";
+        return matchCommandWithImplementation(session, rawArguments, command) + "\r\n";
     }
 
     public void close(Session session) {
@@ -91,18 +91,20 @@ public class ManageSieveProcessor {
 
     private String parseArguments(String request, int firstWordEndIndex) {
         if (firstWordEndIndex >= 0) {
-            return request.substring(firstWordEndIndex + 1).trim();
+            // Not trimmed: the literal of PUTSCRIPT and CHECKSCRIPT is made of the exact octets sent by the client
+            return request.substring(firstWordEndIndex + 1);
         }
         return "";
     }
 
-    private String matchCommandWithImplementation(Session session, String arguments, String command) throws SessionTerminatedException {
+    private String matchCommandWithImplementation(Session session, String rawArguments, String command) throws SessionTerminatedException {
+        String arguments = rawArguments.trim();
         if (command.equalsIgnoreCase(AUTHENTICATE)) {
             return saslProcessor.startAuthentication(session, arguments);
         } else if (command.equalsIgnoreCase(CAPABILITY)) {
             return argumentParser.capability(session, arguments);
         } else if (command.equalsIgnoreCase(CHECKSCRIPT)) {
-            return argumentParser.checkScript(session, arguments);
+            return argumentParser.checkScript(session, rawArguments);
         } else if (command.equalsIgnoreCase(DELETESCRIPT)) {
             return argumentParser.deleteScript(session, arguments);
         } else if (command.equalsIgnoreCase(GETSCRIPT)) {
@@ -116,7 +118,7 @@ public class ManageSieveProcessor {
         } else if (command.equalsIgnoreCase(NOOP)) {
             return argumentParser.noop(arguments);
         } else if (command.equalsIgnoreCase(PUTSCRIPT)) {
-            return argumentParser.putScript(session, arguments);
+            return argumentParser.putScript(session, rawArguments);
         } else if (command.equalsIgnoreCase(RENAMESCRIPT)) {
             return argumentParser.renameScript(session, arguments);
         } else if (command.equalsIgnoreCase(SETACTIVE)) {

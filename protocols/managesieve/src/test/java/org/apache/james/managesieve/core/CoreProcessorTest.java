@@ -22,7 +22,9 @@ package org.apache.james.managesieve.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.lang.reflect.Proxy;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,5 +56,18 @@ class CoreProcessorTest {
 
         assertThat(response).startsWith("NO");
         assertThat(calls).doesNotContain("putScript");
+    }
+
+    @Test
+    void getScriptShouldAnnounceTheScriptSizeInOctets() throws Exception {
+        SieveRepository repository = (SieveRepository) Proxy.newProxyInstance(SieveRepository.class.getClassLoader(),
+            new Class<?>[] {SieveRepository.class},
+            (proxy, method, args) -> new ByteArrayInputStream("# é\r\nkeep;".getBytes(StandardCharsets.UTF_8)));
+        CoreProcessor processor = new CoreProcessor(repository, new Parser(), ImmutableList.of());
+        SettableSession session = new SettableSession();
+        session.setUser(Username.of("bob"));
+        session.setState(Session.State.AUTHENTICATED);
+
+        assertThat(processor.getScript(session, "script")).isEqualTo("{11}\r\n# é\r\nkeep;\r\nOK");
     }
 }
