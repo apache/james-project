@@ -44,8 +44,11 @@ import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CharMatcher;
+
 public final class EnvelopeBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(EnvelopeBuilder.class);
+    private static final CharMatcher PRINTABLE_ASCII = CharMatcher.inRange(' ', '~').or(CharMatcher.is('\t'));
 
     public FetchResponse.Envelope buildEnvelope(Headers headers) throws MailboxException {
         final String date = headerValue(headers, ImapConstants.RFC822_DATE);
@@ -147,13 +150,17 @@ public final class EnvelopeBuilder {
     }
 
     private String encodedMailboxName(Mailbox mailbox) {
-        // Encode the mailbox name
-        // See IMAP-266
         String name = mailbox.getName();
-        if (name != null) {
-            return EncoderUtil.encodeAddressDisplayName(name);
+        if (name == null) {
+            return null;
         }
-        return null;
+        // The IMAP string carries the quoting: do not use the RFC 5322 quoted-string form of the display name
+        if (PRINTABLE_ASCII.matchesAllOf(name)) {
+            return name;
+        }
+        // Encode non ASCII names
+        // See IMAP-266
+        return EncoderUtil.encodeEncodedWord(name, EncoderUtil.Usage.WORD_ENTITY);
     }
 
     private void addAddresses(Group group, List<FetchResponse.Envelope.Address> addresses) {
