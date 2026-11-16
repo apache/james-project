@@ -82,4 +82,27 @@ public class MimeMessageUtilTest {
         LifecycleUtil.dispose(wrapper);
     }
 
+    private static MimeMessage parse(String raw) throws MessagingException {
+        return new MimeMessageWrapper(MimeMessageInputStreamSource.create("test",
+            new ByteArrayInputStream(raw.getBytes(StandardCharsets.US_ASCII))));
+    }
+
+    @Test
+    void headerBlockHoldsABareCarriageReturnShouldDetectABareCrInHeaders() throws Exception {
+        assertThat(MimeMessageUtil.headerBlockHoldsABareCarriageReturn(
+            parse("Subject: a\rSender: b@c.d\r\n\r\nbody\r\n"))).isTrue();
+    }
+
+    @Test
+    void headerBlockHoldsABareCarriageReturnShouldAcceptCrLfHeaders() throws Exception {
+        assertThat(MimeMessageUtil.headerBlockHoldsABareCarriageReturn(
+            parse("Subject: a\r\nSender: b@c.d\r\n\r\nbody\r\n"))).isFalse();
+    }
+
+    @Test
+    void headerBlockHoldsABareCarriageReturnShouldIgnoreTheBody() throws Exception {
+        assertThat(MimeMessageUtil.headerBlockHoldsABareCarriageReturn(
+            parse("Subject: a\r\n\r\nbo\rdy\r\n"))).isFalse();
+    }
+
 }

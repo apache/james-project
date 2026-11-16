@@ -19,6 +19,7 @@
 
 package org.apache.james.server.core;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -295,6 +296,46 @@ public class MimeMessageUtil {
             size = out.getSize();
         }
         return size;
+    }
+
+    /**
+     * Reads the header block as it will be transmitted and stored: the raw bytes received as long as the message is
+     * not modified. A CR is only allowed as part of a CRLF (RFC 5322 section 2.2).
+     *
+     * Jakarta Mail ends a header line at a bare CR while mime4j does not: such a header block can be read differently
+     * by the checks and by the recipients.
+     */
+    public static boolean headerBlockHoldsABareCarriageReturn(MimeMessage message) throws MessagingException, IOException {
+        try (InputStream in = new BufferedInputStream(rawHeaderStream(message))) {
+            boolean emptyLine = true;
+            int current = in.read();
+            while (current != -1) {
+                if (current == '\r') {
+                    if (in.read() != '\n') {
+                        return true;
+                    }
+                    current = '\n';
+                }
+                if (current == '\n') {
+                    if (emptyLine) {
+                        // End of the header block
+                        return false;
+                    }
+                    emptyLine = true;
+                } else {
+                    emptyLine = false;
+                }
+                current = in.read();
+            }
+            return false;
+        }
+    }
+
+    private static InputStream rawHeaderStream(MimeMessage message) throws MessagingException {
+        if (message instanceof MimeMessageWrapper wrapper) {
+            return wrapper.getMessageInputStream();
+        }
+        return new InternetHeadersInputStream(message.getAllHeaderLines());
     }
 
 }
