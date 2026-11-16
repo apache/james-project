@@ -1070,6 +1070,26 @@ public class POP3ServerTest {
     }
 
     @Test
+    void capaShouldNotAdvertiseStlsOnceTlsIsActive() throws Exception {
+        finishSetUp(pop3Configuration);
+
+        POP3SClient client = new POP3SClient(false, BogusSslContextFactory.getClientContext());
+        client.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
+        pop3Client = client;
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        assertThat(client.sendCommand("CAPA")).isEqualTo(POP3Reply.OK);
+        client.getAdditionalReply();
+        assertThat(client.getReplyStrings()).contains("STLS");
+
+        assertThat(client.execTLS()).isTrue();
+        assertThat(client.sendCommand("CAPA")).isEqualTo(POP3Reply.OK);
+        client.getAdditionalReply();
+        assertThat(client.getReplyStrings()).doesNotContain("STLS");
+    }
+
+    @Test
     void unknownAuthMechanismShouldBeRejectedAsUnsupported() throws Exception {
         finishSetUp(pop3Configuration);
 
