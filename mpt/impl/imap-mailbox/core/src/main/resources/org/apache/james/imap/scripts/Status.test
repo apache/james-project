@@ -149,3 +149,7 @@ S: a017 OK LIST completed.
 # Cleanup
 C: a1 DELETE statustest
 S: a1 OK DELETE completed.
+
+# RFC 9051 section 9: at least one status item
+C: a2 STATUS INBOX ()
+S: a2 BAD STATUS failed. Illegal arguments.
