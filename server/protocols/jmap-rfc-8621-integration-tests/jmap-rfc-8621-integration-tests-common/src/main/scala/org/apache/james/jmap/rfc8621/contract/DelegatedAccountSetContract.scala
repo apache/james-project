@@ -164,7 +164,7 @@ trait DelegatedAccountSetContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "${SESSION_STATE.value}",
+           |    "sessionState": "$${json-unit.any-string}",
            |    "methodResponses": [
            |        [
            |            "DelegatedAccount/set",
@@ -216,7 +216,7 @@ trait DelegatedAccountSetContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |	"sessionState": "${SESSION_STATE.value}",
+           |	"sessionState": "$${json-unit.any-string}",
            |	"methodResponses": [
            |		[
            |			"error",

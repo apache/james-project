@@ -150,6 +150,36 @@ trait DelegateSetContract {
   }
 
   @Test
+  def sessionStateShouldChangeWhenTheUserIsGrantedADelegatedAccount(server: GuiceJamesServer): Unit = {
+    val stateBeforeDelegation = sessionState()
+
+    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(andreUsername, bobUsername)
+
+    val stateAfterDelegation = sessionState()
+    assertThat(stateAfterDelegation).isNotEqualTo(stateBeforeDelegation)
+    assertThat(echoSessionState()).isEqualTo(stateAfterDelegation)
+  }
+
+  private def sessionState(): String =
+    `given`
+    .when
+      .get("/session")
+    .`then`
+      .statusCode(SC_OK)
+      .extract
+      .path[String]("state")
+
+  private def echoSessionState(): String =
+    `given`
+      .body("""{"using": ["urn:ietf:params:jmap:core"], "methodCalls": [["Core/echo", {}, "c1"]]}""")
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .extract
+      .path[String]("sessionState")
+
+  @Test
   def delegateSetWithSeveralCreationRequestsShouldSucceed(server: GuiceJamesServer): Unit = {
     val delegationProbe = server.getProbe(classOf[DelegationProbe])
     val request =

@@ -47,7 +47,7 @@ import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutesHandler, JMAPServer, 
 import org.apache.james.mailbox.extension.PreDeletionHook
 import org.apache.james.mailbox.inmemory.{InMemoryMailboxManager, MemoryMailboxManagerProvider}
 import org.apache.james.metrics.tests.RecordingMetricFactory
-import org.apache.james.user.memory.MemoryUsersRepository
+import org.apache.james.user.memory.{MemoryDelegationStore, MemoryUsersRepository}
 import org.hamcrest
 import org.hamcrest.Matchers.equalTo
 import org.mockito.ArgumentMatchers.any
@@ -78,7 +78,7 @@ object JMAPApiRoutesTest {
   private val userProvisionner: UserProvisioning = new UserProvisioning(usersRepository, new RecordingMetricFactory)
   private[routes] def newServer(methods: Set[Method]): JMAPServer = {
     val configuration = JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")
-    val api = new JMAPApi(methods, DefaultCapabilities.supported(configuration).map(_.id()), configuration)
+    val api = new JMAPApi(methods, DefaultCapabilities.supported(configuration).map(_.id()), configuration, new MemoryDelegationStore())
     val apiRoute = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, api)
     val routesHandler = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, apiRoute))
     val versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT)
@@ -433,7 +433,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
 
     val methods: Set[Method] = Set(mockCoreEchoMethod)
     val jmapRfc8621Configuration = JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")
-    val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(methods, DefaultCapabilities.supported(jmapRfc8621Configuration).map(_.id()), jmapRfc8621Configuration))
+    val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(methods, DefaultCapabilities.supported(jmapRfc8621Configuration).map(_.id()), jmapRfc8621Configuration, new MemoryDelegationStore()))
     val routesHandler: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, apiRoute))
 
     val versionParser: VersionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT)

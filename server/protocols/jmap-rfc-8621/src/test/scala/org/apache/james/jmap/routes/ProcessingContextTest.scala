@@ -20,18 +20,20 @@
 package org.apache.james.jmap.routes
 
 import eu.timepit.refined.auto._
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.JMAP_CORE
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, JmapRfc8621Configuration, ServerId}
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.method.{CoreEchoMethod, Method}
-import org.apache.james.mailbox.MailboxSession
+import org.apache.james.mailbox.MailboxSessionUtil
+import org.apache.james.user.memory.MemoryDelegationStore
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{Nested, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{mock, spy, times, verify}
+import org.mockito.Mockito.{spy, times, verify}
 import play.api.libs.json.{JsArray, JsObject, Json}
 
 class ProcessingContextTest {
@@ -436,7 +438,7 @@ class ProcessingContextTest {
     def apiShouldRejectCollisionWithoutDispatchAndContinueUsingEarlierResults(arguments: String): Unit = {
       val echo = spy(new CoreEchoMethod)
       val configuration = JmapRfc8621Configuration("http://localhost", "ws://localhost")
-      val api = new JMAPApi(Set[Method](echo), Set(JMAP_CORE), configuration)
+      val api = new JMAPApi(Set[Method](echo), Set(JMAP_CORE), configuration, new MemoryDelegationStore())
       val request = ResponseSerializer.deserializeRequestObject(
         s"""{
           |  "using":["urn:ietf:params:jmap:core"],
@@ -447,7 +449,7 @@ class ProcessingContextTest {
           |  ]
           |}""".stripMargin).get
 
-      val response = ResponseSerializer.serialize(api.process(request, mock(classOf[MailboxSession])).block())
+      val response = ResponseSerializer.serialize(api.process(request, MailboxSessionUtil.create(Username.of("bob@domain.tld"))).block())
       val responses = (response \ "methodResponses").as[Seq[JsArray]]
 
       assertThat(responses.size).isEqualTo(3)
@@ -490,7 +492,7 @@ class ProcessingContextTest {
     def apiShouldKeepInvalidResultReferenceForNonCollidingReferenceErrors(reference: String): Unit = {
       val echo = spy(new CoreEchoMethod)
       val configuration = JmapRfc8621Configuration("http://localhost", "ws://localhost")
-      val api = new JMAPApi(Set[Method](echo), Set(JMAP_CORE), configuration)
+      val api = new JMAPApi(Set[Method](echo), Set(JMAP_CORE), configuration, new MemoryDelegationStore())
       val request = ResponseSerializer.deserializeRequestObject(
         s"""{
            |  "using":["urn:ietf:params:jmap:core"],
@@ -500,7 +502,7 @@ class ProcessingContextTest {
            |  ]
            |}""".stripMargin).get
 
-      val response = ResponseSerializer.serialize(api.process(request, mock(classOf[MailboxSession])).block())
+      val response = ResponseSerializer.serialize(api.process(request, MailboxSessionUtil.create(Username.of("bob@domain.tld"))).block())
       val error = (response \ "methodResponses").as[Seq[JsArray]].apply(1)
 
       assertThat(error.value.head).isEqualTo(Json.toJson("error"))

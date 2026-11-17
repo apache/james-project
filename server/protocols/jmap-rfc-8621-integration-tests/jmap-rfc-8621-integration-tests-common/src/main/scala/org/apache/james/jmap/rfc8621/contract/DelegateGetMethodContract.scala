@@ -345,7 +345,7 @@ trait DelegateGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "${SESSION_STATE.value}",
+         |  "sessionState": "$${json-unit.any-string}",
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
@@ -388,7 +388,7 @@ trait DelegateGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "${SESSION_STATE.value}",
+         |  "sessionState": "$${json-unit.any-string}",
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
@@ -436,7 +436,7 @@ trait DelegateGetMethodContract {
       .withOptions(IGNORING_ARRAY_ORDER)
       .isEqualTo(
       s"""{
-         |  "sessionState": "${SESSION_STATE.value}",
+         |  "sessionState": "$${json-unit.any-string}",
          |  "methodResponses": [
          |        [
          |            "error",
