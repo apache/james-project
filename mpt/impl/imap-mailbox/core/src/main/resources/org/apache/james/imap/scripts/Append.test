@@ -65,5 +65,13 @@ C: Hello Joe, could we change that to 4:00pm tomorrow?
 C:
 S: 5.25 OK (\[.+\] )?APPEND completed.
 
+# An impossible date-time is a BAD command: no continuation request is sent for its literal
+C: a2 APPEND appendBox "31-Feb-2009 09:00:00 +0000" {310}
+S: a2 BAD APPEND failed. Illegal arguments.
+
+# Flags are atoms, not quoted strings
+C: a3 APPEND appendBox ("foo") {310}
+S: a3 BAD APPEND failed. Illegal arguments.
+
 C: a1 DELETE appendBox
 S: a1 OK DELETE completed.
