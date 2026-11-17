@@ -35,7 +35,7 @@
     <connectionLimitPerIP>0</connectionLimitPerIP>
     <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
     <auth>
-        <announce>forUnauthorizedAddresses</announce>
+        <announce>always</announce>
         <requireSSL>false</requireSSL>
     </auth>
     <verifyIdentity>false</verifyIdentity>
