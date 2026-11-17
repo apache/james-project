@@ -115,6 +115,11 @@ public abstract class AuthenticatedState extends BasicImapCommands {
     }
 
     @Test
+    public void testListMultiplePatterns() throws Exception {
+        simpleScriptedTestProtocol.run("ListMultiplePatterns");
+    }
+
+    @Test
     public void testStatusUS() throws Exception {
         simpleScriptedTestProtocol.run("Status");
     }
