@@ -111,15 +111,16 @@ public class SenderHeaderVerificationHook implements JamesMessageHook, SaslAuthR
         Username loggedInUser = session.getAttachment(LOGGED_IN_USER, ProtocolSession.State.Connection)
             .orElse(session.getUsername());
         try {
+            if (MimeMessageUtil.headerBlockHoldsABareCarriageReturn(mail.getMessage())) {
+                // Jakarta Mail ends a header line at a bare CR, mime4j (used to display the message) does not: the
+                // Sender field checked here could differ from the one shown to recipients, or even be hidden from
+                // Jakarta Mail when the bare CRs make it read an empty line
+                LOGGER.warn("{} tried to send a mail with a bare CR in its header block", loggedInUser.asString());
+                return SENDER_MISMATCH;
+            }
             String[] senderFields = mail.getMessage().getHeader(SENDER);
             if (senderFields == null) {
                 return HookResult.DECLINED;
-            }
-            if (MimeMessageUtil.headerBlockHoldsABareCarriageReturn(mail.getMessage())) {
-                // Jakarta Mail ends a header line at a bare CR, mime4j (used to display the message) does not: the
-                // Sender field checked here could differ from the one shown to recipients
-                LOGGER.warn("{} tried to send a mail with a bare CR in its header block alongside a Sender header", loggedInUser.asString());
-                return SENDER_MISMATCH;
             }
             for (String senderField : senderFields) {
                 if (!disclosesOnly(senderField, loggedInUser)) {

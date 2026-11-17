@@ -47,6 +47,8 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class SenderHeaderVerificationHookTest {
     private static final Username BOB = Username.of("bob@example.local");
@@ -171,6 +173,18 @@ class SenderHeaderVerificationHookTest {
 
         send(smtpProtocol, BOB.asString(), "rcpt@example.com",
             "From: " + BOB.asString() + "\r\nSender: " + BOB.asString() + "\r\nX-Custom: a\rb\r\n");
+
+        assertRejected(smtpProtocol);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"X-A: b\r\r\r\nSender: ", "X-A: b\r\rSender: "})
+    void senderHiddenFromJakartaMailByBareCrsShouldBeRejected(String hidingPrefix) throws Exception {
+        start("smtpserver-sender-header-verification.xml");
+        SMTPClient smtpProtocol = authenticateAsBob();
+
+        send(smtpProtocol, BOB.asString(), "rcpt@example.com",
+            "From: " + BOB.asString() + "\r\n" + hidingPrefix + ALICE.asString() + "\r\n");
 
         assertRejected(smtpProtocol);
     }

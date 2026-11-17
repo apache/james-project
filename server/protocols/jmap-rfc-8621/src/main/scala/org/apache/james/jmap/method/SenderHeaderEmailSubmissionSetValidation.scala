@@ -54,9 +54,10 @@ class SenderHeaderEmailSubmissionSetValidation @Inject()(usersRepository: UsersR
     SMono.fromCallable(() => {
         val senderFields = Option(mail.getMessage.getHeader("Sender")).toList.flatten
         // Jakarta Mail ends a header line at a bare CR, mime4j (used to display the message) does not: the
-        // Sender field checked here could differ from the one shown to recipients
-        senderFields.isEmpty ||
-          (!MimeMessageUtil.headerBlockHoldsABareCarriageReturn(mail.getMessage) && senderFields.forall(field => disclosesOnly(field, loggedInUser)))
+        // Sender field checked here could differ from the one shown to recipients, or even be hidden from
+        // Jakarta Mail when the bare CRs make it read an empty line
+        !MimeMessageUtil.headerBlockHoldsABareCarriageReturn(mail.getMessage) &&
+          senderFields.forall(field => disclosesOnly(field, loggedInUser))
       })
       .map {
         case true => None
