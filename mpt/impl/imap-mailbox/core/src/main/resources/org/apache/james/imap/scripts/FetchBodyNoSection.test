@@ -31,3 +31,11 @@ S:
 S: Test 01
 S: \)
 S: f1 OK FETCH completed.
+
+# Part numbers are non-zero
+C: f2 FETCH 1 (BODY[0])
+S: f2 BAD FETCH failed. Illegal arguments.
+
+# A header list names at least one field
+C: f3 FETCH 1 (BODY[HEADER.FIELDS ()])
+S: f3 BAD FETCH failed. Illegal arguments.
