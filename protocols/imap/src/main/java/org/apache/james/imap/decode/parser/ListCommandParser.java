@@ -19,6 +19,7 @@
 package org.apache.james.imap.decode.parser;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
@@ -40,6 +41,8 @@ import org.apache.james.imap.decode.ImapRequestLineReader.AtomCharValidator;
 import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.request.ListRequest.ListReturnOption;
 import org.apache.james.imap.message.request.ListRequest.ListSelectOption;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Parse LIST commands
@@ -75,6 +78,10 @@ public class ListCommandParser extends AbstractUidCommandParser {
      * @return An argument of type "list_mailbox"
      */
     public String listMailbox(ImapRequestLineReader request) throws DecodingException {
+        return listMailbox(request, false);
+    }
+
+    private String listMailbox(ImapRequestLineReader request, boolean withinPatternList) throws DecodingException {
         char next = request.nextWordChar();
         switch (next) {
         case '"':
@@ -82,8 +89,34 @@ public class ListCommandParser extends AbstractUidCommandParser {
         case '{':
             return assertDecodable(request.consumeLiteral(null));
         default:
-            return assertDecodable(request.consumeWord(ListCharValidator.INSTANCE));
+            return assertDecodable(request.consumeWord(ListCharValidator.INSTANCE, withinPatternList));
         }
+    }
+
+    /**
+     * Reads a parenthesized list of mailbox patterns (RFC 5258 section 6):
+     *
+     * <pre>
+     * patterns = "(" list-mailbox *(SP list-mailbox) ")"
+     * </pre>
+     *
+     * RFC 5258 section 3: in an extended LIST command, the empty string pattern is ignored for the purpose of matching,
+     * it is thus not part of the returned patterns.
+     */
+    private List<String> listMailboxPatterns(ImapRequestLineReader request) throws DecodingException {
+        request.consumeChar('(');
+        if (request.nextWordChar() == ')') {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expecting at least one mailbox pattern");
+        }
+        ImmutableList.Builder<String> patterns = ImmutableList.builder();
+        while (request.nextWordChar() != ')') {
+            String pattern = listMailbox(request, true);
+            if (!pattern.isEmpty()) {
+                patterns.add(pattern);
+            }
+        }
+        request.consumeChar(')');
+        return patterns.build();
     }
 
     /**
@@ -105,18 +138,24 @@ public class ListCommandParser extends AbstractUidCommandParser {
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         EnumSet<ListSelectOption> listOptions = parseSelectOptions(request);
         String referenceName = request.mailbox();
-        String mailboxPattern = listMailbox(request);
+        boolean isPatternList = request.nextWordChar() == '(';
+        List<String> mailboxPatterns;
+        if (isPatternList) {
+            mailboxPatterns = listMailboxPatterns(request);
+        } else {
+            mailboxPatterns = ImmutableList.of(listMailbox(request));
+        }
 
         Pair<EnumSet<ListReturnOption>, Optional<StatusDataItems>> listReturnOptions = parseReturnOptions(request);
         request.eol();
 
-        if (listOptions.isEmpty() && listReturnOptions.getLeft().isEmpty()) {
-            return createMessage(referenceName, mailboxPattern, tag);
+        if (!isPatternList && listOptions.isEmpty() && listReturnOptions.getLeft().isEmpty()) {
+            return createMessage(referenceName, mailboxPatterns.get(0), tag);
         }
         if (listOptions.contains(ListSelectOption.SPECIAL_USE)) {
             listReturnOptions.getLeft().add(ListReturnOption.SPECIAL_USE);
         }
-        return new ListRequest(ImapConstants.LIST_COMMAND, referenceName, mailboxPattern, tag, listOptions, listReturnOptions.getLeft(), listReturnOptions.getRight());
+        return new ListRequest(ImapConstants.LIST_COMMAND, referenceName, mailboxPatterns, tag, listOptions, listReturnOptions.getLeft(), listReturnOptions.getRight());
     }
 
     protected ImapMessage createMessage(String referenceName, String mailboxPattern, Tag tag) {
