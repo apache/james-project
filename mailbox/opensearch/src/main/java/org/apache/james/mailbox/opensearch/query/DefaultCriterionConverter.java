@@ -568,6 +568,9 @@ public class DefaultCriterionConverter implements CriterionConverter {
 
     /**
      * RFC 9051 section 6.4.4: TEXT matches the header or the body of the message.
+     *
+     * Indexing every header is optional (opensearch.indexHeaders): the subject, the addresses and the Message-ID,
+     * always indexed, are matched on their own fields too.
      */
     protected Query headersContain(String value) {
         return new BoolQuery.Builder()
@@ -577,6 +580,11 @@ public class DefaultCriterionConverter implements CriterionConverter {
                 .operator(Operator.And)
                 .build()
                 .toQuery())
+            .should(addressesContain(JsonMessageConstants.FROM, value))
+            .should(addressesContain(JsonMessageConstants.TO, value))
+            .should(addressesContain(JsonMessageConstants.CC, value))
+            .should(addressesContain(JsonMessageConstants.BCC, value))
+            .should(mimeMessageIdIs(value))
             .should(new NestedQuery.Builder()
                 .path(JsonMessageConstants.HEADERS)
                 .query(new MatchQuery.Builder()
@@ -588,6 +596,40 @@ public class DefaultCriterionConverter implements CriterionConverter {
                 .scoreMode(ChildScoreMode.Avg)
                 .build()
                 .toQuery())
+            .build()
+            .toQuery();
+    }
+
+    private Query addressesContain(String field, String value) {
+        BoolQuery.Builder builder = new BoolQuery.Builder();
+        Stream.of(JsonMessageConstants.EMailer.NAME, JsonMessageConstants.EMailer.ADDRESS, JsonMessageConstants.EMailer.DOMAIN)
+            .forEach(subField -> builder.should(new MatchQuery.Builder()
+                .field(field + "." + subField)
+                .query(new FieldValue.Builder().stringValue(value).build())
+                .operator(Operator.And)
+                .build()
+                .toQuery()));
+        return builder
+            .should(new MatchQuery.Builder()
+                .field(field + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW)
+                .query(new FieldValue.Builder().stringValue(value).build())
+                .build()
+                .toQuery())
+            .build()
+            .toQuery();
+    }
+
+    private Query mimeMessageIdIs(String value) {
+        String trimmed = value.trim();
+        String bracketed = trimmed.startsWith("<") ? trimmed : "<" + trimmed + ">";
+        return new TermsQuery.Builder()
+            .field(JsonMessageConstants.MIME_MESSAGE_ID)
+            .terms(new TermsQueryField.Builder()
+                .value(Stream.of(trimmed, bracketed)
+                    .distinct()
+                    .map(term -> new FieldValue.Builder().stringValue(term).build())
+                    .collect(ImmutableList.toImmutableList()))
+                .build())
             .build()
             .toQuery();
     }
