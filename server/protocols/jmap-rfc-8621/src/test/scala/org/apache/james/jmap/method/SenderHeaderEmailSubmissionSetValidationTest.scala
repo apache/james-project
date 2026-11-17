@@ -152,6 +152,14 @@ class SenderHeaderEmailSubmissionSetValidationTest {
     assertRejected(validateRawAsBob("From: bob@domain.tld\r\nSender: bob@domain.tld\r\nX-Custom: a\rb\r\n\r\nbody\r\n"))
 
   @Test
+  def shouldRejectASenderHiddenFromJakartaMailByBareCarriageReturns(): Unit =
+    assertRejected(validateRawAsBob("From: bob@domain.tld\r\nX-A: b\r\r\r\nSender: alice@domain.tld\r\n\r\nbody\r\n"))
+
+  @Test
+  def shouldRejectASenderFollowingTwoBareCarriageReturns(): Unit =
+    assertRejected(validateRawAsBob("From: bob@domain.tld\r\nX-A: b\r\rSender: alice@domain.tld\r\n\r\nbody\r\n"))
+
+  @Test
   def shouldAcceptABareCarriageReturnInTheBody(): Unit =
     assertAccepted(validateRawAsBob("From: bob@domain.tld\r\nSender: bob@domain.tld\r\nSubject: test\r\n\r\nbody\rwith a bare CR\r\n"))
 
