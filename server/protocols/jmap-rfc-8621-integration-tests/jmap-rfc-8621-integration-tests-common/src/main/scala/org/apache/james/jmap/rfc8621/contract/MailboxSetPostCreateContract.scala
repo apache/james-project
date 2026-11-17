@@ -65,71 +65,6 @@ trait MailboxSetPostCreateContract {
     server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", bobUsername.asString(), path).serialize()
 
   @Test
-  def postCreateShouldDestroyNewMailbox(server: GuiceJamesServer): Unit = {
-    val request = s"""{
-      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      |  "methodCalls": [
-      |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"mailboxToDestroy": {"name": "before"}},
-      |      "destroy": ["#mailboxToDestroy"]
-      |    }, "createAndDestroy"]
-      |  ]
-      |}""".stripMargin
-
-    val response = execute(request).extract()
-
-    val creation = setResult(response, "createAndDestroy")
-    val createdId = response.path[String](s"${responseArgumentsPath("createAndDestroy")}.created.'mailboxToDestroy'.id")
-
-    assertThatJson(creation)
-      .when(path("created.mailboxToDestroy"), `then`(IGNORING_EXTRA_FIELDS))
-      .isEqualTo(s"""{
-        |  "created": {
-        |    "mailboxToDestroy": {"id": ${Json.toJson(createdId)}}
-        |  },
-        |  "destroyed": [${Json.toJson(createdId)}]
-        |}""".stripMargin)
-
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
-      .doesNotContain("before")
-  }
-
-  @Test
-  def postCreateShouldResolveMaximumLengthCreationId(server: GuiceJamesServer): Unit = {
-    val creationId = "m" * 255
-    val request = s"""{
-      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      |  "methodCalls": [
-      |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"$creationId": {"name": "before"}},
-      |      "update": {"#$creationId": {"name": "after"}}
-      |    }, "createAndUpdate"]
-      |  ]
-      |}""".stripMargin
-
-    val response = execute(request).extract()
-
-    val creation = setResult(response, "createAndUpdate")
-    val createdId = mailboxId(server, "after")
-
-    assertThatJson(creation)
-      .when(path(s"created.$creationId"), `then`(IGNORING_EXTRA_FIELDS))
-      .isEqualTo(s"""{
-        |  "created": {
-        |    ${Json.toJson(creationId)}: {"id": ${Json.toJson(createdId)}}
-        |  },
-        |  "updated": {
-        |    ${Json.toJson(createdId)}: "$${json-unit.ignore}"
-        |  }
-        |}""".stripMargin)
-
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
-      .doesNotContain("before")
-  }
-
-  @Test
   def postCreateShouldResolveParentAndRealTarget(server: GuiceJamesServer): Unit = {
     val childId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(bobUsername, "child")).serialize()
@@ -209,10 +144,10 @@ trait MailboxSetPostCreateContract {
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
-      |    ["Core/echo", {"aliasPatch": {"name": "renamedReplacement"}}, "preparePatches"],
+      |    ["Core/echo", {"aliasPatch": {"name": "renamedReplacement", "parentId": "#parent"}}, "preparePatches"],
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"reusedMailbox": {"name": "old"}}
+      |      "create": {"reusedMailbox": {"name": "old"}, "parent": {"name": "oldParent"}}
       |    }, "createOriginal"],
       |    ["Core/echo", {
       |      "patches": {
@@ -222,7 +157,7 @@ trait MailboxSetPostCreateContract {
       |    }, "echoPatches"],
       |    ["Mailbox/set", {
       |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"reusedMailbox": {"name": "replacement"}},
+      |      "create": {"reusedMailbox": {"name": "replacement"}, "parent": {"name": "newParent"}},
       |      "#update": {"resultOf": "echoPatches", "name": "Core/echo", "path": "/patches"}
       |    }, "replaceAndUpdate"]
       |  ]
@@ -232,12 +167,15 @@ trait MailboxSetPostCreateContract {
 
     val oldId = response.path[String](s"${responseArgumentsPath("createOriginal")}.created.reusedMailbox.id")
     val update = setResult(response, "replaceAndUpdate")
-    val newId = mailboxId(server, "renamedReplacement")
+    val newId = mailboxId(server, "newParent.renamedReplacement")
 
     assertThatJson(update)
       .when(path("created.reusedMailbox"), `then`(IGNORING_EXTRA_FIELDS))
       .isEqualTo(s"""{
-        |  "created": {"reusedMailbox": {"id": ${Json.toJson(newId)}}},
+        |  "created": {
+        |    "reusedMailbox": {"id": ${Json.toJson(newId)}},
+        |    "parent": "$${json-unit.ignore}"
+        |  },
         |  "updated": {${Json.toJson(newId)}: "$${json-unit.ignore}", ${Json.toJson(oldId)}: "$${json-unit.ignore}"}
         |}""".stripMargin)
 
@@ -485,13 +423,16 @@ trait MailboxSetPostCreateContract {
   }
 
   @Test
-  def postCreateShouldUpdateThenDestroyTheSameTarget(server: GuiceJamesServer): Unit = {
+  def postCreateShouldUpdateThenDestroyTheSameMaximumLengthCreationId(server: GuiceJamesServer): Unit = {
+    val creationId = "m" * 255
     val request = s"""{
       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
       |  "methodCalls": [
       |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)}, "create": {"newMailbox": {"name": "before"}},
-      |      "update": {"#newMailbox": {"name": "after"}}, "destroy": ["#newMailbox"]
+      |      "accountId": ${Json.toJson(bobAccountId)},
+      |      "create": {"$creationId": {"name": "before"}},
+      |      "update": {"#$creationId": {"name": "after"}},
+      |      "destroy": ["#$creationId"]
       |    }, "createUpdateAndDestroy"]
       |  ]
       |}""".stripMargin
@@ -499,13 +440,13 @@ trait MailboxSetPostCreateContract {
     val response = execute(request).extract()
 
     val operation = setResult(response, "createUpdateAndDestroy")
-    val createdId = response.path[String](s"${responseArgumentsPath("createUpdateAndDestroy")}.created.newMailbox.id")
+    val createdId = response.path[String](s"${responseArgumentsPath("createUpdateAndDestroy")}.created.$creationId.id")
 
     assertThatJson(operation)
-      .when(path("created.newMailbox"), `then`(IGNORING_EXTRA_FIELDS))
+      .when(path(s"created.$creationId"), `then`(IGNORING_EXTRA_FIELDS))
       .isEqualTo(s"""{
         |  "created": {
-        |    "newMailbox": {"id": ${Json.toJson(createdId)}}
+        |    "$creationId": {"id": ${Json.toJson(createdId)}}
         |  },
         |  "updated": {
         |    ${Json.toJson(createdId)}: "$${json-unit.ignore}"
@@ -515,46 +456,6 @@ trait MailboxSetPostCreateContract {
 
     assertThat(server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(bobUsername.asString()))
       .doesNotContain("before", "after")
-  }
-
-  @Test
-  def postCreateShouldUseTheLatestMappingForUpdateTargetsFromAResultReference(server: GuiceJamesServer): Unit = {
-    val request = s"""{
-      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      |  "methodCalls": [
-      |    ["Core/echo", {
-      |      "patches": {"#child": {"name": "after", "parentId": "#parent"}}
-      |    }, "echoPatches"],
-      |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"child": {"name": "old"}, "parent": {"name": "oldParent"}}
-      |    }, "createOriginals"],
-      |    ["Mailbox/set", {
-      |      "accountId": ${Json.toJson(bobAccountId)},
-      |      "create": {"child": {"name": "new"}, "parent": {"name": "newParent"}},
-      |      "#update": {"resultOf": "echoPatches", "name": "Core/echo", "path": "/patches"}
-      |    }, "replaceAndUpdateFromResult"]
-      |  ]
-      |}""".stripMargin
-
-    val response = execute(request).extract()
-
-    val replacement = setResult(response, "replaceAndUpdateFromResult")
-    val oldId = response.path[String](s"${responseArgumentsPath("createOriginals")}.created.child.id")
-    val updatedId = mailboxId(server, "newParent.after")
-
-    assertThatJson(replacement)
-      .when(path("created.child"), `then`(IGNORING_EXTRA_FIELDS))
-      .isEqualTo(s"""{
-        |  "created": {
-        |    "child": {"id": ${Json.toJson(updatedId)}},
-        |    "parent": "$${json-unit.ignore}"
-        |  },
-        |  "updated": {
-        |    ${Json.toJson(updatedId)}: "$${json-unit.ignore}"
-        |  }
-        |}""".stripMargin)
-    assertThat(mailboxId(server, "old")).isEqualTo(oldId)
   }
 
   @Test
