@@ -32,3 +32,12 @@ S: a1 OK ID completed.
 C: a1 ID ("name" "Thunderbird" "version" 102.7.1)
 S: \* ID NIL
 S: a1 OK ID completed.
+
+# RFC 2971: the field list may be empty
+C: a2 ID ()
+S: \* ID NIL
+S: a2 OK ID completed.
+
+# RFC 2971: every field needs a value
+C: a3 ID ("name")
+S: a3 BAD ID failed. Illegal arguments.
