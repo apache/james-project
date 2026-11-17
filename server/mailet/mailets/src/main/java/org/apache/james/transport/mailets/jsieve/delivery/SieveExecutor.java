@@ -28,6 +28,7 @@ import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.jsieve.ActionDispatcher;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.transport.mailets.jsieve.SieveMailAdapter;
+import org.apache.james.transport.mailets.jsieve.UserAddresses;
 import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.jsieve.ConfigurationManager;
 import org.apache.jsieve.SieveConfigurationException;
@@ -62,6 +63,12 @@ public class SieveExecutor {
         private ResourceLocator resourceLocator;
         private NotificationRegistry notificationRegistry;
         private AutomaticallySentMailDetector automaticallySentMailDetector;
+        private UserAddresses userAddresses = UserAddresses.NONE;
+
+        public Builder userAddresses(UserAddresses userAddresses) {
+            this.userAddresses = userAddresses;
+            return this;
+        }
 
         public Builder notificationRegistry(NotificationRegistry notificationRegistry) {
             this.notificationRegistry = notificationRegistry;
@@ -94,7 +101,8 @@ public class SieveExecutor {
             Preconditions.checkNotNull(sievePoster);
             Preconditions.checkNotNull(notificationRegistry);
             Preconditions.checkNotNull(automaticallySentMailDetector);
-            return new SieveExecutor(mailetContext, sievePoster, resourceLocator, notificationRegistry, automaticallySentMailDetector);
+            Preconditions.checkNotNull(userAddresses);
+            return new SieveExecutor(mailetContext, sievePoster, resourceLocator, notificationRegistry, automaticallySentMailDetector, userAddresses);
         }
     }
 
@@ -107,11 +115,17 @@ public class SieveExecutor {
     public SieveExecutor(MailetContext mailetContext, SievePoster sievePoster,
                          ResourceLocator resourceLocator, NotificationRegistry notificationRegistry,
                          AutomaticallySentMailDetector automaticallySentMailDetector) throws MessagingException {
+        this(mailetContext, sievePoster, resourceLocator, notificationRegistry, automaticallySentMailDetector, UserAddresses.NONE);
+    }
+
+    public SieveExecutor(MailetContext mailetContext, SievePoster sievePoster,
+                         ResourceLocator resourceLocator, NotificationRegistry notificationRegistry,
+                         AutomaticallySentMailDetector automaticallySentMailDetector, UserAddresses userAddresses) throws MessagingException {
         this.mailetContext = mailetContext;
         this.sievePoster = sievePoster;
         this.resourceLocator = resourceLocator;
         this.factory = createFactory();
-        this.actionDispatcher = new ActionDispatcher(notificationRegistry, automaticallySentMailDetector);
+        this.actionDispatcher = new ActionDispatcher(notificationRegistry, automaticallySentMailDetector, userAddresses);
     }
 
     private SieveFactory createFactory() throws MessagingException {

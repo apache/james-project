@@ -24,6 +24,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -53,6 +54,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class VacationAction implements MailAction {
@@ -68,10 +70,17 @@ public class VacationAction implements MailAction {
      */
     private final NotificationRegistry notificationRegistry;
     private final AutomaticallySentMailDetector automaticallySentMailDetector;
+    private final UserAddresses userAddresses;
 
     public VacationAction(NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector) {
+        this(notificationRegistry, automaticallySentMailDetector, UserAddresses.NONE);
+    }
+
+    public VacationAction(NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector,
+                          UserAddresses userAddresses) {
         this.notificationRegistry = notificationRegistry;
         this.automaticallySentMailDetector = automaticallySentMailDetector;
+        this.userAddresses = userAddresses;
     }
 
     @Override
@@ -83,10 +92,12 @@ public class VacationAction implements MailAction {
                 context.getScriptInterpretationDate().toLocalDate()))
             .intValue();
         // RFC 5230 section 4.6: no reply to a message with a null envelope sender
-        if (mail.hasSender()
-                && isStillInVacation(actionVacation, dayDifference)
-                && isValidForReply(mail, actionVacation, context)
-                && !isFromUser(mail, actionVacation, context)
+        if (!mail.hasSender() || !isStillInVacation(actionVacation, dayDifference)) {
+            return;
+        }
+        Set<MailAddress> userMailAddresses = userMailAddresses(actionVacation, context);
+        if (isValidForReply(mail, userMailAddresses)
+                && !isFromUser(mail, userMailAddresses)
                 && !isMailingList(mail)
                 && !automaticallySentMailDetector.isAutomaticallySent(mail)
                 && !isNoReplySender(mail)
@@ -121,17 +132,31 @@ public class VacationAction implements MailAction {
         return dayDifference >= 0 && dayDifference <= actionVacation.getDuration();
     }
 
-    // RFC 5230 section 4.5: MUST NOT respond unless the user's address (or one of the :addresses) is in a To, Cc, Bcc,
-    // Resent-To, Resent-Cc or Resent-Bcc header of the message. The envelope recipient is always the user, Bcc copies,
-    // bulk mails and mails with a forged To are not addressed to them.
-    private boolean isValidForReply(final Mail mail, ActionVacation actionVacation, final ActionContext context) throws MessagingException {
-        Set<MailAddress> allowedMailAddresses = Stream
-            .concat(
+    // RFC 5230 section 4.5: the user's addresses are the recipient, the :addresses and those the server knows to be
+    // theirs (their aliases, their address in the domain aliases)
+    private Set<MailAddress> userMailAddresses(ActionVacation actionVacation, ActionContext context) {
+        MailAddress recipient = context.getRecipient();
+        List<MailAddress> knownAddresses = Flux.from(userAddresses.of(recipient))
+            .onErrorResume(e -> {
+                LOGGER.warn("Cannot list the addresses of {}, relying on the vacation :addresses only", recipient.asString(), e);
+                return Flux.empty();
+            })
+            .collectList()
+            .block();
+        return Stream.of(
+                Stream.of(recipient),
                 actionVacation.getAddresses().stream().flatMap(this::retrieveAddressFromString),
-                Stream.of(context.getRecipient()))
+                knownAddresses.stream())
+            .flatMap(stream -> stream)
             .collect(ImmutableSet.toImmutableSet());
+    }
+
+    // RFC 5230 section 4.5: MUST NOT respond unless one of the user's addresses is in a To, Cc, Bcc, Resent-To,
+    // Resent-Cc or Resent-Bcc header of the message. The envelope recipient is always the user, Bcc copies, bulk mails
+    // and mails with a forged To are not addressed to them.
+    private boolean isValidForReply(Mail mail, Set<MailAddress> userMailAddresses) throws MessagingException {
         return headerRecipients(mail.getMessage())
-            .anyMatch(allowedMailAddresses::contains);
+            .anyMatch(userMailAddresses::contains);
     }
 
     private Stream<MailAddress> headerRecipients(MimeMessage message) throws MessagingException {
@@ -168,12 +193,8 @@ public class VacationAction implements MailAction {
     }
 
     // RFC 5230 section 4.5: never answer the user's own addresses
-    private boolean isFromUser(Mail mail, ActionVacation actionVacation, ActionContext context) {
-        MailAddress sender = mail.getMaybeSender().get();
-        return sender.equals(context.getRecipient())
-            || actionVacation.getAddresses().stream()
-                .flatMap(this::retrieveAddressFromString)
-                .anyMatch(sender::equals);
+    private boolean isFromUser(Mail mail, Set<MailAddress> userMailAddresses) {
+        return userMailAddresses.contains(mail.getMaybeSender().get());
     }
 
     private boolean isNoReplySender(Mail mail) {
