@@ -113,6 +113,12 @@ S: \* QUOTA #private&imapuser \(MESSAGE 7 7\)
 S: \* QUOTA #private&imapuser \(STORAGE 1 5242880\)
 S: A007 OK GETQUOTA completed.
 
+# The quota root is an astring
+C: A008 GETQUOTA "#private&imapuser"
+S: \* QUOTA #private&imapuser \(MESSAGE 7 7\)
+S: \* QUOTA #private&imapuser \(STORAGE 1 5242880\)
+S: A008 OK GETQUOTA completed.
+
 C: A007 SETQUOTA #private&imapuser (MESSAGE 4096) (STORAGE 5242880)
 S: A007 NO SETQUOTA failed. Insufficient rights.
 
