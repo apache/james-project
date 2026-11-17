@@ -128,12 +128,11 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
                       capabilities: Set[CapabilityIdentifier],
                       processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)): SMono[MailboxUpdateResults] =
     SFlux.fromIterable(MailboxSetReferenceResolver.updates(mailboxSetRequest, processingContext, mailboxIdFactory))
-      .flatMap({
-        case (errorKey, resolved) =>
-          resolved.fold(
-            e => SMono.just(MailboxUpdateFailure(errorKey, e, None)),
-            { case (mailboxId, patch) => updateMailbox(mailboxSession, mailboxId, errorKey, patch, capabilities) })
-            .onErrorResume(e => SMono.just(MailboxUpdateFailure(errorKey, e, None)))
+      .flatMap({ target =>
+        target.resolution.fold(
+          e => SMono.just(MailboxUpdateFailure(target.errorKey, e, None)),
+          resolved => updateMailbox(mailboxSession, resolved.mailboxId, target.errorKey, resolved.patch, capabilities))
+          .onErrorResume(e => SMono.just(MailboxUpdateFailure(target.errorKey, e, None)))
       }, maxConcurrency = 5)
       .collectSeq()
       .map(MailboxUpdateResults)

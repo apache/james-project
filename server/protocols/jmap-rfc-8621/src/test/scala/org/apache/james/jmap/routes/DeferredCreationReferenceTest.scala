@@ -61,8 +61,10 @@ class DeferredCreationReferenceTest {
     val deferredPaths = Set(JsPath \ "create" \ "child" \ "parentId")
     val contextWithPreviousResult = context.recordInvocation(previous)
 
-    val resolved = contextWithPreviousResult.resolveBackReferences(invocation, deferredPaths).toOption.get
-    assertThat((resolved.arguments.value \ "create" \ "child" \ "parentId").as[String]).isEqualTo("real-parent")
+    val resolved = contextWithPreviousResult.resolveBackReferences(invocation, deferredPaths)
+
+    val resolvedParent = resolved.map(result => (result.arguments.value \ "create" \ "child" \ "parentId").as[String])
+    assertThat(resolvedParent).isEqualTo(Right("real-parent"))
   }
 
   @Test
@@ -80,9 +82,14 @@ class DeferredCreationReferenceTest {
     val arguments = Json.obj("update" -> Json.obj("#parent" -> Json.obj("parentId" -> "#parent"),
       "old-parent" -> Json.obj("name" -> "other")), "destroy" -> Json.arr("#parent"))
     val invocation = Invocation(MethodName("Mailbox/set"), Arguments(arguments), MethodCallId("set"))
-    assertThat(context.resolveBackReferences(invocation, Set(JsPath \ "update" \ "#parent",
-      JsPath \ "update" \ "#parent" \ "parentId", (JsPath \ "destroy")(0))))
-      .isEqualTo(Right(invocation))
+    val deferredPaths = Set(
+      JsPath \ "update" \ "#parent",
+      JsPath \ "update" \ "#parent" \ "parentId",
+      (JsPath \ "destroy")(0))
+
+    val resolved = context.resolveBackReferences(invocation, deferredPaths)
+
+    assertThat(resolved).isEqualTo(Right(invocation))
   }
 
   @Test
@@ -91,10 +98,12 @@ class DeferredCreationReferenceTest {
     val previous = Invocation(MethodName("Core/echo"), Arguments(Json.obj("patches" -> patches)), MethodCallId("echoPatches"))
     val invocation = Invocation(MethodName("Mailbox/set"), Arguments(Json.obj(
       "#update" -> Json.obj("resultOf" -> "echoPatches", "name" -> "Core/echo", "path" -> "/patches"))), MethodCallId("updateFromResult"))
+    val contextWithPreviousResult = context.recordInvocation(previous)
+    val expectedArguments = Arguments(Json.obj("update" -> patches))
 
-    val resolved = context.recordInvocation(previous).resolveBackReferences(invocation)
+    val resolved = contextWithPreviousResult.resolveBackReferences(invocation)
 
-    assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj("update" -> patches)))))
+    assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = expectedArguments)))
   }
 
   @Test
@@ -103,10 +112,11 @@ class DeferredCreationReferenceTest {
     val previous = Invocation(MethodName("Core/echo"), Arguments(Json.obj("targets" -> targets)), MethodCallId("echoTargets"))
     val invocation = Invocation(MethodName("Mailbox/set"), Arguments(Json.obj(
       "#destroy" -> Json.obj("resultOf" -> "echoTargets", "name" -> "Core/echo", "path" -> "/targets"))), MethodCallId("destroyFromResult"))
+    val contextWithPreviousResult = context.recordInvocation(previous)
+    val expectedArguments = Arguments(Json.obj("destroy" -> targets))
 
-    val resolved = context.recordInvocation(previous).resolveBackReferences(invocation)
+    val resolved = contextWithPreviousResult.resolveBackReferences(invocation)
 
-    assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj("destroy" -> targets)))))
+    assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = expectedArguments)))
   }
-
 }

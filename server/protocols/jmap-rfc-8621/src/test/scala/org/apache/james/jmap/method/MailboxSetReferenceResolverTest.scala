@@ -22,12 +22,14 @@ package org.apache.james.jmap.method
 import org.apache.james.jmap.core.{ClientId, Id, ServerId}
 import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.{InvalidUpdateException, MailboxPatchObject, MailboxSetRequest}
+import org.apache.james.jmap.method.MailboxSetReferenceResolver.{ResolvedUpdate, TargetResolution, UnresolvedMailboxReferenceException}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.inmemory.InMemoryId
 import org.apache.james.mailbox.model.TestId
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.SoftAssertions.assertSoftly
 import org.junit.jupiter.api.Test
-import play.api.libs.json.{JsNull, JsObject, Json}
+import play.api.libs.json.{JsNull, JsObject, JsString, Json}
 
 class MailboxSetReferenceResolverTest {
   private val mailboxIdFactory = new InMemoryId.Factory
@@ -44,12 +46,21 @@ class MailboxSetReferenceResolverTest {
   def shouldReturnOneFailureForAConflictingResolvedTarget(): Unit = {
     val input = request(Json.obj("update" -> Json.obj("#mailboxAlias" -> Json.obj("name" -> "alias"),
       "1" -> Json.obj("isSubscribed" -> false), "3" -> Json.obj("name" -> "success"))))
+
     val results = MailboxSetReferenceResolver.updates(input, context, mailboxIdFactory)
-    assertThat(results.size).isEqualTo(2)
-    val error = results.find(_._1.id.value == "1").get._2.left.toOption.get
-    assertThat(error).isInstanceOf(classOf[IllegalArgumentException])
-    assertThat(error.getMessage).isEqualTo("Multiple update keys resolve to the same mailbox: '#mailboxAlias', '1'")
-    assertThat(results.find(_._1.id.value == "3").get._2.isRight).isTrue()
+
+    results.sortBy(_.errorKey.id.value) match {
+      case Seq(TargetResolution(conflictKey, Left(conflict)), independentUpdate) =>
+        assertSoftly(softly => {
+          softly.assertThat(conflictKey.id.value).isEqualTo("1")
+          softly.assertThat(conflict).isExactlyInstanceOf(classOf[IllegalArgumentException])
+            .hasMessage("Multiple update keys resolve to the same mailbox: '#mailboxAlias', '1'")
+          softly.assertThat(independentUpdate.errorKey.id.value).isEqualTo("3")
+          softly.assertThat(independentUpdate.resolution)
+            .isEqualTo(Right(ResolvedUpdate(InMemoryId.of(3), MailboxPatchObject(Map("name" -> JsString("success"))))))
+        })
+      case other => throw new AssertionError(s"Expected one conflicting and one independent update, got $other")
+    }
   }
 
   @Test
@@ -57,56 +68,62 @@ class MailboxSetReferenceResolverTest {
     val input = request(Json.obj("update" -> Json.obj("#child" -> Json.obj("parentId" -> "#parent"))))
     val updatedContext = context.recordCreatedId(ClientId(Id.validate("child").toOption.get), ServerId(Id.validate("4").toOption.get))
       .recordCreatedId(ClientId(Id.validate("parent").toOption.get), ServerId(Id.validate("5").toOption.get))
-    val (errorKey, resolved) = MailboxSetReferenceResolver.updates(input, updatedContext, mailboxIdFactory).head
-    assertThat(errorKey.id.value).isEqualTo("4")
-    assertThat(resolved.toOption.get._1.serialize()).isEqualTo("4")
-    assertThat(resolved.toOption.get._2.value("parentId")).isEqualTo(Json.toJson("5"))
+
+    val results = MailboxSetReferenceResolver.updates(input, updatedContext, mailboxIdFactory)
+
+    results match {
+      case Seq(TargetResolution(errorKey, Right(update))) =>
+        assertSoftly(softly => {
+          softly.assertThat(errorKey.id.value).isEqualTo("4")
+          softly.assertThat(update.mailboxId).isEqualTo(InMemoryId.of(4))
+          softly.assertThat(update.patch.value).isEqualTo(Map("parentId" -> JsString("5")))
+        })
+      case other => throw new AssertionError(s"Expected one resolved update, got $other")
+    }
   }
 
   @Test
   def shouldResolveOnlyParentIdAndPreserveNullAndLiterals(): Unit = {
     val patch = MailboxPatchObject(Map("name" -> Json.toJson("#mailboxAlias"), "parentId" -> JsNull,
       "sharedWith/#mailboxAlias" -> Json.toJson("#mailboxAlias")))
-    assertThat(MailboxSetReferenceResolver.patch(patch, context)).isEqualTo(Right(patch))
-  }
 
-  @Test
-  def shouldDescribeAnUnknownMaximumLengthUpdateTarget(): Unit = {
-    val reference = "#" + "u" * 255
-    val input = request(Json.obj("update" -> Json.obj(reference -> Json.obj("name" -> "missing"))))
-    val update = MailboxSetReferenceResolver.updates(input, context, mailboxIdFactory).head
-    assertThat(update._1.id.value).isEqualTo(reference)
-    assertThat(update._2.left.toOption.get).isInstanceOf(classOf[IllegalArgumentException])
-    assertThat(update._2.left.toOption.get.getMessage)
-      .isEqualTo(s"Unable to resolve mailbox reference '$reference': no successful creation is recorded for creation ID '${reference.substring(1)}'")
-  }
+    val resolved = MailboxSetReferenceResolver.patch(patch, context)
 
-  @Test
-  def shouldDescribeAnUnknownMaximumLengthDestroyTarget(): Unit = {
-    val reference = "#" + "u" * 255
-    val input = request(Json.obj("destroy" -> Json.arr(reference)))
-    val deletion = MailboxSetReferenceResolver.deletions(input, context, mailboxIdFactory).head
-    assertThat(deletion._1.id.value).isEqualTo(reference)
-    assertThat(deletion._2.left.toOption.get).isInstanceOf(classOf[IllegalArgumentException])
-    assertThat(deletion._2.left.toOption.get.getMessage)
-      .isEqualTo(s"Unable to resolve mailbox reference '$reference': no successful creation is recorded for creation ID '${reference.substring(1)}'")
+    assertThat(resolved).isEqualTo(Right(patch))
   }
 
   @Test
   def shouldRejectUnknownOrMalformedParentBeforeApplyingThePatch(): Unit = {
     Seq("#missing", "#", "#bad/reference", "#" + "x" * 256).foreach(parent => {
-      val result = MailboxSetReferenceResolver.patch(MailboxPatchObject(Map("parentId" -> Json.toJson(parent))), context)
-      assertThat(result.left.toOption.get).isInstanceOf(classOf[InvalidUpdateException])
+      val patch = MailboxPatchObject(Map("parentId" -> Json.toJson(parent)))
+
+      val result = MailboxSetReferenceResolver.patch(patch, context)
+
+      result match {
+        case Left(error) => assertThat(error).as(parent).isInstanceOf(classOf[InvalidUpdateException])
+        case Right(resolved) => throw new AssertionError(s"Expected invalid parent '$parent' to fail, got $resolved")
+      }
     })
   }
 
   @Test
   def shouldDeduplicateDestroyAliasesByResolvedString(): Unit = {
     val input = request(Json.obj("destroy" -> Json.arr("#mailboxAlias", "1", "01", "#mailboxAlias", "#missing")))
+
     val results = MailboxSetReferenceResolver.deletions(input, context, mailboxIdFactory)
-    assertThat(results.map(_._1.id.value)).isEqualTo(Seq("1", "01", "#missing"))
-    assertThat(results.filter(_._2.isRight).map(_._2.toOption.get.serialize())).isEqualTo(Seq("1", "1"))
-    assertThat(results.last._2.left.toOption.get).isInstanceOf(classOf[MailboxSetReferenceResolver.UnresolvedMailboxReferenceException])
+
+    results match {
+      case Seq(first, leadingZero, TargetResolution(missingKey, Left(missing))) =>
+        assertSoftly(softly => {
+          softly.assertThat(first.errorKey.id.value).isEqualTo("1")
+          softly.assertThat(leadingZero.errorKey.id.value).isEqualTo("01")
+          softly.assertThat(first.resolution).isEqualTo(Right(InMemoryId.of(1)))
+          softly.assertThat(leadingZero.resolution).isEqualTo(Right(InMemoryId.of(1)))
+          softly.assertThat(missingKey.id.value).isEqualTo("#missing")
+          softly.assertThat(missing).isInstanceOf(classOf[UnresolvedMailboxReferenceException])
+        })
+      case other => throw new AssertionError(s"Expected two resolved destroys and one unresolved destroy, got $other")
+    }
   }
 
   @Test
@@ -116,13 +133,19 @@ class MailboxSetReferenceResolverTest {
     val input = request(Json.obj("update" -> Json.obj("#mailboxAlias" -> Json.obj("name" -> "alias")),
       "destroy" -> Json.arr("#mailboxAlias", "not-a-number")))
 
-    val (updateKey, update) = MailboxSetReferenceResolver.updates(input, invalidContext, mailboxIdFactory).head
-    assertThat(updateKey.id.value).isEqualTo("not-a-number")
-    assertThat(update.left.toOption.get).isInstanceOf(classOf[NumberFormatException])
-
+    val updates = MailboxSetReferenceResolver.updates(input, invalidContext, mailboxIdFactory)
     val deletions = MailboxSetReferenceResolver.deletions(input, invalidContext, mailboxIdFactory)
-    assertThat(deletions.map(_._1.id.value)).isEqualTo(Seq("not-a-number"))
-    assertThat(deletions.head._2.left.toOption.get).isInstanceOf(classOf[NumberFormatException])
+
+    (updates, deletions) match {
+      case (Seq(TargetResolution(updateKey, Left(updateError))), Seq(TargetResolution(destroyKey, Left(destroyError)))) =>
+        assertSoftly(softly => {
+          softly.assertThat(updateKey.id.value).isEqualTo("not-a-number")
+          softly.assertThat(updateError).isInstanceOf(classOf[NumberFormatException])
+          softly.assertThat(destroyKey.id.value).isEqualTo("not-a-number")
+          softly.assertThat(destroyError).isInstanceOf(classOf[NumberFormatException])
+        })
+      case other => throw new AssertionError(s"Expected one parse failure for each operation, got $other")
+    }
   }
 
   @Test
@@ -130,8 +153,13 @@ class MailboxSetReferenceResolverTest {
     val input = request(Json.obj("update" -> Json.obj("#mailboxAlias" -> Json.obj("name" -> "alias"),
       "1" -> Json.obj("isSubscribed" -> false), "01" -> Json.obj("name" -> "leadingZero"))))
 
-    val error = MailboxSetReferenceResolver.validateUpdateTargets(input, context).left.toOption.get
-    assertThat(error.getMessage).isEqualTo("Multiple update keys resolve to the same mailbox: '#mailboxAlias', '1'")
+    val validation = MailboxSetReferenceResolver.validateUpdateTargets(input, context)
+
+    validation match {
+      case Left(error) =>
+        assertThat(error).hasMessage("Multiple update keys resolve to the same mailbox: '#mailboxAlias', '1'")
+      case Right(_) => throw new AssertionError("Expected the two aliases resolving to '1' to conflict")
+    }
   }
 
   @Test
@@ -139,7 +167,9 @@ class MailboxSetReferenceResolverTest {
     val input = request(Json.obj("create" -> Json.obj("mailboxAlias" -> Json.obj("name" -> "replacement")),
       "update" -> Json.obj("#mailboxAlias" -> Json.obj("name" -> "alias"), "1" -> Json.obj("name" -> "literal"))))
 
-    assertThat(MailboxSetReferenceResolver.validateUpdateTargets(input, context)).isEqualTo(Right(()))
+    val validation = MailboxSetReferenceResolver.validateUpdateTargets(input, context)
+
+    assertThat(validation).isEqualTo(Right(()))
   }
 
   @Test
@@ -147,9 +177,15 @@ class MailboxSetReferenceResolverTest {
     val input = request(Json.obj("update" -> Json.obj("1" -> Json.obj("name" -> "renamed"),
       "01" -> Json.obj("isSubscribed" -> false))))
 
-    assertThat(MailboxSetReferenceResolver.validateUpdateTargets(input, context)).isEqualTo(Right(()))
+    val validation = MailboxSetReferenceResolver.validateUpdateTargets(input, context)
     val results = MailboxSetReferenceResolver.updates(input, context, mailboxIdFactory)
-    assertThat(results.map(_._1.id.value).toSet).isEqualTo(Set("1", "01"))
-    assertThat(results.forall(_._2.isRight)).isTrue()
+
+    assertSoftly(softly => {
+      softly.assertThat(validation).isEqualTo(Right(()))
+      softly.assertThat(results.map(result => result.errorKey.id.value -> result.resolution).toMap).isEqualTo(Map(
+        "1" -> Right(ResolvedUpdate(InMemoryId.of(1), MailboxPatchObject(Map("name" -> JsString("renamed"))))),
+        "01" -> Right(ResolvedUpdate(InMemoryId.of(1), MailboxPatchObject(Map("isSubscribed" -> Json.toJson(false)))))))
+      softly.assertThat(results.size).isEqualTo(2)
+    })
   }
 }

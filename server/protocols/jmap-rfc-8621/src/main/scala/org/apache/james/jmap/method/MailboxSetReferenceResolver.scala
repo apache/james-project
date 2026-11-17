@@ -26,6 +26,10 @@ import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json.JsString
 
 object MailboxSetReferenceResolver {
+  case class TargetResolution[+A](errorKey: UnparsedMailboxId, resolution: Either[Throwable, A])
+
+  case class ResolvedUpdate(mailboxId: MailboxId, patch: MailboxPatchObject)
+
   case class UnresolvedMailboxReferenceException(reference: String, reason: String)
     extends IllegalArgumentException(s"Unable to resolve mailbox reference '$reference': $reason")
 
@@ -56,13 +60,13 @@ object MailboxSetReferenceResolver {
     conflictingTargets.minByOption(_.map(_.id.value).min).map(conflictError).toLeft(())
   }
 
-  def updates(request: MailboxSetRequest, context: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Seq[(UnparsedMailboxId, Either[Throwable, (MailboxId, MailboxPatchObject)])] = {
+  def updates(request: MailboxSetRequest, context: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Seq[TargetResolution[ResolvedUpdate]] = {
     val targets = request.update.toSeq.flatMap(_.toSeq).map { case (original, originalPatch) =>
       (original, context.resolveId(original.id), originalPatch)
     }
     val unresolved = targets.collect {
       case (original, Left(error), _) =>
-        original -> Left(UnresolvedMailboxReferenceException(original.id.value, error.getMessage))
+        TargetResolution(original, Left(UnresolvedMailboxReferenceException(original.id.value, error.getMessage)))
     }
     val updatesByServerId = targets.collect {
       case (original, Right(serverId), originalPatch) => serverId -> (original, originalPatch)
@@ -77,9 +81,9 @@ object MailboxSetReferenceResolver {
         for {
           mailboxId <- parse(serverId, mailboxIdFactory)
           resolvedPatch <- patch(originalPatch, context)
-        } yield (mailboxId, resolvedPatch)
+        } yield ResolvedUpdate(mailboxId, resolvedPatch)
       }
-      errorKey -> result
+      TargetResolution(errorKey, result)
     }
     unresolved ++ resolved
   }
@@ -91,16 +95,16 @@ object MailboxSetReferenceResolver {
     new IllegalArgumentException(s"Multiple update keys resolve to the same mailbox: $sampleKeys$additionalKeys")
   }
 
-  def deletions(request: MailboxSetRequest, context: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Seq[(UnparsedMailboxId, Either[Throwable, MailboxId])] =
+  def deletions(request: MailboxSetRequest, context: ProcessingContext, mailboxIdFactory: MailboxId.Factory): Seq[TargetResolution[MailboxId]] =
     request.destroy.toSeq.flatten.distinct.map { original =>
       context.resolveId(original.id) match {
         case Left(error) => Left(original -> UnresolvedMailboxReferenceException(original.id.value, error.getMessage))
         case Right(serverId) => Right(serverId)
       }
     }.distinct.map {
-      case Left((original, error)) => original -> Left(error)
+      case Left((original, error)) => TargetResolution(original, Left(error))
       case Right(serverId) =>
         val errorKey = UnparsedMailboxId(serverId.value)
-        errorKey -> parse(serverId, mailboxIdFactory)
+        TargetResolution(errorKey, parse(serverId, mailboxIdFactory))
     }
 }

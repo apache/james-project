@@ -94,10 +94,10 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
   def deleteMailboxes(mailboxSession: MailboxSession, mailboxSetRequest: MailboxSetRequest, supportSharedMailbox: Boolean,
                       processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)): SMono[MailboxDeletionResults] =
     SFlux.fromIterable(MailboxSetReferenceResolver.deletions(mailboxSetRequest, processingContext, mailboxIdFactory))
-      .flatMap({ case (errorKey, resolved) =>
-        resolved.fold(SMono.error[MailboxDeletionResult], id => delete(mailboxSession, id,
+      .flatMap({ target =>
+        target.resolution.fold(SMono.error[MailboxDeletionResult], id => delete(mailboxSession, id,
           mailboxSetRequest.onDestroyRemoveEmails.getOrElse(RemoveEmailsOnDestroy(false)), supportSharedMailbox))
-          .onErrorRecover(e => MailboxDeletionFailure(errorKey, e))
+          .onErrorRecover(e => MailboxDeletionFailure(target.errorKey, e))
       }, maxConcurrency = 5)
       .collectSeq()
       .map(MailboxDeletionResults)

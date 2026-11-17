@@ -3268,7 +3268,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
       |  ]
       |}""".stripMargin
 
-    val result = `given`
+    val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
@@ -3278,9 +3278,9 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract()
-      .path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'destroyMissingMailbox' }[1]")
 
-    assertThatJson(result)
+    val destroy = response.path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'destroyMissingMailbox' }[1]")
+    assertThatJson(destroy)
       .whenIgnoringPaths("oldState", "newState")
       .isEqualTo(s"""{
         |  "accountId": ${Json.toJson(bobAccountId)},
@@ -3351,7 +3351,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
       |  ]
       |}""".stripMargin
 
-    val result = `given`
+    val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
@@ -3361,9 +3361,9 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract()
-      .path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'destroyMissingMailbox' }[1]")
 
-    assertThatJson(result)
+    val destroy = response.path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'destroyMissingMailbox' }[1]")
+    assertThatJson(destroy)
       .whenIgnoringPaths("oldState", "newState")
       .isEqualTo(s"""{
         |  "accountId": ${Json.toJson(bobAccountId)},
@@ -8804,7 +8804,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
       |  ]
       |}""".stripMargin
 
-    val result = `given`
+    val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
@@ -8814,9 +8814,9 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract()
-      .path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'updateWithMissingParent' }[1]")
 
-    assertThatJson(result)
+    val update = response.path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'updateWithMissingParent' }[1]")
+    assertThatJson(update)
       .whenIgnoringPaths("oldState", "newState")
       .isEqualTo(s"""{
         |  "accountId": ${Json.toJson(bobAccountId)},
@@ -9536,7 +9536,7 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
       |  ]
       |}""".stripMargin
 
-    val result = `given`
+    val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
@@ -9546,9 +9546,9 @@ trait MailboxSetMethodContract extends MailboxSetCreationDependencyContract with
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract()
-      .path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'updateMissingMailbox' }[1]")
 
-    assertThatJson(result)
+    val update = response.path[java.util.Map[String, Object]]("methodResponses.find { it[2] == 'updateMissingMailbox' }[1]")
+    assertThatJson(update)
       .whenIgnoringPaths("oldState", "newState")
       .isEqualTo(s"""{
         |  "accountId": ${Json.toJson(bobAccountId)},
