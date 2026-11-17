@@ -43,8 +43,8 @@ Date: 16/11/2026
 Concerned products: SMTP servers whose `smtpserver.xml` entries do not set `auth.requireSSL`
 
 `auth.requireSSL` now defaults to `true` for SMTP, as it already did for IMAP and POP3. Unless a server entry
-sets it, authentication is no longer announced on clear-text connections, and the `PLAIN` and `LOGIN` mechanisms
-are refused until `STARTTLS` succeeded. A mechanism refused for this reason is now answered
+sets it, authentication is no longer announced on clear-text connections, and the `PLAIN`, `LOGIN`, `XOAUTH2` and
+`OAUTHBEARER` mechanisms are refused until `STARTTLS` succeeded. A mechanism refused for this reason is now answered
 `538 5.7.11 Encryption required for requested authentication mechanism` (RFC 4954) instead of
 `504 Unrecognized Authentication Type`.
 

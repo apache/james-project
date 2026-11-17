@@ -94,10 +94,11 @@ public class SMTPServerModule extends AbstractModule {
     @Provides
     @Singleton
     @SmtpDefaultSaslMechanismFactories
-    ImmutableList<SaslMechanismFactory> provideDefaultSmtpSaslMechanismFactories(OauthBearerSaslMechanismFactory oauthBearer,
-                                                                                 XOauth2SaslMechanismFactory xoauth2) {
+    ImmutableList<SaslMechanismFactory> provideDefaultSmtpSaslMechanismFactories() {
         PlainSaslMechanismFactory plain = new PlainSaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT);
-        return ImmutableList.of(new LoginSaslMechanismFactory(plain), plain, oauthBearer, xoauth2);
+        return ImmutableList.of(new LoginSaslMechanismFactory(plain), plain,
+            new OauthBearerSaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT),
+            new XOauth2SaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT));
     }
 
     @Provides

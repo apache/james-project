@@ -62,8 +62,8 @@ public class SMTPServerFactory extends AbstractServerFactory implements Disconne
             ImmutableList<SaslMechanismFactory> defaultFactories = ImmutableList.of(
                 new LoginSaslMechanismFactory(plain),
                 plain,
-                new OauthBearerSaslMechanismFactory(),
-                new XOauth2SaslMechanismFactory());
+                new OauthBearerSaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT),
+                new XOauth2SaslMechanismFactory(AuthAnnouncementConfiguration.REQUIRE_SSL_DEFAULT));
             return configuration -> loadBuiltInMechanisms(defaultFactories, configuration);
         }
 

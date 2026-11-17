@@ -29,6 +29,14 @@ import org.apache.james.protocols.api.sasl.SaslMechanismNames;
 import org.apache.james.protocols.sasl.oidc.OAuthSaslMechanism;
 
 public class OauthBearerSaslMechanismFactory extends OidcSaslMechanismFactory {
+    public OauthBearerSaslMechanismFactory() {
+        super();
+    }
+
+    public OauthBearerSaslMechanismFactory(boolean requireSslDefault) {
+        super(requireSslDefault);
+    }
+
     @Override
     public SaslMechanism create(HierarchicalConfiguration<ImmutableNode> serverConfiguration) throws ConfigurationException {
         OidcSASLConfiguration oidcConfiguration = parseConfiguration(serverConfiguration);
