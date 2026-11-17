@@ -95,3 +95,14 @@ C: a11 DELETE another.test
 S: a11 OK DELETE completed.
 C: a11 DELETE another
 S: a11 OK DELETE completed.
+
+# A quoted string left open at the end of its line is a BAD command
+C: a12 CREATE "unterminated
+S: a12 BAD CREATE failed. Illegal arguments.
+
+# Control characters are refused in mailbox names
+C: a13 CREATE "con	trol"
+S: a13 NO CREATE processing failed.
+
+C: a14 LIST "" "con*"
+S: a14 OK LIST completed.
