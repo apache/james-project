@@ -29,6 +29,7 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -130,7 +131,8 @@ public class JPAMailbox {
     }
 
     public long consumeModSeq() {
-        return ++highestModSeq;
+        highestModSeq = Math.max(highestModSeq, ModSeq.initialHighestModSeq().asLong()) + 1;
+        return highestModSeq;
     }
 
     public Mailbox toMailbox() {

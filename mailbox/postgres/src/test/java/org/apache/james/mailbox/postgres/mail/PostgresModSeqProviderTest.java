@@ -65,7 +65,7 @@ public class PostgresModSeqProviderTest {
     void highestModSeqShouldRetrieveValueStoredNextModSeq() throws Exception {
         int nbEntries = 100;
         ModSeq result = modSeqProvider.highestModSeq(mailbox);
-        assertThat(result).isEqualTo(ModSeq.first());
+        assertThat(result).isEqualTo(ModSeq.initialHighestModSeq());
         LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
                     ModSeq modSeq = modSeqProvider.nextModSeq(mailbox);

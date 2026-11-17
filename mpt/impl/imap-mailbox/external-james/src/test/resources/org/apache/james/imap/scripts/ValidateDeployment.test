@@ -405,7 +405,7 @@ S: \* 0 EXISTS
 S: \* 0 RECENT
 S: \* OK \[UIDVALIDITY .*\] UIDs valid
 S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen \\\*\)\] Limited
-S: \* OK \[HIGHESTMODSEQ 0\] Highest
+S: \* OK \[HIGHESTMODSEQ 1\] Highest
 S: \* OK \[UIDNEXT 1\] Predicted next UID
 S: s0001 OK \[READ-WRITE\] SELECT completed.
 

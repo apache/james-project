@@ -100,7 +100,7 @@ public class PostgresMailboxDAO {
     };
 
     private static final Function<Record, PostgresMailbox> RECORD_TO_POSTGRES_MAILBOX_FUNCTION = record -> new PostgresMailbox(RECORD_TO_MAILBOX_FUNCTION.apply(record),
-        Optional.ofNullable(record.get(MAILBOX_HIGHEST_MODSEQ)).map(ModSeq::of).orElse(ModSeq.first()),
+        Optional.ofNullable(record.get(MAILBOX_HIGHEST_MODSEQ)).map(ModSeq::of).orElse(ModSeq.initialHighestModSeq()),
         Optional.ofNullable(record.get(MAILBOX_LAST_UID)).map(MessageUid::of).orElse(null));
 
 
@@ -291,7 +291,7 @@ public class PostgresMailboxDAO {
 
     public Mono<ModSeq> incrementAndGetModSeq(MailboxId mailboxId) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.update(TABLE_NAME)
-                .set(MAILBOX_HIGHEST_MODSEQ, coalesce(MAILBOX_HIGHEST_MODSEQ, 0L).add(1))
+                .set(MAILBOX_HIGHEST_MODSEQ, coalesce(MAILBOX_HIGHEST_MODSEQ, ModSeq.initialHighestModSeq().asLong()).add(1))
                 .where(MAILBOX_ID.eq(asUUID(mailboxId)))
                 .returning(MAILBOX_HIGHEST_MODSEQ)))
             .map(record -> record.get(MAILBOX_HIGHEST_MODSEQ))
@@ -302,7 +302,7 @@ public class PostgresMailboxDAO {
         int increment = 1;
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.update(TABLE_NAME)
                 .set(MAILBOX_LAST_UID, coalesce(MAILBOX_LAST_UID, 0L).add(increment))
-                .set(MAILBOX_HIGHEST_MODSEQ, coalesce(MAILBOX_HIGHEST_MODSEQ, 0L).add(increment))
+                .set(MAILBOX_HIGHEST_MODSEQ, coalesce(MAILBOX_HIGHEST_MODSEQ, ModSeq.initialHighestModSeq().asLong()).add(increment))
                 .where(MAILBOX_ID.eq(asUUID(mailboxId)))
                 .returning(MAILBOX_LAST_UID, MAILBOX_HIGHEST_MODSEQ)))
             .map(record -> Pair.of(MessageUid.of(record.get(MAILBOX_LAST_UID)), ModSeq.of(record.get(MAILBOX_HIGHEST_MODSEQ))));

@@ -608,15 +608,16 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void getHighestMoseqShouldBeEqualToZeroOnEmptyMailbox() throws MailboxException {
-        assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isEqualTo(ModSeq.first());
+    void getHighestModSeqShouldBePositiveOnEmptyMailbox() throws MailboxException {
+        // RFC 7162: mod-sequence values are positive
+        assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isEqualTo(ModSeq.initialHighestModSeq());
     }
 
     @Test
     void insertingAMessageShouldIncrementModSeq() throws MailboxException {
         messageMapper.add(benwaInboxMailbox, message1);
         ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
-        assertThat(modSeq).isGreaterThan(ModSeq.first());
+        assertThat(modSeq).isGreaterThan(ModSeq.initialHighestModSeq());
         messageMapper.add(benwaInboxMailbox, message2);
         assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isGreaterThan(modSeq);
     }

@@ -55,7 +55,7 @@ public class InMemoryModSeqProvider implements ModSeqProvider {
     private AtomicLong getHighest(InMemoryId id) {
         AtomicLong modSeq = map.get(id);
         if (modSeq == null) {
-            modSeq = new AtomicLong(0);
+            modSeq = new AtomicLong(ModSeq.initialHighestModSeq().asLong());
             AtomicLong u = map.putIfAbsent(id, modSeq);
             if (u != null) {
                 modSeq = u;

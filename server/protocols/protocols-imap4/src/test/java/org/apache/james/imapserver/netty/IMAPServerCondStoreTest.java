@@ -31,6 +31,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 import jakarta.mail.Flags;
@@ -84,6 +86,42 @@ class IMAPServerCondStoreTest extends AbstractIMAPServerTest {
     }
 
     @Test
+    void selectOfANewMailboxShouldReportAPositiveHighestModSeqBelowTheFirstChange() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+
+        clientConnection.write(ByteBuffer.wrap(("a1 CREATE newbox\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("CREATE completed."));
+
+        clientConnection.write(ByteBuffer.wrap(("a2 SELECT newbox (CONDSTORE)\r\n").getBytes(StandardCharsets.UTF_8)));
+        List<String> selectReplies = readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+        long highestModSeq = extractNumber(selectReplies, Pattern.compile("\\* OK \\[HIGHESTMODSEQ (\\d+)\\]"));
+
+        String message = "MIME-Version: 1.0\r\n\r\nCONTENT\r\n";
+        clientConnection.write(ByteBuffer.wrap(String.format("a3 APPEND newbox {%d+}\r\n%s\r\n", message.length(), message).getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("APPEND completed."));
+
+        clientConnection.write(ByteBuffer.wrap(("a4 FETCH 1 (MODSEQ)\r\n").getBytes(StandardCharsets.UTF_8)));
+        List<String> fetchReplies = readStringUntil(clientConnection, s -> s.contains("a4 OK FETCH completed."));
+        long firstModSeq = extractNumber(fetchReplies, Pattern.compile("\\* 1 FETCH \\(MODSEQ \\((\\d+)\\)"));
+
+        // RFC 7162: mod-sequence values are positive, and a change gets a mod-sequence greater than the reported HIGHESTMODSEQ
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(highestModSeq).isPositive();
+            softly.assertThat(firstModSeq).isGreaterThan(highestModSeq);
+        });
+    }
+
+    private long extractNumber(List<String> replies, Pattern pattern) {
+        return replies.stream()
+            .map(pattern::matcher)
+            .filter(Matcher::find)
+            .map(matcher -> Long.parseLong(matcher.group(1)))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("No reply matching " + pattern + " in " + replies));
+    }
+
+    @Test
     void fetchShouldSupportChangedSince() throws Exception {
         clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
         readBytes(clientConnection);
@@ -109,20 +147,20 @@ class IMAPServerCondStoreTest extends AbstractIMAPServerTest {
         List<String> replies = readStringUntil(clientConnection, s -> s.contains("a3 OK FETCH completed."));
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(replies)
-                .filteredOn(s -> s.contains("* 2 FETCH (MODSEQ (41) FLAGS (\\Answered \\Recent) UID 2)"))
+                .filteredOn(s -> s.contains("* 2 FETCH (MODSEQ (42) FLAGS (\\Answered \\Recent) UID 2)"))
                 .hasSize(1);
             softly.assertThat(replies)
-                .filteredOn(s -> s.contains("* 25 FETCH (MODSEQ (42) FLAGS (\\Answered \\Recent) UID 25)"))
+                .filteredOn(s -> s.contains("* 25 FETCH (MODSEQ (43) FLAGS (\\Answered \\Recent) UID 25)"))
                 .hasSize(1);
             softly.assertThat(replies)
-                .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (43) FLAGS (\\Answered \\Recent) UID 35)"))
+                .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (44) FLAGS (\\Answered \\Recent) UID 35)"))
                 .hasSize(1);
 
             softly.assertThat(replies)
-                .filteredOn(s -> s.contains("* 14 FETCH (MODSEQ (39) FLAGS (\\Answered \\Recent) UID 14)"))
+                .filteredOn(s -> s.contains("* 14 FETCH (MODSEQ (40) FLAGS (\\Answered \\Recent) UID 14)"))
                 .isEmpty();
             softly.assertThat(replies)
-                .filteredOn(s -> s.contains("* 31 FETCH (MODSEQ (40) FLAGS (\\Answered \\Recent) UID 31)"))
+                .filteredOn(s -> s.contains("* 31 FETCH (MODSEQ (41) FLAGS (\\Answered \\Recent) UID 31)"))
                 .isEmpty();
         });
     }
@@ -151,7 +189,7 @@ class IMAPServerCondStoreTest extends AbstractIMAPServerTest {
         clientConnection.write(ByteBuffer.wrap(String.format("A150 SEARCH MODSEQ %d\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
         assertThat(readStringUntil(clientConnection, s -> s.contains("A150 OK SEARCH completed.")))
-            .filteredOn(s -> s.contains("* SEARCH 2 25 31 35 (MODSEQ 43)"))
+            .filteredOn(s -> s.contains("* SEARCH 2 25 31 35 (MODSEQ 44)"))
             .hasSize(1);
     }
 
@@ -180,7 +218,7 @@ class IMAPServerCondStoreTest extends AbstractIMAPServerTest {
 
         // Restrictions are not applied however
         assertThat(readStringUntil(clientConnection, s -> s.contains("a OK SEARCH completed.")))
-            .filteredOn(s -> s.contains("* SEARCH 2 25 31 35 (MODSEQ 43)"))
+            .filteredOn(s -> s.contains("* SEARCH 2 25 31 35 (MODSEQ 44)"))
             .hasSize(1);
     }
 
@@ -237,7 +275,7 @@ class IMAPServerCondStoreTest extends AbstractIMAPServerTest {
 
         clientConnection.write(ByteBuffer.wrap(("a2 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
         assertThat(readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed.")))
-            .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (39) FLAGS (\\Answered \\Recent))"))
+            .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (40) FLAGS (\\Answered \\Recent))"))
             .hasSize(1);
     }
 
@@ -258,7 +296,7 @@ class IMAPServerCondStoreTest extends AbstractIMAPServerTest {
 
         clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE %d) +FLAGS.SILENT (\\Seen)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8))));
         assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK STORE completed.")))
-            .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (40) UID 35)"))
+            .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (41) UID 35)"))
             .hasSize(1);
     }
 
@@ -279,7 +317,7 @@ class IMAPServerCondStoreTest extends AbstractIMAPServerTest {
 
         clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE %d) +FLAGS (\\Seen)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8))));
         assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK STORE completed.")))
-            .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (40) FLAGS (\\Answered \\Recent \\Seen) UID 35)"))
+            .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (41) FLAGS (\\Answered \\Recent \\Seen) UID 35)"))
             .hasSize(1);
     }
 
