@@ -1841,6 +1841,37 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
     @Nested
     class MetadataTests {
         @Test
+        void highestModSeqOfANewMailboxShouldBePositive() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath inbox = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(inbox, session);
+
+            ModSeq highestModSeq = mailboxManager.getMailbox(inbox, session)
+                .getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq();
+
+            // RFC 7162: mod-sequence values are positive
+            assertThat(highestModSeq.asLong()).isPositive();
+        }
+
+        @Test
+        void firstChangeOfANewMailboxShouldGetAModSeqGreaterThanTheInitialHighestModSeq() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath inbox = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(inbox, session);
+            MessageManager messageManager = mailboxManager.getMailbox(inbox, session);
+            ModSeq initialHighestModSeq = messageManager
+                .getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq();
+
+            messageManager.appendMessage(AppendCommand.from(message), session);
+
+            assertThat(messageManager.getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq())
+                .isGreaterThan(initialHighestModSeq);
+        }
+
+        @Test
         void getMailboxCountersShouldReturnDefaultValueWhenNoReadRight() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
             MailboxSession session1 = mailboxManager.createSystemSession(USER_1);

@@ -476,7 +476,7 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
         List<String> replies = readStringUntil(clientConnection, s -> s.contains("a2 OK ENABLE completed."));
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(replies)
-                .filteredOn(s -> s.contains("* OK [HIGHESTMODSEQ 41] Highest"))
+                .filteredOn(s -> s.contains("* OK [HIGHESTMODSEQ 42] Highest"))
                 .hasSize(1);
             softly.assertThat(replies)
                 .filteredOn(s -> s.contains("* ENABLED QRESYNC"))
@@ -508,7 +508,7 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
         clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 1:37 (FLAGS) (CHANGEDSINCE %d)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
         assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK FETCH completed.")))
-            .filteredOn(s -> s.contains("* 10 FETCH (MODSEQ (39) FLAGS (\\Answered \\Recent) UID 10)"))
+            .filteredOn(s -> s.contains("* 10 FETCH (MODSEQ (40) FLAGS (\\Answered \\Recent) UID 10)"))
             .hasSize(1);
     }
 
@@ -655,7 +655,7 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
 
         clientConnection.write(ByteBuffer.wrap(("I00104 EXPUNGE\r\n").getBytes(StandardCharsets.UTF_8)));
 
-        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 44] EXPUNGE completed.")))
+        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 45] EXPUNGE completed.")))
             .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
             .hasSize(1);
     }
@@ -684,7 +684,7 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
 
         clientConnection.write(ByteBuffer.wrap(("I00104 UID EXPUNGE 1:37\r\n").getBytes(StandardCharsets.UTF_8)));
 
-        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 44] EXPUNGE completed.")))
+        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 45] EXPUNGE completed.")))
             .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
             .hasSize(1);
     }

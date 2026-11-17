@@ -57,7 +57,7 @@ public class PostgresMailboxMapperTest extends MailboxMapperTest {
 
         PostgresMailbox metaData = (PostgresMailbox) mailboxMapper.findMailboxById(mailbox.getMailboxId()).block();
 
-        assertThat(metaData.getHighestModSeq()).isEqualTo(ModSeq.first());
+        assertThat(metaData.getHighestModSeq()).isEqualTo(ModSeq.initialHighestModSeq());
         assertThat(metaData.getLastUid()).isEqualTo(null);
     }
 

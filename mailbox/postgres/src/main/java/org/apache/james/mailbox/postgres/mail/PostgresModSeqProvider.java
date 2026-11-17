@@ -76,7 +76,7 @@ public class PostgresModSeqProvider implements ModSeqProvider {
 
     private Mono<ModSeq> getHighestModSeq(MailboxId mailboxId) {
         return mailboxDAO.findHighestModSeqByMailboxId(mailboxId)
-            .defaultIfEmpty(ModSeq.first());
+            .defaultIfEmpty(ModSeq.initialHighestModSeq());
     }
 
     @Override

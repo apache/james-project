@@ -97,7 +97,8 @@ public class JPAModSeqProvider implements ModSeqProvider {
             long highest = (Long) manager.createNamedQuery("findHighestModSeq")
                 .setParameter("idParam", jpaId.getRawId())
                 .getSingleResult();
-            return ModSeq.of(highest);
+            // Mailboxes start with a stored 0: report the positive initial value instead (RFC 7162)
+            return ModSeq.of(Math.max(highest, ModSeq.initialHighestModSeq().asLong()));
         } catch (PersistenceException e) {
             throw new MailboxException("Unable to get highest mod-sequence for mailbox " + mailboxId.serialize(), e);
         }

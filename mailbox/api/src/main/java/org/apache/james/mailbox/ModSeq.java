@@ -31,6 +31,16 @@ public class ModSeq implements Comparable<ModSeq> {
         return of(0L);
     }
 
+    /**
+     * Highest mod-sequence of a mailbox for which no mod-sequence was ever allocated.
+     *
+     * RFC 7162 mod-sequence values are positive integers: this value is reported instead of 0,
+     * and the first mod-sequence allocated for such a mailbox is strictly greater than it.
+     */
+    public static ModSeq initialHighestModSeq() {
+        return of(1L);
+    }
+
     private final long modSeq;
 
     private ModSeq(long modSeq) {

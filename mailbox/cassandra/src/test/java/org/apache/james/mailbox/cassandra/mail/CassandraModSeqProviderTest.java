@@ -80,7 +80,7 @@ class CassandraModSeqProviderTest {
     void highestModSeqShouldRetrieveValueStoredNextModSeq() throws Exception {
         int nbEntries = 100;
         ModSeq result = modSeqProvider.highestModSeq(mailbox);
-        assertThat(result).isEqualTo(ModSeq.first());
+        assertThat(result).isEqualTo(ModSeq.initialHighestModSeq());
         LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
                     ModSeq modSeq = modSeqProvider.nextModSeq(mailbox);
@@ -175,13 +175,13 @@ class CassandraModSeqProviderTest {
         ModSeq modseq6 = modSeqProvider.highestModSeqReactive(mailbox).block();
 
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(modseq0).isEqualTo(ModSeq.of(10));
-            softly.assertThat(modseq1).isEqualTo(ModSeq.of(11));
-            softly.assertThat(modseq2).isEqualTo(ModSeq.of(12));
-            softly.assertThat(modseq3).isEqualTo(ModSeq.of(13));
-            softly.assertThat(modseq4).isEqualTo(ModSeq.of(13));
-            softly.assertThat(modseq5).isEqualTo(ModSeq.of(13));
-            softly.assertThat(modseq6).isEqualTo(ModSeq.of(13));
+            softly.assertThat(modseq0).isEqualTo(ModSeq.of(11));
+            softly.assertThat(modseq1).isEqualTo(ModSeq.of(12));
+            softly.assertThat(modseq2).isEqualTo(ModSeq.of(13));
+            softly.assertThat(modseq3).isEqualTo(ModSeq.of(14));
+            softly.assertThat(modseq4).isEqualTo(ModSeq.of(14));
+            softly.assertThat(modseq5).isEqualTo(ModSeq.of(14));
+            softly.assertThat(modseq6).isEqualTo(ModSeq.of(14));
         });
     }
 }

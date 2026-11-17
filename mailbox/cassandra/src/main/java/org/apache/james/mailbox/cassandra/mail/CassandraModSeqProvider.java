@@ -159,7 +159,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     public ModSeq highestModSeq(MailboxId mailboxId) throws MailboxException {
         return unbox(() -> findHighestModSeq((CassandraId) mailboxId,
             locateReadProfile())
-            .block().orElse(ModSeq.first()))
+            .block().orElse(ModSeq.initialHighestModSeq()))
             .add(cassandraConfiguration.getUidModseqIncrement());
     }
 
@@ -213,7 +213,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
             findHighestModSeq(cassandraId, Optional.of(lwtProfile))
                 .flatMap(maybeHighestModSeq -> maybeHighestModSeq
                     .map(highestModSeq -> tryUpdateModSeq(cassandraId, highestModSeq))
-                    .orElseGet(() -> tryInsertModSeq(cassandraId, ModSeq.first())))
+                    .orElseGet(() -> tryInsertModSeq(cassandraId, ModSeq.initialHighestModSeq())))
                 .single()
                 .retryWhen(retrySpec)
                 .map(modSeq -> modSeq.add(cassandraConfiguration.getUidModseqIncrement()))));
@@ -222,7 +222,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     @Override
     public Mono<ModSeq> highestModSeqReactive(Mailbox mailbox) {
         return findHighestModSeq((CassandraId) mailbox.getMailboxId(), locateReadProfile())
-            .map(optional -> optional.orElse(ModSeq.first()))
+            .map(optional -> optional.orElse(ModSeq.initialHighestModSeq()))
             .map(modSeq -> modSeq.add(cassandraConfiguration.getUidModseqIncrement()));
     }
 }
