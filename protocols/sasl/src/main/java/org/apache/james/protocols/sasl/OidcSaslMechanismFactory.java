@@ -31,8 +31,20 @@ import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.protocols.api.sasl.SaslMechanismFactory;
 
 abstract class OidcSaslMechanismFactory implements SaslMechanismFactory {
+    private static final boolean REQUIRE_SSL_DEFAULT = false;
+
+    private final boolean requireSslDefault;
+
+    OidcSaslMechanismFactory() {
+        this(REQUIRE_SSL_DEFAULT);
+    }
+
+    OidcSaslMechanismFactory(boolean requireSslDefault) {
+        this.requireSslDefault = requireSslDefault;
+    }
+
     protected boolean requiresSsl(HierarchicalConfiguration<ImmutableNode> serverConfiguration) {
-        return serverConfiguration.getBoolean("auth.requireSSL", false);
+        return serverConfiguration.getBoolean("auth.requireSSL", requireSslDefault);
     }
 
     protected byte[] invalidTokenResponse(OidcSASLConfiguration configuration) {

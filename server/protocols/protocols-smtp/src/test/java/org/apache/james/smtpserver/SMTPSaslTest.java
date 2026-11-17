@@ -55,6 +55,7 @@ import org.apache.james.protocols.sasl.OauthBearerSaslMechanismFactory;
 import org.apache.james.protocols.sasl.XOauth2SaslMechanismFactory;
 import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
 import org.apache.james.protocols.smtp.core.esmtp.LoginSaslMechanismFactory;
+import org.apache.james.smtpserver.netty.SMTPServerFactory;
 import org.apache.james.util.ClassLoaderUtils;
 import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
@@ -97,13 +98,16 @@ class SMTPSaslTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(OidcTokenFixture.JWKS_RESPONSE, StandardCharsets.UTF_8));
 
+        setUpServerWithOidcMechanisms(oidcConfiguration());
+    }
+
+    private HierarchicalConfiguration<ImmutableNode> oidcConfiguration() throws Exception {
         HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("smtpserver-advancedSecurity.xml"));
         config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
         config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
         config.addProperty("auth.oidc.oidcConfigurationURL", OIDC_URL);
         config.addProperty("auth.oidc.scope", SCOPE);
-
-        setUpServerWithOidcMechanisms(config);
+        return config;
     }
 
     private void setUpServerWithOidcMechanisms(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
@@ -202,6 +206,25 @@ class SMTPSaslTest {
         assertThat(client.getReplyString())
             .as("Should not advertise OAUTHBEARER when no TLS connect.")
             .doesNotContain("OAUTHBEARER");
+
+        client.sendCommand("AUTH OAUTHBEARER " + VALID_OAUTHBEARER_TOKEN);
+        assertThat(client.getReplyString()).contains("538 5.7.11 Encryption required for requested authentication mechanism");
+    }
+
+    @Test
+    void oauthOverClearTextShouldBeRefusedWhenRequireSSLIsNotConfigured() throws Exception {
+        testSystem.smtpServer.destroy();
+        HierarchicalConfiguration<ImmutableNode> config = oidcConfiguration();
+        config.clearProperty("auth.requireSSL");
+        testSystem.setUpWithSaslMechanisms(config, authorizator(), SMTPServerFactory.SmtpSaslMechanismLoader.defaultLoader().load(config));
+
+        SMTPClient client = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        client.sendCommand("EHLO localhost");
+
+        client.sendCommand("AUTH XOAUTH2 " + OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN));
+        assertThat(client.getReplyString()).contains("538 5.7.11 Encryption required for requested authentication mechanism");
 
         client.sendCommand("AUTH OAUTHBEARER " + VALID_OAUTHBEARER_TOKEN);
         assertThat(client.getReplyString()).contains("538 5.7.11 Encryption required for requested authentication mechanism");

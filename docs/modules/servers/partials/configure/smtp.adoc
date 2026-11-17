@@ -152,7 +152,7 @@ However, if authentication capabilities are not announced, only the mechanisms `
 | Configures whether authentication requires a secure connection (TLS or STARTTLS).
 If this value is `true` and the connection is not secure, authentication capabilities are not announced.
 This always holds, even if `auth.announce` is set to `always`.
-The `PLAIN` and `LOGIN` mechanisms also use this value to reject authentication attempts over an insecure connection,
+The `PLAIN`, `LOGIN`, `XOAUTH2` and `OAUTHBEARER` mechanisms also use this value to reject authentication attempts over an insecure connection,
 with a `538 5.7.11 Encryption required for requested authentication mechanism` reply.
 ifndef::no-kerberos[]
 The optional `GSSAPI` mechanism also uses this value to reject authentication attempts over an insecure connection.
