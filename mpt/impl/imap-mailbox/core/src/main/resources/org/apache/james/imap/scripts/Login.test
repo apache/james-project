@@ -32,5 +32,10 @@ S: a003 NO LOGIN failed. Invalid login/password.
 C: a004 LOGIN imapuser invalid
 S: a004 NO LOGIN failed. Invalid login/password.
 
-C: a005 LOGIN imapuser password
+# Every synchronizing literal of a command gets its continuation request
+C: a005 LOGIN {8}
+S: \+ Ok
+C: imapuser {8}
+S: \+ Ok
+C: password
 S: a005 OK LOGIN completed.
