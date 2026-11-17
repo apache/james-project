@@ -55,3 +55,7 @@ S: e OK SEARCH completed.
 C: e SEARCH UNFLAGGED
 S: \* SEARCH 3 4
 S: e OK SEARCH completed.
+
+# BADCHARSET lists each supported charset once, by its canonical name
+C: f SEARCH CHARSET UNKNOWN-CHARSET ALL
+S: f NO \[BADCHARSET \((?!.*\bUTF8\b)(?!.*X-MODIFIED-UTF-7)(?=.*\bUTF-8\b).*\)\] SEARCH failed\..*
