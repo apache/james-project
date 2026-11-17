@@ -1146,7 +1146,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     protected void modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq() throws Exception {
-        SearchQuery searchQuery = SearchQuery.of(SearchQuery.modSeqEquals(2L));
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.modSeqEquals(3L));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .containsOnly(m2.getUid());
@@ -1154,7 +1154,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     protected void modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
-        SearchQuery searchQuery = SearchQuery.of(SearchQuery.modSeqGreaterThan(7L));
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.modSeqGreaterThan(8L));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .containsOnly(m8.getUid(), m9.getUid());
@@ -1162,7 +1162,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     protected void modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
-        SearchQuery searchQuery = SearchQuery.of(SearchQuery.modSeqLessThan(3L));
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.modSeqLessThan(4L));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .containsOnly(m1.getUid(), m2.getUid());
@@ -1375,7 +1375,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     protected void youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery() throws Exception {
-        SearchQuery searchQuery = SearchQuery.of(SearchQuery.headerExists("Precedence"), SearchQuery.modSeqGreaterThan(6L));
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.headerExists("Precedence"), SearchQuery.modSeqGreaterThan(7L));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .containsOnly(m8.getUid(), m9.getUid());
@@ -1385,7 +1385,7 @@ public abstract class AbstractMessageSearchIndexTest {
     protected void andShouldReturnResultsMatchingBothRequests() throws Exception {
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.and(
             SearchQuery.headerExists("Precedence"),
-            SearchQuery.modSeqGreaterThan(6L)));
+            SearchQuery.modSeqGreaterThan(7L)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .containsOnly(m8.getUid(), m9.getUid());
@@ -1396,7 +1396,7 @@ public abstract class AbstractMessageSearchIndexTest {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m4.getUid())};
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.or(
             SearchQuery.uid(numericRanges),
-            SearchQuery.modSeqGreaterThan(6L)));
+            SearchQuery.modSeqGreaterThan(7L)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .containsOnly(m2.getUid(), m3.getUid(), m4.getUid(), m7.getUid(), m8.getUid(), m9.getUid());
