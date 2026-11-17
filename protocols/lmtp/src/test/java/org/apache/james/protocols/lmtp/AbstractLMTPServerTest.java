@@ -93,6 +93,29 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
     public void testHeloEnforcementDisabled() throws Exception {
     }
 
+    @Test
+    @Override
+    protected void heloAndEhloRepliesShouldHaveBalancedBrackets() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String replies = rawUtf8Exchange(bindedAddress,
+                "LHLO localhost\r\n",
+                "QUIT\r\n");
+
+            assertThat(replies)
+                .containsPattern("250-\\S+ Hello localhost \\[[^\\]]+\\]\r\n")
+                .doesNotContain("])");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
 
     @Override
     protected void testMailWithoutBrackets() throws Exception {

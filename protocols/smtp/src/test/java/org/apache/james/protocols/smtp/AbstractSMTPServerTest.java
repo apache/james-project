@@ -1021,7 +1021,7 @@ public abstract class AbstractSMTPServerTest {
     }
 
     @Test
-    void heloAndEhloRepliesShouldHaveBalancedBrackets() throws Exception {
+    protected void heloAndEhloRepliesShouldHaveBalancedBrackets() throws Exception {
         ProtocolServer server = null;
         try {
             server = createServer(createProtocol(new TestMessageHook()));
@@ -1412,7 +1412,7 @@ public abstract class AbstractSMTPServerTest {
         return new java.net.Socket(address.getAddress().getHostAddress(), address.getPort());
     }
 
-    private String rawUtf8Exchange(InetSocketAddress address, String... commands) throws IOException {
+    protected String rawUtf8Exchange(InetSocketAddress address, String... commands) throws IOException {
         try (java.net.Socket socket = createRawSocket(address)) {
             socket.getOutputStream().write(String.join("", commands).getBytes(StandardCharsets.UTF_8));
             socket.getOutputStream().flush();
