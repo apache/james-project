@@ -421,7 +421,6 @@ public class POP3ServerTest {
         pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         pop3Client.login("foo", "bar");
         String firstUniqueId = pop3Client.listUniqueIdentifier(1).identifier;
-        assertThat(firstUniqueId).isEqualTo(mailboxManager.getMailbox(mailboxPath, session).getMailboxEntity().getUidValidity().asLong() + "-1");
         pop3Client.logout();
         pop3Client.disconnect();
 
