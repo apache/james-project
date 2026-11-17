@@ -48,12 +48,17 @@ public class ActionDispatcher {
     private final ImmutableMap<Class<?>, MailAction> mailActions;
 
     public ActionDispatcher(NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector) {
+        this(notificationRegistry, automaticallySentMailDetector, UserAddresses.NONE);
+    }
+
+    public ActionDispatcher(NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector,
+                            UserAddresses userAddresses) {
         this.mailActions = ImmutableMap.of(
             ActionFileInto.class, new FileIntoAction(),
             ActionKeep.class, new KeepAction(),
             ActionRedirect.class, new RedirectAction(),
             ActionReject.class, new RejectAction(),
-            ActionVacation.class, new VacationAction(notificationRegistry, automaticallySentMailDetector),
+            ActionVacation.class, new VacationAction(notificationRegistry, automaticallySentMailDetector, userAddresses),
             ActionDiscard.class, new DiscardAction());
     }
 

@@ -42,6 +42,7 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.core.builder.MimeMessageBuilder.Header;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailetcontainer.AutomaticallySentMailDetectorImpl;
+import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.Sieve;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
@@ -67,6 +68,7 @@ import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class SieveIntegrationTest {
@@ -1666,6 +1668,46 @@ class SieveIntegrationTest {
             .recipient(RECEIVER_DOMAIN_COM)
             .sender(sender)
             .build();
+    }
+
+    @Test
+    void vacationShouldReplyWhenTheMessageHeadersNameAnAliasOfTheUser() throws Exception {
+        useSieveWithAlias(Username.of(LOCAL_PART), "sales@domain.com");
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        testee.service(createMailWithRecipientHeader("To", "Sales <sales@domain.com>"));
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+    }
+
+    @Test
+    void vacationShouldNotReplyToAnAliasOfTheUser() throws Exception {
+        useSieveWithAlias(Username.of(LOCAL_PART), "sales@domain.com");
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
+
+        testee.service(FakeMail.builder()
+            .name("name")
+            .mimeMessage(
+                MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("Subject")
+                    .setSender("sales@domain.com")
+                    .addHeader("To", RECEIVER_DOMAIN_COM)
+                    .setText("A text"))
+            .state(Mail.DEFAULT)
+            .recipient(RECEIVER_DOMAIN_COM)
+            .sender("sales@domain.com")
+            .build());
+
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    private void useSieveWithAlias(Username user, String alias) throws Exception {
+        MailAddress aliasAddress = new MailAddress(alias);
+        AliasReverseResolver aliasReverseResolver = username -> username.equals(user)
+            ? Flux.just(aliasAddress)
+            : Flux.empty();
+        testee = new Sieve(usersRepository, resourceLocator, notificationRegistry, new AutomaticallySentMailDetectorImpl(), aliasReverseResolver);
+        testee.init(FakeMailetConfig.builder().mailetName("Sieve").mailetContext(fakeMailContext).build());
     }
 
     private FakeMail createMailWithRecipientHeader(String headerName, String headerValue) throws MessagingException {

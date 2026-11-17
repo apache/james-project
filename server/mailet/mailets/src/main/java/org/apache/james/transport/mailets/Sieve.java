@@ -24,8 +24,10 @@ import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
+import org.apache.james.transport.mailets.jsieve.UserAddresses;
 import org.apache.james.transport.mailets.jsieve.delivery.SieveExecutor;
 import org.apache.james.transport.mailets.jsieve.delivery.SievePoster;
 import org.apache.james.user.api.UsersRepository;
@@ -33,6 +35,8 @@ import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.GenericMailet;
+
+import reactor.core.publisher.Mono;
 
 /**
  * Execute Sieve scripts for incoming emails, and set the result of the execution as attributes of the mail
@@ -43,20 +47,42 @@ public class Sieve extends GenericMailet {
     private final ResourceLocator resourceLocator;
     private final NotificationRegistry notificationRegistry;
     private final AutomaticallySentMailDetector automaticallySentMailDetector;
+    private final UserAddresses userAddresses;
     private SieveExecutor sieveExecutor;
 
     @Inject
     public Sieve(UsersRepository usersRepository, SieveRepository sieveRepository,
-                 NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector) {
-        this(usersRepository, new ResourceLocator(sieveRepository, usersRepository), notificationRegistry, automaticallySentMailDetector);
+                 NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector,
+                 AliasReverseResolver aliasReverseResolver) {
+        this(usersRepository, new ResourceLocator(sieveRepository, usersRepository), notificationRegistry, automaticallySentMailDetector,
+            aliasReverseResolver);
     }
 
     public Sieve(UsersRepository usersRepository, ResourceLocator resourceLocator,
                  NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector) {
+        this(usersRepository, resourceLocator, notificationRegistry, automaticallySentMailDetector, UserAddresses.NONE);
+    }
+
+    public Sieve(UsersRepository usersRepository, ResourceLocator resourceLocator,
+                 NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector,
+                 AliasReverseResolver aliasReverseResolver) {
+        this(usersRepository, resourceLocator, notificationRegistry, automaticallySentMailDetector,
+            aliasAddresses(usersRepository, aliasReverseResolver));
+    }
+
+    private static UserAddresses aliasAddresses(UsersRepository usersRepository, AliasReverseResolver aliasReverseResolver) {
+        return recipient -> Mono.fromCallable(() -> usersRepository.getUsername(recipient))
+            .flatMapMany(aliasReverseResolver::listAddresses);
+    }
+
+    private Sieve(UsersRepository usersRepository, ResourceLocator resourceLocator,
+                  NotificationRegistry notificationRegistry, AutomaticallySentMailDetector automaticallySentMailDetector,
+                  UserAddresses userAddresses) {
         this.usersRepository = usersRepository;
         this.resourceLocator = resourceLocator;
         this.notificationRegistry = notificationRegistry;
         this.automaticallySentMailDetector = automaticallySentMailDetector;
+        this.userAddresses = userAddresses;
     }
 
     @Override
@@ -72,6 +98,7 @@ public class Sieve extends GenericMailet {
             .sievePoster(new SievePoster(usersRepository, MailboxConstants.INBOX))
             .notificationRegistry(notificationRegistry)
             .automaticallySentMailDetector(automaticallySentMailDetector)
+            .userAddresses(userAddresses)
             .build();
     }
 
