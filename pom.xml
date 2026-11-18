@@ -2980,6 +2980,12 @@
                 <version>${mockito.version}</version>
             </dependency>
             <dependency>
+                <!-- Override the version pulled by jooq-postgres-extensions: CVE-2026-54291 -->
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>42.7.14</version>
+            </dependency>
+            <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-library</artifactId>
                 <version>${scala.version}</version>
