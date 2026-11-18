@@ -94,9 +94,12 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
         .collectSeq())
 
   private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, invocation: InvocationWithContext) : SFlux[InvocationWithContext] = {
-    val deferredPaths = methodsByName.get(invocation.invocation.methodName)
+    val methodDeferredPaths = methodsByName.get(invocation.invocation.methodName)
       .collect { case method: DeferredCreationReferences => method.deferredCreationReferencePaths(invocation.invocation.arguments) }
       .getOrElse(Set.empty)
+    val arguments = invocation.invocation.arguments.value
+    val sameCallTargetPaths = SameCallCreationReferences.targetPaths(arguments, invocation.processingContext.declaredCreationIds(arguments))
+    val deferredPaths = methodDeferredPaths ++ sameCallTargetPaths
 
     SFlux.fromPublisher(
       invocation.processingContext.resolveBackReferences(invocation.invocation, deferredPaths) match {
@@ -111,7 +114,7 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
         case Right(resolvedInvocation) => processMethodWithMatchName(capabilities, InvocationWithContext(resolvedInvocation, invocation.processingContext), mailboxSession)
           // An implicit response can fail after the method has already emitted successful creations.
           .scan(invocation) { (previous, response) =>
-            val isErrorResponse = response.invocation.methodName.value.value == "error"
+            val isErrorResponse = response.invocation.methodName == Invocation.ERROR_METHOD_NAME
             val withContext = if (isErrorResponse) {
               response.copy(processingContext = previous.processingContext)
             } else {

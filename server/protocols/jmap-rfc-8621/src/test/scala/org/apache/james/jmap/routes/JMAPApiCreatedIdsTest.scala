@@ -188,4 +188,51 @@ class JMAPApiCreatedIdsTest {
 
     assertThat(ResponseSerializer.serialize(response).keys.contains("createdIds")).isFalse()
   }
+
+  @Test
+  def shouldNotResolveTargetsCreatedByTheSameCallWithTheInitialIds(): Unit = {
+    val response = process(
+      """{
+        |  "using": ["urn:ietf:params:jmap:core"],
+        |  "createdIds": {"x": "old-x", "y": "old-y"},
+        |  "methodCalls": [
+        |    ["Test/read", {
+        |      "create": {"x": {"note": "#y"}},
+        |      "update": {"#x": {}, "#y": {}},
+        |      "destroy": ["#x", "#y"]
+        |    }, "set"]
+        |  ]
+        |}""".stripMargin)
+
+    assertThat(argumentsOf(response, "set", "Test/read")).isEqualTo(Json.parse(
+      """{
+        |  "create": {"x": {"note": "old-y"}},
+        |  "update": {"#x": {}, "old-y": {}},
+        |  "destroy": ["#x", "old-y"]
+        |}""".stripMargin))
+  }
+
+  @Test
+  def shouldNotResolveTargetsCreatedThroughACreateResultReference(): Unit = {
+    val response = process(
+      """{
+        |  "using": ["urn:ietf:params:jmap:core"],
+        |  "createdIds": {"x": "old-x"},
+        |  "methodCalls": [
+        |    ["Core/echo", {"create": {"x": {}}}, "echo"],
+        |    ["Test/read", {
+        |      "#create": {"resultOf": "echo", "name": "Core/echo", "path": "/create"},
+        |      "update": {"#x": {}},
+        |      "destroy": ["#x"]
+        |    }, "set"]
+        |  ]
+        |}""".stripMargin)
+
+    assertThat(argumentsOf(response, "set", "Test/read")).isEqualTo(Json.parse(
+      """{
+        |  "create": {"x": {}},
+        |  "update": {"#x": {}},
+        |  "destroy": ["#x"]
+        |}""".stripMargin))
+  }
 }

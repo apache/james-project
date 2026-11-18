@@ -140,6 +140,15 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
   def resolveBackReferences(invocation: Invocation): Either[ArgumentResolutionError, Invocation] =
     resolveBackReferences(invocation, Set.empty)
 
+  /** Keys of the `create` argument, including one supplied through a `#create` result reference. */
+  def declaredCreationIds(arguments: JsObject): Set[String] = {
+    val create: Option[JsValue] = (arguments \ "create").toOption
+      .orElse((arguments \ "#create").toOption
+        .flatMap(value => BackReferenceDeserializer.deserializeBackReference(value).asOpt)
+        .flatMap(backReference => resolve(backReference).asOpt))
+    create.flatMap(_.asOpt[JsObject]).map(_.keys.toSet).getOrElse(Set.empty)
+  }
+
   def resolveBackReferences(invocation: Invocation, deferredCreationReferences: Set[JsPath]): Either[ArgumentResolutionError, Invocation] = {
     val arguments = invocation.arguments.value
     val argumentNames = arguments.keys

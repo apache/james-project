@@ -34,12 +34,14 @@ object Invocation {
   case class Arguments(value: JsObject) extends AnyVal
   case class MethodCallId(value: NonEmptyString)
 
+  val ERROR_METHOD_NAME: MethodName = MethodName("error")
+
   def error(errorCode: ErrorCode, description: String, methodCallId: MethodCallId): Invocation =
-    Invocation(MethodName("error"),
+    Invocation(ERROR_METHOD_NAME,
       Arguments(JsObject(Seq("type" -> JsString(errorCode.code), "description" -> JsString(description)))),
       methodCallId)
 
-  def error(errorCode: ErrorCode, methodCallId: MethodCallId): Invocation = Invocation(MethodName("error"),
+  def error(errorCode: ErrorCode, methodCallId: MethodCallId): Invocation = Invocation(ERROR_METHOD_NAME,
       Arguments(JsObject(Map("type" -> JsString(errorCode.code)))),
       methodCallId)
 
