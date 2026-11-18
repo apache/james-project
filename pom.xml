@@ -3175,7 +3175,7 @@
                         <dependency>
                             <groupId>ch.epfl.scala</groupId>
                             <artifactId>scalafix-core_2.13</artifactId>
-                            <version>0.14.3</version>
+                            <version>0.14.6</version>
                         </dependency>
                         <dependency>
                             <groupId>com.nequissimus</groupId>
