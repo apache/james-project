@@ -33,7 +33,7 @@ import org.apache.james.jmap.mail.MDN._
 import org.apache.james.jmap.mail.MDNSend.MDN_ALREADY_SENT_FLAG
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.LOGGER
-import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
+import org.apache.james.jmap.routes.{IdPaths, ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
 import org.apache.james.mailbox.model.{FetchGroup, MessageResult}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
@@ -49,7 +49,7 @@ import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.server.core.MailImpl
 import org.apache.mailet.{Attribute, AttributeValue, Mail}
-import play.api.libs.json.{JsError, JsObject, JsSuccess}
+import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
@@ -64,9 +64,15 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
                               val identityResolver: IdentityResolver,
                               val metricFactory: MetricFactory,
                               val sessionSupplier: SessionSupplier,
-                              val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[MDNSendRequest] with Startable {
+                              val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[MDNSendRequest] with IdArguments with DeferredCreationReferences with Startable {
   override val methodName: MethodName = MethodName("MDN/send")
+  override val idPaths: IdPaths = IdPaths(values = Set("send/*/forEmailId"), keys = Set("onSuccessUpdateEmail/*/mailboxIds"))
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MDN, JMAP_MAIL, JMAP_CORE)
+
+  /** `onSuccessUpdateEmail` keys reference MDNs this call sends and are resolved after sending. */
+  override def deferredCreationReferencePaths(arguments: Arguments, processingContext: ProcessingContext): Set[JsPath] =
+    DeferredCreationReferences.creationReferenceKeyPaths(arguments, "onSuccessUpdateEmail")
+
   var queue: MailQueue = _
 
   def init: Unit =

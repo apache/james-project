@@ -31,7 +31,7 @@ import org.apache.james.jmap.mail.{MailboxSetRequest, MailboxSetResponse}
 import org.apache.james.jmap.method.MailboxSetCreatePerformer.MailboxCreationResults
 import org.apache.james.jmap.method.MailboxSetDeletePerformer.MailboxDeletionResults
 import org.apache.james.jmap.method.MailboxSetUpdatePerformer.MailboxUpdateResults
-import org.apache.james.jmap.routes.SessionSupplier
+import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.MailboxId
 import org.apache.james.mailbox.{MailboxSession, MessageManager}
@@ -64,7 +64,7 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
   override val methodName: MethodName = MethodName("Mailbox/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
-  override def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath] = {
+  override def deferredCreationReferencePaths(arguments: Arguments, processingContext: ProcessingContext): Set[JsPath] = {
     val createParentPaths = (arguments.value \ "create").asOpt[JsObject]
       .map(creates => creates.keys.map(id => JsPath \ "create" \ id \ "parentId").toSet)
       .getOrElse(Set.empty)

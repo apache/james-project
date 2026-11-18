@@ -1386,6 +1386,76 @@ trait EmailSubmissionSetMethodContract {
   }
 
   @Test
+  def onSuccessUpdateEmailShouldResolveMailboxCreatedEarlierInTheRequest(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(bobUsername.asString)
+      .setFrom(bobUsername.asString)
+      .setTo(andreUsername.asString)
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobDraftsPath, AppendCommand.builder()
+      .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["Mailbox/set", {
+         |       "accountId": "$bobAccountId",
+         |       "create": {"mbx": {"name": "Archive"}}
+         |     }, "createMailbox"],
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$bobAccountId",
+         |       "create": {
+         |         "submittedEmail": {
+         |           "identityId": "${identityIdOf(bobUsername)}",
+         |           "emailId": "${messageId.serialize}",
+         |           "envelope": {
+         |             "mailFrom": {"email": "${bobUsername.asString}"},
+         |             "rcptTo": [{"email": "${andreUsername.asString}"}]
+         |           }
+         |         }
+         |       },
+         |       "onSuccessUpdateEmail": {
+         |         "#submittedEmail": {"mailboxIds": {"#mbx": true}}
+         |       }
+         |     }, "submitEmail"],
+         |     ["Email/get", {
+         |       "accountId": "$bobAccountId",
+         |       "ids": ["${messageId.serialize}"],
+         |       "properties": ["mailboxIds"]
+         |     }, "getSentEmail"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract()
+
+    val mailboxId = response.path[String](
+      "methodResponses.find { it[2] == 'createMailbox' }[1].created.mbx.id")
+
+    assertThatJson(response.asString())
+      .inPath("methodResponses[2][1].updated")
+      .isEqualTo(s"""{"${messageId.serialize}": null}""")
+    assertThatJson(response.asString())
+      .inPath("methodResponses[3][1].list[0].mailboxIds")
+      .isEqualTo(s"""{"$mailboxId": true}""")
+  }
+
+  @Test
   def setShouldFailWhenOnSuccessUpdateEmailMissesTheCreationIdSharp(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of

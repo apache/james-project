@@ -29,7 +29,6 @@ import io.restassured.builder.RequestSpecBuilder
 import io.restassured.config.EncoderConfig.encoderConfig
 import io.restassured.config.RestAssuredConfig.newConfig
 import io.restassured.http.{ContentType, Header, Headers}
-import io.restassured.specification.RequestSpecification
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus
 import org.apache.james.core.{Domain, Username}
@@ -85,23 +84,8 @@ object JMAPApiRoutesTest {
     new JMAPServer(TEST_CONFIGURATION, routesHandler, versionParser)
   }
 
-  private[routes] val userBase64String: String = Base64.getEncoder.encodeToString("user1:password".getBytes(StandardCharsets.UTF_8))
+  private val userBase64String: String = Base64.getEncoder.encodeToString("user1:password".getBytes(StandardCharsets.UTF_8))
   
-  private[routes] def startServer(): JMAPServer = {
-    val server = newServer(Set(new CoreEchoMethod))
-    server.start()
-    server
-  }
-
-  private[routes] def requestSpec(server: JMAPServer): RequestSpecification =
-    new RequestSpecBuilder()
-      .setContentType(ContentType.JSON)
-      .setAccept(ContentType.JSON)
-      .setConfig(newConfig.encoderConfig(encoderConfig.defaultContentCharset(StandardCharsets.UTF_8)))
-      .setPort(server.getPort.getValue)
-      .setBasePath(JMAP)
-      .build
-
   private val REQUEST_OBJECT: String =
     """{
       |  "using": [
@@ -273,8 +257,16 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   var jmapServer: JMAPServer = _
 
   before {
-    jmapServer = startServer()
-    RestAssured.requestSpecification = requestSpec(jmapServer)
+    jmapServer = newServer(Set(new CoreEchoMethod))
+    jmapServer.start()
+
+    RestAssured.requestSpecification = new RequestSpecBuilder()
+      .setContentType(ContentType.JSON)
+      .setAccept(ContentType.JSON)
+      .setConfig(newConfig.encoderConfig(encoderConfig.defaultContentCharset(StandardCharsets.UTF_8)))
+      .setPort(jmapServer.getPort.getValue)
+      .setBasePath(JMAP)
+      .build
   }
 
   after {

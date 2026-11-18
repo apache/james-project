@@ -39,7 +39,7 @@ class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCr
                                           pushSubscriptionSerializer: PushSubscriptionSerializer,
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier,
-                                          val sessionTranslator: SessionTranslator) extends MethodWithoutAccountId[PushSubscriptionSetRequest] with Startable {
+                                          val sessionTranslator: SessionTranslator) extends MethodWithoutAccountId[PushSubscriptionSetRequest] with SameCallCreationTargets with Startable {
   override val methodName: Invocation.MethodName = MethodName("PushSubscription/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE)
 

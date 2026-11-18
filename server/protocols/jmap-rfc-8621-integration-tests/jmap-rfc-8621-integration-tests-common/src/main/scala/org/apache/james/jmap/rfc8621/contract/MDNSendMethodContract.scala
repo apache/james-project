@@ -204,6 +204,65 @@ trait MDNSendMethodContract {
   }
 
   @Test
+  def onSuccessUpdateEmailShouldTargetTheSentMdnWhenCreatedIdsMapsItsCreationId(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val andreInbox = MailboxPath.inbox(andreUsername)
+    mailboxProbe.createMailbox(andreInbox)
+    val messageId = mailboxProbe.appendMessage(andreUsername.asString(), andreInbox, AppendCommand.builder()
+      .build(buildOriginalMessage("read receipt")))
+      .getMessageId
+    val otherMessageId = mailboxProbe.appendMessage(andreUsername.asString(), andreInbox, AppendCommand.builder()
+      .build(buildOriginalMessage("other")))
+      .getMessageId
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:mdn"],
+         |  "createdIds": {"k1": "${otherMessageId.serialize}"},
+         |  "methodCalls": [
+         |    ["MDN/send", {
+         |      "accountId": "$andreAccountId",
+         |      "identityId": "$andreIdentityId",
+         |      "send": {
+         |        "k1": {
+         |          "forEmailId": "${messageId.serialize}",
+         |          "disposition": {
+         |            "actionMode": "manual-action",
+         |            "sendingMode": "mdn-sent-manually",
+         |            "type": "displayed"
+         |          }
+         |        }
+         |      },
+         |      "onSuccessUpdateEmail": {"#k1": {"keywords/$$mdnsent": true}}
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "$andreAccountId",
+         |      "ids": ["${messageId.serialize}", "${otherMessageId.serialize}"],
+         |      "properties": ["keywords"]
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract.body.asString
+
+    assertThatJson(response).inPath("methodResponses[0][1].sent").isObject.containsKey("k1")
+    assertThatJson(response).inPath("methodResponses[1][1].updated")
+      .isEqualTo(s"""{"${messageId.serialize}": null}""")
+    assertThatJson(response).inPath("methodResponses[2][1].list")
+      .isEqualTo(s"""[
+        |  {"id": "${messageId.serialize}", "keywords": {"$$mdnsent": true}},
+        |  {"id": "${otherMessageId.serialize}", "keywords": {}}
+        |]""".stripMargin)
+  }
+
+  @Test
   def mdnSendShouldBeSuccessAndSendMailSuccessfully(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 

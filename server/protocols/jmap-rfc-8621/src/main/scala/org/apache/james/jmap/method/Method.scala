@@ -24,14 +24,14 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, JmapRfc8621Configuration, SessionTranslator}
 import org.apache.james.jmap.delegation.ForbiddenAccountManagementException
 import org.apache.james.jmap.mail.{IdentityIdNotFoundException, RequestTooLargeException, UnsupportedFilterException, UnsupportedNestingException, UnsupportedRequestParameterException, UnsupportedSortException}
-import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
+import org.apache.james.jmap.routes.{IdPaths, ProcessingContext, SessionSupplier}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.MDCStructuredLogger
 import org.reactivestreams.Publisher
 import org.slf4j.LoggerFactory
-import play.api.libs.json.JsPath
+import play.api.libs.json.{JsArray, JsObject, JsPath, JsString}
 import reactor.core.scala.publisher.SFlux
 
 object Method {
@@ -54,9 +54,61 @@ trait Method {
   def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext]
 }
 
+/**
+ * A method expecting Ids at locations that do not follow the naming convention of the specifications (see [[IdPaths]]),
+ * such as the `inMailbox` filter condition. Creation references are also resolved there.
+ */
+trait IdArguments {
+  def idPaths: IdPaths
+}
+
 trait DeferredCreationReferences {
   /** Creation reference values and object keys at these paths are resolved by the method after its creates. */
-  def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath]
+  def deferredCreationReferencePaths(arguments: Arguments, processingContext: ProcessingContext): Set[JsPath]
+}
+
+object DeferredCreationReferences {
+  /** `update` keys and `destroy` entries that reference a creation id created by the same call. */
+  def sameCallTargetPaths(arguments: Arguments, processingContext: ProcessingContext): Set[JsPath] = {
+    val createdByThisCall = processingContext.declaredCreationIds(arguments.value)
+    def isCreatedByThisCall(value: String): Boolean = value.startsWith("#") && createdByThisCall.contains(value.substring(1))
+
+    if (createdByThisCall.isEmpty) {
+      Set.empty
+    } else {
+      keyPaths(arguments, "update", isCreatedByThisCall) ++ elementPaths(arguments, "destroy", isCreatedByThisCall)
+    }
+  }
+
+  /** Every creation reference among the keys of `property`. */
+  def creationReferenceKeyPaths(arguments: Arguments, property: String): Set[JsPath] =
+    keyPaths(arguments, property, _.startsWith("#"))
+
+  /** Every creation reference among the elements of `property`. */
+  def creationReferenceElementPaths(arguments: Arguments, property: String): Set[JsPath] =
+    elementPaths(arguments, property, _.startsWith("#"))
+
+  private def keyPaths(arguments: Arguments, property: String, selected: String => Boolean): Set[JsPath] =
+    (arguments.value \ property).asOpt[JsObject]
+      .map(_.keys.filter(selected).map(key => JsPath \ property \ key).toSet)
+      .getOrElse(Set.empty)
+
+  private def elementPaths(arguments: Arguments, property: String, selected: String => Boolean): Set[JsPath] =
+    (arguments.value \ property).asOpt[JsArray]
+      .map(_.value.zipWithIndex.collect { case (JsString(value), index) if selected(value) => (JsPath \ property)(index) }.toSet)
+      .getOrElse(Set.empty)
+}
+
+/**
+ * A `/set` method whose update and destroy performers do not resolve creation references themselves.
+ *
+ * A target referencing a creation id that the same call creates is left as `#creationId`: the incoming context maps it
+ * to an older object, while RFC 8620 §5.3 processes creates before updates and destroys. The method then reports it as
+ * not updated or not destroyed instead of acting on the older object.
+ */
+trait SameCallCreationTargets extends DeferredCreationReferences {
+  override def deferredCreationReferencePaths(arguments: Arguments, processingContext: ProcessingContext): Set[JsPath] =
+    DeferredCreationReferences.sameCallTargetPaths(arguments, processingContext)
 }
 
 trait WithAccountId {

@@ -29,7 +29,7 @@ import org.apache.james.jmap.core.Position.Position
 import org.apache.james.jmap.core.{CanCalculateChanges, Invocation, Limit, Position, QueryState, SessionTranslator}
 import org.apache.james.jmap.json.EmailQuerySerializer
 import org.apache.james.jmap.mail.{Comparator, EmailQueryRequest, EmailQueryResponse, UnsupportedRequestParameterException}
-import org.apache.james.jmap.routes.SessionSupplier
+import org.apache.james.jmap.routes.{IdPaths, SessionSupplier}
 import org.apache.james.jmap.utils.search.MailboxFilter
 import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
 import org.apache.james.mailbox.model.{MessageId, MultimailboxesSearchQuery, SearchOptions, SearchQuery}
@@ -45,10 +45,11 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier,
                                   val sessionTranslator: SessionTranslator,
-                                  val javaEmailQueryOptimizers: java.util.Set[EmailQueryOptimizer]) extends MethodRequiringAccountId[EmailQueryRequest] {
+                                  val javaEmailQueryOptimizers: java.util.Set[EmailQueryOptimizer]) extends MethodRequiringAccountId[EmailQueryRequest] with IdArguments {
   private val emailQueryOptimizers: Set[EmailQueryOptimizer] = javaEmailQueryOptimizers.asScala.toSet
 
   override val methodName: MethodName = MethodName("Email/query")
+  override val idPaths: IdPaths = IdPaths(values = Set("filter/**/inMailbox", "filter/**/inMailboxOtherThan/*"))
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailQueryRequest): SMono[InvocationWithContext] = {

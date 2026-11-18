@@ -44,10 +44,15 @@ class JMAPApiDeferredCreationReferencesTest {
     override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): SFlux[InvocationWithContext] =
       SFlux.just(invocation.copy(processingContext = invocation.processingContext.recordCreatedId(ClientId("parent"), ServerId("old-parent"))))
   }
+  private val plainEcho = new CoreEchoMethod {
+    override val methodName: MethodName = MethodName("Test/plainEcho")
+    override val idPaths: IdPaths = IdPaths.CONVENTIONAL
+  }
   private val deferredEcho = new CoreEchoMethod with DeferredCreationReferences {
     override val methodName: MethodName = MethodName("Test/deferredEcho")
+    override val idPaths: IdPaths = IdPaths.CONVENTIONAL
 
-    override def deferredCreationReferencePaths(arguments: Arguments): Set[JsPath] =
+    override def deferredCreationReferencePaths(arguments: Arguments, processingContext: ProcessingContext): Set[JsPath] =
       Set(JsPath \ "create" \ "child" \ "parentId", JsPath \ "create" \ "fromResult" \ "parentId")
   }
 
@@ -56,7 +61,7 @@ class JMAPApiDeferredCreationReferencesTest {
 
   @BeforeEach
   def setUp(): Unit = {
-    jmapServer = JMAPApiRoutesTest.newServer(Set(new CoreEchoMethod, seedCreationMapping, deferredEcho))
+    jmapServer = JMAPApiRoutesTest.newServer(Set(new CoreEchoMethod, seedCreationMapping, plainEcho, deferredEcho))
     jmapServer.start()
     requestSpecification = new RequestSpecBuilder()
       .setContentType(ContentType.JSON)
@@ -98,7 +103,7 @@ class JMAPApiDeferredCreationReferencesTest {
       |    ["Test/seedCreationMapping", {"id": "result-parent"}, "seed"],
       |    ["Test/deferredEcho", {
       |      "create": {
-      |        "child": {"parentId": "#parent", "name": "old-parent"},
+      |        "child": {"parentId": "#parent", "name": "#parent"},
       |        "fromResult": {"parentId": "result-parent"}
       |      },
       |      "update": {"old-parent": {"parentId": "old-parent"}}
@@ -117,7 +122,7 @@ class JMAPApiDeferredCreationReferencesTest {
           |  "using": ["urn:ietf:params:jmap:core"],
           |  "methodCalls": [
           |    ["Test/seedCreationMapping", {}, "seed"],
-          |    ["Core/echo", {"create": {"child": {"parentId": "#parent"}}}, "echo"]
+          |    ["Test/plainEcho", {"create": {"child": {"parentId": "#parent"}}}, "echo"]
           |  ]
           |}""".stripMargin)
       .when().post()
@@ -128,7 +133,7 @@ class JMAPApiDeferredCreationReferencesTest {
       |  "sessionState": "${SESSION_STATE.value}",
       |  "methodResponses": [
       |    ["Test/seedCreationMapping", {}, "seed"],
-      |    ["Core/echo", {"create": {"child": {"parentId": "old-parent"}}}, "echo"]
+      |    ["Test/plainEcho", {"create": {"child": {"parentId": "old-parent"}}}, "echo"]
       |  ]
       |}""".stripMargin)
   }

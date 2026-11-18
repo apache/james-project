@@ -22,6 +22,7 @@ package org.apache.james.jmap.routes
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.{ClientId, Invocation, ServerId}
+import org.apache.james.jmap.method.DeferredCreationReferences
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import play.api.libs.json.{JsObject, JsPath, Json}
@@ -30,13 +31,13 @@ class DeferredCreationReferenceTest {
   private val context = ProcessingContext(Map(ClientId("parent") -> ServerId("old-parent")), Map.empty)
 
   @Test
-  def shouldDeferOnlyDeclaredValuesAndKeepLegacySubstitutionElsewhere(): Unit = {
+  def shouldDeferOnlyDeclaredValuesAndResolveOtherIdLocations(): Unit = {
     val arguments = Json.parse("""{
       |  "create": {"child": {"parentId": "#parent", "name": "#parent"}},
       |  "update": {"#parent": {"parentId": "#parent"}}
       |}""".stripMargin).as[JsObject]
     val expectedArguments = Json.parse("""{
-      |  "create": {"child": {"parentId": "#parent", "name": "old-parent"}},
+      |  "create": {"child": {"parentId": "#parent", "name": "#parent"}},
       |  "update": {"old-parent": {"parentId": "old-parent"}}
       |}""".stripMargin).as[JsObject]
     val invocation = Invocation(MethodName("Mailbox/set"), Arguments(arguments), MethodCallId("set"))
@@ -93,30 +94,48 @@ class DeferredCreationReferenceTest {
   }
 
   @Test
-  def shouldPreserveCreationReferencesInAResolvedUpdateResult(): Unit = {
+  def shouldDeferCreationReferencesInAResolvedUpdateResult(): Unit = {
     val patches = Json.obj("#parent" -> Json.obj("parentId" -> "#parent", "name" -> "after"))
     val previous = Invocation(MethodName("Core/echo"), Arguments(Json.obj("patches" -> patches)), MethodCallId("echoPatches"))
     val invocation = Invocation(MethodName("Mailbox/set"), Arguments(Json.obj(
       "#update" -> Json.obj("resultOf" -> "echoPatches", "name" -> "Core/echo", "path" -> "/patches"))), MethodCallId("updateFromResult"))
     val contextWithPreviousResult = context.recordInvocation(previous)
     val expectedArguments = Arguments(Json.obj("update" -> patches))
+    // Deferred paths are those of the expanded arguments, as computed by Mailbox/set.
+    val deferredPaths = Set(JsPath \ "update" \ "#parent", JsPath \ "update" \ "#parent" \ "parentId")
 
-    val resolved = contextWithPreviousResult.resolveBackReferences(invocation)
+    val resolved = contextWithPreviousResult.resolveResultReferences(invocation)
+      .flatMap(expanded => contextWithPreviousResult.resolveCreationReferences(expanded, deferredPaths, IdPaths.CONVENTIONAL))
 
     assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = expectedArguments)))
   }
 
   @Test
-  def shouldPreserveCreationReferencesInAResolvedDestroyResult(): Unit = {
+  def shouldDeferCreationReferencesInAResolvedDestroyResult(): Unit = {
     val targets = Json.arr("#parent")
     val previous = Invocation(MethodName("Core/echo"), Arguments(Json.obj("targets" -> targets)), MethodCallId("echoTargets"))
     val invocation = Invocation(MethodName("Mailbox/set"), Arguments(Json.obj(
       "#destroy" -> Json.obj("resultOf" -> "echoTargets", "name" -> "Core/echo", "path" -> "/targets"))), MethodCallId("destroyFromResult"))
     val contextWithPreviousResult = context.recordInvocation(previous)
     val expectedArguments = Arguments(Json.obj("destroy" -> targets))
+    val deferredPaths = Set((JsPath \ "destroy")(0))
 
-    val resolved = contextWithPreviousResult.resolveBackReferences(invocation)
+    val resolved = contextWithPreviousResult.resolveResultReferences(invocation)
+      .flatMap(expanded => contextWithPreviousResult.resolveCreationReferences(expanded, deferredPaths, IdPaths.CONVENTIONAL))
 
     assertThat(resolved).isEqualTo(Right(invocation.copy(arguments = expectedArguments)))
   }
+
+  private def sameCallTargetPaths(json: String): Set[JsPath] =
+    DeferredCreationReferences.sameCallTargetPaths(Arguments(Json.parse(json).as[JsObject]), ProcessingContext(Map.empty, Map.empty))
+
+  @Test
+  def sameCallTargetPathsShouldSelectTargetsCreatedByTheSameCall(): Unit =
+    assertThat(sameCallTargetPaths(
+      """{
+        |  "create": {"x": {"parentId": "#x"}},
+        |  "update": {"#x": {}, "#y": {}, "x": {}, "other": {"parentId": "#x"}},
+        |  "destroy": ["#y", "#x", "x"]
+        |}""".stripMargin))
+      .isEqualTo(Set(JsPath \ "update" \ "#x", (JsPath \ "destroy")(1)))
 }

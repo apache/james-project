@@ -20,11 +20,11 @@
 package org.apache.james.jmap.routes
 
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.core.CapabilityIdentifier.JMAP_CORE
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, JmapRfc8621Configuration, ServerId}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, JmapRfc8621Configuration, ResponseObject, ServerId}
 import org.apache.james.jmap.json.ResponseSerializer
-import org.apache.james.jmap.method.{CoreEchoMethod, Method}
+import org.apache.james.jmap.method.{CoreEchoMethod, InvocationWithContext, Method, SameCallCreationTargets}
 import org.apache.james.mailbox.MailboxSession
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{Nested, Test}
@@ -32,7 +32,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{mock, spy, times, verify}
-import play.api.libs.json.{JsArray, JsObject, Json}
+import play.api.libs.json.{JsArray, JsObject, JsPath, JsValue, Json}
+import reactor.core.scala.publisher.SFlux
 
 class ProcessingContextTest {
   @Test
@@ -76,47 +77,77 @@ class ProcessingContextTest {
   }
 
   @Test
-  def resolveBackReferencesShouldResolveStringsRegardlessOfMethodAndPropertyNames(): Unit = {
+  def resolveBackReferencesShouldResolveConventionalIdLocationsOfAnyMethod(): Unit = {
     val context = ProcessingContext(Map(ClientId("asset") -> ServerId("server-asset")), Map.empty)
-    val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "arbitrary" -> "#asset")), MethodCallId("echo"))
+    val invocation = Invocation(MethodName("Custom/method"), Arguments(Json.obj(
+      "id" -> "#asset",
+      "blobId" -> "#asset",
+      "ids" -> Json.arr("#asset"),
+      "emailIds" -> Json.arr("#asset"),
+      "destroy" -> Json.arr("#asset"),
+      "update" -> Json.obj("#asset" -> Json.obj("mailboxIds" -> Json.obj("#other" -> true))),
+      "create" -> Json.obj("k" -> Json.obj("mailboxIds" -> Json.obj("#asset" -> true))))), MethodCallId("custom"))
 
     assertThat(context.resolveBackReferences(invocation))
       .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
-        "arbitrary" -> "server-asset")))))
+        "id" -> "server-asset",
+        "blobId" -> "server-asset",
+        "ids" -> Json.arr("server-asset"),
+        "emailIds" -> Json.arr("server-asset"),
+        "destroy" -> Json.arr("server-asset"),
+        "update" -> Json.obj("server-asset" -> Json.obj("mailboxIds" -> Json.obj("#other" -> true))),
+        "create" -> Json.obj("k" -> Json.obj("mailboxIds" -> Json.obj("server-asset" -> true))))))))
+  }
+
+  @Test
+  def resolveBackReferencesShouldNotResolveOutsideIdLocations(): Unit = {
+    val context = ProcessingContext(Map(ClientId("asset") -> ServerId("server-asset")), Map.empty)
+    val invocation = Invocation(MethodName("Custom/method"), Arguments(Json.obj(
+      "subject" -> "#asset",
+      "#asset" -> Json.obj("name" -> "#asset"),
+      "messageId" -> Json.arr("#asset"),
+      "keywords" -> Json.obj("#asset" -> true),
+      "create" -> Json.obj("#asset" -> Json.obj("destroy" -> Json.arr("#asset"), "update" -> Json.obj("#asset" -> Json.obj()))))), MethodCallId("custom"))
+
+    assertThat(context.resolveBackReferences(invocation))
+      .isEqualTo(Right(invocation))
   }
 
   @Test
   def resolveBackReferencesShouldResolveCreationReferencesInNestedArraysAndObjects(): Unit = {
     val context = ProcessingContext(Map(ClientId("email") -> ServerId("server-email")), Map.empty)
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "nested" -> Json.arr(Json.arr("#email"), Json.obj("value" -> "#email")))), MethodCallId("echo"))
+      "filter" -> Json.obj("conditions" -> Json.arr(
+        Json.obj("emailIds" -> Json.arr("#email")),
+        Json.obj("conditions" -> Json.arr(Json.obj("emailId" -> "#email"))))))), MethodCallId("echo"))
 
-    assertThat(context.resolveBackReferences(invocation))
+    assertThat(context.resolveBackReferences(invocation, Set.empty, IdPaths(values = Set("filter/**/emailIds/*", "filter/**/emailId"))))
       .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
-        "nested" -> Json.arr(Json.arr("server-email"), Json.obj("value" -> "server-email")))))))
+        "filter" -> Json.obj("conditions" -> Json.arr(
+          Json.obj("emailIds" -> Json.arr("server-email")),
+          Json.obj("conditions" -> Json.arr(Json.obj("emailId" -> "server-email"))))))))))
   }
 
   @Test
   def resolveBackReferencesShouldResolveBothObjectKeysAndTheirNestedValues(): Unit = {
     val context = ProcessingContext(Map(ClientId("mailbox") -> ServerId("server-mailbox")), Map.empty)
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "#mailbox" -> Json.obj("value" -> "#mailbox"))), MethodCallId("echo"))
+      "update" -> Json.obj("#mailbox" -> Json.obj("parentId" -> "#mailbox")))), MethodCallId("echo"))
 
     assertThat(context.resolveBackReferences(invocation))
       .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
-        "server-mailbox" -> Json.obj("value" -> "server-mailbox"))))))
+        "update" -> Json.obj("server-mailbox" -> Json.obj("parentId" -> "server-mailbox")))))))
   }
 
   @Test
   def resolveBackReferencesShouldPreserveAnUnknownObjectKeyWhileResolvingItsValue(): Unit = {
     val context = ProcessingContext(Map(ClientId("email") -> ServerId("server-email")), Map.empty)
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "#unknown" -> "#email")), MethodCallId("echo"))
+      "update" -> Json.obj("#unknown" -> Json.obj("emailId" -> "#email")))), MethodCallId("echo"))
 
     assertThat(context.resolveBackReferences(invocation))
       .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
-        "#unknown" -> "server-email")))))
+        "update" -> Json.obj("#unknown" -> Json.obj("emailId" -> "server-email")))))))
   }
 
   @Test
@@ -132,7 +163,7 @@ class ProcessingContextTest {
   @Test
   def resolveBackReferencesShouldPreserveABareHashWithoutFailingTheInvocation(): Unit = {
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "value" -> "#", "#" -> true)), MethodCallId("echo"))
+      "id" -> "#", "update" -> Json.obj("#" -> Json.obj()))), MethodCallId("echo"))
     val context = ProcessingContext(Map.empty, Map.empty)
 
     assertThat(context.resolveBackReferences(invocation))
@@ -142,7 +173,7 @@ class ProcessingContextTest {
   @Test
   def resolveBackReferencesShouldPreserveMalformedCreationReferences(): Unit = {
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "value" -> "#with space", "#with space" -> true)), MethodCallId("echo"))
+      "id" -> "#with space", "update" -> Json.obj("#with space" -> Json.obj()))), MethodCallId("echo"))
     val context = ProcessingContext(Map.empty, Map.empty)
 
     assertThat(context.resolveBackReferences(invocation))
@@ -155,7 +186,7 @@ class ProcessingContextTest {
     assertThat(Id.validate(creationId).isLeft).isTrue()
     val reference = "#" + creationId
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "value" -> reference, reference -> true)), MethodCallId("echo"))
+      "id" -> reference, "update" -> Json.obj(reference -> Json.obj()))), MethodCallId("echo"))
     val context = ProcessingContext(Map.empty, Map.empty)
 
     assertThat(context.resolveBackReferences(invocation))
@@ -178,7 +209,7 @@ class ProcessingContextTest {
   def resolveBackReferencesShouldPreserveAnEmbeddedHashThatDoesNotStartTheValue(): Unit = {
     val context = ProcessingContext(Map(ClientId("email") -> ServerId("server-email")), Map.empty)
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "value" -> "prefix#email")), MethodCallId("echo"))
+      "id" -> "prefix#email")), MethodCallId("echo"))
 
     assertThat(context.resolveBackReferences(invocation))
       .isEqualTo(Right(invocation))
@@ -190,11 +221,11 @@ class ProcessingContextTest {
       ClientId("first") -> ServerId("#second"),
       ClientId("second") -> ServerId("server-id")), Map.empty)
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "value" -> "#first")), MethodCallId("echo"))
+      "id" -> "#first")), MethodCallId("echo"))
 
     assertThat(context.resolveBackReferences(invocation))
       .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
-        "value" -> "#second")))))
+        "id" -> "#second")))))
   }
 
   @Test
@@ -231,12 +262,12 @@ class ProcessingContextTest {
       .recordInvocation(response)
       .recordCreatedId(ClientId("email"), ServerId("new-email"))
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "created" -> "#email",
+      "emailId" -> "#email",
       "#ids" -> Json.obj("resultOf" -> "get", "name" -> "Email/get", "path" -> "/list/*/id"))), MethodCallId("echo"))
 
     assertThat(context.resolveBackReferences(invocation))
       .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
-        "created" -> "new-email",
+        "emailId" -> "new-email",
         "ids" -> Json.arr("previous-email"))))))
   }
 
@@ -274,12 +305,12 @@ class ProcessingContextTest {
     val context = ProcessingContext(Map(ClientId("email") -> ServerId("server-email")), Map.empty)
       .recordInvocation(response)
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "value" -> "#email",
+      "id" -> "#email",
       "#list" -> Json.obj("resultOf" -> "get", "name" -> "Email/get", "path" -> "/list"))), MethodCallId("echo"))
 
     assertThat(context.resolveBackReferences(invocation))
       .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
-        "value" -> "server-email", "list" -> Json.arr())))))
+        "id" -> "server-email", "list" -> Json.arr())))))
   }
 
   @Test
@@ -326,11 +357,11 @@ class ProcessingContextTest {
     val creationId = "c" * 255
     val context = ProcessingContext(Map(ClientId(Id.validate(creationId).toOption.get) -> ServerId("server-id")), Map.empty)
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      ("#" + creationId) -> Json.obj("nested" -> Json.arr("#" + creationId)))), MethodCallId("echo"))
+      "update" -> Json.obj(("#" + creationId) -> Json.obj("ids" -> Json.arr("#" + creationId))))), MethodCallId("echo"))
 
     assertThat(context.resolveBackReferences(invocation))
       .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
-        "server-id" -> Json.obj("nested" -> Json.arr("server-id")))))))
+        "update" -> Json.obj("server-id" -> Json.obj("ids" -> Json.arr("server-id"))))))))
   }
 
   @Test
@@ -338,7 +369,7 @@ class ProcessingContextTest {
     val reference = "#" + "u" * 255
     val context = ProcessingContext(Map(ClientId("known") -> ServerId("server-id")), Map.empty)
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      reference -> Json.arr(reference))), MethodCallId("echo"))
+      "update" -> Json.obj(reference -> Json.obj("ids" -> Json.arr(reference))))), MethodCallId("echo"))
 
     assertThat(context.resolveBackReferences(invocation)).isEqualTo(Right(invocation))
   }
@@ -349,10 +380,11 @@ class ProcessingContextTest {
       ClientId("created") -> ServerId("plain-id"),
       ClientId("#created") -> ServerId("hash-id")), Map.empty)
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      "##created" -> "##created")), MethodCallId("echo"))
+      "update" -> Json.obj("##created" -> Json.obj("id" -> "##created")))), MethodCallId("echo"))
 
     assertThat(context.resolveBackReferences(invocation))
-      .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj("hash-id" -> "hash-id")))))
+      .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
+        "update" -> Json.obj("hash-id" -> Json.obj("id" -> "hash-id")))))))
   }
 
   @Test
@@ -373,11 +405,11 @@ class ProcessingContextTest {
     val creationId = "c" * 255
     val context = ProcessingContext(Map(ClientId(Id.validate(creationId).toOption.get) -> ServerId("server-id")), Map.empty)
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
-      ("#" + creationId) -> Json.obj("resultOf" -> 42, "nested" -> ("#" + creationId)))), MethodCallId("echo"))
+      "update" -> Json.obj(("#" + creationId) -> Json.obj("resultOf" -> 42, "parentId" -> ("#" + creationId))))), MethodCallId("echo"))
 
     assertThat(context.resolveBackReferences(invocation))
       .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
-        "server-id" -> Json.obj("resultOf" -> 42, "nested" -> "server-id"))))))
+        "update" -> Json.obj("server-id" -> Json.obj("resultOf" -> 42, "parentId" -> "server-id")))))))
   }
 
   @Test
@@ -419,6 +451,17 @@ class ProcessingContextTest {
       val result = ProcessingContext(Map.empty, Map(MethodCallId("c0") -> previous)).resolveBackReferences(invocation)
 
       assertThat(result).isEqualTo(Left(DuplicateArgumentException("ids")))
+    }
+
+    @Test
+    def resolverShouldRejectEntriesResolvingToTheSameKey(): Unit = {
+      val invocation = Invocation(MethodName("Email/set"), Arguments(Json.parse(
+        """{"update":{"M1":{"keywords/a":true},"#a":{"keywords/b":true}}}""").as[JsObject]), MethodCallId("set"))
+
+      val result = ProcessingContext(Map(ClientId("a") -> ServerId("M1")), Map.empty)
+        .resolveBackReferences(invocation)
+
+      assertThat(result).isEqualTo(Left(AmbiguousArgumentException(JsPath \ "update", "M1")))
     }
 
     @ParameterizedTest
@@ -507,6 +550,186 @@ class ProcessingContextTest {
       assertThat((error.value(1) \ "type").as[String]).isEqualTo("invalidResultReference")
       assertThat(error.value(2)).isEqualTo(Json.toJson("c1"))
       verify(echo, times(1)).process(any(), any(), any())
+    }
+  }
+
+  @Nested
+  class CreatedIds {
+    private val configuration = JmapRfc8621Configuration("http://localhost", "ws://localhost")
+
+    private val createMethod = new Method {
+      override val methodName: MethodName = MethodName("Test/create")
+      override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE)
+
+      override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, session: MailboxSession): SFlux[InvocationWithContext] = {
+        val createdContext = invocation.processingContext.recordCreatedId(ClientId("new"), ServerId("new-server"))
+        val createdResponse = invocation.copy(processingContext = createdContext)
+        val shouldFailImplicitCall = (invocation.invocation.arguments.value \ "failAfterCreate").asOpt[Boolean].contains(true)
+        if (shouldFailImplicitCall) {
+          SFlux.concat(SFlux.just(createdResponse), SFlux.error[InvocationWithContext](new RuntimeException("Implicit call failed")))
+        } else {
+          val implicitResponse = invocation.invocation.copy(methodName = MethodName("Test/implicit"))
+          SFlux.just(createdResponse, createdResponse.copy(invocation = implicitResponse))
+        }
+      }
+    }
+
+    private val readMethod = new Method with SameCallCreationTargets {
+      override val methodName: MethodName = MethodName("Test/read")
+      override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE)
+
+      override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, session: MailboxSession): SFlux[InvocationWithContext] =
+        SFlux.just(invocation)
+    }
+
+    private def process(requestJson: String): ResponseObject = {
+      val request = ResponseSerializer.deserializeRequestObject(requestJson).get
+      val api = new JMAPApi(Set(new CoreEchoMethod, createMethod, readMethod), Set(JMAP_CORE), configuration)
+      api.process(request, mock(classOf[MailboxSession])).block()
+    }
+
+    private def argumentsOf(response: ResponseObject, callId: String, methodName: String): JsObject =
+      response.methodResponses.find(invocation =>
+        invocation.methodCallId.value.value == callId && invocation.methodName.value.value == methodName)
+        .map(_.arguments.value)
+        .getOrElse(throw new AssertionError(s"Missing response $methodName for call $callId"))
+
+    private def createdIdsOf(response: ResponseObject): JsValue =
+      (ResponseSerializer.serialize(response) \ "createdIds").get
+
+    @Test
+    def shouldReturnEmptyMapWhenRequested(): Unit = {
+      val response = process(
+        """{
+          |  "using": ["urn:ietf:params:jmap:core"],
+          |  "createdIds": {},
+          |  "methodCalls": []
+          |}""".stripMargin)
+
+      assertThat(createdIdsOf(response)).isEqualTo(Json.obj())
+    }
+
+    @Test
+    def shouldKeepLatestCreationAcrossMultipleResponsesAndAFinalError(): Unit = {
+      val response = process(
+        """{
+          |  "using": ["urn:ietf:params:jmap:core"],
+          |  "createdIds": {"old": "old-server", "new": "obsolete"},
+          |  "methodCalls": [
+          |    ["Test/create", {}, "create"],
+          |    ["Test/read", {"id": "#new"}, "read"],
+          |    ["Core/echo", {"#id": {"resultOf": "missing", "name": "Core/echo", "path": "/id"}}, "invalid"]
+          |  ]
+          |}""".stripMargin)
+
+      assertThat(response.methodResponses.map(_.methodName.value.value))
+        .isEqualTo(Seq("Test/create", "Test/implicit", "Test/read", "error"))
+      assertThat(argumentsOf(response, "read", "Test/read")).isEqualTo(Json.obj("id" -> "new-server"))
+      assertThat((argumentsOf(response, "invalid", "error") \ "type").as[String]).isEqualTo("invalidResultReference")
+      assertThat(createdIdsOf(response)).isEqualTo(Json.obj("old" -> "old-server", "new" -> "new-server"))
+    }
+
+    @Test
+    def shouldKeepCreationsWhenAnImplicitResponseFails(): Unit = {
+      val response = process(
+        """{
+          |  "using": ["urn:ietf:params:jmap:core"],
+          |  "createdIds": {"new": "obsolete"},
+          |  "methodCalls": [
+          |    ["Test/create", {"failAfterCreate": true}, "create"],
+          |    ["Test/read", {"id": "#new"}, "read"]
+          |  ]
+          |}""".stripMargin)
+
+      assertThat((argumentsOf(response, "create", "error") \ "type").as[String]).isEqualTo("serverFail")
+      assertThat(argumentsOf(response, "read", "Test/read")).isEqualTo(Json.obj("id" -> "new-server"))
+      assertThat(createdIdsOf(response)).isEqualTo(Json.obj("new" -> "new-server"))
+    }
+
+    @Test
+    def shouldOmitMapWhenNotRequestedEvenAfterCreation(): Unit = {
+      val response = process(
+        """{
+          |  "using": ["urn:ietf:params:jmap:core"],
+          |  "methodCalls": [["Test/create", {}, "create"]]
+          |}""".stripMargin)
+
+      assertThat(ResponseSerializer.serialize(response).keys.contains("createdIds")).isFalse()
+    }
+
+    @Test
+    def shouldDeferSameCallTargetsAfterExpandingResultReferences(): Unit = {
+      val response = process(
+        """{
+          |  "using": ["urn:ietf:params:jmap:core"],
+          |  "createdIds": {"x": "old-x", "y": "old-y"},
+          |  "methodCalls": [
+          |    ["Core/echo", {"create": {"x": {}}, "update": {"#x": {}}}, "echo"],
+          |    ["Test/read", {
+          |      "#create": {"resultOf": "echo", "name": "Core/echo", "path": "/create"},
+          |      "#update": {"resultOf": "echo", "name": "Core/echo", "path": "/update"},
+          |      "destroy": ["#x", "#y"]
+          |    }, "set"]
+          |  ]
+          |}""".stripMargin)
+
+      assertThat(argumentsOf(response, "set", "Test/read")).isEqualTo(Json.parse(
+        """{
+          |  "create": {"x": {}},
+          |  "update": {"#x": {}},
+          |  "destroy": ["#x", "old-y"]
+          |}""".stripMargin))
+    }
+
+    @Test
+    def shouldResolveCreationReferencesFetchedThroughAResultReference(): Unit = {
+      val response = process(
+        """{
+          |  "using": ["urn:ietf:params:jmap:core"],
+          |  "methodCalls": [
+          |    ["Test/create", {}, "create"],
+          |    ["Core/echo", {"ids": ["#new"]}, "echo"],
+          |    ["Test/read", {"#ids": {"resultOf": "echo", "name": "Core/echo", "path": "/ids"}}, "read"]
+          |  ]
+          |}""".stripMargin)
+
+      assertThat(argumentsOf(response, "echo", "Core/echo")).isEqualTo(Json.obj("ids" -> Json.arr("#new")))
+      assertThat(argumentsOf(response, "read", "Test/read")).isEqualTo(Json.obj("ids" -> Json.arr("new-server")))
+    }
+
+    @Test
+    def idPathsShouldMatchWildcards(): Unit = {
+      val idPaths = IdPaths(values = Set("create/*/blobId", "filter/**/inMailbox"), keys = Set("update"))
+
+      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "blobId")).isTrue()
+      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "subject")).isFalse()
+      assertThat(idPaths.isIdValue(JsPath \ "filter" \ "inMailbox")).isTrue()
+      assertThat(idPaths.isIdValue(((JsPath \ "filter" \ "conditions")(0) \ "conditions")(1) \ "inMailbox")).isTrue()
+      assertThat(idPaths.hasIdKeys(JsPath \ "update")).isTrue()
+      assertThat(idPaths.hasIdKeys(JsPath \ "update" \ "k1")).isFalse()
+    }
+
+    @Test
+    def conventionalIdPathsShouldFollowTheNamingOfTheSpecifications(): Unit = {
+      val idPaths = IdPaths.CONVENTIONAL
+
+      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "parentId")).isTrue()
+      assertThat(idPaths.isIdValue((JsPath \ "create" \ "k1" \ "blobIds")(0))).isTrue()
+      assertThat(idPaths.isIdValue((JsPath \ "destroy")(0))).isTrue()
+      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "subject")).isFalse()
+      assertThat(idPaths.isIdValue((JsPath \ "create" \ "k1" \ "messageId")(0))).isFalse()
+      assertThat(idPaths.isIdValue((JsPath \ "create" \ "k1" \ "destroy")(0))).isFalse()
+      assertThat(idPaths.isIdValue(JsPath \ "filter" \ "inMailbox")).isFalse()
+      assertThat(idPaths.isIdValue((JsPath \ "create" \ "k1" \ "textBody")(0) \ "partId")).isFalse()
+      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "deviceClientId")).isFalse()
+      assertThat(idPaths.isIdValue(JsPath \ "send" \ "k1" \ "extensionFields" \ "id")).isFalse()
+      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "extensionFields" \ "id")).isFalse()
+      assertThat(idPaths.isIdValue(JsPath \ "update" \ "k1" \ "parentId")).isTrue()
+      assertThat(idPaths.hasIdKeys(JsPath \ "update")).isTrue()
+      assertThat(idPaths.hasIdKeys(JsPath \ "update" \ "k1" \ "mailboxIds")).isTrue()
+      assertThat(idPaths.hasIdKeys(JsPath \ "onSuccessUpdateEmail" \ "#k1" \ "mailboxIds")).isFalse()
+      assertThat(idPaths.hasIdKeys(JsPath \ "create" \ "k1" \ "update")).isFalse()
+      assertThat(idPaths.hasIdKeys(JsPath \ "create" \ "k1" \ "keywords")).isFalse()
     }
   }
 }

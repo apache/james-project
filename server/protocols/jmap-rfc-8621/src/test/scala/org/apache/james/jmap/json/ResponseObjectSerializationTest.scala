@@ -93,4 +93,28 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
       ResponseSerializer.serialize(responseObject) should be(Json.parse(expectedJson))
     }
   }
+
+  "Round trip ResponseObject createdIds" should {
+    "keep an empty creation id map" in {
+      val responseJson = Json.parse(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [],
+           |  "createdIds": {}
+           |}""".stripMargin)
+
+      ResponseSerializer.serialize(ResponseSerializer.deserializeResponseObject(responseJson.toString).get) should be(responseJson)
+    }
+
+    "keep creation id mappings" in {
+      val responseJson = Json.parse(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [],
+           |  "createdIds": {"client": "server"}
+           |}""".stripMargin)
+
+      ResponseSerializer.serialize(ResponseSerializer.deserializeResponseObject(responseJson.toString).get) should be(responseJson)
+    }
+  }
 }

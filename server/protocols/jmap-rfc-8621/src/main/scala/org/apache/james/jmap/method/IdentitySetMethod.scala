@@ -37,7 +37,7 @@ class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
                                   val configuration: JmapRfc8621Configuration,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier,
-                                  val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[IdentitySetRequest] {
+                                  val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[IdentitySetRequest] with SameCallCreationTargets {
   override val methodName: Invocation.MethodName = MethodName("Identity/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
 

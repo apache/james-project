@@ -97,6 +97,23 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
     }
   }
 
+  "Deserialize RequestObject with malformed createdIds" should {
+    Seq(
+      "an array" -> "[]",
+      "an invalid client ID" -> """{"bad id": "server"}""",
+      "an invalid server ID" -> """{"client": "bad id"}""")
+      .foreach { case (scenario, createdIds) =>
+        s"fail with $scenario" in {
+          ResponseSerializer.deserializeRequestObject(
+            s"""{
+               |  "using": ["urn:ietf:params:jmap:core"],
+               |  "createdIds": $createdIds,
+               |  "methodCalls": []
+               |}""".stripMargin).isError should be(true)
+        }
+      }
+  }
+
   "Serialize RequestObject" should {
     "succeed when write to string without CreatedIds" in {
       val actualValue = ResponseSerializer.serialize(
