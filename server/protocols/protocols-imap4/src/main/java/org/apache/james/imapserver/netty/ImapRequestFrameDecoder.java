@@ -38,8 +38,6 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -77,8 +75,6 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private static final boolean RETRY = true;
     private static final String TRAILING_EOL_SIZE = "TRAILING_EOL_SIZE";
     private static final String SINK = "SINK";
-    private static final int REJECTED_LINE_TAIL_SIZE = 32;
-    private static final Pattern NON_SYNCHRONIZING_LITERAL_AT_END_OF_LINE = Pattern.compile("~?\\{(\\d+)\\+}\r?\n$");
     private static final String SUBSCRIPTION = "SUBSCRIPTION";
     public static final int UNAUTHENTICATE_LITERAL_MAX_SIZE = Optional.ofNullable(System.getProperty("james.imap.unauthenticated.literal.max.size"))
         .map(Integer::parseInt)
@@ -94,8 +90,8 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private boolean discardUntilEndOfLine = false;
     // Content of the literals of a rejected command, still to be skipped (RFC 7888 section 4)
     private long literalBytesToDiscard = 0;
-    // Last bytes of the rejected line being discarded, to spot a literal announced at its end
-    private byte[] rejectedLineTail = new byte[0];
+    // Spots a non synchronizing literal announced at the end of the rejected line being discarded
+    private final LiteralAnnouncementScanner rejectedLineScanner = new LiteralAnnouncementScanner();
     private final AtomicBoolean awaitingFileBackedLiteral = new AtomicBoolean(false);
 
     public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength) {
@@ -204,7 +200,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 // A rejected command is the exception: whatever is left of its line is not a
                 // command of its own, wherever the parse stopped.
                 if (attempt.size() == -1 || message instanceof StatusResponse) {
-                    consumeRestOfLine(session, attempt);
+                    consumeRestOfLine(session, attempt, message instanceof StatusResponse);
                 }
                 if (message instanceof StatusResponse && attempt.buffer() != null) {
                     // The client sends the literals of a command whatever its outcome: they are not commands
@@ -249,12 +245,24 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         return Optional.empty();
     }
 
-    private void consumeRestOfLine(ImapSession session, ParseAttempt attempt) throws IOException {
+    private void consumeRestOfLine(ImapSession session, ParseAttempt attempt, boolean rejected) throws IOException {
         ByteBuf buffer = attempt.buffer();
-        if (buffer == null || endOfLineReached(buffer)) {
+        if (buffer == null) {
             return;
         }
+        // The parser of a rejected command may have read part of a literal announcement before refusing the
+        // command (eg its '{'): look for it on the whole line, unless the reader knows of that literal already.
+        boolean scanWholeLine = rejected && attempt.reader().unreadLiteral().isEmpty()
+            && attempt.reader() instanceof NettyImapRequestLineReader;
         int restOfLineStart = buffer.readerIndex();
+        int scanStart = scanWholeLine ? ((NettyImapRequestLineReader) attempt.reader()).lineStart() : restOfLineStart;
+        if (endOfLineReached(buffer)) {
+            if (scanWholeLine) {
+                rejectedLineScanner.scan(buffer, scanStart, restOfLineStart);
+                onRejectedLineEnd(session);
+            }
+            return;
+        }
         try {
             attempt.reader().consumeLine();
         } catch (NettyImapRequestLineReader.NotEnoughDataException e) {
@@ -266,21 +274,10 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             // of the line without it, so that the outcome does not depend on what was already received.
             skipToEndOfLine(buffer);
         }
-        appendToRejectedLineTail(buffer, restOfLineStart, buffer.readerIndex());
+        rejectedLineScanner.scan(buffer, scanStart, buffer.readerIndex());
         if (!discardUntilEndOfLine) {
             onRejectedLineEnd(session);
         }
-    }
-
-    private void appendToRejectedLineTail(ByteBuf buffer, int from, int to) {
-        int length = Math.min(to - from, REJECTED_LINE_TAIL_SIZE);
-        byte[] appended = new byte[length];
-        buffer.getBytes(to - length, appended);
-        int kept = Math.min(rejectedLineTail.length, REJECTED_LINE_TAIL_SIZE - length);
-        byte[] tail = new byte[kept + length];
-        System.arraycopy(rejectedLineTail, rejectedLineTail.length - kept, tail, 0, kept);
-        System.arraycopy(appended, 0, tail, kept, length);
-        rejectedLineTail = tail;
     }
 
     /**
@@ -288,16 +285,10 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
      * command failed to parse an argument before it): the client sends its content without waiting.
      */
     private void onRejectedLineEnd(ImapSession session) throws IOException {
-        Matcher matcher = NON_SYNCHRONIZING_LITERAL_AT_END_OF_LINE.matcher(new String(rejectedLineTail, StandardCharsets.US_ASCII));
-        rejectedLineTail = new byte[0];
-        if (matcher.find()) {
-            long size;
-            try {
-                size = Long.parseLong(matcher.group(1));
-            } catch (NumberFormatException e) {
-                throw tooBigNonSynchronizingLiteral("Non synchronizing literal of " + matcher.group(1) + " bytes exceeds the literal size limit");
-            }
-            discardLiteral(session, size);
+        Optional<Long> announcedSize = rejectedLineScanner.announcedLiteralSize();
+        rejectedLineScanner.reset();
+        if (announcedSize.isPresent()) {
+            discardLiteral(session, announcedSize.get());
         }
     }
 
@@ -374,11 +365,11 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         int endOfLine = in.bytesBefore((byte) '\n');
         if (endOfLine < 0) {
             in.skipBytes(in.readableBytes());
-            appendToRejectedLineTail(in, start, in.readerIndex());
+            rejectedLineScanner.scan(in, start, in.readerIndex());
         } else {
             in.skipBytes(endOfLine + 1);
             discardUntilEndOfLine = false;
-            appendToRejectedLineTail(in, start, in.readerIndex());
+            rejectedLineScanner.scan(in, start, in.readerIndex());
             onRejectedLineEnd(ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get());
             if (literalBytesToDiscard > 0) {
                 disableFraming(ctx);

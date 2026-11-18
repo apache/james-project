@@ -49,6 +49,8 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
 
     private final ByteBuf buffer;
     private int read = 0;
+    // Where the current line starts in the buffer: after the content of the last literal read
+    private int lineStart;
     private int literalCount = 0;
     private final int maxLiteralSize;
     private final int maxFrameLength;
@@ -59,6 +61,15 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         this.initialReaderIndex = initialReaderIndex;
         this.maxLiteralSize  = maxLiteralSize;
         this.maxFrameLength = maxFrameLength;
+        this.lineStart = initialReaderIndex;
+    }
+
+    /**
+     * @return the index in the buffer of the first byte of the line being read: the command start, or the byte
+     * following the content of the last literal read.
+     */
+    public int lineStart() {
+        return lineStart;
     }
     
 
@@ -131,11 +142,14 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         try {
             // limit the size via commons-io as ByteBufInputStream size limiting is buggy
             InputStream in = new BoundedInputStream(new ByteBufInputStream(buffer), size);
+            Literal literal;
             if (extraCRLF) {
-                return BytesBackedLiteral.copy(new EolInputStream(this, in), size);
+                literal = BytesBackedLiteral.copy(new EolInputStream(this, in), size);
             } else {
-                return BytesBackedLiteral.copy(in, size);
+                literal = BytesBackedLiteral.copy(in, size);
             }
+            lineStart = buffer.readerIndex();
+            return literal;
         } catch (IOException e) {
             throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Can not read literal", e);
         }
