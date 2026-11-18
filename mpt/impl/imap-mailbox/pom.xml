@@ -35,7 +35,6 @@
     <modules>
         <module>cassandra</module>
         <module>core</module>
-        <module>cyrus</module>
         <module>external-james</module>
         <module>inmemory</module>
         <module>jpa</module>
@@ -56,12 +55,6 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mpt-imapmailbox-cyrus</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
