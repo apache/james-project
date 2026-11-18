@@ -20,6 +20,7 @@
 package org.apache.james.transport.matchers;
 
 import java.util.Collection;
+import java.util.Locale;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.Part;
@@ -58,7 +59,7 @@ public class PartHasContentType extends GenericMatcher {
 
     private boolean partMatch(Part part) throws MessagingException {
         for (MimeWalk.Mask mask : configuration.masks()) {
-            if (part.getContentType().startsWith(mask.getMatchString())) {
+            if (part.getContentType().toLowerCase(Locale.US).trim().startsWith(mask.getMatchString())) {
                 return true; // matching file found
             }
         }

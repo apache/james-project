@@ -22,7 +22,10 @@ package org.apache.james.transport.matchers;
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import jakarta.mail.internet.MimeMessage;
 
@@ -110,7 +113,7 @@ class AttachmentFileNameIsTest {
     }
 
     @Test
-    void shouldIgnoreMultipartAlternative() throws Exception {
+    void shouldLookIntoMultipartAlternative() throws Exception {
         Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
@@ -118,8 +121,17 @@ class AttachmentFileNameIsTest {
                 .setContent(MimeMessageBuilder.multipartBuilder()
                     .subType("alternative")
                     .addBody(MimeMessageBuilder.bodyPartBuilder()
-                        .disposition("attachment")
-                        .filename("xxx.zip")))
+                        .data("text"))
+                    .addBody(MimeMessageBuilder.bodyPartBuilder()
+                        .data(MimeMessageBuilder.multipartBuilder()
+                            .subType("mixed")
+                            .addBody(MimeMessageBuilder.bodyPartBuilder()
+                                .type("text/html")
+                                .data("<p>html</p>"))
+                            .addBody(MimeMessageBuilder.bodyPartBuilder()
+                                .disposition("attachment")
+                                .filename("xxx.zip"))
+                            .build())))
                 .build())
             .build();
 
@@ -131,7 +143,7 @@ class AttachmentFileNameIsTest {
             .build());
 
         assertThat(testee.match(mail))
-            .isNull();
+            .containsOnly(ANY_AT_JAMES);
     }
 
     @Test
@@ -619,5 +631,35 @@ class AttachmentFileNameIsTest {
 
         assertThat(testee.match(mail))
             .isNull();
+    }
+
+    @Test
+    void zipEntryMatchShouldBeCaseInsensitive() throws Exception {
+        ByteArrayOutputStream zip = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(zip)) {
+            zos.putNextEntry(new ZipEntry("INVOICE.EXE"));
+            zos.write("content".getBytes(StandardCharsets.UTF_8));
+            zos.closeEntry();
+        }
+
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .recipient(ANY_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
+                    .filename("invoice.zip")
+                    .data(zip.toByteArray()))
+                .build())
+            .build();
+
+        AttachmentFileNameIs testee = new AttachmentFileNameIs();
+
+        testee.init(FakeMatcherConfig.builder()
+            .matcherName("AttachmentFileNameIs")
+            .condition("-z *.exe")
+            .build());
+
+        assertThat(testee.match(mail))
+            .containsOnly(ANY_AT_JAMES);
     }
 }

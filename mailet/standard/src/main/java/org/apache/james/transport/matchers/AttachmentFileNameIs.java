@@ -207,7 +207,7 @@ public class AttachmentFileNameIs extends GenericMatcher {
                 if (zipEntry == null) {
                     break;
                 }
-                String fileName = zipEntry.getName();
+                String fileName = cleanFileName(zipEntry.getName());
                 if (matchFound(fileName)) {
                     if (configuration.unzipIsRequested()) {
                         LOGGER.debug("matched {}({})", part.getFileName(), fileName);

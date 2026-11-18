@@ -102,4 +102,28 @@ class PartHasContentTypeTest {
         assertThat(matched)
             .isNotEmpty();
     }
+
+    @Test
+    void shouldMatchWhenContentTypeHasAnotherCase() throws Exception {
+        PartHasContentType testee = new PartHasContentType();
+        testee.init(FakeMatcherConfig.builder()
+            .matcherName("PartHasContentType")
+            .condition("application/json")
+            .build());
+
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .recipient(ANY_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setMultipartWithBodyParts(
+                    MimeMessageBuilder.bodyPartBuilder()
+                        .type("Application/JSON")
+                        .disposition("attachment")
+                        .filename("xxx.json")))
+            .build();
+        Collection<MailAddress> matched = testee.match(mail);
+
+        assertThat(matched)
+            .isNotEmpty();
+    }
 }

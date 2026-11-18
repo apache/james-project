@@ -151,8 +151,7 @@ public class MimeWalk {
          * the content type can be anything
          */
 
-        if (part.getContentType() == null ||
-            part.getContentType().startsWith("multipart/alternative")) {
+        if (part.getContentType() == null) {
             return false;
         }
 
