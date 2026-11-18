@@ -2920,6 +2920,12 @@
                 <version>2.0.0.0</version>
             </dependency>
             <dependency>
+                <!-- Override the version pulled by plexus-archiver (mailetdocs-maven-plugin): CVE-2024-36124 -->
+                <groupId>org.iq80.snappy</groupId>
+                <artifactId>snappy</artifactId>
+                <version>0.5</version>
+            </dependency>
+            <dependency>
                 <groupId>org.jasypt</groupId>
                 <artifactId>jasypt</artifactId>
                 <version>${jasypt.version}</version>
