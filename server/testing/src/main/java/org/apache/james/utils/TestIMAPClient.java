@@ -250,7 +250,11 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
         List<String> parts = Splitter.on('\n')
             .trimResults()
             .omitEmptyStrings()
-            .splitToList(replyString);
+            .splitToList(replyString)
+            .stream()
+            // The expunged message may have been \Recent: the server then also reports the new RECENT count
+            .filter(line -> !line.matches("\\* \\d+ RECENT"))
+            .toList();
 
         return parts.size() == 2
             && parts.get(1).contains("OK NOOP completed.")
