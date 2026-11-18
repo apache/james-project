@@ -73,3 +73,13 @@ S: \* LIST \(\\HasNoChildren\) "\." "INBOX\.child"
 S: \* LIST \(\\HasNoChildren\) "\." "selected"
 S: \* LIST \(\\HasNoChildren\) "\." "testmailbox"
 S: A6 OK LIST completed\.
+
+# INBOX can be renamed under itself: its sub-mailboxes stay in place (RFC 9051 section 6.3.6)
+C: A7 RENAME INBOX INBOX.old
+S: A7 OK RENAME completed\.
+
+C: A8 LIST "" "INBOX*"
+S: \* LIST \(\\HasChildren\) "\." "INBOX"
+S: \* LIST \(\\HasNoChildren\) "\." "INBOX\.child"
+S: \* LIST \(\\HasNoChildren\) "\." "INBOX\.old"
+S: A8 OK LIST completed\.
