@@ -47,12 +47,11 @@ import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.helper.ByteBufferInputStream;
 import org.apache.james.mpt.helper.ByteBufferOutputStream;
-import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
 import org.apache.james.user.memory.MemoryUsersRepository;
 
 import com.github.fge.lambdas.Throwing;
 
-public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRightsOnHost {
+public abstract class JamesImapHostSystem implements ImapHostSystem {
     private static final DomainList NO_DOMAIN_LIST = null;
 
     private MemoryUsersRepository memoryUsersRepository;

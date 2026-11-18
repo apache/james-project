@@ -143,11 +143,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mpt-imapmailbox-cyrus</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mpt-external-james</artifactId>
             <version>${project.version}</version>
         </dependency>
