@@ -136,7 +136,9 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     protected void permanentFlags(Responder responder, Flags mailboxPermanentFlags, SelectedMailbox selected, MailboxSession mailboxSession) {
         Flags permanentFlags = grantedPermanentFlags(mailboxPermanentFlags, selected, mailboxSession);
         if (permanentFlags.contains(Flags.Flag.USER)) {
-            permanentFlags.add(selected.getApplicableFlags());
+            for (String keyword : selected.getApplicableFlags().getUserFlags()) {
+                permanentFlags.add(keyword);
+            }
         }
         final StatusResponse untaggedOk = factory.untaggedOk(HumanReadableText.permanentFlags(permanentFlags), ResponseCode.permanentFlags(permanentFlags));
         responder.respond(untaggedOk);
@@ -156,7 +158,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             rights = getMailboxManager().myRights(selected.getMessageManager().getMailboxEntity(), mailboxSession);
         } catch (MailboxException e) {
             LOGGER.warn("Could not read the rights on mailbox {}", selected.getMailboxId().serialize(), e);
-            return permanentFlags;
+            return new Flags();
         }
         Flags granted = new Flags();
         grantIf(granted, permanentFlags, Flags.Flag.SEEN, rights.contains(MailboxACL.Right.WriteSeenFlag));
