@@ -306,6 +306,54 @@ class ImapRequestFrameDecoderTest {
     }
 
     @Test
+    void aNonSynchronizingLiteralWhoseBraceWasReadByTheRejectedCommandShouldNotBeDecodedAsCommands() {
+        byte[] stream = ("a ID (\"name\" {24+}\r\n"
+            + "x1 NOOP\r\n"
+            + "x2 CREATE pwn\r\n"
+            + ")\r\n"
+            + "b NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(true, 1024, 5504, 3008, List.of(stream));
+        assertThat(whole)
+            .hasSize(2)
+            .last().asString().contains("tag=b, command=NOOP");
+        assertThat(decode(true, 1024, 5504, 3008, byteByByte(stream)))
+            .isEqualTo(whole);
+    }
+
+    @Test
+    void aNonSynchronizingLiteralSizeWithManyLeadingZerosOfARejectedCommandShouldNotBeDecodedAsCommands() {
+        byte[] stream = ("a APPEND INBOX \"99-Foo-2026 10:00:00 +0000\" {" + "0".repeat(64) + "24+}\r\n"
+            + "x1 NOOP\r\n"
+            + "x2 CREATE pwn\r\n"
+            + "\r\n"
+            + "b NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(true, 1024, 5504, 3008, List.of(stream));
+        assertThat(whole)
+            .hasSize(2)
+            .last().asString().contains("tag=b, command=NOOP");
+        assertThat(decode(true, 1024, 5504, 3008, byteByByte(stream)))
+            .isEqualTo(whole);
+    }
+
+    @Test
+    void aBinaryLiteralOfARejectedSetMetadataShouldNotBeDecodedAsCommands() {
+        byte[] stream = ("a SETMETADATA INBOX (/private/comment ~{24+}\r\n"
+            + "x1 NOOP\r\n"
+            + "x2 CREATE pwn\r\n"
+            + ")\r\n"
+            + "b NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(true, 1024, 5504, 3008, List.of(stream));
+        assertThat(whole)
+            .hasSize(2)
+            .last().asString().contains("tag=b, command=NOOP");
+        assertThat(decode(true, 1024, 5504, 3008, byteByByte(stream)))
+            .isEqualTo(whole);
+    }
+
+    @Test
     void aBinaryLiteralOfARejectedCommandShouldNotBeDecodedAsCommands() {
         List<byte[]> chunks = List.of(
             "a APPEND INBOX (\\Seen) \"14-Nov-2026 10:00:00 +0000\" ~{24+}\r\n".getBytes(StandardCharsets.US_ASCII),
