@@ -165,7 +165,7 @@
         <property name="location" value="classpath:james-database.properties"/>
     </bean>
 
-    <bean id="datasource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <bean id="datasource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
         <property name="driverClassName" value="${database.driverClassName}"/>
         <property name="url" value="${database.url}"/>
         <property name="username" value="${database.username}"/>
@@ -173,20 +173,20 @@
         <property name="testOnBorrow" value="${datasource.testOnBorrow:false}" />
         <property name="validationQueryTimeout" value="${datasource.validationQueryTimeoutSec:-1}" />
         <property name="validationQuery" value="${datasource.validationQuery:#{null}}" />
-        <!--The value for maxActive should always be larger than the number of spooler threads. The-->
+        <!--The value for maxTotal should always be larger than the number of spooler threads. The-->
         <!--reason is that a spooler thread normally requires 1 connection to process a mail, however-->
         <!--sometimes OpenJPA requires 1 connection to finish the processing on top of that. If-->
-        <!--    maxActive <= num spooler threads,-->
-        <!--it can happen that the spooler threads grab all maxActive connections but then cannot-->
+        <!--    maxTotal <= num spooler threads,-->
+        <!--it can happen that the spooler threads grab all maxTotal connections but then cannot-->
         <!--finish processing because each of them blocks waiting for OpenJPA which itself is waiting-->
         <!--for a connection. See https://issues.apache.org/jira/browse/JAMES-1317.-->
-        <property name="maxActive" value="21"/>
+        <property name="maxTotal" value="21"/>
         <!-- This lets a mail fail to be processed rather than the server freezing. -->
-        <property name="maxWait" value="30000"/>
+        <property name="maxWaitMillis" value="30000"/>
         <!-- This keeps the number of connections in the pool low on average -->
         <property name="timeBetweenEvictionRunsMillis" value="300000"/>
         <property name="minEvictableIdleTimeMillis" value="300000"/>
-        <property name="removeAbandoned" value="true"/>
+        <property name="removeAbandonedOnBorrow" value="true"/>
         <property name="logAbandoned" value="true"/>
         <property name="removeAbandonedTimeout" value="300"/>
     </bean>
