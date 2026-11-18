@@ -33,7 +33,7 @@ import org.apache.james.jmap.core.{ClientId, Id, Invocation, JmapRfc8621Configur
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.{BlobId, EmailCreationId, EmailCreationResponse, EmailImport, EmailImportRequest, EmailImportResponse, ThreadId, ValidatedEmailImport}
 import org.apache.james.jmap.method.EmailImportMethod.{ImportFailure, ImportResult, ImportResults, ImportSuccess, ImportWithBlob}
-import org.apache.james.jmap.routes.{Blob, BlobNotFoundException, BlobResolvers, ProcessingContext, SessionSupplier}
+import org.apache.james.jmap.routes.{Blob, BlobNotFoundException, BlobResolvers, IdPaths, ProcessingContext, SessionSupplier}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaException}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager}
@@ -100,8 +100,9 @@ class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
                                    val blobResolvers: BlobResolvers,
                                    val serializer: EmailSetSerializer,
                                    val mailboxManager: MailboxManager,
-                                   val emailChangeRepository: EmailChangeRepository) extends MethodRequiringAccountId[EmailImportRequest] {
+                                   val emailChangeRepository: EmailChangeRepository) extends MethodRequiringAccountId[EmailImportRequest] with IdArguments {
   override val methodName: MethodName = MethodName("Email/import")
+  override val idPaths: IdPaths = IdPaths(values = Set("emails/*/blobId"), keys = Set("emails/*/mailboxIds"))
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailImportRequest] =

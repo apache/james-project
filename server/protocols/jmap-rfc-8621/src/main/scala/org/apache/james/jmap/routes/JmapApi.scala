@@ -22,7 +22,7 @@ import jakarta.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation.MethodName
 import org.apache.james.jmap.core.{CapabilityFactory, ErrorCode, Invocation, JmapRfc8621Configuration, MaxCallsInRequest, MissingCapabilityException, RequestObject, ResponseObject}
-import org.apache.james.jmap.method.{DeferredCreationReferences, InvocationWithContext, Method}
+import org.apache.james.jmap.method.{DeferredCreationReferences, IdArguments, InvocationWithContext, Method}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.publisher.Flux
@@ -94,16 +94,21 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
         .collectSeq())
 
   private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, invocation: InvocationWithContext) : SFlux[InvocationWithContext] = {
-    val methodDeferredPaths = methodsByName.get(invocation.invocation.methodName)
-      .collect { case method: DeferredCreationReferences => method.deferredCreationReferencePaths(invocation.invocation.arguments) }
-      .getOrElse(Set.empty)
-    val arguments = invocation.invocation.arguments.value
-    val sameCallTargetPaths = SameCallCreationReferences.targetPaths(arguments, invocation.processingContext.declaredCreationIds(arguments))
-    val deferredPaths = methodDeferredPaths ++ sameCallTargetPaths
+    val method = methodsByName.get(invocation.invocation.methodName)
+    val idPaths = method.collect { case method: IdArguments => method.idPaths }.getOrElse(IdPaths.CONVENTIONAL)
+    val context = invocation.processingContext
+    // Deferred paths are computed on the expanded arguments, so that a `#update` result reference is deferred too.
+    val resolution = context.resolveResultReferences(invocation.invocation)
+      .flatMap(expanded => {
+        val deferredPaths = method
+          .collect { case method: DeferredCreationReferences => method.deferredCreationReferencePaths(expanded.arguments, context) }
+          .getOrElse(Set.empty)
+        context.resolveCreationReferences(expanded, deferredPaths, idPaths)
+      })
 
     SFlux.fromPublisher(
-      invocation.processingContext.resolveBackReferences(invocation.invocation, deferredPaths) match {
-        case Left(e: DuplicateArgumentException) => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(
+      resolution match {
+        case Left(e @ (_: DuplicateArgumentException | _: AmbiguousArgumentException)) => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(
           errorCode = ErrorCode.InvalidArguments,
           description = e.message,
           methodCallId = invocation.invocation.methodCallId), invocation.processingContext))

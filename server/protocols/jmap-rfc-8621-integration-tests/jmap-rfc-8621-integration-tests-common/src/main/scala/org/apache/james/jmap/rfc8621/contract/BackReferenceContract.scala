@@ -201,6 +201,46 @@ trait BackReferenceContract {
   }
 
   @Test
+  def createdIdsShouldOnlyResolveIdArguments(server: GuiceJamesServer): Unit = {
+    val (inboxId, existingId) = appendEmail(server, "existing")
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "createdIds": {"x": ${Json.toJson(existingId.serialize)}, "inbox": ${Json.toJson(inboxId.serialize)}},
+      |  "methodCalls": [
+      |    ["Email/set", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "create": {"draft": {
+      |        "mailboxIds": {"#inbox": true},
+      |        "subject": "#x",
+      |        "textBody": [{"partId": "#x", "type": "text/plain"}],
+      |        "bodyValues": {"#x": {"value": "body of #x"}}
+      |      }}
+      |    }, "setEmails"],
+      |    ["Email/get", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "ids": ["#draft"],
+      |      "properties": ["subject", "mailboxIds", "bodyValues"],
+      |      "fetchTextBodyValues": true
+      |    }, "getDraft"]
+      |  ]
+      |}""".stripMargin
+
+    val response = execute(request).extract()
+    val createdId = response.path[String](s"${responseArgumentsPath("setEmails")}.created.draft.id")
+    val drafts = response.path[java.util.List[Object]](s"${responseArgumentsPath("getDraft")}.list")
+
+    assertThatJson(drafts)
+      .whenIgnoringPaths("[0].bodyValues")
+      .isEqualTo(s"""[{
+        |  "id": ${Json.toJson(createdId)},
+        |  "subject": "#x",
+        |  "mailboxIds": {${Json.toJson(inboxId.serialize)}: true}
+        |}]""".stripMargin)
+    // Part identifiers are not Ids: the `#x` partId and bodyValues key are kept.
+    assertThatJson(drafts).inPath("[0].bodyValues.*.value").isEqualTo("""["body of #x"]""")
+  }
+
+  @Test
   def destroyShouldNotTargetAnInitialMappingReplacedByTheSameCall(server: GuiceJamesServer): Unit = {
     val (inboxId, existingId) = appendEmail(server, "existing")
     val request = s"""{

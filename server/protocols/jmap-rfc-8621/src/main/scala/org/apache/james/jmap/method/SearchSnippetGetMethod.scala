@@ -27,7 +27,7 @@ import org.apache.james.jmap.core.{CapabilityIdentifier, Invocation, SessionTran
 import org.apache.james.jmap.highlight.{SearchSnippetGetRequest, SearchSnippetGetResponse}
 import org.apache.james.jmap.json.SearchSnippetSerializer
 import org.apache.james.jmap.mail.UnparsedEmailId
-import org.apache.james.jmap.routes.SessionSupplier
+import org.apache.james.jmap.routes.{IdPaths, SessionSupplier}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery.{AccessibleNamespace, Namespace, PersonalNamespace}
 import org.apache.james.mailbox.model.SearchQuery.ConjunctionCriterion
@@ -46,9 +46,10 @@ class SearchSnippetGetMethod @Inject()(serializer: SearchSnippetSerializer,
                                        messageIdFactory: MessageId.Factory,
                                        val metricFactory: MetricFactory,
                                        val sessionSupplier: SessionSupplier,
-                                       val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[SearchSnippetGetRequest] {
+                                       val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[SearchSnippetGetRequest] with IdArguments {
 
   override val methodName: MethodName = MethodName("SearchSnippet/get")
+  override val idPaths: IdPaths = IdPaths(values = Set("filter/**/inMailbox", "filter/**/inMailboxOtherThan/*"))
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, SearchSnippetGetRequest] = serializer.deserializeSearchSnippetGetRequest(invocation.arguments.value)

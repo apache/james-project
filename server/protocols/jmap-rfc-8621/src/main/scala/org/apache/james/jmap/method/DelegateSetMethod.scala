@@ -37,7 +37,7 @@ class DelegateSetMethod @Inject()(createPerformer: DelegateSetCreatePerformer,
                                   val configuration: JmapRfc8621Configuration,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier,
-                                  val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[DelegateSetRequest] {
+                                  val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[DelegateSetRequest] with SameCallCreationTargets {
   override val methodName: Invocation.MethodName = MethodName("Delegate/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JAMES_DELEGATION)
 

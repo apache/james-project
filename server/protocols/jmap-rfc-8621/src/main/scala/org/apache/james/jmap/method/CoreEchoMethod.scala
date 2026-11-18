@@ -22,12 +22,15 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.MethodName
+import org.apache.james.jmap.routes.IdPaths
 import org.apache.james.mailbox.MailboxSession
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
-class CoreEchoMethod extends Method {
+class CoreEchoMethod extends Method with IdArguments {
   override val methodName = MethodName("Core/echo")
+  /** Arguments are returned unchanged (RFC 8620 §4): result references are resolved, creation references are not. */
+  override val idPaths: IdPaths = IdPaths.NONE
 
   override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] = SMono.just(invocation)
 

@@ -25,7 +25,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.{ClientId, CreatedIds, Id, IdOrCreationReference, Invocation, ServerId}
 import org.apache.james.jmap.json.BackReferenceDeserializer
-import play.api.libs.json.{JsArray, JsError, JsObject, JsPath, JsResult, JsString, JsSuccess, JsValue, Reads}
+import play.api.libs.json.{IdxPathNode, JsArray, JsError, JsObject, JsPath, JsResult, JsString, JsSuccess, JsValue, JsonValidationError, KeyPathNode, PathNode, Reads}
 
 import scala.collection.IndexedSeq
 import scala.collection.Map
@@ -128,14 +128,112 @@ case class DuplicateArgumentException(argument: String) extends IllegalArgumentE
   override val message: String = s"Argument '$argument' is supplied both directly and as a result reference"
 }
 
+case class AmbiguousArgumentException(path: JsPath, key: String) extends IllegalArgumentException with ArgumentResolutionError {
+  override val message: String = s"Several entries of '${path.toJsonString}' resolve to '$key'"
+}
+
+object AmbiguousArgumentException {
+  val ERROR_KEY: String = "error.ambiguous.argument"
+}
+
+/**
+ * Argument locations where an Id is expected (RFC 8620 §5.3): creation references (`#creationId`) are only resolved there.
+ *
+ * With `conventional`, the properties typed `Id` by RFC 8620 and RFC 8621 (see [[IdPaths.ID_PROPERTIES]],
+ * [[IdPaths.ID_ARRAYS]] and [[IdPaths.ID_KEYED_OBJECTS]]) are Id locations when they are arguments or properties of a
+ * `create` or `update` entry, as are the `update` keys and `destroy` entries. Deeper values are not, so that free-form
+ * content such as MDN `extensionFields` or client-chosen strings such as `partId` are kept. A method declares in `values`
+ * and `keys` its other Id locations, such as the `forEmailId` of `MDN/send` entries or `inMailbox`.
+ *
+ * A pattern is a `/` separated list of object keys where `*` matches one object key or array index and `**` any number
+ * of them. `values` designate string values and the elements of string arrays; `keys` designate objects whose keys are
+ * Ids.
+ */
+case class IdPaths(values: Set[String] = Set.empty, keys: Set[String] = Set.empty, conventional: Boolean = true) {
+  private lazy val valuePatterns: Set[List[String]] = values.map(IdPaths.parse)
+  private lazy val keyPatterns: Set[List[String]] = keys.map(IdPaths.parse)
+
+  def isIdValue(path: JsPath): Boolean = (conventional && IdPaths.isConventionalIdValue(path.path)) ||
+    valuePatterns.exists(pattern => IdPaths.matches(pattern, path.path))
+
+  def hasIdKeys(objectPath: JsPath): Boolean = (conventional && IdPaths.hasConventionalIdKeys(objectPath.path)) ||
+    keyPatterns.exists(pattern => IdPaths.matches(pattern, objectPath.path))
+}
+
+object IdPaths {
+  val CONVENTIONAL: IdPaths = IdPaths()
+  /** No creation reference is resolved, e.g. for `Core/echo` which returns its arguments unchanged (RFC 8620 §4). */
+  val NONE: IdPaths = IdPaths(conventional = false)
+
+  /** String properties typed `Id`. */
+  val ID_PROPERTIES: Set[String] = Set("id", "accountId", "fromAccountId", "anchor", "blobId", "emailId", "identityId",
+    "parentId", "threadId", "forEmailId")
+  /** Properties typed `Id[]`. */
+  val ID_ARRAYS: Set[String] = Set("ids", "blobIds", "emailIds")
+  /** Properties typed `Id[Boolean]`. */
+  val ID_KEYED_OBJECTS: Set[String] = Set("mailboxIds")
+
+  /** Path relative to the object holding the properties: the arguments, or a `create` or `update` entry. */
+  private def propertyPath(nodes: List[PathNode]): List[PathNode] = nodes match {
+    case KeyPathNode("create" | "update") :: KeyPathNode(_) :: properties => properties
+    case _ => nodes
+  }
+
+  private def isConventionalIdValue(nodes: List[PathNode]): Boolean = nodes match {
+    case List(KeyPathNode("destroy"), IdxPathNode(_)) => true
+    case _ => propertyPath(nodes) match {
+      case List(KeyPathNode(name)) => ID_PROPERTIES.contains(name)
+      case List(KeyPathNode(name), IdxPathNode(_)) => ID_ARRAYS.contains(name)
+      case _ => false
+    }
+  }
+
+  private def hasConventionalIdKeys(nodes: List[PathNode]): Boolean = nodes match {
+    case List(KeyPathNode("update")) => true
+    case _ => propertyPath(nodes) match {
+      case List(KeyPathNode(name)) => ID_KEYED_OBJECTS.contains(name)
+      case _ => false
+    }
+  }
+
+  private def parse(pattern: String): List[String] = pattern.split('/').toList.filter(_.nonEmpty)
+
+  private def matches(pattern: List[String], nodes: List[PathNode]): Boolean = (pattern, nodes) match {
+    case (Nil, Nil) => true
+    case ("**" :: rest, _) => matches(rest, nodes) || (nodes.nonEmpty && matches(pattern, nodes.tail))
+    case ("*" :: rest, _ :: tail) => matches(rest, tail)
+    case (key :: rest, KeyPathNode(name) :: tail) if key == name => matches(rest, tail)
+    case _ => false
+  }
+}
+
+/**
+ * One resolution phase. Result references are expanded first; creation references are then resolved on the expanded
+ * arguments (RFC 8620 §3.7), at Id locations except the deferred ones.
+ */
+private case class ResolutionPolicy(resultReferences: Boolean, creationReferences: Boolean, deferred: Set[JsPath], idPaths: IdPaths) {
+  def resolvesValue(path: JsPath): Boolean = creationReferences && !deferred.contains(path) && idPaths.isIdValue(path)
+
+  def resolvesKey(objectPath: JsPath, key: String): Boolean = creationReferences && !deferred.contains(objectPath \ key) && idPaths.hasIdKeys(objectPath)
+}
+
+private object ResolutionPolicy {
+  val RESULT_REFERENCES: ResolutionPolicy = ResolutionPolicy(resultReferences = true, creationReferences = false, Set.empty, IdPaths.NONE)
+
+  def creationReferences(deferred: Set[JsPath], idPaths: IdPaths): ResolutionPolicy =
+    ResolutionPolicy(resultReferences = false, creationReferences = true, deferred, idPaths)
+}
+
 case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, ServerId],
                              private val invocations: ImmutableMap[MethodCallId, Invocation]) {
 
   def createdIds: CreatedIds = CreatedIds(creationIds)
 
-  def recordCreatedId(clientId: ClientId, serverId: ServerId): ProcessingContext = ProcessingContext(creationIds + (clientId -> serverId), invocations)
+  def recordCreatedId(clientId: ClientId, serverId: ServerId): ProcessingContext =
+    ProcessingContext(creationIds + (clientId -> serverId), invocations)
 
-  def recordInvocation(invocation: Invocation): ProcessingContext = ProcessingContext(creationIds, invocations + (invocation.methodCallId -> invocation))
+  def recordInvocation(invocation: Invocation): ProcessingContext =
+    ProcessingContext(creationIds, invocations + (invocation.methodCallId -> invocation))
 
   def resolveBackReferences(invocation: Invocation): Either[ArgumentResolutionError, Invocation] =
     resolveBackReferences(invocation, Set.empty)
@@ -149,67 +247,87 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
     create.flatMap(_.asOpt[JsObject]).map(_.keys.toSet).getOrElse(Set.empty)
   }
 
-  def resolveBackReferences(invocation: Invocation, deferredCreationReferences: Set[JsPath]): Either[ArgumentResolutionError, Invocation] = {
-    val arguments = invocation.arguments.value
-    val argumentNames = arguments.keys
+  def resolveBackReferences(invocation: Invocation, deferredCreationReferences: Set[JsPath]): Either[ArgumentResolutionError, Invocation] =
+    resolveBackReferences(invocation, deferredCreationReferences, IdPaths.CONVENTIONAL)
+
+  def resolveBackReferences(invocation: Invocation, deferredCreationReferences: Set[JsPath], idPaths: IdPaths): Either[ArgumentResolutionError, Invocation] =
+    resolveResultReferences(invocation)
+      .flatMap(expanded => resolveCreationReferences(expanded, deferredCreationReferences, idPaths))
+
+  /** Expands the result references of the arguments, leaving creation references as they are. */
+  def resolveResultReferences(invocation: Invocation): Either[ArgumentResolutionError, Invocation] = {
+    val argumentNames = invocation.arguments.value.keys
     argumentNames.find(key => key.startsWith("#") && argumentNames.contains(key.substring(1))) match {
       case Some(key) => Left(DuplicateArgumentException(key.substring(1)))
-      case None => backReferenceResolver(JsPath, deferredCreationReferences).reads(arguments) match {
-        case JsError(e) => Left(InvalidResultReferenceException(e.toString()))
-        case JsSuccess(JsObject(underlying), _) => Right(Invocation(methodName = invocation.methodName,
-          methodCallId = invocation.methodCallId,
-          arguments = Arguments(JsObject(underlying))))
-        case others: JsSuccess[JsValue] => Left(InvalidResultReferenceException(s"Unexpected value $others"))
-      }
+      case None => resolve(invocation, ResolutionPolicy.RESULT_REFERENCES)
     }
   }
 
-  private def backReferenceResolver(path: JsPath, deferred: Set[JsPath]): Reads[JsValue] = {
-    case JsArray(value) => resolveBackReferences(value, path, deferred)
-    case JsObject(underlying) => resolveBackReference(underlying, path, deferred)
-    case value: JsString if deferred.contains(path) => JsSuccess(value)
+  /** Resolves creation references at the Id locations of arguments whose result references are already expanded. */
+  def resolveCreationReferences(invocation: Invocation, deferredCreationReferences: Set[JsPath], idPaths: IdPaths): Either[ArgumentResolutionError, Invocation] =
+    resolve(invocation, ResolutionPolicy.creationReferences(deferredCreationReferences, idPaths))
+
+  private def resolve(invocation: Invocation, policy: ResolutionPolicy): Either[ArgumentResolutionError, Invocation] =
+    backReferenceResolver(JsPath, policy).reads(invocation.arguments.value) match {
+      case JsError(errors) => Left(errors.view
+        .flatMap { case (path, validationErrors) => validationErrors.find(_.message == AmbiguousArgumentException.ERROR_KEY)
+          .map(error => AmbiguousArgumentException(path, error.args.head.toString)) }
+        .headOption
+        .getOrElse(InvalidResultReferenceException(errors.toString())))
+      case JsSuccess(arguments: JsObject, _) => Right(invocation.copy(arguments = Arguments(arguments)))
+      case others: JsSuccess[JsValue] => Left(InvalidResultReferenceException(s"Unexpected value $others"))
+    }
+
+  private def backReferenceResolver(path: JsPath, policy: ResolutionPolicy): Reads[JsValue] = {
+    case JsArray(value) => resolveBackReferences(value, path, policy)
+    case JsObject(underlying) => resolveBackReference(underlying, path, policy)
+    case value: JsString if !policy.resolvesValue(path) => JsSuccess(value)
     case JsString(value) if value.startsWith("#") => resolveCreationId(value)
         .fold(_ => JsSuccess(JsString(value)),
           serverId => JsSuccess(JsString(serverId.value.value)))
     case others: JsValue => JsSuccess(others)
   }
 
-  private def resolveBackReferences(array: IndexedSeq[JsValue], path: JsPath, deferred: Set[JsPath]): JsResult[JsValue] = {
+  private def resolveBackReferences(array: IndexedSeq[JsValue], path: JsPath, policy: ResolutionPolicy): JsResult[JsValue] = {
     val results: IndexedSeq[JsResult[JsValue]] = array.zipWithIndex.map { case (value, index) =>
-      backReferenceResolver(path(index), deferred).reads(value)
+      backReferenceResolver(path(index), policy).reads(value)
     }
     results.find(_.isError)
       .getOrElse(JsSuccess(JsArray(results.map(_.get))))
   }
 
-  private def resolveBackReference(underlying: Map[String, JsValue], path: JsPath, deferred: Set[JsPath]): JsResult[JsObject] = {
-    val resolutions = underlying.map(entry => resolveBackReference(entry, path, deferred))
+  private def resolveBackReference(underlying: Map[String, JsValue], path: JsPath, policy: ResolutionPolicy): JsResult[JsObject] = {
+    val resolutions = underlying.map(entry => resolveBackReference(entry, path, policy))
 
     val firstError = resolutions.flatMap(_.left.toOption).headOption
 
-    val transformedMap = resolutions.flatMap(_.toOption).toMap
+    val transformedEntries = resolutions.flatMap(_.toOption).toSeq
+    // Two entries resolving to the same key would silently drop one of them.
+    val ambiguousKey = transformedEntries.groupBy(_._1).collectFirst { case (key, entries) if entries.size > 1 => key }
 
-    firstError.getOrElse(JsSuccess(JsObject(transformedMap)))
+    firstError
+      .orElse(ambiguousKey.map(key => JsError(path, JsonValidationError(AmbiguousArgumentException.ERROR_KEY, key))))
+      .getOrElse(JsSuccess(JsObject(transformedEntries)))
   }
 
-  private def resolveBackReference(entry: (String, JsValue), path: JsPath, deferred: Set[JsPath]): Either[JsError, (String, JsValue)] = {
+  private def resolveBackReference(entry: (String, JsValue), path: JsPath, policy: ResolutionPolicy): Either[JsError, (String, JsValue)] = {
     if (entry._1.startsWith("#")) {
       val newEntry: String = entry._1.substring(1)
 
       BackReferenceDeserializer.deserializeBackReference(entry._2) match {
-        case JsSuccess(backReference, _) => resolveBackReference(newEntry, backReference)
+        case JsSuccess(backReference, _) if policy.resultReferences => resolveBackReference(newEntry, backReference)
         // Resolve the value first so an invalid nested result reference still rejects the invocation.
-        case _: JsError => propagateBackReferenceResolution(entry, path, deferred)
-          .map(resolvedEntry => resolveCreationReferenceKey(resolvedEntry, path, deferred))
+        case _ => propagateBackReferenceResolution(entry, path, policy)
+          .map(resolvedEntry => resolveCreationReferenceKey(resolvedEntry, path, policy))
       }
     } else {
-      propagateBackReferenceResolution(entry, path, deferred)
+      propagateBackReferenceResolution(entry, path, policy)
     }
   }
 
-  private def resolveCreationReferenceKey(entry: (String, JsValue), path: JsPath, deferred: Set[JsPath]): (String, JsValue) = {
+  private def resolveCreationReferenceKey(entry: (String, JsValue), path: JsPath, policy: ResolutionPolicy): (String, JsValue) = {
     val (originalKey, resolvedValue) = entry
-    val shouldDeferCreationReference = deferred.contains(path \ originalKey)
+    val shouldDeferCreationReference = !policy.resolvesKey(path, originalKey)
     if (shouldDeferCreationReference) {
       entry
     } else {
@@ -225,8 +343,8 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
       case JsSuccess(resolvedBackReference, _) => Right((newEntry, resolvedBackReference))
     }
 
-  private def propagateBackReferenceResolution(entry: (String, JsValue), path: JsPath, deferred: Set[JsPath]): Either[JsError, (String, JsValue)] =
-    backReferenceResolver(path \ entry._1, deferred).reads(entry._2) match {
+  private def propagateBackReferenceResolution(entry: (String, JsValue), path: JsPath, policy: ResolutionPolicy): Either[JsError, (String, JsValue)] =
+    backReferenceResolver(path \ entry._1, policy).reads(entry._2) match {
       case e: JsError => Left(e)
       case JsSuccess(newValue, _) => Right((entry._1, newValue))
     }
