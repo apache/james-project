@@ -686,6 +686,7 @@
         <lettuce.core.version>6.8.2.RELEASE</lettuce.core.version>
         <io.micrometer.core.version>1.17.2</io.micrometer.core.version>
         <io.micrometer.tracing.version>1.7.2</io.micrometer.tracing.version>
+        <opentelemetry.version>1.68.0</opentelemetry.version>
 
         <bouncycastle.version>1.87</bouncycastle.version>
         <scala.base>3.10</scala.base>
@@ -2614,6 +2615,21 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-transport-native-epoll</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <!-- Override the versions pulled by pulsar-client-all: CVE-2026-118259 -->
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${opentelemetry.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom-alpha</artifactId>
+                <version>${opentelemetry.version}-alpha</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>io.projectreactor</groupId>
