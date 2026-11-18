@@ -128,6 +128,17 @@
             <groupId>org.apache.pulsar</groupId>
             <artifactId>pulsar-client-all</artifactId>
             <version>${pulsar-client.version}</version>
+            <exclusions>
+                <exclusion>
+                    <!--
+                    This jar embeds its own BouncyCastle jars (1.78.1), affected by CVE-2025-14813.
+                    The Pulsar client loads the BC provider from the classpath, where
+                    bcprov-jdk18on is managed by the root pom.
+                    -->
+                    <groupId>org.apache.pulsar</groupId>
+                    <artifactId>bouncy-castle-bc</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
