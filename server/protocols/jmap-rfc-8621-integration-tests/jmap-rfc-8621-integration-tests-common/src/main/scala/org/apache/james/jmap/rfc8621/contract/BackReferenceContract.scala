@@ -188,6 +188,53 @@ trait BackReferenceContract {
       |]""".stripMargin)
   }
 
+  private def appendEmail(server: GuiceJamesServer, subject: String): (MailboxId, MessageId) = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val inboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val messageId = mailboxProbe
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(Message.Builder
+        .of.setSubject(subject)
+        .setBody("testmail", StandardCharsets.UTF_8)
+        .build))
+      .getMessageId
+    (inboxId, messageId)
+  }
+
+  @Test
+  def destroyShouldNotTargetAnInitialMappingReplacedByTheSameCall(server: GuiceJamesServer): Unit = {
+    val (inboxId, existingId) = appendEmail(server, "existing")
+    val request = s"""{
+      |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      |  "createdIds": {"x": ${Json.toJson(existingId.serialize)}},
+      |  "methodCalls": [
+      |    ["Email/set", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "create": {"x": {"mailboxIds": {${Json.toJson(inboxId.serialize)}: true}, "subject": "new"}},
+      |      "destroy": ["#x"]
+      |    }, "setEmails"],
+      |    ["Email/get", {
+      |      "accountId": ${Json.toJson(BOB_ACCOUNT_ID)},
+      |      "ids": [${Json.toJson(existingId.serialize)}],
+      |      "properties": ["id", "subject"]
+      |    }, "getExisting"]
+      |  ]
+      |}""".stripMargin
+
+    val response = execute(request).extract()
+    val createdId = response.path[String](s"${responseArgumentsPath("setEmails")}.created.x.id")
+    val destroyed = response.path[Object](s"${responseArgumentsPath("setEmails")}.destroyed")
+    val notDestroyedType = response.path[String](s"${responseArgumentsPath("setEmails")}.notDestroyed.'#x'.type")
+    val existingEmails = response.path[java.util.List[Object]](s"${responseArgumentsPath("getExisting")}.list")
+    val createdIds = response.path[java.util.Map[String, String]]("createdIds")
+
+    assertThat(destroyed).isNull()
+    assertThat(notDestroyedType).isEqualTo("invalidArguments")
+    assertThatJson(existingEmails).isEqualTo(s"""[
+      |  {"id": ${Json.toJson(existingId.serialize)}, "subject": "existing"}
+      |]""".stripMargin)
+    assertThatJson(createdIds).isEqualTo(s"""{"x": ${Json.toJson(createdId)}}""")
+  }
+
   @Test
   def backReferenceResolvingShouldWork(): Unit = {
     val response = `given`
