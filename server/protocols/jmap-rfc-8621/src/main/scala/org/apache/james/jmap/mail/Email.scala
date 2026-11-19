@@ -324,14 +324,16 @@ object EmailHeaders {
   val SPECIFIC_HEADER_PREFIX = "header:"
 
   def from(zoneId: ZoneId)(mime4JMessage: Message): EmailHeaders =
-    from(zoneId, Email.allowedProperties)(mime4JMessage)
+    build(zoneId, _ => true)(mime4JMessage)
 
   /**
    * Only computes the fields whose property is requested: the others get their empty value, and are anyway
    * filtered out of the response by the serializer.
    */
-  def from(zoneId: ZoneId, properties: Properties)(mime4JMessage: Message): EmailHeaders = {
-    def requested(property: String): Boolean = properties.containsString(property)
+  def from(zoneId: ZoneId, properties: Properties)(mime4JMessage: Message): EmailHeaders =
+    build(zoneId, properties.containsString)(mime4JMessage)
+
+  private def build(zoneId: ZoneId, requested: String => Boolean)(mime4JMessage: Message): EmailHeaders = {
     def noMessageIds = MessageIdsHeaderValue(None)
 
     EmailHeaders(
