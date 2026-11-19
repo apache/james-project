@@ -20,6 +20,7 @@
 package org.apache.james.jmap.json
 
 import eu.timepit.refined.refineV
+import eu.timepit.refined.string.Uri
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.james.core.Username
 import org.apache.james.jmap.core
@@ -27,7 +28,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, ClientId, CoreCapabilityProperties, CreatedIds, EhloArg, EhloArgs, EhloName, Invocation, IsPersonal, IsReadOnly, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxDelayedSend, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, ProblemDetails, Properties, RequestObject, ResponseObject, ServerId, Session, SetError, SubmissionProperties, SupportsPush, UuidState, WebPushVapidCapabilityProperties, WebSocketCapabilityProperties, URL}
+import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, CapabilityIdentifier, ClientId, CoreCapabilityProperties, CreatedIds, EhloArg, EhloArgs, EhloName, Invocation, IsPersonal, IsReadOnly, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxDelayedSend, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, ProblemDetails, Properties, RequestObject, ResponseObject, ServerId, Session, SetError, SubmissionProperties, SupportsPush, UuidState, WebPushVapidCapabilityProperties, WebSocketCapabilityProperties, URL}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -61,6 +62,19 @@ object ResponseSerializer {
   private implicit val statusWrite: Writes[HttpResponseStatus] = status => JsNumber(status.code())
 
   // RequestObject
+  // Well-known identifiers are valid URIs (refined literals): skip the java.net.URI parsing done by refined's Uri
+  // predicate for them. Any other string is validated as before, with the same error.
+  private val knownCapabilityIdentifiers: Map[String, CapabilityIdentifier] =
+    Seq(CapabilityIdentifier.JMAP_CORE, CapabilityIdentifier.JMAP_MAIL, CapabilityIdentifier.JMAP_VACATION_RESPONSE,
+      CapabilityIdentifier.EMAIL_SUBMISSION, CapabilityIdentifier.JMAP_WEBSOCKET, CapabilityIdentifier.JMAP_WEBPUSH_VAPID,
+      CapabilityIdentifier.JAMES_QUOTA, CapabilityIdentifier.JMAP_QUOTA, CapabilityIdentifier.JAMES_SHARES,
+      CapabilityIdentifier.JAMES_IDENTITY_SORTORDER, CapabilityIdentifier.JAMES_DELEGATION, CapabilityIdentifier.JMAP_MDN)
+      .map(identifier => identifier.value -> identifier)
+      .toMap
+  private implicit val capabilityIdentifierReads: Reads[CapabilityIdentifier] = Reads(jsValue =>
+    Reads.StringReads.reads(jsValue).flatMap(string => knownCapabilityIdentifiers.get(string)
+      .map(JsSuccess(_))
+      .getOrElse(refineV[Uri](string).fold(JsError(_), JsSuccess(_)))))
   private implicit val requestObjectRead: Format[RequestObject] = Json.format[RequestObject]
 
   // ResponseObject

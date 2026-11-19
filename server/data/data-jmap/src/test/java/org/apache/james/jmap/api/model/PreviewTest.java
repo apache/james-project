@@ -23,14 +23,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.google.common.base.Strings;
 
@@ -140,6 +144,45 @@ class PreviewTest {
             assertThat(Preview.compute(body))
                 .isEqualTo(Preview.from("this is the preview content"));
         }
+    }
+
+    private static String encoderBasedSanitize(String value) {
+        CharsetEncoder encoder = StandardCharsets.UTF_8.newEncoder();
+        while (!encoder.canEncode(value)) {
+            value = value.substring(0, value.length() - 1);
+        }
+        return value;
+    }
+
+    static Stream<String> sanitizeCases() {
+        String high = String.valueOf((char) 0xD83D);
+        String low = String.valueOf((char) 0xDE00);
+        String emoji = high + low;
+        String maxHigh = String.valueOf((char) 0xDBFF);
+        String maxLow = String.valueOf((char) 0xDFFF);
+        String minHigh = String.valueOf((char) 0xD800);
+        return Stream.of(
+            "",
+            "plain ascii",
+            "caf" + (char) 0xE9 + " " + (char) 0x4E2D + (char) 0x6587,
+            emoji,
+            "a" + emoji + "b" + emoji,
+            "abc" + high,
+            high,
+            low,
+            "abc" + low + "def",
+            "abc" + high + "def",
+            "ab" + emoji + low + emoji,
+            "ab" + high + high + low,
+            "ab" + low + high,
+            "x" + maxHigh + maxLow + "y" + minHigh);
+    }
+
+    @ParameterizedTest
+    @MethodSource("sanitizeCases")
+    void sanitizeUTF8StringShouldKeepTheLongestEncodablePrefix(String value) {
+        assertThat(Preview.sanitizeUTF8String(value))
+            .isEqualTo(encoderBasedSanitize(value));
     }
 
     @Test
