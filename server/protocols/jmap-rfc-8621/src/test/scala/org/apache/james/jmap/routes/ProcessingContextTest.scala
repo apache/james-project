@@ -121,7 +121,7 @@ class ProcessingContextTest {
         Json.obj("emailIds" -> Json.arr("#email")),
         Json.obj("conditions" -> Json.arr(Json.obj("emailId" -> "#email"))))))), MethodCallId("echo"))
 
-    assertThat(context.resolveBackReferences(invocation, Set.empty, IdPaths(values = Set("filter/**/emailIds/*", "filter/**/emailId"))))
+    assertThat(context.resolveBackReferences(invocation))
       .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj(
         "filter" -> Json.obj("conditions" -> Json.arr(
           Json.obj("emailIds" -> Json.arr("server-email")),
@@ -698,38 +698,43 @@ class ProcessingContextTest {
     }
 
     @Test
-    def idPathsShouldMatchWildcards(): Unit = {
-      val idPaths = IdPaths(values = Set("create/*/blobId", "filter/**/inMailbox"), keys = Set("update"))
+    def conventionalIdPathsShouldFollowTheNamingOfTheSpecificationsAtAnyDepth(): Unit = {
+      val idPaths = IdPaths.CONVENTIONAL
+      val emailCreate = JsPath \ "create" \ "k1" \ "email/create"
 
-      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "blobId")).isTrue()
-      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "subject")).isFalse()
-      assertThat(idPaths.isIdValue(JsPath \ "filter" \ "inMailbox")).isTrue()
+      assertThat(idPaths.isIdValue(JsPath \ "mailboxId")).isTrue()
+      assertThat(idPaths.isIdValue(JsPath \ "upToId")).isTrue()
+      assertThat(idPaths.isIdValue(JsPath \ "anchor")).isTrue()
+      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "parentId")).isTrue()
+      assertThat(idPaths.isIdValue((JsPath \ "send" \ "k1") \ "forEmailId")).isTrue()
+      assertThat(idPaths.isIdValue((emailCreate \ "attachments")(0) \ "blobId")).isTrue()
+      assertThat(idPaths.isIdValue((JsPath \ "create" \ "k1" \ "blobIds")(0))).isTrue()
       assertThat(idPaths.isIdValue(((JsPath \ "filter" \ "conditions")(0) \ "conditions")(1) \ "inMailbox")).isTrue()
+      assertThat(idPaths.isIdValue((JsPath \ "filter" \ "inMailboxOtherThan")(0))).isTrue()
+      assertThat(idPaths.isIdValue((JsPath \ "destroy")(0))).isTrue()
       assertThat(idPaths.hasIdKeys(JsPath \ "update")).isTrue()
-      assertThat(idPaths.hasIdKeys(JsPath \ "update" \ "k1")).isFalse()
+      assertThat(idPaths.hasIdKeys(emailCreate \ "mailboxIds")).isTrue()
+      assertThat(idPaths.hasIdKeys(JsPath \ "onSuccessUpdateEmail" \ "#k1" \ "mailboxIds")).isTrue()
+      assertThat(idPaths.hasIdKeys(JsPath \ "create" \ "k1" \ "identityIds")).isTrue()
     }
 
     @Test
-    def conventionalIdPathsShouldFollowTheNamingOfTheSpecifications(): Unit = {
+    def conventionalIdPathsShouldExcludeStringsNamedLikeIdsAndFreeFormContent(): Unit = {
       val idPaths = IdPaths.CONVENTIONAL
 
-      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "parentId")).isTrue()
-      assertThat(idPaths.isIdValue((JsPath \ "create" \ "k1" \ "blobIds")(0))).isTrue()
-      assertThat(idPaths.isIdValue((JsPath \ "destroy")(0))).isTrue()
       assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "subject")).isFalse()
-      assertThat(idPaths.isIdValue((JsPath \ "create" \ "k1" \ "messageId")(0))).isFalse()
-      assertThat(idPaths.isIdValue((JsPath \ "create" \ "k1" \ "destroy")(0))).isFalse()
-      assertThat(idPaths.isIdValue(JsPath \ "filter" \ "inMailbox")).isFalse()
       assertThat(idPaths.isIdValue((JsPath \ "create" \ "k1" \ "textBody")(0) \ "partId")).isFalse()
       assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "deviceClientId")).isFalse()
-      assertThat(idPaths.isIdValue(JsPath \ "send" \ "k1" \ "extensionFields" \ "id")).isFalse()
-      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "extensionFields" \ "id")).isFalse()
-      assertThat(idPaths.isIdValue(JsPath \ "update" \ "k1" \ "parentId")).isTrue()
-      assertThat(idPaths.hasIdKeys(JsPath \ "update")).isTrue()
-      assertThat(idPaths.hasIdKeys(JsPath \ "update" \ "k1" \ "mailboxIds")).isTrue()
-      assertThat(idPaths.hasIdKeys(JsPath \ "onSuccessUpdateEmail" \ "#k1" \ "mailboxIds")).isFalse()
+      assertThat(idPaths.isIdValue(JsPath \ "send" \ "k1" \ "originalMessageId")).isFalse()
+      assertThat(idPaths.isIdValue((JsPath \ "create" \ "k1" \ "messageId")(0))).isFalse()
+      assertThat(idPaths.isIdValue(JsPath \ "create" \ "k1" \ "header:X-Correlation-Id:asText")).isFalse()
+      assertThat(idPaths.isIdValue(JsPath \ "send" \ "k1" \ "extensionFields" \ "X-Original-Id")).isFalse()
+      assertThat(idPaths.isIdValue((JsPath \ "create" \ "k1" \ "destroy")(0))).isFalse()
+      assertThat(idPaths.isIdValue((JsPath \ "onSuccessDestroyEmail")(0))).isFalse()
+      assertThat(idPaths.hasIdKeys(JsPath \ "onSuccessUpdateEmail")).isFalse()
       assertThat(idPaths.hasIdKeys(JsPath \ "create" \ "k1" \ "update")).isFalse()
       assertThat(idPaths.hasIdKeys(JsPath \ "create" \ "k1" \ "keywords")).isFalse()
+      assertThat(idPaths.hasIdKeys(JsPath \ "create" \ "k1" \ "bodyValues")).isFalse()
     }
   }
 }

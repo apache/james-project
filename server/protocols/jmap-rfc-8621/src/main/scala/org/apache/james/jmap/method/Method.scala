@@ -55,8 +55,8 @@ trait Method {
 }
 
 /**
- * A method expecting Ids at locations that do not follow the naming convention of the specifications (see [[IdPaths]]),
- * such as the `inMailbox` filter condition. Creation references are also resolved there.
+ * A method whose Id locations differ from the naming of the specifications ([[IdPaths.CONVENTIONAL]]), such as `Core/echo`
+ * which resolves no creation reference ([[IdPaths.NONE]]).
  */
 trait IdArguments {
   def idPaths: IdPaths
@@ -79,14 +79,6 @@ object DeferredCreationReferences {
       keyPaths(arguments, "update", isCreatedByThisCall) ++ elementPaths(arguments, "destroy", isCreatedByThisCall)
     }
   }
-
-  /** Every creation reference among the keys of `property`. */
-  def creationReferenceKeyPaths(arguments: Arguments, property: String): Set[JsPath] =
-    keyPaths(arguments, property, _.startsWith("#"))
-
-  /** Every creation reference among the elements of `property`. */
-  def creationReferenceElementPaths(arguments: Arguments, property: String): Set[JsPath] =
-    elementPaths(arguments, property, _.startsWith("#"))
 
   private def keyPaths(arguments: Arguments, property: String, selected: String => Boolean): Set[JsPath] =
     (arguments.value \ property).asOpt[JsObject]
