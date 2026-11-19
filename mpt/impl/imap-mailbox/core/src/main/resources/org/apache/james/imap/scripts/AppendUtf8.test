@@ -1,0 +1,171 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# RFC 6855 section 4: once UTF8=ACCEPT is enabled, APPEND can carry the message as UTF8 (literal8)
+C: a1 CREATE utf8box
+S: a1 OK \[MAILBOXID \(.+\)\] CREATE completed.
+
+C: a2 ENABLE UTF8=ACCEPT
+S: \* ENABLED UTF8=ACCEPT
+S: a2 OK ENABLE completed.
+
+# Non synchronizing literal8
+C: a3 APPEND utf8box UTF8 (~{22+}
+C: Subject: utf8
+C:
+C: hello)
+S: a3 OK (\[.+\] )?APPEND completed.
+
+# Synchronizing literal8
+C: a4 APPEND utf8box UTF8 (~{22}
+S: \+ Ok
+C: Subject: utf8
+C:
+C: hello)
+S: a4 OK (\[.+\] )?APPEND completed.
+
+# With flags and date, the keyword is case insensitive
+C: a5 APPEND utf8box (\Seen) "09-Apr-2008 15:17:51 +0200" utf8 (~{22+}
+C: Subject: utf8
+C:
+C: hello)
+S: a5 OK (\[.+\] )?APPEND completed.
+
+# A plain literal is tolerated
+C: a6 APPEND utf8box UTF8 ({22+}
+C: Subject: utf8
+C:
+C: hello)
+S: a6 OK (\[.+\] )?APPEND completed.
+
+# A message ending with a parenthesis: only the announced octets are the message
+C: a7 APPEND utf8box UTF8 (~{23+}
+C: Subject: utf8
+C:
+C: hello))
+S: a7 OK (\[.+\] )?APPEND completed.
+
+# A message whose last line is a parenthesis
+C: a8 APPEND utf8box UTF8 (~{18+}
+C: Subject: utf8
+C:
+C: ))
+S: a8 OK (\[.+\] )?APPEND completed.
+
+# The classic form is still accepted
+C: a9 APPEND utf8box {22+}
+C: Subject: utf8
+C:
+C: hello
+S: a9 OK (\[.+\] )?APPEND completed.
+
+# Malformed UTF8 message data, rejected before the literal is invited
+C: e1 APPEND utf8box UTF8X (~{22}
+S: e1 BAD APPEND failed. Illegal arguments.
+
+C: e2 APPEND utf8box UTF8(~{22}
+S: e2 BAD APPEND failed. Illegal arguments.
+
+C: e3 APPEND utf8box UTF8 ~{22}
+S: e3 BAD APPEND failed. Illegal arguments.
+
+C: e4 APPEND utf8box UTF8 ( ~{22}
+S: e4 BAD APPEND failed. Illegal arguments.
+
+C: e5 APPEND utf8box UTF8 ((~{22}
+S: e5 BAD APPEND failed. Illegal arguments.
+
+C: e6 APPEND utf8box UTF8
+S: e6 BAD APPEND failed. Illegal arguments.
+
+C: e7 APPEND utf8box UTF8 (~{22+})
+S: e7 BAD APPEND failed. Illegal arguments.
+
+# Malformed after the literal: the closing parenthesis is missing
+C: e8 APPEND utf8box UTF8 (~{22+}
+C: Subject: utf8
+C:
+C: hello
+S: e8 BAD APPEND failed. Illegal arguments.
+
+# Malformed after the literal: extra data after the closing parenthesis
+C: e9 APPEND utf8box UTF8 (~{22+}
+C: Subject: utf8
+C:
+C: hello) junk
+S: e9 BAD APPEND failed. Illegal arguments.
+
+C: e10 APPEND utf8box UTF8 (~{22+}
+C: Subject: utf8
+C:
+C: hello))
+S: e10 BAD APPEND failed. Illegal arguments.
+
+# The session is still in sync, and none of the rejected messages was stored
+C: f1 NOOP
+S: f1 OK NOOP completed.
+
+C: f2 STATUS utf8box (MESSAGES)
+S: \* STATUS "utf8box" \(MESSAGES 7\)
+S: f2 OK STATUS completed.
+
+C: f3 SELECT utf8box
+SUB {
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(.+\)
+S: \* 7 EXISTS
+S: \* 7 RECENT
+S: \* OK \[UIDVALIDITY \d+\] UIDs valid
+S: \* OK \[UNSEEN 1\] MailboxMessage 1 is first unseen
+S: \* OK \[PERMANENTFLAGS \(.+\)\] Limited
+S: \* OK \[HIGHESTMODSEQ \d+\] Highest
+S: \* OK \[UIDNEXT 8\] Predicted next UID
+}
+S: f3 OK \[READ-WRITE\] SELECT completed.
+
+C: f4 FETCH 1:7 (RFC822.SIZE)
+S: \* 1 FETCH \(RFC822.SIZE 22\)
+S: \* 2 FETCH \(RFC822.SIZE 22\)
+S: \* 3 FETCH \(RFC822.SIZE 22\)
+S: \* 4 FETCH \(RFC822.SIZE 22\)
+S: \* 5 FETCH \(RFC822.SIZE 23\)
+S: \* 6 FETCH \(RFC822.SIZE 18\)
+S: \* 7 FETCH \(RFC822.SIZE 22\)
+S: f4 OK FETCH completed.
+
+C: f5 FETCH 3 (FLAGS INTERNALDATE)
+S: \* 3 FETCH \(FLAGS \(\\Recent \\Seen\) INTERNALDATE "09-Apr-2008 \d\d:17:51 [+-]\d{4}"\)
+S: f5 OK FETCH completed.
+
+C: f6 FETCH 1 (BODY.PEEK[TEXT])
+S: \* 1 FETCH \(BODY\[TEXT\] \{5\}
+S: hello\)
+S: f6 OK FETCH completed.
+
+C: f7 FETCH 5 (BODY.PEEK[TEXT])
+S: \* 5 FETCH \(BODY\[TEXT\] \{6\}
+S: hello\)\)
+S: f7 OK FETCH completed.
+
+C: f8 FETCH 6 (BODY.PEEK[TEXT])
+S: \* 6 FETCH \(BODY\[TEXT\] \{1\}
+S: \)\)
+S: f8 OK FETCH completed.
+
+C: f9 DELETE utf8box
+S: f9 OK DELETE completed.

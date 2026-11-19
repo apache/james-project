@@ -135,6 +135,11 @@ public abstract class AuthenticatedState extends BasicImapCommands {
     }
 
     @Test
+    public void testAppendUtf8US() throws Exception {
+        simpleScriptedTestProtocol.run("AppendUtf8");
+    }
+
+    @Test
     public void testAppendExpungeUS() throws Exception {
         simpleScriptedTestProtocol.run("AppendExpunge");
     }
