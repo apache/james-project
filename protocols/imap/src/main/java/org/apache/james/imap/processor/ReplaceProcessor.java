@@ -84,11 +84,16 @@ public class ReplaceProcessor extends AbstractMailboxProcessor<ReplaceRequest> i
 
     @Override
     protected Mono<Void> processRequestReactive(ReplaceRequest request, ImapSession session, Responder responder) {
+        MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        return existingMailboxPath(requestedPath, session)
+            .flatMap(mailboxPath -> processRequestReactive(request, session, responder, mailboxPath));
+    }
+
+    private Mono<Void> processRequestReactive(ReplaceRequest request, ImapSession session, Responder responder, MailboxPath mailboxPath) {
         final String mailboxName = request.getMailboxName();
         final Content messageIn = request.getMessage().asMailboxContent();
         final Date datetime = request.getDatetime();
         final Flags flags = request.getFlags();
-        final MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName);
         final MailboxManager mailboxManager = getMailboxManager();
 
         session.stopDetectingCommandInjection();

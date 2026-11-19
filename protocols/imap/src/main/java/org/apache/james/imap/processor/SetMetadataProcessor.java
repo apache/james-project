@@ -83,11 +83,15 @@ public class SetMetadataProcessor extends AbstractMailboxProcessor<SetMetadataRe
 
     @Override
     protected Mono<Void> processRequestReactive(SetMetadataRequest request, ImapSession session, Responder responder) {
+        MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        return existingMailboxPath(requestedPath, session)
+            .flatMap(mailboxPath -> processRequestReactive(request, session, responder, mailboxPath));
+    }
+
+    private Mono<Void> processRequestReactive(SetMetadataRequest request, ImapSession session, Responder responder, MailboxPath mailboxPath) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
         final String mailboxName = request.getMailboxName();
-
-        final MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName);
 
         return Mono.from(mailboxManager.updateAnnotationsReactive(mailboxPath, mailboxSession, request.getMailboxAnnotations()))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)).then())
