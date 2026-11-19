@@ -563,9 +563,13 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
      * Where the end of the line following a literal stops in {@code bytes}, starting at {@code length}.
      * {@link ImapRequestLineReader#eol()} tolerates spaces before the end of line, and a bare LF: keep
      * spooling them rather than cutting the line short, but nothing after, as this is the next command.
+     * The literal can also be the last item of a list, as in the {@code UTF8 (literal8)} form of APPEND (RFC 6855).
      */
     private static int endOfLiteralLine(byte[] bytes, int literalEnd) {
         int length = literalEnd;
+        if (length < bytes.length && bytes[length] == ')') {
+            length++;
+        }
         while (length < bytes.length && (bytes[length] == ' ' || bytes[length] == '\r')) {
             length++;
         }
