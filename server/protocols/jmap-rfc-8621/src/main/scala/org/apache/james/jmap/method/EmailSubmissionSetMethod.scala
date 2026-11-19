@@ -42,7 +42,7 @@ import org.apache.james.jmap.core.{ClientId, Id, IdOrCreationReference, Invocati
 import org.apache.james.jmap.json.EmailSubmissionSetSerializer
 import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue, UnparsedEmailSubmissionId, UnparsedIdentityId}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, NO_DELAY, VALID_PARAMETER_NAME_SET, formatter}
-import org.apache.james.jmap.routes.{IdPaths, ProcessingContext, SessionSupplier}
+import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
 import org.apache.james.mailbox.model.{FetchGroup, MessageId, MessageResult}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
@@ -213,19 +213,11 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
                                          @Named("supportsDelaySends") supportsDelaySends: Boolean,
                                          val metricFactory: MetricFactory,
                                          val sessionSupplier: SessionSupplier,
-                                         val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with IdArguments with SameCallCreationTargets with Startable {
+                                         val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with SameCallCreationTargets with Startable {
   private val validations: Seq[EmailSubmissionSetValidation] = javaValidations.asScala.toSeq
 
   override val methodName: MethodName = MethodName("EmailSubmission/set")
-  override val idPaths: IdPaths = IdPaths(keys = Set("onSuccessUpdateEmail/*/mailboxIds"))
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
-
-  /** `onSuccess*` targets reference submissions this call creates and are resolved after the creates. */
-  override def deferredCreationReferencePaths(arguments: Arguments, processingContext: ProcessingContext): Set[JsPath] =
-    super.deferredCreationReferencePaths(arguments, processingContext) ++
-      DeferredCreationReferences.creationReferenceKeyPaths(arguments, "onSuccessUpdateEmail") ++
-      DeferredCreationReferences.creationReferenceElementPaths(arguments, "onSuccessDestroyEmail")
-
   var queue: MailQueue = _
   def init: Unit = queue = mailQueueFactory.createQueue(SPOOL)
 

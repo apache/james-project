@@ -27,7 +27,7 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, JmapRfc8621Configuration, ServerId, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.{EmailSetRequest, EmailSetResponse}
-import org.apache.james.jmap.routes.{IdPaths, SessionSupplier}
+import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.metrics.api.MetricFactory
@@ -43,9 +43,8 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
                                createPerformer: EmailSetCreatePerformer,
                                deletePerformer: EmailSetDeletePerformer,
                                updatePerformer: EmailSetUpdatePerformer,
-                               emailChangeRepository: EmailChangeRepository) extends MethodRequiringAccountId[EmailSetRequest] with IdArguments with SameCallCreationTargets {
+                               emailChangeRepository: EmailChangeRepository) extends MethodRequiringAccountId[EmailSetRequest] with SameCallCreationTargets {
   override val methodName: MethodName = MethodName("Email/set")
-  override val idPaths: IdPaths = IdPaths(values = Set("create/*/attachments/*/blobId", "create/*/htmlBody/*/blobId", "create/*/textBody/*/blobId"))
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailSetRequest): SMono[InvocationWithContext] = {

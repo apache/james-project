@@ -138,71 +138,59 @@ object AmbiguousArgumentException {
 
 /**
  * Argument locations where an Id is expected (RFC 8620 §5.3): creation references (`#creationId`) are only resolved there.
- *
- * With `conventional`, the properties typed `Id` by RFC 8620 and RFC 8621 (see [[IdPaths.ID_PROPERTIES]],
- * [[IdPaths.ID_ARRAYS]] and [[IdPaths.ID_KEYED_OBJECTS]]) are Id locations when they are arguments or properties of a
- * `create` or `update` entry, as are the `update` keys and `destroy` entries. Deeper values are not, so that free-form
- * content such as MDN `extensionFields` or client-chosen strings such as `partId` are kept. A method declares in `values`
- * and `keys` its other Id locations, such as the `forEmailId` of `MDN/send` entries or `inMailbox`.
- *
- * A pattern is a `/` separated list of object keys where `*` matches one object key or array index and `**` any number
- * of them. `values` designate string values and the elements of string arrays; `keys` designate objects whose keys are
- * Ids.
  */
-case class IdPaths(values: Set[String] = Set.empty, keys: Set[String] = Set.empty, conventional: Boolean = true) {
-  private lazy val valuePatterns: Set[List[String]] = values.map(IdPaths.parse)
-  private lazy val keyPatterns: Set[List[String]] = keys.map(IdPaths.parse)
+trait IdPaths {
+  /** Whether the string at `path`, or the array element at `path`, is an Id. */
+  def isIdValue(path: JsPath): Boolean
 
-  def isIdValue(path: JsPath): Boolean = (conventional && IdPaths.isConventionalIdValue(path.path)) ||
-    valuePatterns.exists(pattern => IdPaths.matches(pattern, path.path))
-
-  def hasIdKeys(objectPath: JsPath): Boolean = (conventional && IdPaths.hasConventionalIdKeys(objectPath.path)) ||
-    keyPatterns.exists(pattern => IdPaths.matches(pattern, objectPath.path))
+  /** Whether the keys of the object at `objectPath` are Ids. */
+  def hasIdKeys(objectPath: JsPath): Boolean
 }
 
 object IdPaths {
-  val CONVENTIONAL: IdPaths = IdPaths()
+  /**
+   * Id locations found by the naming of the JMAP specifications, at any depth: `id` and `*Id` string values, the
+   * elements of `ids` and `*Ids` arrays, the keys of `*Ids` objects, plus `anchor`, `inMailbox`, the elements of
+   * `inMailboxOtherThan`, the `update` keys and the `destroy` entries.
+   *
+   * String-typed properties named like Ids (`partId`, `deviceClientId`, `originalMessageId`), `header:` properties and
+   * free-form `extensionFields` are not Id locations.
+   */
+  val CONVENTIONAL: IdPaths = new IdPaths {
+    override def isIdValue(path: JsPath): Boolean = !isExcluded(path.path) && (path.path match {
+      case List(KeyPathNode("destroy"), IdxPathNode(_)) => true
+      case nodes => nodes.reverse match {
+        case KeyPathNode(name) :: _ => isIdName(name)
+        case IdxPathNode(_) :: KeyPathNode(name) :: _ => isIdArrayName(name)
+        case _ => false
+      }
+    })
+
+    override def hasIdKeys(objectPath: JsPath): Boolean = !isExcluded(objectPath.path) && (objectPath.path match {
+      case List(KeyPathNode("update")) => true
+      case nodes => nodes.lastOption.exists {
+        case KeyPathNode(name) => name.endsWith("Ids")
+        case _ => false
+      }
+    })
+  }
+
   /** No creation reference is resolved, e.g. for `Core/echo` which returns its arguments unchanged (RFC 8620 §4). */
-  val NONE: IdPaths = IdPaths(conventional = false)
+  val NONE: IdPaths = new IdPaths {
+    override def isIdValue(path: JsPath): Boolean = false
 
-  /** String properties typed `Id`. */
-  val ID_PROPERTIES: Set[String] = Set("id", "accountId", "fromAccountId", "anchor", "blobId", "emailId", "identityId",
-    "parentId", "threadId", "forEmailId")
-  /** Properties typed `Id[]`. */
-  val ID_ARRAYS: Set[String] = Set("ids", "blobIds", "emailIds")
-  /** Properties typed `Id[Boolean]`. */
-  val ID_KEYED_OBJECTS: Set[String] = Set("mailboxIds")
-
-  /** Path relative to the object holding the properties: the arguments, or a `create` or `update` entry. */
-  private def propertyPath(nodes: List[PathNode]): List[PathNode] = nodes match {
-    case KeyPathNode("create" | "update") :: KeyPathNode(_) :: properties => properties
-    case _ => nodes
+    override def hasIdKeys(objectPath: JsPath): Boolean = false
   }
 
-  private def isConventionalIdValue(nodes: List[PathNode]): Boolean = nodes match {
-    case List(KeyPathNode("destroy"), IdxPathNode(_)) => true
-    case _ => propertyPath(nodes) match {
-      case List(KeyPathNode(name)) => ID_PROPERTIES.contains(name)
-      case List(KeyPathNode(name), IdxPathNode(_)) => ID_ARRAYS.contains(name)
-      case _ => false
-    }
-  }
+  private val STRING_PROPERTIES: Set[String] = Set("partId", "deviceClientId", "originalMessageId")
 
-  private def hasConventionalIdKeys(nodes: List[PathNode]): Boolean = nodes match {
-    case List(KeyPathNode("update")) => true
-    case _ => propertyPath(nodes) match {
-      case List(KeyPathNode(name)) => ID_KEYED_OBJECTS.contains(name)
-      case _ => false
-    }
-  }
+  private def isIdName(name: String): Boolean =
+    !STRING_PROPERTIES.contains(name) && (name == "id" || name.endsWith("Id") || name == "anchor" || name == "inMailbox")
 
-  private def parse(pattern: String): List[String] = pattern.split('/').toList.filter(_.nonEmpty)
+  private def isIdArrayName(name: String): Boolean = name == "ids" || name.endsWith("Ids") || name == "inMailboxOtherThan"
 
-  private def matches(pattern: List[String], nodes: List[PathNode]): Boolean = (pattern, nodes) match {
-    case (Nil, Nil) => true
-    case ("**" :: rest, _) => matches(rest, nodes) || (nodes.nonEmpty && matches(pattern, nodes.tail))
-    case ("*" :: rest, _ :: tail) => matches(rest, tail)
-    case (key :: rest, KeyPathNode(name) :: tail) if key == name => matches(rest, tail)
+  private def isExcluded(nodes: List[PathNode]): Boolean = nodes.exists {
+    case KeyPathNode(name) => name == "extensionFields" || name.startsWith("header:")
     case _ => false
   }
 }
