@@ -36,6 +36,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.message.request.AppendRequest;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -118,6 +119,27 @@ class AppendCommandParserTest {
                 .atZone(ZoneOffset.systemDefault())
                 .withZoneSameInstant(ZoneOffset.UTC))
             .isEqualTo("2008-04-09T15:17:51Z");
+    }
+
+    @Test
+    void decodeShouldAcceptUtf8MessageData() throws Exception {
+        // RFC 6855 section 4, as sent by Thunderbird once UTF8=ACCEPT is enabled
+        String message = "Subject: été\r\n\r\nhello";
+        int size = message.getBytes(StandardCharsets.UTF_8).length;
+        ImapRequestStreamLineReader request = toRequest("Sent (\\Seen) \"09-Apr-2008 15:17:51 +0200\" UTF8 (~{" + size + "+}\r\n" + message + ")\r\n");
+
+        AppendRequest appendRequest = (AppendRequest) testee.decode(request, new Tag("A1"), new FakeImapSession());
+
+        assertThat(appendRequest.getMailboxName()).isEqualTo("Sent");
+        assertThat(appendRequest.getMessage().getInputStream()).hasBinaryContent(message.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void decodeShouldRejectUnknownMessageDataExtension() {
+        ImapRequestStreamLineReader request = toRequest("Sent UNKNOWN ({5+}\r\nhello)\r\n");
+
+        assertThatThrownBy(() -> testee.decode(request, new Tag("A1"), new FakeImapSession()))
+            .isInstanceOf(DecodingException.class);
     }
 
     private ImapRequestStreamLineReader toRequest(String input) {

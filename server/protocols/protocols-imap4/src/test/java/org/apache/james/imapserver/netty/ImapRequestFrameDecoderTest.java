@@ -236,6 +236,31 @@ class ImapRequestFrameDecoderTest {
     }
 
     @Test
+    void anUtf8AppendShouldBeDecoded() {
+        List<byte[]> chunks = List.of(
+            "a APPEND INBOX UTF8 (~{5+}\r\nhello)\r\nb NOOP\r\n".getBytes(StandardCharsets.US_ASCII));
+
+        // inMemorySizeLimit 4096 > 5: the literal is read from memory
+        assertThat(decode(true, 4096, 5504, 3008, chunks))
+            .hasSize(2)
+            .satisfies(messages -> assertThat(messages.get(0)).startsWith("AppendRequest{mailboxName=INBOX"))
+            .satisfies(messages -> assertThat(messages.get(1)).contains("tag=b, command=NOOP"));
+    }
+
+    @Test
+    void anUtf8AppendWithAFileBackedLiteralShouldBeDecoded() {
+        List<byte[]> chunks = List.of(
+            "a APPEND INBOX UTF8 (~{40}\r\n".getBytes(StandardCharsets.US_ASCII),
+            ("x".repeat(40) + ")\r\nb NOOP\r\n").getBytes(StandardCharsets.US_ASCII));
+
+        // inMemorySizeLimit 32 < 40: the literal is spooled to a file
+        assertThat(decode(true, 32, 5504, 3008, chunks))
+            .hasSize(2)
+            .satisfies(messages -> assertThat(messages.get(0)).startsWith("AppendRequest{mailboxName=INBOX"))
+            .satisfies(messages -> assertThat(messages.get(1)).contains("tag=b, command=NOOP"));
+    }
+
+    @Test
     void aLiteralEndingWithABareLfAtTheEndOfTheDataShouldBeDecoded() {
         List<byte[]> chunks = List.of(
             "a APPEND INBOX {5}\r\n".getBytes(StandardCharsets.US_ASCII),
