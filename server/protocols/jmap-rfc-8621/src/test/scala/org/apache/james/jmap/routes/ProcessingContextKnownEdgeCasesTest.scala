@@ -51,7 +51,6 @@ class ProcessingContextKnownEdgeCasesTest {
   }
 
   @Test
-  @Disabled("Baseline substitutes every matching '#'-prefixed string, including this literal; method-aware resolution is deferred.")
   def resolveBackReferencesShouldPreserveALiteralStringMatchingARecordedCreationID(): Unit = {
     val context = ProcessingContext(Map(ClientId("created") -> ServerId("server-id")), Map.empty)
     val arguments = Json.obj("name" -> "#created")
