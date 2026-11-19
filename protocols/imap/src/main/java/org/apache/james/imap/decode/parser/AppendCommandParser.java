@@ -93,6 +93,9 @@ public class AppendCommandParser extends AbstractImapCommandParser {
         try {
             Literal literal = next == 'U' || next == 'u' ? utf8Message(request) : request.consumeLiteral(true).right;
             return new AppendRequest(mailboxName, flags, Date.from(datetime.atZone(ZoneId.systemDefault()).toInstant()), literal, tag);
+        } catch (DecodingException e) {
+            // A syntax error is not an IO failure
+            throw e;
         } catch (IOException e) {
             throw new DecodingException(SOCKET_IO_FAILURE, "Error copying content", e);
         }
