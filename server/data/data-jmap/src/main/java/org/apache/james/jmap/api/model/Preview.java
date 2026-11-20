@@ -22,7 +22,6 @@ package org.apache.james.jmap.api.model;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.CharsetEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
@@ -121,12 +120,27 @@ public class Preview {
         return Preview.from(sanitizeUTF8String(truncateToMaxLength));
     }
 
-    private static String sanitizeUTF8String(String truncateToMaxLength) {
-        CharsetEncoder encoder = StandardCharsets.UTF_8.newEncoder();
-        while (!encoder.canEncode(truncateToMaxLength)) {
-            truncateToMaxLength = truncateToMaxLength.substring(0, truncateToMaxLength.length() - 1);
+    /**
+     * Returns the longest prefix of the given string that is valid UTF-16 (hence encodable in UTF-8):
+     * it stops right before the first unpaired surrogate. Single pass, no encoder.
+     */
+    @VisibleForTesting
+    static String sanitizeUTF8String(String value) {
+        int length = value.length();
+        for (int i = 0; i < length; i++) {
+            char c = value.charAt(i);
+            if (Character.isHighSurrogate(c)) {
+                if (i + 1 < length && Character.isLowSurrogate(value.charAt(i + 1))) {
+                    i++;
+                    continue;
+                }
+                return value.substring(0, i);
+            }
+            if (Character.isLowSurrogate(c)) {
+                return value.substring(0, i);
+            }
         }
-        return truncateToMaxLength;
+        return value;
     }
 
     private static String truncateToMaxLength(String body) {
