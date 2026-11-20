@@ -108,6 +108,22 @@ class WebAdminConfigurationTest {
     }
 
     @Test
+    void builderShouldAcceptPemHttps() {
+        TlsConfiguration tlsConfiguration = TlsConfiguration.builder()
+            .pem("cert.pem", "key.pem")
+            .build();
+
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .tls(tlsConfiguration)
+                .port(PORT)
+                .build())
+            .extracting(WebAdminConfiguration::getTlsConfiguration)
+            .isEqualTo(tlsConfiguration);
+    }
+
+    @Test
     void builderShouldReturnTlsDisableWhenNoTlsConfiguration() {
         assertThat(
             WebAdminConfiguration.builder()
