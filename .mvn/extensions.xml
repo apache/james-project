@@ -41,6 +41,6 @@
         <!-- requires enabling during execution: `-Dprofile -DprofileFormat=JSON,HTML` -->
         <groupId>fr.jcgay.maven</groupId>
         <artifactId>maven-profiler</artifactId>
-        <version>3.2</version>
+        <version>3.3</version>
     </extension>
 </extensions>
