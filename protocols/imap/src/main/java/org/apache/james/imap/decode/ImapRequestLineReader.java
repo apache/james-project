@@ -62,6 +62,8 @@ import com.google.common.base.CharMatcher;
  * lookahead=1 on the underlying character stream. TODO need to look at encoding
  */
 public abstract class ImapRequestLineReader {
+    private static final String UTF8_APPEND_DATA_KEYWORD = "UTF8";
+
     public record LiteralHeader(long size, boolean synchronizing, boolean continuationSent, boolean sizeAccepted) {
         public boolean isSentByTheClient() {
             return !synchronizing || continuationSent;
@@ -708,6 +710,30 @@ public abstract class ImapRequestLineReader {
                 throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Could not read literal", e);
             }
         }
+    }
+
+    /**
+     * Reads the message of an APPEND or a REPLACE (RFC 4466 append-data): a literal ending the line, or, once
+     * UTF8=ACCEPT is enabled, {@code UTF8 (literal8)} (RFC 6855 section 4). Leading whitespace is not skipped.
+     */
+    public Literal appendData() throws IOException {
+        char next = nextChar();
+        if (next != 'U' && next != 'u') {
+            return consumeLiteral(true).right;
+        }
+        String keyword = atom();
+        if (!UTF8_APPEND_DATA_KEYWORD.equalsIgnoreCase(keyword)) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a literal or UTF8 (literal8), found " + keyword);
+        }
+        nextWordChar();
+        consumeChar('(');
+        if (nextChar() == '~') {
+            consume();
+        }
+        Literal literal = consumeLiteral(false).right;
+        consumeChar(')');
+        eol();
+        return literal;
     }
 
     /**

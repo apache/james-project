@@ -60,6 +60,13 @@ public abstract class SelectedState implements ImapTestConstants {
     }
 
     @Test
+    public void testReplaceUtf8() throws Exception {
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("ReplaceUtf8");
+    }
+
+    @Test
     public void replaceInASharedMailboxShouldBeRejectedWithoutDeleteMessagesRight() throws Exception {
         sharedMailboxScriptedTestProtocol("lrswipe")
             .run("ReplaceSharedMailboxWithoutDeleteMessagesRight");
