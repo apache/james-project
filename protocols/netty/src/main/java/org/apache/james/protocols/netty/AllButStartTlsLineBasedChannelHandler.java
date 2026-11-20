@@ -58,6 +58,14 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
         channel.attr(ATTRIBUTE_KEY).set(false);
     }
 
+    /**
+     * Opens the STARTTLS in flight window for a STARTTLS that reached the protocol decoder
+     * without being framed by this handler: further frames are refused until TLS is active.
+     */
+    public static void markStartTlsInFlight(Channel channel) {
+        channel.attr(ATTRIBUTE_KEY).set(true);
+    }
+
     public AllButStartTlsLineBasedChannelHandler(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter, String pattern) {
         super(maxFrameLength, stripDelimiter, !FAIL_FAST);
         this.pipeline = pipeline;

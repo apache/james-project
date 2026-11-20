@@ -48,7 +48,10 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.ImapRequestLineReader;
+import org.apache.james.imap.message.request.StartTLSRequest;
 import org.apache.james.lifecycle.api.Disposable.LeakAware;
+import org.apache.james.protocols.netty.AllButStartTlsLineBasedChannelHandler;
+import org.apache.james.protocols.netty.CommandInjectionDetectedException;
 import org.apache.james.protocols.netty.LineHandlerAware;
 
 import com.github.fge.lambdas.Throwing;
@@ -88,6 +91,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private ArrayList<byte[]> pending = new ArrayList<>();
     private boolean discardUntilEndOfLine = false;
     private final AtomicBoolean awaitingFileBackedLiteral = new AtomicBoolean(false);
+    private boolean commandInjectionDetected = false;
 
     public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength) {
         this.decoder = decoder;
@@ -125,6 +129,12 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     @Override
     @SuppressWarnings("unchecked")
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        if (commandInjectionDetected) {
+            // The connection is being closed: nothing it still holds is a command.
+            in.skipBytes(in.readableBytes());
+            return;
+        }
+
         ChannelInboundHandlerAdapter override = behaviourOverrides.peekFirst();
         if (override != null) {
             override.channelRead(ctx, in);
@@ -153,6 +163,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
         int readableBytes = in.readableBytes();
         Optional<ImapMessage> message = parseImapMessage(ctx, in, attachment, attempt, readerIndex);
+        if (message.filter(StartTLSRequest.class::isInstance).isPresent()) {
+            checkNoCommandInjection(ctx, in);
+        }
         if (message.isPresent() && in.readableBytes() == readableBytes) {
             // The command ended within `pending`, before reaching `in`. Netty forbids decoding a
             // message without reading anything, so hand it over directly, then decode what follows:
@@ -164,6 +177,25 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             return;
         }
         message.ifPresent(out::add);
+    }
+
+    /**
+     * The FRAMER refuses a STARTTLS followed by other data, then any data until TLS is active.
+     * But a segment that was not framed (after a literal, eg `a LOGIN {1+}`) reaches this decoder
+     * whole: the commands it holds are decoded in a row, the FRAMER never sees them. Apply the
+     * same rules here, otherwise plain text commands pipelined after STARTTLS would be processed
+     * within the TLS session (CVE-2011-0411).
+     */
+    private void checkNoCommandInjection(ChannelHandlerContext ctx, ByteBuf in) {
+        ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+        if (session == null || session.needsCommandInjectionDetection()) {
+            if (in.isReadable() || !pending.isEmpty()) {
+                commandInjectionDetected = true;
+                pending.clear();
+                throw new CommandInjectionDetectedException("STARTTLS followed by pipelined data");
+            }
+            AllButStartTlsLineBasedChannelHandler.markStartTlsInFlight(ctx.channel());
+        }
     }
 
     /**
