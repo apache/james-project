@@ -269,7 +269,7 @@ public class PostgresExecutor {
                         .flatMap(result -> Mono.from(connection.commitTransaction()).thenReturn(result))
                         .onErrorResume(throwable -> Mono.from(connection.rollbackTransaction()).then(Mono.error(throwable))))
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                    .onErrorResume(TimeoutException.class, e -> handleTimeout(connection, e))
+                    .onErrorResume(TimeoutException.class, e -> handleTransactionTimeout(connection, e))
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                         .filter(preparedStatementConflictException())))));
     }
@@ -327,6 +327,17 @@ public class PostgresExecutor {
             .then(Mono.error(timeoutException));
     }
 
+    private <T> Mono<T> handleTransactionTimeout(Connection connection, TimeoutException timeoutException) {
+        LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, timeoutException);
+        return cancelRunningQuery(connection)
+            .then(Mono.from(connection.rollbackTransaction())
+                .onErrorResume(e -> {
+                    LOGGER.warn("Failed to rollback the timed out Postgres transaction", e);
+                    return Mono.empty();
+                }))
+            .then(Mono.error(timeoutException));
+    }
+
     /**
      * Cancelling the reactive pipeline (timeout, or a downstream short-circuit like `any`, `next`, `take`...) does not stop
      * the query on the Postgres server side: the connection stays busy until the query completes, and is handed back to
@@ -356,6 +367,7 @@ public class PostgresExecutor {
 
     private Predicate<Throwable> preparedStatementConflictException() {
         return throwable -> throwable.getCause() instanceof R2dbcBadGrammarException
+            && throwable.getMessage() != null
             && throwable.getMessage().contains("prepared statement")
             && throwable.getMessage().contains("already exists");
     }
