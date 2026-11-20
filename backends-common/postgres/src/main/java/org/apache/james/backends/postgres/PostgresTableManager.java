@@ -85,6 +85,8 @@ public class PostgresTableManager implements Startable {
                     .execute())
                 .flatMap(Result::getRowsUpdated)
                 .then(),
+            Connection::close,
+            (connection, error) -> connection.close(),
             Connection::close);
     }
 
@@ -96,6 +98,8 @@ public class PostgresTableManager implements Startable {
                         .filter(table -> !existTables.contains(table.getName()))
                         .flatMap(table -> createAndAlterTable(table, dsl, connection))))
                 .then(),
+            connection -> postgresExecutor.connectionFactory().closeConnection(connection),
+            (connection, error) -> postgresExecutor.connectionFactory().closeConnection(connection),
             connection -> postgresExecutor.connectionFactory().closeConnection(connection));
     }
 
@@ -115,6 +119,8 @@ public class PostgresTableManager implements Startable {
                         .eq(DSL.currentSchema()))))
                 .map(r -> r.get(0, String.class))
                 .collectList(),
+            connection -> postgresExecutor.connectionFactory().closeConnection(connection),
+            (connection, error) -> postgresExecutor.connectionFactory().closeConnection(connection),
             connection -> postgresExecutor.connectionFactory().closeConnection(connection));
     }
 
@@ -184,6 +190,8 @@ public class PostgresTableManager implements Startable {
                         .doOnSuccess(any -> LOGGER.info("Table {} truncated", table.getName()))
                         .doOnError(e -> LOGGER.error("Error while truncating table {}", table.getName(), e)))
                     .then()),
+            connection -> postgresExecutor.connectionFactory().closeConnection(connection),
+            (connection, error) -> postgresExecutor.connectionFactory().closeConnection(connection),
             connection -> postgresExecutor.connectionFactory().closeConnection(connection));
     }
 
@@ -195,6 +203,8 @@ public class PostgresTableManager implements Startable {
                         .filter(index -> !existIndexes.contains(index.getName()))
                         .flatMap(index -> createTableIndex(index, dsl))))
                 .then(),
+            connection -> postgresExecutor.connectionFactory().closeConnection(connection),
+            (connection, error) -> postgresExecutor.connectionFactory().closeConnection(connection),
             connection -> postgresExecutor.connectionFactory().closeConnection(connection));
     }
 

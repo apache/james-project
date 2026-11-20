@@ -146,6 +146,8 @@ public interface Store<T, I> {
                         throw e;
                     }
                 }),
+                stream -> Mono.fromRunnable(Throwing.runnable(stream::close)),
+                (stream, error) -> Mono.fromRunnable(Throwing.runnable(stream::close)),
                 stream -> Mono.fromRunnable(Throwing.runnable(stream::close)));
         }
 
