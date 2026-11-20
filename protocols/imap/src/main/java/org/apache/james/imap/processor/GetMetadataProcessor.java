@@ -90,10 +90,15 @@ public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRe
 
     @Override
     protected Mono<Void> processRequestReactive(GetMetadataRequest request, ImapSession session, Responder responder) {
+        MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        return existingMailboxPath(requestedPath, session)
+            .flatMap(mailboxPath -> processRequestReactive(request, session, responder, mailboxPath));
+    }
+
+    private Mono<Void> processRequestReactive(GetMetadataRequest request, ImapSession session, Responder responder, MailboxPath mailboxPath) {
         String mailboxName = request.getMailboxName();
         Optional<Integer> maxsize = request.getMaxsize();
 
-        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName);
         return getMailboxAnnotations(session, request.getKeys(), request.getDepth(), mailboxPath)
             .collectList()
             .flatMap(mailboxAnnotations -> Mono.fromCallable(() -> getMaxSizeValue(mailboxAnnotations, maxsize))

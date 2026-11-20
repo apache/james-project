@@ -54,7 +54,12 @@ public class UnsubscribeProcessor extends AbstractSubscriptionProcessor<Unsubscr
 
     @Override
     protected Mono<Void> doProcessRequest(UnsubscribeRequest request, ImapSession session, Responder responder) {
-        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        return existingMailboxPath(requestedPath, session)
+            .flatMap(mailboxPath -> doProcessRequest(request, session, responder, mailboxPath));
+    }
+
+    private Mono<Void> doProcessRequest(UnsubscribeRequest request, ImapSession session, Responder responder, MailboxPath mailboxPath) {
         MailboxSession mailboxSession = session.getMailboxSession();
 
         return Mono.from(getSubscriptionManager().unsubscribeReactive(mailboxPath, mailboxSession))

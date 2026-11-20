@@ -60,8 +60,13 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
 
     @Override
     protected Mono<Void> processRequestReactive(DeleteRequest request, ImapSession session, Responder responder) {
+        MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        return existingMailboxPath(requestedPath, session)
+            .flatMap(mailboxPath -> processRequestReactive(request, session, responder, mailboxPath));
+    }
+
+    private Mono<Void> processRequestReactive(DeleteRequest request, ImapSession session, Responder responder, MailboxPath mailboxPath) {
         MailboxManager mailboxManager = getMailboxManager();
-        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
         if (mailboxPath.isInbox()) {
             LOGGER.info("Deleting INBOX mailbox is not allowed (request from user {})", session.getMailboxSession().getUser().asString());
             no(request, responder, HumanReadableText.FAILURE_DELETE_INBOX_NOT_ALLOWED);

@@ -90,6 +90,11 @@ public abstract class AuthenticatedState extends BasicImapCommands {
     }
 
     @Test
+    public void testInboxChildUS() throws Exception {
+        simpleScriptedTestProtocol.run("InboxChild");
+    }
+
+    @Test
     public void testExamineEmptyUS() throws Exception {
         simpleScriptedTestProtocol.run("ExamineEmpty");
     }

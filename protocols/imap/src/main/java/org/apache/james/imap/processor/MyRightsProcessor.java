@@ -68,11 +68,16 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
 
     @Override
     protected Mono<Void> processRequestReactive(MyRightsRequest request, ImapSession session, Responder responder) {
+        MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName().asString());
+        return existingMailboxPath(requestedPath, session)
+            .flatMap(mailboxPath -> processRequestReactive(request, session, responder, mailboxPath));
+    }
+
+    private Mono<Void> processRequestReactive(MyRightsRequest request, ImapSession session, Responder responder, MailboxPath mailboxPath) {
         MailboxManager mailboxManager = getMailboxManager();
         MailboxSession mailboxSession = session.getMailboxSession();
         MailboxName mailboxName = request.getMailboxName();
 
-        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName.asString());
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
             .doOnNext(Throwing.consumer(mailbox -> {
                 Rfc4314Rights myRights = mailboxManager.myRights(mailbox.getMailboxEntity(), mailboxSession);

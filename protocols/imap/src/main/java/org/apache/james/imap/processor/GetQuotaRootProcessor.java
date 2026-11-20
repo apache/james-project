@@ -78,10 +78,14 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
 
     @Override
     protected Mono<Void> processRequestReactive(GetQuotaRootRequest request, ImapSession session, Responder responder) {
+        MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        return existingMailboxPath(requestedPath, session)
+            .flatMap(mailboxPath -> processRequestReactive(request, session, responder, mailboxPath));
+    }
+
+    private Mono<Void> processRequestReactive(GetQuotaRootRequest request, ImapSession session, Responder responder, MailboxPath mailboxPath) {
         final MailboxSession mailboxSession = session.getMailboxSession();
         final MailboxManager mailboxManager = getMailboxManager();
-
-        final MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
 
         // First check mailbox exists
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
