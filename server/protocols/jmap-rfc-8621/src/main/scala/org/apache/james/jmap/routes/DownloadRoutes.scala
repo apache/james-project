@@ -381,6 +381,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
 
   private def addCacheControlHeader(): HttpServerResponse => HttpServerResponse =
     resp => resp.header(HttpHeaderNames.CACHE_CONTROL, "private, immutable, max-age=31536000")
+      .header(HttpHeaderNames.VARY, HttpHeaderNames.AUTHORIZATION)
 
   private def addContentDispositionHeaderRegardingEncoding(rawName: String, resp: HttpServerResponse): HttpServerResponse = {
     val name = Name.normalize(rawName)
