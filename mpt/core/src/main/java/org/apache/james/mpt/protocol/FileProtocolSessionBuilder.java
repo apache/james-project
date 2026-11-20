@@ -22,8 +22,11 @@ package org.apache.james.mpt.protocol;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.james.mpt.protocol.ProtocolSession.TimerCommand;
 
@@ -38,6 +41,24 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
     public static final String INFO = "INFO";
     public static final String WARN = "WARN";
     public static final String ERR = "ERR";
+    /** Reads and discards server lines until one matches: <code>UNTIL: regex</code>. */
+    public static final String UNTIL_TAG = "UNTIL:";
+    /** Defines a runtime variable: <code>SET: name=value</code>. */
+    public static final String SET_TAG = "SET:";
+    /** Defines a runtime variable holding a base64 encoded value (\0 = NUL): <code>SET-BASE64: name=value</code>. */
+    public static final String SET_BASE64_TAG = "SET-BASE64:";
+    /** Skips server lines matching the pattern (when not matching the expected one): <code>IGNORE: regex</code>. */
+    public static final String IGNORE_TAG = "IGNORE:";
+    /** Literal content line, followed by CRLF. */
+    public static final String LITERAL_LINE_TAG = "L:";
+    /** Literal content line, not followed by CRLF. */
+    public static final String LITERAL_RAW_TAG = "L-:";
+    /** <code>POLL timeoutMs intervalMs {</code> ... <code>}</code> */
+    public static final String POLL_TAG = "POLL";
+    public static final String POLL_EXPECT_TAG = "EXPECT:";
+    public static final String POLL_END_TAG = "END:";
+    /** Upgrades the current session to TLS. */
+    public static final String STARTTLS = "STARTTLS";
 
     private static final int TIMER_COMMAND_START = TIMER.length() + 1;
     private static final int TIMER_COMMAND_END = TIMER_COMMAND_START + 5;
@@ -88,99 +109,232 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
      *            The name of the source file, for error messages.
      */
     public void addProtocolLinesFromStream(InputStream is, ProtocolSession session, String fileName) throws Exception {
-        int sessionNumber = -1;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            new Parser(reader, session, fileName).parse();
+        }
+    }
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            String next;
-            int lineNumber = -1;
-            String lastClientMsg = "";
-            while ((next = reader.readLine()) != null) {
-                String location = fileName + ":" + lineNumber;
-                if (SERVER_CONTINUATION_TAG.equals(next)) {
-                    session.cont(sessionNumber);
-                } else if (next.startsWith(CLIENT_TAG)) {
-                    String clientMsg = "";
-                    if (next.length() > 3) {
-                        clientMsg = next.substring(3);
-                    }
-                    session.cl(sessionNumber, clientMsg);
-                    lastClientMsg = clientMsg;
-                } else if (next.startsWith(SERVER_TAG)) {
-                    String serverMsg = "";
-                    if (next.length() > 3) {
-                        serverMsg = next.substring(3);
-                    }
-                    session.sl(sessionNumber, serverMsg, location, lastClientMsg);
-                } else if (next.startsWith(WAIT)) {
-                    if (next.length() > 5) {
-                        session.wait(sessionNumber, Long.parseLong(next.substring(5)));
-                    } else {
-                        throw new Exception("Invalid line length on WAIT instruction : " + next);
-                    }
-                } else if (next.startsWith(LOG)) {
-                    String logInstruction = next.substring(4);
-                    if (logInstruction.startsWith(DEBUG)) {
-                        session.log(sessionNumber, ProtocolSession.LolLevel.Debug, logInstruction.substring(6));
-                    } else if (logInstruction.startsWith(INFO)) {
-                        session.log(sessionNumber, ProtocolSession.LolLevel.Info, logInstruction.substring(5));
-                    } else if (logInstruction.startsWith(WARN)) {
-                        session.log(sessionNumber, ProtocolSession.LolLevel.Warn, logInstruction.substring(5));
-                    } else if (logInstruction.startsWith(ERR)) {
-                        session.log(sessionNumber, ProtocolSession.LolLevel.Err, logInstruction.substring(4));
-                    } else {
-                        throw new Exception("Unrecognized log level for " + next);
-                    }
-                } else if (next.startsWith(REINIT)) {
-                    session.reinit(sessionNumber);
-                }  else if (next.startsWith(AWAIT)) {
-                    session.await(sessionNumber);
-                } else if (next.startsWith(OPEN_UNORDERED_BLOCK_TAG)) {
-                    List<String> unorderedLines = new ArrayList<>(5);
-                    next = reader.readLine();
+    private static class Parser {
+        private final BufferedReader reader;
+        private final ProtocolSession session;
+        private final String fileName;
+        private int sessionNumber = -1;
+        private int lineNumber = 0;
+        private String lastClientMsg = "";
+        private String pushedBack = null;
 
-                    if (next == null) {
-                        throw new Exception("Readline doesn't contain any data, but must not be 'null' (linenumber="
-                            + lineNumber);
-                    }
+        Parser(BufferedReader reader, ProtocolSession session, String fileName) {
+            this.reader = reader;
+            this.session = session;
+            this.fileName = fileName;
+        }
 
-                    while (!next.startsWith(CLOSE_UNORDERED_BLOCK_TAG)) {
-                        if (!next.startsWith(SERVER_TAG)) {
-                            throw new Exception("Only 'S: ' lines are permitted inside a 'SUB {' block.");
-                        }
-                        String serverMsg = next.substring(3);
-                        unorderedLines.add(serverMsg);
-                        next = reader.readLine();
-                        lineNumber++;
-
-                        if (next == null) {
-                            throw new Exception(
-                                "Readline doesn't contain any data, but must not be 'null' (linenumber="
-                                    + lineNumber);
-                        }
-
-                    }
-
-                    session.sub(sessionNumber, unorderedLines, location, lastClientMsg);
-                } else if (next.startsWith(COMMENT_TAG) || next.trim().length() == 0) {
-                    // ignore these lines.
-                } else if (next.startsWith(SESSION_TAG)) {
-                    String number = next.substring(SESSION_TAG.length()).trim();
-                    if (number.length() == 0) {
-                        throw new Exception("No session number specified");
-                    }
-                    sessionNumber = Integer.parseInt(number);
-                } else if (next.startsWith(TIMER)) {
-                    TimerCommand timerCommand = TimerCommand.from(next.substring(TIMER_COMMAND_START, TIMER_COMMAND_END));
-                    String timerName = next.substring(TIMER_COMMAND_END + 1);
-                    session.timer(timerCommand, timerName);
-                } else {
-                    String prefix = next;
-                    if (next.length() > 3) {
-                        prefix = next.substring(0, 3);
-                    }
-                    throw new Exception("Invalid line prefix: " + prefix);
-                }
+        private String nextLine() throws Exception {
+            if (pushedBack != null) {
+                String line = pushedBack;
+                pushedBack = null;
                 lineNumber++;
+                return line;
+            }
+            String line = reader.readLine();
+            if (line != null) {
+                lineNumber++;
+            }
+            return line;
+        }
+
+        void parse() throws Exception {
+            String next;
+            while ((next = nextLine()) != null) {
+                String location = fileName + ":" + lineNumber;
+                try {
+                    parseLine(next, location);
+                } catch (Exception e) {
+                    throw new Exception("Parse error at " + location + ": " + e.getMessage(), e);
+                }
+            }
+        }
+
+        private void parseLine(String next, String location) throws Exception {
+            if (SERVER_CONTINUATION_TAG.equals(next)) {
+                session.cont(sessionNumber);
+            } else if (next.startsWith(CLIENT_TAG)) {
+                String clientMsg = "";
+                if (next.length() > 3) {
+                    clientMsg = next.substring(3);
+                }
+                if (clientMsg.endsWith("{}") || clientMsg.endsWith("{+}")) {
+                    List<ProtocolSession.LiteralPart> parts = literalParts();
+                    if (!parts.isEmpty()) {
+                        session.literal(sessionNumber, clientMsg, parts, location);
+                        lastClientMsg = clientMsg;
+                        return;
+                    }
+                }
+                session.cl(sessionNumber, clientMsg, location);
+                lastClientMsg = clientMsg;
+            } else if (next.startsWith(LITERAL_LINE_TAG) || next.startsWith(LITERAL_RAW_TAG)) {
+                throw new Exception("'L:' and 'L-:' lines must follow a 'C:' line ending with '{}' or '{+}'");
+            } else if (next.startsWith(IGNORE_TAG)) {
+                String pattern = next.substring(IGNORE_TAG.length()).trim();
+                session.ignore(sessionNumber, pattern.isEmpty() ? null : validRegex(pattern));
+            } else if (next.startsWith(POLL_TAG + " ")) {
+                parsePoll(next, location);
+            } else if (next.startsWith(SERVER_TAG)) {
+                String serverMsg = "";
+                if (next.length() > 3) {
+                    serverMsg = next.substring(3);
+                }
+                session.sl(sessionNumber, validRegex(serverMsg), location, lastClientMsg);
+            } else if (next.startsWith(UNTIL_TAG)) {
+                String serverMsg = next.substring(UNTIL_TAG.length()).trim();
+                session.until(sessionNumber, validRegex(serverMsg), location, lastClientMsg);
+            } else if (next.startsWith(SET_TAG) || next.startsWith(SET_BASE64_TAG)) {
+                boolean base64 = next.startsWith(SET_BASE64_TAG);
+                String assignment = next.substring(base64 ? SET_BASE64_TAG.length() : SET_TAG.length()).trim();
+                int separator = assignment.indexOf('=');
+                if (separator <= 0) {
+                    throw new Exception("Expecting 'SET: name=value' or 'SET-BASE64: name=value', got: " + next);
+                }
+                String name = assignment.substring(0, separator).trim();
+                String value = assignment.substring(separator + 1);
+                if (base64) {
+                    session.setBase64(name, value);
+                } else {
+                    session.set(name, value);
+                }
+            } else if (next.trim().equals(STARTTLS)) {
+                session.startTls(sessionNumber);
+            } else if (next.startsWith(WAIT)) {
+                if (next.length() > 5) {
+                    session.wait(sessionNumber, Long.parseLong(next.substring(5).trim()));
+                } else {
+                    throw new Exception("Invalid line length on WAIT instruction : " + next);
+                }
+            } else if (next.startsWith(LOG)) {
+                String logInstruction = next.substring(Math.min(next.length(), 4));
+                if (logInstruction.startsWith(DEBUG)) {
+                    session.log(sessionNumber, ProtocolSession.LolLevel.Debug, logInstruction.substring(Math.min(logInstruction.length(), 6)));
+                } else if (logInstruction.startsWith(INFO)) {
+                    session.log(sessionNumber, ProtocolSession.LolLevel.Info, logInstruction.substring(Math.min(logInstruction.length(), 5)));
+                } else if (logInstruction.startsWith(WARN)) {
+                    session.log(sessionNumber, ProtocolSession.LolLevel.Warn, logInstruction.substring(Math.min(logInstruction.length(), 5)));
+                } else if (logInstruction.startsWith(ERR)) {
+                    session.log(sessionNumber, ProtocolSession.LolLevel.Err, logInstruction.substring(Math.min(logInstruction.length(), 4)));
+                } else {
+                    throw new Exception("Unrecognized log level for " + next);
+                }
+            } else if (next.startsWith(REINIT)) {
+                session.reinit(sessionNumber);
+            } else if (next.startsWith(AWAIT)) {
+                session.await(sessionNumber);
+            } else if (next.startsWith(OPEN_UNORDERED_BLOCK_TAG)) {
+                List<String> unorderedLines = new ArrayList<>(5);
+                next = nextLine();
+                while (next == null || !next.startsWith(CLOSE_UNORDERED_BLOCK_TAG)) {
+                    if (next == null) {
+                        throw new Exception("Unterminated 'SUB {' block");
+                    }
+                    if (!next.startsWith(SERVER_TAG)) {
+                        throw new Exception("Only 'S: ' lines are permitted inside a 'SUB {' block (line " + lineNumber + ")");
+                    }
+                    unorderedLines.add(validRegex(next.length() > 3 ? next.substring(3) : ""));
+                    next = nextLine();
+                }
+                session.sub(sessionNumber, unorderedLines, location, lastClientMsg);
+            } else if (next.startsWith(COMMENT_TAG) || next.trim().isEmpty()) {
+                // ignore these lines.
+            } else if (next.startsWith(SESSION_TAG)) {
+                String number = next.substring(SESSION_TAG.length()).trim();
+                if (number.isEmpty()) {
+                    throw new Exception("No session number specified");
+                }
+                sessionNumber = Integer.parseInt(number);
+                if (sessionNumber < 0) {
+                    throw new Exception("Session number must be positive");
+                }
+            } else if (next.startsWith(TIMER)) {
+                if (next.length() < TIMER_COMMAND_END + 2) {
+                    throw new Exception("TIMER expects 'TIMER start|print|reset name', got: " + next);
+                }
+                TimerCommand timerCommand = TimerCommand.from(next.substring(TIMER_COMMAND_START, TIMER_COMMAND_END));
+                String timerName = next.substring(TIMER_COMMAND_END + 1);
+                session.timer(timerCommand, timerName);
+            } else {
+                String prefix = next;
+                if (next.length() > 3) {
+                    prefix = next.substring(0, 3);
+                }
+                throw new Exception("Invalid line prefix: " + prefix);
+            }
+        }
+
+        private List<ProtocolSession.LiteralPart> literalParts() throws Exception {
+            List<ProtocolSession.LiteralPart> parts = new ArrayList<>();
+            while (true) {
+                String line = nextLine();
+                if (line == null) {
+                    return parts;
+                }
+                if (line.startsWith(LITERAL_RAW_TAG)) {
+                    parts.add(new ProtocolSession.LiteralPart(literalText(line, LITERAL_RAW_TAG), false));
+                } else if (line.startsWith(LITERAL_LINE_TAG)) {
+                    parts.add(new ProtocolSession.LiteralPart(literalText(line, LITERAL_LINE_TAG), true));
+                } else {
+                    pushedBack = line;
+                    lineNumber--;
+                    return parts;
+                }
+            }
+        }
+
+        private String literalText(String line, String tag) {
+            // like 'C:', one separator space after the tag is not part of the content
+            String text = line.substring(tag.length());
+            return text.startsWith(" ") ? text.substring(1) : text;
+        }
+
+        private void parsePoll(String header, String location) throws Exception {
+            String[] tokens = header.trim().split("\\s+");
+            if (tokens.length != 4 || !tokens[3].equals("{")) {
+                throw new Exception("Expecting 'POLL <timeoutMs> <intervalMs> {', got: " + header);
+            }
+            long timeout = Long.parseLong(tokens[1]);
+            long interval = Long.parseLong(tokens[2]);
+            if (timeout <= 0 || interval <= 0) {
+                throw new Exception("POLL timeout and interval must be positive");
+            }
+            List<String> commands = new ArrayList<>();
+            String expect = null;
+            String end = null;
+            String line;
+            while ((line = nextLine()) != null && !line.trim().equals(CLOSE_UNORDERED_BLOCK_TAG)) {
+                if (line.startsWith(CLIENT_TAG)) {
+                    commands.add(line.length() > 3 ? line.substring(3) : "");
+                } else if (line.startsWith(POLL_EXPECT_TAG)) {
+                    expect = validRegex(line.substring(POLL_EXPECT_TAG.length()).trim());
+                } else if (line.startsWith(POLL_END_TAG)) {
+                    end = validRegex(line.substring(POLL_END_TAG.length()).trim());
+                } else if (!line.startsWith(COMMENT_TAG) && !line.isBlank()) {
+                    throw new Exception("Only 'C:', 'EXPECT:' and 'END:' lines are permitted inside a POLL block (line " + lineNumber + ")");
+                }
+            }
+            if (line == null) {
+                throw new Exception("Unterminated POLL block");
+            }
+            if (commands.isEmpty() || expect == null || end == null) {
+                throw new Exception("A POLL block needs at least one 'C:' line, an 'EXPECT:' line and an 'END:' line");
+            }
+            session.poll(sessionNumber, timeout, interval, commands, expect, end, location);
+        }
+
+        private String validRegex(String regex) throws Exception {
+            try {
+                // variables are substituted at runtime: validate the pattern with placeholders
+                Pattern.compile(regex.replaceAll("\\$\\{[A-Za-z][A-Za-z0-9_]*}", "x"));
+                return regex;
+            } catch (PatternSyntaxException e) {
+                throw new Exception("Invalid regular expression '" + regex + "': " + e.getDescription());
             }
         }
     }

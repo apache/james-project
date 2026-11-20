@@ -20,14 +20,21 @@
 package org.apache.james.mpt.protocol;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.james.mpt.api.ProtocolInteractor;
 import org.apache.james.mpt.api.Session;
@@ -63,6 +70,93 @@ public class ProtocolSession implements ProtocolInteractor {
     private boolean continueAfterFailure = false;
 
     private Map<String, Stopwatch> timers = new HashMap<>();
+
+    /**
+     * Runtime variables. They are substituted (<code>${name}</code>) into client lines (verbatim)
+     * and into expected server lines (quoted as regex literals) when the element is executed.
+     * They are fed by {@link #setVariable(String, String)}, by <code>SET:</code> directives and
+     * by the named groups (<code>(?&lt;name&gt;...)</code>) of matched server lines.
+     */
+    private final Map<String, String> variables = new ConcurrentHashMap<>();
+
+    private final List<String> failures = new CopyOnWriteArrayList<>();
+
+    /** Last line actually sent (after substitution) per session, prefixed by its script location. */
+    private final Map<Integer, String> lastSent = new ConcurrentHashMap<>();
+
+    /** Patterns of server lines to skip, per session. */
+    private final Map<Integer, List<String>> ignores = new ConcurrentHashMap<>();
+
+    private static final Pattern VARIABLE_NAME = Pattern.compile("[A-Za-z][A-Za-z0-9_]*");
+
+    private static final int MAX_UNTIL_LINES = 10_000;
+
+    public void setVariable(String name, String value) {
+        if (!VARIABLE_NAME.matcher(name).matches()) {
+            throw new IllegalArgumentException("Invalid variable name '" + name + "'");
+        }
+        variables.put(name, value);
+    }
+
+    public Map<String, String> getVariables() {
+        return Collections.unmodifiableMap(variables);
+    }
+
+    /**
+     * Failures recorded while running with {@link #setContinueAfterFailure(boolean)} set to true.
+     */
+    public List<String> getFailures() {
+        return Collections.unmodifiableList(failures);
+    }
+
+    private String substitute(String line, boolean asRegex) {
+        if (variables.isEmpty() || !line.contains("${")) {
+            return line;
+        }
+        StringBuilder result = new StringBuilder();
+        int position = 0;
+        while (position < line.length()) {
+            int start = line.indexOf("${", position);
+            if (start < 0) {
+                break;
+            }
+            int end = line.indexOf('}', start);
+            if (end < 0) {
+                break;
+            }
+            String value = variables.get(line.substring(start + 2, end));
+            result.append(line, position, start);
+            if (value == null) {
+                result.append(line, start, end + 1);
+            } else if (asRegex) {
+                result.append(Pattern.quote(value));
+            } else {
+                result.append(value);
+            }
+            position = end + 1;
+        }
+        result.append(line.substring(position));
+        return result.toString();
+    }
+
+    private boolean matchAndCapture(String expected, String actual) {
+        Matcher matcher;
+        try {
+            matcher = Pattern.compile(expected).matcher(actual);
+        } catch (PatternSyntaxException e) {
+            throw new IllegalStateException("Invalid expected pattern (undefined variable?) '" + expected + "': " + e.getDescription(), e);
+        }
+        if (!matcher.matches()) {
+            return false;
+        }
+        matcher.pattern().namedGroups().keySet().forEach(name -> {
+            String value = matcher.group(name);
+            if (value != null) {
+                variables.put(name, value);
+            }
+        });
+        return true;
+    }
 
     public final boolean isContinueAfterFailure() {
         return continueAfterFailure;
@@ -155,7 +249,7 @@ public class ProtocolSession implements ProtocolInteractor {
      */
     @Override
     public void sub(List<String> serverLines, String location) {
-        testElements.add(new ServerUnorderedBlockResponse(serverLines, location));
+        testElements.add(new ServerUnorderedBlockResponse(-1, serverLines, location));
     }
 
     /**
@@ -163,8 +257,12 @@ public class ProtocolSession implements ProtocolInteractor {
      */
     @Override
     public void cl(int sessionNumber, String clientLine) {
+        cl(sessionNumber, clientLine, null);
+    }
+
+    public void cl(int sessionNumber, String clientLine, String location) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
-        testElements.add(new ClientRequest(sessionNumber, clientLine));
+        testElements.add(new ClientRequest(sessionNumber, clientLine, location));
     }
 
     /**
@@ -183,7 +281,7 @@ public class ProtocolSession implements ProtocolInteractor {
     @Override
     public void sl(int sessionNumber, String serverLine, String location, String lastClientMessage) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
-        testElements.add(new ServerResponse(sessionNumber, serverLine, location, lastClientMessage));
+        testElements.add(new ServerResponse(sessionNumber, serverLine, location));
     }
 
     /**
@@ -192,7 +290,7 @@ public class ProtocolSession implements ProtocolInteractor {
     @Override
     public void sub(int sessionNumber, List<String> serverLines, String location, String lastClientMessage) {
         this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
-        testElements.add(new ServerUnorderedBlockResponse(sessionNumber, serverLines, location, lastClientMessage));
+        testElements.add(new ServerUnorderedBlockResponse(sessionNumber, serverLines, location));
     }
 
     /**
@@ -223,53 +321,97 @@ public class ProtocolSession implements ProtocolInteractor {
     }
 
     /**
+     * Reads server lines, discarding them, until one matches the expected pattern.
+     */
+    public void until(int sessionNumber, String serverLine, String location, String lastClientMessage) {
+        this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
+        testElements.add(new UntilResponse(sessionNumber, serverLine, location));
+    }
+
+    /**
+     * Skips, from now on, server lines matching the pattern when they do not match the expected line.
+     * A null pattern clears the ignored patterns.
+     */
+    public void ignore(int sessionNumber, String pattern) {
+        this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
+        testElements.add(new IgnoreElement(sessionNumber, pattern));
+    }
+
+    /**
+     * Sends a command ending with <code>{}</code> or <code>{+}</code>, the literal size being computed from the parts.
+     */
+    public void literal(int sessionNumber, String command, List<LiteralPart> parts, String location) {
+        this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
+        testElements.add(new LiteralRequest(sessionNumber, command, parts, location));
+    }
+
+    /**
+     * Sends the commands and reads the response up to the end pattern, again every interval until one line
+     * matches the expected pattern or the timeout elapses.
+     */
+    public void poll(int sessionNumber, long timeoutMs, long intervalMs, List<String> commands, String expect, String end, String location) {
+        this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
+        testElements.add(new PollElement(sessionNumber, timeoutMs, intervalMs, commands, expect, end, location));
+    }
+
+    /**
+     * Upgrades the session connection to TLS (to be used after the server accepted STARTTLS).
+     */
+    public void startTls(int sessionNumber) {
+        this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
+        testElements.add(new StartTlsElement(sessionNumber));
+    }
+
+    /**
+     * Defines a runtime variable. The value is itself subject to variable substitution.
+     */
+    public void set(String name, String value) {
+        set(name, value, false);
+    }
+
+    /**
+     * Defines a runtime variable holding the base64 encoding of the (substituted) UTF-8 value,
+     * where <code>\0</code> stands for the NUL character. Handy for SASL PLAIN.
+     */
+    public void setBase64(String name, String value) {
+        set(name, value, true);
+    }
+
+    private void set(String name, String value, boolean base64) {
+        if (!VARIABLE_NAME.matcher(name).matches()) {
+            throw new IllegalArgumentException("Invalid variable name '" + name + "'");
+        }
+        testElements.add(new SetElement(name, value, base64));
+    }
+
+    /**
      * A client request, which write the specified message to a Writer.
      */
-    private static class ClientRequest implements ProtocolElement {
+    private class ClientRequest implements ProtocolElement {
         private final int sessionNumber;
-
         private final String message;
+        private final String location;
 
-        /**
-         * Initialises the ClientRequest with the supplied message.
-         */
         public ClientRequest(String message) {
-            this(-1, message);
+            this(-1, message, null);
         }
 
-        /**
-         * Initialises the ClientRequest, with a message and session number.
-         * 
-         * @param sessionNumber
-         * @param message
-         */
-        public ClientRequest(int sessionNumber, String message) {
+        public ClientRequest(int sessionNumber, String message, String location) {
             this.sessionNumber = sessionNumber;
             this.message = message;
+            this.location = location;
         }
 
         /**
          * Writes the request message to the PrintWriters. If the sessionNumber
          * == -1, the request is written to *all* supplied writers, otherwise,
          * only the writer for this session is writted to.
-         * 
-         * @throws Exception
          */
         @Override
         public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
-            if (sessionNumber < 0) {
-                for (Session session : sessions) {
-                    writeMessage(session);
-                }
-            } else {
-                Session session = sessions[sessionNumber];
-                writeMessage(session);
+            for (int index : targetSessions(sessionNumber, sessions)) {
+                send(sessions[index], index, substitute(message, false), location);
             }
-        }
-
-        private void writeMessage(Session session) throws Exception {
-            LOGGER.debug("C: {}", message);
-            session.writeLine(message);
         }
 
         @Override
@@ -278,110 +420,83 @@ public class ProtocolSession implements ProtocolInteractor {
         }
     }
 
+    private int[] targetSessions(int sessionNumber, Session[] sessions) {
+        if (sessionNumber < 0) {
+            return java.util.stream.IntStream.range(0, sessions.length).toArray();
+        }
+        return new int[] {sessionNumber};
+    }
+
+    private void send(Session session, int index, String line, String location) throws Exception {
+        LOGGER.debug("C: {}", line);
+        lastSent.put(index, (location == null ? "" : location + ": ") + line);
+        session.writeLine(line);
+    }
+
+    private String failure(int index, String location, String details) {
+        return "\nLocation: " + location
+            + "\nSession: " + index
+            + "\nLastClientMsg: " + lastSent.getOrDefault(index, "(nothing sent yet: server greeting)")
+            + details;
+    }
+
+    private String readServerLine(Session session, int index, String location, String expected) throws Exception {
+        try {
+            return session.readLine();
+        } catch (IOException e) {
+            throw new InvalidServerResponseException(failure(index, location, "\nExpected: '" + expected
+                + "'\nReason: Server Timeout or connection closed (" + e.getMessage() + ")"));
+        }
+    }
+
+    private boolean ignored(int index, String line) {
+        return ignores.getOrDefault(index, List.of()).stream()
+            .anyMatch(pattern -> Pattern.matches(substitute(pattern, true), line));
+    }
+
     /**
      * Represents a single-line server response, which reads a line from a
      * reader, and compares it with the defined regular expression definition of
-     * this line.
+     * this line. Lines matching an IGNORE pattern (and not the expected one) are skipped.
      */
     private class ServerResponse implements ProtocolElement {
-        private final String lastClientMessage;
+        protected final int sessionNumber;
+        protected final String expectedLine;
+        protected final String location;
 
-        private final int sessionNumber;
-
-        private final String expectedLine;
-
-        protected String location;
-
-        /**
-         * Sets up a server response.
-         * 
-         * @param expectedPattern
-         *            A Perl regular expression pattern used to test the line
-         *            received.
-         * @param location
-         *            A descriptive value to use in error messages.
-         */
         public ServerResponse(String expectedPattern, String location) {
-            this(-1, expectedPattern, location, null);
+            this(-1, expectedPattern, location);
         }
 
-        /**
-         * Sets up a server response.
-         * 
-         * @param sessionNumber
-         *            The number of session for a multi-session test
-         * @param expectedPattern
-         *            A Perl regular expression pattern used to test the line
-         *            received.
-         * @param location
-         *            A descriptive value to use in error messages.
-         */
-        public ServerResponse(int sessionNumber, String expectedPattern, String location, String lastClientMessage) {
+        public ServerResponse(int sessionNumber, String expectedPattern, String location) {
             this.sessionNumber = sessionNumber;
             this.expectedLine = expectedPattern;
             this.location = location;
-            this.lastClientMessage = lastClientMessage;
         }
 
-        /**
-         * Reads a line from the supplied reader, and tests that it matches the
-         * expected regular expression. If the sessionNumber == -1, then all
-         * readers are tested, otherwise, only the reader for this session is
-         * tested.
-         *
-         * @throws InvalidServerResponseException
-         *             If the actual server response didn't match the regular
-         *             expression expected.
-         */
         @Override
         public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
-            if (sessionNumber < 0) {
-                for (Session session : sessions) {
-                    checkResponse(session, continueAfterFailure);
+            for (int index : targetSessions(sessionNumber, sessions)) {
+                checkResponse(sessions[index], index, continueAfterFailure);
+            }
+        }
+
+        protected void checkResponse(Session session, int index, boolean continueAfterFailure) throws Exception {
+            String expected = substitute(expectedLine, true);
+            for (int i = 0; i < MAX_UNTIL_LINES; i++) {
+                String testLine = readServerLine(session, index, location, expected);
+                LOGGER.debug("S: {}", testLine);
+                if (matchAndCapture(expected, testLine)) {
+                    return;
                 }
-            } else {
-                Session session = sessions[sessionNumber];
-                checkResponse(session, continueAfterFailure);
+                if (!ignored(index, testLine)) {
+                    handleFailure(continueAfterFailure, failure(index, location, "\nExpected: '"
+                        + expected + "'\nActual   : '" + testLine + "'"));
+                    return;
+                }
             }
-        }
-
-        protected void checkResponse(Session session, boolean continueAfterFailure) throws Exception {
-            String testLine = readLine(session);
-            LOGGER.debug("S: {}", testLine);
-            if (!match(expectedLine, testLine)) {
-                String errMsg = "\nLocation: " + location + "\nLastClientMsg: " + lastClientMessage + "\nExpected: '"
-                        + expectedLine + "'\nActual   : '" + testLine + "'";
-                handleFailure(continueAfterFailure, errMsg);
-            }
-        }
-
-        /**
-         * A convenience method which returns true if the actual string matches
-         * the expected regular expression.
-         * 
-         * @param expected
-         *            The regular expression used for matching.
-         * @param actual
-         *            The actual message to match.
-         * @return <code>true</code> if the actual matches the expected.
-         */
-        protected boolean match(String expected, String actual) {
-            return Pattern.matches(expected, actual);
-        }
-
-        /**
-         * Grabs a line from the server and throws an error message if it
-         * doesn't work out
-         * 
-         * @return String of the line from the server
-         */
-        protected String readLine(Session session) throws Exception {
-            try {
-                return session.readLine();
-            } catch (IOException e) {
-                String errMsg = "\nLocation: " + location + "\nExpected: " + expectedLine + "\nReason: Server Timeout.";
-                throw new InvalidServerResponseException(errMsg);
-            }
+            handleFailure(continueAfterFailure, failure(index, location, "\nExpected: '" + expected
+                + "'\nReason: more than " + MAX_UNTIL_LINES + " ignored lines"));
         }
 
         @Override
@@ -395,75 +510,40 @@ public class ProtocolSession implements ProtocolInteractor {
      * non-specified order.
      */
     private class ServerUnorderedBlockResponse extends ServerResponse {
-        private List<String> expectedLines = new ArrayList<>();
+        private final List<String> expectedLines;
 
-        /**
-         * Sets up a ServerUnorderedBlockResponse with the list of expected
-         * lines.
-         * 
-         * @param expectedLines
-         *            A list containing a reqular expression for each expected
-         *            line.
-         * @param location
-         *            A descriptive location string for error messages.
-         */
-        public ServerUnorderedBlockResponse(List<String> expectedLines, String location) {
-            this(-1, expectedLines, location, null);
-        }
-
-        /**
-         * Sets up a ServerUnorderedBlockResponse with the list of expected
-         * lines.
-         * 
-         * @param sessionNumber
-         *            The number of the session to expect this block, for a
-         *            multi-session test.
-         * @param expectedLines
-         *            A list containing a reqular expression for each expected
-         *            line.
-         * @param location
-         *            A descriptive location string for error messages.
-         */
-        public ServerUnorderedBlockResponse(int sessionNumber, List<String> expectedLines, String location,
-                String lastClientMessage) {
-            super(sessionNumber, "<Unordered Block>", location, lastClientMessage);
+        public ServerUnorderedBlockResponse(int sessionNumber, List<String> expectedLines, String location) {
+            super(sessionNumber, "<Unordered Block>", location);
             this.expectedLines = expectedLines;
         }
 
-        /**
-         * Reads lines from the server response and matches them against the
-         * list of expected regular expressions. Each regular expression in the
-         * expected list must be matched by only one server response line.
-         *
-         * @throws InvalidServerResponseException
-         *             If a line is encountered which doesn't match one of the
-         *             expected lines.
-         */
         @Override
-        protected void checkResponse(Session session, boolean continueAfterFailure) throws Exception {
-            List<String> testLines = new ArrayList<>(expectedLines);
-            while (testLines.size() > 0) {
-                String actualLine = readLine(session);
+        protected void checkResponse(Session session, int index, boolean continueAfterFailure) throws Exception {
+            List<String> testLines = new ArrayList<>(expectedLines.stream()
+                .map(line -> substitute(line, true))
+                .toList());
+            int skipped = 0;
+            while (!testLines.isEmpty()) {
+                String actualLine = readServerLine(session, index, location, String.join(" | ", testLines));
 
                 boolean foundMatch = false;
                 for (int i = 0; i < testLines.size(); i++) {
-                    String expected = (String) testLines.get(i);
-                    if (match(expected, actualLine)) {
+                    if (matchAndCapture(testLines.get(i), actualLine)) {
                         foundMatch = true;
-                        testLines.remove(expected);
+                        testLines.remove(i);
                         break;
                     }
                 }
 
-                if (!foundMatch) {
-                    StringBuilder errMsg = new StringBuilder().append("\nLocation: ").append(location)
-                            .append("\nExpected one of: ");
-                    for (String expectedLine : expectedLines) {
+                if (!foundMatch && (!ignored(index, actualLine) || ++skipped > MAX_UNTIL_LINES)) {
+                    StringBuilder errMsg = new StringBuilder().append("\nExpected one of: ");
+                    for (String expectedLine : testLines) {
                         errMsg.append("\n    ");
                         errMsg.append(expectedLine);
                     }
                     errMsg.append("\nActual: ").append(actualLine);
-                    handleFailure(continueAfterFailure, errMsg.toString());
+                    handleFailure(continueAfterFailure, failure(index, location, errMsg.toString()));
+                    return;
                 }
             }
         }
@@ -503,9 +583,249 @@ public class ProtocolSession implements ProtocolInteractor {
 
     private void handleFailure(boolean continueAfterFailure, String message) throws InvalidServerResponseException {
         if (continueAfterFailure) {
+            failures.add(message);
             LOGGER.warn(message);
         } else {
             throw new InvalidServerResponseException(message);
+        }
+    }
+
+    /**
+     * Reads (and discards) server lines until one of them matches the expected pattern.
+     */
+    private class UntilResponse extends ServerResponse {
+        UntilResponse(int sessionNumber, String expectedPattern, String location) {
+            super(sessionNumber, expectedPattern, location);
+        }
+
+        @Override
+        protected void checkResponse(Session session, int index, boolean continueAfterFailure) throws Exception {
+            String expected = substitute(expectedLine, true);
+            for (int i = 0; i < MAX_UNTIL_LINES; i++) {
+                String actualLine = readServerLine(session, index, location, expected);
+                LOGGER.debug("S: {}", actualLine);
+                if (matchAndCapture(expected, actualLine)) {
+                    return;
+                }
+            }
+            handleFailure(continueAfterFailure, failure(index, location, "\nExpected: '" + expected
+                + "'\nReason: no matching line within " + MAX_UNTIL_LINES + " lines"));
+        }
+    }
+
+    /**
+     * Adds (or clears, when the pattern is null) the patterns of server lines to skip.
+     */
+    private class IgnoreElement implements ProtocolElement {
+        private final int sessionNumber;
+        private final String pattern;
+
+        IgnoreElement(int sessionNumber, String pattern) {
+            this.sessionNumber = sessionNumber;
+            this.pattern = pattern;
+        }
+
+        @Override
+        public void testProtocol(Session[] sessions, boolean continueAfterFailure) {
+            for (int index : targetSessions(sessionNumber, sessions)) {
+                if (pattern == null) {
+                    ignores.remove(index);
+                } else {
+                    ignores.computeIfAbsent(index, any -> new CopyOnWriteArrayList<>()).add(pattern);
+                }
+            }
+        }
+
+        @Override
+        public boolean isClient() {
+            return false;
+        }
+    }
+
+    public record LiteralPart(String text, boolean lineEnding) {
+    }
+
+    /**
+     * A command ending with <code>{}</code> (synchronizing) or <code>{+}</code> (non synchronizing) followed by
+     * literal content whose UTF-8 byte size is computed at runtime.
+     */
+    private class LiteralRequest implements ProtocolElement {
+        private final int sessionNumber;
+        private final String command;
+        private final List<LiteralPart> parts;
+        private final String location;
+
+        LiteralRequest(int sessionNumber, String command, List<LiteralPart> parts, String location) {
+            this.sessionNumber = sessionNumber;
+            this.command = command;
+            this.parts = List.copyOf(parts);
+            this.location = location;
+        }
+
+        @Override
+        public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
+            StringBuilder content = new StringBuilder();
+            parts.forEach(part -> content.append(substitute(part.text(), false)).append(part.lineEnding() ? "\r\n" : ""));
+            int size = content.toString().getBytes(StandardCharsets.UTF_8).length;
+            String substituted = substitute(command, false);
+            boolean synchronizing = substituted.endsWith("{}");
+            String line = substituted.substring(0, substituted.lastIndexOf('{'))
+                + (synchronizing ? "{" + size + "}" : "{" + size + "+}");
+            for (int index : targetSessions(sessionNumber, sessions)) {
+                Session session = sessions[index];
+                send(session, index, line, location);
+                if (synchronizing && !awaitContinuation(session, index, continueAfterFailure)) {
+                    return;
+                }
+                session.write(content.toString());
+            }
+        }
+
+        private boolean awaitContinuation(Session session, int index, boolean continueAfterFailure) throws Exception {
+            for (int i = 0; i < MAX_UNTIL_LINES; i++) {
+                String actualLine = readServerLine(session, index, location, "\\+.*");
+                if (actualLine.startsWith("+")) {
+                    return true;
+                }
+                if (!ignored(index, actualLine)) {
+                    handleFailure(continueAfterFailure, failure(index, location,
+                        "\nExpected: a continuation request ('+ ...') before sending the literal\nActual   : '" + actualLine + "'"));
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public boolean isClient() {
+            return true;
+        }
+    }
+
+    /**
+     * Repeats commands until a response line matches, reading every iteration up to the END line.
+     */
+    private class PollElement implements ProtocolElement {
+        private final int sessionNumber;
+        private final long timeoutMs;
+        private final long intervalMs;
+        private final List<String> commands;
+        private final String expect;
+        private final String end;
+        private final String location;
+
+        PollElement(int sessionNumber, long timeoutMs, long intervalMs, List<String> commands, String expect, String end, String location) {
+            this.sessionNumber = sessionNumber;
+            this.timeoutMs = timeoutMs;
+            this.intervalMs = intervalMs;
+            this.commands = List.copyOf(commands);
+            this.expect = expect;
+            this.end = end;
+            this.location = location;
+        }
+
+        @Override
+        public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
+            for (int index : targetSessions(sessionNumber, sessions)) {
+                poll(sessions[index], index, continueAfterFailure);
+            }
+        }
+
+        private void poll(Session session, int index, boolean continueAfterFailure) throws Exception {
+            long deadline = System.currentTimeMillis() + timeoutMs;
+            List<String> lastResponse = List.of();
+            for (int attempt = 1; ; attempt++) {
+                variables.put("pollAttempt", String.valueOf(attempt));
+                for (String command : commands) {
+                    send(session, index, substitute(command, false), location);
+                }
+                String expected = substitute(expect, true);
+                String expectedEnd = substitute(end, true);
+                boolean found = false;
+                boolean ended = false;
+                List<String> response = new ArrayList<>();
+                for (int i = 0; i < MAX_UNTIL_LINES && !ended; i++) {
+                    String line = readServerLine(session, index, location, expectedEnd);
+                    response.add(line);
+                    if (!found && matchAndCapture(expected, line)) {
+                        found = true;
+                    }
+                    ended = matchAndCapture(expectedEnd, line);
+                }
+                if (!ended) {
+                    handleFailure(continueAfterFailure, failure(index, location, "\nExpected end of response: '" + expectedEnd
+                        + "'\nReason: not found within " + MAX_UNTIL_LINES + " lines"));
+                    return;
+                }
+                if (found) {
+                    return;
+                }
+                lastResponse = response;
+                if (System.currentTimeMillis() + intervalMs > deadline) {
+                    handleFailure(continueAfterFailure, failure(index, location, "\nExpected: '" + expected
+                        + "'\nReason: POLL gave up after " + attempt + " attempts (" + timeoutMs + " ms)"
+                        + "\nLast response: " + String.join(" | ", lastResponse)));
+                    return;
+                }
+                Thread.sleep(intervalMs);
+            }
+        }
+
+        @Override
+        public boolean isClient() {
+            return true;
+        }
+    }
+
+    private static class StartTlsElement implements ProtocolElement {
+        private final int sessionNumber;
+
+        StartTlsElement(int sessionNumber) {
+            this.sessionNumber = sessionNumber;
+        }
+
+        @Override
+        public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
+            if (sessionNumber < 0) {
+                for (Session session : sessions) {
+                    session.startTls();
+                }
+            } else {
+                sessions[sessionNumber].startTls();
+            }
+        }
+
+        @Override
+        public boolean isClient() {
+            return false;
+        }
+    }
+
+    private class SetElement implements ProtocolElement {
+        private final String name;
+        private final String value;
+        private final boolean base64;
+
+        SetElement(String name, String value, boolean base64) {
+            this.name = name;
+            this.value = value;
+            this.base64 = base64;
+        }
+
+        @Override
+        public void testProtocol(Session[] sessions, boolean continueAfterFailure) {
+            String substituted = substitute(value, false);
+            if (base64) {
+                byte[] bytes = substituted.replace("\\0", "\u0000").getBytes(StandardCharsets.UTF_8);
+                variables.put(name, Base64.getEncoder().encodeToString(bytes));
+            } else {
+                variables.put(name, substituted);
+            }
+        }
+
+        @Override
+        public boolean isClient() {
+            return false;
         }
     }
 
