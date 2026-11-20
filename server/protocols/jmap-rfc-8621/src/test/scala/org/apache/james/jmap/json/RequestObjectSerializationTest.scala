@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.json
 
+import eu.timepit.refined.refineV
+import eu.timepit.refined.string.Uri
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.RequestObject
 import org.apache.james.jmap.json.Fixture._
 import org.scalatest.matchers.should.Matchers
@@ -94,6 +97,45 @@ class RequestObjectSerializationTest extends AnyWordSpec with Matchers {
             |  ]
             |}
             |""".stripMargin) should equal(JsSuccess(expectedRequestObject))
+    }
+    "succeed with a capability that is not a well-known one" in {
+      val customIdentifier: CapabilityIdentifier = refineV[Uri]("com:example:custom").toOption.get
+      ResponseSerializer
+        .deserializeRequestObject(
+          """
+            |{
+            |  "using": [ "urn:ietf:params:jmap:core", "com:example:custom"],
+            |  "methodCalls": []
+            |}
+            |""".stripMargin).map(_.`using`) should equal(JsSuccess(Set(coreIdentifier, customIdentifier)))
+    }
+
+    "fail with the URI validation error when a capability is not a valid URI" in {
+      val invalid = "urn:ietf:params:jmap:core invalid"
+      val expectedMessage: String = refineV[Uri](invalid).swap.toOption.get
+
+      val result = ResponseSerializer
+        .deserializeRequestObject(
+          s"""
+            |{
+            |  "using": [ "$invalid"],
+            |  "methodCalls": []
+            |}
+            |""".stripMargin)
+
+      result.isError should be(true)
+      result.asInstanceOf[JsError].errors.flatMap(_._2).flatMap(_.messages) should contain(expectedMessage)
+    }
+
+    "fail when a capability is not a string" in {
+      ResponseSerializer
+        .deserializeRequestObject(
+          """
+            |{
+            |  "using": [ 42 ],
+            |  "methodCalls": []
+            |}
+            |""".stripMargin).isError should be(true)
     }
   }
 

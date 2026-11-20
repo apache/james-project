@@ -321,19 +321,32 @@ object EmailHeaders {
   val SPECIFIC_HEADER_PREFIX = "header:"
 
   def from(zoneId: ZoneId)(mime4JMessage: Message): EmailHeaders =
+    build(zoneId, _ => true)(mime4JMessage)
+
+  /**
+   * Only computes the fields whose property is requested: the others get their empty value, and are anyway
+   * filtered out of the response by the serializer.
+   */
+  def from(zoneId: ZoneId, properties: Properties)(mime4JMessage: Message): EmailHeaders =
+    build(zoneId, properties.containsString)(mime4JMessage)
+
+  private def build(zoneId: ZoneId, requested: String => Boolean)(mime4JMessage: Message): EmailHeaders = {
+    def noMessageIds = MessageIdsHeaderValue(None)
+
     EmailHeaders(
-      headers = asEmailHeaders(mime4JMessage.getHeader),
-      messageId = extractMessageId(mime4JMessage, "Message-Id"),
-      inReplyTo = extractMessageId(mime4JMessage, "In-Reply-To"),
-      references = extractMessageId(mime4JMessage, "References"),
-      to = extractAddresses(mime4JMessage, "To"),
-      cc = extractAddresses(mime4JMessage, "Cc"),
-      bcc = extractAddresses(mime4JMessage, "Bcc"),
-      from = extractAddresses(mime4JMessage, "From"),
-      replyTo = extractAddresses(mime4JMessage, "Reply-To"),
-      sender = extractAddresses(mime4JMessage, "Sender"),
-      subject = extractSubject(mime4JMessage),
-      sentAt = extractDate(mime4JMessage, "Date").map(date => UTCDate.from(date, zoneId)))
+      headers = if (requested("headers")) asEmailHeaders(mime4JMessage.getHeader) else List(),
+      messageId = if (requested("messageId")) extractMessageId(mime4JMessage, "Message-Id") else noMessageIds,
+      inReplyTo = if (requested("inReplyTo")) extractMessageId(mime4JMessage, "In-Reply-To") else noMessageIds,
+      references = if (requested("references")) extractMessageId(mime4JMessage, "References") else noMessageIds,
+      to = Option.when(requested("to"))(extractAddresses(mime4JMessage, "To")).flatten,
+      cc = Option.when(requested("cc"))(extractAddresses(mime4JMessage, "Cc")).flatten,
+      bcc = Option.when(requested("bcc"))(extractAddresses(mime4JMessage, "Bcc")).flatten,
+      from = Option.when(requested("from"))(extractAddresses(mime4JMessage, "From")).flatten,
+      replyTo = Option.when(requested("replyTo"))(extractAddresses(mime4JMessage, "Reply-To")).flatten,
+      sender = Option.when(requested("sender"))(extractAddresses(mime4JMessage, "Sender")).flatten,
+      subject = Option.when(requested("subject"))(extractSubject(mime4JMessage)).flatten,
+      sentAt = Option.when(requested("sentAt"))(extractDate(mime4JMessage, "Date")).flatten.map(date => UTCDate.from(date, zoneId)))
+  }
 
   def extractSpecificHeaders(properties: Option[Properties])(zoneId: ZoneId, header: org.apache.james.mime4j.dom.Header) =
     properties.getOrElse(Properties.empty()).value
@@ -548,7 +561,7 @@ private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) e
           receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
           size = sanitizeSize(firstMessage.getSize),
           keywords = keywords),
-        header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
+        header = EmailHeaders.from(zoneIdProvider.get(), request.properties.getOrElse(Email.defaultProperties))(mime4JMessage),
         specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage.getHeader))
     }
   }
@@ -625,7 +638,7 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
           receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
           keywords = keywords,
           size = sanitizeSize(firstMessage.getSize)),
-        header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
+        header = EmailHeaders.from(zoneIdProvider.get(), request.properties.getOrElse(Email.defaultProperties))(mime4JMessage),
         bodyMetadata = EmailBodyMetadata(
           hasAttachment = HasAttachment(bodyStructure.attachments.exists(attachment =>
             attachment.disposition.contains(ATTACHMENT) && attachment.cid.isEmpty)),
@@ -775,7 +788,7 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
         bodyMetadata = EmailBodyMetadata(
           hasAttachment = HasAttachment(fastView.hasAttachment),
           preview = fastView.getPreview),
-        header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
+        header = EmailHeaders.from(zoneIdProvider.get(), request.properties.getOrElse(Email.defaultProperties))(mime4JMessage),
         specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage.getHeader))
     }
   }
@@ -866,7 +879,7 @@ private class EmailFastViewWithAttachmentsMetadataReader @Inject()(messageIdMana
         bodyMetadata = EmailBodyMetadata(
           hasAttachment = HasAttachment(fastView.hasAttachment),
           preview = fastView.getPreview),
-        header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
+        header = EmailHeaders.from(zoneIdProvider.get(), request.properties.getOrElse(Email.defaultProperties))(mime4JMessage),
         specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage.getHeader),
         attachments = AttachmentsMetadata(firstMessage.getLoadedAttachments.asScala.toList.map(EmailBodyPart.fromAttachment(_, mime4JMessage))))
     }
