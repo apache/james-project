@@ -43,8 +43,12 @@ public class BrokerExtension implements ParameterResolver, BeforeAllCallback, Af
 
     public static final String STATISTICS = "Statistics";
 
-    /** Unique broker ID counter to avoid conflicts when multiple tests run. */
-    private static final AtomicInteger BROKER_COUNTER = new AtomicInteger(0);
+    /**
+     * Unique broker ID counter to avoid conflicts when multiple tests run.
+     * Starts at -1 so the first {@code incrementAndGet()} yields 0, matching the
+     * {@code vm://0} InVM URL used by the queue tests (first broker == server-id 0).
+     */
+    private static final AtomicInteger BROKER_COUNTER = new AtomicInteger(-1);
 
     /**
      * Generate a random queue name for the embedded broker.

@@ -18,6 +18,11 @@
  ****************************************************************/
 package org.apache.james.queue.activemq;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.james.metrics.api.GaugeRegistry;
@@ -25,14 +30,16 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.DelayedPriorityMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueMetricContract;
 import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.apache.james.queue.api.MailQueueName;
+import org.apache.james.queue.api.Mails;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.PriorityManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.jms.BrokerExtension;
-import org.apache.james.queue.jms.JMSCacheableMailQueue;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -40,12 +47,16 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 @ExtendWith(BrokerExtension.class)
 @Tag(BrokerExtension.STATISTICS)
 public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract,
     MailQueueMetricContract {
 
-    JMSCacheableMailQueue mailQueue;
+    ActiveMQCacheableMailQueue mailQueue;
 
     @BeforeEach
     public void setUp(EmbeddedActiveMQ broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
@@ -55,7 +66,7 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
         MetricFactory metricFactory = metricTestSystem.getMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         MailQueueName queueName = BrokerExtension.generateRandomQueueName();
-        mailQueue = new JMSCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory, gaugeRegistry);
+        mailQueue = new ActiveMQCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory, gaugeRegistry);
     }
 
     @AfterEach
@@ -143,5 +154,134 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
     @Disabled("JAMES-3687 Delayed deletes are buggy")
     public void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() {
 
+    }
+
+    @Test
+    void delayedMessagesShouldNotBlockReadyMessagesHolBlocking() throws Exception {
+        // Enqueue a burst of delayed messages
+        for (int i = 0; i < 50; i++) {
+            mailQueue.enQueue(Mails.defaultMail()
+                .name("delayed-" + i)
+                .build(),
+                1,
+                TimeUnit.HOURS);
+        }
+
+        // Enqueue an immediate (ready) message behind the delayed ones
+        mailQueue.enQueue(Mails.defaultMail()
+            .name("ready-message")
+            .build());
+
+        // Dequeue should instantly receive the ready message without head-of-line blocking
+        Mono<MailQueueItem> itemMono =
+            Flux.from(mailQueue.deQueue()).next();
+        MailQueueItem dequeuedItem =
+            itemMono.block(Duration.ofSeconds(5));
+
+        Assertions.assertThat(dequeuedItem).isNotNull();
+        Assertions.assertThat(dequeuedItem.getMail().getName()).isEqualTo("ready-message");
+    }
+
+    @Test
+    void readyMessagesShouldBeConsumedAtWireSpeedEvenWhenDelayedMessagesExist() throws Exception {
+        // Enqueue delayed messages
+        for (int i = 0; i < 20; i++) {
+            mailQueue.enQueue(Mails.defaultMail()
+                .name("delayed-" + i)
+                .build(),
+                30,
+                TimeUnit.MINUTES);
+        }
+
+        // Enqueue multiple ready messages
+        for (int i = 0; i < 10; i++) {
+            mailQueue.enQueue(Mails.defaultMail()
+                .name("ready-" + i)
+                .build());
+        }
+
+        List<String> dequeuedNames = Flux.from(mailQueue.deQueue())
+            .take(10)
+            .map(item -> item.getMail().getName())
+            .collectList()
+            .block(Duration.ofSeconds(10));
+
+        Assertions.assertThat(dequeuedNames)
+            .containsExactly("ready-0", "ready-1", "ready-2", "ready-3", "ready-4",
+                             "ready-5", "ready-6", "ready-7", "ready-8", "ready-9");
+    }
+
+    @Test
+    void delayedMailShouldNotBeDeliveredBeforeItsDelayElapses() throws Exception {
+        // Given a mail delayed for delivery by 2 seconds
+        mailQueue.enQueue(Mails.defaultMail()
+                .name("scheduled")
+                .build(),
+            2,
+            TimeUnit.SECONDS);
+
+        // When we try to dequeue almost immediately, nothing should be available:
+        // the mail sits on the companion delayed queue and is not transferred until due.
+        Mono<MailQueueItem> next =
+            Flux.from(mailQueue.deQueue())
+                .subscribeOn(Schedulers.boundedElastic())
+                .next();
+
+        Assertions.assertThatThrownBy(() -> next.block(Duration.ofMillis(500)))
+            .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void delayedMailShouldBecomeAvailableAfterItsDelayElapses() throws Exception {
+        // Given a mail scheduled for delivery in 1 second
+        mailQueue.enQueue(Mails.defaultMail()
+                .name("scheduled")
+                .build(),
+            1,
+            TimeUnit.SECONDS);
+
+        // When we wait past the delay, the transfer task moves the mail to the main
+        // queue and the selector-less consumer delivers it.
+        MailQueueItem item =
+            Flux.from(mailQueue.deQueue())
+                .next()
+                .block(Duration.ofSeconds(5));
+
+        Assertions.assertThat(item).isNotNull();
+        Assertions.assertThat(item.getMail().getName()).isEqualTo("scheduled");
+    }
+
+    @Test
+    void getSizeShouldCountScheduledMessages() throws Exception {
+        // Given a not-yet-due delayed mail
+        mailQueue.enQueue(Mails.defaultMail()
+                .name("scheduled")
+                .build(),
+            1,
+            TimeUnit.HOURS);
+
+        // Delayed mail lives on the companion queue as an ordinary message, so getSize()
+        // spans both queues and must report it.
+        Assertions.assertThat(mailQueue.getSize()).isEqualTo(1L);
+    }
+
+    @Test
+    void browseShouldReturnScheduledMessages() throws Exception {
+        // Given a not-yet-due delayed mail
+        mailQueue.enQueue(Mails.defaultMail()
+                .name("scheduled")
+                .build(),
+            1,
+            TimeUnit.HOURS);
+
+        // browse() spans both queues and must expose the delayed mail with its next-delivery date.
+        List<String> browsedNames = new ArrayList<>();
+        try (ManageableMailQueue.MailQueueIterator iterator = mailQueue.browse()) {
+            while (iterator.hasNext()) {
+                browsedNames.add(iterator.next().getMail().getName());
+            }
+        }
+
+        Assertions.assertThat(browsedNames).contains("scheduled");
     }
 }
