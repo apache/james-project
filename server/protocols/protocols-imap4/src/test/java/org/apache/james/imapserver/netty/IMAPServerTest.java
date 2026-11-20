@@ -950,6 +950,42 @@ class IMAPServerTest {
                 .subscribe();
         }
 
+
+        @Test
+        void startTLSPipelinedAfterALiteralShouldNotLeadToCommandInjection() throws Exception {
+            ListAppender<ILoggingEvent> listAppender = getListAppenderForClass(AbstractProcessor.class);
+
+            // The segment completing the literal is not framed: STARTTLS and NOOP reach the decoder together
+            send("a0 LOGIN {1}\r\n");
+            Thread.sleep(50);
+            send("u p\r\na1 STARTTLS\r\na2 NOOP\r\n");
+
+            Thread.sleep(200);
+
+            assertThat(listAppender.list)
+                .filteredOn(event -> event.getFormattedMessage().contains("Processing org.apache.james.imap.message.request.NoopRequest"))
+                .isEmpty();
+            assertThat(listAppender.list)
+                .filteredOn(event -> event.getFormattedMessage().contains("Processing org.apache.james.imap.message.request.StartTLSRequest"))
+                .isEmpty();
+            assertThat(connection.isDisposed() || !connection.channel().isActive()).isTrue();
+        }
+
+        @RepeatedTest(10)
+        void startTLSEndingAnUnframedSegmentShouldRefuseWhatFollows() throws Exception {
+            ListAppender<ILoggingEvent> listAppender = getListAppenderForClass(AbstractProcessor.class);
+
+            send("a0 LOGIN {1}\r\n");
+            Thread.sleep(50);
+            send("u p\r\na1 STARTTLS\r\n");
+            send("a2 NOOP\r\n");
+
+            Thread.sleep(50);
+
+            assertThat(listAppender.list)
+                .filteredOn(event -> event.getFormattedMessage().contains("Processing org.apache.james.imap.message.request.NoopRequest"))
+                .isEmpty();
+        }
         @RepeatedTest(10)
         void concurrencyShouldNotLeadToCommandInjection() throws Exception {
             ListAppender<ILoggingEvent> listAppender = getListAppenderForClass(AbstractProcessor.class);
