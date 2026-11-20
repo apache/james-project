@@ -1,0 +1,114 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+# RFC 8508 REPLACE takes the same message data as APPEND: once UTF8=ACCEPT is enabled, UTF8 (literal8) (RFC 6855)
+C: a1 CREATE rbox
+S: a1 OK \[MAILBOXID \(.+\)\] CREATE completed.
+
+C: a2 APPEND rbox {22+}
+C: Subject: utf8
+C:
+C: hello
+S: a2 OK (\[.+\] )?APPEND completed.
+
+C: a3 APPEND rbox {22+}
+C: Subject: utf8
+C:
+C: hello
+S: a3 OK (\[.+\] )?APPEND completed.
+
+C: a4 ENABLE UTF8=ACCEPT
+S: \* ENABLED UTF8=ACCEPT
+S: a4 OK ENABLE completed.
+
+C: a5 SELECT rbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 2 EXISTS
+S: \* 2 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 3\].*
+S: a5 OK \[READ-WRITE\] SELECT completed.
+
+# UID REPLACE, non synchronizing literal8
+C: r1 UID REPLACE 1 rbox UTF8 (~{22+}
+C: Subject: utf8
+C:
+C: world)
+S: \* OK \[APPENDUID .+ .+\] Replacement Message ready
+S: \* 3 EXISTS
+S: \* 1 EXPUNGE
+S: \* 2 RECENT
+S: r1 OK REPLACE completed.
+
+# REPLACE, synchronizing literal8, with flags, date and a lower case keyword
+C: r2 REPLACE 1 rbox (\Seen) "09-Apr-2008 15:17:51 +0200" utf8 (~{22}
+S: \+ Ok
+C: Subject: utf8
+C:
+C: again)
+S: \* OK \[APPENDUID .+ .+\] Replacement Message ready
+S: \* 3 EXISTS
+S: \* 1 EXPUNGE
+S: \* 2 RECENT
+S: r2 OK REPLACE completed.
+
+# Malformed UTF8 message data, rejected before the literal is invited
+C: e1 REPLACE 1 rbox UTF8X (~{22}
+S: e1 BAD REPLACE failed. Illegal arguments.
+
+C: e2 REPLACE 1 rbox UTF8 ~{22}
+S: e2 BAD REPLACE failed. Illegal arguments.
+
+# Malformed after the literal: the closing parenthesis is missing
+C: e3 UID REPLACE 3 rbox UTF8 (~{22+}
+C: Subject: utf8
+C:
+C: wrong
+S: e3 BAD UID failed. Illegal arguments.
+
+# Malformed after the literal: extra data after the closing parenthesis
+C: e4 UID REPLACE 3 rbox UTF8 (~{22+}
+C: Subject: utf8
+C:
+C: wrong) junk
+S: e4 BAD UID failed. Illegal arguments.
+
+# The session is still in sync, and the rejected commands did not replace anything
+C: f1 NOOP
+S: f1 OK NOOP completed.
+
+C: f2 UID FETCH 1:* (RFC822.SIZE BODY.PEEK[TEXT])
+S: \* 1 FETCH \(RFC822.SIZE 22 UID 3 BODY\[TEXT\] \{5\}
+S: world\)
+S: \* 2 FETCH \(RFC822.SIZE 22 UID 4 BODY\[TEXT\] \{5\}
+S: again\)
+S: f2 OK FETCH completed.
+
+C: f3 FETCH 2 (FLAGS INTERNALDATE)
+S: \* 2 FETCH \(FLAGS \(\\Recent \\Seen\) INTERNALDATE "09-Apr-2008 \d\d:17:51 [+-]\d{4}"\)
+S: f3 OK FETCH completed.
+
+C: f4 CLOSE
+S: f4 OK CLOSE completed.
+
+C: f5 DELETE rbox
+S: f5 OK DELETE completed.

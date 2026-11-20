@@ -32,7 +32,6 @@ import jakarta.mail.Flags;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
-import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
@@ -47,8 +46,6 @@ import com.google.common.annotations.VisibleForTesting;
  * Parses APPEND command
  */
 public class AppendCommandParser extends AbstractImapCommandParser {
-    private static final String UTF8_KEYWORD = "UTF8";
-
     private final Clock clock;
 
     @Inject
@@ -88,10 +85,10 @@ public class AppendCommandParser extends AbstractImapCommandParser {
         String mailboxName = request.mailbox();
         Flags flags = parseFlags(request);
         LocalDateTime datetime = parseDateTime(request);
-        char next = request.nextWordChar();
+        request.nextWordChar();
 
         try {
-            Literal literal = next == 'U' || next == 'u' ? utf8Message(request) : request.consumeLiteral(true).right;
+            Literal literal = request.appendData();
             return new AppendRequest(mailboxName, flags, Date.from(datetime.atZone(ZoneId.systemDefault()).toInstant()), literal, tag);
         } catch (DecodingException e) {
             // A syntax error is not an IO failure
@@ -99,24 +96,5 @@ public class AppendCommandParser extends AbstractImapCommandParser {
         } catch (IOException e) {
             throw new DecodingException(SOCKET_IO_FAILURE, "Error copying content", e);
         }
-    }
-
-    /**
-     * RFC 6855 section 4: once UTF8=ACCEPT is enabled, the message can be sent as {@code UTF8 (literal8)}.
-     */
-    private Literal utf8Message(ImapRequestLineReader request) throws IOException {
-        String keyword = request.atom();
-        if (!UTF8_KEYWORD.equalsIgnoreCase(keyword)) {
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a literal or UTF8 (literal8), found " + keyword);
-        }
-        request.nextWordChar();
-        request.consumeChar('(');
-        if (request.nextChar() == '~') {
-            request.consume();
-        }
-        Literal literal = request.consumeLiteral(false).right;
-        request.consumeChar(')');
-        request.eol();
-        return literal;
     }
 }
