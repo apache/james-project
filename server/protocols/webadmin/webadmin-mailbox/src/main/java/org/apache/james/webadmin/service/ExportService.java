@@ -114,6 +114,8 @@ public class ExportService {
             .then(Mono.usingWhen(
                 blobStore.save(blobStore.getDefaultBucketName(), inputStream, BlobStore.StoragePolicy.LOW_COST),
                 blobId -> export(username, blobId),
+                this::deleteBlob,
+                (blobId, error) -> deleteBlob(blobId),
                 this::deleteBlob)
             .doOnSuccess(any -> progress.setStage(Stage.COMPLETED))
             .thenReturn(Task.Result.COMPLETED)
