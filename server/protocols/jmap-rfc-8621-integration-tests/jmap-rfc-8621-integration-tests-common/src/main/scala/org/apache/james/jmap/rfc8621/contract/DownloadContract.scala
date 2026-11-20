@@ -108,6 +108,7 @@ trait DownloadContract {
       .statusCode(SC_OK)
       .contentType("message/rfc822")
       .header("cache-control", "private, immutable, max-age=31536000")
+      .header("vary", "authorization")
       .extract
       .body
       .asString
