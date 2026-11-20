@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
 
@@ -87,6 +88,8 @@ public class CassandraBlobReferenceIndex {
     Mono<CassandraBlobReferenceIndexDAO> create(RunId runId) {
         String table = tableName(runId);
         return cleanupStaleTables()
+            // Cassandra 5: set allow_auto_snapshot = false once Cassandra 5 is the baseline (CASSANDRA-17842).
+            // These temporary tables are dropped frequently and their automatic snapshots should not be retained.
             .then(changeSchema("CREATE TABLE IF NOT EXISTS " + table
                 + " (blob_id text, reference_type text, reference_id uuid, PRIMARY KEY (blob_id, reference_type, reference_id))"
                 + " WITH comment = '" + heartbeatComment(clock.instant()) + "'"))
@@ -128,6 +131,7 @@ public class CassandraBlobReferenceIndex {
     }
 
     private Mono<Void> cleanup(String table) {
+        Preconditions.checkArgument(isRunTable(table), "Refusing to drop non-compaction table %s", table);
         return changeSchema("DROP TABLE IF EXISTS " + table)
             .doOnSuccess(any -> LOGGER.info("Cleaned blob reference snapshot {}", table));
     }
