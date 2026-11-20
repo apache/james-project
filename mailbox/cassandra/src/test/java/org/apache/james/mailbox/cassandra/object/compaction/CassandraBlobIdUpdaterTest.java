@@ -25,7 +25,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -348,6 +351,94 @@ class CassandraBlobIdUpdaterTest {
     }
 
     @Test
+    void creatingRunShouldCleanSnapshotsWithoutHeartbeatForThreeDays() {
+        Instant initialHeartbeat = Instant.parse("2026-01-01T00:00:00Z");
+        RunId abandoned = RunId.generate();
+        new CassandraBlobReferenceIndex(session, 2, Clock.fixed(initialHeartbeat, ZoneOffset.UTC),
+            Duration.ofDays(1), Duration.ofDays(3)).create(abandoned).block();
+
+        RunId current = RunId.generate();
+        new CassandraBlobReferenceIndex(session, 2, Clock.fixed(initialHeartbeat.plus(Duration.ofDays(4)), ZoneOffset.UTC),
+            Duration.ofDays(1), Duration.ofDays(3)).create(current).block();
+
+        assertThat(runTables()).containsExactly(CassandraBlobReferenceIndex.tableName(current));
+        new CassandraBlobReferenceIndex(session).cleanup(current).block();
+    }
+
+    @Test
+    void creatingRunShouldLeaveRecentAndUnrecognisedSnapshotsAlone() {
+        Instant initialHeartbeat = Instant.parse("2026-01-01T00:00:00Z");
+        RunId recent = RunId.generate();
+        new CassandraBlobReferenceIndex(session, 2, Clock.fixed(initialHeartbeat, ZoneOffset.UTC),
+            Duration.ofDays(1), Duration.ofDays(3)).create(recent).block();
+        RunId unrecognised = RunId.generate();
+        session.execute("CREATE TABLE " + CassandraBlobReferenceIndex.tableName(unrecognised)
+            + " (blob_id text PRIMARY KEY) WITH comment = 'not-a-compaction-heartbeat'");
+
+        RunId current = RunId.generate();
+        new CassandraBlobReferenceIndex(session, 2, Clock.fixed(initialHeartbeat.plus(Duration.ofDays(2)), ZoneOffset.UTC),
+            Duration.ofDays(1), Duration.ofDays(3)).create(current).block();
+
+        assertThat(runTables()).containsExactlyInAnyOrder(
+            CassandraBlobReferenceIndex.tableName(recent),
+            CassandraBlobReferenceIndex.tableName(unrecognised),
+            CassandraBlobReferenceIndex.tableName(current));
+        new CassandraBlobReferenceIndex(session).cleanup(recent).block();
+        new CassandraBlobReferenceIndex(session).cleanup(unrecognised).block();
+        new CassandraBlobReferenceIndex(session).cleanup(current).block();
+    }
+
+    @Test
+    void activeRunShouldRefreshHeartbeat() {
+        CassandraBlobReferenceIndex index = new CassandraBlobReferenceIndex(session, 2, Clock.systemUTC(),
+            Duration.ofMillis(100), Duration.ofDays(3));
+        CassandraBlobIdUpdater.Factory heartbeatFactory = new CassandraBlobIdUpdater.Factory(
+            new CassandraBlobReferenceDAO(session, new PlainBlobId.Factory(), 2), index);
+        BlobIdUpdater updater = heartbeatFactory.forPredicate(id -> true, id -> { }).block();
+        String table = runTables().get(0);
+        String initialComment = tableComment(table);
+
+        try {
+            await().atMost(Duration.ofSeconds(10)).untilAsserted(() ->
+                assertThat(tableComment(table)).isNotEqualTo(initialComment));
+        } finally {
+            updater.cleanup().block();
+        }
+    }
+
+    @Test
+    void heartbeatFailureShouldFailRunClosed() {
+        CassandraBlobReferenceIndex index = new CassandraBlobReferenceIndex(session, 2, Clock.systemUTC(),
+            Duration.ofMillis(100), Duration.ofDays(3));
+        CassandraBlobIdUpdater.Factory heartbeatFactory = new CassandraBlobIdUpdater.Factory(
+            new CassandraBlobReferenceDAO(session, new PlainBlobId.Factory(), 2), index);
+        BlobIdUpdater updater = heartbeatFactory.forPredicate(id -> true, id -> { }).block();
+        session.registerScenario(fail().times(1).whenQueryStartsWith("ALTER TABLE blob_ref_"));
+
+        try {
+            await().atMost(Duration.ofSeconds(10)).untilAsserted(() ->
+                assertThatThrownBy(() -> updater.replaceReferences(OLD, NEW).block())
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Blob reference snapshot heartbeat failed"));
+        } finally {
+            updater.cleanup().block();
+        }
+    }
+
+    @Test
+    void missingRunTableShouldFailRun() {
+        BlobIdUpdater updater = factory.forPredicate(id -> true, id -> { }).block();
+        session.execute("DROP TABLE " + runTables().get(0));
+
+        try {
+            assertThatThrownBy(() -> updater.replaceReferences(OLD, NEW).block())
+                .hasMessageContaining("Failed executing SELECT reference_type, reference_id FROM blob_ref_");
+        } finally {
+            updater.cleanup().block();
+        }
+    }
+
+    @Test
     void observerFailureShouldCleanPartiallyBuiltSnapshot() {
         UUID message = saveMessage(OLD, OLD);
         AtomicInteger observed = new AtomicInteger();
@@ -446,6 +537,11 @@ class CassandraBlobIdUpdaterTest {
             .map(row -> row.getString("table_name"))
             .filter(name -> name.startsWith(CassandraBlobReferenceIndex.TABLE_PREFIX))
             .toList();
+    }
+
+    private String tableComment(String table) {
+        return session.execute("SELECT comment FROM system_schema.tables WHERE keyspace_name = ? AND table_name = ?",
+            session.getKeyspace().orElseThrow().asInternal(), table).one().getString("comment");
     }
 
     private UUID saveMessage(BlobId header, BlobId body) {
