@@ -43,6 +43,7 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.main.DeniedAccessOnSharedMailboxException;
+import org.apache.james.imap.main.InboxChildResolver;
 import org.apache.james.imap.message.response.ExistsResponse;
 import org.apache.james.imap.message.response.ExpungeResponse;
 import org.apache.james.imap.message.response.FetchResponse;
@@ -420,6 +421,20 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
 
     protected MailboxManager getMailboxManager() {
         return mailboxManager;
+    }
+
+    /**
+     * See {@link InboxChildResolver#existingMailbox(MailboxPath, MailboxSession)}
+     */
+    protected Mono<MailboxPath> existingMailboxPath(MailboxPath requestedPath, ImapSession session) {
+        return new InboxChildResolver(getMailboxManager()).existingMailbox(requestedPath, session.getMailboxSession());
+    }
+
+    /**
+     * See {@link InboxChildResolver#newMailbox(MailboxPath, MailboxSession)}
+     */
+    protected Mono<MailboxPath> newMailboxPath(MailboxPath requestedPath, ImapSession session) {
+        return new InboxChildResolver(getMailboxManager()).newMailbox(requestedPath, session.getMailboxSession());
     }
 
     protected StatusResponseFactory getStatusResponseFactory() {

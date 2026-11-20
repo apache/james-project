@@ -73,7 +73,12 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
 
     @Override
     protected Mono<Void> processRequestReactive(R request, ImapSession session, Responder responder) {
-        MailboxPath targetMailbox = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        return existingMailboxPath(requestedPath, session)
+            .flatMap(targetMailbox -> processRequestReactive(request, session, responder, targetMailbox));
+    }
+
+    private Mono<Void> processRequestReactive(R request, ImapSession session, Responder responder, MailboxPath targetMailbox) {
         MailboxSession mailboxSession = session.getMailboxSession();
 
         return Mono.from(getMailboxManager().mailboxExists(targetMailbox, mailboxSession))

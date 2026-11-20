@@ -108,9 +108,13 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
     @Override
     protected Mono<Void> processRequestReactive(R request, ImapSession session, Responder responder) {
-        String mailboxName = request.getMailboxName();
-        MailboxPath fullMailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName);
+        MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        return existingMailboxPath(requestedPath, session)
+            .flatMap(fullMailboxPath -> processRequestReactive(request, session, responder, fullMailboxPath));
+    }
 
+    private Mono<Void> processRequestReactive(R request, ImapSession session, Responder responder, MailboxPath fullMailboxPath) {
+        String mailboxName = request.getMailboxName();
         return respond(session, fullMailboxPath, request, responder)
             .onErrorResume(MailboxNotFoundException.class, e -> {
                 responder.respond(statusResponseFactory.taggedNo(request.getTag(), request.getCommand(), HumanReadableText.FAILURE_NO_SUCH_MAILBOX));

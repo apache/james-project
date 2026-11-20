@@ -57,34 +57,40 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
     protected Mono<Void> processRequestReactive(RenameRequest request, ImapSession session, Responder responder) {
         try {
             PathConverter pathConverter = pathConverterFactory.forSession(session);
-            MailboxPath existingPath = pathConverter.buildFullPath(request.getExistingName());
-            MailboxPath newPath = pathConverter.buildFullPath(request.getNewName());
-            MailboxManager mailboxManager = getMailboxManager();
-            MailboxSession mailboxsession = session.getMailboxSession();
-
-            return Mono.from(mailboxManager.renameMailboxReactive(existingPath, newPath, MailboxManager.RenameOption.NONE, mailboxsession))
-                .then(createInboxIfNeeded(existingPath, mailboxsession))
-                .then(Mono.fromRunnable(() -> okComplete(request, responder)))
-                .onErrorResume(MailboxExistsException.class, e -> {
-                    no(request, responder, HumanReadableText.MAILBOX_EXISTS);
-                    return logAsMono(() -> LOGGER.debug("Rename from {} to {} failed because the target mailbox exists", existingPath, newPath, e));
-                })
-                .onErrorResume(MailboxNotFoundException.class, e -> {
-                    no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
-                    return logAsMono(() -> LOGGER.debug("Rename from {} to {} failed because the source mailbox doesn't exist", existingPath, newPath, e));
-                })
-                .onErrorResume(TooLongMailboxNameException.class, e -> {
-                    taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
-                    return logAsMono(() -> LOGGER.debug("The mailbox name length is over limit: {}", newPath.getName(), e));
-                })
-                .onErrorResume(TooLongMailboxNameException.class, e -> {
-                    no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-                    return logAsMono(() -> LOGGER.error("Rename from {} to {} failed", existingPath, newPath, e));
-                })
-                .then(unsolicitedResponses(session, responder, false));
+            MailboxPath requestedExistingPath = pathConverter.buildFullPath(request.getExistingName());
+            MailboxPath requestedNewPath = pathConverter.buildFullPath(request.getNewName());
+            return existingMailboxPath(requestedExistingPath, session)
+                .zipWith(newMailboxPath(requestedNewPath, session))
+                .flatMap(paths -> rename(request, session, responder, paths.getT1(), paths.getT2()));
         } catch (Exception e) {
             return Mono.error(e);
         }
+    }
+
+    private Mono<Void> rename(RenameRequest request, ImapSession session, Responder responder, MailboxPath existingPath, MailboxPath newPath) {
+        MailboxManager mailboxManager = getMailboxManager();
+        MailboxSession mailboxsession = session.getMailboxSession();
+
+        return Mono.from(mailboxManager.renameMailboxReactive(existingPath, newPath, MailboxManager.RenameOption.NONE, mailboxsession))
+            .then(createInboxIfNeeded(existingPath, mailboxsession))
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+            .onErrorResume(MailboxExistsException.class, e -> {
+                no(request, responder, HumanReadableText.MAILBOX_EXISTS);
+                return logAsMono(() -> LOGGER.debug("Rename from {} to {} failed because the target mailbox exists", existingPath, newPath, e));
+            })
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                return logAsMono(() -> LOGGER.debug("Rename from {} to {} failed because the source mailbox doesn't exist", existingPath, newPath, e));
+            })
+            .onErrorResume(TooLongMailboxNameException.class, e -> {
+                taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
+                return logAsMono(() -> LOGGER.debug("The mailbox name length is over limit: {}", newPath.getName(), e));
+            })
+            .onErrorResume(TooLongMailboxNameException.class, e -> {
+                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                return logAsMono(() -> LOGGER.error("Rename from {} to {} failed", existingPath, newPath, e));
+            })
+            .then(unsolicitedResponses(session, responder, false));
     }
 
     private Mono<Void> createInboxIfNeeded(MailboxPath existingPath, MailboxSession session) {

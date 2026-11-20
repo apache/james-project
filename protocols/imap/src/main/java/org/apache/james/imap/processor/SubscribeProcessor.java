@@ -53,7 +53,12 @@ public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeR
 
     @Override
     protected Mono<Void> doProcessRequest(SubscribeRequest request, ImapSession session, Responder responder) {
-        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        return existingMailboxPath(requestedPath, session)
+            .flatMap(mailboxPath -> doProcessRequest(request, session, responder, mailboxPath));
+    }
+
+    private Mono<Void> doProcessRequest(SubscribeRequest request, ImapSession session, Responder responder, MailboxPath mailboxPath) {
         MailboxSession mailboxSession = session.getMailboxSession();
 
         return Mono.from(getSubscriptionManager().subscribeReactive(mailboxPath, mailboxSession))

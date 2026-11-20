@@ -103,7 +103,12 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
 
     @Override
     protected Mono<Void> processRequestReactive(StatusRequest request, ImapSession session, Responder responder) {
-        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
+        return existingMailboxPath(requestedPath, session)
+            .flatMap(mailboxPath -> processRequestReactive(request, session, responder, mailboxPath));
+    }
+
+    private Mono<Void> processRequestReactive(StatusRequest request, ImapSession session, Responder responder, MailboxPath mailboxPath) {
         MailboxSession mailboxSession = session.getMailboxSession();
         StatusDataItems statusDataItems = request.getStatusDataItems();
 
