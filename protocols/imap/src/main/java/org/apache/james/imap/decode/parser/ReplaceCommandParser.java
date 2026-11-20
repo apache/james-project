@@ -88,10 +88,13 @@ public class ReplaceCommandParser extends AbstractUidCommandParser {
         request.nextWordChar();
 
         try {
-            Literal literal = request.consumeLiteral(true).right;
+            Literal literal = request.appendData();
             Date from = Date.from(datetime.atZone(ZoneId.systemDefault()).toInstant());
 
             return new ReplaceRequest(id, mailboxName, flags, from, literal, tag, useUids);
+        } catch (DecodingException e) {
+            // A syntax error is not an IO failure
+            throw e;
         } catch (IOException e) {
             throw new DecodingException(SOCKET_IO_FAILURE, "Error copying content", e);
         }
