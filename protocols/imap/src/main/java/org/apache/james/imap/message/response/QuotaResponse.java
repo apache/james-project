@@ -19,84 +19,108 @@
 
 package org.apache.james.imap.message.response;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.quota.QuotaManager;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 
 /**
- * Quota Response
+ * RFC 9208 section 5.1: a single QUOTA response per quota root, listing its limited resources (possibly none).
  */
 public class QuotaResponse implements ImapResponseMessage {
-    private final String resourceName;
-    private final String quotaRoot;
-    private final Quota<?, ?> quota;
+    public static class Resource {
+        private final String name;
+        private final Quota<?, ?> quota;
 
-    /**
-     * RFC 9208 section 4.2.1: a quota root without any limit is answered with an empty resource list.
-     */
+        public Resource(String name, Quota<?, ?> quota) {
+            this.name = name;
+            this.quota = quota;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Quota<?, ?> getQuota() {
+            return quota;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Resource) {
+                Resource other = (Resource) o;
+                return Objects.equal(this.name, other.name)
+                    && Objects.equal(this.quota, other.quota);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hashCode(name, quota);
+        }
+
+        @Override
+        public String toString() {
+            return name + ' ' + quota.getUsed() + ' ' + quota.getLimit();
+        }
+    }
+
+    public static QuotaResponse from(String quotaRoot, QuotaManager.Quotas quotas) {
+        ImmutableList.Builder<Resource> resources = ImmutableList.builder();
+        if (quotas.getMessageQuota().getLimit().isLimited()) {
+            resources.add(new Resource(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotas.getMessageQuota()));
+        }
+        if (quotas.getStorageQuota().getLimit().isLimited()) {
+            resources.add(new Resource(ImapConstants.STORAGE_QUOTA_RESOURCE, quotas.getStorageQuota()));
+        }
+        return new QuotaResponse(quotaRoot, resources.build());
+    }
+
     public static QuotaResponse withoutLimits(String quotaRoot) {
-        return new QuotaResponse(null, quotaRoot, null);
+        return new QuotaResponse(quotaRoot, ImmutableList.of());
     }
 
-    public QuotaResponse(String resource, String quotaRoot, Quota<?, ?> quota) {
-        this.quota = quota;
-        this.resourceName = resource;
+    private final String quotaRoot;
+    private final List<Resource> resources;
+
+    public QuotaResponse(String quotaRoot, List<Resource> resources) {
         this.quotaRoot = quotaRoot;
-    }
-
-    public boolean hasResource() {
-        return resourceName != null;
-    }
-
-    public Quota<?, ?> getQuota() {
-        return quota;
-    }
-
-    public String getResourceName() {
-        return resourceName;
+        this.resources = ImmutableList.copyOf(resources);
     }
 
     public String getQuotaRoot() {
         return quotaRoot;
     }
 
+    public List<Resource> getResources() {
+        return resources;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof QuotaResponse) {
             QuotaResponse other = (QuotaResponse) o;
-
             return Objects.equal(this.quotaRoot, other.quotaRoot)
-                && Objects.equal(this.resourceName, other.resourceName)
-                && Objects.equal(this.quota, other.quota);
+                && Objects.equal(this.resources, other.resources);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(resourceName, quotaRoot, quota);
+        return Objects.hashCode(quotaRoot, resources);
     }
 
     @Override
     public String toString() {
-        if (!hasResource()) {
-            return ImapConstants.QUOTA_RESPONSE_NAME + ' ' + quotaRoot + " ()";
-        }
-        StringBuilder result = new StringBuilder()
-                .append(ImapConstants.QUOTA_RESPONSE_NAME)
-                .append(' ')
-                .append(quotaRoot)
-                .append(' ')
-                .append('(')
-                .append(resourceName)
-                .append(' ')
-                .append(quota.getUsed())
-                .append(' ')
-                .append(quota.getLimit())
-                .append(')');
-        return result.toString();
+        return ImapConstants.QUOTA_RESPONSE_NAME + ' ' + quotaRoot + " ("
+            + resources.stream().map(Resource::toString).collect(Collectors.joining(" ")) + ')';
     }
-
 }

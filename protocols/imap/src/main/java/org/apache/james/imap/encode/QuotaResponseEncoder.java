@@ -38,28 +38,24 @@ public class QuotaResponseEncoder implements ImapResponseEncoder<QuotaResponse> 
     @Override
     public void encode(QuotaResponse quotaResponse, ImapResponseComposer composer) throws IOException {
         String quotaRoot = quotaResponse.getQuotaRoot();
-        Quota<?, ?> quota = quotaResponse.getQuota();
 
         composer.untagged();
         composer.message(ImapConstants.QUOTA_RESPONSE_NAME);
-        composer.message(quotaRoot == null ? "" : quotaRoot);
+        // RFC 9208: quota-root-name = astring
+        composer.quote(quotaRoot == null ? "" : quotaRoot);
         composer.openParen();
-        if (!quotaResponse.hasResource()) {
-            composer.closeParen();
-            composer.end();
-            return;
+        for (QuotaResponse.Resource resource : quotaResponse.getResources()) {
+            composer.message(resource.getName());
+            // See RFC 2087 : response for STORAGE should be in KB. For more accuracy, we stores B, so conversion should be made
+            switch (resource.getName().toUpperCase(Locale.US)) {
+                case ImapConstants.STORAGE_QUOTA_RESOURCE:
+                    writeMessagesSize(composer, resource.getQuota());
+                    break;
+                case ImapConstants.MESSAGE_QUOTA_RESOURCE:
+                    writeMessagesCount(composer, resource.getQuota());
+                    break;
+            }
         }
-        composer.message(quotaResponse.getResourceName());
-        // See RFC 2087 : response for STORAGE should be in KB. For more accuracy, we stores B, so conversion should be made
-        switch (quotaResponse.getResourceName().toUpperCase(Locale.US)) {
-            case ImapConstants.STORAGE_QUOTA_RESOURCE:
-                writeMessagesSize(composer, quota);
-                break;
-            case ImapConstants.MESSAGE_QUOTA_RESOURCE:
-                writeMessagesCount(composer, quota);
-                break;
-        }
-
         composer.closeParen();
 
         composer.end();

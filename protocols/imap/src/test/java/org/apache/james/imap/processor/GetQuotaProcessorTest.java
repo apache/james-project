@@ -61,6 +61,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
 
+import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -124,19 +126,20 @@ class GetQuotaProcessorTest {
         when(mockedQuotaManager.getQuotasReactive(any(QuotaRoot.class)))
             .thenReturn(Mono.just(new QuotaManager.Quotas(MESSAGE_QUOTA, STORAGE_QUOTA)));
 
-        QuotaResponse storageQuotaResponse = new QuotaResponse("STORAGE", "plop", STORAGE_QUOTA);
-        QuotaResponse messageQuotaResponse = new QuotaResponse("MESSAGE", "plop", MESSAGE_QUOTA);
+        // RFC 9208 section 5.1: a single QUOTA response per quota root
+        QuotaResponse quotaResponse = new QuotaResponse("plop", ImmutableList.of(
+            new QuotaResponse.Resource("MESSAGE", MESSAGE_QUOTA), new QuotaResponse.Resource("STORAGE", STORAGE_QUOTA)));
 
         testee.doProcess(getQuotaRequest, mockedResponder, imapSession).block();
 
         ArgumentCaptor<ImapResponseMessage> argumentCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
-        verify(mockedResponder, times(3)).respond(argumentCaptor.capture());
+        verify(mockedResponder, times(2)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(mockedResponder);
 
         assertThat(argumentCaptor.getAllValues())
-            .hasSize(3)
-            .contains(storageQuotaResponse, messageQuotaResponse);
-        assertThat(argumentCaptor.getAllValues().get(2))
+            .hasSize(2)
+            .contains(quotaResponse);
+        assertThat(argumentCaptor.getAllValues().get(1))
             .matches(StatusResponseTypeMatcher.OK_RESPONSE_MATCHER::matches);
     }
 
