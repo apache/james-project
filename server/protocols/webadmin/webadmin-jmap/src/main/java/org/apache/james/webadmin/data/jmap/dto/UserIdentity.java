@@ -33,7 +33,6 @@ import org.apache.james.jmap.api.model.Identity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 
 import scala.jdk.javaapi.CollectionConverters;
@@ -85,8 +84,13 @@ public class UserIdentity {
             return mailAddress;
         }
 
-        public org.apache.james.jmap.api.model.EmailAddress asScalaEmailAddress() throws AddressException {
-            return org.apache.james.jmap.api.model.EmailAddress.from(Optional.ofNullable(getEmailerName()), new MailAddress(getMailAddress()));
+        public org.apache.james.jmap.api.model.EmailAddress asScalaEmailAddress() {
+            Preconditions.checkArgument(mailAddress != null, "'email' is mandatory in 'bcc' and 'replyTo' entries");
+            try {
+                return org.apache.james.jmap.api.model.EmailAddress.from(Optional.ofNullable(getEmailerName()), new MailAddress(getMailAddress()));
+            } catch (AddressException e) {
+                throw new IllegalArgumentException(String.format("'%s' is not a valid email address", mailAddress), e);
+            }
         }
     }
 
@@ -121,30 +125,28 @@ public class UserIdentity {
             return IdentityCreationRequest.fromJava(
                 new MailAddress(email),
                 Optional.ofNullable(name),
-                Optional.ofNullable(replyTo)
-                    .map(rt -> rt.stream()
-                        .map(Throwing.function(EmailAddress::asScalaEmailAddress))
-                        .collect(Collectors.toList())),
-                Optional.ofNullable(bcc)
-                    .map(rt -> rt.stream()
-                        .map(Throwing.function(EmailAddress::asScalaEmailAddress))
-                        .collect(Collectors.toList())),
+                asScalaEmailAddresses(replyTo),
+                asScalaEmailAddresses(bcc),
                 Optional.ofNullable(sortOrder),
                 Optional.ofNullable(textSignature),
                 Optional.ofNullable(htmlSignature));
         }
 
+        private static Optional<List<org.apache.james.jmap.api.model.EmailAddress>> asScalaEmailAddresses(List<EmailAddress> addresses) {
+            return Optional.ofNullable(addresses)
+                .map(list -> list.stream()
+                    .map(address -> {
+                        Preconditions.checkArgument(address != null, "'bcc' and 'replyTo' entries must not be null");
+                        return address.asScalaEmailAddress();
+                    })
+                    .collect(Collectors.toList()));
+        }
+
         public IdentityUpdateRequest asUpdateRequest() {
             return IdentityUpdateRequest.fromJava(
                 Optional.ofNullable(name),
-                Optional.ofNullable(replyTo)
-                    .map(rt -> rt.stream()
-                        .map(Throwing.function(EmailAddress::asScalaEmailAddress))
-                        .collect(Collectors.toList())),
-                Optional.ofNullable(bcc)
-                    .map(rt -> rt.stream()
-                        .map(Throwing.function(EmailAddress::asScalaEmailAddress))
-                        .collect(Collectors.toList())),
+                asScalaEmailAddresses(replyTo),
+                asScalaEmailAddresses(bcc),
                 Optional.ofNullable(sortOrder),
                 Optional.ofNullable(textSignature),
                 Optional.ofNullable(htmlSignature));
