@@ -1791,6 +1791,7 @@ Response codes:
  
  - 201: Success. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
+ - 404: The user does not exist. Use the `force` query parameter to bypass this check.
 
 The scheduled task will have the following type `user-reindexing` and the following `additionalInformation`:
 
