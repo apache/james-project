@@ -113,7 +113,7 @@ public class RabbitMQMailQueuesRoutes implements Routes {
         return mailQueueFactory.getQueue(mailQueueName)
             .orElseThrow(
                 () -> ErrorResponder.builder()
-                    .message("%s can not be found", mailQueueName)
+                    .message("%s can not be found", mailQueueName.asString())
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorResponder.ErrorType.NOT_FOUND)
                     .haltError());

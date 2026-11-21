@@ -345,6 +345,7 @@ class TasksRoutesTest {
             .get("/" + unknownTaskId + "/await")
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404)
+            .body("type", is("notFound"))
             .body("message", is("The taskId is not found"));
     }
 

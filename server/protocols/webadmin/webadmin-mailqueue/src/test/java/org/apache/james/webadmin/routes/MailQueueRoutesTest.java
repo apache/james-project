@@ -364,7 +364,9 @@ class MailQueueRoutesTest {
             when()
                 .get(FIRST_QUEUE.asString())
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .body("type", is("notFound"))
+                .body("message", is(FIRST_QUEUE.asString() + " can not be found"));
         }
     }
 

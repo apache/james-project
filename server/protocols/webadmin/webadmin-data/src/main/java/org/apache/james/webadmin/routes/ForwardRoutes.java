@@ -138,7 +138,7 @@ public class ForwardRoutes implements Routes {
         if (!usersRepository.contains(usersRepository.getUsername(mailAddress))) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorType.INVALID_ARGUMENT)
+                .type(ErrorType.NOT_FOUND)
                 .message("Requested base forward address does not correspond to a user")
                 .haltError();
         }
@@ -172,7 +172,7 @@ public class ForwardRoutes implements Routes {
         if (mappings == null || mappings.isEmpty()) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorType.INVALID_ARGUMENT)
+                .type(ErrorType.NOT_FOUND)
                 .message("The forward does not exist")
                 .haltError();
         }
