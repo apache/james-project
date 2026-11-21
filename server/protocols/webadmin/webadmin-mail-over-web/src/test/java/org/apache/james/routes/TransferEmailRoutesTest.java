@@ -22,6 +22,7 @@ package org.apache.james.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
+import static org.hamcrest.Matchers.is;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -94,7 +95,8 @@ class TransferEmailRoutesTest {
                 .post()
                 .then()
                 .assertThat()
-                .statusCode(500);
+                .statusCode(400)
+                .body("type", is("InvalidArgument"));
 
         Assertions.assertThrows(IllegalStateException.class,
                 () -> {
@@ -130,11 +132,50 @@ class TransferEmailRoutesTest {
                 .post()
                 .then()
                 .assertThat()
-                .statusCode(500);
+                .statusCode(400);
 
         Assertions.assertThrows(IllegalStateException.class,
                 () -> {
                     MailQueue.MailQueueItem mailQueueItem = ((Flux<MailQueue.MailQueueItem>) mailQueue.deQueue()).blockFirst(Duration.of(100, ChronoUnit.MILLIS));
                 });
+    }
+
+    @Test
+    void requestFailsWhenFromIsMissing() {
+        given()
+                .body("To: bob@domain.tld\r\nSubject: no from\r\n\r\nx\r\n")
+                .when()
+                .post()
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("type", is("InvalidArgument"));
+    }
+
+    @Test
+    void requestFailsWhenFromIsInvalid() {
+        given()
+                .body("From: not an address\r\nTo: bob@domain.tld\r\nSubject: bad from\r\n\r\nx\r\n")
+                .when()
+                .post()
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("type", is("InvalidArgument"));
+
+        Assertions.assertThrows(IllegalStateException.class,
+                () -> ((Flux<MailQueue.MailQueueItem>) mailQueue.deQueue()).blockFirst(Duration.of(100, ChronoUnit.MILLIS)));
+    }
+
+    @Test
+    void requestFailsWhenRecipientIsInvalid() {
+        given()
+                .body("From: alice@domain.tld\r\nTo: not an address\r\nSubject: bad to\r\n\r\nx\r\n")
+                .when()
+                .post()
+                .then()
+                .assertThat()
+                .statusCode(400)
+                .body("type", is("InvalidArgument"));
     }
 }

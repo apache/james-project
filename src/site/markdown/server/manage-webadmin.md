@@ -4269,6 +4269,11 @@ Will send the following email to the recipients specified in the MIME message.
 
 The `{MIME message}` payload must match `message/rfc822` format.
 
+Response codes:
+
+ - 201: The email was enqueued for processing
+ - 400: The payload is not a valid MIME message, has no valid `From` address, no recipient or an invalid recipient address
+
 ## Administrating DLP Configuration
 
 DLP (stands for Data Leak Prevention) is supported by James. A DLP matcher will, on incoming emails,

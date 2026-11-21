@@ -4540,6 +4540,11 @@ Will send the following email to the recipients specified in the MIME message.
 
 The `{MIME message}` payload must match `message/rfc822` format.
 
+Response codes:
+
+* 201: The email was enqueued for processing
+* 400: The payload is not a valid MIME message, has no valid `From` address, no recipient or an invalid recipient address
+
 == Event Dead Letter
 
 The EventBus allows to register `group listeners' that are called in a
