@@ -23,10 +23,6 @@ import java.util.List;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.core.quota.QuotaCountLimit;
-import org.apache.james.core.quota.QuotaCountUsage;
-import org.apache.james.core.quota.QuotaSizeLimit;
-import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -41,7 +37,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
@@ -109,15 +104,8 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
         return Mono.from(quotaRootResolver.getQuotaRootReactive(mailboxPath))
             .flatMap(quotaRoot -> Mono.from(quotaManager.getQuotasReactive(quotaRoot))
                 .doOnNext(quotas -> {
-                    Quota<QuotaCountLimit, QuotaCountUsage> messageQuota = quotas.getMessageQuota();
-                    Quota<QuotaSizeLimit, QuotaSizeUsage> storageQuota = quotas.getStorageQuota();
                     responder.respond(new QuotaRootResponse(request.getMailboxName(), quotaRoot.getValue()));
-                    if (messageQuota.getLimit().isLimited()) {
-                        responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), messageQuota));
-                    }
-                    if (storageQuota.getLimit().isLimited()) {
-                        responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
-                    }
+                    responder.respond(QuotaResponse.ofLimitedResources(quotaRoot.getValue(), quotas));
                     okComplete(request, responder);
                 }))
             .onErrorResume(MailboxException.class, e -> {

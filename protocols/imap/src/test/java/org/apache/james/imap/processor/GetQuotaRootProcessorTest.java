@@ -65,6 +65,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
 
+import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -77,6 +79,10 @@ class GetQuotaRootProcessorTest {
         Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(24)).computedLimit(QuotaCountLimit.count(1589)).build();
     private static final Quota<QuotaSizeLimit, QuotaSizeUsage> STORAGE_QUOTA =
         Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(240)).computedLimit(QuotaSizeLimit.size(15890)).build();
+    private static final Quota<QuotaCountLimit, QuotaCountUsage> UNLIMITED_MESSAGE_QUOTA =
+        Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(24)).computedLimit(QuotaCountLimit.unlimited()).build();
+    private static final Quota<QuotaSizeLimit, QuotaSizeUsage> UNLIMITED_STORAGE_QUOTA =
+        Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(240)).computedLimit(QuotaSizeLimit.unlimited()).build();
 
     private GetQuotaRootProcessor testee;
     private FakeImapSession imapSession;
@@ -119,22 +125,49 @@ class GetQuotaRootProcessorTest {
         when(mockedQuotaManager.getQuotasReactive(any(QuotaRoot.class)))
             .thenReturn(Mono.just(new QuotaManager.Quotas(MESSAGE_QUOTA, STORAGE_QUOTA)));
 
-        final QuotaResponse storageQuotaResponse = new QuotaResponse("STORAGE", "plop", STORAGE_QUOTA);
-        final QuotaResponse messageQuotaResponse = new QuotaResponse("MESSAGE", "plop", MESSAGE_QUOTA);
-        final QuotaRootResponse quotaRootResponse = new QuotaRootResponse("INBOX", "plop");
+        QuotaResponse quotaResponse = new QuotaResponse("plop", ImmutableList.of(
+            new QuotaResponse.Resource("MESSAGE", MESSAGE_QUOTA),
+            new QuotaResponse.Resource("STORAGE", STORAGE_QUOTA)));
+        QuotaRootResponse quotaRootResponse = new QuotaRootResponse("INBOX", "plop");
 
         testee.doProcess(getQuotaRootRequest, mockedResponder, imapSession).block();
 
         verify(mockedMailboxManager).manageProcessing(any(), any());
 
         ArgumentCaptor<ImapResponseMessage> responseCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
-        verify(mockedResponder, times(4)).respond(responseCaptor.capture());
+        verify(mockedResponder, times(3)).respond(responseCaptor.capture());
 
         List<ImapResponseMessage> captorValues = responseCaptor.getAllValues();
-        assertThat(captorValues).contains(quotaRootResponse, storageQuotaResponse, messageQuotaResponse);
+        assertThat(captorValues).containsSubsequence(quotaRootResponse, quotaResponse);
         assertThat(captorValues).anySatisfy(response -> assertThat(response).isInstanceOfSatisfying(
             StatusResponse.class,
             st -> assertThat(st.getServerResponseType()).isEqualTo(OK)));
+    }
+
+    @Test
+    void processorShouldRespondAnEmptyQuotaWhenNoLimit() throws Exception {
+        assertThat(quotaRootResponses(new QuotaManager.Quotas(UNLIMITED_MESSAGE_QUOTA, UNLIMITED_STORAGE_QUOTA)))
+            .containsSubsequence(new QuotaRootResponse("INBOX", "plop"), new QuotaResponse("plop", ImmutableList.of()));
+    }
+
+    @Test
+    void processorShouldOnlyListLimitedResources() throws Exception {
+        assertThat(quotaRootResponses(new QuotaManager.Quotas(UNLIMITED_MESSAGE_QUOTA, STORAGE_QUOTA)))
+            .contains(new QuotaResponse("plop", ImmutableList.of(new QuotaResponse.Resource("STORAGE", STORAGE_QUOTA))));
+    }
+
+    private List<ImapResponseMessage> quotaRootResponses(QuotaManager.Quotas quotas) throws Exception {
+        imapSession.authenticated();
+        imapSession.setMailboxSession(mailboxSession);
+        when(mockedQuotaRootResolver.getQuotaRootReactive(MAILBOX_PATH)).thenReturn(Mono.just(QUOTA_ROOT));
+        when(mockedMailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Read), eq(mailboxSession))).thenReturn(true);
+        when(mockedQuotaManager.getQuotasReactive(any(QuotaRoot.class))).thenReturn(Mono.just(quotas));
+
+        testee.doProcess(new GetQuotaRootRequest(TAG, "INBOX"), mockedResponder, imapSession).block();
+
+        ArgumentCaptor<ImapResponseMessage> responseCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
+        verify(mockedResponder, times(3)).respond(responseCaptor.capture());
+        return responseCaptor.getAllValues();
     }
 
     @Test

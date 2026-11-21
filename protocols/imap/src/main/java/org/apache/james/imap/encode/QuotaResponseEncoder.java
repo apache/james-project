@@ -30,6 +30,8 @@ import org.apache.james.mailbox.model.Quota;
  * Quota response encoder
  */
 public class QuotaResponseEncoder implements ImapResponseEncoder<QuotaResponse> {
+    private static final long BYTES_PER_KIB = 1024;
+
     @Override
     public Class<QuotaResponse> acceptableMessages() {
         return QuotaResponse.class;
@@ -38,31 +40,35 @@ public class QuotaResponseEncoder implements ImapResponseEncoder<QuotaResponse> 
     @Override
     public void encode(QuotaResponse quotaResponse, ImapResponseComposer composer) throws IOException {
         String quotaRoot = quotaResponse.getQuotaRoot();
-        Quota<?, ?> quota = quotaResponse.getQuota();
 
         composer.untagged();
         composer.message(ImapConstants.QUOTA_RESPONSE_NAME);
         composer.message(quotaRoot == null ? "" : quotaRoot);
         composer.openParen();
-        composer.message(quotaResponse.getResourceName());
-        // See RFC 2087 : response for STORAGE should be in KB. For more accuracy, we stores B, so conversion should be made
-        switch (quotaResponse.getResourceName().toUpperCase(Locale.US)) {
-            case ImapConstants.STORAGE_QUOTA_RESOURCE:
-                writeMessagesSize(composer, quota);
-                break;
-            case ImapConstants.MESSAGE_QUOTA_RESOURCE:
-                writeMessagesCount(composer, quota);
-                break;
+        for (QuotaResponse.Resource resource : quotaResponse.getResources()) {
+            encode(resource, composer);
         }
-
         composer.closeParen();
 
         composer.end();
     }
 
+    private void encode(QuotaResponse.Resource resource, ImapResponseComposer composer) throws IOException {
+        composer.message(resource.name());
+        // See RFC 9208 : response for STORAGE should be in KB. For more accuracy, we stores B, so conversion should be made
+        switch (resource.name().toUpperCase(Locale.US)) {
+            case ImapConstants.STORAGE_QUOTA_RESOURCE:
+                writeMessagesSize(composer, resource.quota());
+                break;
+            case ImapConstants.MESSAGE_QUOTA_RESOURCE:
+                writeMessagesCount(composer, resource.quota());
+                break;
+        }
+    }
+
     private void writeMessagesSize(ImapResponseComposer composer, Quota<?, ?> quota) throws IOException {
-        composer.message(quota.getUsed().asLong() / 1024);
-        composer.message(quota.getLimit().asLong() / 1024);
+        composer.message(quota.getUsed().asLong() / BYTES_PER_KIB);
+        composer.message(quota.getLimit().asLong() / BYTES_PER_KIB);
     }
 
     private void writeMessagesCount(ImapResponseComposer composer, Quota<?, ?> quota) throws IOException {
