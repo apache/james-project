@@ -69,16 +69,14 @@ LOG INFO awaiting commands
 AWAIT
 
 C: A006 GETQUOTAROOT #private.imapuser.test
-S: \* QUOTAROOT "#private\.imapuser\.test" #private&imapuser
-S: \* QUOTA #private&imapuser \(MESSAGE 6 7\)
-S: \* QUOTA #private&imapuser \(STORAGE 1 5242880\)
+S: \* QUOTAROOT "#private\.imapuser\.test" "#private&imapuser"
+S: \* QUOTA "#private&imapuser" \(MESSAGE 6 7 STORAGE 1 5242880\)
 S: A006 OK GETQUOTAROOT completed.
 
 C: A007 GETQUOTA #private&imapuser
 # seven because of pre inserted messages for imapuser
-S: \* QUOTA #private&imapuser \(MESSAGE 6 7\)
 # 1 = 1KB : 254 * 4 + 3 * 310 = 1946 so shrinked to 1KB
-S: \* QUOTA #private&imapuser \(STORAGE 1 5242880\)
+S: \* QUOTA "#private&imapuser" \(MESSAGE 6 7 STORAGE 1 5242880\)
 S: A007 OK GETQUOTA completed.
 
 C: A005 APPEND #private.imapuser.test (\Seen \Draft) "09-Apr-2008 15:17:51 +0200" {310+}
@@ -101,22 +99,19 @@ LOG INFO awaiting commands
 AWAIT
 
 C: A006 GETQUOTAROOT #private.imapuser.test
-S: \* QUOTAROOT "#private\.imapuser\.test" #private&imapuser
-S: \* QUOTA #private&imapuser \(MESSAGE 7 7\)
-S: \* QUOTA #private&imapuser \(STORAGE 1 5242880\)
+S: \* QUOTAROOT "#private\.imapuser\.test" "#private&imapuser"
+S: \* QUOTA "#private&imapuser" \(MESSAGE 7 7 STORAGE 1 5242880\)
 S: A006 OK GETQUOTAROOT completed.
 
 C: A007 GETQUOTA #private&imapuser
 # seven because of pre inserted messages for imapuser
-S: \* QUOTA #private&imapuser \(MESSAGE 7 7\)
 # 1 = 1KB : 254 * 4 + 3 * 310 = 1946 so shrinked to 1KB
-S: \* QUOTA #private&imapuser \(STORAGE 1 5242880\)
+S: \* QUOTA "#private&imapuser" \(MESSAGE 7 7 STORAGE 1 5242880\)
 S: A007 OK GETQUOTA completed.
 
 # The quota root is an astring
 C: A008 GETQUOTA "#private&imapuser"
-S: \* QUOTA #private&imapuser \(MESSAGE 7 7\)
-S: \* QUOTA #private&imapuser \(STORAGE 1 5242880\)
+S: \* QUOTA "#private&imapuser" \(MESSAGE 7 7 STORAGE 1 5242880\)
 S: A008 OK GETQUOTA completed.
 
 C: A007 SETQUOTA #private&imapuser (MESSAGE 4096) (STORAGE 5242880)

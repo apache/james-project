@@ -103,12 +103,8 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
     }
 
     private void respond(Responder responder, GetQuotaRequest request, QuotaRoot quotaRoot, QuotaManager.Quotas quotas) {
-        if (quotas.getMessageQuota().getLimit().isLimited()) {
-            responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), quotas.getMessageQuota()));
-        }
-        if (quotas.getStorageQuota().getLimit().isLimited()) {
-            responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), quotas.getStorageQuota()));
-        }
+        // RFC 9208 section 4.2.1: a single QUOTA response, listing the limited resources (possibly none)
+        responder.respond(QuotaResponse.from(quotaRoot.getValue(), quotas));
         okComplete(request, responder);
     }
 

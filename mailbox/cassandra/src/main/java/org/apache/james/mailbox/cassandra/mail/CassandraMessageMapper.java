@@ -44,7 +44,6 @@ import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProf
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
-import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -540,7 +539,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public Mono<MessageMetaData> copyReactive(Mailbox mailbox, MailboxMessage original) {
-        original.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flag.RECENT).build());
+        // The copy keeps the flags of the original, \Recent included: copies and moves never mark a message recent
         original.setSaveDate(Date.from(clock.instant()));
         return setInMailboxReactive(mailbox, original);
     }
@@ -552,7 +551,6 @@ public class CassandraMessageMapper implements MessageMapper {
         }
         return setMessagesInMailboxReactive(mailbox, originals.stream()
             .map(original -> {
-                original.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flag.RECENT).build());
                 original.setSaveDate(Date.from(clock.instant()));
                 return original;
             }).collect(ImmutableList.toImmutableList()))

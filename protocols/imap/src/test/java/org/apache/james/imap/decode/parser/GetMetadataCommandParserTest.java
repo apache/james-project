@@ -433,4 +433,25 @@ public class GetMetadataCommandParserTest {
         assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
             .isInstanceOf(DecodingException.class);
     }
+
+    @Test
+    void decodeShouldAcceptTopLevelEntriesWithDepth() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream(("(DEPTH infinity) " + INBOX + " (/private /shared)\n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        GetMetadataRequest request = (GetMetadataRequest) parser.decode(lineReader, TAG, session);
+
+        assertThat(request.getKeys()).containsOnly(MailboxAnnotationKey.forRetrieval("/private"), MailboxAnnotationKey.forRetrieval("/shared"));
+        assertThat(request.getDepth()).isEqualTo(Depth.INFINITY);
+    }
+
+    @Test
+    void decodeShouldAcceptAPartialVendorEntry() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream(("(DEPTH 1) " + INBOX + " /private/vendor/acme\n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        GetMetadataRequest request = (GetMetadataRequest) parser.decode(lineReader, TAG, session);
+
+        assertThat(request.getKeys()).containsOnly(MailboxAnnotationKey.forRetrieval("/private/vendor/acme"));
+    }
 }

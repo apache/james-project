@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -37,6 +38,7 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.ReadOnlyAnnotationPredicate;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.PrivateAnnotationException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -90,6 +92,7 @@ class StoreMailboxManagerAnnotationTest {
         when(mailboxSessionMapperFactory.getMailboxMapper(eq(session))).thenReturn(mailboxMapper);
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(session))).thenReturn(annotationMapper);
         when(mailbox.getMailboxId()).thenReturn(mailboxId);
+        when(mailbox.getUser()).thenReturn(session.getUser());
         when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(Mono.just(mailbox));
         when(annotationMapper.execute(any(Mapper.Transaction.class)))
             .thenAnswer(invocationOnMock -> {
@@ -208,5 +211,58 @@ class StoreMailboxManagerAnnotationTest {
         manager.updateAnnotations(mailboxPath, session, ImmutableList.of(PRIVATE_ANNOTATION));
 
         verify(annotationMapper, times(1)).insertAnnotationReactive(eq(mailboxId), eq(PRIVATE_ANNOTATION));
+    }
+
+    @Test
+    void privateAnnotationsShouldNotBeVisibleToOtherUsers() throws Exception {
+        when(mailbox.getUser()).thenReturn(Username.of("mailboxOwner"));
+        when(annotationMapper.getAllAnnotationsReactive(eq(mailboxId))).thenReturn(Flux.fromIterable(ANNOTATIONS));
+        when(annotationMapper.getAnnotationsByKeysReactive(eq(mailboxId), any())).thenReturn(Flux.fromIterable(ANNOTATIONS));
+        when(annotationMapper.getAnnotationsByKeysWithOneDepthReactive(eq(mailboxId), any())).thenReturn(Flux.fromIterable(ANNOTATIONS));
+        when(annotationMapper.getAnnotationsByKeysWithAllDepthReactive(eq(mailboxId), any())).thenReturn(Flux.fromIterable(ANNOTATIONS));
+
+        assertThat(annotationManager.getAllAnnotations(mailboxPath, session)).containsOnly(SHARED_ANNOTATION);
+        assertThat(annotationManager.getAnnotationsByKeys(mailboxPath, session, KEYS)).containsOnly(SHARED_ANNOTATION);
+        assertThat(annotationManager.getAnnotationsByKeysWithOneDepth(mailboxPath, session, KEYS)).containsOnly(SHARED_ANNOTATION);
+        assertThat(annotationManager.getAnnotationsByKeysWithAllDepth(mailboxPath, session, KEYS)).containsOnly(SHARED_ANNOTATION);
+    }
+
+    @Test
+    void privateAnnotationsShouldBeVisibleToTheOwner() throws Exception {
+        when(annotationMapper.getAllAnnotationsReactive(eq(mailboxId))).thenReturn(Flux.fromIterable(ANNOTATIONS));
+
+        assertThat(annotationManager.getAllAnnotations(mailboxPath, session)).containsOnlyElementsOf(ANNOTATIONS);
+    }
+
+    @Test
+    void otherUsersShouldNotSetPrivateAnnotations() {
+        when(mailbox.getUser()).thenReturn(Username.of("mailboxOwner"));
+
+        assertThatThrownBy(() -> annotationManager.updateAnnotations(mailboxPath, session, ANNOTATIONS))
+            .isInstanceOf(PrivateAnnotationException.class);
+
+        verify(annotationMapper, never()).insertAnnotationReactive(any(), any());
+        verify(annotationMapper, never()).deleteAnnotationReactive(any(), any());
+    }
+
+    @Test
+    void otherUsersShouldNotDeletePrivateAnnotations() {
+        when(mailbox.getUser()).thenReturn(Username.of("mailboxOwner"));
+
+        assertThatThrownBy(() -> annotationManager.updateAnnotations(mailboxPath, session, ImmutableList.of(MailboxAnnotation.nil(PRIVATE_KEY))))
+            .isInstanceOf(PrivateAnnotationException.class);
+
+        verify(annotationMapper, never()).deleteAnnotationReactive(any(), any());
+    }
+
+    @Test
+    void otherUsersShouldSetSharedAnnotations() throws Exception {
+        when(mailbox.getUser()).thenReturn(Username.of("mailboxOwner"));
+        when(annotationMapper.existReactive(eq(mailboxId), any())).thenReturn(Mono.just(true));
+        when(annotationMapper.insertAnnotationReactive(eq(mailboxId), any())).thenReturn(Mono.empty());
+
+        annotationManager.updateAnnotations(mailboxPath, session, ImmutableList.of(SHARED_ANNOTATION));
+
+        verify(annotationMapper).insertAnnotationReactive(eq(mailboxId), eq(SHARED_ANNOTATION));
     }
 }

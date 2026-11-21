@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class MailboxAnnotationKeyTest {
     @Test
@@ -129,6 +131,38 @@ class MailboxAnnotationKeyTest {
     }
 
     @Test
+    void forRetrievalShouldAcceptTopLevelEntries() {
+        assertThat(MailboxAnnotationKey.forRetrieval("/private").asString()).isEqualTo("/private");
+        assertThat(MailboxAnnotationKey.forRetrieval("/shared").asString()).isEqualTo("/shared");
+    }
+
+    @Test
+    void forRetrievalShouldAcceptPartialVendorEntries() {
+        assertThat(MailboxAnnotationKey.forRetrieval("/private/vendor").asString()).isEqualTo("/private/vendor");
+        assertThat(MailboxAnnotationKey.forRetrieval("/private/vendor/acme").asString()).isEqualTo("/private/vendor/acme");
+    }
+
+    @Test
+    void forRetrievalShouldStillValidateTheSyntax() {
+        assertThatThrownBy(() -> MailboxAnnotationKey.forRetrieval("/private/"))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> MailboxAnnotationKey.forRetrieval("private"))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> MailboxAnnotationKey.forRetrieval("/"))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> MailboxAnnotationKey.forRetrieval("/private*"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void forRetrievalShouldMatchItsDescendants() {
+        assertThat(MailboxAnnotationKey.forRetrieval("/private")
+            .isAncestorOrIsEqual(new MailboxAnnotationKey("/private/filters/values/a"))).isTrue();
+        assertThat(MailboxAnnotationKey.forRetrieval("/private")
+            .isAncestorOrIsEqual(new MailboxAnnotationKey("/shared/comment"))).isFalse();
+    }
+
+    @Test
     void isParentOrIsEqualShouldReturnTrueWhenSameKey() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
 
@@ -221,5 +255,17 @@ class MailboxAnnotationKeyTest {
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/tututata");
 
         assertThat(key1.isParentOrIsEqual(key2)).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/private", "/private/comment", "/PRIVATE/Comment", "/private/vendor/acme/x"})
+    void privateEntriesShouldBeRecognized(String key) {
+        assertThat(MailboxAnnotationKey.forRetrieval(key).isPrivate()).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/shared", "/shared/comment", "/privateer/comment", "/shared/private"})
+    void otherEntriesShouldNotBePrivate(String key) {
+        assertThat(MailboxAnnotationKey.forRetrieval(key).isPrivate()).isFalse();
     }
 }

@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Ascii;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +33,8 @@ public class Role {
     public static final String USER_DEFINED_ROLE_PREFIX = "x-";
 
     private static final BiFunction<String, String, Boolean> CASE_SENSITIVE_COMPARATOR = (a, b) -> a.equals(b);
-    private static final BiFunction<String, String, Boolean> NON_CASE_SENSITIVE_COMPARATOR = (a, b) -> a.equalsIgnoreCase(b);
+    // IMAP case-insensitivity is ASCII only: no Unicode case folding (eg a Turkish dotless i in "ınbox")
+    private static final BiFunction<String, String, Boolean> NON_CASE_SENSITIVE_COMPARATOR = (a, b) -> a != null && b != null && Ascii.equalsIgnoreCase(a, b);
 
     public static final Role INBOX = new Role("inbox", DefaultMailboxes.INBOX, NON_CASE_SENSITIVE_COMPARATOR);
     public static final Role DRAFTS = new Role("drafts", DefaultMailboxes.DRAFTS, CASE_SENSITIVE_COMPARATOR);

@@ -40,7 +40,6 @@ import org.apache.james.backends.postgres.utils.PostgresUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
-import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -385,7 +384,8 @@ public class PostgresMessageMapper implements MessageMapper {
     public Mono<MessageMetaData> copyReactive(Mailbox mailbox, MailboxMessage original) {
         return Mono.fromCallable(() -> {
                 MailboxMessage copiedMessage = original.copy(mailbox);
-                copiedMessage.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flags.Flag.RECENT).build());
+                // The copy keeps the flags of the original, \Recent included: copies and moves never mark a message recent
+                copiedMessage.setFlags(original.createFlags());
                 copiedMessage.setSaveDate(Date.from(clock.instant()));
                 return copiedMessage;
             })

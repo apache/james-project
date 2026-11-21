@@ -31,33 +31,59 @@ import org.apache.james.imap.message.response.QuotaResponse;
 import org.apache.james.mailbox.model.Quota;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * QUOTA Response encoder test
  */
 class QuotaResponseEncoderTest {
     @Test
     void quotaMessageResponseShouldBeWellFormatted() throws Exception {
-        QuotaResponse response = new QuotaResponse("MESSAGE", "root",
-            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(231)).computedLimit(QuotaCountLimit.count(1024)).build());
+        QuotaResponse response = new QuotaResponse("root", ImmutableList.of(new QuotaResponse.Resource("MESSAGE",
+            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(231)).computedLimit(QuotaCountLimit.count(1024)).build())));
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
         QuotaResponseEncoder encoder = new QuotaResponseEncoder();
         encoder.encode(response, composer);
         composer.flush();
         String responseString = byteImapResponseWriter.getString();
-        assertThat(responseString).isEqualTo("* QUOTA root (MESSAGE 231 1024)\r\n");
+        assertThat(responseString).isEqualTo("* QUOTA \"root\" (MESSAGE 231 1024)\r\n");
     }
 
     @Test
     void quotaStorageResponseShouldBeWellFormatted() throws Exception {
-        QuotaResponse response = new QuotaResponse("STORAGE", "root",
-        Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(231 * 1024)).computedLimit(QuotaSizeLimit.size(1024 * 1024)).build());
+        QuotaResponse response = new QuotaResponse("root", ImmutableList.of(new QuotaResponse.Resource("STORAGE",
+        Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(231 * 1024)).computedLimit(QuotaSizeLimit.size(1024 * 1024)).build())));
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
         QuotaResponseEncoder encoder = new QuotaResponseEncoder();
         encoder.encode(response, composer);
         composer.flush();
         String responseString = byteImapResponseWriter.getString();
-        assertThat(responseString).isEqualTo("* QUOTA root (STORAGE 231 1024)\r\n");
+        assertThat(responseString).isEqualTo("* QUOTA \"root\" (STORAGE 231 1024)\r\n");
+    }
+
+    @Test
+    void quotaResponseWithoutLimitsShouldHaveAnEmptyResourceList() throws Exception {
+        ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
+        ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
+        new QuotaResponseEncoder().encode(QuotaResponse.withoutLimits("root"), composer);
+        composer.flush();
+        assertThat(byteImapResponseWriter.getString()).isEqualTo("* QUOTA \"root\" ()\r\n");
+    }
+
+    @Test
+    void quotaResponseShouldListAllItsResourcesInASingleResponse() throws Exception {
+        QuotaResponse response = new QuotaResponse("#private&bob@domain.tld", ImmutableList.of(
+            new QuotaResponse.Resource("MESSAGE",
+                Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(42)).computedLimit(QuotaCountLimit.count(1000)).build()),
+            new QuotaResponse.Resource("STORAGE",
+                Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(54 * 1024)).computedLimit(QuotaSizeLimit.size(111 * 1024)).build())));
+        ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
+        ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
+        new QuotaResponseEncoder().encode(response, composer);
+        composer.flush();
+        // RFC 9208 section 5.1, quota-root-name = astring
+        assertThat(byteImapResponseWriter.getString()).isEqualTo("* QUOTA \"#private&bob@domain.tld\" (MESSAGE 42 1000 STORAGE 54 111)\r\n");
     }
 }

@@ -76,6 +76,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private static final boolean RETRY = true;
     private static final String TRAILING_EOL_SIZE = "TRAILING_EOL_SIZE";
     private static final String SINK = "SINK";
+    private static final String LITERAL_LINE_LENGTH = "LITERAL_LINE_LENGTH";
     private static final String SUBSCRIPTION = "SUBSCRIPTION";
     public static final int UNAUTHENTICATE_LITERAL_MAX_SIZE = Optional.ofNullable(System.getProperty("james.imap.unauthenticated.literal.max.size"))
         .map(Integer::parseInt)
@@ -94,6 +95,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     // Spots a non synchronizing literal announced at the end of the rejected line being discarded
     private final LiteralAnnouncementScanner rejectedLineScanner = new LiteralAnnouncementScanner();
     private final AtomicBoolean awaitingFileBackedLiteral = new AtomicBoolean(false);
+    // Non synchronizing literal announced at the end of the line of a file-backed literal: discarded from the event
+    // loop once that command is decoded
+    private volatile Optional<Long> literalToDiscardAfterFileBackedCommand = Optional.empty();
 
     public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength) {
         this.decoder = decoder;
@@ -220,11 +224,15 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                     }
                 }
 
-                if (literalBytesToDiscard > 0) {
-                    // Literal content is not split into lines
-                    disableFraming(ctx);
-                } else {
-                    enableFraming(ctx);
+                // A file-backed command is decoded outside of the event loop: its framing is set once it resumes,
+                // see resumeAfterFileBackedLiteral
+                if (attempt.buffer() != null) {
+                    if (literalBytesToDiscard > 0) {
+                        // Literal content is not split into lines
+                        disableFraming(ctx);
+                    } else {
+                        enableFraming(ctx);
+                    }
                 }
 
                 attachment.clear();
@@ -488,12 +496,13 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 .subscribe(fileChunkConsumer,
                     e -> {
                         fileChunkConsumer.discard();
+                        attachment.clear();
                         ctx.fireExceptionCaught(e);
                         resumeAfterFileBackedLiteral(ctx);
                     },
                     () -> {
                         fileChunkConsumer.finalizeDataTransfer();
-                        ImapRequestLineReader reader = new NettyStreamImapRequestLineReader(ctx.channel(), fileChunkConsumer.getFile(), RETRY, maxFrameLength);
+                        NettyStreamImapRequestLineReader reader = new NettyStreamImapRequestLineReader(ctx.channel(), fileChunkConsumer.getFile(), RETRY, maxFrameLength);
 
                         // Remove ongoing subscription: now on lifecycle of the message will be managed by ImapChannelUpstreamHandler.
                         // Not doing this causes IDLEd IMAP connections to clear IMAP append literal while they are processed.
@@ -506,10 +515,17 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                             // literal was being buffered, leaves nobody to do it.
                             boolean isNotClosable = message.filter(Closeable.class::isInstance).isEmpty();
                             if (isNotClosable) {
+                                reader.close();
                                 fileChunkConsumer.discard();
+                            } else if (!reader.hasDeferredEndOfLine()) {
+                                // Only the message data of an APPEND (not its UTF8 form) reads the end of its line
+                                // from the reader once processed
+                                reader.close();
                             }
                             message.ifPresent(ctx::fireChannelRead);
                         } catch (Exception e) {
+                            closeQuietly(reader);
+                            attachment.clear();
                             if (removed instanceof Disposable) {
                                 ((Disposable) removed).dispose();
                             }
@@ -536,18 +552,43 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         int literalSize = size - (Integer) attachment.getOrDefault(TRAILING_EOL_SIZE, 0);
         int literalBytes = Math.min(readableBytes, Math.max(0, literalSize - received));
         boolean literalSpooled = received + literalBytes >= literalSize;
-        int accepted = literalSpooled ? endOfLiteralLine(bytes, literalBytes) : literalBytes;
+        int accepted = literalBytes;
+        boolean lineEnded = false;
+        boolean lineTooLong = false;
+        if (literalSpooled) {
+            // The file holds the whole command: what follows the literal up to the end of its line goes there too
+            // (eg the next entries of a SETMETADATA), so that the command decoded does not depend on where its
+            // literal is held.
+            int lineLength = (Integer) attachment.getOrDefault(LITERAL_LINE_LENGTH, 0);
+            int endOfLine = indexOfLineFeed(bytes, literalBytes);
+            int lineEnd = endOfLine < 0 ? readableBytes : endOfLine + 1;
+            int lineBytes = Math.min(lineEnd - literalBytes, Math.max(0, maxFrameLength - lineLength));
+            accepted = literalBytes + lineBytes;
+            lineEnded = endOfLine >= 0 && accepted == lineEnd;
+            lineTooLong = !lineEnded && lineLength + lineBytes >= maxFrameLength;
+            if (lineLength == 0) {
+                rejectedLineScanner.reset();
+            }
+            attachment.put(LITERAL_LINE_LENGTH, lineLength + lineBytes);
+            // Spots a further literal announced at the end of the line. Should the line be too long, the scanner
+            // goes on with the rest of the line, discarded by discardRestOfRejectedLine.
+            rejectedLineScanner.scan(in, in.readerIndex() + literalBytes, in.readerIndex() + accepted);
+        }
         in.skipBytes(accepted);
         sink.getLeft().emitNext(accepted == readableBytes ? bytes : Arrays.copyOf(bytes, accepted), FAIL_FAST);
         sink.getRight().addAndGet(accepted);
-        boolean lineEnded = accepted > literalBytes && bytes[accepted - 1] == '\n';
-        boolean endOfLineReached = accepted < readableBytes || lineEnded;
-        if (literalSpooled && endOfLineReached) {
-            if (!lineEnded) {
-                // Malformed literal line, the command will be rejected: drop the rest of that line.
+        if (lineEnded || lineTooLong) {
+            if (lineTooLong) {
+                // The command will be rejected: drop the rest of that line.
                 discardUntilEndOfLine = true;
             }
             awaitingFileBackedLiteral.set(true);
+            if (lineEnded) {
+                // A further non synchronizing literal ends the line: the file holds the command up to its announcement
+                // only, so the command is rejected, and the client sends that literal anyway. It is not a command.
+                literalToDiscardAfterFileBackedCommand = rejectedLineScanner.announcedLiteralSize();
+                rejectedLineScanner.reset();
+            }
             sink.getLeft().tryEmitComplete();
         }
     }
@@ -561,6 +602,17 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             awaitingFileBackedLiteral.set(false);
             if (!ctx.isRemoved() && ctx.channel().isActive()) {
                 try {
+                    Optional<Long> literalToDiscard = literalToDiscardAfterFileBackedCommand;
+                    literalToDiscardAfterFileBackedCommand = Optional.empty();
+                    if (literalToDiscard.isPresent()) {
+                        discardLiteral(ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get(), literalToDiscard.get());
+                    }
+                    if (literalBytesToDiscard > 0) {
+                        // Literal content is not split into lines
+                        disableFraming(ctx);
+                    } else if (!discardUntilEndOfLine) {
+                        enableFraming(ctx);
+                    }
                     channelRead(ctx, Unpooled.EMPTY_BUFFER);
                 } catch (Exception e) {
                     ctx.fireExceptionCaught(e);
@@ -569,24 +621,21 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         });
     }
 
-    /**
-     * Where the end of the line following a literal stops in {@code bytes}, starting at {@code length}.
-     * {@link ImapRequestLineReader#eol()} tolerates spaces before the end of line, and a bare LF: keep
-     * spooling them rather than cutting the line short, but nothing after, as this is the next command.
-     * The literal can also be the last item of a list, as in the {@code UTF8 (literal8)} form of APPEND (RFC 6855).
-     */
-    private static int endOfLiteralLine(byte[] bytes, int literalEnd) {
-        int length = literalEnd;
-        if (length < bytes.length && bytes[length] == ')') {
-            length++;
+    private static void closeQuietly(Closeable closeable) {
+        try {
+            closeable.close();
+        } catch (IOException e) {
+            //ignore exception during close
         }
-        while (length < bytes.length && (bytes[length] == ' ' || bytes[length] == '\r')) {
-            length++;
+    }
+
+    private static int indexOfLineFeed(byte[] bytes, int from) {
+        for (int i = from; i < bytes.length; i++) {
+            if (bytes[i] == '\n') {
+                return i;
+            }
         }
-        if (length < bytes.length && bytes[length] == '\n') {
-            length++;
-        }
-        return length;
+        return -1;
     }
 
     public static class FileHolderInner extends LeakAware.Resource {

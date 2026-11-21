@@ -31,6 +31,7 @@ import java.util.Base64;
 import java.util.Optional;
 
 import org.apache.commons.net.smtp.SMTPClient;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -457,5 +458,49 @@ class SenderHeaderVerificationHookTest {
 
         assertThat(result.getResult()).isEqualTo(HookReturnCode.denySoft());
         assertThat(result.getSmtpRetCode()).isEqualTo("451");
+    }
+
+    private static Mail mailWithSender(String sender) throws Exception {
+        return MailImpl.builder()
+            .name("mail")
+            .sender(BOB.asString())
+            .addRecipient("rcpt@example.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addFrom(BOB.asString())
+                .addHeader("Sender", sender)
+                .setText("body"))
+            .build();
+    }
+
+    private static HookResult verifySender(String sender) throws Exception {
+        UsersRepository usersRepository = mock(UsersRepository.class);
+        when(usersRepository.getUsername(any(MailAddress.class))).thenReturn(BOB);
+        DomainList domainList = mock(DomainList.class);
+        when(domainList.containsDomain(Domain.of("example.local"))).thenReturn(true);
+        when(domainList.containsDomain(Domain.of("bücher.example"))).thenReturn(true);
+
+        return new SenderHeaderVerificationHook(usersRepository, domainList)
+            .onMessage(sessionOfBob(), mailWithSender(sender));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        // U+FF45 FULLWIDTH LATIN SMALL LETTER E: IDNA2003 nameprep maps it to 'e'
+        "bob@ｅxample.local",
+        // U+3002 IDEOGRAPHIC FULL STOP is a label separator for IDNA
+        "bob@example。local",
+        // U+00AA FEMININE ORDINAL INDICATOR: NFKC maps it to 'a', a single byte in ISO-8859-1
+        "bob@exªmple.local"})
+    void senderDomainOnlyLocalAfterIdnaMappingShouldBeRejected(String sender) throws Exception {
+        HookResult result = verifySender(sender);
+
+        assertThat(result.getResult()).isEqualTo(HookReturnCode.deny());
+        assertThat(result.getSmtpRetCode()).isEqualTo("550");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"bob@bücher.example", "bob@bücher.EXAMPLE", "bob@xn--bcher-kva.example", "bob@EXAMPLE.local"})
+    void senderWithADomainInCanonicalFormShouldBeAccepted(String sender) throws Exception {
+        assertThat(verifySender(sender).getResult()).isEqualTo(HookReturnCode.declined());
     }
 }

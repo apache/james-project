@@ -746,6 +746,11 @@ public abstract class ImapRequestLineReader {
         stringBuilder.setLength(0);
         char next = nextChar();
         while (next != '}' && next != '+') {
+            // RFC 3501 number = 1*DIGIT: stop on anything else, without consuming it, so that a malformed announcement
+            // never reads past the end of its line (and swallows the next pipelined commands)
+            if (next < '0' || next > '9') {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a valid positive number as literal size");
+            }
             stringBuilder.append(next);
             consume();
             next = nextChar();
@@ -1043,6 +1048,34 @@ public abstract class ImapRequestLineReader {
         // See IMAP-211
         List<IdRange> merged = IdRange.mergeRanges(rangeList);
         return merged.toArray(IdRange[]::new);
+    }
+
+    /**
+     * Reads a sequence-set without merging its ranges: their order and boundaries are the ones given by the client, as
+     * needed for the message sequence match data of QRESYNC (RFC 7162 section 3.2.5).
+     */
+    public IdRange[] parseIdRangeInClientOrder() throws DecodingException {
+        String nextWord = consumeWord(MessageSetCharValidator.INSTANCE, true);
+        String[] ranges = nextWord.split(",", -1);
+        IdRange[] result = new IdRange[ranges.length];
+        for (int i = 0; i < ranges.length; i++) {
+            result[i] = parseRange(ranges[i]);
+        }
+        return result;
+    }
+
+    /**
+     * Reads a UID set without merging its ranges: their order and boundaries are the ones given by the client, as
+     * needed for the message sequence match data of QRESYNC (RFC 7162 section 3.2.5).
+     */
+    public UidRange[] parseUidRangeInClientOrder() throws DecodingException {
+        String nextWord = consumeWord(MessageSetCharValidator.INSTANCE, true);
+        String[] ranges = nextWord.split(",", -1);
+        UidRange[] result = new UidRange[ranges.length];
+        for (int i = 0; i < ranges.length; i++) {
+            result[i] = parseUidRange(ranges[i]);
+        }
+        return result;
     }
 
     /**

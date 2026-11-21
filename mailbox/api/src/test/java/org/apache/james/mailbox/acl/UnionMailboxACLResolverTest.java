@@ -602,4 +602,34 @@ class UnionMailboxACLResolverTest {
         assertThat(noGlobals.resolveRights(USER_1, mixedAcl, USER_2))
             .isEqualTo(Rfc4314Rights.fromSerializedRfc4314Rights("r"));
     }
+
+    @Test
+    void listRightsShouldStartWithTheImplicitRights() throws UnsupportedRightException {
+        // RFC 4314 section 3.7: LISTRIGHTS <mailbox> <identifier> <required-rights> *(<optional-rights>)
+        assertThat(anyoneReadListGlobal.listRights(EntryKey.createUserEntryKey(USER_2), USER_1))
+            .containsExactly(Rfc4314Rights.fromSerializedRfc4314Rights("lr"),
+                Rfc4314Rights.fromSerializedRfc4314Rights("a"), Rfc4314Rights.fromSerializedRfc4314Rights("e"),
+                Rfc4314Rights.fromSerializedRfc4314Rights("i"), Rfc4314Rights.fromSerializedRfc4314Rights("k"),
+                Rfc4314Rights.fromSerializedRfc4314Rights("p"), Rfc4314Rights.fromSerializedRfc4314Rights("s"),
+                Rfc4314Rights.fromSerializedRfc4314Rights("t"), Rfc4314Rights.fromSerializedRfc4314Rights("w"),
+                Rfc4314Rights.fromSerializedRfc4314Rights("x"));
+    }
+
+    @Test
+    void listRightsShouldListTheOtherRightsAsOptional() throws UnsupportedRightException {
+        assertThat(noGlobals.listRights(EntryKey.createUserEntryKey(USER_2), USER_1))
+            .containsExactly(MailboxACL.NO_RIGHTS,
+                Rfc4314Rights.fromSerializedRfc4314Rights("a"), Rfc4314Rights.fromSerializedRfc4314Rights("e"),
+                Rfc4314Rights.fromSerializedRfc4314Rights("i"), Rfc4314Rights.fromSerializedRfc4314Rights("k"),
+                Rfc4314Rights.fromSerializedRfc4314Rights("l"), Rfc4314Rights.fromSerializedRfc4314Rights("p"),
+                Rfc4314Rights.fromSerializedRfc4314Rights("r"), Rfc4314Rights.fromSerializedRfc4314Rights("s"),
+                Rfc4314Rights.fromSerializedRfc4314Rights("t"), Rfc4314Rights.fromSerializedRfc4314Rights("w"),
+                Rfc4314Rights.fromSerializedRfc4314Rights("x"));
+    }
+
+    @Test
+    void listRightsShouldReturnASingleRequiredGroupForTheOwner() throws UnsupportedRightException {
+        assertThat(ownerFullGlobal.listRights(EntryKey.createUserEntryKey(USER_1), USER_1))
+            .containsExactly(MailboxACL.FULL_RIGHTS);
+    }
 }

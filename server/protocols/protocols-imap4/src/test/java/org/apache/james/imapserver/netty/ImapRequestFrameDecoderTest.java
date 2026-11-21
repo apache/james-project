@@ -35,6 +35,8 @@ import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -440,5 +442,94 @@ class ImapRequestFrameDecoderTest {
         assertThat((Object) channel.readOutbound()).isNull();
         assertThat(channel.readInbound().toString()).contains("BAD");
         channel.finishAndReleaseAll();
+    }
+
+    @Test
+    void aMalformedLiteralAnnouncementShouldNotSwallowTheNextCommands() {
+        byte[] stream = "a SELECT {1\r\nb NOOP\r\nc NOOP}\r\nd NOOP\r\n".getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(true, 1024, 5504, 3008, List.of(stream));
+        assertThat(whole).hasSize(4);
+        assertThat(whole.get(0)).contains("serverResponseType=BAD, tag=a");
+        assertThat(whole.get(1)).contains("tag=b, command=NOOP");
+        assertThat(whole.get(2)).contains("serverResponseType=BAD, tag=c");
+        assertThat(whole.get(3)).contains("tag=d, command=NOOP");
+        assertThat(decode(true, 1024, 5504, 3008, byteByByte(stream))).isEqualTo(whole);
+    }
+
+    @Test
+    void aFileBackedLiteralFollowedByMoreArgumentsShouldBeDecodedAsInMemory() {
+        byte[] stream = ("b SETMETADATA INBOX (/private/comment {34}\r\n" + "y".repeat(34)
+            + " /private/other \"v\")\r\n"
+            + "c NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> inMemory = decode(true, 1024, 5504, 3008, List.of(stream));
+        assertThat(inMemory).first().asString().contains("SetMetadataRequest");
+        assertThat(decode(true, 16, 5504, 3008, List.of(stream)))
+            .isEqualTo(inMemory);
+        assertThat(decode(true, 16, 5504, 3008, byteByByte(stream)))
+            .isEqualTo(inMemory);
+    }
+
+    @Test
+    void aNonSynchronizingLiteralAfterAFileBackedLiteralShouldNotBeDecodedAsCommands() {
+        byte[] stream = ("b SETMETADATA INBOX (/private/comment {34}\r\n" + "y".repeat(34)
+            + " /private/other {13+}\r\n"
+            + "x1 CREATE pwn)\r\n"
+            + "c NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(true, 16, 5504, 3008, List.of(stream));
+        assertThat(whole)
+            .hasSize(2)
+            .last().asString().contains("tag=c, command=NOOP");
+        assertThat(decode(true, 16, 5504, 3008, byteByByte(stream)))
+            .isEqualTo(whole);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"~{13+}", "{0+}"})
+    void otherNonSynchronizingLiteralsAfterAFileBackedLiteralShouldNotBeDecodedAsCommands(String announcement) {
+        String literal = announcement.startsWith("~") ? "x1 CREATE pwn" : "";
+        byte[] stream = ("b SETMETADATA INBOX (/private/comment {34}\r\n" + "y".repeat(34)
+            + " /private/other " + announcement + "\r\n"
+            + literal + ")\r\n"
+            + "c NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(true, 16, 5504, 3008, List.of(stream));
+        assertThat(whole)
+            .hasSize(2)
+            .last().asString().contains("tag=c, command=NOOP");
+        assertThat(decode(true, 16, 5504, 3008, byteByByte(stream)))
+            .isEqualTo(whole);
+    }
+
+    @Test
+    void aSynchronizingLiteralAfterAFileBackedLiteralShouldRejectTheCommand() {
+        // The client waits for a continuation request before sending that literal: it gets the BAD response instead
+        byte[] stream = ("b SETMETADATA INBOX (/private/comment {34}\r\n" + "y".repeat(34)
+            + " /private/other {13}\r\n"
+            + "c NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(true, 16, 5504, 3008, List.of(stream));
+        assertThat(whole).hasSize(2);
+        assertThat(whole.get(0)).contains("serverResponseType=BAD, tag=b");
+        assertThat(whole.get(1)).contains("tag=c, command=NOOP");
+        assertThat(decode(true, 16, 5504, 3008, byteByByte(stream)))
+            .isEqualTo(whole);
+    }
+
+    @Test
+    void aLiteralAnnouncedAcrossTheLengthLimitOfAFileBackedLiteralLineShouldNotBeDecodedAsCommands() {
+        // The first 3008 bytes after the literal end with "{6": the announcement goes on past the length limit
+        byte[] stream = ("b SETMETADATA INBOX (/private/c {34}\r\n" + "y".repeat(34)
+            + " ".repeat(3006) + "{6+}\r\n"
+            + "x NOOP\r\n"
+            + "c NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(true, 16, 5504, 3008, List.of(stream));
+        assertThat(whole).noneMatch(message -> message.contains("tag=x"));
+        assertThat(whole).last().asString().contains("tag=c, command=NOOP");
+        assertThat(decode(true, 16, 5504, 3008, byteByByte(stream)))
+            .isEqualTo(whole);
     }
 }

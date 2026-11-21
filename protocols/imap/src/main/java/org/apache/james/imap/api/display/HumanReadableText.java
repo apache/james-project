@@ -83,6 +83,8 @@ public class HumanReadableText {
 
     public static final HumanReadableText FAILURE_MAIL_PARSE = new HumanReadableText("org.apache.james.imap.FAILURE_MAIL_PARSE", "failed. Mail cannot be parsed.");
 
+    public static final HumanReadableText SERVER_ANNOTATIONS_UNSUPPORTED = new HumanReadableText("org.apache.james.imap.SERVER_ANNOTATIONS_UNSUPPORTED", "failed. Server annotations are not supported.");
+
     public static final HumanReadableText FAILURE_NO_SUCH_MAILBOX = new HumanReadableText("org.apache.james.imap.FAILURE_NO_SUCH_MAILBOX", "failed. No such mailbox.");
 
     public static final HumanReadableText FAILURE_DELETE_INBOX_NOT_ALLOWED = new HumanReadableText("org.apache.james.imap.DELETE_INBOX_NOT_ALLOWED", "failed. Deleting INBOX is forbidden.");

@@ -275,11 +275,8 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         this.uid = uid.asLong();
         this.modSeq = modSeq.asLong();
         this.userFlags = new ArrayList<>();
+        // The copy keeps the flags of the original, \Recent included: copies and moves never mark a message recent
         setFlags(original.createFlags());
-
-        // A copy of a message is recent
-        // See MAILBOX-85
-        this.recent = true;
 
         this.contentOctets = original.getFullContentOctets();
         this.bodyStartOctet = (int) (original.getFullContentOctets() - original.getBodyOctets());

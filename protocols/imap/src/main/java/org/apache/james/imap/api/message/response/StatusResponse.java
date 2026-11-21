@@ -352,6 +352,15 @@ public interface StatusResponse extends ImapResponseMessage {
         public static ResponseCode longestMetadataEntry(long entryLong) {
             return new ResponseCode("METADATA LONGENTRIES", entryLong);
         }
+
+        /**
+         * RFC 5464 section 4.3: private annotations can not be set
+         *
+         * @return <code>ResponseCode</code>
+         */
+        public static ResponseCode metadataNoPrivate() {
+            return new ResponseCode("METADATA NOPRIVATE");
+        }
         
         /**
          * Create a RFC4551 <code>NOMODSEQ</code> response code

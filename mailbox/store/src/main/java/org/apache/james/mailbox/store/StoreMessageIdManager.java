@@ -372,7 +372,8 @@ public class StoreMessageIdManager implements MessageIdManager {
                     MailboxMessage::getMailboxId)))
             .then(
                 Flux.fromIterable(actualDeletion.asMap().entrySet())
-                    .flatMap(metadataWithMailboxId -> mailboxMapper.findMailboxById(metadataWithMailboxId.getKey())
+                    .flatMap(metadataWithMailboxId -> raiseHighestModSeq(metadataWithMailboxId.getKey(), mailboxSession)
+                        .then(mailboxMapper.findMailboxById(metadataWithMailboxId.getKey()))
                         .flatMap(mailbox -> eventBus.dispatch(EventFactory.expunged()
                                 .randomEventId()
                                 .mailboxSession(mailboxSession)
@@ -516,6 +517,9 @@ public class StoreMessageIdManager implements MessageIdManager {
             .collect(ImmutableList.toImmutableList());
 
         return Mono.from(messageIdMapper.deleteReactive(messageId, mailboxIds))
+            .thenMany(Flux.fromIterable(mailboxIds)
+                .distinct()
+                .concatMap(mailboxId -> raiseHighestModSeq(mailboxId, mailboxSession)))
             .thenMany(Flux.fromIterable(messages)
                 .map(message -> expungedEvent(message, mailboxSession, messageMoves)));
     }
@@ -621,6 +625,19 @@ public class StoreMessageIdManager implements MessageIdManager {
             appended.movedFrom(messageMoves.removedMailboxes().iterator().next().getMailboxId());
         }
         return new EventWithRegistrationKey(appended.build(), ImmutableSet.of(new MailboxIdRegistrationKey(mailbox.getMailboxId())));
+    }
+
+    /**
+     * RFC 7162: an expunge is a change of the mailbox, its HIGHESTMODSEQ needs to grow.
+     */
+    private Mono<Void> raiseHighestModSeq(MailboxId mailboxId, MailboxSession mailboxSession) {
+        return mailboxSessionMapperFactory.getModSeqProvider(mailboxSession).nextModSeqReactive(mailboxId)
+            .then()
+            // The messages are gone already: the expunged event still needs to be dispatched
+            .onErrorResume(e -> {
+                LOGGER.warn("Could not raise the HIGHESTMODSEQ of mailbox {} after removing messages", mailboxId.serialize(), e);
+                return Mono.empty();
+            });
     }
 
     private boolean isSingleMove(MessageMovesWithMailbox messageMoves) {

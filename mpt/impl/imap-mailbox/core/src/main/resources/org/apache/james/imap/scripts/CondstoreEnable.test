@@ -23,3 +23,8 @@ S: A0 OK CAPABILITY completed.
 C: A1 ENABLE CONDSTORE
 S: \* ENABLED CONDSTORE
 S: A1 OK ENABLE completed.
+
+# RFC 9051 section 7.2.1: an extension already enabled is not listed again
+C: A1b ENABLE CONDSTORE
+S: \* ENABLED
+S: A1b OK ENABLE completed.

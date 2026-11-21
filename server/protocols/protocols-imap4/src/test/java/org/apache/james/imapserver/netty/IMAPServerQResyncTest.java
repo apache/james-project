@@ -476,7 +476,7 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
         List<String> replies = readStringUntil(clientConnection, s -> s.contains("a2 OK ENABLE completed."));
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(replies)
-                .filteredOn(s -> s.contains("* OK [HIGHESTMODSEQ 42] Highest"))
+                .filteredOn(s -> s.contains("* OK [HIGHESTMODSEQ 44] Highest"))
                 .hasSize(1);
             softly.assertThat(replies)
                 .filteredOn(s -> s.contains("* ENABLED QRESYNC"))
@@ -655,7 +655,7 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
 
         clientConnection.write(ByteBuffer.wrap(("I00104 EXPUNGE\r\n").getBytes(StandardCharsets.UTF_8)));
 
-        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 45] EXPUNGE completed.")))
+        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 46] EXPUNGE completed.")))
             .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
             .hasSize(1);
     }
@@ -684,7 +684,37 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
 
         clientConnection.write(ByteBuffer.wrap(("I00104 UID EXPUNGE 1:37\r\n").getBytes(StandardCharsets.UTF_8)));
 
-        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 45] EXPUNGE completed.")))
+        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 46] EXPUNGE completed.")))
+            .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
+            .hasSize(1);
+    }
+
+    @Test
+    void uidExpungeOfSeveralRangesShouldRaiseTheHighestModSeqOnce() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+        clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+        clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(11)), mailboxSession);
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(12)), mailboxSession);
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(26)), mailboxSession);
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
+
+        // A single mod-sequence for all the ranges: the same HIGHESTMODSEQ as when expunging them through 1:37
+        clientConnection.write(ByteBuffer.wrap(("I00104 UID EXPUNGE 10:12,25:26,31\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 46] EXPUNGE completed.")))
             .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
             .hasSize(1);
     }
@@ -726,5 +756,36 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
 
         assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK CLOSE completed.")))
             .isNotNull();
+    }
+
+    @Test
+    void selectShouldRejectNonAscendingKnownSequenceSet() throws Exception {
+        UidValidity uidValidity = inbox.getMailboxEntity().getUidValidity();
+
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+        clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+        clientConnection.write(ByteBuffer.wrap(String.format("a2 SELECT INBOX (QRESYNC (%d 1 (4,56,10,12 7,8,16,19)))\r\n", uidValidity.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(readStringUntil(clientConnection, s -> s.startsWith("a2 ")))
+            .anyMatch(s -> s.startsWith("a2 BAD"));
+    }
+
+    @Test
+    void selectShouldPairMatchDataItemByItem() throws Exception {
+        // Expunge UID 5: MSN 4 -> UID 4, MSN 10 -> UID 11, MSN 11 -> UID 12
+        inbox.delete(ImmutableList.of(MessageUid.of(5)), mailboxSession);
+        UidValidity uidValidity = inbox.getMailboxEntity().getUidValidity();
+
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+        clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+        // RFC 7162 pairs (4,4) (10,5) (11,11): the second one fails, so UID 5 must be reported
+        clientConnection.write(ByteBuffer.wrap(String.format("a2 SELECT INBOX (QRESYNC (%d 1 (4,10,11 4,5,11)))\r\n", uidValidity.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed.")))
+            .anyMatch(s -> s.contains("* VANISHED (EARLIER) 5\r\n"));
     }
 }

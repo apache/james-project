@@ -68,9 +68,10 @@ S: \* OK \[HIGHESTMODSEQ \d+\].*
 S: \* OK \[UIDNEXT \d+\].*
 S: a7 OK \[READ-WRITE\] SELECT completed.
 
+# A move keeps the flags of the original: it is not marked \Recent
 C: a8 FETCH 1:2 (FLAGS)
-S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
-S: \* 2 FETCH \(FLAGS \(\\Deleted \\Recent\)\)
+S: \* 1 FETCH \(FLAGS \(\)\)
+S: \* 2 FETCH \(FLAGS \(\\Deleted\)\)
 S: a8 OK FETCH completed.
 
 C: a9 DELETE moved

@@ -41,7 +41,8 @@ public class QuotaRootResponseEncoder implements ImapResponseEncoder<QuotaRootRe
         composer.untagged();
         composer.message(ImapConstants.QUOTAROOT_RESPONSE_NAME);
         composer.mailbox(mailbox == null ? "" : mailbox);
-        composer.message(quotaRoot == null ? "" : quotaRoot);
+        // RFC 9208: quota-root-name = astring
+        composer.quote(quotaRoot == null ? "" : quotaRoot);
         composer.end();
     }
 }

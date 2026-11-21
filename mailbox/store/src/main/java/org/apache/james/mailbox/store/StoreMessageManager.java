@@ -108,6 +108,8 @@ import org.apache.james.util.io.BodyOffsetInputStream;
 import org.apache.james.util.io.InputStreamConsummer;
 import org.apache.james.util.streams.Iterators;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
@@ -129,6 +131,8 @@ import reactor.core.scheduler.Schedulers;
  * {@link MailboxSession}'s.
  */
 public class StoreMessageManager implements MessageManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoreMessageManager.class);
+
     public static final boolean HANDLE_RECENT = Optional.ofNullable(System.getProperty("james.mailbox.handleRecent"))
         .map(Boolean::parseBoolean)
         .orElse(true);
@@ -269,6 +273,22 @@ public class StoreMessageManager implements MessageManager {
             .flatMapIterable(Map::keySet);
     }
 
+    @Override
+    public Flux<MessageUid> expungeRangesReactive(List<MessageRange> sets, MailboxSession mailboxSession) {
+        if (!isWriteable(mailboxSession)) {
+            return Flux.error(new ReadOnlyException(getMailboxEntity().generateAssociatedPath()));
+        }
+
+        return Flux.fromIterable(sets)
+            .concatMap(set -> retrieveMessagesMarkedForDeletion(set, mailboxSession))
+            .<MessageUid>concatMapIterable(uids -> uids)
+            .distinct()
+            .collectList()
+            .flatMap(uids -> deleteMessages(uids, mailboxSession))
+            .flatMap(deletedMessages -> dispatchExpungeEvent(mailboxSession, deletedMessages).thenReturn(deletedMessages))
+            .flatMapIterable(Map::keySet);
+    }
+
     private Mono<List<MessageUid>> retrieveMessagesMarkedForDeletion(MessageRange messageRange, MailboxSession session) {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
@@ -298,8 +318,26 @@ public class StoreMessageManager implements MessageManager {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
         return runPredeletionHooks(messageUids, session)
-            .then(messageMapper.executeReactive(messageMapper.deleteMessagesReactive(getMailboxEntity(), messageUids)));
+            .then(messageMapper.executeReactive(messageMapper.deleteMessagesReactive(getMailboxEntity(), messageUids)))
+            .flatMap(deletedMessages -> raiseHighestModSeq(!deletedMessages.isEmpty(), session).thenReturn(deletedMessages));
+    }
 
+    /**
+     * RFC 7162: an expunge is a change of the mailbox, its HIGHESTMODSEQ needs to grow even when no flag update
+     * (STORE \Deleted) preceded it, as for a POP3 deletion.
+     */
+    private Mono<Void> raiseHighestModSeq(boolean messagesRemoved, MailboxSession session) {
+        if (!messagesRemoved) {
+            return Mono.empty();
+        }
+        MailboxId mailboxId = getMailboxEntity().getMailboxId();
+        return mapperFactory.getModSeqProvider(session).nextModSeqReactive(mailboxId)
+            .then()
+            // The messages are gone already: the expunged event still needs to be dispatched
+            .onErrorResume(e -> {
+                LOGGER.warn("Could not raise the HIGHESTMODSEQ of mailbox {} after removing messages", mailboxId.serialize(), e);
+                return Mono.empty();
+            });
     }
 
     private Mono<Void> dispatchExpungeEvent(MailboxSession mailboxSession, Map<MessageUid, MessageMetaData> deletedMessages) {
@@ -888,10 +926,14 @@ public class StoreMessageManager implements MessageManager {
                         return Mono.from(eventBus.dispatch(ImmutableList.of(added, expunged, moved)))
                             .thenReturn(moveUids);
                     })))
-            .reduce(new TreeMap<>(), (acc, batchUids) -> {
+            .reduce((SortedMap<MessageUid, MessageMetaData>) new TreeMap<MessageUid, MessageMetaData>(), (acc, batchUids) -> {
                 acc.putAll(batchUids);
                 return acc;
-            });
+            })
+            // One new mod-sequence for the whole move, not one per batch: allocating it is costly (LWT)
+            .flatMap(movedUids -> raiseHighestModSeq(!movedUids.isEmpty(), session).thenReturn(movedUids))
+            // Some messages may have left the mailbox before the failure
+            .onErrorResume(e -> raiseHighestModSeq(true, session).then(Mono.error(e)));
     }
 
     @Override
@@ -1103,7 +1145,13 @@ public class StoreMessageManager implements MessageManager {
                         messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(ImmutableSet.toImmutableSet()));
                     return Mono.from(eventBus.dispatch(ImmutableList.of(added, expunged, moved)))
                         .thenReturn(moveUids);
-                })));
+                })))
+            .collectList()
+            // One new mod-sequence for the whole move, not one per batch: allocating it is costly (LWT)
+            // Some messages may have left the mailbox before the failure
+            .onErrorResume(e -> raiseHighestModSeq(true, session).then(Mono.error(e)))
+            .flatMapMany(batches -> raiseHighestModSeq(batches.stream().anyMatch(batch -> !batch.isEmpty()), session)
+                .thenMany(Flux.fromIterable(batches)));
     }
 
     private Flux<MailboxMessage> retrieveOriginalRows(MessageRange set, MailboxSession session) {

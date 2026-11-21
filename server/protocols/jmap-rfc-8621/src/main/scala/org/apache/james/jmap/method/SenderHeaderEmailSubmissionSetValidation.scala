@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.method
 
+import java.text.Normalizer
+
+import com.google.common.base.{Ascii, CharMatcher}
 import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import jakarta.mail.internet.{InternetAddress, MimeUtility}
@@ -74,10 +77,20 @@ class SenderHeaderEmailSubmissionSetValidation @Inject()(usersRepository: UsersR
     Try(InternetAddress.parseHeader(unfolded, true)).toOption match {
       case Some(Array(address)) if !address.isGroup && readsTheSameMailbox(unfolded, address) =>
         Try(new MailAddress(address.getAddress)).toOption
+          .filter(mailAddress => rawDomainIsCanonical(address.getAddress, mailAddress))
           .filter(mailAddress => domainList.containsDomain(mailAddress.getDomain))
           .exists(mailAddress => resolvesTo(mailAddress, loggedInUser))
       case _ => false
     }
+  }
+
+  // The comparison is made on the normalised address: its domain went through IDNA (NFKC), which maps eg a
+  // full-width 'ｅ' onto 'e'. Recipients read the raw field: its domain needs to already be in canonical form,
+  // ASCII or the U-label Domain gives back, up to NFC (canonical equivalents render the same) and ASCII case.
+  private def rawDomainIsCanonical(rawAddress: String, sender: MailAddress): Boolean = {
+    val rawDomain = rawAddress.substring(rawAddress.lastIndexOf('@') + 1)
+    CharMatcher.ascii().matchesAllOf(rawDomain) ||
+      Ascii.equalsIgnoreCase(Normalizer.normalize(rawDomain, Normalizer.Form.NFC), sender.getDomain.asString())
   }
 
   // InternetAddress.parseHeader ignores what follows the first mailbox, eg '<bob@domain.tld> alice@domain.tld', and

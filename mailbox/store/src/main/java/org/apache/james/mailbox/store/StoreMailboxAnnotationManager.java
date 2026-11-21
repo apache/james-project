@@ -32,6 +32,8 @@ import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.PrivateAnnotationException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -95,11 +97,12 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     @Override
     public Flux<MailboxAnnotation> getAllAnnotationsReactive(MailboxPath mailboxPath, MailboxSession session) {
         AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        return checkThenGetMailboxId(mailboxPath, session, Right.Read)
+        return checkThenGetMailbox(mailboxPath, session, Right.Read)
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
-            .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAllAnnotationsReactive(mailboxId))
+            .flatMapMany(mailbox -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAllAnnotationsReactive(mailbox.getMailboxId()))
                     .collectList())
-                .flatMapIterable(Function.identity()));
+                .flatMapIterable(Function.identity())
+                .filter(annotation -> isVisible(annotation.getKey(), mailbox, session)));
     }
 
     @Override
@@ -112,11 +115,12 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     public Flux<MailboxAnnotation> getAnnotationsByKeysReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
         AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
 
-        return checkThenGetMailboxId(mailboxPath, session, Right.Read)
+        return checkThenGetMailbox(mailboxPath, session, Right.Read)
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
-            .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysReactive(mailboxId, keys))
+            .flatMapMany(mailbox -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysReactive(mailbox.getMailboxId(), keys))
                     .collectList())
-                .flatMapIterable(Function.identity()));
+                .flatMapIterable(Function.identity())
+                .filter(annotation -> isVisible(annotation.getKey(), mailbox, session)));
     }
 
     @Override
@@ -128,8 +132,10 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     @Override
     public Mono<Void> updateAnnotationsReactive(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) {
         AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        return annotationMapper.executeReactive(checkThenGetMailboxId(mailboxPath, session, Right.Read, Right.Write)
+        return annotationMapper.executeReactive(checkThenGetMailbox(mailboxPath, session, Right.Read, Right.Write)
                 .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
+            .flatMap(mailbox -> checkPrivateAnnotationsCanBeSet(mailbox, session, mailboxAnnotations))
+            .map(Mailbox::getMailboxId)
             .flatMapMany(mailboxId -> Flux.fromIterable(mailboxAnnotations)
                 .concatMap(annotation -> {
                     if (readOnlyPredicate.isReadOnly(annotation.getKey())) {
@@ -170,11 +176,12 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     @Override
     public Flux<MailboxAnnotation> getAnnotationsByKeysWithOneDepthReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
         AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        return checkThenGetMailboxId(mailboxPath, session, Right.Read)
+        return checkThenGetMailbox(mailboxPath, session, Right.Read)
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
-            .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysWithOneDepthReactive(mailboxId, keys))
+            .flatMapMany(mailbox -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysWithOneDepthReactive(mailbox.getMailboxId(), keys))
                     .collectList())
-                .flatMapIterable(Function.identity()));
+                .flatMapIterable(Function.identity())
+                .filter(annotation -> isVisible(annotation.getKey(), mailbox, session)));
     }
 
     @Override
@@ -186,19 +193,41 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     @Override
     public Flux<MailboxAnnotation> getAnnotationsByKeysWithAllDepthReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
         AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        return checkThenGetMailboxId(mailboxPath, session, Right.Read)
+        return checkThenGetMailbox(mailboxPath, session, Right.Read)
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
-            .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysWithAllDepthReactive(mailboxId, keys))
+            .flatMapMany(mailbox -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysWithAllDepthReactive(mailbox.getMailboxId(), keys))
                     .collectList())
-                .flatMapIterable(Function.identity()));
+                .flatMapIterable(Function.identity())
+                .filter(annotation -> isVisible(annotation.getKey(), mailbox, session)));
     }
 
-    private Mono<MailboxId> checkThenGetMailboxId(MailboxPath mailboxPath, MailboxSession session, Right... requiredRights) {
+    private Mono<Mailbox> checkThenGetMailbox(MailboxPath mailboxPath, MailboxSession session, Right... requiredRights) {
         return mailboxSessionMapperFactory.getMailboxMapper(session).findMailboxByPath(mailboxPath)
             .flatMap(mailbox -> rightManager.myRightsReactive(mailboxPath, session)
                 .map(rights -> rights.contains(requiredRights))
                 .filter(FunctionalUtils.identityPredicate().negate())
-                .flatMap(hasRight -> Mono.<MailboxId>error(new InsufficientRightsException("Not enough rights on " + mailboxPath)))
-                .switchIfEmpty(Mono.just(mailbox.getMailboxId())));
+                .flatMap(hasRight -> Mono.<Mailbox>error(new InsufficientRightsException("Not enough rights on " + mailboxPath)))
+                .switchIfEmpty(Mono.just(mailbox)));
+    }
+
+    /**
+     * RFC 5464: a /private entry holds a value specific to each user. A single value is stored per mailbox, that of its
+     * owner: it is neither visible to nor settable by the other users the mailbox is shared with.
+     */
+    private static boolean isVisible(MailboxAnnotationKey key, Mailbox mailbox, MailboxSession session) {
+        return !key.isPrivate() || isOwner(mailbox, session);
+    }
+
+    private static boolean isOwner(Mailbox mailbox, MailboxSession session) {
+        return session.getUser().equals(mailbox.getUser());
+    }
+
+    private static Mono<Mailbox> checkPrivateAnnotationsCanBeSet(Mailbox mailbox, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) {
+        boolean setsPrivateAnnotations = mailboxAnnotations.stream()
+            .anyMatch(annotation -> annotation.getKey().isPrivate());
+        if (setsPrivateAnnotations && !isOwner(mailbox, session)) {
+            return Mono.error(new PrivateAnnotationException("private annotations can only be set by the owner of the mailbox"));
+        }
+        return Mono.just(mailbox);
     }
 }

@@ -90,6 +90,10 @@ public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRe
 
     @Override
     protected Mono<Void> processRequestReactive(GetMetadataRequest request, ImapSession session, Responder responder) {
+        if (request.getMailboxName().isEmpty()) {
+            // RFC 5464 section 4.2: "" designates the server annotations. None are stored, there is no entry to return
+            return Mono.fromRunnable(() -> okComplete(request, responder));
+        }
         MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
         return existingMailboxPath(requestedPath, session)
             .flatMap(mailboxPath -> processRequestReactive(request, session, responder, mailboxPath));
