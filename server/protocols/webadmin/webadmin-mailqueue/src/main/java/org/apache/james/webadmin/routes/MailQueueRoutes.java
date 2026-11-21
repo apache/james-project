@@ -130,7 +130,7 @@ public class MailQueueRoutes implements Routes {
         return mailQueueFactory.getQueue(mailQueueName).map(this::toDTO)
             .orElseThrow(
                 () -> ErrorResponder.builder()
-                    .message("%s can not be found", mailQueueName)
+                    .message("%s can not be found", mailQueueName.asString())
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorResponder.ErrorType.NOT_FOUND)
                     .haltError());
@@ -170,7 +170,7 @@ public class MailQueueRoutes implements Routes {
                 .map(q -> listMails(q, isDelayed(request.queryParams(DELAYED_QUERY_PARAM)), ParametersExtractor.extractLimit(request)))
                 .orElseThrow(
                     () -> ErrorResponder.builder()
-                        .message("%s can not be found", mailQueueName)
+                        .message("%s can not be found", mailQueueName.asString())
                         .statusCode(HttpStatus.NOT_FOUND_404)
                         .type(ErrorResponder.ErrorType.NOT_FOUND)
                         .haltError());
@@ -278,7 +278,7 @@ public class MailQueueRoutes implements Routes {
         MailQueueName mailQueueName = MailQueueName.of(request.params(MAIL_QUEUE_NAME));
         return mailQueueFactory.getQueue(mailQueueName)
             .orElseThrow(() -> ErrorResponder.builder()
-                .message("%s can not be found", mailQueueName)
+                .message("%s can not be found", mailQueueName.asString())
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorType.NOT_FOUND)
                 .haltError());
@@ -332,7 +332,7 @@ public class MailQueueRoutes implements Routes {
             return queue
                 .orElseThrow(
                     () -> ErrorResponder.builder()
-                        .message("%s can not be found", queueName)
+                        .message("%s can not be found", queueName.asString())
                         .statusCode(HttpStatus.NOT_FOUND_404)
                         .type(ErrorResponder.ErrorType.NOT_FOUND)
                         .haltError());

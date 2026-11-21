@@ -186,7 +186,7 @@ public class DLPConfigurationRoutes implements Routes {
     private HaltException notFound(String message) {
         return ErrorResponder.builder()
             .statusCode(HttpStatus.NOT_FOUND_404)
-            .type(ErrorType.INVALID_ARGUMENT)
+            .type(ErrorType.NOT_FOUND)
             .message(message)
             .haltError();
     }

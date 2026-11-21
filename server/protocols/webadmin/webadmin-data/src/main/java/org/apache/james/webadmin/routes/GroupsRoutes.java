@@ -172,7 +172,7 @@ public class GroupsRoutes implements Routes {
         if (mappings == null || mappings.isEmpty()) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorType.INVALID_ARGUMENT)
+                .type(ErrorType.NOT_FOUND)
                 .message("The group does not exist")
                 .haltError();
         }

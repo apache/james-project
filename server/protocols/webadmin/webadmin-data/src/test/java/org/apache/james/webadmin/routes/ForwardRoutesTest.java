@@ -203,7 +203,7 @@ class ForwardRoutesTest {
 
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
-                .containsEntry("type", "InvalidArgument")
+                .containsEntry("type", "notFound")
                 .containsEntry("message", "The forward does not exist");
         }
 
@@ -225,7 +225,7 @@ class ForwardRoutesTest {
 
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
-                .containsEntry("type", "InvalidArgument")
+                .containsEntry("type", "notFound")
                 .containsEntry("message", "The forward does not exist");
         }
 
@@ -243,7 +243,7 @@ class ForwardRoutesTest {
 
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
-                .containsEntry("type", "InvalidArgument")
+                .containsEntry("type", "notFound")
                 .containsEntry("message", "The forward does not exist");
         }
 
@@ -404,7 +404,7 @@ class ForwardRoutesTest {
 
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
-                .containsEntry("type", "InvalidArgument")
+                .containsEntry("type", "notFound")
                 .containsEntry("message", "Requested base forward address does not correspond to a user");
         }
 

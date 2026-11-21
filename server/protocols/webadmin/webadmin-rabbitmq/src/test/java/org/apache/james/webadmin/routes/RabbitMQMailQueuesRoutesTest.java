@@ -23,6 +23,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
@@ -127,7 +128,7 @@ class RabbitMQMailQueuesRoutesTest {
             .post(MailQueueRoutes.BASE_URL + "/spooler")
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404)
-            .body("message", containsString("MailQueueName{value=spooler} can not be found"));
+            .body("message", equalTo("spooler can not be found"));
     }
 
     @Test
