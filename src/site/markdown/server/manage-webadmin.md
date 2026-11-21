@@ -3986,6 +3986,7 @@ Response codes:
  - 201: Task generation succeeded. Corresponding task id is returned.
  - 404: Could not find that mail repository
  - 400: The target `queue` does not exist
+ - 400: The target `processor` is not configured in the mailet container
 
 The scheduled task will have the following type `reprocessing-all` and the following `additionalInformation`:
 
@@ -4041,6 +4042,7 @@ Response codes:
  - 201: Task generation succeeded. Corresponding task id is returned.
  - 404: Could not find that mail repository
  - 400: The target `queue` does not exist
+ - 400: The target `processor` is not configured in the mailet container
 
 The scheduled task will have the following type `reprocessing-one` and the following `additionalInformation`:
 

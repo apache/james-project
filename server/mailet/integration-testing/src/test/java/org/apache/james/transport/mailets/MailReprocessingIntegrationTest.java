@@ -48,6 +48,7 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.mailet.base.test.FakeMail;
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -179,7 +180,7 @@ class MailReprocessingIntegrationTest {
     }
 
     @Test
-    void reprocessingShouldProcessAsErrorWhenUnknownMailProcessor() throws Exception {
+    void reprocessingShouldBeRejectedWhenUnknownMailProcessor() throws Exception {
         // Given an incoming email
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(FROM, PASSWORD)
@@ -194,17 +195,19 @@ class MailReprocessingIntegrationTest {
         // Being stored in MailRepository B
         awaitAtMostOneMinute.until(() -> containsExactlyOneMail(REPOSITORY_B));
 
-        // When I reprocess it
+        // When I reprocess it into an unknown processor
         given()
             .spec(specification)
             .param("action", "reprocess")
             .param("queue", MailQueueFactory.SPOOL.asString())
             .param("processor", "unknown")
-            .patch("/mailRepositories/" + REPOSITORY_B.getPath().urlEncoded() + "/mails");
+            .patch("/mailRepositories/" + REPOSITORY_B.getPath().urlEncoded() + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
 
-        // Then I can move it to repository A
-        awaitAtMostOneMinute.until(() -> containsExactlyOneMail(ERROR_REPOSITORY));
-        assertThat(containsExactlyOneMail(ERROR_REPOSITORY)).isTrue();
+        // Then the mail stays in repository B
+        assertThat(containsExactlyOneMail(REPOSITORY_B)).isTrue();
+        assertThat(containsExactlyOneMail(ERROR_REPOSITORY)).isFalse();
     }
 
     private boolean containsExactlyOneMail(MailRepositoryUrl repositoryUrl) {
