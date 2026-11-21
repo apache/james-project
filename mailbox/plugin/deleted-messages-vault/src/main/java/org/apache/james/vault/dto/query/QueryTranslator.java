@@ -95,8 +95,18 @@ public class QueryTranslator {
 
         FieldValueParser<ZonedDateTime> ZONED_DATE_TIME_PARSER = ZonedDateTime::parse;
         FieldValueParser<String> STRING_PARSER = input -> input;
-        FieldValueParser<Boolean> BOOLEAN_PARSER = Boolean::valueOf;
+        FieldValueParser<Boolean> BOOLEAN_PARSER = FieldValueParser::parseBoolean;
         FieldValueParser<MailAddress> MAIL_ADDRESS_PARSER = FieldValueParser::parseMailAddress;
+
+        static Boolean parseBoolean(String booleanString) throws QueryTranslatorException {
+            if (Boolean.TRUE.toString().equalsIgnoreCase(booleanString)) {
+                return true;
+            }
+            if (Boolean.FALSE.toString().equalsIgnoreCase(booleanString)) {
+                return false;
+            }
+            throw new QueryTranslatorException("'" + booleanString + "' is not a boolean");
+        }
 
         static MailAddress parseMailAddress(String mailAddressString) throws QueryTranslatorException {
             try {
