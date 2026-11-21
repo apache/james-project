@@ -77,6 +77,10 @@ class GetQuotaRootProcessorTest {
         Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(24)).computedLimit(QuotaCountLimit.count(1589)).build();
     private static final Quota<QuotaSizeLimit, QuotaSizeUsage> STORAGE_QUOTA =
         Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(240)).computedLimit(QuotaSizeLimit.size(15890)).build();
+    private static final Quota<QuotaCountLimit, QuotaCountUsage> UNLIMITED_MESSAGE_QUOTA =
+        Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(24)).computedLimit(QuotaCountLimit.unlimited()).build();
+    private static final Quota<QuotaSizeLimit, QuotaSizeUsage> UNLIMITED_STORAGE_QUOTA =
+        Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(240)).computedLimit(QuotaSizeLimit.unlimited()).build();
 
     private GetQuotaRootProcessor testee;
     private FakeImapSession imapSession;
@@ -175,5 +179,28 @@ class GetQuotaRootProcessorTest {
         assertThat(responseCaptor.getValue())
             .extracting(StatusResponse::getServerResponseType)
             .isEqualTo(StatusResponse.Type.NO);
+    }
+
+    @Test
+    void processorShouldAnswerAnEmptyQuotaResponseWhenNoLimit() throws Exception {
+        GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest(TAG, "INBOX");
+
+        imapSession.authenticated();
+        imapSession.setMailboxSession(mailboxSession);
+        when(mockedQuotaRootResolver.getQuotaRootReactive(MAILBOX_PATH)).thenReturn(Mono.just(QUOTA_ROOT));
+        when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession)).thenReturn(Flux.just(mock(Mailbox.class)));
+        when(mockedMailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Read), eq(mailboxSession))).thenReturn(true);
+        when(mockedQuotaManager.getQuotasReactive(any(QuotaRoot.class)))
+            .thenReturn(Mono.just(new QuotaManager.Quotas(UNLIMITED_MESSAGE_QUOTA, UNLIMITED_STORAGE_QUOTA)));
+
+        testee.doProcess(getQuotaRootRequest, mockedResponder, imapSession).block();
+
+        // RFC 9208 section 4.2.2: a QUOTA response for each quota root
+        ArgumentCaptor<ImapResponseMessage> responseCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
+        verify(mockedResponder, times(3)).respond(responseCaptor.capture());
+        assertThat(responseCaptor.getAllValues().subList(0, 2))
+            .containsExactly(new QuotaRootResponse("INBOX", "plop"), QuotaResponse.withoutLimits("plop"));
+        assertThat(responseCaptor.getAllValues().get(2))
+            .matches(StatusResponseTypeMatcher.OK_RESPONSE_MATCHER::matches);
     }
 }

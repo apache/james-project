@@ -60,4 +60,13 @@ class QuotaResponseEncoderTest {
         String responseString = byteImapResponseWriter.getString();
         assertThat(responseString).isEqualTo("* QUOTA root (STORAGE 231 1024)\r\n");
     }
+
+    @Test
+    void quotaResponseWithoutLimitsShouldHaveAnEmptyResourceList() throws Exception {
+        ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
+        ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
+        new QuotaResponseEncoder().encode(QuotaResponse.withoutLimits("root"), composer);
+        composer.flush();
+        assertThat(byteImapResponseWriter.getString()).isEqualTo("* QUOTA root ()\r\n");
+    }
 }

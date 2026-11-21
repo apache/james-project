@@ -33,10 +33,21 @@ public class QuotaResponse implements ImapResponseMessage {
     private final String quotaRoot;
     private final Quota<?, ?> quota;
 
+    /**
+     * RFC 9208 section 4.2.1: a quota root without any limit is answered with an empty resource list.
+     */
+    public static QuotaResponse withoutLimits(String quotaRoot) {
+        return new QuotaResponse(null, quotaRoot, null);
+    }
+
     public QuotaResponse(String resource, String quotaRoot, Quota<?, ?> quota) {
         this.quota = quota;
         this.resourceName = resource;
         this.quotaRoot = quotaRoot;
+    }
+
+    public boolean hasResource() {
+        return resourceName != null;
     }
 
     public Quota<?, ?> getQuota() {
@@ -70,6 +81,9 @@ public class QuotaResponse implements ImapResponseMessage {
 
     @Override
     public String toString() {
+        if (!hasResource()) {
+            return ImapConstants.QUOTA_RESPONSE_NAME + ' ' + quotaRoot + " ()";
+        }
         StringBuilder result = new StringBuilder()
                 .append(ImapConstants.QUOTA_RESPONSE_NAME)
                 .append(' ')
