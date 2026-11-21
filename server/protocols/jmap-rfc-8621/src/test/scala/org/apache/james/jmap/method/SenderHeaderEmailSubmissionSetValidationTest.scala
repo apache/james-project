@@ -278,4 +278,28 @@ class SenderHeaderEmailSubmissionSetValidationTest {
 
     assertAccepted(validate(systemSession, "bob@domain.tld"))
   }
+
+  private def validateWithUnicodeSender(loggedInUser: Username, sender: String): Option[SetError] = {
+    val unicodeDomainList = mock(classOf[DomainList])
+    when(unicodeDomainList.containsDomain(Domain.of("domain.tld"))).thenReturn(true)
+    when(unicodeDomainList.containsDomain(Domain.of("bücher.example"))).thenReturn(true)
+    val validation = new SenderHeaderEmailSubmissionSetValidation(MemoryUsersRepository.withVirtualHosting(unicodeDomainList), unicodeDomainList)
+    val mail = mailWithHeaders()
+    // Set as a Java string: the field is not read back from bytes, whatever the charset the parser assumes
+    mail.getMessage.setHeader("Sender", sender)
+    try {
+      validation.validate(mail, MailboxSessionUtil.create(loggedInUser)).block()
+    } finally {
+      LifecycleUtil.dispose(mail)
+    }
+  }
+
+  @Test
+  def shouldRejectSenderWhoseDomainIsLocalOnlyAfterIdnaMapping(): Unit =
+    // U+FF44 FULLWIDTH LATIN SMALL LETTER D: IDNA2003 nameprep maps it to 'd'
+    assertRejected(validateWithUnicodeSender(BOB, "bob@ｄomain.tld"))
+
+  @Test
+  def shouldAcceptSenderWithAnInternationalizedDomainInCanonicalForm(): Unit =
+    assertAccepted(validateWithUnicodeSender(Username.of("bob@bücher.example"), "bob@bücher.example"))
 }
