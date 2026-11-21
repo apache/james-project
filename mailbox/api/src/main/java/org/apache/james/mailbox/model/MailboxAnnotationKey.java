@@ -40,6 +40,7 @@ public class MailboxAnnotationKey {
     public static final int MINIMUM_COMPONENTS_OF_VENDOR = 4;
     public static final int SECOND_COMPONENT_INDEX = 1;
     public static final String VENDOR_COMPONENT = "vendor";
+    public static final String PRIVATE_ROOT = "/private";
     private final String key;
 
     /**
@@ -98,6 +99,14 @@ public class MailboxAnnotationKey {
 
         return components.length >= MINIMUM_COMPONENTS
             && VENDOR_COMPONENT.equalsIgnoreCase(components[SECOND_COMPONENT_INDEX]);
+    }
+
+    /**
+     * RFC 5464 section 3.2: entries under /private hold a value specific to each user, entries under /shared a
+     * value common to all users.
+     */
+    public boolean isPrivate() {
+        return asString().equals(PRIVATE_ROOT) || asString().startsWith(PRIVATE_ROOT + SLASH_CHARACTER);
     }
 
     public int countComponents() {

@@ -212,3 +212,13 @@ S: m14 OK GETMETADATA completed.
 
 C: m15 GETMETADATA (DEPTH infinity) "mailboxTest" (/private/vendor/acme)
 S: m15 OK GETMETADATA completed.
+
+# RFC 5464: "" designates the server annotations, which are not stored
+C: m16 GETMETADATA "" /private/comment
+S: m16 OK GETMETADATA completed.
+
+C: m17 SETMETADATA "" (/private/comment "server")
+S: m17 NO \[METADATA NOPRIVATE\] SETMETADATA failed. Server annotations are not supported.
+
+C: m18 SETMETADATA "" (/shared/comment "server")
+S: m18 NO SETMETADATA failed. Server annotations are not supported.

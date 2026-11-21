@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class MailboxAnnotationKeyTest {
     @Test
@@ -253,5 +255,17 @@ class MailboxAnnotationKeyTest {
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/tututata");
 
         assertThat(key1.isParentOrIsEqual(key2)).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/private", "/private/comment", "/PRIVATE/Comment", "/private/vendor/acme/x"})
+    void privateEntriesShouldBeRecognized(String key) {
+        assertThat(MailboxAnnotationKey.forRetrieval(key).isPrivate()).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/shared", "/shared/comment", "/privateer/comment", "/shared/private"})
+    void otherEntriesShouldNotBePrivate(String key) {
+        assertThat(MailboxAnnotationKey.forRetrieval(key).isPrivate()).isFalse();
     }
 }
