@@ -33,6 +33,7 @@ import java.util.stream.IntStream;
 import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
@@ -278,7 +279,20 @@ public abstract class AbstractMessageIdManagerStorageTest {
             .filter(inMailbox(aliceMailbox3.getMailboxId()))
             .findFirst()
             .get();
-        assertThat(messageResult3.getFlags()).isEqualTo(newFlags);
+        assertThat(messageResult3.getFlags()).isEqualTo(FlagsBuilder.builder().add(newFlags).add(Flags.Flag.RECENT).build());
+    }
+
+    @Test
+    void setInMailboxesShouldMarkTheCopyRecent() throws Exception {
+        // RFC 3501 section 6.4.7, and range copies and moves mark the copy \Recent too
+        Flags flags = new Flags(Flags.Flag.SEEN);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, flags, aliceSession);
+
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox2.getMailboxId()), aliceSession);
+
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession))
+            .singleElement()
+            .satisfies(message -> assertThat(message.getFlags()).isEqualTo(FlagsBuilder.builder().add(Flags.Flag.SEEN, Flags.Flag.RECENT).build()));
     }
 
     @Test
@@ -475,8 +489,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
             .collect(ImmutableList.toImmutableList());
 
         assertThat(flags).hasSize(2);
-        assertThat(flags.get(0)).isEqualTo(newFlags);
-        assertThat(flags.get(1)).isEqualTo(newFlags);
+        assertThat(flags).allSatisfy(messageFlags -> assertThat(messageFlags.contains(Flags.Flag.SEEN)).isTrue());
     }
 
     @Test
@@ -1088,7 +1101,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession);
         assertThat(messages)
             .extracting(MessageResult::getFlags)
-            .containsOnly(new Flags());
+            .containsOnly(new Flags(Flags.Flag.RECENT));
     }
 
     @Test
@@ -1108,6 +1121,6 @@ public abstract class AbstractMessageIdManagerStorageTest {
         List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession);
         assertThat(messages)
             .extracting(MessageResult::getFlags)
-            .containsOnly(flags);
+            .containsOnly(FlagsBuilder.builder().add(flags).add(Flags.Flag.RECENT).build());
     }
 }
