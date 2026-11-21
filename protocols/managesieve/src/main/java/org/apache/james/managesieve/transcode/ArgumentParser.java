@@ -142,7 +142,8 @@ public class ArgumentParser {
 
     public String haveSpace(Session session, String args) {
         return withArguments(args.trim(), arguments -> {
-            if (arguments.isEmpty()) {
+            // As PUTSCRIPT: RFC 5804 section 2.5, HAVESPACE tells whether a PUTSCRIPT would succeed
+            if (arguments.isEmpty() || Strings.isNullOrEmpty(arguments.get(0))) {
                 return no("Missing argument: script name");
             }
             if (arguments.size() < 2) {
