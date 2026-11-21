@@ -174,7 +174,9 @@ public abstract class WebAdminServerIntegrationImmutableTest {
     }
 
     @Test
-    void getUserDefaultIdentityShouldReturnNotFoundByDefault() {
+    void getUserDefaultIdentityShouldReturnNotFoundByDefault() throws Exception {
+        dataProbe.addUser(USERNAME, "anyPassword");
+
         when()
             .get(String.format("/users/%s/identities?default=true", USERNAME))
         .then()

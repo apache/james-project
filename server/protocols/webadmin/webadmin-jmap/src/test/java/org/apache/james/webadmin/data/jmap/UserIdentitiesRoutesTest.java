@@ -23,6 +23,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 
@@ -47,6 +48,7 @@ import org.apache.james.json.DTOConverter;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.TasksRoutes;
@@ -73,7 +75,7 @@ class UserIdentitiesRoutesTest {
     private DefaultIdentitySupplier identityFactory;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         identityFactory = mock(DefaultIdentitySupplier.class);
         Mockito.when(identityFactory.userCanSendFrom(any(), any())).thenReturn(SMono.just(true));
@@ -83,7 +85,9 @@ class UserIdentitiesRoutesTest {
 
         JsonTransformer jsonTransformer = new JsonTransformer();
         TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(UploadCleanupTaskAdditionalInformationDTO.SERIALIZATION_MODULE));
-        UserIdentityRoutes userIdentityRoutes = new UserIdentityRoutes(identityRepository, new JsonTransformer());
+        UsersRepository usersRepository = mock(UsersRepository.class);
+        Mockito.when(usersRepository.contains(BOB)).thenReturn(true);
+        UserIdentityRoutes userIdentityRoutes = new UserIdentityRoutes(identityRepository, usersRepository, new JsonTransformer());
 
         webAdminServer = WebAdminUtils.createWebAdminServer(userIdentityRoutes, tasksRoutes).start();
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
@@ -460,6 +464,33 @@ class UserIdentitiesRoutesTest {
                 "    \"message\": \"JSON payload of the request is not valid\"," +
                 "    \"details\": \"${json-unit.ignore}\"" +
                 "}");
+    }
+
+    @Test
+    void listIdentitiesShouldReturnNotFoundWhenUnknownUser() {
+        when()
+            .get(String.format(GET_IDENTITIES_USERS_PATH, "unknown@domain.tld"))
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .body("message", is("User 'unknown@domain.tld' does not exist"));
+    }
+
+    @Test
+    void createIdentityShouldReturnNotFoundWhenUnknownUser() {
+        given()
+            .body("{\"name\":\"N\",\"email\":\"unknown@domain.tld\"}")
+            .post(String.format(GET_IDENTITIES_USERS_PATH, "unknown@domain.tld"))
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404);
+    }
+
+    @Test
+    void updateIdentityShouldReturnNotFoundWhenUnknownUser() {
+        given()
+            .body("{\"name\":\"N\"}")
+            .put(String.format(GET_IDENTITIES_USERS_PATH, "unknown@domain.tld") + "/" + UUID.randomUUID())
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404);
     }
 
     @Test
