@@ -73,6 +73,10 @@ class GetQuotaProcessorTest {
         Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(24)).computedLimit(QuotaCountLimit.count(1589)).build();
     private static final Quota<QuotaSizeLimit, QuotaSizeUsage> STORAGE_QUOTA =
         Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(240)).computedLimit(QuotaSizeLimit.size(15890)).build();
+    private static final Quota<QuotaCountLimit, QuotaCountUsage> UNLIMITED_MESSAGE_QUOTA =
+        Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(24)).computedLimit(QuotaCountLimit.unlimited()).build();
+    private static final Quota<QuotaSizeLimit, QuotaSizeUsage> UNLIMITED_STORAGE_QUOTA =
+        Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(240)).computedLimit(QuotaSizeLimit.unlimited()).build();
 
     private GetQuotaProcessor testee;
     private ImapSession imapSession;
@@ -174,5 +178,26 @@ class GetQuotaProcessorTest {
         assertThat(argumentCaptor.getAllValues())
             .hasSize(1)
             .allMatch(StatusResponseTypeMatcher.NO_RESPONSE_MATCHER::matches);
+    }
+
+    @Test
+    void processorShouldAnswerAnEmptyQuotaResponseWhenNoLimit() throws Exception {
+        GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, QUOTA_ROOT.getValue());
+
+        when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
+            .thenReturn(Flux.just(mailbox));
+        when(mockedMailboxManager.hasRight(any(Mailbox.class), eq(MailboxACL.Right.Read), eq(mailboxSession)))
+            .thenReturn(true);
+        when(mockedQuotaManager.getQuotasReactive(any(QuotaRoot.class)))
+            .thenReturn(Mono.just(new QuotaManager.Quotas(UNLIMITED_MESSAGE_QUOTA, UNLIMITED_STORAGE_QUOTA)));
+
+        testee.doProcess(getQuotaRequest, mockedResponder, imapSession).block();
+
+        // RFC 9208 section 4.2.1: GETQUOTA always returns a QUOTA response
+        ArgumentCaptor<ImapResponseMessage> argumentCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
+        verify(mockedResponder, times(2)).respond(argumentCaptor.capture());
+        assertThat(argumentCaptor.getAllValues().get(0)).isEqualTo(QuotaResponse.withoutLimits("plop"));
+        assertThat(argumentCaptor.getAllValues().get(1))
+            .matches(StatusResponseTypeMatcher.OK_RESPONSE_MATCHER::matches);
     }
 }

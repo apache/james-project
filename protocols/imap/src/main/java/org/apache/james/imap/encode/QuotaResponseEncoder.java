@@ -44,6 +44,11 @@ public class QuotaResponseEncoder implements ImapResponseEncoder<QuotaResponse> 
         composer.message(ImapConstants.QUOTA_RESPONSE_NAME);
         composer.message(quotaRoot == null ? "" : quotaRoot);
         composer.openParen();
+        if (!quotaResponse.hasResource()) {
+            composer.closeParen();
+            composer.end();
+            return;
+        }
         composer.message(quotaResponse.getResourceName());
         // See RFC 2087 : response for STORAGE should be in KB. For more accuracy, we stores B, so conversion should be made
         switch (quotaResponse.getResourceName().toUpperCase(Locale.US)) {
