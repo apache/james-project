@@ -35,16 +35,31 @@ public class ReindexingRunningOptionsParser {
     }
 
     public static Optional<Integer> intQueryParameter(Request request, String queryParameter) {
+        Optional<Integer> value;
         try {
-            return Optional.ofNullable(request.queryParams(queryParameter))
+            value = Optional.ofNullable(request.queryParams(queryParameter))
                 .map(Integer::parseInt);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s', expecting a " +
-                "strictly positive optional integer", queryParameter), e);
+            throw invalidIntQueryParameter(queryParameter, e);
         }
+        if (value.isPresent() && value.get() <= 0) {
+            throw invalidIntQueryParameter(queryParameter, null);
+        }
+        return value;
+    }
+
+    private static IllegalArgumentException invalidIntQueryParameter(String queryParameter, NumberFormatException cause) {
+        return new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s', expecting a " +
+            "strictly positive optional integer", queryParameter), cause);
     }
 
     public static Optional<RunningOptions.Mode> modeQueryParameter(Request request, String queryParameter) {
-        return RunningOptions.parseMode(request.queryParams(queryParameter));
+        Optional<String> rawMode = Optional.ofNullable(request.queryParams(queryParameter));
+        Optional<RunningOptions.Mode> mode = rawMode.flatMap(RunningOptions::parseMode);
+        if (rawMode.isPresent() && mode.isEmpty()) {
+            throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s': '%s'. " +
+                "Supported values are [rebuildAll, rebuildAllNoCleanup, fixOutdated]", queryParameter, rawMode.get()));
+        }
+        return mode;
     }
 }
