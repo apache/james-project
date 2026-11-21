@@ -20,6 +20,7 @@
 package org.apache.james.imap.decode.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
@@ -27,11 +28,15 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest.ClientSpecifiedUidValidity;
 import org.apache.james.imap.message.request.SelectRequest;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.UidValidity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,6 +67,53 @@ class SelectCommandParserTest {
 
         assertThat(selectRequest.getLastKnownUidValidity())
             .isEqualTo(ClientSpecifiedUidValidity.valid(UidValidity.of(18)));
+    }
+
+    @Test
+    void decodeShouldRejectANonAscendingKnownSequenceSet() {
+        ImapRequestStreamLineReader request = toRequest("mailbox (QRESYNC (18 42 (4,56,10,12 7,8,16,19)))\n");
+
+        assertThatThrownBy(() -> testee.decode(request, new Tag("0001"), mock(ImapSession.class)))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeShouldRejectANonAscendingKnownUidSet() {
+        ImapRequestStreamLineReader request = toRequest("mailbox (QRESYNC (18 42 (4,10,12 7,19,16)))\n");
+
+        assertThatThrownBy(() -> testee.decode(request, new Tag("0001"), mock(ImapSession.class)))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeShouldKeepTheMessageSequenceMatchDataAsGiven() throws Exception {
+        ImapRequestStreamLineReader request = toRequest("mailbox (QRESYNC (18 42 (4,10,11 7,8,16)))\n");
+
+        SelectRequest selectRequest = (SelectRequest) testee.decode(request, new Tag("0001"), mock(ImapSession.class));
+
+        assertThat(selectRequest.getKnownSequenceSet())
+            .containsExactly(new IdRange(4), new IdRange(10), new IdRange(11));
+        assertThat(selectRequest.getKnownUidSet())
+            .containsExactly(new UidRange(MessageUid.of(7)), new UidRange(MessageUid.of(8)), new UidRange(MessageUid.of(16)));
+    }
+
+    @Test
+    void decodeShouldAcceptMessageSequenceMatchDataStartingAtOne() throws Exception {
+        ImapRequestStreamLineReader request = toRequest("mailbox (QRESYNC (18 42 (1,3 1,5)))\n");
+
+        SelectRequest selectRequest = (SelectRequest) testee.decode(request, new Tag("0001"), mock(ImapSession.class));
+
+        assertThat(selectRequest.getKnownUidSet())
+            .containsExactly(new UidRange(MessageUid.of(1)), new UidRange(MessageUid.of(5)));
+    }
+
+    @Test
+    void decodeShouldAcceptRangesStartingAtOne() throws Exception {
+        ImapRequestStreamLineReader request = toRequest("mailbox (QRESYNC (18 42 (1:3 1:3)))\n");
+
+        SelectRequest selectRequest = (SelectRequest) testee.decode(request, new Tag("0001"), mock(ImapSession.class));
+
+        assertThat(selectRequest.getKnownSequenceSet()).containsExactly(new IdRange(1, 3));
     }
 
     private ImapRequestStreamLineReader toRequest(String input) {
