@@ -59,7 +59,12 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
         public void close() {
             Mono.fromRunnable(Throwing.runnable(() -> {
                     file.dispose();
-                    reader.close();
+                    if (extraCRLF) {
+                        // The message data of an APPEND is read once the command is processed: it reads the end of
+                        // the line from the reader. A literal read while the command is parsed (eg a SETMETADATA
+                        // value) leaves the reader open, the command can go on after it.
+                        reader.close();
+                    }
                 }))
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe();
@@ -86,6 +91,7 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
     private final ImapRequestFrameDecoder.FileHolder backingFile;
     private final CountingInputStream in;
     private int literalCount = 0;
+    private boolean deferredEndOfLine = false;
     private int read = 0;
     private final int maxFrameLength;
 
@@ -129,11 +135,7 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
             if (next == -1) {
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unexpected end of command.");
             }
-            read++;
             nextSeen = true;
-            if (read > 8192) {
-                throw new DecodingException(HumanReadableText.FAILED, "Line length exceeded.");
-            }
             nextChar = (char) next;
         }
         
@@ -164,13 +166,27 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
         }
         literalCount++;
 
+        long offset = in.getCount();
+        if (offset + size > backingFile.getFile().length()) {
+            // The file holds the command up to the end of the line of its first literal: a further literal is not in it
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Literal not available");
+        }
         try {
-            long offset = in.getCount();
             in.skip(size);
+            // The message data of an APPEND reads the end of its line once processed: the reader is still needed then
+            deferredEndOfLine |= extraCRLF;
             return new FileLiteral(offset, size, extraCRLF, backingFile, this);
         } catch (IOException e) {
             throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Could not copy litteral", e);
         }
+    }
+
+    /**
+     * @return true when a literal returned by this reader reads the end of its line once processed (the message data of
+     * an APPEND): the reader is then to be closed with that literal.
+     */
+    public boolean hasDeferredEndOfLine() {
+        return deferredEndOfLine;
     }
 
     @Override
