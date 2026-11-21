@@ -730,19 +730,37 @@ public class StoreMailboxManager implements MailboxManager {
                                                            MailboxSession fromSession, MailboxSession toSession) {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(fromSession);
 
-        return mapper.executeReactive(fromMailboxPublisher
-            .flatMap(mailboxes -> doRenameMailboxes(mailboxes, to, fromSession, toSession, mapper)
-                .doOnNext(result -> AuditTrail.entry()
-                    .username(() -> fromSession.getUser().asString())
-                    .sessionId(() -> String.valueOf(fromSession.getSessionId().getValue()))
-                    .protocol("mailbox")
-                    .action("rename")
-                    .parameters(Throwing.supplier(() -> ImmutableMap.of("mailboxId", result.getMailboxId().serialize(),
-                        "fromMailboxPath", result.getOriginPath().asString(),
-                        "toMailboxPath", result.getDestinationPath().asString())))
-                    .log("Mailbox Rename"))
-                .collectList()
-                .flatMap(renamedResults -> renameSubscriptionsIfNeeded(renamedResults, option, fromSession, toSession))));
+        return fromMailboxPublisher
+            .flatMap(mailboxes -> createMissingParents(to, toSession)
+                .then(mapper.executeReactive(renameMailboxes(mailboxes, to, option, fromSession, toSession, mapper))));
+    }
+
+    /**
+     * RFC 3501 section 6.3.5 / RFC 9051 section 6.3.6: the server SHOULD create any superior hierarchical
+     * names that are needed for the RENAME command to complete successfully.
+     */
+    private Mono<Void> createMissingParents(MailboxPath to, MailboxSession toSession) {
+        boolean isRootPath = false;
+        return Flux.fromIterable(to.getParents(toSession.getPathDelimiter()))
+            .filterWhen(parent -> mailboxExists(parent, toSession).map(FunctionalUtils.negate()))
+            .concatMap(parent -> manageMailboxCreation(toSession, isRootPath, parent, CreateOption.NONE))
+            .then();
+    }
+
+    private Mono<List<MailboxRenamedResult>> renameMailboxes(List<Mailbox> mailboxes, MailboxPath to, RenameOption option,
+                                                             MailboxSession fromSession, MailboxSession toSession, MailboxMapper mapper) {
+        return doRenameMailboxes(mailboxes, to, fromSession, toSession, mapper)
+            .doOnNext(result -> AuditTrail.entry()
+                .username(() -> fromSession.getUser().asString())
+                .sessionId(() -> String.valueOf(fromSession.getSessionId().getValue()))
+                .protocol("mailbox")
+                .action("rename")
+                .parameters(Throwing.supplier(() -> ImmutableMap.of("mailboxId", result.getMailboxId().serialize(),
+                    "fromMailboxPath", result.getOriginPath().asString(),
+                    "toMailboxPath", result.getDestinationPath().asString())))
+                .log("Mailbox Rename"))
+            .collectList()
+            .flatMap(renamedResults -> renameSubscriptionsIfNeeded(renamedResults, option, fromSession, toSession));
     }
 
     private Flux<MailboxRenamedResult> doRenameMailboxes(List<Mailbox> mailboxes, MailboxPath newMailboxPath, MailboxSession fromSession, MailboxSession toSession, MailboxMapper mapper) {
