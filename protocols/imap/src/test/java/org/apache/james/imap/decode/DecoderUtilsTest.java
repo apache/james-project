@@ -73,13 +73,21 @@ class DecoderUtilsTest {
             .isTrue();
     }
 
-    @Test
-    void extensionFlagShouldBeAdded() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {EXTENSION_FLAG, "\\Bogus", "\\Other", "\\"})
+    void setFlagShouldDropUndefinedSystemFlags(String flag) throws Exception {
         Flags flags = new Flags();
-        DecoderUtils.setFlag(EXTENSION_FLAG, flags);
-        assertThat(flags.contains(EXTENSION_FLAG))
-            .describedAs("Extension flags should be added")
-            .isTrue();
+        DecoderUtils.setFlag(flag, flags);
+        assertThat(flags).isEqualTo(new Flags());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"\\Answered", "\\deleted", "\\DRAFT", "\\Flagged", "\\Seen"})
+    void setFlagShouldAcceptTheSystemFlags(String flag) throws Exception {
+        Flags flags = new Flags();
+        DecoderUtils.setFlag(flag, flags);
+        assertThat(flags.getSystemFlags()).hasSize(1);
+        assertThat(flags.getUserFlags()).isEmpty();
     }
     
     @ParameterizedTest
