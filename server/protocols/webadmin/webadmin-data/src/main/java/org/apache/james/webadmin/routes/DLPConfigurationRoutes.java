@@ -110,6 +110,13 @@ public class DLPConfigurationRoutes implements Routes {
                 .type(ErrorType.INVALID_ARGUMENT)
                 .message("'id' duplicates are not allowed in DLP rules")
                 .haltError();
+        } catch (IllegalStateException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Invalid DLP rule: %s", e.getMessage())
+                .cause(e)
+                .haltError();
         }
     }
 

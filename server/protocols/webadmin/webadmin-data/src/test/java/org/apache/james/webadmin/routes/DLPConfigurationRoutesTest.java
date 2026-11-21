@@ -448,6 +448,31 @@ class DLPConfigurationRoutesTest {
         }
 
         @Test
+        void putShouldRejectInvalidRegex() {
+            String storeBody =
+                "{\"rules\": [" +
+                    "  {" +
+                    "    \"id\": \"1\"," +
+                    "    \"expression\": \"(unclosed\"," +
+                    "    \"explanation\": \"explanation 1\"," +
+                    "    \"targetsSender\": true," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": false" +
+                    "  }]}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(JSON_CONTENT_TYPE)
+                .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Invalid DLP rule: `expression` must be a valid regex"));
+        }
+
+        @Test
         void putShouldClearTheConfigurationsWhenNoRule() {
             String storeBody =
                 "{\"rules\": [" +
