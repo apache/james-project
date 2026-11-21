@@ -49,9 +49,11 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
@@ -177,6 +179,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         interface FinalStage {
             FinalStage updatableClock(UpdatableTickingClock updatableTickingClock);
 
+            FinalStage batchSizes(BatchSizes batchSizes);
+
             InMemoryIntegrationResources build();
         }
     }
@@ -210,6 +214,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private Optional<Integer> limitAnnotationSize;
         private Optional<MessageParserImpl> messageParser;
         private Optional<UpdatableTickingClock> updatableTickingClock;
+        private BatchSizes batchSizes;
         private Optional<Function<MailboxManagerSearchIndexStage, MessageSearchIndex>> searchIndexFactory;
         private ImmutableSet.Builder<Function<MailboxManagerPreInstanciationStage, PreDeletionHook>> preDeletionHooksFactories;
         private ImmutableList.Builder<EventListener.GroupEventListener> listenersToBeRegistered;
@@ -224,6 +229,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             this.messageParser = Optional.empty();
             this.quotaManager = Optional.empty();
             this.updatableTickingClock = Optional.empty();
+            this.batchSizes = BatchSizes.defaultValues();
             this.preDeletionHooksFactories = ImmutableSet.builder();
             this.listenersToBeRegistered = ImmutableList.builder();
         }
@@ -294,6 +300,12 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         }
 
         @Override
+        public Stages.FinalStage batchSizes(BatchSizes batchSizes) {
+            this.batchSizes = batchSizes;
+            return this;
+        }
+
+        @Override
         public InMemoryIntegrationResources build() {
             Preconditions.checkState(authenticator.isPresent());
             Preconditions.checkState(authorizator.isPresent());
@@ -348,7 +360,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                 index,
                 hooks,
                 threadIdGuessingAlgorithm,
-                clock);
+                clock,
+                new MailboxManagerConfiguration(batchSizes));
 
             eventBus.register(listeningCurrentQuotaUpdater);
             eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));

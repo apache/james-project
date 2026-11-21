@@ -24,6 +24,7 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 
@@ -99,16 +100,17 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
     private Mono<Integer> expunge(ExpungeRequest request, ImapSession session, MessageManager mailbox, MailboxSession mailboxSession) {
         IdRange[] ranges = request.getUidSet();
         if (ranges == null) {
-            return expunge(mailbox, MessageRange.all(), session, mailboxSession);
+            return expunge(mailbox, ImmutableList.of(MessageRange.all()), session, mailboxSession);
         } else {
             // Handle UID EXPUNGE which is part of UIDPLUS
             // See http://tools.ietf.org/html/rfc4315
+            // All the ranges are expunged at once: the mailbox gets a single new mod-sequence
             return Flux.fromIterable(ImmutableList.copyOf(ranges))
                 .map(Throwing.<IdRange, MessageRange>function(range -> messageRange(session.getSelected(), range, true)
                     .orElseThrow(() -> new MessageRangeException(range.getFormattedString() + " is an invalid range")))
                     .sneakyThrow())
-                .concatMap(range -> expunge(mailbox, range, session, mailboxSession))
-                .reduce(Integer::sum);
+                .collectList()
+                .flatMap(messageRanges -> expunge(mailbox, messageRanges, session, mailboxSession));
         }
     }
 
@@ -125,10 +127,10 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
         }
     }
 
-    private Mono<Integer> expunge(MessageManager mailbox, MessageRange range, ImapSession session, MailboxSession mailboxSession) {
+    private Mono<Integer> expunge(MessageManager mailbox, List<MessageRange> ranges, ImapSession session, MailboxSession mailboxSession) {
         SelectedMailbox selected = session.getSelected();
 
-        return mailbox.expungeReactive(range, mailboxSession)
+        return mailbox.expungeRangesReactive(ranges, mailboxSession)
             .doOnNext(selected::removeRecent)
             .count()
             .map(Long::intValue)
@@ -139,7 +141,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
                 .action("EXPUNGE")
                 .parameters(() -> ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
                     "mailboxId", mailbox.getId().serialize(),
-                    "messageUids", range.toString()))
+                    "messageUids", ranges.stream().map(MessageRange::toString).collect(Collectors.joining(","))))
                 .log(String.format("IMAP EXPUNGE succeeded. %d message deleted.", count)))
                 .thenReturn(count));
     }

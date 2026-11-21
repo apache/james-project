@@ -63,8 +63,24 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
                                   PreDeletionHooks preDeletionHooks,
                                   ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
                                   Clock clock) {
+        this(mailboxSessionMapperFactory, sessionProvider, locker, messageParser, messageIdFactory, eventBus, annotationManager,
+            storeRightManager, quotaComponents, searchIndex, preDeletionHooks, threadIdGuessingAlgorithm, clock,
+            MailboxManagerConfiguration.DEFAULT);
+    }
+
+    public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
+                                  MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory,
+                                  EventBus eventBus,
+                                  StoreMailboxAnnotationManager annotationManager,
+                                  StoreRightManager storeRightManager,
+                                  QuotaComponents quotaComponents,
+                                  MessageSearchIndex searchIndex,
+                                  PreDeletionHooks preDeletionHooks,
+                                  ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                  Clock clock,
+                                  MailboxManagerConfiguration configuration) {
         super(mailboxSessionMapperFactory, sessionProvider, locker, messageParser, messageIdFactory,
-            annotationManager, eventBus, storeRightManager, quotaComponents, searchIndex, MailboxManagerConfiguration.DEFAULT,
+            annotationManager, eventBus, storeRightManager, quotaComponents, searchIndex, configuration,
             preDeletionHooks, threadIdGuessingAlgorithm, clock);
     }
 
