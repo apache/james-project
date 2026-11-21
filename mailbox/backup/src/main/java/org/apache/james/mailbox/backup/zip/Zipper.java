@@ -22,8 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -45,12 +44,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Charsets;
 
 public class Zipper implements ArchiveService {
 
     public static final String ANNOTATION_DIRECTORY = "annotations";
-    private static final boolean AUTO_FLUSH = true;
     private static final Logger LOGGER = LoggerFactory.getLogger(Zipper.class);
 
     @Inject
@@ -122,11 +119,10 @@ public class Zipper implements ArchiveService {
         archiveEntry.addExtraField(EntryTypeExtraField.TYPE_MAILBOX_ANNOTATION);
         archiveOutputStream.putArchiveEntry(archiveEntry);
 
-        annotation.getValue().ifPresent(value -> {
-            try (PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(archiveOutputStream, Charsets.UTF_8), AUTO_FLUSH)) {
-                printWriter.print(value);
-            }
-        });
+        // Do not wrap the archive in a closeable writer: closing it would close the archive, and thus the destination, mid-entry
+        if (annotation.getValue().isPresent()) {
+            archiveOutputStream.write(annotation.getValue().get().getBytes(StandardCharsets.UTF_8));
+        }
 
         archiveOutputStream.closeArchiveEntry();
     }
