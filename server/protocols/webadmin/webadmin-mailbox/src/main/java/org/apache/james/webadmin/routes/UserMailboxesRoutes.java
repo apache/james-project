@@ -64,8 +64,21 @@ public class UserMailboxesRoutes implements Routes {
 
     public static class UserReIndexingTaskRegistration extends TaskRegistration {
         @Inject
-        public UserReIndexingTaskRegistration(ReIndexer reIndexer) {
-            super(RE_INDEX, request -> reIndexer.reIndex(getUsernameParam(request), ReindexingRunningOptionsParser.parse(request)));
+        public UserReIndexingTaskRegistration(ReIndexer reIndexer, UserMailboxesService userMailboxesService) {
+            super(RE_INDEX, request -> {
+                Username username = getUsernameParam(request);
+                try {
+                    userMailboxesService.usernamePreconditions(username, getOptions(request));
+                } catch (IllegalStateException e) {
+                    throw ErrorResponder.builder()
+                        .statusCode(HttpStatus.NOT_FOUND_404)
+                        .type(ErrorType.NOT_FOUND)
+                        .message("User does not exist")
+                        .cause(e)
+                        .haltError();
+                }
+                return reIndexer.reIndex(username, ReindexingRunningOptionsParser.parse(request));
+            });
         }
     }
 

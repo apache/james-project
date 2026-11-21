@@ -161,7 +161,7 @@ class UserMailboxesRoutesTest {
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new UserMailboxesRoutes(new UserMailboxesService(mailboxManager, usersRepository), new JsonTransformer(),
                     taskManager,
-                    ImmutableSet.of(new UserMailboxesRoutes.UserReIndexingTaskRegistration(reIndexer))),
+                    ImmutableSet.of(new UserMailboxesRoutes.UserReIndexingTaskRegistration(reIndexer, new UserMailboxesService(mailboxManager, usersRepository)))),
                 new TasksRoutes(taskManager, new JsonTransformer(),
                     DTOConverter.of(WebAdminUserReindexingTaskAdditionalInformationDTO.serializationModule(),
                         ClearMailboxContentTaskAdditionalInformationDTO.SERIALIZATION_MODULE)))
@@ -1563,6 +1563,21 @@ class UserMailboxesRoutesTest {
                     .body("type", Matchers.is("InvalidArgument"))
                     .body("message", Matchers.is("Invalid arguments supplied in the user request"))
                     .body("details", Matchers.is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in bad@bad"));
+            }
+
+            @Test
+            void userReprocessingShouldFailWhenUserDoesNotExist() throws Exception {
+                when(usersRepository.contains(USERNAME)).thenReturn(false);
+
+                given()
+                    .queryParam("task", "reIndex")
+                .when()
+                    .post()
+                .then()
+                    .statusCode(NOT_FOUND_404)
+                    .body("statusCode", Matchers.is(404))
+                    .body("type", Matchers.is("notFound"))
+                    .body("message", Matchers.is("User does not exist"));
             }
         }
 
