@@ -36,6 +36,8 @@ import org.apache.james.jmap.api.identity.IdentityForbiddenDeleteException;
 import org.apache.james.jmap.api.identity.IdentityNotFoundException;
 import org.apache.james.jmap.api.identity.IdentityRepository;
 import org.apache.james.jmap.api.model.IdentityId;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.data.jmap.dto.UserIdentity;
@@ -71,13 +73,16 @@ public class UserIdentityRoutes implements Routes {
 
     private Service service;
     private final IdentityRepository identityRepository;
+    private final UsersRepository usersRepository;
     private final JsonTransformer jsonTransformer;
     private final ObjectMapper jsonDeserialize;
 
     @Inject
     public UserIdentityRoutes(IdentityRepository identityRepository,
+                              UsersRepository usersRepository,
                               JsonTransformer jsonTransformer) {
         this.identityRepository = identityRepository;
+        this.usersRepository = usersRepository;
         this.jsonTransformer = jsonTransformer;
         this.jsonDeserialize =  new ObjectMapper()
             .registerModule(new Jdk8Module())
@@ -115,9 +120,9 @@ public class UserIdentityRoutes implements Routes {
         service.delete(USERS_IDENTITY_BASE_PATH + SEPARATOR + IDENTITY_ID, this::deleteIdentity);
     }
 
-    private List<UserIdentity> listIdentities(Request request, Response response) {
+    private List<UserIdentity> listIdentities(Request request, Response response) throws UsersRepositoryException {
+        Username username = extractExistingUsername(request);
         try {
-            Username username = extractUsername(request);
             Optional<Boolean> defaultFilter = ParametersExtractor.extractBoolean(request, "default");
 
             List<UserIdentity> identities = Flux.from(identityRepository.list(username))
@@ -143,8 +148,8 @@ public class UserIdentityRoutes implements Routes {
 
     }
 
-    private HaltException createIdentity(Request request, Response response) {
-        Username username = extractUsername(request);
+    private HaltException createIdentity(Request request, Response response) throws UsersRepositoryException {
+        Username username = extractExistingUsername(request);
         try {
             UserIdentityUpsert creationRequest = parseUpsert(request);
             Mono.from(identityRepository.save(username, creationRequest.asCreationRequest())).block();
@@ -167,8 +172,8 @@ public class UserIdentityRoutes implements Routes {
         }
     }
 
-    private HaltException updateIdentity(Request request, Response response) {
-        Username username = extractUsername(request);
+    private HaltException updateIdentity(Request request, Response response) throws UsersRepositoryException {
+        Username username = extractExistingUsername(request);
         IdentityId identityId = Optional.ofNullable(request.params(IDENTITY_ID))
             .map(UUID::fromString)
             .map(IdentityId::new)
@@ -236,6 +241,24 @@ public class UserIdentityRoutes implements Routes {
 
     private Username extractUsername(Request request) {
         return Parsers.parseUsername(request.params(USER_NAME));
+    }
+
+    private Username extractExistingUsername(Request request) throws UsersRepositoryException {
+        Username username = extractUsername(request);
+        try {
+            usersRepository.assertValid(username);
+        } catch (UsersRepositoryException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid username")
+                .cause(e)
+                .haltError();
+        }
+        if (!usersRepository.contains(username)) {
+            throw throw404(String.format("User '%s' does not exist", username.asString()));
+        }
+        return username;
     }
 
 }
