@@ -6305,6 +6305,27 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def movesShouldMarkTheMessagesRecentWhateverTheirCount(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(bobUsername)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val otherId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "other"))
+    def append(): MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+        AppendCommand.builder().notRecent().withFlags(new Flags(Flags.Flag.SEEN)).build(Fixture.createTestMessage))
+      .getMessageId
+    val batch = (1 to 4).map(_ => append())
+    val single = append()
+
+    // More than 3 identical moves go through the range path, a single one through the per message path
+    postEmailSetUpdate(batch.map(id => s""""${id.serialize}": {"mailboxIds": {"${otherId.serialize}": true}}""").mkString(","))
+    postEmailSetUpdate(s""""${single.serialize}": {"mailboxIds": {"${otherId.serialize}": true}}""")
+
+    (batch :+ single).foreach(id => {
+      val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(id, bobUsername).asScala.head.getFlags
+      assertThat(flags).isEqualTo(FlagsBuilder.builder().add(Flags.Flag.SEEN, Flags.Flag.RECENT).build())
+    })
+  }
+
+  @Test
   def rangeMoveToTheCurrentMailboxShouldBeANoop(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(bobUsername)
     val inboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)

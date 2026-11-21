@@ -598,7 +598,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                 MailboxACL.Rfc4314Rights myRights = rightManager.myRights(mailbox, mailboxSession);
                 boolean shouldPreserveFlags = myRights.contains(Right.Write);
                 MailboxMessage copy = mailboxMessage.copy(mailbox);
-                copy.setFlags(FlagsFactory
+                Flags flags = FlagsFactory
                     .builder()
                     .flags(mailboxMessage.createFlags())
                     .filteringFlags(
@@ -606,7 +606,10 @@ public class StoreMessageIdManager implements MessageIdManager {
                             .systemFlagFilter(f -> shouldPreserveFlags)
                             .userFlagFilter(f -> shouldPreserveFlags)
                             .build())
-                    .build());
+                    .build();
+                // RFC 3501 section 6.4.7: a copy is \Recent, as the range copies and moves of the mappers
+                flags.add(Flags.Flag.RECENT);
+                copy.setFlags(flags);
 
                 return save(messageIdMapper, copy, mailbox, mailboxSession)
                     .map(metadata -> addedEvent(mailboxSession, mailbox, metadata, messageMoves));
