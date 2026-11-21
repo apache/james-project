@@ -24,9 +24,9 @@ import java.io.IOException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 class QueryElementDeserializer extends StdDeserializer<QueryElement> {
     protected QueryElementDeserializer() {
@@ -36,7 +36,7 @@ class QueryElementDeserializer extends StdDeserializer<QueryElement> {
     @Override
     public QueryElement deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
         ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();
-        ObjectNode queryElement = mapper.readTree(jsonParser);
+        JsonNode queryElement = deserializationContext.readTree(jsonParser);
 
         if (isComposedElement(queryElement)) {
             return mapper.treeToValue(queryElement, QueryDTO.class);
@@ -44,7 +44,7 @@ class QueryElementDeserializer extends StdDeserializer<QueryElement> {
         return mapper.treeToValue(queryElement, CriterionDTO.class);
     }
 
-    private boolean isComposedElement(ObjectNode queryElement) {
+    private boolean isComposedElement(JsonNode queryElement) {
         return queryElement.findValue("combinator") != null
             || queryElement.findValue("criteria") != null;
     }
