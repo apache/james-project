@@ -21,6 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
@@ -35,6 +36,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import spark.HaltException;
 import spark.Request;
 import spark.Service;
 
@@ -90,13 +92,29 @@ public class CassandraMigrationRoutes implements Routes {
                 .message(MIGRATION_REQUEST_CAN_NOT_BE_DONE)
                 .cause(e)
                 .haltError();
+        } catch (NotImplementedException e) {
+            throw migrationCanNotBePlanned(e);
         }
     }
 
     public Task upgradeToVersion(Request request) {
         LOGGER.debug("Cassandra upgrade launched");
         CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse(request.body());
-        return cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
+        try {
+            return cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
+        } catch (NotImplementedException e) {
+            throw migrationCanNotBePlanned(e);
+        }
+    }
+
+    private HaltException migrationCanNotBePlanned(NotImplementedException e) {
+        LOGGER.info(MIGRATION_REQUEST_CAN_NOT_BE_DONE, e);
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.GONE_410)
+            .type(ErrorType.WRONG_STATE)
+            .message(MIGRATION_REQUEST_CAN_NOT_BE_DONE)
+            .cause(e)
+            .haltError();
     }
 
     public CassandraVersionResponse getCassandraLatestVersion() {
