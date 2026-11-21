@@ -53,6 +53,8 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -234,6 +236,21 @@ class VacationRoutesTest {
     void postVacationHandlesBadJson() {
         given()
             .body("{not really a JSON object}")
+        .when()
+            .post(VacationRoutes.VACATION + SEPARATOR + BOB)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(HttpStatus.BAD_REQUEST_400));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "{\"fromDate\":\"+999999999-12-31T23:59:59Z\"}",
+        "{\"toDate\":\"-999999999-01-01T00:00:00Z\"}"
+    })
+    void postVacationShouldRejectOutOfRangeDates(String body) {
+        given()
+            .body(body)
         .when()
             .post(VacationRoutes.VACATION + SEPARATOR + BOB)
         .then()

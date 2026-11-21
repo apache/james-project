@@ -56,12 +56,22 @@ public class VacationDTO {
                         @JsonProperty("subject") Optional<String> subject,
                         @JsonProperty("textBody") Optional<String> textBody,
                         @JsonProperty("htmlBody") Optional<String> htmlBody) {
+        fromDate.ifPresent(date -> validateDate("fromDate", date));
+        toDate.ifPresent(date -> validateDate("toDate", date));
         this.enabled = enabled;
         this.fromDate = fromDate;
         this.toDate = toDate;
         this.textBody = textBody;
         this.subject = subject;
         this.htmlBody = htmlBody;
+    }
+
+    private static void validateDate(String field, ZonedDateTime date) {
+        try {
+            date.toInstant().toEpochMilli();
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException(String.format("'%s' is out of the supported date range", field), e);
+        }
     }
 
     public Optional<Boolean> getEnabled() {
