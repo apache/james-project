@@ -154,7 +154,8 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
                     .uid(message.getUid())
                     .messageId(message.getMessageId())
                     .oldFlags(message.createFlags())
-                    .newFlags(newState)
+                    // Nothing changes: the new flags are the stored ones, not the requested ones
+                    .newFlags(message.createFlags())
                     .build();
                 return Mono.just(Pair.of(message.getMailboxId(), updatedFlags));
             }
