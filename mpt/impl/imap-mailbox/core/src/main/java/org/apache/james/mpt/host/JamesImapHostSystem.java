@@ -19,6 +19,7 @@
 
 package org.apache.james.mpt.host;
 
+import java.util.List;
 import java.util.stream.IntStream;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -42,6 +43,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.ImapHostSystem;
@@ -146,6 +148,15 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
                 .rights(rights)
                 .asAddition()),
             mailboxSession);
+        mailboxManager.endProcessingRequest(mailboxSession);
+    }
+
+    @Override
+    public void setAnnotations(MailboxPath mailboxPath, List<MailboxAnnotation> annotations) throws Exception {
+        MailboxManager mailboxManager = getMailboxManager();
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
+        mailboxManager.startProcessingRequest(mailboxSession);
+        mailboxManager.updateAnnotations(mailboxPath, mailboxSession, annotations);
         mailboxManager.endProcessingRequest(mailboxSession);
     }
 
