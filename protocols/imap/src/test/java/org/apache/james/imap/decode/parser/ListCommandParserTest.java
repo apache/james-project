@@ -35,6 +35,7 @@ import org.apache.james.imap.message.request.ListRequest.ListReturnOption;
 import org.apache.james.imap.message.request.ListRequest.ListSelectOption;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -99,6 +100,14 @@ class ListCommandParserTest {
     @ParameterizedTest
     @ValueSource(strings = {"\"\" ()\r\n", "\"\" (INBOX\r\n", "\"\" (INBOX (Sent))\r\n", "\"\" (INBOX) extra\r\n"})
     void decodeShouldRejectInvalidPatternLists(String input) {
+        assertThatThrownBy(() -> decode(input))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @ParameterizedTest
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    @ValueSource(strings = {"\"\" (\t)\r\n", "\"\" (INBOX\tSent)\r\n", "\"\" (x\t)\r\n", "\"\" (\"INBOX\"\t)\r\n"})
+    void decodeShouldRejectATabInAPatternList(String input) {
         assertThatThrownBy(() -> decode(input))
             .isInstanceOf(DecodingException.class);
     }
