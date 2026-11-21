@@ -114,6 +114,12 @@ public class ListCommandParser extends AbstractUidCommandParser {
             if (!pattern.isEmpty()) {
                 patterns.add(pattern);
             }
+            // The patterns are separated by SP: anything else (a TAB, which is a CTL) is invalid, and would not be
+            // consumed by the next iteration.
+            char next = request.nextChar();
+            if (next != ' ' && next != ')') {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid character in a mailbox pattern list");
+            }
         }
         request.consumeChar(')');
         return patterns.build();
