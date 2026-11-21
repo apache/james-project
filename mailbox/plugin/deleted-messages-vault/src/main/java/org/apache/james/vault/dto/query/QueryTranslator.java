@@ -173,9 +173,18 @@ public class QueryTranslator {
     }
 
     private Criterion<?> translate(CriterionDTO dto) throws QueryTranslatorException {
-        return Optional.ofNullable(getCriterionParser(dto))
-            .map(criterionGeneratingFunction -> criterionGeneratingFunction.apply(dto.getValue()))
+        Function<String, Criterion<?>> criterionParser = Optional.ofNullable(getCriterionParser(dto))
             .orElseThrow(() -> new QueryTranslatorException("pair of fieldName: '" + dto.getFieldName() + "' and operator: '" + dto.getOperator() + "' is not supported"));
+        if (dto.getValue() == null) {
+            throw new QueryTranslatorException("value is mandatory for fieldName: '" + dto.getFieldName() + "'");
+        }
+        try {
+            return criterionParser.apply(dto.getValue());
+        } catch (QueryTranslatorException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw new QueryTranslatorException("value: '" + dto.getValue() + "' is invalid for fieldName: '" + dto.getFieldName() + "': " + e.getMessage());
+        }
     }
 
     private Function<String, Criterion<?>> getCriterionParser(CriterionDTO dto) {

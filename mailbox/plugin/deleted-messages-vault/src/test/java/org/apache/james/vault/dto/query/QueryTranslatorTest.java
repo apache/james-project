@@ -72,6 +72,20 @@ class QueryTranslatorTest {
     }
 
     @Test
+    void translateShouldThrowWhenPassingUnparsableDate() {
+        assertThatThrownBy(() -> queryTranslator.translate(QueryDTO.and(
+            new CriterionDTO(FieldName.DELETION_DATE.getValue(), Operator.BEFORE_OR_EQUALS.getValue(), "not-a-date"))))
+            .isInstanceOf(QueryTranslator.QueryTranslatorException.class);
+    }
+
+    @Test
+    void translateShouldThrowWhenValueIsMissing() {
+        assertThatThrownBy(() -> queryTranslator.translate(QueryDTO.and(
+            new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), null))))
+            .isInstanceOf(QueryTranslator.QueryTranslatorException.class);
+    }
+
+    @Test
     void translateShouldNotThrowWhenPassingFlattenQuery() {
         assertThatCode(() -> queryTranslator.translate(QueryDTO.and(
             new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), "james"),
