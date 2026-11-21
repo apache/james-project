@@ -485,6 +485,75 @@ class DeletedMessagesVaultRoutesTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenPassingInvalidDate(String action) {
+            String query =
+                "{" +
+                "  \"criteria\": [" +
+                "    {\"fieldName\": \"deletionDate\", \"operator\": \"beforeOrEquals\", \"value\": \"not-a-date\"}" +
+                "  ]" +
+                "}";
+
+            given()
+                .queryParam("action", action)
+                .body(query)
+            .when()
+                .post(BOB_PATH)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid payload passing to the route"))
+                .body("details", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenValueIsMissing(String action) {
+            String query =
+                "{" +
+                "  \"criteria\": [" +
+                "    {\"fieldName\": \"subject\", \"operator\": \"contains\"}" +
+                "  ]" +
+                "}";
+
+            given()
+                .queryParam("action", action)
+                .body(query)
+            .when()
+                .post(BOB_PATH)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid payload passing to the route"))
+                .body("details", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenPassingInvalidBoolean(String action) {
+            String query =
+                "{" +
+                "  \"criteria\": [" +
+                "    {\"fieldName\": \"hasAttachment\", \"operator\": \"equals\", \"value\": \"maybe\"}" +
+                "  ]" +
+                "}";
+
+            given()
+                .queryParam("action", action)
+                .body(query)
+            .when()
+                .post(BOB_PATH)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid payload passing to the route"))
+                .body("details", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
         void userVaultAPIShouldReturnBadRequestWhenPassingUnsupportedPairOfFieldNameAndOperator(String action) {
             Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
