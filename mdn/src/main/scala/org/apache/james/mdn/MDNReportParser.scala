@@ -280,7 +280,9 @@ class MDNReportParser(val input: ParserInput) extends Parser {
   private def dispositionModifierExtension = rule { atom }
 
   //    error-field = "Error" ":" *([FWS] text)
-  private[mdn] def errorField: Rule1[Error] = rule { ("Error" ~ ":" ~ capture(zeroOrMore(fws.? ~ text))) ~> ((error: String) =>  new Error(Text.fromRawText(error))) }
+  // Trailing whitespace is tolerated (and not captured), as for extension fields: text includes SP and HTAB, but once
+  // FWS consumed it the PEG does not retry without it. Otherwise the line would be read as an extension field "Error".
+  private[mdn] def errorField: Rule1[Error] = rule { ("Error" ~ ":" ~ capture(zeroOrMore(fws.? ~ text)) ~ zeroOrMore(wsp)) ~> ((error: String) =>  new Error(Text.fromRawText(error))) }
 
   //    extension-field = extension-field-name ":" *([FWS] text)
   // Trailing whitespace is tolerated (and not captured): an empty value is formatted as "Name:" but other generators may write "Name: "

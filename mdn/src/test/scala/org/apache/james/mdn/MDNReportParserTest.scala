@@ -25,6 +25,7 @@ import org.apache.james.mdn.modifier.DispositionModifier
 import org.apache.james.mdn.sending.mode.DispositionSendingMode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.parboiled2.{EOI, ParserInput, Rule1}
 
 class MDNReportParserTest {
 
@@ -354,4 +355,37 @@ class MDNReportParserTest {
     assertThat(once.getExtensionFields).hasSize(2)
     assertThat(twice).isEqualTo(once)
   }
+
+  @Test
+  def errorFieldWithTrailingWhitespaceShouldBeAnErrorField(): Unit = {
+    val report = "Final-Recipient: rfc822; f\r\n" +
+      "Disposition: automatic-action/MDN-sent-automatically;processed\r\n" +
+      "Error: e\t\r\n"
+    val actual = MDNReportParser.parse(report).get
+    assertThat(actual.getErrorFields).containsExactly(new Error(Text.fromRawText("e")))
+    assertThat(actual.getExtensionFields).isEmpty()
+    assertThat(MDNReportParser.parse(actual.formattedValue()).get).isEqualTo(actual)
+  }
+
+  @Test
+  def errorFieldShouldAcceptTrailingWhitespace(): Unit = {
+    // EOI: the whole input, trailing whitespace included, needs to be consumed by the rule
+    val result = new WholeErrorFieldParser(ParserInput("Error: Message1 \t")).wholeErrorField.run()
+    assertThat(result.isSuccess).isTrue
+    assertThat(result.get).isEqualTo(new Error(Text.fromRawText("Message1")))
+  }
+
+  @Test
+  def foldedErrorFieldWithTrailingWhitespaceShouldBeAnErrorField(): Unit = {
+    val report = "Final-Recipient: rfc822; f\r\n" +
+      "Disposition: automatic-action/MDN-sent-automatically;processed\r\n" +
+      "Error: a\r\n b \r\n"
+    val actual = MDNReportParser.parse(report).get
+    assertThat(actual.getErrorFields).hasSize(1)
+    assertThat(actual.getExtensionFields).isEmpty()
+  }
+}
+
+private class WholeErrorFieldParser(input: ParserInput) extends MDNReportParser(input) {
+  def wholeErrorField: Rule1[Error] = rule { errorField ~ EOI }
 }
