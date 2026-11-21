@@ -63,11 +63,16 @@ public class JsonExtractor<RequestT> {
 
     public RequestT parse(String text) throws JsonExtractException {
         Preconditions.checkNotNull(text);
+        RequestT result;
         try {
-            return type != null ? objectMapper.readValue(text, type) : objectMapper.readValue(text, typeReference);
+            result = type != null ? objectMapper.readValue(text, type) : objectMapper.readValue(text, typeReference);
         } catch (IOException | IllegalArgumentException e) {
             throw new JsonExtractException(e);
         }
+        if (result == null) {
+            throw new JsonExtractException("The JSON payload must not be null");
+        }
+        return result;
     }
 
 }

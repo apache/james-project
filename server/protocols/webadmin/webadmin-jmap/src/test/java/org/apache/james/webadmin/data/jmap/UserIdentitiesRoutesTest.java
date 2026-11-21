@@ -457,6 +457,24 @@ class UserIdentitiesRoutesTest {
     }
 
     @Test
+    void createIdentityShouldFailWhenNullBody() {
+        given()
+            .body("null")
+            .post(String.format(GET_IDENTITIES_USERS_PATH, BOB.asString()))
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @Test
+    void updateIdentityShouldFailWhenNullBody() {
+        given()
+            .body("null")
+            .put(String.format(GET_IDENTITIES_USERS_PATH, BOB.asString()) + "/" + UUID.randomUUID())
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @Test
     void createIdentityShouldNotSupportMayDeleteProperty() {
         String creationRequest = "" +
             "    {" +

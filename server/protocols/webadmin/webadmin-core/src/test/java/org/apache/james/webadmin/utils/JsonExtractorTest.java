@@ -49,6 +49,11 @@ class JsonExtractorTest {
     }
 
     @Test
+    void parseShouldThrowOnJsonNull() {
+        assertThatThrownBy(() -> jsonExtractor.parse("null")).isInstanceOf(JsonExtractException.class);
+    }
+
+    @Test
     void parseShouldThrowOnBrokenJson() {
         assertThatThrownBy(() -> jsonExtractor.parse("{\"field1\":\"broken")).isInstanceOf(JsonExtractException.class);
     }

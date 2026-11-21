@@ -24,4 +24,8 @@ public class JsonExtractException extends Exception {
     public JsonExtractException(Throwable throwable) {
         super(throwable.getMessage(), throwable);
     }
+
+    public JsonExtractException(String message) {
+        super(message);
+    }
 }
