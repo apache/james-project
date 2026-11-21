@@ -42,13 +42,28 @@ public class MailboxAnnotationKey {
     public static final String VENDOR_COMPONENT = "vendor";
     private final String key;
 
-    public MailboxAnnotationKey(String key) {
-        this.key = key;
-        Preconditions.checkArgument(isValid(),
-            "Key must start with '/' and not end with '/' and does not contain character with hex from '\u0000' to '\u00019' or {'*', '%', two consecutive '/'} ");
+    /**
+     * Builds the name of an entry that can be retrieved, without the minimum number of components required for
+     * storing an annotation: RFC 5464 GETMETADATA entries are also prefixes for the DEPTH option, so
+     * {@code /private}, {@code /shared} and partial vendor paths such as {@code /private/vendor/acme} are valid.
+     */
+    public static MailboxAnnotationKey forRetrieval(String key) {
+        return new MailboxAnnotationKey(key, false);
     }
 
-    private boolean isValid() {
+    public MailboxAnnotationKey(String key) {
+        this(key, true);
+    }
+
+    private MailboxAnnotationKey(String key, boolean enforceMinimumComponents) {
+        this.key = key;
+        Preconditions.checkArgument(isValidSyntax(),
+            "Key must start with '/' and not end with '/' and does not contain character with hex from '\u0000' to '\u00019' or {'*', '%', two consecutive '/'} ");
+        Preconditions.checkArgument(!enforceMinimumComponents || hasEnoughComponents(),
+            "Key must have at least " + MINIMUM_COMPONENTS + " components (" + MINIMUM_COMPONENTS_OF_VENDOR + " for vendor keys)");
+    }
+
+    private boolean isValidSyntax() {
         if (StringUtils.isBlank(key)) {
             return false;
         }
@@ -67,6 +82,10 @@ public class MailboxAnnotationKey {
         if (!NAME_ANNOTATION_PATTERN.matchesAllOf(key)) {
             return false;
         }
+        return true;
+    }
+
+    private boolean hasEnoughComponents() {
         int componentsNo = countComponents();
         if (isVendorKey() && componentsNo < MINIMUM_COMPONENTS_OF_VENDOR) {
             return false;

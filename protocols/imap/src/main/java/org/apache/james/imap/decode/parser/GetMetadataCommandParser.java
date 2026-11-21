@@ -134,7 +134,7 @@ public class GetMetadataCommandParser extends AbstractImapCommandParser {
     }
 
     private void consumeKey(ImapRequestLineReader requestReader, GetMetadataRequest.Builder builder) throws DecodingException {
-        builder.keys(ImmutableSet.of(new MailboxAnnotationKey(requestReader.astring())));
+        builder.keys(ImmutableSet.of(MailboxAnnotationKey.forRetrieval(requestReader.astring())));
         requestReader.eol();
     }
 
@@ -142,7 +142,7 @@ public class GetMetadataCommandParser extends AbstractImapCommandParser {
         Builder<MailboxAnnotationKey> keys = ImmutableSet.builder();
 
         do {
-            keys.add(new MailboxAnnotationKey(requestReader.astring()));
+            keys.add(MailboxAnnotationKey.forRetrieval(requestReader.astring()));
         } while (requestReader.nextWordChar() != ')');
 
         builder.keys(keys.build());
