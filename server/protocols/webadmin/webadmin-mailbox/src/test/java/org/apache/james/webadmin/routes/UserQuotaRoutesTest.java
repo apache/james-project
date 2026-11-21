@@ -314,6 +314,30 @@ class UserQuotaRoutesTest {
         }
 
         @Test
+        default void minOccupationRatioShouldNotBeNaN() {
+            given()
+                .param("minOccupationRatio", "NaN")
+            .when()
+                .get("/quota/users")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .body("message", equalTo("minOccupationRatio must be a finite number"));
+        }
+
+        @Test
+        default void maxOccupationRatioShouldNotBeInfinite() {
+            given()
+                .param("maxOccupationRatio", "Infinity")
+            .when()
+                .get("/quota/users")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .body("message", equalTo("maxOccupationRatio must be a finite number"));
+        }
+
+        @Test
         default void maxOccupationRatioShouldNotBeNegative() {
             given()
                 .param("maxOccupationRatio", -0.5)

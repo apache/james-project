@@ -225,6 +225,16 @@ public class UserQuotaRoutes implements Routes {
 
     public Optional<QuotaBoundary> extractQuotaBoundary(Request request, String parameterName) {
         return ParametersExtractor.extractPositiveDouble(request, parameterName)
+            .map(ratio -> {
+                if (!Double.isFinite(ratio)) {
+                    throw ErrorResponder.builder()
+                        .statusCode(HttpStatus.BAD_REQUEST_400)
+                        .type(ErrorType.INVALID_ARGUMENT)
+                        .message("%s must be a finite number", parameterName)
+                        .haltError();
+                }
+                return ratio;
+            })
             .map(QuotaBoundary::new);
     }
 
