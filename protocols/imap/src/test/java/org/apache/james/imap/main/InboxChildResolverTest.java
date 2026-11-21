@@ -102,4 +102,26 @@ class InboxChildResolverTest {
         assertThat(testee.existingMailbox(MailboxPath.forUser(BOB, "INBOX.sub"), session).block())
             .isEqualTo(MailboxPath.forUser(BOB, "INBOX.sub"));
     }
+
+    @Test
+    void newMailboxShouldNotPutADotlessINameUnderInbox() {
+        // U+0131 LATIN SMALL LETTER DOTLESS I: IMAP case-insensitivity is ASCII only
+        assertThat(testee.newMailbox(MailboxPath.forUser(BOB, "ınbox.sub"), session).block())
+            .isEqualTo(MailboxPath.forUser(BOB, "ınbox.sub"));
+    }
+
+    @Test
+    void inboxChildShouldOnlyFoldAsciiCase() {
+        // U+0130 LATIN CAPITAL LETTER I WITH DOT ABOVE
+        assertThat(InboxChildResolver.inboxChild(MailboxPath.forUser(BOB, "İnbox.sub"), '.')).isEmpty();
+        assertThat(InboxChildResolver.inboxChild(MailboxPath.forUser(BOB, "ınbox.sub"), '.')).isEmpty();
+        assertThat(InboxChildResolver.inboxChild(MailboxPath.forUser(BOB, "inbox.sub"), '.'))
+            .contains(MailboxPath.forUser(BOB, "INBOX.sub"));
+    }
+
+    @Test
+    void inboxChildShouldIgnoreNamesShorterThanTheInboxPrefix() {
+        assertThat(InboxChildResolver.inboxChild(MailboxPath.forUser(BOB, "inbox"), '.')).isEmpty();
+        assertThat(InboxChildResolver.inboxChild(MailboxPath.forUser(BOB, "in"), '.')).isEmpty();
+    }
 }
