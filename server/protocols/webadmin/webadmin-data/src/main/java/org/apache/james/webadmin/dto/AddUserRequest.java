@@ -30,6 +30,7 @@ public class AddUserRequest {
     @JsonCreator
     public AddUserRequest(@JsonProperty("password") char[] password) {
         Preconditions.checkNotNull(password);
+        Preconditions.checkArgument(password.length > 0, "password should not be empty");
         this.password = password;
     }
 

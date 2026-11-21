@@ -424,7 +424,7 @@ hence it should match the criteria at [User Repositories documentation](/server/
 Response codes:
 
  - 204: The user was successfully created
- - 400: The user name or the payload is invalid
+ - 400: The user name or the payload is invalid (an empty password is refused)
  - 409: The user name already exists
 
 Note: If the user exists already, its password cannot be updated using this. 
@@ -441,7 +441,7 @@ curl -XPUT http://ip:port/users/usernameToBeUsed?force \
 Response codes:
 
 - 204: The user's password was successfully updated
-- 400: The user name or the payload is invalid
+- 400: The user name or the payload is invalid (an empty password is refused)
 
 This also can be used to create a new user.
 
