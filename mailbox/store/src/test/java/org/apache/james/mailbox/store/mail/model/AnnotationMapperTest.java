@@ -137,6 +137,26 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
+    void getAnnotationsByKeysWithAllDepthShouldAcceptATopLevelEntry() {
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
+
+        assertThat(annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, ImmutableSet.of(MailboxAnnotationKey.forRetrieval("/private"))))
+            .containsOnly(PRIVATE_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION);
+    }
+
+    @Test
+    void getAnnotationsByKeysWithOneDepthShouldAcceptATopLevelEntry() {
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
+        annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
+
+        assertThat(annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, ImmutableSet.of(MailboxAnnotationKey.forRetrieval("/private"))))
+            .containsOnly(PRIVATE_ANNOTATION);
+    }
+
+    @Test
     void getAnnotationsByKeysWithOneDepthShouldReturnTheChildrenEntriesEvenItDoesNotExist() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
