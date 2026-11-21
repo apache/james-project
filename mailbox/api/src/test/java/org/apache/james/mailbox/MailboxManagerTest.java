@@ -2025,6 +2025,55 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void renameMailboxShouldCreateMissingParents() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "src");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "rn.deep.x");
+            mailboxManager.createMailbox(originalPath, session);
+
+            mailboxManager.renameMailbox(originalPath, newMailboxPath, session);
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(Mono.from(mailboxManager.mailboxExists(MailboxPath.forUser(USER_1, "rn"), session)).block()).isTrue();
+                softly.assertThat(Mono.from(mailboxManager.mailboxExists(MailboxPath.forUser(USER_1, "rn.deep"), session)).block()).isTrue();
+                softly.assertThat(Mono.from(mailboxManager.mailboxExists(newMailboxPath, session)).block()).isTrue();
+                softly.assertThat(Mono.from(mailboxManager.mailboxExists(originalPath, session)).block()).isFalse();
+            });
+        }
+
+        @Test
+        void renameMailboxShouldCreateMissingParentsWhenRenamingAChild() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath parentPath = MailboxPath.forUser(USER_1, "parent");
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "parent.child");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "other.deep.x");
+            mailboxManager.createMailbox(originalPath, session);
+
+            mailboxManager.renameMailbox(originalPath, newMailboxPath, session);
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(Mono.from(mailboxManager.mailboxExists(MailboxPath.forUser(USER_1, "other"), session)).block()).isTrue();
+                softly.assertThat(Mono.from(mailboxManager.mailboxExists(MailboxPath.forUser(USER_1, "other.deep"), session)).block()).isTrue();
+                softly.assertThat(Mono.from(mailboxManager.mailboxExists(newMailboxPath, session)).block()).isTrue();
+                softly.assertThat(Mono.from(mailboxManager.mailboxExists(parentPath, session)).block()).isTrue();
+            });
+        }
+
+        @Test
+        void renameMailboxShouldNotCreateParentsWhenSourceDoesNotExist() {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath originalPath = MailboxPath.forUser(USER_1, "notFound");
+            MailboxPath newMailboxPath = MailboxPath.forUser(USER_1, "rn.deep.x");
+
+            assertThatThrownBy(() -> mailboxManager.renameMailbox(originalPath, newMailboxPath, session))
+                .isInstanceOf(MailboxNotFoundException.class);
+            assertThat(Mono.from(mailboxManager.mailboxExists(MailboxPath.forUser(USER_1, "rn"), session)).block()).isFalse();
+        }
+
+        @Test
         void renameMailboxShouldRenamedChildMailboxesWithRenameOption() throws MailboxException {
             MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
