@@ -627,6 +627,10 @@ Response codes:
 curl -XDELETE http://ip:port/users/{userToBeDeleted}
 ....
 
+The delegations from and to the deleted user are removed as well, so that an account
+later created with the same name does not inherit them. Other user data is kept: see
+link:#_delete_data_of_a_user[delete data of a user].
+
 Response codes:
 
 * 204: The user was successfully deleted

@@ -261,6 +261,12 @@ public class CassandraUsersDAO implements UsersDAO {
             .build());
     }
 
+    private Mono<Void> removeDelegations(Username name) {
+        return getDelegatedToUsers(name)
+            .concatMap(delegator -> removeAuthorizedUser(delegator, name))
+            .then(removeAllAuthorizedUsers(name));
+    }
+
     public Flux<Username> getDelegatedToUsers(Username name) {
         return executor.executeSingleRow(
                 getDelegatedToUsersStatement.bind()
@@ -272,6 +278,10 @@ public class CassandraUsersDAO implements UsersDAO {
 
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
+        // The reverse delegation index is stored on the user row: clean delegations before dropping it, otherwise the
+        // removed user would stay authorized on its delegators accounts, and a re-created account would inherit it.
+        removeDelegations(name).block();
+
         boolean executed = executor.executeReturnApplied(
                 removeUserStatement.bind()
                     .setString(NAME, name.asString()))

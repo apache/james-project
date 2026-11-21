@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresDelegationStoreTest implements DelegationStoreContract {
@@ -63,5 +64,44 @@ public class PostgresDelegationStoreTest implements DelegationStoreContract {
 
         assertThat(postgresUsersDAO.listReactive().collectList().block())
             .containsOnly(BOB);
+    }
+
+    @Test
+    void removeUserShouldRemoveItFromItsDelegatorsAuthorizedUsers() throws Exception {
+        addUser(ALICE);
+        addUser(BOB);
+        Mono.from(testee().addAuthorizedUser(BOB).forUser(ALICE)).block();
+
+        postgresUsersDAO.removeUser(BOB);
+
+        assertThat(Flux.from(testee().authorizedUsers(ALICE)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void recreatedUserShouldNotInheritDelegationOfRemovedUser() throws Exception {
+        addUser(ALICE);
+        addUser(BOB);
+        Mono.from(testee().addAuthorizedUser(BOB).forUser(ALICE)).block();
+
+        postgresUsersDAO.removeUser(BOB);
+        addUser(BOB);
+
+        assertThat(Flux.from(testee().authorizedUsers(ALICE)).collectList().block())
+            .isEmpty();
+        assertThat(Flux.from(testee().delegatedUsers(BOB)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void removeUserShouldRemoveItFromItsDelegateesDelegatedUsers() throws Exception {
+        addUser(ALICE);
+        addUser(BOB);
+        Mono.from(testee().addAuthorizedUser(BOB).forUser(ALICE)).block();
+
+        postgresUsersDAO.removeUser(ALICE);
+
+        assertThat(Flux.from(testee().delegatedUsers(BOB)).collectList().block())
+            .isEmpty();
     }
 }
