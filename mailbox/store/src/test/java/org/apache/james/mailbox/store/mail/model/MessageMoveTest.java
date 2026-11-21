@@ -95,9 +95,8 @@ public abstract class MessageMoveTest {
         MailboxMessage messageToMove = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.METADATA, 1).next();
         MessageMetaData messageMetaData = messageMapper.move(benwaWorkMailbox, messageToMove);
 
-        Flags expectedFlags = message1.createFlags();
-        expectedFlags.add(Flags.Flag.RECENT);
-        assertThat(messageMetaData.getFlags()).isEqualTo(expectedFlags);
+        // A move keeps the flags of the original: it does not mark the message recent
+        assertThat(messageMetaData.getFlags()).isEqualTo(message1.createFlags());
         assertThat(messageMetaData.getUid()).isEqualTo(messageMapper.getLastUid(benwaWorkMailbox).get());
         assertThat(messageMetaData.getModSeq()).isEqualTo(messageMapper.getHighestModSeq(benwaWorkMailbox));
     }

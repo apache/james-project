@@ -42,11 +42,12 @@ C: a6 STORE 2 FLAGS (\Flagged)
 S: \* 2 FETCH \(FLAGS \(\\Flagged \\Recent\)\)
 S: a6 OK STORE completed.
 
+# A copy keeps the flags of the original: it is not marked \Recent
 C: a7 SELECT copied
 S: \* OK \[MAILBOXID \(.+\)\] Ok
 S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
 S: \* 3 EXISTS
-S: \* 3 RECENT
+S: \* 0 RECENT
 S: \* OK \[UIDVALIDITY \d+\].*
 S: \* OK \[UNSEEN \d+\].*
 S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
@@ -55,15 +56,15 @@ S: \* OK \[UIDNEXT \d+\].*
 S: a7 OK \[READ-WRITE\] SELECT completed.
 
 C: a8 FETCH 1:3 (FLAGS)
-S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
-S: \* 2 FETCH \(FLAGS \(\\Deleted \\Recent\)\)
-S: \* 3 FETCH \(FLAGS \(\\Recent\)\)
+S: \* 1 FETCH \(FLAGS \(\)\)
+S: \* 2 FETCH \(FLAGS \(\\Deleted\)\)
+S: \* 3 FETCH \(FLAGS \(\)\)
 S: a8 OK FETCH completed.
 
 # COPYUID lists the messages actually copied, and is omitted when there is none (RFC 4315 section 3)
 C: a81 UID COPY 3:9999 copied
 S: \* 4 EXISTS
-S: \* 4 RECENT
+S: \* 1 RECENT
 S: a81 OK \[COPYUID \d+ 3 4\] COPY completed.
 
 C: a82 UID COPY 9999 copied

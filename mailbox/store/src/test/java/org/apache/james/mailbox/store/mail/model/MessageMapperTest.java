@@ -689,6 +689,31 @@ public abstract class MessageMapperTest {
     }
 
     @Test
+    void copyShouldNotMarkTheMessageRecent() throws MailboxException {
+        message6.setFlags(new Flags(Flags.Flag.SEEN));
+        saveMessages();
+
+        MailboxMessage original = messageMapper.findInMailbox(benwaWorkMailbox, MessageRange.one(message6.getUid()), FetchType.METADATA, 1).next()
+            .copy(benwaInboxMailbox);
+        MessageMetaData copy = messageMapper.copy(benwaInboxMailbox, original);
+
+        assertThat(copy.getFlags()).isEqualTo(new Flags(Flags.Flag.SEEN));
+        assertThat(messageMapper.findRecentMessageUidsInMailbox(benwaInboxMailbox)).doesNotContain(copy.getUid());
+    }
+
+    @Test
+    void copyShouldKeepTheRecentFlagOfTheOriginal() throws MailboxException {
+        message6.setFlags(new Flags(Flags.Flag.RECENT));
+        saveMessages();
+
+        MailboxMessage original = messageMapper.findInMailbox(benwaWorkMailbox, MessageRange.one(message6.getUid()), FetchType.METADATA, 1).next()
+            .copy(benwaInboxMailbox);
+        MessageMetaData copy = messageMapper.copy(benwaInboxMailbox, original);
+
+        assertThat(copy.getFlags()).isEqualTo(new Flags(Flags.Flag.RECENT));
+    }
+
+    @Test
     void copyOfSeenMessageShouldNotIncrementUnSeenMessageCount() throws MailboxException {
         message6.setFlags(new Flags(Flags.Flag.SEEN));
         saveMessages();
@@ -701,7 +726,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void copiedMessageShouldBeMarkedAsRecent() throws MailboxException {
+    void copiedMessageShouldNotBeMarkedAsRecent() throws MailboxException {
         saveMessages();
         MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message6.getUid()), FetchType.METADATA, 1).next();
         MessageMetaData metaData = messageMapper.copy(benwaInboxMailbox, message);
@@ -712,23 +737,7 @@ public abstract class MessageMapperTest {
                     LIMIT
                 ).next()
                 .isRecent()
-        ).isTrue();
-    }
-
-    @Test
-    void copiedRecentMessageShouldBeMarkedAsRecent() throws MailboxException {
-        saveMessages();
-        message6.setFlags(new Flags(Flags.Flag.RECENT));
-        MailboxMessage message = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message6.getUid()), FetchType.METADATA, 1).next();
-        MessageMetaData metaData = messageMapper.copy(benwaInboxMailbox, message);
-        assertThat(
-            messageMapper.findInMailbox(benwaInboxMailbox,
-                    MessageRange.one(metaData.getUid()),
-                    MessageMapper.FetchType.METADATA,
-                    LIMIT
-                ).next()
-                .isRecent()
-        ).isTrue();
+        ).isFalse();
     }
 
     @Test

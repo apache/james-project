@@ -30,7 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 import jakarta.mail.Flags;
-import jakarta.mail.Flags.Flag;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -189,11 +188,8 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
         SimpleMailboxMessage message = SimpleMailboxMessage.copy(mailbox.getMailboxId(), original);
         message.setUid(uid);
         message.setModSeq(modSeq);
-        Flags flags = original.createFlags();
-
-        // Mark message as recent as it is a copy
-        flags.add(Flag.RECENT);
-        message.setFlags(flags);
+        // The copy keeps the flags of the original, \Recent included: copies and moves never mark a message recent
+        message.setFlags(original.createFlags());
         return save(mailbox, message);
     }
 
