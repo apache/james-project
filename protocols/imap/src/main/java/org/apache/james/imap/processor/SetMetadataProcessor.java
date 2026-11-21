@@ -40,6 +40,7 @@ import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.PrivateAnnotationException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
@@ -105,6 +106,9 @@ public class SetMetadataProcessor extends AbstractMailboxProcessor<SetMetadataRe
                 error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate())))
             .onErrorResume(InsufficientRightsException.class,
                 error -> respondInsufficientRights(request, responder, mailboxPath, mailboxSession, Optional.of(StatusResponse.ResponseCode.tryCreate())))
+            .onErrorResume(PrivateAnnotationException.class,
+                error -> Mono.fromRunnable(() -> no(request, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, error.getMessage()),
+                    StatusResponse.ResponseCode.metadataNoPrivate())))
             .onErrorResume(AnnotationException.class,
                 error -> Mono.fromRunnable(() -> no(request, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, error.getMessage()))))
             .onErrorResume(MailboxException.class,
