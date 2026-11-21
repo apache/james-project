@@ -276,6 +276,25 @@ class UserMailboxesRoutesTest {
         }
 
         @Test
+        void deleteMailboxContentShouldReturnBadRequestWhenMailboxNameWithDots() {
+            Map<String, Object> errors = when()
+                .delete(MAILBOX_NAME_WITH_DOTS + "/messages")
+            .then()
+                .statusCode(BAD_REQUEST_400)
+                .contentType(JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Attempt to clear the content of an invalid mailbox")
+                .containsEntry("details", "'#private:username:my..MailboxName' has an empty part within its mailbox name considering . as a delimiter");
+        }
+
+        @Test
         void putShouldThrowWhenMailboxNameStartsWithDot() throws Exception {
             Map<String, Object> errors = when()
                 .put(".startWithDot")
