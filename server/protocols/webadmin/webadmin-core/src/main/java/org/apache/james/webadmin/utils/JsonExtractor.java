@@ -22,7 +22,9 @@ package org.apache.james.webadmin.utils;
 import java.io.IOException;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
@@ -40,7 +42,9 @@ public class JsonExtractor<RequestT> {
         this.objectMapper = new ObjectMapper()
             .registerModule(new Jdk8Module())
             .registerModule(new GuavaModule())
-            .registerModules(modules);
+            .registerModules(modules)
+            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+            .enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
         this.type = type;
         this.typeReference = typeReference;
     }
