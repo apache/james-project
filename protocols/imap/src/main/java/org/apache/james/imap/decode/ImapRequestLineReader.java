@@ -746,6 +746,11 @@ public abstract class ImapRequestLineReader {
         stringBuilder.setLength(0);
         char next = nextChar();
         while (next != '}' && next != '+') {
+            // RFC 3501 number = 1*DIGIT: stop on anything else, without consuming it, so that a malformed announcement
+            // never reads past the end of its line (and swallows the next pipelined commands)
+            if (next < '0' || next > '9') {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a valid positive number as literal size");
+            }
             stringBuilder.append(next);
             consume();
             next = nextChar();

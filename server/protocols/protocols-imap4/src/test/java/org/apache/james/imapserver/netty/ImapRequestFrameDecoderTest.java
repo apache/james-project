@@ -441,4 +441,17 @@ class ImapRequestFrameDecoderTest {
         assertThat(channel.readInbound().toString()).contains("BAD");
         channel.finishAndReleaseAll();
     }
+
+    @Test
+    void aMalformedLiteralAnnouncementShouldNotSwallowTheNextCommands() {
+        byte[] stream = "a SELECT {1\r\nb NOOP\r\nc NOOP}\r\nd NOOP\r\n".getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decode(true, 1024, 5504, 3008, List.of(stream));
+        assertThat(whole).hasSize(4);
+        assertThat(whole.get(0)).contains("serverResponseType=BAD, tag=a");
+        assertThat(whole.get(1)).contains("tag=b, command=NOOP");
+        assertThat(whole.get(2)).contains("serverResponseType=BAD, tag=c");
+        assertThat(whole.get(3)).contains("tag=d, command=NOOP");
+        assertThat(decode(true, 1024, 5504, 3008, byteByByte(stream))).isEqualTo(whole);
+    }
 }
