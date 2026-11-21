@@ -104,6 +104,10 @@ public class PostgresUsersDAO implements UsersDAO {
 
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
+        // The reverse delegation index is stored on the user row: clean delegations before dropping it, otherwise the
+        // removed user would stay authorized on its delegators accounts, and a re-created account would inherit it.
+        removeDelegations(name).block();
+
         boolean executed = postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
                 .where(USERNAME.eq(name.asString()))
                 .returning(USERNAME)))
@@ -235,6 +239,12 @@ public class PostgresUsersDAO implements UsersDAO {
                     targetUser.asString()))
             .where(USERNAME.eq(baseUser.asString()))
             .and(DSL.field(field.getName()).isNotNull());
+    }
+
+    private Mono<Void> removeDelegations(Username name) {
+        return getDelegatedToUsers(name)
+            .concatMap(delegator -> removeAuthorizedUser(delegator, name))
+            .then(removeAllAuthorizedUsers(name));
     }
 
     public Mono<Void> removeAllAuthorizedUsers(Username baseUser) {

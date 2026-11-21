@@ -472,6 +472,8 @@ If the user do not exist, then it will be created.
 curl -XDELETE http://ip:port/users/{userToBeDeleted}
 ```
 
+The delegations from and to the deleted user are removed as well, so that an account later created with the same name does not inherit them.
+
 Response codes:
 
  - 204: The user was successfully deleted
