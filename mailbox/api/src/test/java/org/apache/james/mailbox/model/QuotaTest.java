@@ -117,4 +117,26 @@ class QuotaTest {
             .isEqualTo(0);
     }
 
+    @Test
+    void getRatioShouldReturnZeroWhenZeroLimitAndNothingUsed() {
+        assertThat(
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+                .used(QuotaSizeUsage.size(0))
+                .computedLimit(QuotaSizeLimit.size(0))
+                .build()
+                .getRatio())
+            .isEqualTo(0);
+    }
+
+    @Test
+    void getRatioShouldReturnOneWhenZeroLimitAndSomethingUsed() {
+        assertThat(
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+                .used(QuotaSizeUsage.size(15))
+                .computedLimit(QuotaSizeLimit.size(0))
+                .build()
+                .getRatio())
+            .isEqualTo(1);
+    }
+
 }
