@@ -65,6 +65,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
 
+import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -123,8 +125,9 @@ class GetQuotaRootProcessorTest {
         when(mockedQuotaManager.getQuotasReactive(any(QuotaRoot.class)))
             .thenReturn(Mono.just(new QuotaManager.Quotas(MESSAGE_QUOTA, STORAGE_QUOTA)));
 
-        final QuotaResponse storageQuotaResponse = new QuotaResponse("STORAGE", "plop", STORAGE_QUOTA);
-        final QuotaResponse messageQuotaResponse = new QuotaResponse("MESSAGE", "plop", MESSAGE_QUOTA);
+        // RFC 9208 section 5.1: a single QUOTA response per quota root
+        final QuotaResponse quotaResponse = new QuotaResponse("plop", ImmutableList.of(
+            new QuotaResponse.Resource("MESSAGE", MESSAGE_QUOTA), new QuotaResponse.Resource("STORAGE", STORAGE_QUOTA)));
         final QuotaRootResponse quotaRootResponse = new QuotaRootResponse("INBOX", "plop");
 
         testee.doProcess(getQuotaRootRequest, mockedResponder, imapSession).block();
@@ -132,10 +135,10 @@ class GetQuotaRootProcessorTest {
         verify(mockedMailboxManager).manageProcessing(any(), any());
 
         ArgumentCaptor<ImapResponseMessage> responseCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
-        verify(mockedResponder, times(4)).respond(responseCaptor.capture());
+        verify(mockedResponder, times(3)).respond(responseCaptor.capture());
 
         List<ImapResponseMessage> captorValues = responseCaptor.getAllValues();
-        assertThat(captorValues).contains(quotaRootResponse, storageQuotaResponse, messageQuotaResponse);
+        assertThat(captorValues).contains(quotaRootResponse, quotaResponse);
         assertThat(captorValues).anySatisfy(response -> assertThat(response).isInstanceOfSatisfying(
             StatusResponse.class,
             st -> assertThat(st.getServerResponseType()).isEqualTo(OK)));
