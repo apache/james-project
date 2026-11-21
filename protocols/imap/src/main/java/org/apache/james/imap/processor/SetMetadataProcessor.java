@@ -83,6 +83,10 @@ public class SetMetadataProcessor extends AbstractMailboxProcessor<SetMetadataRe
 
     @Override
     protected Mono<Void> processRequestReactive(SetMetadataRequest request, ImapSession session, Responder responder) {
+        if (request.getMailboxName().isEmpty()) {
+            // RFC 5464 section 4.3: "" designates the server annotations, which are not stored
+            return Mono.fromRunnable(() -> respondServerAnnotationsUnsupported(request, responder));
+        }
         MailboxPath requestedPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
         return existingMailboxPath(requestedPath, session)
             .flatMap(mailboxPath -> processRequestReactive(request, session, responder, mailboxPath));
@@ -105,6 +109,16 @@ public class SetMetadataProcessor extends AbstractMailboxProcessor<SetMetadataRe
                 error -> Mono.fromRunnable(() -> no(request, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, error.getMessage()))))
             .onErrorResume(MailboxException.class,
                 error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING)));
+    }
+
+    private void respondServerAnnotationsUnsupported(SetMetadataRequest request, Responder responder) {
+        boolean setsPrivateEntries = request.getMailboxAnnotations().stream()
+            .anyMatch(annotation -> annotation.getKey().isPrivate());
+        if (setsPrivateEntries) {
+            no(request, responder, HumanReadableText.SERVER_ANNOTATIONS_UNSUPPORTED, StatusResponse.ResponseCode.metadataNoPrivate());
+        } else {
+            no(request, responder, HumanReadableText.SERVER_ANNOTATIONS_UNSUPPORTED);
+        }
     }
 
     @Override
