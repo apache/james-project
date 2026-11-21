@@ -186,7 +186,9 @@ class SieveQuotaRoutesTest {
         given()
             .get("/sieve/quota/users/not_exist")
         .then()
-            .statusCode(HttpStatus.NOT_FOUND_404);
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .body("type", is("notFound"))
+            .body("message", is("User not_exist does not exist"));
     }
 
     @Test

@@ -226,7 +226,7 @@ class GroupsRoutesTest {
 
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
-                .containsEntry("type", "InvalidArgument")
+                .containsEntry("type", "notFound")
                 .containsEntry("message", "The group does not exist");
         }
 
@@ -248,7 +248,7 @@ class GroupsRoutesTest {
 
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
-                .containsEntry("type", "InvalidArgument")
+                .containsEntry("type", "notFound")
                 .containsEntry("message", "The group does not exist");
         }
 
@@ -266,7 +266,7 @@ class GroupsRoutesTest {
 
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
-                .containsEntry("type", "InvalidArgument")
+                .containsEntry("type", "notFound")
                 .containsEntry("message", "The group does not exist");
         }
 

@@ -297,7 +297,7 @@ class DLPConfigurationRoutesTest {
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(JSON_CONTENT_TYPE)
                 .body("statusCode", is(HttpStatus.NOT_FOUND_404))
-                .body("type", is("InvalidArgument"))
+                .body("type", is("notFound"))
                 .body("message", is("'strange.com' is not managed by this James server"));
         }
 
@@ -673,7 +673,7 @@ class DLPConfigurationRoutesTest {
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(JSON_CONTENT_TYPE)
                 .body("statusCode", is(HttpStatus.NOT_FOUND_404))
-                .body("type", is("InvalidArgument"))
+                .body("type", is("notFound"))
                 .body("message", is("'strange.com' is not managed by this James server"));
         }
 
@@ -886,7 +886,7 @@ class DLPConfigurationRoutesTest {
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(JSON_CONTENT_TYPE)
                 .body("statusCode", is(HttpStatus.NOT_FOUND_404))
-                .body("type", is("InvalidArgument"))
+                .body("type", is("notFound"))
                 .body("message", is("'strange.com' is not managed by this James server"));
         }
 
@@ -943,7 +943,7 @@ class DLPConfigurationRoutesTest {
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(JSON_CONTENT_TYPE)
                 .body("statusCode", is(HttpStatus.NOT_FOUND_404))
-                .body("type", is("InvalidArgument"))
+                .body("type", is("notFound"))
                 .body("message", is("'strange.com' is not managed by this James server"));
         }
 
@@ -955,7 +955,7 @@ class DLPConfigurationRoutesTest {
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(JSON_CONTENT_TYPE)
                 .body("statusCode", is(HttpStatus.NOT_FOUND_404))
-                .body("type", is("InvalidArgument"))
+                .body("type", is("notFound"))
                 .body("message", is("'strange.com' is not managed by this James server"));
         }
 
@@ -969,7 +969,7 @@ class DLPConfigurationRoutesTest {
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(JSON_CONTENT_TYPE)
                 .body("statusCode", is(HttpStatus.NOT_FOUND_404))
-                .body("type", is("InvalidArgument"))
+                .body("type", is("notFound"))
                 .body("message", is("There is no rule '666' for '" + DEFAULT_DOMAIN + "' managed by this James server"));
         }
 

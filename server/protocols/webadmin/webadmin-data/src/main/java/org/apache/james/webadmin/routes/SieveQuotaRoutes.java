@@ -169,8 +169,8 @@ public class SieveQuotaRoutes implements Routes {
         if (!usersRepository.contains(username)) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("User %s does not exist", username)
+                .type(ErrorResponder.ErrorType.NOT_FOUND)
+                .message("User %s does not exist", username.asString())
                 .haltError();
         }
         return username;

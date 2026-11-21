@@ -376,7 +376,7 @@ public class TasksRoutes implements Routes {
         } catch (TaskNotFoundException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorResponder.ErrorType.SERVER_ERROR)
+                .type(ErrorResponder.ErrorType.NOT_FOUND)
                 .message("The taskId is not found")
                 .haltError();
         }
