@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 import jakarta.inject.Inject;
@@ -87,33 +88,53 @@ public class ExportService {
         this.usersRepository = usersRepository;
     }
 
+    static class ZippedMailboxes implements Closeable {
+        private final InputStream content;
+        private final Mono<Void> backupCompletion;
+
+        ZippedMailboxes(InputStream content, Mono<Void> backupCompletion) {
+            this.content = content;
+            this.backupCompletion = backupCompletion;
+        }
+
+        @Override
+        public void close() throws IOException {
+            content.close();
+        }
+    }
+
     public Mono<Task.Result> export(Progress progress, Username username) {
         return Mono.usingWhen(
             Mono.fromCallable(() -> zipMailboxesContent(progress, username)),
-            inputStream -> export(progress, username, inputStream),
+            zippedMailboxes -> export(progress, username, zippedMailboxes.content, zippedMailboxes.backupCompletion),
             this::closeResource,
-            (inputStream, throwable) -> closeResource(inputStream),
+            (zippedMailboxes, throwable) -> closeResource(zippedMailboxes),
             this::closeResource
         );
     }
 
-    InputStream zipMailboxesContent(Progress progress, Username username) throws IOException {
+    ZippedMailboxes zipMailboxesContent(Progress progress, Username username) throws IOException {
         progress.setStage(Stage.ZIPPING);
         PipedOutputStream out = new PipedOutputStream();
         PipedInputStream in = new PipedInputStream(out);
 
-        writeUserMailboxesContent(username, out)
+        CompletableFuture<Void> backupCompletion = writeUserMailboxesContent(username, out)
             .subscribeOn(Schedulers.boundedElastic())
-            .subscribe();
+            .toFuture();
 
-        return in;
+        return new ZippedMailboxes(in, Mono.fromFuture(backupCompletion));
     }
 
     Mono<Task.Result> export(Progress progress, Username username, InputStream inputStream) {
+        return export(progress, username, inputStream, Mono.empty());
+    }
+
+    private Mono<Task.Result> export(Progress progress, Username username, InputStream inputStream, Mono<Void> backupCompletion) {
         return Mono.fromRunnable(() -> progress.setStage(Stage.EXPORTING))
             .then(Mono.usingWhen(
                 blobStore.save(blobStore.getDefaultBucketName(), inputStream, BlobStore.StoragePolicy.LOW_COST),
-                blobId -> export(username, blobId),
+                // The archive is only complete if the backup succeeded: a failed backup closes the pipe, which looks like a regular end of stream
+                blobId -> backupCompletion.then(export(username, blobId)),
                 this::deleteBlob)
             .doOnSuccess(any -> progress.setStage(Stage.COMPLETED))
             .thenReturn(Task.Result.COMPLETED)

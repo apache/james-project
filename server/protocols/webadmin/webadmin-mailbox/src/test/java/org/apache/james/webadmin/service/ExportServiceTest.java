@@ -25,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -43,9 +45,12 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.backup.MailboxBackup;
 import org.apache.james.mailbox.backup.ZipAssert;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxAnnotation;
+import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Task;
 import org.assertj.core.api.SoftAssertions;
@@ -55,6 +60,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
 import reactor.core.publisher.Mono;
@@ -236,5 +242,40 @@ class ExportServiceTest {
         testee.export(progress, BOB).block();
 
         assertThat(progress.getStage()).isEqualTo(ExportService.Stage.COMPLETED);
+    }
+
+    @Test
+    void exportUserMailboxesDataShouldReturnPartialWhenBackupFails() throws Exception {
+        MailboxBackup failingBackup = mock(MailboxBackup.class);
+        doThrow(new IOException("Pipe closed"))
+            .when(failingBackup)
+            .backupAccount(any(), any());
+        ExportService testee = new ExportService(failingBackup, testSystem.blobStore, testSystem.blobExport, testSystem.usersRepository);
+
+        Task.Result result = testee.export(progress, BOB).block();
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(result).isEqualTo(Task.Result.PARTIAL);
+            softly.assertThat(progress.getStage()).isNotEqualTo(ExportService.Stage.COMPLETED);
+            softly.assertThat(testSystem.mailetContext.getSentMails()).isEmpty();
+        });
+    }
+
+    @Test
+    void exportUserMailboxesDataShouldProduceAZipWithAnnotations() throws Exception {
+        ComposedMessageId id = createAMailboxWithAMail(MESSAGE_CONTENT);
+        MailboxAnnotationKey annotationKey = new MailboxAnnotationKey("/private/comment");
+        testSystem.mailboxManager.updateAnnotations(MailboxPath.inbox(BOB), testSystem.bobSession,
+            ImmutableList.of(MailboxAnnotation.newInstance(annotationKey, "annotation value")));
+
+        Task.Result result = testee.export(progress, BOB).block();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+        ZipAssert.assertThatZip(new FileInputStream(getFileUrl()))
+            .containsOnlyEntriesMatching(
+                ZipAssert.EntryChecks.hasName(INBOX + "/").isDirectory(),
+                ZipAssert.EntryChecks.hasName(INBOX + "/annotations/").isDirectory(),
+                ZipAssert.EntryChecks.hasName(INBOX + "/annotations/" + annotationKey.asString()).hasStringContent("annotation value"),
+                ZipAssert.EntryChecks.hasName(id.getMessageId().serialize()).hasStringContent(MESSAGE_CONTENT));
     }
 }
