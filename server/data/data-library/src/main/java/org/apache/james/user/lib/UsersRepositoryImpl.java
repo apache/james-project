@@ -182,10 +182,24 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
         }
     }
 
+    /**
+     * Stricter checks only enforced when creating a user, so that already existing users keep working.
+     */
+    protected void assertLocalPartValidForCreation(Username username) throws InvalidUsernameException {
+        boolean hasInvisibleCharacter = username.getLocalPart().codePoints()
+            .anyMatch(codePoint -> Character.getType(codePoint) == Character.FORMAT
+                || Character.getType(codePoint) == Character.CONTROL);
+        if (hasInvisibleCharacter) {
+            throw new InvalidUsernameException(String.format("Given Username '%s' should not contain invisible (format or control) characters",
+                username.asString()));
+        }
+    }
+
     @Override
     public void addUser(Username username, String password) throws UsersRepositoryException {
         ensureNoConflict(username);
         assertValid(username);
+        assertLocalPartValidForCreation(username);
         usersDAO.addUser(username, password);
     }
 
