@@ -19,8 +19,11 @@
 
 package org.apache.james.mpt.script;
 
+import java.util.List;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapHostSystem;
 
@@ -71,6 +74,20 @@ public class ImapScriptedTestProtocol extends GenericSimpleScriptedTestProtocol<
         }
     }
 
+    private static class SetAnnotations implements PrepareCommand<ImapHostSystem> {
+        final MailboxPath mailboxPath;
+        final List<MailboxAnnotation> annotations;
+
+        SetAnnotations(MailboxPath mailboxPath, List<MailboxAnnotation> annotations) {
+            this.mailboxPath = mailboxPath;
+            this.annotations = annotations;
+        }
+
+        @Override
+        public void prepare(ImapHostSystem system) throws Exception {
+            system.setAnnotations(mailboxPath, annotations);
+        }
+    }
 
     public ImapScriptedTestProtocol(String scriptDirectory, ImapHostSystem hostSystem) throws Exception {
         super(scriptDirectory, hostSystem);
@@ -86,5 +103,9 @@ public class ImapScriptedTestProtocol extends GenericSimpleScriptedTestProtocol<
 
     public ImapScriptedTestProtocol withRights(MailboxPath mailboxPath, Username username, MailboxACL.Rfc4314Rights rights) {
         return withPreparedCommand(new CreateRights(mailboxPath, username, rights));
+    }
+
+    public ImapScriptedTestProtocol withAnnotations(MailboxPath mailboxPath, List<MailboxAnnotation> annotations) {
+        return withPreparedCommand(new SetAnnotations(mailboxPath, annotations));
     }
 }
