@@ -127,7 +127,7 @@ public class ArgumentParser {
 
     public String haveSpace(Session session, String args) {
         return withArguments(args.trim(), arguments -> {
-            if (arguments.isEmpty()) {
+            if (arguments.isEmpty() || Strings.isNullOrEmpty(arguments.get(0))) {
                 return no("Missing argument: script name");
             }
             if (arguments.size() < 2) {
