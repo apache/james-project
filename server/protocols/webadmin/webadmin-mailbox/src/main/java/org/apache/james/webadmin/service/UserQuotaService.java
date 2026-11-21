@@ -39,14 +39,16 @@ import org.apache.james.quota.search.QuotaSearcher;
 import org.apache.james.webadmin.dto.QuotaDetailsDTO;
 import org.apache.james.webadmin.dto.UsersQuotaDetailsDTO;
 import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Mono;
 
 public class UserQuotaService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserQuotaService.class);
 
     private final MaxQuotaManager maxQuotaManager;
     private final QuotaManager quotaManager;
@@ -145,10 +147,20 @@ public class UserQuotaService {
     public List<UsersQuotaDetailsDTO> getUsersQuota(QuotaQuery quotaQuery) {
         return quotaSearcher.search(quotaQuery)
             .stream()
-            .map(Throwing.function(user -> UsersQuotaDetailsDTO.builder()
+            .flatMap(user -> usersQuotaDetails(user).stream())
+            .collect(ImmutableList.toImmutableList());
+    }
+
+    private Optional<UsersQuotaDetailsDTO> usersQuotaDetails(Username user) {
+        try {
+            return Optional.of(UsersQuotaDetailsDTO.builder()
                 .user(user)
                 .detail(getQuota(userQuotaRootResolver.forMailAddress(user)))
-                .build()))
-            .collect(ImmutableList.toImmutableList());
+                .build());
+        } catch (Exception e) {
+            // One invalid indexed entry should not fail the whole listing
+            LOGGER.warn("Could not retrieve quota of user '{}', skipping it from the quota search results", user.asString(), e);
+            return Optional.empty();
+        }
     }
 }

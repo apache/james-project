@@ -79,6 +79,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -965,6 +966,28 @@ class UserRoutesTest {
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("message", is("Username supplied is invalid"));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"..", ".a", "a.", "a..b"})
+        void putShouldReturnBadRequestWhenLocalPartHasMisplacedDots(String localPart) {
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .put(localPart + "@" + DOMAIN.name())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("message", is("Username supplied is invalid"));
+        }
+
+        @Test
+        void putShouldAcceptDotInTheMiddleOfTheLocalPart() {
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .put("first.last@" + DOMAIN.name())
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
