@@ -25,6 +25,8 @@ import java.util.UUID;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
+import jakarta.mail.Address;
+import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 
@@ -32,7 +34,11 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.eclipse.jetty.http.HttpStatus;
 
+import spark.HaltException;
+import spark.Request;
 import spark.Service;
 
 public class TransferEmailRoutes implements Routes {
@@ -67,10 +73,7 @@ public class TransferEmailRoutes implements Routes {
 
     public void defineReceiveMailFromWebService(Service service) {
         service.post(BASE_URL, (request, response) -> {
-            //parse MimeMessage from request body
-            MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(System.getProperties()), new ByteArrayInputStream(request.bodyAsBytes()));
-            //create MailImpl object from MimeMessage
-            MailImpl mail = MailImpl.fromMimeMessage(UUID.randomUUID().toString(), mimeMessage);
+            MailImpl mail = parseMail(request);
             //Send to queue api for mail processing
             queue.enQueue(mail);
             response.body("");
@@ -78,5 +81,35 @@ public class TransferEmailRoutes implements Routes {
 
             return response.body();
         });
+    }
+
+    private MailImpl parseMail(Request request) {
+        try {
+            //parse MimeMessage from request body
+            MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(System.getProperties()), new ByteArrayInputStream(request.bodyAsBytes()));
+            Address[] from = mimeMessage.getFrom();
+            if (from == null || from.length != 1) {
+                throw badRequest("The message must have exactly one 'From' address", null);
+            }
+            Address[] recipients = mimeMessage.getAllRecipients();
+            if (recipients == null || recipients.length == 0) {
+                throw badRequest("The message must have at least one recipient ('To', 'Cc' or 'Bcc')", null);
+            }
+            //create MailImpl object from MimeMessage
+            return MailImpl.fromMimeMessage(UUID.randomUUID().toString(), mimeMessage);
+        } catch (MessagingException | IllegalArgumentException e) {
+            throw badRequest("Invalid message: " + e.getMessage(), e);
+        }
+    }
+
+    private HaltException badRequest(String message, Exception cause) {
+        ErrorResponder errorResponder = ErrorResponder.builder()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+            .message(message);
+        if (cause != null) {
+            errorResponder.cause(cause);
+        }
+        return errorResponder.haltError();
     }
 }
