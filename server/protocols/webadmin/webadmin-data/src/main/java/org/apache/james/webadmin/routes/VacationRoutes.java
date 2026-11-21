@@ -21,6 +21,8 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
@@ -41,6 +43,7 @@ import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Parsers;
 import org.apache.james.webadmin.utils.Responses;
+import org.eclipse.jetty.http.HttpStatus;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -52,6 +55,8 @@ public class VacationRoutes implements Routes {
 
     public static final String VACATION = "/vacation";
     private static final String USER_NAME = ":userName";
+    private static final Instant MIN_SUPPORTED_INSTANT = Instant.ofEpochMilli(Long.MIN_VALUE);
+    private static final Instant MAX_SUPPORTED_INSTANT = Instant.ofEpochMilli(Long.MAX_VALUE);
 
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<VacationDTO> jsonExtractor;
@@ -92,6 +97,8 @@ public class VacationRoutes implements Routes {
         testUserExists(request);
         AccountId accountId = AccountId.fromString(request.params(USER_NAME));
         VacationDTO vacationDto = jsonExtractor.parse(request.body());
+        validateDate("fromDate", vacationDto.getFromDate());
+        validateDate("toDate", vacationDto.getToDate());
         VacationPatch vacationPatch = VacationPatch.builder()
             .subject(updateOrKeep(vacationDto.getSubject()))
             .textBody(updateOrKeep(vacationDto.getTextBody()))
@@ -132,6 +139,22 @@ public class VacationRoutes implements Routes {
         } catch (UsersRepositoryException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void validateDate(String fieldName, Optional<ZonedDateTime> date) {
+        date.filter(this::isOutOfSupportedRange)
+            .ifPresent(outOfRangeDate -> {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                    .message("'%s' is out of the supported date range: %s", fieldName, outOfRangeDate)
+                    .haltError();
+            });
+    }
+
+    private boolean isOutOfSupportedRange(ZonedDateTime date) {
+        Instant instant = date.toInstant();
+        return instant.isBefore(MIN_SUPPORTED_INSTANT) || instant.isAfter(MAX_SUPPORTED_INSTANT);
     }
 
     private static <T> ValuePatch<T> updateOrKeep(Optional<T> opt) {

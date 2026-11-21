@@ -242,6 +242,41 @@ class VacationRoutesTest {
     }
 
     @Test
+    void postVacationShouldRejectTooFarFromDate() {
+        given()
+            .body("{\"fromDate\":\"+999999999-12-31T23:59:59Z\"}")
+        .when()
+            .post(VacationRoutes.VACATION + SEPARATOR + BOB)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()));
+    }
+
+    @Test
+    void postVacationShouldRejectTooEarlyToDate() {
+        given()
+            .body("{\"toDate\":\"-999999999-01-01T00:00:00Z\"}")
+        .when()
+            .post(VacationRoutes.VACATION + SEPARATOR + BOB)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()));
+    }
+
+    @Test
+    void postVacationShouldNotStoreOutOfRangeDate() {
+        given()
+            .body("{\"subject\":\"subject\",\"fromDate\":\"+999999999-12-31T23:59:59Z\"}")
+        .when()
+            .post(VacationRoutes.VACATION + SEPARATOR + BOB);
+
+        Vacation vacation = vacationService.retrieveVacation(AccountId.fromString(BOB)).block();
+        assertThat(vacation.getSubject()).isEmpty();
+    }
+
+    @Test
     void deleteVacation() throws Exception {
         AccountId bob = AccountId.fromString(BOB);
         RecipientId alice = RecipientId.fromMailAddress(new MailAddress(ALICE));

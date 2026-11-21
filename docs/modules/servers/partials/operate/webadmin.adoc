@@ -1084,7 +1084,7 @@ Response codes:
 
 * 204: The vacation settings were successfully updated
 * 404: The user name is unknown
-* 400: The payload is invalid
+* 400: The payload is invalid, or `fromDate` / `toDate` is out of the supported date range
 
 === Delete vacation settings
 
