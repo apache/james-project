@@ -49,6 +49,8 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import io.restassured.RestAssured;
@@ -470,6 +472,20 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid DLP rule: `expression` must be a valid regex"));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"{}", "{\"rules\": null}"})
+        void putShouldReturnBadRequestWhenRulesAreMissing(String storeBody) {
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(JSON_CONTENT_TYPE)
+                .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"));
         }
 
         @Test

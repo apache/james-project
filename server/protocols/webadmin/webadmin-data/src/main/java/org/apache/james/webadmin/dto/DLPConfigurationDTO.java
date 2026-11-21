@@ -45,6 +45,7 @@ public class DLPConfigurationDTO {
     @JsonCreator
     public DLPConfigurationDTO(
             @JsonProperty("rules") ImmutableList<DLPConfigurationItemDTO> rules) {
+        Preconditions.checkNotNull(rules, "'rules' is mandatory");
         this.rules = rules;
     }
 
