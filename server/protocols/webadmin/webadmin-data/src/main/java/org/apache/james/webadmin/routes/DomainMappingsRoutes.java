@@ -31,6 +31,7 @@ import jakarta.inject.Inject;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -82,7 +83,7 @@ public class DomainMappingsRoutes implements Routes {
         Domain destinationDomain = extractDomain(request.body());
         try {
             recipientRewriteTable.addDomainMapping(mappingSource, destinationDomain);
-        } catch (SourceDomainIsNotInDomainListException e) {
+        } catch (SourceDomainIsNotInDomainListException | SameSourceAndDestinationException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
