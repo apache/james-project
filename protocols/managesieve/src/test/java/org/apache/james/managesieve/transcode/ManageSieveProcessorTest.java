@@ -109,6 +109,14 @@ class ManageSieveProcessorTest {
     }
 
     @Test
+    void haveSpaceShouldRejectAnEmptyScriptName() throws Exception {
+        String response = processor.handleRequest(session, "HAVESPACE \"\" 10\r\n");
+
+        assertThat(response).isEqualTo("NO \"Missing argument: script name\"\r\n");
+        assertThat(calls).isEmpty();
+    }
+
+    @Test
     void putScriptWithExtraArgumentsShouldConsumeItsLiteral() {
         assertThatThrownBy(() -> processor.handleRequest(session, "PUTSCRIPT \"a\" extra {13+}\r\n"))
             .isInstanceOf(NotEnoughDataException.class);

@@ -34,5 +34,8 @@ S: OK
 C: HAVESPACE "scriptname" 49
 S: OK
 
+C: HAVESPACE "" 10
+S: NO "Missing argument: script name"
+
 C: HAVESPACE "scriptname" 51
 S: NO \(QUOTA/MAXSIZE\) "Quota exceeded"
