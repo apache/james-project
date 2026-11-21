@@ -38,6 +38,7 @@ import org.apache.james.mailetcontainer.api.LocalResources;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.james.mailetcontainer.api.MatcherLoader;
+import org.apache.james.mailetcontainer.api.ProcessorStates;
 import org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean;
 import org.apache.james.mailetcontainer.impl.CompositeProcessorImpl;
 import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
@@ -102,6 +103,7 @@ public class MailetContainerModule extends AbstractModule {
     protected void configure() {
         bind(CompositeProcessorImpl.class).in(Scopes.SINGLETON);
         bind(MailProcessor.class).to(CompositeProcessorImpl.class);
+        bind(ProcessorStates.class).to(CompositeProcessorImpl.class);
 
         bind(JamesMailSpooler.class).in(Scopes.SINGLETON);
         bind(MailSpoolerMBean.class).to(JamesMailSpooler.class);

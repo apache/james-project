@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Stream;
 
@@ -36,6 +37,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailetcontainer.api.MailProcessor;
+import org.apache.james.mailetcontainer.api.ProcessorStates;
 import org.apache.james.mailetcontainer.impl.CompositeProcessorImpl;
 import org.apache.james.mailetcontainer.impl.MailetProcessorImpl;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
@@ -47,12 +49,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Abstract base class for {@link CompositeProcessorImpl} which service the
  * {@link Mail} with a {@link ProcessorImpl} instances
  */
-public abstract class AbstractStateCompositeProcessor implements MailProcessor, Configurable {
+public abstract class AbstractStateCompositeProcessor implements MailProcessor, ProcessorStates, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStateCompositeProcessor.class);
 
     private final Collection<CompositeProcessorListener> listeners = new ConcurrentLinkedDeque<>();
@@ -119,6 +122,11 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
 
     public String[] getProcessorStates() {
         return processors.keySet().toArray(String[]::new);
+    }
+
+    @Override
+    public Set<String> configuredStates() {
+        return ImmutableSet.copyOf(processors.keySet());
     }
 
     /**

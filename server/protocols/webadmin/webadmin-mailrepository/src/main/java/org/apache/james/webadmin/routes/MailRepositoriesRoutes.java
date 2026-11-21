@@ -36,6 +36,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.james.core.MailAddress;
+import org.apache.james.mailetcontainer.api.ProcessorStates;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -83,14 +84,16 @@ public class MailRepositoriesRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
     private final MailRepositoryStoreService repositoryStoreService;
     private final ReprocessingService reprocessingService;
+    private final ProcessorStates processorStates;
     private final TaskManager taskManager;
     private Service service;
 
     @Inject
-    public MailRepositoriesRoutes(MailRepositoryStoreService repositoryStoreService, JsonTransformer jsonTransformer, ReprocessingService reprocessingService, TaskManager taskManager) {
+    public MailRepositoriesRoutes(MailRepositoryStoreService repositoryStoreService, JsonTransformer jsonTransformer, ReprocessingService reprocessingService, TaskManager taskManager, ProcessorStates processorStates) {
         this.repositoryStoreService = repositoryStoreService;
         this.jsonTransformer = jsonTransformer;
         this.reprocessingService = reprocessingService;
+        this.processorStates = processorStates;
         this.taskManager = taskManager;
     }
 
@@ -383,7 +386,16 @@ public class MailRepositoriesRoutes implements Routes {
     }
 
     private Optional<String> parseTargetProcessor(Request request) {
-        return Optional.ofNullable(request.queryParams("processor"));
+        Optional<String> processor = Optional.ofNullable(request.queryParams("processor"));
+        processor.filter(state -> !processorStates.isConfigured(state))
+            .ifPresent(state -> {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("'%s' processor is not configured", state)
+                    .haltError();
+            });
+        return processor;
     }
 
     private Optional<MailAddress> parseForRecipient(Request request) {

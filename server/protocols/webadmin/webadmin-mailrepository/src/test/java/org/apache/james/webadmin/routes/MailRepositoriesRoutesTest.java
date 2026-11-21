@@ -95,6 +95,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -133,7 +134,7 @@ class MailRepositoriesRoutesTest {
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new MailRepositoriesRoutes(repositoryStoreService,
-                    jsonTransformer, reprocessingService, taskManager),
+                    jsonTransformer, reprocessingService, taskManager, () -> ImmutableSet.of("root", "transport", "error")),
             new TasksRoutes(taskManager, jsonTransformer,
                 DTOConverter.of(ReprocessingOneMailTaskAdditionalInformationDTO.module(),
                     ReprocessingAllMailsTaskAdditionalInformationDTO.module(),
@@ -1962,6 +1963,52 @@ class MailRepositoriesRoutesTest {
             .body("message", is("'unknown' mail queue does not exist"));
 
         assertThat(mailRepository.list()).toIterable().hasSize(1);
+    }
+
+    @Test
+    void reprocessingAllTaskShouldRejectUnknownProcessor() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        mailRepository.store(FakeMail.builder()
+            .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
+            .build());
+
+        given()
+            .param("action", "reprocess")
+            .param("processor", "unknown")
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("'unknown' processor is not configured"));
+
+        assertThat(mailRepository.list()).toIterable().hasSize(1);
+        assertThat(spoolQueue.browse()).toIterable().isEmpty();
+    }
+
+    @Test
+    void reprocessingOneTaskShouldRejectUnknownProcessor() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        mailRepository.store(FakeMail.builder()
+            .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
+            .build());
+
+        given()
+            .param("action", "reprocess")
+            .param("processor", "unknown")
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("'unknown' processor is not configured"));
+
+        assertThat(mailRepository.list()).toIterable().hasSize(1);
+        assertThat(spoolQueue.browse()).toIterable().isEmpty();
     }
 
     @Test
