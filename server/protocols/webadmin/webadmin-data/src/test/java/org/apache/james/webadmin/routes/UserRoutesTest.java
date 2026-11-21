@@ -944,6 +944,39 @@ class UserRoutesTest {
         }
 
         @Test
+        void putShouldReturnBadRequestWhenUsernameContainsInvisibleCharacter() {
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .put("al%C2%ADice@" + DOMAIN.name())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("message", is("Username supplied is invalid"))
+                .body("details", is("Given Username 'al­ice@" + DOMAIN.name() + "' should not contain invisible (format or control) characters"));
+        }
+
+        @Test
+        void putShouldReturnBadRequestWhenUsernameContainsZeroWidthSpace() {
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .put("al%E2%80%8Bice@" + DOMAIN.name())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("message", is("Username supplied is invalid"));
+        }
+
+        @Test
+        void putShouldAcceptNonAsciiLetters() {
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .put("%C3%A1lice@" + DOMAIN.name())
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
         void putWithDomainPartInUsernameWithExistingUsernameAndNonForceParamShouldNotBeAllowed() {
             given()
                 .body("{\"password\":\"password\"}")

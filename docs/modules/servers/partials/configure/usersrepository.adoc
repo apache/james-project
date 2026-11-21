@@ -13,6 +13,8 @@ A valid user should satisfy these criteria:
 * username should not be longer than 255 characters
 * username can not contain '/'
 * username can not contain multiple domain delimiter('@')
+* when creating a user, its local part should not contain invisible (Unicode format or control) characters,
+e.g. a soft hyphen (U+00AD) or a zero width space (U+200B)
 * A username can have only a local part when virtualHosting is disabled. E.g.'myUser'
 * When virtualHosting is enabled, a username should have a domain part, and the domain part should be concatenated
 after a domain delimiter('@'). E.g. 'myuser@james.org'
