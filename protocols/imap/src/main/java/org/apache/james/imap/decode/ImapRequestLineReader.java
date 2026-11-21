@@ -1051,6 +1051,34 @@ public abstract class ImapRequestLineReader {
     }
 
     /**
+     * Reads a sequence-set without merging its ranges: their order and boundaries are the ones given by the client, as
+     * needed for the message sequence match data of QRESYNC (RFC 7162 section 3.2.5).
+     */
+    public IdRange[] parseIdRangeInClientOrder() throws DecodingException {
+        String nextWord = consumeWord(MessageSetCharValidator.INSTANCE, true);
+        String[] ranges = nextWord.split(",", -1);
+        IdRange[] result = new IdRange[ranges.length];
+        for (int i = 0; i < ranges.length; i++) {
+            result[i] = parseRange(ranges[i]);
+        }
+        return result;
+    }
+
+    /**
+     * Reads a UID set without merging its ranges: their order and boundaries are the ones given by the client, as
+     * needed for the message sequence match data of QRESYNC (RFC 7162 section 3.2.5).
+     */
+    public UidRange[] parseUidRangeInClientOrder() throws DecodingException {
+        String nextWord = consumeWord(MessageSetCharValidator.INSTANCE, true);
+        String[] ranges = nextWord.split(",", -1);
+        UidRange[] result = new UidRange[ranges.length];
+        for (int i = 0; i < ranges.length; i++) {
+            result[i] = parseUidRange(ranges[i]);
+        }
+        return result;
+    }
+
+    /**
      * Reads a "message set" argument, and parses into an IdSet. This also support the use of $ as sequence-set as stated in SEARCHRES RFC5182 
      */
     public UidRange[] parseUidRange() throws DecodingException {
