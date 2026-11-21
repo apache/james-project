@@ -1872,6 +1872,47 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void deleteShouldRaiseTheHighestModSeq() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath inbox = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(inbox, session);
+            MessageManager messageManager = mailboxManager.getMailbox(inbox, session);
+            MessageUid uid = messageManager.appendMessage(AppendCommand.from(message), session).getId().getUid();
+            ModSeq highestModSeqBeforeDeletion = messageManager
+                .getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq();
+
+            // As POP3 does: no \Deleted flag update before the deletion
+            messageManager.delete(ImmutableList.of(uid), session);
+
+            // RFC 7162: the expunge is a change of the mailbox
+            assertThat(messageManager.getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq())
+                .isGreaterThan(highestModSeqBeforeDeletion);
+        }
+
+        @Test
+        void moveMessagesShouldRaiseTheHighestModSeqOfTheSourceMailbox() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Move));
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath inbox = MailboxPath.inbox(session);
+            MailboxPath other = MailboxPath.forUser(USER_1, "other");
+            mailboxManager.createMailbox(inbox, session);
+            mailboxManager.createMailbox(other, session);
+            MessageManager messageManager = mailboxManager.getMailbox(inbox, session);
+            MessageUid uid = messageManager.appendMessage(AppendCommand.from(message), session).getId().getUid();
+            ModSeq highestModSeqBeforeMove = messageManager
+                .getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq();
+
+            mailboxManager.moveMessages(MessageRange.one(uid), inbox, other, session);
+
+            assertThat(messageManager.getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq())
+                .isGreaterThan(highestModSeqBeforeMove);
+        }
+
+        @Test
         void getMailboxCountersShouldReturnDefaultValueWhenNoReadRight() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
             MailboxSession session1 = mailboxManager.createSystemSession(USER_1);

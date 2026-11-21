@@ -139,6 +139,15 @@ public interface MessageManager {
     }
 
     /**
+     * Expunges the messages marked for deletion in any of the given ranges, as a single operation: the mailbox
+     * changes once (one expunged event, one new mod-sequence) however many ranges are given.
+     */
+    default Flux<MessageUid> expungeRangesReactive(List<MessageRange> sets, MailboxSession mailboxSession) {
+        return Flux.fromIterable(sets)
+            .concatMap(set -> expungeReactive(set, mailboxSession));
+    }
+
+    /**
      * Deletes a list of messages given their uids in the mailbox.
      */
     void delete(List<MessageUid> uids, MailboxSession mailboxSession) throws MailboxException;

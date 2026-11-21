@@ -476,7 +476,7 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
         List<String> replies = readStringUntil(clientConnection, s -> s.contains("a2 OK ENABLE completed."));
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(replies)
-                .filteredOn(s -> s.contains("* OK [HIGHESTMODSEQ 42] Highest"))
+                .filteredOn(s -> s.contains("* OK [HIGHESTMODSEQ 44] Highest"))
                 .hasSize(1);
             softly.assertThat(replies)
                 .filteredOn(s -> s.contains("* ENABLED QRESYNC"))
@@ -655,7 +655,7 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
 
         clientConnection.write(ByteBuffer.wrap(("I00104 EXPUNGE\r\n").getBytes(StandardCharsets.UTF_8)));
 
-        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 45] EXPUNGE completed.")))
+        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 46] EXPUNGE completed.")))
             .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
             .hasSize(1);
     }
@@ -684,7 +684,37 @@ class IMAPServerQResyncTest extends AbstractIMAPServerTest {
 
         clientConnection.write(ByteBuffer.wrap(("I00104 UID EXPUNGE 1:37\r\n").getBytes(StandardCharsets.UTF_8)));
 
-        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 45] EXPUNGE completed.")))
+        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 46] EXPUNGE completed.")))
+            .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
+            .hasSize(1);
+    }
+
+    @Test
+    void uidExpungeOfSeveralRangesShouldRaiseTheHighestModSeqOnce() throws Exception {
+        clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+        readBytes(clientConnection);
+        clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+        clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(11)), mailboxSession);
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(12)), mailboxSession);
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(26)), mailboxSession);
+        memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+            .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
+
+        // A single mod-sequence for all the ranges: the same HIGHESTMODSEQ as when expunging them through 1:37
+        clientConnection.write(ByteBuffer.wrap(("I00104 UID EXPUNGE 10:12,25:26,31\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 46] EXPUNGE completed.")))
             .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
             .hasSize(1);
     }
