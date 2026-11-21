@@ -335,6 +335,10 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         checkHasValidAddress(mapping);
+        if (source.asMailAddress().isPresent() && source.asMailAddress().equals(mapping.asMailAddress())) {
+            // A group being its own member is a loop
+            throw new LoopDetectedException(source, mapping);
+        }
         source.asMailAddress()
             .ifPresent(Throwing.consumer(this::ensureGroupNotShadowingAnotherAddress).sneakyThrow());
         checkDuplicateMapping(source, mapping);

@@ -352,6 +352,28 @@ class GroupsRoutesTest {
         }
 
         @Test
+        void putShouldRejectGroupBeingItsOwnMember() {
+            Map<String, Object> errors = when()
+                .put(GROUP1 + SEPARATOR + GROUP1)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.CONFLICT_409)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("type", "WrongState")
+                .containsEntry("message", "Creation of redirection of group1@b.com to group:group1@b.com would lead to a loop, operation not performed");
+
+            when()
+                .get(GROUP1)
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
         void putShouldNotConflictWithAlias() throws Exception {
             memoryRecipientRewriteTable.addAliasMapping(MappingSource.fromUser(Username.of(GROUP1)), USER_A);
 
