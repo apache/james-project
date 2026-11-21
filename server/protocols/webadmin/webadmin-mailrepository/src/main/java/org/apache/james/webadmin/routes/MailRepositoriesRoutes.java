@@ -397,9 +397,17 @@ public class MailRepositoriesRoutes implements Routes {
     }
 
     private MailQueueName parseTargetQueue(Request request) {
-        return Optional.ofNullable(request.queryParams("queue"))
+        MailQueueName mailQueueName = Optional.ofNullable(request.queryParams("queue"))
             .map(MailQueueName::of)
             .orElse(MailQueueFactory.SPOOL);
+        if (!reprocessingService.queueExists(mailQueueName)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("'%s' mail queue does not exist", mailQueueName.asString())
+                .haltError();
+        }
+        return mailQueueName;
     }
 
     private MailRepositoryPath getRepositoryPath(Request request) {

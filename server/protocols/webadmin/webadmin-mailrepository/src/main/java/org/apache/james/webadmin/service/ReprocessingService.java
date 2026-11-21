@@ -222,6 +222,10 @@ public class ReprocessingService {
         }
     }
 
+    public boolean queueExists(MailQueueName mailQueueName) {
+        return mailQueueFactory.listCreatedMailQueues().contains(mailQueueName);
+    }
+
     private MailQueue getMailQueue(MailQueueName targetQueue) {
         return mailQueueFactory.getQueue(targetQueue)
             .orElseThrow(() -> new RuntimeException("Can not find queue " + targetQueue.asString()));
