@@ -79,6 +79,57 @@ class OpenSearchQuotaSearcherTest implements QuotaSearcherContract {
                 .hasSize(userCount - 1));
     }
 
+    @Test
+    void searchShouldSupportLimitAboveOpenSearchMaxResultWindow(QuotaSearchTestSystem testSystem) throws Exception {
+        int userCount = 3;
+        testSystem.getDomainList().addDomain(SIMPSON_COM);
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
+
+        IntStream.range(0, userCount)
+            .boxed()
+            .map(i -> Username.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
+            .forEach(user -> provisionUser(testSystem, user));
+        testSystem.await();
+
+        CALMLY_AWAIT.untilAsserted(() ->
+            assertThat(
+                testSystem.getQuotaSearcher()
+                    .search(QuotaQuery.builder()
+                        .withLimit(Limit.of(10001))
+                        .withOffset(Offset.of(1))
+                        .build()))
+                .hasSize(userCount - 1));
+    }
+
+    @Test
+    void searchShouldSupportOffsetPlusLimitAboveOpenSearchMaxResultWindow(QuotaSearchTestSystem testSystem) throws Exception {
+        int userCount = 3;
+        testSystem.getDomainList().addDomain(SIMPSON_COM);
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
+
+        IntStream.range(0, userCount)
+            .boxed()
+            .map(i -> Username.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
+            .forEach(user -> provisionUser(testSystem, user));
+        testSystem.await();
+
+        CALMLY_AWAIT.untilAsserted(() ->
+            assertThat(
+                testSystem.getQuotaSearcher()
+                    .search(QuotaQuery.builder()
+                        .withLimit(Limit.of(2))
+                        .withOffset(Offset.of(1))
+                        .build()))
+                .hasSize(2));
+        assertThat(
+            testSystem.getQuotaSearcher()
+                .search(QuotaQuery.builder()
+                    .withLimit(Limit.of(10))
+                    .withOffset(Offset.of(9995))
+                    .build()))
+            .isEmpty();
+    }
+
     private void provisionUser(QuotaSearchTestSystem testSystem, Username username) {
         try {
             testSystem.getUsersRepository().addUser(username, PASSWORD);
