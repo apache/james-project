@@ -2129,7 +2129,7 @@ The answer is the details of the quota of that user.
  - The `domain` entry represent the quota limit allowed for the user of that domain.
  - The `user` entry represent the quota limit allowed for this specific user.
  - The `computed` entry represent the quota limit applied for this user, resolved from the upper values.
- - The `occupation` entry represent the occupation of the quota for this user. This includes used count and size as well as occupation ratio (used / limit).
+ - The `occupation` entry represent the occupation of the quota for this user. This includes used count and size as well as occupation ratio (used / limit). The ratio is 0 for an unlimited quota. For a limit of 0, the ratio is 0 when nothing is used and 1 otherwise.
 
 Note that `quota` object can contain a fixed value, an empty value (null) or an unlimited value (-1):
 
