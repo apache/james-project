@@ -146,7 +146,7 @@ public class UserIdentityRoutes implements Routes {
     private HaltException createIdentity(Request request, Response response) {
         Username username = extractUsername(request);
         try {
-            UserIdentityUpsert creationRequest = jsonDeserialize.readValue(request.body(), UserIdentityUpsert.class);
+            UserIdentityUpsert creationRequest = parseUpsert(request);
             Mono.from(identityRepository.save(username, creationRequest.asCreationRequest())).block();
             return halt(HttpStatus.CREATED_201);
         } catch (AddressException | JsonProcessingException e) {
@@ -174,7 +174,7 @@ public class UserIdentityRoutes implements Routes {
             .map(IdentityId::new)
             .orElseThrow(() -> new IllegalArgumentException("Can not parse identityId"));
         try {
-            UserIdentityUpsert updateRequest = jsonDeserialize.readValue(request.body(), UserIdentityUpsert.class);
+            UserIdentityUpsert updateRequest = parseUpsert(request);
             Mono.from(identityRepository.update(username, identityId, updateRequest.asUpdateRequest())).block();
             return halt(HttpStatus.NO_CONTENT_204);
         } catch (JsonProcessingException e) {
@@ -213,6 +213,15 @@ public class UserIdentityRoutes implements Routes {
                 .message(String.format("IdentityId '%s' can not be deleted", identityId.id().toString()))
                 .haltError();
         }
+    }
+
+    private UserIdentityUpsert parseUpsert(Request request) throws JsonProcessingException {
+        return Optional.ofNullable(jsonDeserialize.readValue(request.body(), UserIdentityUpsert.class))
+            .orElseThrow(() -> ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("JSON payload of the request must not be null")
+                .haltError());
     }
 
     private Optional<UserIdentity> getDefaultIdentity(List<UserIdentity> identities) {
