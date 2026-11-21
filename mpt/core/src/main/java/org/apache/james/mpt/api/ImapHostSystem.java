@@ -18,10 +18,13 @@
  ****************************************************************/
 package org.apache.james.mpt.api;
 
+import java.util.List;
+
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 
@@ -36,4 +39,6 @@ public interface ImapHostSystem extends HostSystem {
     void setQuotaLimits(QuotaCountLimit maxMessageQuota, QuotaSizeLimit maxStorageQuota) throws Exception;
 
     void grantRights(MailboxPath mailboxPath, Username userName, MailboxACL.Rfc4314Rights rights) throws Exception;
+
+    void setAnnotations(MailboxPath mailboxPath, List<MailboxAnnotation> annotations) throws Exception;
 }

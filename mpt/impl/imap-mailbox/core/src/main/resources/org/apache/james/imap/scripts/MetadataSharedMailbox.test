@@ -1,0 +1,82 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+# The mailbox #user.boby.shared is owned by boby, who set /private/comment, /private/vendor/vendorclient/setting
+# and /shared/comment on it. It is shared with imapuser with the lrw rights.
+# RFC 5464 section 3.2: a /private entry is specific to each user, a /shared entry is common to all the users.
+
+# /shared entries are visible to the users the mailbox is shared with
+C: g1 GETMETADATA "#user.boby.shared" /shared/comment
+S: \* METADATA "#user.boby.shared" \(\/shared\/comment "The shared comment"\)
+S: g1 OK GETMETADATA completed.
+
+# The /private entries of the owner are not
+C: g2 GETMETADATA "#user.boby.shared" /private/comment
+S: g2 OK GETMETADATA completed.
+
+C: g3 GETMETADATA "#user.boby.shared" (/private/comment /shared/comment)
+S: \* METADATA "#user.boby.shared" \(\/shared\/comment "The shared comment"\)
+S: g3 OK GETMETADATA completed.
+
+C: g4 GETMETADATA "#user.boby.shared"
+S: \* METADATA "#user.boby.shared" \(\/shared\/comment "The shared comment"\)
+S: g4 OK GETMETADATA completed.
+
+C: g5 GETMETADATA "#user.boby.shared" (DEPTH infinity) (/private)
+S: g5 OK GETMETADATA completed.
+
+C: g6 GETMETADATA "#user.boby.shared" (DEPTH infinity) (/private/vendor/vendorclient)
+S: g6 OK GETMETADATA completed.
+
+C: g7 GETMETADATA "#user.boby.shared" (DEPTH 1) (/private/comment)
+S: g7 OK GETMETADATA completed.
+
+# The users the mailbox is shared with can neither set nor delete /private entries
+C: s1 SETMETADATA "#user.boby.shared" (/private/comment "Overwritten by imapuser")
+S: s1 NO \[METADATA NOPRIVATE\] .*
+
+C: s2 SETMETADATA "#user.boby.shared" (/private/comment NIL)
+S: s2 NO \[METADATA NOPRIVATE\] .*
+
+C: s3 SETMETADATA "#user.boby.shared" (/private/vendor/vendorclient/setting "Overwritten by imapuser")
+S: s3 NO \[METADATA NOPRIVATE\] .*
+
+# Nothing is stored when a command mixes /shared and /private entries
+C: s4 SETMETADATA "#user.boby.shared" (/shared/comment "Overwritten by imapuser" /private/comment "Overwritten by imapuser")
+S: s4 NO \[METADATA NOPRIVATE\] .*
+
+C: g8 GETMETADATA "#user.boby.shared" /shared/comment
+S: \* METADATA "#user.boby.shared" \(\/shared\/comment "The shared comment"\)
+S: g8 OK GETMETADATA completed.
+
+# /shared entries can still be set with the w right
+C: s5 SETMETADATA "#user.boby.shared" (/shared/comment "Updated by imapuser")
+S: s5 OK SETMETADATA completed.
+
+C: g9 GETMETADATA "#user.boby.shared"
+S: \* METADATA "#user.boby.shared" \(\/shared\/comment "Updated by imapuser"\)
+S: g9 OK GETMETADATA completed.
+
+# The users the mailbox is shared with keep their /private entries on their own mailboxes
+C: s6 SETMETADATA INBOX (/private/comment "My own comment")
+S: s6 OK SETMETADATA completed.
+
+C: g10 GETMETADATA INBOX /private/comment
+S: \* METADATA "INBOX" \(\/private\/comment "My own comment"\)
+S: g10 OK GETMETADATA completed.
