@@ -129,6 +129,38 @@ class MailboxAnnotationKeyTest {
     }
 
     @Test
+    void forRetrievalShouldAcceptTopLevelEntries() {
+        assertThat(MailboxAnnotationKey.forRetrieval("/private").asString()).isEqualTo("/private");
+        assertThat(MailboxAnnotationKey.forRetrieval("/shared").asString()).isEqualTo("/shared");
+    }
+
+    @Test
+    void forRetrievalShouldAcceptPartialVendorEntries() {
+        assertThat(MailboxAnnotationKey.forRetrieval("/private/vendor").asString()).isEqualTo("/private/vendor");
+        assertThat(MailboxAnnotationKey.forRetrieval("/private/vendor/acme").asString()).isEqualTo("/private/vendor/acme");
+    }
+
+    @Test
+    void forRetrievalShouldStillValidateTheSyntax() {
+        assertThatThrownBy(() -> MailboxAnnotationKey.forRetrieval("/private/"))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> MailboxAnnotationKey.forRetrieval("private"))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> MailboxAnnotationKey.forRetrieval("/"))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> MailboxAnnotationKey.forRetrieval("/private*"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void forRetrievalShouldMatchItsDescendants() {
+        assertThat(MailboxAnnotationKey.forRetrieval("/private")
+            .isAncestorOrIsEqual(new MailboxAnnotationKey("/private/filters/values/a"))).isTrue();
+        assertThat(MailboxAnnotationKey.forRetrieval("/private")
+            .isAncestorOrIsEqual(new MailboxAnnotationKey("/shared/comment"))).isFalse();
+    }
+
+    @Test
     void isParentOrIsEqualShouldReturnTrueWhenSameKey() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
 
