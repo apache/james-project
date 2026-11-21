@@ -85,7 +85,10 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
     }
    
     public Mono<Set<Capability>> enable(ImapRequest request, Responder responder, ImapSession session, List<Capability> caps) {
+        Set<Capability> alreadyEnabled = ImmutableSet.copyOf(getEnabledCapabilities(session));
         return Flux.fromIterable(caps)
+            // RFC 9051 section 7.2.1: ENABLED only lists the capabilities newly enabled by this command
+            .filter(cap -> !alreadyEnabled.contains(cap))
             .flatMap(cap -> {
                 // Check if the CAPABILITY is supported at all
                 if (capabilityProcessor.getSupportedCapabilities(session).contains(cap)) {
