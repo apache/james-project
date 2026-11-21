@@ -27,6 +27,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 
+import com.google.common.base.Ascii;
 import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Flux;
@@ -88,7 +89,9 @@ public class InboxChildResolver {
         if (name == null
             || !MailboxConstants.USER_NAMESPACE.equals(path.getNamespace())
             || name.startsWith(inboxPrefix)
-            || !name.regionMatches(true, 0, inboxPrefix, 0, inboxPrefix.length())) {
+            // IMAP case-insensitivity is ASCII only: no Unicode case folding (eg a Turkish dotless i)
+            || name.length() < inboxPrefix.length()
+            || !Ascii.equalsIgnoreCase(name.substring(0, inboxPrefix.length()), inboxPrefix)) {
             return Optional.empty();
         }
         return Optional.of(new MailboxPath(path.getNamespace(), path.getUser(), inboxPrefix + name.substring(inboxPrefix.length())));

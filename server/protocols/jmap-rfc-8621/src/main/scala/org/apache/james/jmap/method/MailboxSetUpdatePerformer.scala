@@ -33,7 +33,7 @@ import org.apache.james.mailbox.MailboxManager.{MailboxSearchFetchType, RenameOp
 import org.apache.james.mailbox.exception.{DifferentDomainException, InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.search.{MailboxQuery, PrefixedWildcard}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
-import org.apache.james.mailbox.{DefaultMailboxes, MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
+import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
 import org.apache.james.util.{AuditTrail, ReactorUtils}
 import org.slf4j.LoggerFactory
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -167,7 +167,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
     if (validatedPatch.shouldUpdateMailboxPath) {
       SMono.fromCallable[Either[Exception, Option[MailboxPath]]](() => {
         try {
-          if (isASystemMailbox(mailbox) && !DefaultMailboxes.INBOX.equalsIgnoreCase(mailbox.getMailboxPath.getName)) {
+          if (isASystemMailbox(mailbox) && !mailbox.getMailboxPath.isInbox) {
             throw SystemMailboxChangeException(mailboxId)
           }
           if (validatedPatch.parentIdUpdate.flatMap(_.newId).contains(mailboxId)) {
@@ -358,7 +358,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
   }
 
   private def createInboxIfNeeded(existingPath: MailboxPath, session: MailboxSession): SMono[Unit] = {
-    if (!existingPath.getName.equalsIgnoreCase(DefaultMailboxes.INBOX)) {
+    if (!existingPath.isInbox) {
       return SMono.empty
     }
     SMono(mailboxManager.mailboxExists(existingPath, session)).flatMap(exists => createInbox(exists, existingPath, session))

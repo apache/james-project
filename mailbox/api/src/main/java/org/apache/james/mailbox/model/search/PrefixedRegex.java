@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
+import com.google.common.base.Ascii;
 import com.google.re2j.Pattern;
 
 public class PrefixedRegex implements MailboxNameExpression {
@@ -59,7 +60,8 @@ public class PrefixedRegex implements MailboxNameExpression {
         int inboxLength = INBOX.length();
         boolean nameIsInInboxHierarchy = name.startsWith(INBOX)
             && (name.length() == inboxLength || name.charAt(inboxLength) == pathDelimiter);
-        if (prefix.isEmpty() && nameIsInInboxHierarchy && regex.regionMatches(true, 0, INBOX, 0, inboxLength)) {
+        if (prefix.isEmpty() && nameIsInInboxHierarchy && regex.length() >= inboxLength
+            && Ascii.equalsIgnoreCase(regex.substring(0, inboxLength), INBOX)) {
             return Optional.of(regex.substring(0, inboxLength) + name.substring(inboxLength));
         }
         return Optional.empty();

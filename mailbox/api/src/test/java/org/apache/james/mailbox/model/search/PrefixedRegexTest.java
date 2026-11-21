@@ -290,6 +290,14 @@ class PrefixedRegexTest {
         }
 
         @Test
+        void isExpressionMatchShouldOnlyFoldTheAsciiCaseOfInbox() {
+            // U+0131 LATIN SMALL LETTER DOTLESS I and U+0130 LATIN CAPITAL LETTER I WITH DOT ABOVE
+            assertThat(new PrefixedRegex(EMPTY_PREFIX, "ınbox*", folderDelimiter()).isExpressionMatch("INBOX")).isFalse();
+            assertThat(new PrefixedRegex(EMPTY_PREFIX, "ınbox*", folderDelimiter()).isExpressionMatch("INBOX" + folderDelimiter() + "sub")).isFalse();
+            assertThat(new PrefixedRegex(EMPTY_PREFIX, "İnbox%", folderDelimiter()).isExpressionMatch("INBOX")).isFalse();
+        }
+
+        @Test
         void isExpressionMatchShouldMatchOtherNamesCaseSensitively() {
             assertThat(new PrefixedRegex(EMPTY_PREFIX, "inbox*", folderDelimiter()).isExpressionMatch("INBOXES")).isFalse();
             assertThat(new PrefixedRegex(EMPTY_PREFIX, "inbox%", folderDelimiter()).isExpressionMatch("INBOX" + folderDelimiter() + "sub")).isFalse();
