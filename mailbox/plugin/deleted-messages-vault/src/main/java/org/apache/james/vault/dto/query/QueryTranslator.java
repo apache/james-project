@@ -31,6 +31,7 @@ import static org.apache.james.vault.search.Operator.EQUALS;
 import static org.apache.james.vault.search.Operator.EQUALS_IGNORE_CASE;
 
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -89,14 +90,33 @@ public class QueryTranslator {
 
             @Override
             public MailboxId parse(String mailboxIdString) {
-                return mailboxIdFactory.fromString(mailboxIdString);
+                try {
+                    return mailboxIdFactory.fromString(mailboxIdString);
+                } catch (IllegalArgumentException e) {
+                    throw new QueryTranslatorException("mailboxId(" + mailboxIdString + ") parsing got error: " + e.getMessage());
+                }
             }
         }
 
-        FieldValueParser<ZonedDateTime> ZONED_DATE_TIME_PARSER = ZonedDateTime::parse;
+        FieldValueParser<ZonedDateTime> ZONED_DATE_TIME_PARSER = FieldValueParser::parseZonedDateTime;
         FieldValueParser<String> STRING_PARSER = input -> input;
-        FieldValueParser<Boolean> BOOLEAN_PARSER = Boolean::valueOf;
+        FieldValueParser<Boolean> BOOLEAN_PARSER = FieldValueParser::parseBoolean;
         FieldValueParser<MailAddress> MAIL_ADDRESS_PARSER = FieldValueParser::parseMailAddress;
+
+        static ZonedDateTime parseZonedDateTime(String zonedDateTimeString) throws QueryTranslatorException {
+            try {
+                return ZonedDateTime.parse(zonedDateTimeString);
+            } catch (DateTimeParseException e) {
+                throw new QueryTranslatorException("date(" + zonedDateTimeString + ") parsing got error: " + e.getMessage());
+            }
+        }
+
+        static Boolean parseBoolean(String booleanString) throws QueryTranslatorException {
+            return Stream.of(Boolean.TRUE, Boolean.FALSE)
+                .filter(candidate -> candidate.toString().equalsIgnoreCase(booleanString))
+                .findFirst()
+                .orElseThrow(() -> new QueryTranslatorException("boolean(" + booleanString + ") is invalid, expecting 'true' or 'false'"));
+        }
 
         static MailAddress parseMailAddress(String mailAddressString) throws QueryTranslatorException {
             try {
@@ -174,8 +194,13 @@ public class QueryTranslator {
 
     private Criterion<?> translate(CriterionDTO dto) throws QueryTranslatorException {
         return Optional.ofNullable(getCriterionParser(dto))
-            .map(criterionGeneratingFunction -> criterionGeneratingFunction.apply(dto.getValue()))
+            .map(criterionGeneratingFunction -> criterionGeneratingFunction.apply(requireValue(dto)))
             .orElseThrow(() -> new QueryTranslatorException("pair of fieldName: '" + dto.getFieldName() + "' and operator: '" + dto.getOperator() + "' is not supported"));
+    }
+
+    private String requireValue(CriterionDTO dto) throws QueryTranslatorException {
+        return Optional.ofNullable(dto.getValue())
+            .orElseThrow(() -> new QueryTranslatorException("value is missing for fieldName: '" + dto.getFieldName() + "' and operator: '" + dto.getOperator() + "'"));
     }
 
     private Function<String, Criterion<?>> getCriterionParser(CriterionDTO dto) {

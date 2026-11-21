@@ -82,6 +82,44 @@ class QueryTranslatorTest {
     }
 
     @Test
+    void translateShouldThrowWhenPassingUnparsableDate() {
+        assertThatThrownBy(() -> queryTranslator.translate(QueryDTO.and(
+            new CriterionDTO(FieldName.DELETION_DATE.getValue(), Operator.BEFORE_OR_EQUALS.getValue(), "not-a-date"))))
+            .isInstanceOf(QueryTranslator.QueryTranslatorException.class);
+    }
+
+    @Test
+    void translateShouldThrowWhenValueIsMissing() {
+        String nullValue = null;
+        assertThatThrownBy(() -> queryTranslator.translate(QueryDTO.and(
+            new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), nullValue))))
+            .isInstanceOf(QueryTranslator.QueryTranslatorException.class);
+    }
+
+    @Test
+    void translateShouldThrowWhenPassingNonBooleanHasAttachment() {
+        assertThatThrownBy(() -> queryTranslator.translate(QueryDTO.and(
+            new CriterionDTO(FieldName.HAS_ATTACHMENT.getValue(), Operator.EQUALS.getValue(), "maybe"))))
+            .isInstanceOf(QueryTranslator.QueryTranslatorException.class);
+    }
+
+    @Test
+    void translateShouldAcceptCaseInsensitiveBoolean() throws Exception {
+        Query query = queryTranslator.translate(QueryDTO.and(
+            new CriterionDTO(FieldName.HAS_ATTACHMENT.getValue(), Operator.EQUALS.getValue(), "FALSE")));
+
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(
+            new CriterionDTO(FieldName.HAS_ATTACHMENT.getValue(), Operator.EQUALS.getValue(), "false")));
+    }
+
+    @Test
+    void translateShouldThrowWhenPassingInvalidMailboxId() {
+        assertThatThrownBy(() -> queryTranslator.translate(QueryDTO.and(
+            new CriterionDTO(FieldName.ORIGIN_MAILBOXES.getValue(), Operator.CONTAINS.getValue(), "not-a-number"))))
+            .isInstanceOf(QueryTranslator.QueryTranslatorException.class);
+    }
+
+    @Test
     void toDTOShouldConvertQueryWithDeletionDateBeforeOrEquals() throws Exception {
         String serializedDate = "2007-12-03T10:15:30+01:00[Europe/Paris]";
         Query query = Query.of(

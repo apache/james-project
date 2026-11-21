@@ -543,6 +543,38 @@ class DeletedMessagesVaultRoutesTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenPassingUnparsableDate(String action) {
+            assertBadRequestForCriterion(action, "{\"fieldName\": \"deletionDate\", \"operator\": \"beforeOrEquals\", \"value\": \"not-a-date\"}");
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenValueIsMissing(String action) {
+            assertBadRequestForCriterion(action, "{\"fieldName\": \"subject\", \"operator\": \"contains\"}");
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenPassingNonBooleanHasAttachment(String action) {
+            assertBadRequestForCriterion(action, "{\"fieldName\": \"hasAttachment\", \"operator\": \"equals\", \"value\": \"maybe\"}");
+        }
+
+        private void assertBadRequestForCriterion(String action, String criterion) {
+            given()
+                .queryParam("action", action)
+                .body("{\"combinator\": \"and\", \"criteria\": [" + criterion + "]}")
+            .when()
+                .post(BOB_PATH)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid payload passing to the route"))
+                .body("details", is(notNullValue()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
         void userVaultAPIShouldReturnBadRequestWhenPassingOrCombinator(String action) {
             Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
