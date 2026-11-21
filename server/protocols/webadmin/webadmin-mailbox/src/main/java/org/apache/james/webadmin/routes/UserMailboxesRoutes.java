@@ -327,6 +327,14 @@ public class UserMailboxesRoutes implements Routes {
                 .message("Invalid get on user mailboxes")
                 .cause(e)
                 .haltError();
+        } catch (IllegalArgumentException | MailboxNameException e) {
+            LOGGER.info("Attempt to clear the content of an invalid mailbox", e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Attempt to clear the content of an invalid mailbox")
+                .cause(e)
+                .haltError();
         }
 
         return new ClearMailboxContentTask(username, mailboxName, userMailboxesService);
