@@ -69,6 +69,30 @@ class MappingSourceTest {
     }
 
     @Test
+    void fromUserShouldBeTheReverseOfFixedUserAndDomainForUserWithoutDomain() {
+        MappingSource mappingSource = MappingSource.fromUser(Username.of("(("));
+
+        assertThat(MappingSource.fromUser(mappingSource.getFixedUser(), mappingSource.getFixedDomain()))
+            .isEqualTo(mappingSource);
+    }
+
+    @Test
+    void fromUserShouldBeTheReverseOfFixedUserAndDomainForWildcard() {
+        MappingSource mappingSource = MappingSource.wildCard();
+
+        assertThat(MappingSource.fromUser(mappingSource.getFixedUser(), mappingSource.getFixedDomain()))
+            .isEqualTo(mappingSource);
+    }
+
+    @Test
+    void fromUserShouldBeTheReverseOfFixedUserAndDomainForDomain() {
+        MappingSource mappingSource = MappingSource.fromDomain(DOMAIN);
+
+        assertThat(MappingSource.fromUser(mappingSource.getFixedUser(), mappingSource.getFixedDomain()))
+            .isEqualTo(mappingSource);
+    }
+
+    @Test
     void asMailAddressStringShouldSerializeMailAddress() throws Exception {
         MappingSource mappingSource = MappingSource.fromMailAddress(new MailAddress(MAIL_ADDRESS));
 
