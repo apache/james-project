@@ -132,6 +132,13 @@ public class MailRepositoriesRoutes implements Routes {
         service.put(MAIL_REPOSITORIES + "/:encodedPath", (request, response) -> {
             MailRepositoryPath path = getRepositoryPath(request);
             String protocol = request.queryParams("protocol");
+            if (protocol == null || protocol.isBlank()) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("'protocol' query parameter is compulsory")
+                    .haltError();
+            }
             try {
                 repositoryStoreService.createMailRepository(path, protocol);
                 return Responses.returnNoContent(response);
