@@ -126,6 +126,17 @@ C: g12 GETMETADATA "INBOX" (DEPTH infinity) (/private/comment)
 S: \* METADATA "INBOX" \(\/private\/comment.* "My own comment.* \/private\/comment.* "My own comment.* \/private\/comment.* "My own comment.*\)
 S: g12 OK GETMETADATA completed.
 
+C: g20 GETMETADATA "INBOX" (DEPTH infinity) (/private)
+S: \* METADATA "INBOX" \(\/private\/comment.* "My own comment.* \/private\/comment.* "My own comment.* \/private\/comment.* "My own comment.*\)
+S: g20 OK GETMETADATA completed.
+
+C: g21 GETMETADATA "INBOX" (DEPTH 1) /shared
+S: \* METADATA "INBOX" \(\/shared\/comment "The shared comment"\)
+S: g21 OK GETMETADATA completed.
+
+C: g22 GETMETADATA "INBOX" /private
+S: g22 OK GETMETADATA completed.
+
 C: g13 GETMETADATA "INBOX" (/private/comment) (/another/key/group)
 S: g13 BAD GETMETADATA failed. Illegal arguments.
 

@@ -38,17 +38,41 @@ public class MailboxAnnotationKey {
             .or(CharMatcher.is('/'));
     public static final int MINIMUM_COMPONENTS = 2;
     public static final int MINIMUM_COMPONENTS_OF_VENDOR = 4;
+    public static final int MINIMUM_COMPONENTS_OF_ENTRY_PREFIX = 1;
     public static final int SECOND_COMPONENT_INDEX = 1;
     public static final String VENDOR_COMPONENT = "vendor";
+    private static final String INVALID_KEY_MESSAGE = "Key must start with '/' and not end with '/' and does not contain character with hex from '\u0000' to '\u00019' or {'*', '%', two consecutive '/'} ";
+
+    /**
+     * Builds a key used as a GETMETADATA entry (RFC 5464 section 4.2): with the DEPTH option such an entry is a prefix
+     * of the annotations to retrieve, hence the roots of the annotation trees ('/private', '/shared') and partial
+     * vendor paths ('/private/vendor/acme') are accepted, unlike for the name of a stored annotation.
+     */
+    public static MailboxAnnotationKey entryPrefix(String key) {
+        return new MailboxAnnotationKey(key, MINIMUM_COMPONENTS_OF_ENTRY_PREFIX, MINIMUM_COMPONENTS_OF_ENTRY_PREFIX);
+    }
+
     private final String key;
 
     public MailboxAnnotationKey(String key) {
-        this.key = key;
-        Preconditions.checkArgument(isValid(),
-            "Key must start with '/' and not end with '/' and does not contain character with hex from '\u0000' to '\u00019' or {'*', '%', two consecutive '/'} ");
+        this(key, MINIMUM_COMPONENTS, MINIMUM_COMPONENTS_OF_VENDOR);
     }
 
-    private boolean isValid() {
+    private MailboxAnnotationKey(String key, int minimumComponents, int minimumComponentsOfVendor) {
+        this.key = key;
+        Preconditions.checkArgument(isWellFormed() && hasEnoughComponents(minimumComponents, minimumComponentsOfVendor),
+            INVALID_KEY_MESSAGE);
+    }
+
+    private boolean hasEnoughComponents(int minimumComponents, int minimumComponentsOfVendor) {
+        int componentsNo = countComponents();
+        if (isVendorKey() && componentsNo < minimumComponentsOfVendor) {
+            return false;
+        }
+        return componentsNo >= minimumComponents;
+    }
+
+    private boolean isWellFormed() {
         if (StringUtils.isBlank(key)) {
             return false;
         }
@@ -64,14 +88,7 @@ public class MailboxAnnotationKey {
         if (key.endsWith(SLASH_CHARACTER)) {
             return false;
         }
-        if (!NAME_ANNOTATION_PATTERN.matchesAllOf(key)) {
-            return false;
-        }
-        int componentsNo = countComponents();
-        if (isVendorKey() && componentsNo < MINIMUM_COMPONENTS_OF_VENDOR) {
-            return false;
-        }
-        return componentsNo >= MINIMUM_COMPONENTS;
+        return NAME_ANNOTATION_PATTERN.matchesAllOf(key);
     }
 
     private boolean isVendorKey() {
