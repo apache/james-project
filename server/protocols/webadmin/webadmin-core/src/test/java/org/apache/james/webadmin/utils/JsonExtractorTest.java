@@ -54,6 +54,26 @@ class JsonExtractorTest {
     }
 
     @Test
+    void parseShouldThrowOnTrailingGarbage() {
+        assertThatThrownBy(() -> jsonExtractor.parse("{\"field1\":\"value\",\"field2\":\"any\"} garbage")).isInstanceOf(JsonExtractException.class);
+    }
+
+    @Test
+    void parseShouldThrowOnSecondJsonDocument() {
+        assertThatThrownBy(() -> jsonExtractor.parse("{\"field1\":\"value\",\"field2\":\"any\"}{\"field1\":\"other\",\"field2\":\"any\"}")).isInstanceOf(JsonExtractException.class);
+    }
+
+    @Test
+    void parseShouldThrowOnDuplicatedKeys() {
+        assertThatThrownBy(() -> jsonExtractor.parse("{\"field1\":\"value\",\"field1\":\"other\",\"field2\":\"any\"}")).isInstanceOf(JsonExtractException.class);
+    }
+
+    @Test
+    void parseShouldAcceptTrailingWhitespaces() throws Exception {
+        assertThat(jsonExtractor.parse("{\"field1\":\"value\",\"field2\":\"any\"} \n").getField1()).isEqualTo("value");
+    }
+
+    @Test
     void parseShouldThrowOnBrokenJson() {
         assertThatThrownBy(() -> jsonExtractor.parse("{\"field1\":\"broken")).isInstanceOf(JsonExtractException.class);
     }
