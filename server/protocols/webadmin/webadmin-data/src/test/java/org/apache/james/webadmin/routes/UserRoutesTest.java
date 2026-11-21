@@ -484,6 +484,38 @@ class UserRoutesTest {
             }
 
             @Test
+            default void putShouldRejectEmptyPassword() {
+                given()
+                    .body("{\"password\":\"\"}")
+                .when()
+                    .put(USERNAME_WITH_DOMAIN.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is("JSON payload of the request is not valid"));
+            }
+
+            @Test
+            default void putShouldRejectEmptyPasswordArray() {
+                given()
+                    .body("{\"password\":[]}")
+                .when()
+                    .put(USERNAME_WITH_DOMAIN.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400);
+            }
+
+            @Test
+            default void forcePutShouldRejectEmptyPassword() {
+                given()
+                    .body("{\"password\":\"\"}")
+                .when()
+                    .put(USERNAME_WITH_DOMAIN.asString() + "?force")
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400);
+            }
+
+            @Test
             default void deleteShouldReturnOk() {
                 when()
                     .delete(USERNAME_WITH_DOMAIN.asString())
