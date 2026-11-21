@@ -86,6 +86,13 @@ class QueryTranslatorTest {
     }
 
     @Test
+    void translateShouldThrowWhenPassingNonBooleanHasAttachment() {
+        assertThatThrownBy(() -> queryTranslator.translate(QueryDTO.and(
+            new CriterionDTO(FieldName.HAS_ATTACHMENT.getValue(), Operator.EQUALS.getValue(), "maybe"))))
+            .isInstanceOf(QueryTranslator.QueryTranslatorException.class);
+    }
+
+    @Test
     void translateShouldNotThrowWhenPassingFlattenQuery() {
         assertThatCode(() -> queryTranslator.translate(QueryDTO.and(
             new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), "james"),

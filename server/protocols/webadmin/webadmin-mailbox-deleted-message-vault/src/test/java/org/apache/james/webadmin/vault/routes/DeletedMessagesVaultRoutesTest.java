@@ -567,6 +567,32 @@ class DeletedMessagesVaultRoutesTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"restore", "export"})
+        void userVaultAPIShouldReturnBadRequestWhenPassingNonBooleanHasAttachment(String action) {
+            String query =
+                "{" +
+                "  \"criteria\": [" +
+                "    {" +
+                "      \"fieldName\": \"hasAttachment\"," +
+                "      \"operator\": \"equals\"," +
+                "      \"value\": \"maybe\"" +
+                "    }" +
+                "  ]" +
+                "}";
+
+            given()
+                .queryParam("action", action)
+                .body(query)
+            .when()
+                .post(BOB_PATH)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid payload passing to the route"));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"restore", "export"})
         void userVaultAPIShouldReturnBadRequestWhenPassingInvalidMailAddress(String action) {
             Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
