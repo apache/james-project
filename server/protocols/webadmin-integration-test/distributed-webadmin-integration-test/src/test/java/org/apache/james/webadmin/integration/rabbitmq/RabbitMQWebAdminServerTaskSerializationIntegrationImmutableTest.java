@@ -94,6 +94,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
     static void setUp(GuiceJamesServer guiceJamesServer) throws Exception {
         DataProbe dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN);
+        dataProbe.addUser(USERNAME, "secret");
         WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
