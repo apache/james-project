@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -152,5 +153,25 @@ class ImapRequestLineReaderTest {
         lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
         assertThatThrownBy(() -> lineReader.astring()).isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void consumeLiteralShouldNotReadTheSizePastTheEndOfTheLine() throws Exception {
+        ImapRequestLineReader reader = new ImapRequestStreamLineReader(
+            new ByteArrayInputStream("{1\r\nb NOOP}\r\n".getBytes(StandardCharsets.US_ASCII)), new ByteArrayOutputStream());
+
+        assertThatThrownBy(() -> reader.consumeLiteral(false))
+            .isInstanceOf(DecodingException.class);
+        assertThat(reader.nextChar()).isEqualTo('\r');
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{1x}\r\n", "{-1}\r\n", "{ 1}\r\n", "{1 +}\r\n", "{}\r\n", "{+}\r\n"})
+    void consumeLiteralShouldRejectANonDigitSize(String input) {
+        ImapRequestLineReader reader = new ImapRequestStreamLineReader(
+            new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)), new ByteArrayOutputStream());
+
+        assertThatThrownBy(() -> reader.consumeLiteral(false))
+            .isInstanceOf(DecodingException.class);
     }
 }
