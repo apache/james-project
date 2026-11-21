@@ -45,6 +45,8 @@ import reactor.core.publisher.Flux;
 
 public class OpenSearchQuotaSearcher implements QuotaSearcher {
     private static final Time TIMEOUT = new Time.Builder().time("1m").build();
+    // Default value of OpenSearch index.max_result_window: from + size can not exceed it for a single search
+    private static final int MAX_RESULT_WINDOW = 10000;
 
     private final ReactorOpenSearchClient client;
     private final AliasName readAlias;
@@ -70,11 +72,20 @@ public class OpenSearchQuotaSearcher implements QuotaSearcher {
     }
 
     private Flux<Hit<ObjectNode>> searchHits(QuotaQuery query) throws IOException {
-        if (query.getLimit().isLimited()) {
+        if (fitsInResultWindow(query)) {
             return executeSingleSearch(query);
         } else {
-            return executeScrolledSearch(query);
+            Flux<Hit<ObjectNode>> hits = executeScrolledSearch(query);
+            return query.getLimit().getValue()
+                .map(hits::take)
+                .orElse(hits);
         }
+    }
+
+    private boolean fitsInResultWindow(QuotaQuery query) {
+        return query.getLimit().getValue()
+            .map(limit -> (long) limit + query.getOffset().getValue() <= MAX_RESULT_WINDOW)
+            .orElse(false);
     }
 
     private Flux<Hit<ObjectNode>> executeSingleSearch(QuotaQuery query) throws IOException {
