@@ -73,3 +73,11 @@ S: f1 OK FETCH completed.
 # Flags are atoms, not quoted strings
 C: f9 STORE 1 +FLAGS ("foo")
 S: f9 BAD STORE failed. Illegal arguments.
+
+# Flag extensions not defined by a standard are rejected (RFC 3501 section 9)
+C: f10 STORE 1 +FLAGS (\Bogus)
+S: f10 BAD STORE Undefined system flag.
+
+C: f11 FETCH 1 (FLAGS)
+S: \* 1 FETCH \(FLAGS \(\\Deleted \\Flagged \\Recent\)\)
+S: f11 OK FETCH completed.

@@ -86,6 +86,10 @@ public final class DecoderUtils {
             } else if (flagString.indexOf('\\', 1) >= 0) {
                 // flag-keyword = atom and flag-extension = "\" atom: a backslash can only start a flag
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid flag " + flagString);
+            } else if (flagString.startsWith("\\")) {
+                // flag-extension: servers MUST NOT generate flag-extension flags except as defined by
+                // future standard or standards-track revisions (RFC 3501 section 9, RFC 9051 section 9)
+                throw new DecodingException(HumanReadableText.UNDEFINED_SYSTEM_FLAG, "Undefined system flag " + flagString);
             } else {
                 // RFC3501 allows novel flags
                 flags.add(flagString);

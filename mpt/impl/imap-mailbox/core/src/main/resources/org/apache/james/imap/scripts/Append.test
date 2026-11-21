@@ -73,5 +73,9 @@ S: a2 BAD APPEND failed. Illegal arguments.
 C: a3 APPEND appendBox ("foo") {310}
 S: a3 BAD APPEND failed. Illegal arguments.
 
+# Flag extensions not defined by a standard are rejected (RFC 3501 section 9)
+C: a4 APPEND appendBox (\Other) {310}
+S: a4 BAD APPEND Undefined system flag.
+
 C: a1 DELETE appendBox
 S: a1 OK DELETE completed.

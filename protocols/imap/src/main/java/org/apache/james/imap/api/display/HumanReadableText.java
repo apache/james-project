@@ -71,6 +71,8 @@ public class HumanReadableText {
    
     public static final HumanReadableText INVALID_SYSTEM_FLAG = new HumanReadableText("org.apache.james.imap.INVALID_SYSTEM_FLAG", "Invalid system flag \\RECENT.");
 
+    public static final HumanReadableText UNDEFINED_SYSTEM_FLAG = new HumanReadableText("org.apache.james.imap.UNDEFINED_SYSTEM_FLAG", "Undefined system flag.");
+
     public static final HumanReadableText ILLEGAL_TAG = new HumanReadableText("org.apache.james.imap.ILLEGAL_TAG", "Illegal tag.");
 
     public static final HumanReadableText FAILURE_EXISTS_COUNT = new HumanReadableText("org.apache.james.imap.FAILURE_EXISTS_COUNT", "Cannot count number of existing records.");
