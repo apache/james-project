@@ -3624,6 +3624,7 @@ curl -XPUT http://ip:port/mailRepositories/mailRepo?protocol=file
 Response codes:
 
  - 204: The repository is created
+ - 400: The `protocol` query parameter is missing or unsupported
 
 ### Listing mail repositories
 
