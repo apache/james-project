@@ -1921,6 +1921,50 @@ class MailRepositoriesRoutesTest {
     }
 
     @Test
+    void reprocessingAllTaskShouldRejectUnknownQueue() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        mailRepository.store(FakeMail.builder()
+            .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
+            .build());
+
+        given()
+            .param("action", "reprocess")
+            .param("queue", "unknown")
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("'unknown' mail queue does not exist"));
+
+        assertThat(mailRepository.list()).toIterable().hasSize(1);
+    }
+
+    @Test
+    void reprocessingOneTaskShouldRejectUnknownQueue() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        mailRepository.store(FakeMail.builder()
+            .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
+            .build());
+
+        given()
+            .param("action", "reprocess")
+            .param("queue", "unknown")
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("'unknown' mail queue does not exist"));
+
+        assertThat(mailRepository.list()).toIterable().hasSize(1);
+    }
+
+    @Test
     void reprocessingOneTaskShouldCreateATask() throws Exception {
         MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
         mailRepository.store(FakeMail.builder()
