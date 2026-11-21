@@ -57,6 +57,8 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import io.restassured.RestAssured;
@@ -491,6 +493,34 @@ class UserIdentitiesRoutesTest {
             .put(String.format(GET_IDENTITIES_USERS_PATH, "unknown@domain.tld") + "/" + UUID.randomUUID())
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "{\"name\":\"B\",\"email\":\"bob@domain.tld\",\"bcc\":[{\"email\":\"notanemail\",\"name\":\"x\"}]}",
+        "{\"name\":\"B\",\"email\":\"bob@domain.tld\",\"replyTo\":[{\"name\":\"x\"}]}",
+        "{\"name\":\"B\",\"email\":\"bob@domain.tld\",\"replyTo\":[null]}"
+    })
+    void createIdentityShouldFailWhenInvalidBccOrReplyTo(String body) {
+        given()
+            .body(body)
+            .post(String.format(GET_IDENTITIES_USERS_PATH, BOB.asString()))
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "{\"bcc\":[{\"email\":\"notanemail\",\"name\":\"x\"}]}",
+        "{\"replyTo\":[{\"name\":\"x\"}]}",
+        "{\"replyTo\":[null]}"
+    })
+    void updateIdentityShouldFailWhenInvalidBccOrReplyTo(String body) {
+        given()
+            .body(body)
+            .put(String.format(GET_IDENTITIES_USERS_PATH, BOB.asString()) + "/" + UUID.randomUUID())
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
     }
 
     @Test
