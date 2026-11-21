@@ -20,6 +20,7 @@
 package org.apache.james.smtpserver;
 
 import java.io.IOException;
+import java.text.Normalizer;
 
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
@@ -48,6 +49,9 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Ascii;
+import com.google.common.base.CharMatcher;
 
 /**
  * Optional hook rejecting messages of authenticated sessions whose <code>Sender</code> header field does not
@@ -143,13 +147,24 @@ public class SenderHeaderVerificationHook implements JamesMessageHook, SaslAuthR
             if (addresses.length != 1 || addresses[0].isGroup() || !readsTheSameMailbox(field, addresses[0])) {
                 return false;
             }
-            MailAddress sender = new MailAddress(addresses[0].getAddress());
-            return domainList.containsDomain(sender.getDomain())
+            String rawAddress = addresses[0].getAddress();
+            MailAddress sender = new MailAddress(rawAddress);
+            return rawDomainIsCanonical(rawAddress, sender)
+                && domainList.containsDomain(sender.getDomain())
                 && usersRepository.getUsername(sender).equals(loggedInUser);
         } catch (AddressException | IllegalArgumentException e) {
             // IllegalArgumentException: eg a quoted local part holding a '@' cannot be turned into a username
             return false;
         }
+    }
+
+    // The comparison is made on the normalised address: its domain went through IDNA (NFKC), which maps eg a
+    // full-width 'ｅ' onto 'e'. Recipients read the raw field: its domain needs to already be in canonical form,
+    // ASCII or the U-label Domain gives back, up to NFC (canonical equivalents render the same) and ASCII case.
+    private static boolean rawDomainIsCanonical(String rawAddress, MailAddress sender) {
+        String rawDomain = rawAddress.substring(rawAddress.lastIndexOf('@') + 1);
+        return CharMatcher.ascii().matchesAllOf(rawDomain)
+            || Ascii.equalsIgnoreCase(Normalizer.normalize(rawDomain, Normalizer.Form.NFC), sender.getDomain().asString());
     }
 
     // InternetAddress.parseHeader ignores what follows the first mailbox, eg '<bob@domain.tld> alice@domain.tld', and
