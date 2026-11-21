@@ -150,4 +150,11 @@ class ManageSieveProcessorTest {
         assertThat(processor.handleRequest(session, "UNAUTHENTICATE foo"))
             .isEqualTo("NO \"UNAUTHENTICATE do not take arguments\"\r\n");
     }
+
+    @Test
+    void haveSpaceShouldRejectAnEmptyScriptNameAsPutScriptDoes() throws Exception {
+        assertThat(processor.handleRequest(session, "HAVESPACE \"\" 10\r\n"))
+            .isEqualTo("NO \"Missing argument: script name\"\r\n");
+        assertThat(calls).isEmpty();
+    }
 }
