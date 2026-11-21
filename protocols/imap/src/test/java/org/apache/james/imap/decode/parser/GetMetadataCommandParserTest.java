@@ -384,6 +384,27 @@ public class GetMetadataCommandParserTest {
     }
 
     @Test
+    void decodeMessageShouldAcceptAnnotationTreeRootsAsEntries() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream(("(DEPTH infinity) " + INBOX + " (/private /shared)\n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        GetMetadataRequest request = (GetMetadataRequest) parser.decode(lineReader, TAG, session);
+
+        assertThat(request.getDepth()).isEqualTo(Depth.INFINITY);
+        assertThat(request.getKeys()).containsOnly(MailboxAnnotationKey.entryPrefix("/private"), MailboxAnnotationKey.entryPrefix("/shared"));
+    }
+
+    @Test
+    void decodeMessageShouldAcceptPartialVendorPathAsSingleEntry() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream(("(DEPTH infinity) " + INBOX + " /private/vendor/acme\n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        GetMetadataRequest request = (GetMetadataRequest) parser.decode(lineReader, TAG, session);
+
+        assertThat(request.getKeys()).containsOnly(MailboxAnnotationKey.entryPrefix("/private/vendor/acme"));
+    }
+
+    @Test
     void decodeMessageShouldRejectUnknownOptionsBeforeTheMailbox() {
         InputStream inputStream = new ByteArrayInputStream(("(UNKNOWN 1) " + INBOX + " /private/comment\n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);

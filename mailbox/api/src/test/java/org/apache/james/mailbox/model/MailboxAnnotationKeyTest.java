@@ -222,4 +222,48 @@ class MailboxAnnotationKeyTest {
 
         assertThat(key1.isParentOrIsEqual(key2)).isFalse();
     }
+
+    @Test
+    void entryPrefixShouldAcceptAnnotationTreeRoot() {
+        assertThat(MailboxAnnotationKey.entryPrefix("/private").asString()).isEqualTo("/private");
+    }
+
+    @Test
+    void entryPrefixShouldAcceptPartialVendorPath() {
+        assertThat(MailboxAnnotationKey.entryPrefix("/shared/vendor/token").asString()).isEqualTo("/shared/vendor/token");
+    }
+
+    @Test
+    void entryPrefixShouldRejectSlashOnly() {
+        assertThatThrownBy(() -> MailboxAnnotationKey.entryPrefix("/"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void entryPrefixShouldRejectKeyNotStartingWithSlash() {
+        assertThatThrownBy(() -> MailboxAnnotationKey.entryPrefix("private"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void entryPrefixShouldRejectKeyContainingAsterisk() {
+        assertThatThrownBy(() -> MailboxAnnotationKey.entryPrefix("/private/*"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void entryPrefixShouldBeAncestorOfStoredKeys() {
+        MailboxAnnotationKey prefix = MailboxAnnotationKey.entryPrefix("/private");
+        MailboxAnnotationKey key = new MailboxAnnotationKey("/private/comment/toto");
+
+        assertThat(prefix.isAncestorOrIsEqual(key)).isTrue();
+    }
+
+    @Test
+    void entryPrefixShouldNotBeAncestorOfKeysOfTheOtherTree() {
+        MailboxAnnotationKey prefix = MailboxAnnotationKey.entryPrefix("/private");
+        MailboxAnnotationKey key = new MailboxAnnotationKey("/shared/comment");
+
+        assertThat(prefix.isAncestorOrIsEqual(key)).isFalse();
+    }
 }
