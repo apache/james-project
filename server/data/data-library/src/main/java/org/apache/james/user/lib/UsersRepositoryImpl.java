@@ -186,7 +186,12 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
      * Stricter checks only enforced when creating a user, so that already existing users keep working.
      */
     protected void assertLocalPartValidForCreation(Username username) throws InvalidUsernameException {
-        boolean hasInvisibleCharacter = username.getLocalPart().codePoints()
+        String localPart = username.getLocalPart();
+        if (localPart.startsWith(".") || localPart.endsWith(".") || localPart.contains("..")) {
+            throw new InvalidUsernameException(String.format("Given Username '%s' local part should not start or end with '.' nor contain '..'",
+                username.asString()));
+        }
+        boolean hasInvisibleCharacter = localPart.codePoints()
             .anyMatch(codePoint -> Character.getType(codePoint) == Character.FORMAT
                 || Character.getType(codePoint) == Character.CONTROL);
         if (hasInvisibleCharacter) {
