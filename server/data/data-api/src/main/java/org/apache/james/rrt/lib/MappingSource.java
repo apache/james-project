@@ -52,6 +52,13 @@ public class MappingSource implements Serializable {
     }
 
     public static MappingSource fromUser(String localPart, String domain) {
+        if (domain.equals(WILDCARD_SYMBOL)) {
+            // Reverse of getFixedUser / getFixedDomain for sources without a domain part
+            if (localPart.equals(WILDCARD_SYMBOL)) {
+                return wildCard();
+            }
+            return fromUser(Username.of(localPart));
+        }
         return fromUser(localPart, Domain.of(domain));
     }
 
