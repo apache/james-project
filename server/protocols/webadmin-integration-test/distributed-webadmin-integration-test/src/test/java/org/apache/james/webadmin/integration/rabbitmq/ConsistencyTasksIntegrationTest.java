@@ -346,8 +346,8 @@ class ConsistencyTasksIntegrationTest {
             .get(taskId + "/await");
 
         assertThat(testIMAPClient.getQuotaRoot(MailboxConstants.INBOX))
-            .contains("* QUOTAROOT \"INBOX\" #private&bob@domain.tld\r\n" +
-                "* QUOTA #private&bob@domain.tld (MESSAGE 1 50)");
+            .contains("* QUOTAROOT \"INBOX\" \"#private&bob@domain.tld\"\r\n" +
+                "* QUOTA \"#private&bob@domain.tld\" (MESSAGE 1 50)");
     }
 
     @Test
@@ -512,8 +512,8 @@ class ConsistencyTasksIntegrationTest {
             .get(taskId + "/await");
 
         assertThat(testIMAPClient.getQuotaRoot(MailboxConstants.INBOX))
-            .contains("* QUOTAROOT \"INBOX\" #private&bob@domain.tld\r\n" +
-                "* QUOTA #private&bob@domain.tld (MESSAGE 1 50)");
+            .contains("* QUOTAROOT \"INBOX\" \"#private&bob@domain.tld\"\r\n" +
+                "* QUOTA \"#private&bob@domain.tld\" (MESSAGE 1 50)");
     }
 
     @Test

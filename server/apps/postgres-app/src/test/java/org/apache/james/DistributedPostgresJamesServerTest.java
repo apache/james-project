@@ -119,8 +119,8 @@ class DistributedPostgresJamesServerTest implements JamesServerConcreteContract 
         AWAIT.untilAsserted(() -> assertThat(testIMAPClient.connect(JAMES_SERVER_HOST, imapPort)
             .login(USER, PASSWORD)
             .getQuotaRoot(TestIMAPClient.INBOX))
-            .startsWith("* QUOTAROOT \"INBOX\" #private&toto@james.local\r\n" +
-                "* QUOTA #private&toto@james.local (STORAGE 12 50)\r\n")
+            .startsWith("* QUOTAROOT \"INBOX\" \"#private&toto@james.local\"\r\n" +
+                "* QUOTA \"#private&toto@james.local\" (STORAGE 12 50)\r\n")
             .endsWith("OK GETQUOTAROOT completed.\r\n"));
     }
 
