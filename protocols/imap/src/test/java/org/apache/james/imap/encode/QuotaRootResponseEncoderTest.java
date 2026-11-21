@@ -39,6 +39,6 @@ class QuotaRootResponseEncoderTest {
         encoder.encode(response, composer);
         composer.flush();
         String responseString = byteImapResponseWriter.getString();
-        assertThat(responseString).isEqualTo("* QUOTAROOT \"INBOX\" root\r\n");
+        assertThat(responseString).isEqualTo("* QUOTAROOT \"INBOX\" \"root\"\r\n");
     }
 }
