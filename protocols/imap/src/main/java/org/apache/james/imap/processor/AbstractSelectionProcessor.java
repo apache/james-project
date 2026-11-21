@@ -26,14 +26,13 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import jakarta.mail.Flags;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.events.EventBus;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
@@ -78,8 +77,8 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 
-import io.vavr.Tuple;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -347,24 +346,39 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         return ranges;
     }
 
+    /**
+     * RFC 7162 section 3.2.5.2: the message sequence match data is evaluated pair by pair, the Nth message number
+     * against the Nth UID, once both sets are expanded. The UIDs up to the last matching pair before the first one that
+     * fails need not be reported as vanished.
+     */
     @VisibleForTesting
     UidRange[] recomputeUidSet(IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, UidRange[] uidSet) {
-        int size = Math.min(knownSequences.length, knownUids.length);
-        MessageUid firstKnownUid = IntStream.range(0, size)
-            .mapToObj(i -> Pair.of(knownSequences[i], knownUids[i]))
-            // We are guarantied of the ranges being individual items
-            .map(pair -> Pair.of(pair.getLeft().getLowVal(), pair.getRight().getLowVal()))
-            // T3(MSN, UID, MATCH)
-            .map(pair -> Tuple.of(pair.getLeft(), pair.getRight(),
-                selected.uid(pair.getLeft().intValue())
-                    .filter(selectedUid -> selectedUid.equals(pair.getRight()))
-                    .isPresent()))
-            .takeWhile(t3 -> t3._3)
-            .map(t3 -> t3._2)
-            .reduce((t3_1, t3_2) -> t3_2)
-            .orElse(MessageUid.MIN_VALUE);
+        long sequenceCount = Arrays.stream(knownSequences)
+            .mapToLong(range -> range.getHighVal() - range.getLowVal() + 1)
+            .sum();
+        long uidCount = Arrays.stream(knownUids)
+            .mapToLong(range -> range.getHighVal().asLong() - range.getLowVal().asLong() + 1)
+            .sum();
+        if (sequenceCount != uidCount) {
+            // The match data is inconsistent: ignore it, and report every expunged UID
+            return uidSet;
+        }
 
-        return filter(uidSet, firstKnownUid);
+        Iterator<Long> sequences = Iterators.concat(Iterators.transform(Iterators.forArray(knownSequences), IdRange::iterator));
+        Iterator<MessageUid> uids = Iterators.concat(Iterators.transform(Iterators.forArray(knownUids), UidRange::iterator));
+        MessageUid lastMatchingUid = MessageUid.MIN_VALUE;
+        while (sequences.hasNext() && uids.hasNext()) {
+            long sequence = sequences.next();
+            MessageUid uid = uids.next();
+            boolean matches = sequence <= Integer.MAX_VALUE
+                && selected.uid((int) sequence).filter(uid::equals).isPresent();
+            if (!matches) {
+                break;
+            }
+            lastMatchingUid = uid;
+        }
+
+        return filter(uidSet, lastMatchingUid);
     }
 
     private UidRange[] filter(UidRange[] uidSet, MessageUid lowerBound) {

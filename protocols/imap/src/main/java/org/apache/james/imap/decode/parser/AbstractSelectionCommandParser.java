@@ -106,9 +106,10 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
                     if (nc == '(') {
                         // This is enclosed in () so remove (
                         request.consumeChar('(');
-                        knownSequenceSet = request.parseIdRange();
+                        // Not merged: the Nth message number goes with the Nth UID (RFC 7162 section 3.2.5.2)
+                        knownSequenceSet = request.parseIdRangeInClientOrder();
                         request.consumeChar(' ');
-                        knownUidSet = request.parseUidRange();
+                        knownUidSet = request.parseUidRangeInClientOrder();
                        
                         // Check for * and check if its in ascending order
                         checkIdRanges(knownSequenceSet, true);
@@ -161,7 +162,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
                 throw new DecodingException(HumanReadableText.INVALID_MESSAGESET, "* is not allowed in the sequence-set");
             }
             if (checkOrder) {
-                if (low < last) {
+                if (low <= last) {
                     throw new DecodingException(HumanReadableText.INVALID_MESSAGESET, "Sequence-set must be in ascending order");
                 } else {
                     last = high;
@@ -189,7 +190,8 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
      *                          ;; * is not allowed.
      */
     private void checkUidRanges(UidRange[] ranges, boolean checkOrder) throws DecodingException {
-        MessageUid last = MessageUid.MIN_VALUE;
+        // Not MessageUid.MIN_VALUE: the first range can start at UID 1
+        long last = 0;
         for (UidRange r : ranges) {
 
             MessageUid low = r.getLowVal();
@@ -198,10 +200,10 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
                 throw new DecodingException(HumanReadableText.INVALID_MESSAGESET, "* is not allowed in the sequence-set");
             }
             if (checkOrder) {
-                if (low.compareTo(last) < 0) {
+                if (low.asLong() <= last) {
                     throw new DecodingException(HumanReadableText.INVALID_MESSAGESET, "Sequence-set must be in ascending order");
                 } else {
-                    last = high;
+                    last = high.asLong();
                 }
             }
         }

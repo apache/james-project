@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -60,6 +61,40 @@ public class AbstractSelectionProcessorTest {
         when(selectedMailbox.uid(anyInt())).thenReturn(Optional.empty());
 
         testee.recomputeUidSet(asArray(knownSequences), asArray(knownUids), selectedMailbox, asArray(uidSet));
+    }
+
+    @Test
+    public void recomputeUidSetShouldPairTheMatchDataItemByItem() {
+        // MSN 4 -> UID 4, MSN 10 -> UID 11, MSN 11 -> UID 12: UID 5 was expunged
+        SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
+        when(selectedMailbox.uid(anyInt())).thenReturn(Optional.empty());
+        when(selectedMailbox.uid(4)).thenReturn(Optional.of(MessageUid.of(4)));
+        when(selectedMailbox.uid(10)).thenReturn(Optional.of(MessageUid.of(11)));
+        when(selectedMailbox.uid(11)).thenReturn(Optional.of(MessageUid.of(12)));
+
+        // RFC 7162 pairs (4,4) (10,5) (11,11): the second one fails, UIDs above 4 are to be reported
+        UidRange[] result = testee.recomputeUidSet(
+            asArray(new IdRange(4), new IdRange(10, 11)),
+            asArray(new UidRange(MessageUid.of(4), MessageUid.of(5)), new UidRange(MessageUid.of(11))),
+            selectedMailbox,
+            asArray(new UidRange(MessageUid.of(1), MessageUid.of(20))));
+
+        assertThat(result).containsExactly(new UidRange(MessageUid.of(4), MessageUid.of(20)));
+    }
+
+    @Test
+    public void recomputeUidSetShouldIgnoreMatchDataOfDifferentSizes() {
+        SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
+        when(selectedMailbox.uid(anyInt())).thenReturn(Optional.of(MessageUid.of(4)));
+        UidRange[] uidSet = asArray(new UidRange(MessageUid.of(1), MessageUid.of(20)));
+
+        UidRange[] result = testee.recomputeUidSet(
+            asArray(new IdRange(4, 5)),
+            asArray(new UidRange(MessageUid.of(4))),
+            selectedMailbox,
+            uidSet);
+
+        assertThat(result).containsExactly(uidSet);
     }
 
     public static <T> T[] asArray(T... items) {
