@@ -24,7 +24,7 @@ C: a2 MYRIGHTS BAD
 S: a2 NO MYRIGHTS failed. Mailbox not found.
 
 C: a3 LISTRIGHTS INBOX r
-S: \* LISTRIGHTS "INBOX" "r" "a" "e" "i" "k" "l" "p" "r" "s" "t" "w" "x" ""
+S: \* LISTRIGHTS "INBOX" "r" "" "a" "e" "i" "k" "l" "p" "r" "s" "t" "w" "x"
 S: a3 OK LISTRIGHTS completed.
 
 C: a4 LISTRIGHTS BAD r
