@@ -38,7 +38,6 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.events.EventBus;
-import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxAnnotationManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -600,7 +599,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     private Mono<List<Mailbox>> retrieveSubMailboxes(MailboxPath from, MailboxPath to, MailboxSession fromSession, MailboxMapper mapper) {
         // Renaming INBOX leaves its sub-mailboxes in place (RFC 9051 section 6.3.6): it can be renamed under itself
-        if (!to.equals(from) && !isInbox(from) && to.getHierarchyLevels(fromSession.getPathDelimiter()).contains(from)) {
+        if (!to.equals(from) && !from.isInbox() && to.getHierarchyLevels(fromSession.getPathDelimiter()).contains(from)) {
             return Mono.error(new MailboxNameException("Can not rename " + from.asString() + " into its own sub-tree: " + to.asString()));
         }
         MailboxQuery.UserBound query = MailboxQuery.builder()
@@ -732,15 +731,11 @@ public class StoreMailboxManager implements MailboxManager {
                     .thenReturn(result));
     }
 
-    private boolean isInbox(MailboxPath path) {
-        return DefaultMailboxes.INBOX.equalsIgnoreCase(path.getName());
-    }
-
     private Mono<List<MailboxRenamedResult>> renameSubMailboxes(MailboxPath newMailboxPath, MailboxMapper mapper,
                                                MailboxPath from, List<Mailbox> mailboxes) {
         // Renaming INBOX renames the INBOX mailbox itself but leaves its sub-mailboxes in place.
         // The list is sorted shallowest-first, so the first entry is the renamed root.
-        List<Mailbox> mailboxesToRename = isInbox(from) ? mailboxes.subList(0, 1) : mailboxes;
+        List<Mailbox> mailboxesToRename = from.isInbox() ? mailboxes.subList(0, 1) : mailboxes;
         return Mono.from(locker.executeReactiveWithLockReactive(from, Flux.fromIterable(mailboxesToRename)
             .concatMap(sub -> {
                 String subOriginalName = sub.getName();

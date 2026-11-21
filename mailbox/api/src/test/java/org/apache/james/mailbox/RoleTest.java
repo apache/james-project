@@ -55,6 +55,13 @@ class RoleTest {
     }
 
     @Test
+    void fromShouldOnlyFoldTheAsciiCaseOfInbox() {
+        // U+0131 LATIN SMALL LETTER DOTLESS I and U+0130 LATIN CAPITAL LETTER I WITH DOT ABOVE
+        assertThat(Role.from("ınbox")).isEmpty();
+        assertThat(Role.from("İnbox")).isEmpty();
+    }
+
+    @Test
     void isSystemRoleShouldBeTrueWhenInbox() {
         assertThat(Role.INBOX.isSystemRole()).isTrue();
     }
