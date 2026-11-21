@@ -89,6 +89,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import com.github.fge.lambdas.Throwing;
@@ -197,6 +199,31 @@ class MailboxesRoutesTest {
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("Invalid arguments supplied in the user request"))
                     .body("details", is("Invalid value supplied for query parameter 'task': bad. Supported values are [reIndex]"));
+            }
+
+            @ParameterizedTest
+            @ValueSource(strings = {"0", "-1"})
+            void fullReIndexingShouldFailWithNonPositiveMessagesPerSecond(String messagesPerSecond) {
+                when()
+                    .post("/mailboxes?task=reIndex&messagesPerSecond=" + messagesPerSecond)
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Illegal value supplied for query parameter 'messagesPerSecond', expecting a strictly positive optional integer"));
+            }
+
+            @Test
+            void fullReIndexingShouldFailWithUnknownMode() {
+                when()
+                    .post("/mailboxes?task=reIndex&mode=bogus")
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Illegal value supplied for query parameter 'mode': 'bogus'. Supported values are [rebuildAll, rebuildAllNoCleanup, fixOutdated]"));
             }
         }
 
