@@ -112,6 +112,20 @@ class DomainMappingsRoutesTest {
         }
 
         @Test
+        void addDomainMappingShouldRejectMappingADomainToItself() throws Exception {
+            given()
+                .body("from.com")
+            .when()
+                .put("from.com")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Source and destination domain can't be the same!"));
+
+            assertThat(recipientRewriteTable.getAllMappings()).isEmpty();
+        }
+
+        @Test
         void addDomainMappingShouldBeIdempotent() {
             with()
                 .body("to.com")

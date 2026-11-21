@@ -280,6 +280,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void addDomainMapping(MappingSource source, Domain realDomain) throws RecipientRewriteTableException {
+        if (source.asDomain().map(realDomain::equals).orElse(false)) {
+            throw new SameSourceAndDestinationException("Source and destination domain can't be the same!");
+        }
         checkDomainMappingSourceIsManaged(source);
 
         LOGGER.info("Add domain mapping: {} => {}", source.asDomain().map(Domain::asString).orElse("null"), realDomain);
