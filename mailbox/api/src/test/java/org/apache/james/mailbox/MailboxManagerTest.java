@@ -66,6 +66,7 @@ import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.PrivateAnnotationException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.mock.DataProvisioner;
@@ -779,6 +780,69 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             assertThat(mailboxManager.getAllAnnotations(ownerInbox, mailboxManager.createSystemSession(USER_1)))
                 .containsOnly(updated);
+        }
+
+        @Test
+        void shareeShouldNotReadThePrivateAnnotationsOfTheOwner() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read)));
+            mailboxManager.updateAnnotations(ownerInbox, mailboxManager.createSystemSession(USER_1), ImmutableList.of(privateAnnotation));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+
+            // RFC 5464: a /private entry holds a value specific to each user
+            assertThat(mailboxManager.getAllAnnotations(ownerInbox, shareeSession))
+                .containsOnly(sharedAnnotation);
+            assertThat(mailboxManager.getAnnotationsByKeys(ownerInbox, shareeSession, ImmutableSet.of(privateKey)))
+                .isEmpty();
+            assertThat(mailboxManager.getAnnotationsByKeysWithAllDepth(ownerInbox, shareeSession, ImmutableSet.of(new MailboxAnnotationKey("/private/comment"))))
+                .isEmpty();
+        }
+
+        @Test
+        void shareeShouldNotReadThePrivateAnnotationsOfTheOwnerThroughDepth() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read)));
+            mailboxManager.updateAnnotations(ownerInbox, mailboxManager.createSystemSession(USER_1), ImmutableList.of(privateChildAnnotation));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+
+            assertThat(mailboxManager.getAnnotationsByKeysWithOneDepth(ownerInbox, shareeSession, ImmutableSet.of(privateKey)))
+                .isEmpty();
+            assertThat(mailboxManager.getAnnotationsByKeysWithAllDepth(ownerInbox, shareeSession, ImmutableSet.of(privateKey)))
+                .isEmpty();
+        }
+
+        @Test
+        void shareeMixedUpdateWithPrivateEntriesShouldWriteNothing() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.Write)));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+
+            assertThatThrownBy(() -> mailboxManager.updateAnnotations(ownerInbox, shareeSession,
+                    ImmutableList.of(MailboxAnnotation.newInstance(sharedKey, "Updated by sharee"), MailboxAnnotation.nil(privateKey))))
+                .isInstanceOf(PrivateAnnotationException.class);
+
+            assertThat(mailboxManager.getAllAnnotations(ownerInbox, mailboxManager.createSystemSession(USER_1)))
+                .containsOnly(sharedAnnotation);
+        }
+
+        @Test
+        void shareeShouldNotOverwriteThePrivateAnnotationsOfTheOwner() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxPath ownerInbox = shareOwnerInboxWithUser2(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.Write)));
+            MailboxSession ownerSession = mailboxManager.createSystemSession(USER_1);
+            mailboxManager.updateAnnotations(ownerInbox, ownerSession, ImmutableList.of(privateAnnotation));
+            MailboxSession shareeSession = mailboxManager.createSystemSession(USER_2);
+
+            assertThatThrownBy(() -> mailboxManager.updateAnnotations(ownerInbox, shareeSession,
+                    ImmutableList.of(MailboxAnnotation.newInstance(privateKey, "Overwritten by sharee"))))
+                .isInstanceOf(PrivateAnnotationException.class);
+
+            assertThat(mailboxManager.getAllAnnotations(ownerInbox, ownerSession))
+                .containsOnly(sharedAnnotation, privateAnnotation);
         }
 
         @Test
