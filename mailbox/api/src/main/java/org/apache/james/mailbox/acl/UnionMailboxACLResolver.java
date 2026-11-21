@@ -280,13 +280,14 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     }
 
     private static List<Rfc4314Rights> toListRights(Rfc4314Rights implicitRights) throws UnsupportedRightException {
+        // RFC 4314 section 3.7: the required (implicit) rights come first, followed by the optional rights
         return Stream.concat(
+            Stream.of(implicitRights),
             MailboxACL.FULL_RIGHTS
                 .list()
                 .stream()
                 .filter(not(implicitRights::contains))
-                .map(Rfc4314Rights::new),
-            Stream.of(implicitRights))
+                .map(Rfc4314Rights::new))
         .collect(ImmutableList.toImmutableList());
     }
 

@@ -22,6 +22,8 @@ package org.apache.james.mailbox.acl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -601,5 +603,44 @@ class UnionMailboxACLResolverTest {
 
         assertThat(noGlobals.resolveRights(USER_1, mixedAcl, USER_2))
             .isEqualTo(Rfc4314Rights.fromSerializedRfc4314Rights("r"));
+    }
+
+    @Test
+    void listRightsShouldReturnEmptyRequiredRightsFirstWhenNoImplicitRights() throws Exception {
+        assertThat(ownerFullGlobal.listRights(user2Key, USER_1))
+            .first()
+            .isEqualTo(MailboxACL.NO_RIGHTS);
+    }
+
+    @Test
+    void listRightsShouldReturnEachOptionalRightAfterTheRequiredRights() throws Exception {
+        assertThat(optionalRights(ownerFullGlobal.listRights(user2Key, USER_1)))
+            .containsExactlyInAnyOrderElementsOf(MailboxACL.FULL_RIGHTS.list().stream()
+                .map(Rfc4314Rights::new)
+                .toList());
+    }
+
+    @Test
+    void listRightsShouldReturnImplicitRightsFirst() throws Exception {
+        assertThat(anyoneReadListGlobal.listRights(user2Key, USER_1))
+            .first()
+            .isEqualTo(Rfc4314Rights.fromSerializedRfc4314Rights("rl"));
+    }
+
+    @Test
+    void listRightsShouldNotListImplicitRightsAsOptional() throws Exception {
+        assertThat(optionalRights(anyoneReadListGlobal.listRights(user2Key, USER_1)))
+            .doesNotContain(new Rfc4314Rights(MailboxACL.Right.Read), new Rfc4314Rights(MailboxACL.Right.Lookup))
+            .hasSize(MailboxACL.FULL_RIGHTS.list().size() - 2);
+    }
+
+    @Test
+    void listRightsShouldReturnOnlyRequiredRightsForTheOwner() throws Exception {
+        assertThat(ownerFullGlobal.listRights(MailboxACL.OWNER_KEY, USER_1))
+            .containsExactly(MailboxACL.FULL_RIGHTS);
+    }
+
+    private static List<Rfc4314Rights> optionalRights(List<Rfc4314Rights> listRights) {
+        return listRights.subList(1, listRights.size());
     }
 }
