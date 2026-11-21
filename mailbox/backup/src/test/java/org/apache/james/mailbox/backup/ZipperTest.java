@@ -43,6 +43,9 @@ import static org.apache.james.mailbox.backup.ZipAssert.EntryChecks.hasName;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FilterOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -280,6 +283,50 @@ class ZipperTest {
                 hasName(MESSAGE_ID_2.serialize())
                     .hasStringContent(MESSAGE_CONTENT_2));
 
+        }
+    }
+
+    @Test
+    void archiveShouldNotCloseTheDestinationBeforeTheEndWhenAnnotations() throws Exception {
+        MailboxWithAnnotations mailbox1 = new MailboxWithAnnotations(MAILBOX_1, ImmutableList.of(ANNOTATION_1));
+        OutputStream failingOnceClosed = new FilterOutputStream(output) {
+            private boolean closed = false;
+
+            @Override
+            public void write(int b) throws IOException {
+                checkNotClosed();
+                out.write(b);
+            }
+
+            @Override
+            public void write(byte[] b, int off, int len) throws IOException {
+                checkNotClosed();
+                out.write(b, off, len);
+            }
+
+            @Override
+            public void close() throws IOException {
+                closed = true;
+                super.close();
+            }
+
+            private void checkNotClosed() throws IOException {
+                if (closed) {
+                    throw new IOException("Stream closed");
+                }
+            }
+        };
+
+        testee.archive(ImmutableList.of(mailbox1), Stream.of(MESSAGE_RESULT_1), failingOnceClosed);
+
+        try (ZipAssert zipAssert = assertThatZip(output)) {
+            zipAssert.containsExactlyEntriesMatching(
+                hasName(MAILBOX_1.getName() + "/"),
+                hasName(MAILBOX_1.getName() + "/annotations/").isDirectory(),
+                hasName(MAILBOX_1.getName() + "/annotations/" + ANNOTATION_1.getKey().asString())
+                    .hasStringContent(ANNOTATION_1_CONTENT),
+                hasName(MESSAGE_ID_1.serialize())
+                    .hasStringContent(MESSAGE_CONTENT_1));
         }
     }
 }
