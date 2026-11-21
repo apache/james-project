@@ -118,6 +118,10 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
                     if (storageQuota.getLimit().isLimited()) {
                         responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
                     }
+                    if (!messageQuota.getLimit().isLimited() && !storageQuota.getLimit().isLimited()) {
+                        // RFC 9208 section 4.2.2: a QUOTA response for each quota root
+                        responder.respond(QuotaResponse.withoutLimits(quotaRoot.getValue()));
+                    }
                     okComplete(request, responder);
                 }))
             .onErrorResume(MailboxException.class, e -> {
