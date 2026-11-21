@@ -176,6 +176,24 @@ class CassandraMigrationRoutesTest {
     }
 
     @Test
+    void postShouldReturnGoneWhenNoMigrationIsRegisteredForTheTargetVersion() {
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(LATEST_VERSION)));
+
+        given()
+            .body("99999")
+        .with()
+            .post("/upgrade")
+        .then()
+            .statusCode(HttpStatus.GONE_410)
+            .body("statusCode", is(HttpStatus.GONE_410))
+            .body("type", is("WrongState"))
+            .body("message", is("The migration requested can not be performed"))
+            .body("details", is("Can not migrate from 3 to 4. No migration class registered."));
+
+        verify(schemaVersionDAO, times(0)).updateVersion(any());
+    }
+
+    @Test
     void postShouldDoMigrationToNewVersion() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
