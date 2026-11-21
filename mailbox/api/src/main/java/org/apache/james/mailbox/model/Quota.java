@@ -104,6 +104,13 @@ public class Quota<T extends QuotaLimitValue<T>, U extends QuotaUsageValue<U, T>
         if (limit.isUnlimited()) {
             return 0;
         }
+        if (limit.asLong() == 0) {
+            // A zero limit means nothing can be stored: avoid NaN (0/0) and Infinity (x/0)
+            if (used.asLong() == 0) {
+                return 0;
+            }
+            return 1;
+        }
         return Double.valueOf(used.asLong()) / Double.valueOf(limit.asLong());
     }
 
