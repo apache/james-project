@@ -50,6 +50,16 @@ Whether to enable Authentication PLAIN if the connection is not encrypted via SS
 | auth.requireSSL
 | true or false. Defaults to `true`. Whether to require SSL to authenticate. If this is required, the IMAP server will disable authentication on unencrypted channels.
 
+| `maxPipelinedRequests`
+| Requests of a connection are executed one at a time: the requests a client pipelines wait for the request in flight.
+Once this many requests are waiting, James stops reading the connection until they are executed.
+It is an optional integer that defaults to 128.
+
+| `maxPipelinedRequestsBeforeClosing`
+| A single read can still decode many requests, especially with `COMPRESS`.
+Once this many requests are waiting, James answers `* BYE` and closes the connection.
+It is an optional integer that defaults to 4,096, and can not be lower than `maxPipelinedRequests`.
+
 | auth.oidc.oidcConfigurationURL
 | Provide OIDC url address for information to user. Only configure this when you want to authenticate IMAP server using a OIDC provider.
 

@@ -108,10 +108,12 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     @Override
     public void executeSafely(Runnable runnable) {
         channel.eventLoop().execute(() -> {
+            // Reading may already be suspended, for instance because of too many pipelined requests
+            boolean autoRead = channel.config().isAutoRead();
             channel.config().setAutoRead(false);
             runnable.run();
 
-            channel.config().setAutoRead(true);
+            channel.config().setAutoRead(autoRead);
         });
     }
 
@@ -303,6 +305,8 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     public void pushLineHandler(ImapLineHandler lineHandler) {
         LineHandlerAware handler = (LineHandlerAware) channel.pipeline().get(REQUEST_DECODER);
         handler.pushLineHandler(new ImapLineHandlerAdapter(this, lineHandler));
+        // The request in flight now waits for client input (IDLE DONE, AUTHENTICATE continuation...): read it
+        ImapChannelUpstreamHandler.resumeReading(channel);
     }
 
     @Override

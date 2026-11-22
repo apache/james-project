@@ -26,12 +26,14 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.nio.channels.ClosedChannelException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.net.ssl.SSLHandshakeException;
@@ -61,6 +63,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -98,6 +101,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         private Set<ConnectionCheck> connectionChecks;
         private boolean proxyRequired;
         private ChannelGroup imapChannelGroup;
+        private int maxPipelinedRequests = DEFAULT_MAX_PIPELINED_REQUESTS;
+        private int maxPipelinedRequestsBeforeClosing = DEFAULT_MAX_PIPELINED_REQUESTS_BEFORE_CLOSING;
 
         public ImapChannelUpstreamHandlerBuilder reactiveThrottler(ReactiveThrottler reactiveThrottler) {
             this.reactiveThrottler = reactiveThrottler;
@@ -164,14 +169,97 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             return this;
         }
 
+        public ImapChannelUpstreamHandlerBuilder maxPipelinedRequests(int maxPipelinedRequests, int maxPipelinedRequestsBeforeClosing) {
+            Preconditions.checkArgument(maxPipelinedRequests > 0, "maxPipelinedRequests must be strictly positive");
+            Preconditions.checkArgument(maxPipelinedRequestsBeforeClosing >= maxPipelinedRequests,
+                "maxPipelinedRequestsBeforeClosing must be greater than or equal to maxPipelinedRequests");
+            this.maxPipelinedRequests = maxPipelinedRequests;
+            this.maxPipelinedRequestsBeforeClosing = maxPipelinedRequestsBeforeClosing;
+            return this;
+        }
+
         public ImapChannelUpstreamHandler build() {
-            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration, ignoreIDLEUponProcessing, (int) heartbeatInterval.toSeconds(), reactiveThrottler, connectionChecks, proxyRequired, imapChannelGroup);
+            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration, ignoreIDLEUponProcessing, (int) heartbeatInterval.toSeconds(), reactiveThrottler, connectionChecks, proxyRequired, imapChannelGroup,
+                maxPipelinedRequests, maxPipelinedRequestsBeforeClosing);
         }
     }
+
+    /**
+     * Once this many requests of a connection are waiting for the request in flight, the socket is no longer read
+     * until they are processed.
+     */
+    public static final int DEFAULT_MAX_PIPELINED_REQUESTS = 128;
+    /**
+     * A single read can still decode many requests, especially with COMPRESS. Past this many waiting requests, the
+     * connection is closed.
+     */
+    public static final int DEFAULT_MAX_PIPELINED_REQUESTS_BEFORE_CLOSING = 4096;
 
     static class ImapLinerarizer {
         private final AtomicBoolean isExecutingRequest = new AtomicBoolean(false);
         private final ConcurrentLinkedQueue<Object> throttled = new ConcurrentLinkedQueue<>();
+        private final AtomicInteger throttledCount = new AtomicInteger(0);
+        private final AtomicBoolean readSuspended = new AtomicBoolean(false);
+        private final AtomicBoolean closing = new AtomicBoolean(false);
+
+        int enqueue(Object message) {
+            throttled.add(message);
+            return throttledCount.incrementAndGet();
+        }
+
+        Object poll() {
+            Object message = throttled.poll();
+            if (message != null) {
+                throttledCount.decrementAndGet();
+            }
+            return message;
+        }
+    }
+
+    private void resumeReadingIfDrained(ChannelHandlerContext ctx, ImapLinerarizer linearizer) {
+        if (linearizer.throttledCount.get() < maxPipelinedRequests) {
+            resumeReading(ctx.channel());
+        }
+    }
+
+    /**
+     * Resumes reading the connection if it was suspended because of too many pipelined requests.
+     */
+    static void resumeReading(Channel channel) {
+        Optional.ofNullable(channel.attr(LINEARIZER_ATTRIBUTE_KEY).get())
+            .filter(linearizer -> !linearizer.closing.get())
+            .filter(linearizer -> linearizer.readSuspended.compareAndSet(true, false))
+            .ifPresent(linearizer -> channel.eventLoop().execute(() -> channel.config().setAutoRead(true)));
+    }
+
+    private static void discardPendingRequests(ChannelHandlerContext ctx) {
+        Optional.ofNullable(ctx.channel().attr(LINEARIZER_ATTRIBUTE_KEY).get())
+            .ifPresent(linearizer -> {
+                Object queued;
+                while ((queued = linearizer.poll()) != null) {
+                    closeQuietly(queued);
+                }
+            });
+        resumeReading(ctx.channel());
+    }
+
+    private void closeUponTooManyQueuedRequests(ChannelHandlerContext ctx, ImapLinerarizer linearizer) {
+        linearizer.closing.set(true);
+        ctx.channel().config().setAutoRead(false);
+        LOGGER.warn("Closing IMAP connection: {} pipelined requests are waiting", maxPipelinedRequestsBeforeClosing);
+        discardPendingRequests(ctx);
+        ctx.channel().writeAndFlush(Unpooled.wrappedBuffer("* BYE Too many pipelined requests\r\n".getBytes(StandardCharsets.US_ASCII)))
+            .addListener(ChannelFutureListener.CLOSE);
+    }
+
+    private static void closeQuietly(Object message) {
+        if (message instanceof Closeable) {
+            try {
+                ((Closeable) message).close();
+            } catch (IOException e) {
+                LOGGER.info("Failed to release the resources of a discarded IMAP request", e);
+            }
+        }
     }
 
     public static ImapChannelUpstreamHandlerBuilder builder() {
@@ -192,11 +280,14 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     private final Set<ConnectionCheck> connectionChecks;
     private final boolean proxyRequired;
     private final ChannelGroup imapChannelGroup;
+    private final int maxPipelinedRequests;
+    private final int maxPipelinedRequestsBeforeClosing;
 
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
                                       Encryption secure, ImapMetrics imapMetrics, AuthenticationConfiguration authenticationConfiguration,
                                       boolean ignoreIDLEUponProcessing, int heartbeatIntervalSeconds, ReactiveThrottler reactiveThrottler,
-                                      Set<ConnectionCheck> connectionChecks, boolean proxyRequired, ChannelGroup imapChannelGroup) {
+                                      Set<ConnectionCheck> connectionChecks, boolean proxyRequired, ChannelGroup imapChannelGroup,
+                                      int maxPipelinedRequests, int maxPipelinedRequestsBeforeClosing) {
         this.hello = hello;
         this.processor = processor;
         this.encoder = encoder;
@@ -211,6 +302,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         this.connectionChecks = connectionChecks;
         this.proxyRequired = proxyRequired;
         this.imapChannelGroup = imapChannelGroup;
+        this.maxPipelinedRequests = maxPipelinedRequests;
+        this.maxPipelinedRequestsBeforeClosing = maxPipelinedRequestsBeforeClosing;
     }
 
     @Override
@@ -419,8 +512,19 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
         ImapLinerarizer linearalizer = ctx.channel().attr(LINEARIZER_ATTRIBUTE_KEY).get();
         synchronized (linearalizer) {
+            if (linearalizer.closing.get()) {
+                // The connection is being closed for too many pipelined requests
+                closeQuietly(msg);
+                return;
+            }
             if (!handedOver && linearalizer.isExecutingRequest.get()) {
-                linearalizer.throttled.add(msg);
+                int queued = linearalizer.enqueue(msg);
+                if (queued >= maxPipelinedRequestsBeforeClosing) {
+                    closeUponTooManyQueuedRequests(ctx, linearalizer);
+                } else if (queued >= maxPipelinedRequests && linearalizer.readSuspended.compareAndSet(false, true)) {
+                    // Stop reading the socket until the queued requests are processed
+                    ctx.channel().config().setAutoRead(false);
+                }
                 return;
             }
             linearalizer.isExecutingRequest.set(true);
@@ -460,7 +564,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     }
                     Object waitingMessage;
                     synchronized (linearalizer) {
-                        waitingMessage = linearalizer.throttled.poll();
+                        waitingMessage = linearalizer.poll();
                         // RFC 9051 section 5.5: keep the slot for the next queued request, so that a request read
                         // before it runs does not overtake it
                         linearalizer.isExecutingRequest.set(waitingMessage != null && signal.isOnComplete());
@@ -471,6 +575,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     if (signal.hasError()) {
                         ctx.fireExceptionCaught(signal.getThrowable());
                     }
+                    resumeReadingIfDrained(ctx, linearalizer);
                     disposableAttribute.set(null);
                     response.flush();
                     ctx.fireChannelReadComplete();
