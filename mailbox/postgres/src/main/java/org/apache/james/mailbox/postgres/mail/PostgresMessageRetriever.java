@@ -23,6 +23,7 @@ import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.ATTACHMENT_METADATA;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.BODY_BLOB_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.HEADER_CONTENT;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.MESSAGE_ID;
 
 import java.util.List;
 import java.util.Map;
@@ -30,11 +31,14 @@ import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.HeaderAndBodyByteContent;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
+import org.apache.james.mailbox.postgres.PostgresMessageId;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dto.AttachmentsDTO;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -112,24 +116,42 @@ public class PostgresMessageRetriever {
         }
 
         private Mono<Content> retrieveFullContent(Record messageRecord) {
-            return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(),
-                    blobIdFactory.parse(messageRecord.get(BODY_BLOB_ID)),
-                    SIZE_BASED))
+            BlobId bodyBlobId = blobIdFactory.parse(messageRecord.get(BODY_BLOB_ID));
+            return readBody(bodyBlobId)
+                .onErrorResume(ObjectNotFoundException.class, error -> retryWithCurrentBodyBlobId(messageRecord, bodyBlobId, error))
                 .map(bodyBytes -> new HeaderAndBodyByteContent(messageRecord.get(HEADER_CONTENT), bodyBytes));
+        }
+
+        /**
+         * The body reference may have been relocated, and its previous blob deleted, after the message row was read.
+         * Retry once if the current row references another blob; otherwise the blob is genuinely missing.
+         */
+        private Mono<byte[]> retryWithCurrentBodyBlobId(Record messageRecord, BlobId readBlobId, ObjectNotFoundException error) {
+            return messageDAO.getBodyBlobId(PostgresMessageId.Factory.of(messageRecord.get(MESSAGE_ID)))
+                .filter(currentBlobId -> !currentBlobId.equals(readBlobId))
+                .switchIfEmpty(Mono.error(error))
+                .flatMap(this::readBody);
+        }
+
+        private Mono<byte[]> readBody(BlobId bodyBlobId) {
+            return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), bodyBlobId, SIZE_BASED));
         }
     }
 
     private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
     private final PostgresAttachmentMapper attachmentMapper;
+    private final PostgresMessageDAO messageDAO;
     private final List<PartRetriever> partRetrievers = List.of(new AttachmentPartRetriever(), new BlobContentPartRetriever());
 
     public PostgresMessageRetriever(BlobStore blobStore,
                                     BlobId.Factory blobIdFactory,
-                                    PostgresAttachmentMapper attachmentMapper) {
+                                    PostgresAttachmentMapper attachmentMapper,
+                                    PostgresMessageDAO messageDAO) {
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
         this.attachmentMapper = attachmentMapper;
+        this.messageDAO = messageDAO;
     }
 
     public Flux<MailboxMessage> get(MessageMapper.FetchType fetchType, Flux<Pair<SimpleMailboxMessage.Builder, Record>> initialFlux) {

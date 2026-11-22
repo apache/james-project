@@ -113,7 +113,7 @@ public class PostgresMessageMapper implements MessageMapper {
         this.blobStore = blobStore;
         this.clock = clock;
         PostgresAttachmentMapper attachmentMapper = new PostgresAttachmentMapper(new PostgresAttachmentDAO(postgresExecutor, blobIdFactory), blobStore, attachmentIdAssignationStrategy);
-        this.messageRetriever = new PostgresMessageRetriever(blobStore, blobIdFactory, attachmentMapper);
+        this.messageRetriever = new PostgresMessageRetriever(blobStore, blobIdFactory, attachmentMapper, messageDAO);
     }
 
 
