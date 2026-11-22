@@ -235,6 +235,40 @@ class OidcJwtTokenVerifierTest {
             .isNull();
     }
 
+    @Test
+    void invalidTokensShouldNotTriggerAJwksFetchEach() {
+        OidcJwtTokenVerifier testee = new OidcJwtTokenVerifier(configForClaim("email_address"));
+
+        for (int i = 0; i < 10; i++) {
+            assertThat(testee.verifySignatureAndExtractClaim("junk")).isEmpty();
+            assertThat(testee.verifySignatureAndExtractClaim("")).isEmpty();
+            assertThat(testee.verifySignatureAndExtractClaim(OidcTokenFixture.INVALID_TOKEN)).isEmpty();
+        }
+
+        assertThat(mockServer.retrieveRecordedRequests(HttpRequest.request().withPath(JWKS_URI_PATH)))
+            .hasSizeLessThanOrEqualTo(1);
+    }
+
+    @Test
+    void verifyAndClaimShouldThrowWhenJwksEndpointFails() throws Exception {
+        mockServer
+            .when(HttpRequest.request().withPath("/failing"))
+            .respond(HttpResponse.response().withStatusCode(500));
+
+        OidcJwtTokenVerifier testee = new OidcJwtTokenVerifier(OidcSASLConfiguration.builder()
+            .jwksURL(new URI(String.format("http://127.0.0.1:%s/failing", mockServer.getLocalPort())).toURL())
+            .scope("email")
+            .oidcConfigurationURL(new URL("https://whatever.nte"))
+            .claim("email_address")
+            .build());
+
+        // An identity provider outage is not a rejected token: the SASL exchange fails right away
+        assertThatThrownBy(() -> testee.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN))
+            .isInstanceOf(MissingOrInvalidKeyException.class);
+        assertThatThrownBy(() -> testee.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN_HAS_NOT_KID))
+            .isInstanceOf(MissingOrInvalidKeyException.class);
+    }
+
     private OidcSASLConfiguration configForClaim(String claim) {
         try {
             return OidcSASLConfiguration.builder()

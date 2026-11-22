@@ -29,6 +29,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +38,23 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import com.google.common.base.Ticker;
+
 class JwksPublicKeyProviderTest {
+    private static class FakeTicker extends Ticker {
+        private long nanos = 0;
+
+        void advance(Duration duration) {
+            nanos += duration.toNanos();
+        }
+
+        @Override
+        public long read() {
+            return nanos;
+        }
+    }
+
+    private static final String KID = "wu-9VZEr0gHF986PYPVzvU-5IP1q26EzzQVK_sjG29Q";
     private static final String JWKS_URI_PATH = "/auth/realms/realm1/protocol/openid-connect/certs";
     private static final String JWKS_JSON = "{" +
         "    \"keys\": [" +
@@ -125,4 +142,105 @@ class JwksPublicKeyProviderTest {
             .hasSize(2);
     }
 
+    private int jwksRequestCount() {
+        return mockServer.retrieveRecordedRequests(HttpRequest.request().withPath(JWKS_URI_PATH)).length;
+    }
+
+    @Test
+    void keysShouldBeCached() {
+        PublicKeyProvider testee = new JwksPublicKeyProvider(getJwksURL(), new FakeTicker());
+
+        testee.get();
+        testee.get();
+        testee.get(KID);
+        testee.get(KID);
+
+        assertThat(jwksRequestCount()).isEqualTo(1);
+    }
+
+    @Test
+    void unknownKidsShouldNotTriggerAFetchEach() {
+        PublicKeyProvider testee = new JwksPublicKeyProvider(getJwksURL(), new FakeTicker());
+
+        for (int i = 0; i < 10; i++) {
+            assertThat(testee.get("unknown" + i)).isEmpty();
+        }
+
+        assertThat(jwksRequestCount()).isEqualTo(1);
+    }
+
+    @Test
+    void unknownKidShouldTriggerARefreshAfterTheMinimumRefreshInterval() {
+        FakeTicker clock = new FakeTicker();
+        PublicKeyProvider testee = new JwksPublicKeyProvider(getJwksURL(), clock);
+
+        testee.get("unknown");
+        clock.advance(JwksPublicKeyProvider.MIN_REFRESH_INTERVAL.plusSeconds(1));
+        testee.get("unknown");
+
+        assertThat(jwksRequestCount()).isEqualTo(2);
+    }
+
+    @Test
+    void keysShouldBeRefreshedAfterTheCacheTtl() {
+        FakeTicker clock = new FakeTicker();
+        PublicKeyProvider testee = new JwksPublicKeyProvider(getJwksURL(), clock);
+
+        testee.get();
+        clock.advance(JwksPublicKeyProvider.CACHE_TTL.plusSeconds(1));
+        testee.get();
+
+        assertThat(jwksRequestCount()).isEqualTo(2);
+    }
+
+    @Test
+    void lastKnownKeysShouldBeKeptWhenARefreshFails() {
+        FakeTicker clock = new FakeTicker();
+        PublicKeyProvider testee = new JwksPublicKeyProvider(getJwksURL(), clock);
+        testee.get();
+
+        mockServer.reset();
+        mockServer
+            .when(HttpRequest.request().withPath(JWKS_URI_PATH))
+            .respond(HttpResponse.response().withStatusCode(500));
+        clock.advance(JwksPublicKeyProvider.CACHE_TTL.plusSeconds(1));
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(testee.get()).hasSize(2);
+            softly.assertThat(testee.get(KID)).isPresent();
+        });
+    }
+
+    @Test
+    void failuresShouldNotBeRetriedOnEveryCall() throws Exception {
+        mockServer
+            .when(HttpRequest.request().withPath("/failing"))
+            .respond(HttpResponse.response().withStatusCode(500));
+        PublicKeyProvider testee = new JwksPublicKeyProvider(
+            new URI(String.format("http://127.0.0.1:%s/failing", mockServer.getLocalPort())).toURL(), new FakeTicker());
+
+        for (int i = 0; i < 10; i++) {
+            assertThatThrownBy(testee::get).isInstanceOf(MissingOrInvalidKeyException.class);
+            assertThatThrownBy(() -> testee.get(KID)).isInstanceOf(MissingOrInvalidKeyException.class);
+        }
+
+        assertThat(mockServer.retrieveRecordedRequests(HttpRequest.request().withPath("/failing"))).hasSize(1);
+    }
+
+    @Test
+    void keysThatCanNotBeConvertedShouldBeIgnored() throws Exception {
+        mockServer
+            .when(HttpRequest.request().withPath("/mixed"))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(JWKS_JSON.replace("\"keys\": [", "\"keys\": [{\"kid\": \"oct\", \"kty\": \"oct\", \"k\": \"AAAA\"},"), StandardCharsets.UTF_8));
+        PublicKeyProvider testee = new JwksPublicKeyProvider(
+            new URI(String.format("http://127.0.0.1:%s/mixed", mockServer.getLocalPort())).toURL(), new FakeTicker());
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(testee.get()).hasSize(2);
+            softly.assertThat(testee.get(KID)).isPresent();
+            softly.assertThat(testee.get("oct")).isEmpty();
+        });
+    }
 }
