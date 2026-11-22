@@ -32,8 +32,10 @@ import static org.hamcrest.Matchers.is;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Stream;
 
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -93,6 +95,25 @@ class JMAPServerTest {
         DRAFT,
         Version.RFC8621
     );
+
+    @Test
+    void uriTagValueShouldBeTheTemplateOfTheMatchingRoute() {
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
+        JMAPServer jmapServer = new JMAPServer(TEST_CONFIGURATION, ImmutableSet.of(
+            new JMAPRoutesHandler(Version.RFC8621,
+                new FakeJMAPRoutes(ImmutableSet.of(
+                    new Endpoint(HttpMethod.POST, JMAPUrls.JMAP),
+                    new Endpoint(HttpMethod.GET, "/download/{accountId}/{blobId}")), Version.RFC8621))), versionParser);
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(jmapServer.uriTagValue(JMAPUrls.JMAP)).isEqualTo(JMAPUrls.JMAP);
+            softly.assertThat(jmapServer.uriTagValue("/download/abc/def")).isEqualTo("/download/{accountId}/{blobId}");
+            softly.assertThat(jmapServer.uriTagValue("/download/abc/def?name=" + UUID.randomUUID())).isEqualTo("/download/{accountId}/{blobId}");
+            softly.assertThat(jmapServer.uriTagValue(JMAPUrls.JMAP + "/" + UUID.randomUUID())).isEqualTo(JMAPServer.OTHER_URI_TAG);
+            softly.assertThat(jmapServer.uriTagValue("/" + UUID.randomUUID())).isEqualTo(JMAPServer.OTHER_URI_TAG);
+            softly.assertThat(jmapServer.uriTagValue("/download/" + UUID.randomUUID())).isEqualTo(JMAPServer.OTHER_URI_TAG);
+        });
+    }
 
     @Test
     void serverShouldAnswerWhenStarted() {

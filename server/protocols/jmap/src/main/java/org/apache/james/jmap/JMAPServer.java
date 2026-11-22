@@ -22,12 +22,13 @@ package org.apache.james.jmap;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static reactor.netty.Metrics.HTTP_CLIENT_PREFIX;
+import static reactor.netty.Metrics.HTTP_SERVER_PREFIX;
 import static reactor.netty.Metrics.URI;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import jakarta.annotation.PreDestroy;
@@ -38,6 +39,7 @@ import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.util.Port;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
@@ -53,11 +55,15 @@ public class JMAPServer implements Startable {
     public static final boolean REACTOR_NETTY_METRICS_ENABLE = Boolean.parseBoolean(System.getProperty("james.jmap.reactor.netty.metrics.enabled", "false"));
     private static final int REACTOR_NETTY_METRICS_MAX_URI_TAGS = 100;
     private static final int RANDOM_PORT = 0;
+    @VisibleForTesting
+    static final String OTHER_URI_TAG = "other";
+    private static final AtomicBoolean REACTOR_NETTY_METRICS_CONFIGURED = new AtomicBoolean(false);
 
     private final JMAPConfiguration configuration;
     private final VersionParser versionParser;
     private final Multimap<Version, JMAPRoute> routes;
     private final List<JMAPRoute> corsRoutes;
+    private final List<Endpoint> endpoints;
     private Optional<DisposableServer> server;
 
     @Inject
@@ -81,6 +87,10 @@ public class JMAPServer implements Startable {
                 .flatMap(handler -> handler.routes(version)))
             .filter(route -> route.getEndpoint().getMethod().equals(HttpMethod.OPTIONS))
             .collect(ImmutableList.toImmutableList());
+        this.endpoints = Stream.concat(routes.values().stream(), corsRoutes.stream())
+            .map(JMAPRoute::getEndpoint)
+            .distinct()
+            .collect(ImmutableList.toImmutableList());
     }
 
     public Port getPort() {
@@ -91,25 +101,42 @@ public class JMAPServer implements Startable {
 
     public void start() {
         if (configuration.isEnabled()) {
+            if (REACTOR_NETTY_METRICS_ENABLE) {
+                configureReactorNettyMetrics();
+            }
             server = Optional.of(HttpServer.create()
                 .port(configuration.getPort()
                     .map(Port::getValue)
                     .orElse(RANDOM_PORT))
                 .handle((request, response) -> handleVersionRoute(request).handleRequest(request, response))
                 .wiretap(wireTapEnabled())
-                .metrics(REACTOR_NETTY_METRICS_ENABLE, Function.identity())
+                .metrics(REACTOR_NETTY_METRICS_ENABLE, this::uriTagValue)
                 .bindNow());
-
-            if (REACTOR_NETTY_METRICS_ENABLE) {
-                configureReactorNettyMetrics();
-            }
         }
     }
 
-    private void configureReactorNettyMetrics() {
+    private static void configureReactorNettyMetrics() {
+        // The filters apply to the global registry: register them once, before any meter is created
+        if (!REACTOR_NETTY_METRICS_CONFIGURED.compareAndSet(false, true)) {
+            return;
+        }
         Metrics.globalRegistry
             .config()
-            .meterFilter(MeterFilter.maximumAllowableTags(HTTP_CLIENT_PREFIX, URI, REACTOR_NETTY_METRICS_MAX_URI_TAGS, MeterFilter.deny()));
+            .meterFilter(MeterFilter.maximumAllowableTags(HTTP_CLIENT_PREFIX, URI, REACTOR_NETTY_METRICS_MAX_URI_TAGS, MeterFilter.deny()))
+            .meterFilter(MeterFilter.maximumAllowableTags(HTTP_SERVER_PREFIX, URI, REACTOR_NETTY_METRICS_MAX_URI_TAGS, MeterFilter.deny()));
+    }
+
+    /**
+     * The URI tag of the server metrics is the path template of the matching route, so that a client requesting
+     * random paths can not create new meters.
+     */
+    @VisibleForTesting
+    String uriTagValue(String path) {
+        return endpoints.stream()
+            .filter(endpoint -> endpoint.getUriMatcher().matches(path))
+            .map(Endpoint::getPath)
+            .findFirst()
+            .orElse(OTHER_URI_TAG);
     }
 
     private boolean wireTapEnabled() {
