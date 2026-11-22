@@ -26,7 +26,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
@@ -64,8 +66,25 @@ public class PostgresAttachmentMapper implements AttachmentMapper {
     @Override
     public Mono<InputStream> loadAttachmentContentReactive(AttachmentId attachmentId) {
         return postgresAttachmentDAO.getAttachment(attachmentId)
-            .flatMap(pair -> Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), pair.getRight(), LOW_COST)))
+            .flatMap(pair -> readContent(pair.getRight())
+                .onErrorResume(ObjectNotFoundException.class, error -> retryWithCurrentBlobId(attachmentId, pair.getRight(), error)))
             .switchIfEmpty(Mono.error(() -> new AttachmentNotFoundException(attachmentId.toString())));
+    }
+
+    /**
+     * The attachment reference may have been relocated, and its previous blob deleted, after the row was read.
+     * Retry once if the current row references another blob; otherwise the blob is genuinely missing.
+     */
+    private Mono<InputStream> retryWithCurrentBlobId(AttachmentId attachmentId, BlobId readBlobId, ObjectNotFoundException error) {
+        return postgresAttachmentDAO.getAttachment(attachmentId)
+            .map(Pair::getRight)
+            .filter(currentBlobId -> !currentBlobId.equals(readBlobId))
+            .switchIfEmpty(Mono.error(error))
+            .flatMap(this::readContent);
+    }
+
+    private Mono<InputStream> readContent(BlobId blobId) {
+        return Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), blobId, LOW_COST));
     }
 
     @Override

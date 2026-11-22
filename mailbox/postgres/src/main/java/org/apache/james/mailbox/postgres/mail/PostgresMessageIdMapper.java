@@ -112,7 +112,7 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
         this.modSeqProvider = modSeqProvider;
         this.blobStore = blobStore;
         this.clock = clock;
-        this.messageRetriever = new PostgresMessageRetriever(blobStore, blobIdFactory, attachmentMapper);
+        this.messageRetriever = new PostgresMessageRetriever(blobStore, blobIdFactory, attachmentMapper, messageDAO);
     }
 
     @Override
