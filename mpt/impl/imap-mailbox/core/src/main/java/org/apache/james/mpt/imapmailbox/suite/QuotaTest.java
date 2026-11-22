@@ -61,4 +61,11 @@ public abstract class QuotaTest implements ImapTestConstants {
             .withLocale(Locale.CANADA)
             .run("Quota");
     }
+
+    @Test
+    public void quotaRootWithoutLimitsShouldGetAnEmptyQuotaResponse() throws Exception {
+        simpleScriptedTestProtocol
+            .withLocale(Locale.CANADA)
+            .run("QuotaUnlimited");
+    }
 }
