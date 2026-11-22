@@ -32,19 +32,20 @@ import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.mail.MessagingException;
 
 import org.bouncycastle.cert.jcajce.JcaCertStoreBuilder;
-import org.bouncycastle.cert.selector.X509CertificateHolderSelector;
-import org.bouncycastle.cert.selector.jcajce.JcaX509CertSelectorConverter;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
+import org.bouncycastle.cms.jcajce.JcaX509CertSelectorConverter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.mail.smime.SMIMESigned;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -58,6 +59,7 @@ import com.google.common.base.Preconditions;
  */
 public class KeyStoreHolder {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyStoreHolder.class);
     private static final String BC = BouncyCastleProvider.PROVIDER_NAME;
 
     protected KeyStore keyStore;
@@ -92,36 +94,45 @@ public class KeyStoreHolder {
         // checking if the signatures put
         // on the message are valid.
         for (SignerInformation info: sigCol) {
-            // I get the signer's certificate
-            X509CertificateHolderSelector x509CertificateHolderSelector = new X509CertificateHolderSelector(info.getSID().getSubjectKeyIdentifier());
-            X509CertSelector certSelector = new JcaX509CertSelectorConverter().getCertSelector(x509CertificateHolderSelector);
+            // The signer's certificate is the one the SID names: issuer and serial number, or subject key identifier.
+            // Other certificates of the message are only candidates for the chain of trust.
+            X509CertSelector certSelector = new JcaX509CertSelectorConverter().getCertSelector(info.getSID());
             @SuppressWarnings("unchecked")
             Collection<X509Certificate> certCollection = (Collection<X509Certificate>) certs.getCertificates(certSelector);
-            Iterator<X509Certificate> iterator = certCollection.iterator();
-            while (iterator.hasNext()) {
-                X509Certificate signerCert = iterator.next();
-                // The issuer's certifcate is searched in the list of trusted certificate.
+            // Several certificates can match a subject key identifier SID (for instance a renewed certificate
+            // for the same key): the first one that verifies the signature and that can be trusted is kept.
+            Optional<SMIMESignerInfo> signerInfo = Optional.empty();
+            for (X509Certificate signerCert : certCollection) {
+                // The signature is checked first: building a chain of trust is costly, and useless for a bad
+                // signature.
+                if (!verify(info, signerCert)) {
+                    signerInfo = signerInfo.or(() -> Optional.of(new SMIMESignerInfo(signerCert, null, false)));
+                    continue;
+                }
+                // The path is not null if the certificate can be trusted (it can be connected by a chain of trust
+                // to a trusted certificate), null otherwise.
                 CertPath path = verifyCertificate(signerCert, certs, keyStore);
-
-                try {
-                    // if the signature is valid the SMIMESignedInfo is 
-                    // created using "true" as last argument. If it is  
-                    // invalid an exception is thrown by the "verify" method
-                    // and the SMIMESignerInfo is created with "false".
-                    //
-                    // The second argument "path" is not null if the 
-                    // certificate can be trusted (it can be connected 
-                    // by a chain of trust to a trusted certificate), null
-                    // otherwise.
-                    if (info.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider(BC).build(signerCert))) {
-                        result.add(new SMIMESignerInfo(signerCert, path, true));
-                    }
-                } catch (Exception e) { 
-                    result.add(new SMIMESignerInfo(signerCert,path, false)); 
+                if (path != null) {
+                    signerInfo = Optional.of(new SMIMESignerInfo(signerCert, path, true));
+                    break;
+                }
+                if (signerInfo.isEmpty() || !signerInfo.get().isSignValid()) {
+                    signerInfo = Optional.of(new SMIMESignerInfo(signerCert, null, true));
                 }
             }
+            signerInfo.ifPresent(result::add);
         }
         return result;
+    }
+
+    private static boolean verify(SignerInformation info, X509Certificate signerCert) {
+        try {
+            // If the signature is invalid an exception may be thrown by the "verify" method
+            return info.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider(BC).build(signerCert));
+        } catch (Exception e) {
+            LOGGER.debug("Invalid S/MIME signature for {}", signerCert.getSubjectX500Principal(), e);
+            return false;
+        }
     }
 
     /**
