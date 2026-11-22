@@ -30,6 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 import io.jsonwebtoken.JwtException;
 import reactor.core.publisher.Mono;
@@ -39,9 +41,12 @@ public class OidcJwtTokenVerifier {
     private static final Logger LOGGER = LoggerFactory.getLogger(OidcJwtTokenVerifier.class);
 
     private final OidcSASLConfiguration oidcSASLConfiguration;
+    // Shared across tokens so that the key set is cached: see JwksPublicKeyProvider
+    private final Supplier<JwksPublicKeyProvider> publicKeyProvider;
 
     public OidcJwtTokenVerifier(OidcSASLConfiguration oidcSASLConfiguration) {
         this.oidcSASLConfiguration = oidcSASLConfiguration;
+        this.publicKeyProvider = Suppliers.memoize(() -> JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL()));
     }
 
     public Optional<Username> validateToken(String token) {
@@ -72,8 +77,14 @@ public class OidcJwtTokenVerifier {
 
     @VisibleForTesting
     Optional<String> verifySignatureAndExtractClaim(String jwtToken) {
+        if (jwtToken == null || jwtToken.isBlank()) {
+            LOGGER.info("Failed Jwt verification: blank token");
+            return Optional.empty();
+        }
+        // A MissingOrInvalidKeyException (the keys could not be fetched) is not a rejected token: it escapes, so
+        // that the SASL exchange fails right away rather than with an invalid_token challenge (RFC 7628)
         try {
-            return new JwtTokenVerifier(JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL()))
+            return new JwtTokenVerifier(publicKeyProvider.get())
                 .verify(jwtToken)
                 .filter(claims -> oidcSASLConfiguration.getAud().map(expectedAud -> claims.getAudience().contains(expectedAud))
                     .orElse(true)) // true if no aud is configured
