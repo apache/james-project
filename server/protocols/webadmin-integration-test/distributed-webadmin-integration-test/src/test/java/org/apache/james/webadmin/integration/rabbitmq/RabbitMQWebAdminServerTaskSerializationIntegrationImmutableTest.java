@@ -94,7 +94,6 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
     static void setUp(GuiceJamesServer guiceJamesServer) throws Exception {
         DataProbe dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN);
-        dataProbe.addUser(USERNAME, "secret");
         WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
@@ -411,25 +410,32 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
     }
 
     @Test
-    void userReindexingShouldComplete() {
-        String taskId = with()
-                .queryParam("task", "reIndex")
-            .post("users/" + USERNAME + "/mailboxes")
-                .jsonPath()
-                .get("taskId");
+    void userReindexingShouldComplete(GuiceJamesServer guiceJamesServer) throws Exception {
+        // The user is removed afterwards: the other tests of this shared server expect no user
+        DataProbe dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addUser(USERNAME, "secret");
+        try {
+            String taskId = with()
+                    .queryParam("task", "reIndex")
+                .post("users/" + USERNAME + "/mailboxes")
+                    .jsonPath()
+                    .get("taskId");
 
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("user-reindexing"))
-            .body("additionalInformation.successfullyReprocessedMailCount", is(0))
-            .body("additionalInformation.failedReprocessedMailCount", is(0))
-            .body("additionalInformation.username", is(USERNAME))
-            .body("additionalInformation.messageFailures", is(anEmptyMap()));
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("taskId", is(Matchers.notNullValue()))
+                .body("type", is("user-reindexing"))
+                .body("additionalInformation.successfullyReprocessedMailCount", is(0))
+                .body("additionalInformation.failedReprocessedMailCount", is(0))
+                .body("additionalInformation.username", is(USERNAME))
+                .body("additionalInformation.messageFailures", is(anEmptyMap()));
+        } finally {
+            dataProbe.removeUser(USERNAME);
+        }
     }
 
     @Test
