@@ -66,10 +66,9 @@ object ProblemDetails {
       notRequestProblem(
         s"The request violated stream constraints: ${exception.getMessage}")
     case exception: RequestSizeExceeded =>
-      val message = s"Request size is exceeded. Was ${exception.input.length} but maximum allowed is ${MaxSizeRequest.DEFAULT}"
-      MDCStructuredLogger.forLogger(LOGGER)
-        .field("input", new String(exception.input).substring(0, 4096))
-        .log(logger => logger.warn(message))
+      val size = if (exception.exact) s"${exception.size}" else s"at least ${exception.size}"
+      val message = s"Request size is exceeded. Was $size but maximum allowed is ${MaxSizeRequest.DEFAULT}"
+      LOGGER.warn(message)
       ProblemDetails(RequestLevelErrorType.LIMIT, BAD_REQUEST, Some("maxSizeRequest"), message)
     case exception: TooManyCallsInRequest =>
       val message = s"Request call count limit is exceeded. Was ${exception.requestObject.methodCalls.length} but maximum allowed is ${MaxCallsInRequest.DEFAULT}"

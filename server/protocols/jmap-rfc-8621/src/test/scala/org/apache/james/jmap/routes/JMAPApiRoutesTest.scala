@@ -39,7 +39,7 @@ import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.MethodName
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.core.{DefaultCapabilities, JmapRfc8621Configuration, RequestLevelErrorType}
+import org.apache.james.jmap.core.{DefaultCapabilities, JmapRfc8621Configuration, MaxSizeRequest, RequestLevelErrorType}
 import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, UserProvisioning}
 import org.apache.james.jmap.method.{CoreEchoMethod, Method}
 import org.apache.james.jmap.routes.JMAPApiRoutesTest._
@@ -465,5 +465,50 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .asString()
 
     assertThatJson(response).isEqualTo(SERVER_FAIL_RESPONSE_OBJECT)
+  }
+
+  "RFC-8621 version, POST, with an oversized chunked body" should "be rejected while reading it" in {
+    val request = java.net.http.HttpRequest.newBuilder(java.net.URI.create(s"http://127.0.0.1:${jmapServer.getPort.getValue}$JMAP"))
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .header("Authorization", s"Basic ${userBase64String}")
+      .header("Content-Type", "application/json")
+      // No length: the body is sent chunked, without Content-Length
+      .POST(java.net.http.HttpRequest.BodyPublishers.ofInputStream(() =>
+        new java.io.ByteArrayInputStream(Array.fill[Byte](MaxSizeRequest.DEFAULT.toInt + 1)(' '.toByte))))
+      .build()
+
+    val response = java.net.http.HttpClient.newHttpClient()
+      .send(request, java.net.http.HttpResponse.BodyHandlers.ofString())
+
+    response.statusCode() shouldBe HttpStatus.SC_BAD_REQUEST
+    assertThatJson(response.body())
+      .isEqualTo(s"""{
+                   |  "type": "urn:ietf:params:jmap:error:limit",
+                   |  "status": 400,
+                   |  "limit": "maxSizeRequest",
+                   |  "detail": "${'$'}{json-unit.any-string}"
+                   |}""".stripMargin)
+    response.body() should include("Request size is exceeded. Was at least")
+  }
+
+  "RFC-8621 version, POST, with an oversized Content-Length" should "be rejected" in {
+    val headers: Headers = Headers.headers(
+      new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
+      new Header("Authorization", s"Basic ${userBase64String}")
+    )
+
+    val response = RestAssured
+      .`given`()
+        .headers(headers)
+        .body(" " * (MaxSizeRequest.DEFAULT.toInt + 1))
+      .when()
+        .post()
+      .`then`
+        .statusCode(HttpStatus.SC_BAD_REQUEST)
+      .extract()
+        .body()
+        .asString()
+
+    response should include(s"Request size is exceeded. Was ${MaxSizeRequest.DEFAULT + 1} but maximum allowed is ${MaxSizeRequest.DEFAULT}")
   }
 }

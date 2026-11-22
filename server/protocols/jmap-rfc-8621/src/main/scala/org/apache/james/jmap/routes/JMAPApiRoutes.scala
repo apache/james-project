@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.routes
 
+import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
@@ -67,7 +68,10 @@ object JMAPApiRoutes {
 }
 
 case class StreamConstraintsExceptionWithInput(cause: StreamConstraintsException, input: Array[Byte]) extends RuntimeException(cause)
-case class RequestSizeExceeded(input: Array[Byte]) extends RuntimeException
+/**
+ * @param size the size of the request, or when exact is false, the number of bytes read before rejecting it
+ */
+case class RequestSizeExceeded(size: Long, exact: Boolean) extends RuntimeException
 
 class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                      userProvisioner: UserProvisioning,
@@ -101,20 +105,29 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
     JMAPApiRoutes.extractOriginalClientIP(httpServerRequest.requestHeaders().get(ORIGINAL_IP_HEADER))
 
   private def requestAsJsonStream(httpServerRequest: HttpServerRequest): SMono[RequestObject] =
+    declaredContentLength(httpServerRequest)
+      .filter(_ > MaxSizeRequest.DEFAULT)
+      .map(contentLength => SMono.error[RequestObject](RequestSizeExceeded(contentLength, exact = true)))
+      .getOrElse(readBoundedBody(httpServerRequest)
+        .handle[RequestObject](parseRequestObject))
+
+  private def declaredContentLength(httpServerRequest: HttpServerRequest): Option[Long] =
+    Option(httpServerRequest.requestHeaders().get(CONTENT_LENGTH))
+      .flatMap(value => value.trim.toLongOption)
+
+  // Counts the bytes as they are received, so that an oversized body is rejected without being held in memory
+  private def readBoundedBody(httpServerRequest: HttpServerRequest): SMono[Array[Byte]] =
     SMono.fromPublisher(httpServerRequest
       .receive()
-      .aggregate()
-      .asByteArray())
-      .handle[Array[Byte]](validateRequestSize)
-      .handle[RequestObject](parseRequestObject)
-
-  private def validateRequestSize: (Array[Byte], SynchronousSink[Array[Byte]]) => Unit = {
-    case (input, sink) => if (input.length > MaxSizeRequest.DEFAULT) {
-      sink.error(RequestSizeExceeded(input))
-    } else {
-      sink.next(input)
-    }
-  }
+      .asByteArray()
+      .collect(() => new ByteArrayOutputStream(), (buffer: ByteArrayOutputStream, chunk: Array[Byte]) => {
+        if (buffer.size().toLong + chunk.length > MaxSizeRequest.DEFAULT) {
+          throw RequestSizeExceeded(buffer.size().toLong + chunk.length, exact = false)
+        }
+        buffer.write(chunk)
+      }))
+      .filter(_.size() > 0)
+      .map(_.toByteArray)
 
   private def parseRequestObject: (Array[Byte], SynchronousSink[RequestObject]) => Unit = {
     case (input, sink) => Try(parseRequestObject(input)
