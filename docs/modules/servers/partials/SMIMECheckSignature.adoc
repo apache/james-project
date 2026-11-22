@@ -56,3 +56,11 @@ specifies in which attribute the check results will be written.
 considered by this mailet as authentic must be valid and trusted. Setting
 this mailet parameter to "false" the last condition is relaxed and also
 "untrusted" signature are considered will be considered as authentic.
+* maxSignerInfos (default: 10) and maxCertificates (default: 50): a message
+carrying more signer infos or certificates is not checked, and gets a bad
+signature status. Each signer info can lead to a certification path search
+over all the certificates of the message: these limits bound the work a remote
+sender can make this mailet do. Note that a message exceeding them gets a bad
+signature status without its signature being checked. The work of a single
+certification path search can be bounded too, with the
+`org.bouncycastle.x509.max_cert_path_build_nodes` system property.
