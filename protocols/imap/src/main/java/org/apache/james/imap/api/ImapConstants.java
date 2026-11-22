@@ -174,7 +174,7 @@ public interface ImapConstants {
     String STATUS_HIGHESTMODSEQ = "HIGHESTMODSEQ";
 
     ImapCommand CAPABILITY_COMMAND = ImapCommand.anyStateCommand("CAPABILITY");
-    ImapCommand COMPRESS_COMMAND = ImapCommand.anyStateCommand("COMPRESS");
+    ImapCommand COMPRESS_COMMAND = ImapCommand.authenticatedStateCommand("COMPRESS");
     ImapCommand LOGOUT_COMMAND = ImapCommand.anyStateCommand("LOGOUT");
     ImapCommand NOOP_COMMAND = ImapCommand.anyStateCommand("NOOP");
     ImapCommand ID_COMMAND = ImapCommand.anyStateCommand("ID");

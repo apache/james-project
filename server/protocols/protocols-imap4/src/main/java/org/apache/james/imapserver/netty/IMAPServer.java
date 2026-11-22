@@ -119,6 +119,8 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private Optional<IMAPCommandsThrottler.ThrottlerConfiguration> throttlerConfiguration = Optional.empty();
     private boolean ignoreIDLEUponProcessing;
     private Duration heartbeatInterval;
+    private int maxPipelinedRequests;
+    private int maxPipelinedRequestsBeforeClosing;
     private ReactiveThrottler reactiveThrottler;
 
 
@@ -153,6 +155,11 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         connectionLimitUpstreamHandler = ConnectionLimitUpstreamHandler.forCount(connectionLimit);
         connectionPerIpLimitUpstreamHandler = ConnectionPerIpLimitUpstreamHandler.forCount(connPerIP);
         ignoreIDLEUponProcessing = configuration.getBoolean("ignoreIDLEUponProcessing", true);
+        maxPipelinedRequests = configuration.getInt("maxPipelinedRequests", ImapChannelUpstreamHandler.DEFAULT_MAX_PIPELINED_REQUESTS);
+        maxPipelinedRequestsBeforeClosing = configuration.getInt("maxPipelinedRequestsBeforeClosing", ImapChannelUpstreamHandler.DEFAULT_MAX_PIPELINED_REQUESTS_BEFORE_CLOSING);
+        if (maxPipelinedRequests <= 0 || maxPipelinedRequestsBeforeClosing < maxPipelinedRequests) {
+            throw new ConfigurationException("maxPipelinedRequests must be strictly positive and maxPipelinedRequestsBeforeClosing must not be lower than it");
+        }
         ImapConfiguration imapConfiguration = getImapConfiguration(configuration);
         heartbeatInterval = imapConfiguration.idleTimeIntervalAsDuration();
         reactiveThrottler = new ReactiveThrottler(gaugeRegistry, imapConfiguration.getConcurrentRequests(), imapConfiguration.getMaxQueueSize());
@@ -310,6 +317,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .imapMetrics(imapMetrics)
             .heartbeatInterval(heartbeatInterval)
             .ignoreIDLEUponProcessing(ignoreIDLEUponProcessing)
+            .maxPipelinedRequests(maxPipelinedRequests, maxPipelinedRequestsBeforeClosing)
             .proxyRequired(proxyRequired)
             .imapChannelGroup(imapChannelGroup)
             .build();
