@@ -22,6 +22,8 @@ package org.apache.james.mpt.imapmailbox.jpa;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.MailboxAnnotation;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class JpaMailboxAnnotationTest extends MailboxAnnotation {
@@ -31,5 +33,11 @@ public class JpaMailboxAnnotationTest extends MailboxAnnotation {
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return hostSystemExtension.getHostSystem();
+    }
+
+    @Disabled("Jpa does not implement right storing for mailboxes so this test can be ignored")
+    @Test
+    @Override
+    public void privateAnnotationsShouldNotBeSharedWithTheUsersAMailboxIsSharedWith() {
     }
 }
