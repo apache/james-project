@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
@@ -105,6 +106,13 @@ import org.slf4j.LoggerFactory;
  * considered by this mailet as authentic must be valid and trusted. Setting
  * this mailet parameter to "false" the last condition is relaxed and also
  * "untrusted" signature are considered will be considered as authentic.
+ * <li>maxSignerInfos (default: 10) and maxCertificates (default: 50): a message
+ * carrying more signer infos or certificates is not checked, and gets a bad
+ * signature status. Each signer info can lead to a certification path search
+ * over all the certificates of the message: these limits bound the work a
+ * remote sender can make this mailet do. The work of a single certification path
+ * search can be bounded too, with the
+ * <code>org.bouncycastle.x509.max_cert_path_build_nodes</code> system property.
  * </ul>
  * </p>
  * 
@@ -119,6 +127,7 @@ public class SMIMECheckSignature extends GenericMailet {
     private boolean stripSignature = false;
     private boolean onlyTrusted = true;
     private AttributeName mailAttribute = AttributeName.of("org.apache.james.SMIMECheckSignature");
+    private KeyStoreHolder.VerificationLimits verificationLimits = KeyStoreHolder.VerificationLimits.DEFAULT;
 
     @Inject
     public SMIMECheckSignature(FileSystem fileSystem) {
@@ -144,6 +153,16 @@ public class SMIMECheckSignature extends GenericMailet {
             mailAttribute = AttributeName.of(mailAttributeConf);
         }
 
+        try {
+            verificationLimits = new KeyStoreHolder.VerificationLimits(
+                Optional.ofNullable(config.getInitParameter("maxSignerInfos")).map(String::trim).map(Integer::parseInt)
+                    .orElse(KeyStoreHolder.VerificationLimits.DEFAULT.maxSignerInfos()),
+                Optional.ofNullable(config.getInitParameter("maxCertificates")).map(String::trim).map(Integer::parseInt)
+                    .orElse(KeyStoreHolder.VerificationLimits.DEFAULT.maxCertificates()));
+        } catch (IllegalArgumentException e) {
+            throw new MessagingException("Invalid maxSignerInfos or maxCertificates", e);
+        }
+
         trustedCertificateStore = KeyStoreHolderFactory.from(fileSystem).createKeyStoreHolder(KeyStoreHolderConfiguration.from(config));
     }
 
@@ -166,7 +185,7 @@ public class SMIMECheckSignature extends GenericMailet {
             SMIMESigned signed = asSMIMESigned(message);
 
             if (signed != null) {
-                signers = trustedCertificateStore.verifySignatures(signed);
+                signers = trustedCertificateStore.verifySignatures(signed, verificationLimits);
                 strippedMessage = signed.getContent();
                 isMessageSigned = true;
             } else {

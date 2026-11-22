@@ -20,6 +20,7 @@
 package org.apache.james.transport;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -27,6 +28,7 @@ import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.Security;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -35,6 +37,7 @@ import java.util.stream.IntStream;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMultipart;
 
+import org.assertj.core.api.SoftAssertions;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
@@ -148,5 +151,95 @@ class KeyStoreHolderTest {
                 assertThat(info.isSignValid()).isTrue();
                 assertThat(info.getCertPath()).isNull();
             });
+    }
+
+    @Test
+    void verifySignaturesShouldNotCheckMessagesWithTooManyCertificates() throws Exception {
+        Identity root = selfSigned("CN=Root");
+        Identity signer = issue("CN=Signer", keyPair(), new X500Name("CN=Root"), root.keyPair(), false);
+        ImmutableList<X509Certificate> attached = ImmutableList.of(signer.certificate(), root.certificate(),
+            selfSigned("CN=Root").certificate());
+        KeyStoreHolder testee = new KeyStoreHolder(trusting(root.certificate()));
+
+        SoftAssertions.assertSoftly(softly -> {
+            try {
+                softly.assertThat(testee.verifySignatures(sign(signer, attached), new KeyStoreHolder.VerificationLimits(10, 2)))
+                    .isEmpty();
+                softly.assertThat(testee.verifySignatures(sign(signer, attached), new KeyStoreHolder.VerificationLimits(10, 3)))
+                    .hasSize(1);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Test
+    void verifySignaturesShouldNotCheckMessagesWithTooManySignerInfos() throws Exception {
+        Identity root = selfSigned("CN=Root");
+        Identity signer = issue("CN=Signer", keyPair(), new X500Name("CN=Root"), root.keyPair(), false);
+        KeyStoreHolder testee = new KeyStoreHolder(trusting(root.certificate()));
+        SMIMESigned signed = sign(signer, ImmutableList.of(signer.certificate(), root.certificate()));
+
+        SoftAssertions.assertSoftly(softly -> {
+            try {
+                softly.assertThat(testee.verifySignatures(signed, new KeyStoreHolder.VerificationLimits(1, 50)))
+                    .hasSize(1);
+                softly.assertThat(testee.verifySignatures(sign2(signer, root), new KeyStoreHolder.VerificationLimits(1, 50)))
+                    .isEmpty();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Test
+    void verifySignaturesShouldBoundTheCandidatesSharingAName() throws Exception {
+        // Many certificates sharing the name of the signer issuer, none of them trusted
+        KeyPair decoyKeyPair = keyPair();
+        Identity signer = issue("CN=Signer", keyPair(), new X500Name("CN=Decoy"), decoyKeyPair, false);
+        ImmutableList.Builder<X509Certificate> attached = ImmutableList.<X509Certificate>builder().add(signer.certificate());
+        for (int i = 0; i < 49; i++) {
+            attached.add(issue("CN=Decoy", decoyKeyPair, new X500Name("CN=Decoy"), decoyKeyPair, true).certificate());
+        }
+        SMIMESigned signed = sign(signer, attached.build());
+        KeyStoreHolder testee = new KeyStoreHolder(trusting(selfSigned("CN=Root").certificate()));
+
+        List<SMIMESignerInfo> signerInfos = assertTimeoutPreemptively(Duration.ofSeconds(30), () -> testee.verifySignatures(signed));
+
+        assertThat(signerInfos).singleElement()
+            .satisfies(info -> {
+                assertThat(info.isSignValid()).isTrue();
+                assertThat(info.getCertPath()).isNull();
+            });
+    }
+
+    @Test
+    void verifySignaturesShouldTrustChainsWithSeveralCertificatesSharingAName() throws Exception {
+        Identity root = selfSigned("CN=Root");
+        KeyPair caKeyPair = keyPair();
+        Identity ca = issue("CN=CA", caKeyPair, new X500Name("CN=Root"), root.keyPair(), true);
+        // An older certificate of the CA, that does not lead to the trusted root
+        Identity oldCa = selfSigned("CN=CA");
+        Identity signer = issue("CN=Signer", keyPair(), new X500Name("CN=CA"), caKeyPair, false);
+
+        List<SMIMESignerInfo> signerInfos = new KeyStoreHolder(trusting(root.certificate()))
+            .verifySignatures(sign(signer, ImmutableList.of(signer.certificate(), oldCa.certificate(), ca.certificate())));
+
+        assertThat(signerInfos).singleElement()
+            .satisfies(info -> assertThat(info.getCertPath()).isNotNull());
+    }
+
+    // A message signed twice by the same signer: two SignerInfos
+    private static SMIMESigned sign2(Identity signer, Identity root) throws Exception {
+        SMIMESignedGenerator generator = new SMIMESignedGenerator();
+        for (int i = 0; i < 2; i++) {
+            generator.addSignerInfoGenerator(new JcaSimpleSignerInfoGeneratorBuilder()
+                .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+                .build("SHA256withRSA", signer.keyPair().getPrivate(), signer.certificate()));
+        }
+        generator.addCertificates(new JcaCertStore(ImmutableList.of(signer.certificate(), root.certificate())));
+        MimeBodyPart content = new MimeBodyPart();
+        content.setText("Hello");
+        return new SMIMESigned(generator.generate(content));
     }
 }

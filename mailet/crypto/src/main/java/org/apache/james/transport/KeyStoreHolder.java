@@ -22,21 +22,27 @@ package org.apache.james.transport;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathBuilder;
 import java.security.cert.CertPathBuilderException;
 import java.security.cert.CertPathBuilderResult;
 import java.security.cert.CertStore;
+import java.security.cert.CollectionCertStoreParameters;
 import java.security.cert.PKIXBuilderParameters;
 import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.mail.MessagingException;
 
+import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.cert.jcajce.JcaCertStoreBuilder;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
@@ -47,7 +53,9 @@ import org.bouncycastle.mail.smime.SMIMESigned;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * This class is used to handle in a simple way a keystore that contains a set
@@ -58,6 +66,25 @@ import com.google.common.base.Preconditions;
  * 
  */
 public class KeyStoreHolder {
+    /**
+     * Bounds the work a remote sender can make the signature check do: each SignerInfo can lead to a certification
+     * path search over all the certificates of the message.
+     */
+    public record VerificationLimits(int maxSignerInfos, int maxCertificates) {
+        /**
+         * The number of certification path searches per message is bounded by maxSignerInfos.
+         */
+        int maxCertPathSearches() {
+            return maxSignerInfos;
+        }
+
+        public static final VerificationLimits DEFAULT = new VerificationLimits(10, 50);
+
+        public VerificationLimits {
+            Preconditions.checkArgument(maxSignerInfos > 0, "maxSignerInfos must be strictly positive");
+            Preconditions.checkArgument(maxCertificates > 0, "maxCertificates must be strictly positive");
+        }
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyStoreHolder.class);
     private static final String BC = BouncyCastleProvider.PROVIDER_NAME;
@@ -82,11 +109,34 @@ public class KeyStoreHolder {
      * @throws MessagingException
      */
     public List<SMIMESignerInfo> verifySignatures(SMIMESigned signed) throws Exception {
+        return verifySignatures(signed, VerificationLimits.DEFAULT);
+    }
+
+    /**
+     * Verifies the signature of a SMIME message, like {@link #verifySignatures(SMIMESigned)}.
+     *
+     * A message with more SignerInfos or certificates than the limits allow is not checked: no signer is returned.
+     */
+    @SuppressWarnings("unchecked")
+    public List<SMIMESignerInfo> verifySignatures(SMIMESigned signed, VerificationLimits limits) throws Exception {
+        int certificateCount = signed.getCertificates().getMatches(null).size();
+        int signerInfoCount = signed.getSignerInfos().size();
+        if (certificateCount > limits.maxCertificates() || signerInfoCount > limits.maxSignerInfos()) {
+            LOGGER.warn("Not checking a S/MIME signature with {} SignerInfos and {} certificates: limits are {} and {}",
+                signerInfoCount, certificateCount, limits.maxSignerInfos(), limits.maxCertificates());
+            return ImmutableList.of();
+        }
 
         CertStore certs = new JcaCertStoreBuilder()
             .addCertificates(signed.getCertificates())
             .addCRLs(signed.getCRLs())
             .build();
+        // Each node of a certification path search scans every candidate sharing the name of the issuer it looks for:
+        // a sender shipping many certificates sharing a few names would make the search explore their permutations.
+        // A legitimate chain holds very few certificates per name (key rollover, cross certification).
+        Collection<X509Certificate> intermediates = boundCandidatesPerSubject(
+            (Collection<X509Certificate>) certs.getCertificates(null));
+        AtomicInteger remainingCertPathSearches = new AtomicInteger(limits.maxCertPathSearches());
         SignerInformationStore siginfo = signed.getSignerInfos();
         Collection<SignerInformation> sigCol = siginfo.getSigners();
         List<SMIMESignerInfo> result = new ArrayList<>(sigCol.size());
@@ -111,7 +161,13 @@ public class KeyStoreHolder {
                 }
                 // The path is not null if the certificate can be trusted (it can be connected by a chain of trust
                 // to a trusted certificate), null otherwise.
-                CertPath path = verifyCertificate(signerCert, certs, keyStore);
+                CertPath path = null;
+                if (remainingCertPathSearches.getAndDecrement() > 0) {
+                    path = verifyCertificate(signerCert, pathStore(signerCert, intermediates), keyStore);
+                } else {
+                    LOGGER.warn("Not searching a certification path for {}: {} searches were already done for this message",
+                        signerCert.getSubjectX500Principal(), limits.maxCertPathSearches());
+                }
                 if (path != null) {
                     signerInfo = Optional.of(new SMIMESignerInfo(signerCert, path, true));
                     break;
@@ -123,6 +179,26 @@ public class KeyStoreHolder {
             signerInfo.ifPresent(result::add);
         }
         return result;
+    }
+
+    @VisibleForTesting
+    static final int MAX_CANDIDATES_PER_SUBJECT = 4;
+
+    private static Collection<X509Certificate> boundCandidatesPerSubject(Collection<X509Certificate> certificates) {
+        Map<X500Name, Integer> countBySubject = new HashMap<>();
+        // X500Name compares names the way the BouncyCastle path builder does
+        return certificates.stream()
+            .filter(certificate -> countBySubject.merge(X500Name.getInstance(certificate.getSubjectX500Principal().getEncoded()), 1, Integer::sum)
+                <= MAX_CANDIDATES_PER_SUBJECT)
+            .collect(ImmutableList.toImmutableList());
+    }
+
+    private static CertStore pathStore(X509Certificate signerCert, Collection<X509Certificate> intermediates)
+        throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        return CertStore.getInstance("Collection", new CollectionCertStoreParameters(ImmutableList.<X509Certificate>builder()
+            .add(signerCert)
+            .addAll(intermediates.stream().filter(certificate -> !certificate.equals(signerCert)).iterator())
+            .build()));
     }
 
     private static boolean verify(SignerInformation info, X509Certificate signerCert) {
