@@ -19,9 +19,12 @@
 
 package org.apache.james.jmap.pushsubscription
 
-import java.nio.charset.StandardCharsets
+import java.nio.ByteBuffer
+import java.nio.charset.{CodingErrorAction, StandardCharsets}
 import java.time.Duration
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicBoolean
 
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpResponseStatus
@@ -32,7 +35,7 @@ import org.apache.james.jmap.pushsubscription.WebPushClientHeader.{CONTENT_ENCOD
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
-import reactor.netty.ByteBufMono
+import reactor.netty.Connection
 import reactor.netty.http.client.{HttpClient, HttpClientResponse}
 import reactor.netty.resources.ConnectionProvider
 
@@ -68,13 +71,16 @@ case class WebPushTemporarilyUnavailableException(httpCode: Int, detailError: St
 object DefaultWebPushClient {
   val PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH: Int = 1024
 
+  private def timeout(configuration: PushClientConfiguration): Duration =
+    configuration.maxTimeoutSeconds
+      .map(configValue => Duration.of(configValue, ChronoUnit.SECONDS))
+      .getOrElse(DEFAULT_TIMEOUT)
+
   private def buildHttpClient(configuration: PushClientConfiguration, ssrfValidator: SSRFValidator): HttpClient = {
     val connectionProviderBuilder: ConnectionProvider.Builder = ConnectionProvider.builder(DefaultWebPushClient.getClass.getName)
     configuration.maxConnections.foreach(configValue => connectionProviderBuilder.maxConnections(configValue))
 
-    val responseTimeout: Duration = configuration.maxTimeoutSeconds
-      .map(configValue => Duration.of(configValue, ChronoUnit.SECONDS))
-      .getOrElse(DEFAULT_TIMEOUT)
+    val responseTimeout: Duration = timeout(configuration)
 
     val httpClient: HttpClient = HttpClient.create(connectionProviderBuilder.build())
       .disableRetry(true)
@@ -102,6 +108,8 @@ class DefaultWebPushClient(configuration: PushClientConfiguration, ssrfValidator
   def this(configuration: PushClientConfiguration) = this(configuration, new SSRFValidator())
 
   val httpClient: HttpClient = buildHttpClient(configuration, ssrfValidator)
+  // responseTimeout only bounds the inactivity between two reads: a push server that keeps sending must be cut too
+  private val overallTimeout: Duration = DefaultWebPushClient.timeout(configuration)
 
   override def push(pushServerUrl: PushSubscriptionServerURL, request: PushRequest): Publisher[Unit] =
     validate(pushServerUrl)
@@ -115,7 +123,14 @@ class DefaultWebPushClient(configuration: PushClientConfiguration, ssrfValidator
         .post()
         .uri(url.value.toString)
         .send(SMono.just(Unpooled.wrappedBuffer(request.payload)))
-        .responseSingle((httpResponse, dataBuf) => afterHTTPResponseHandler(httpResponse, dataBuf))
+        .responseConnection((httpResponse, connection) => afterHTTPResponseHandler(httpResponse, connection)
+          .timeout(overallTimeout)
+          .onErrorMap {
+            case _: TimeoutException => WebPushTemporarilyUnavailableException(httpResponse.status().code(),
+              s"The response was not received within $overallTimeout")
+            case e => e
+          })
+        .`then`()
         .thenReturn(SMono.empty)))
 
   private def validate(pushServerUrl: PushSubscriptionServerURL): SMono[PushSubscriptionServerURL] =
@@ -125,18 +140,36 @@ class DefaultWebPushClient(configuration: PushClientConfiguration, ssrfValidator
       SMono.just(pushServerUrl)
     }
 
-  private def afterHTTPResponseHandler(httpResponse: HttpClientResponse, dataBuf: ByteBufMono): Mono[Void] =
+  private def afterHTTPResponseHandler(httpResponse: HttpClientResponse, connection: Connection): Mono[Void] =
     Mono.just(httpResponse.status())
       .flatMap {
-        case HttpResponseStatus.OK | HttpResponseStatus.CREATED | HttpResponseStatus.ACCEPTED => Mono.empty()
-        case HttpResponseStatus.BAD_REQUEST => preProcessingData(dataBuf)
+        case HttpResponseStatus.OK | HttpResponseStatus.CREATED | HttpResponseStatus.ACCEPTED => readBoundedResponse(connection).`then`()
+        case HttpResponseStatus.BAD_REQUEST => readBoundedResponse(connection)
           .flatMap(string => Mono.error(WebPushInvalidRequestException(string)))
-        case statusCode: HttpResponseStatus => preProcessingData(dataBuf)
+        case statusCode: HttpResponseStatus => readBoundedResponse(connection)
           .flatMap(string => Mono.error(WebPushTemporarilyUnavailableException(statusCode.code, string)))
       }.`then`()
 
-  private def preProcessingData(dataBuf: ByteBufMono): Mono[String] =
-    dataBuf.asString(StandardCharsets.UTF_8)
-      .switchIfEmpty(Mono.just(""))
-      .map(content => content.take(PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH))
+  // The push server chooses the response body: only its first PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH bytes are read.
+  // A longer body is not drained: the connection is disposed instead of going back to the pool.
+  private def readBoundedResponse(connection: Connection): Mono[String] = {
+    val truncated = new AtomicBoolean(false)
+    connection.inbound().receive().asByteArray()
+      .scan(Array.emptyByteArray, (read: Array[Byte], chunk: Array[Byte]) => {
+        if (read.length + chunk.length > PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH) {
+          truncated.set(true)
+        }
+        (read ++ chunk).take(PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH)
+      })
+      .takeUntil(_ => truncated.get())
+      .last(Array.emptyByteArray)
+      .map(bytes => StandardCharsets.UTF_8.newDecoder()
+        // The truncation may split a character
+        .onMalformedInput(CodingErrorAction.IGNORE)
+        .decode(ByteBuffer.wrap(bytes))
+        .toString)
+      .doFinally(_ => if (truncated.get()) {
+        connection.dispose()
+      })
+  }
 }
