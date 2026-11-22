@@ -88,4 +88,12 @@ class IMAPServerCompressTest extends AbstractIMAPServerTest {
 
         assertThat(reply).contains("AAAB BAD COMPRESS failed. Illegal arguments.");
     }
+
+    @Test
+    void compressShouldBeRejectedBeforeAuthentication() throws Exception {
+        String reply = testIMAPClient.connect("127.0.0.1", port)
+            .sendCommand("COMPRESS DEFLATE");
+
+        assertThat(reply).contains("AAAA NO COMPRESS failed. Command not valid in this state.");
+    }
 }

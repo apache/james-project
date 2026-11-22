@@ -55,6 +55,16 @@ It is an optional boolean that defaults to `true`.
 | Disables sending heartbeats to the client while processing its request.
 It is an optional boolean that defaults to `true`.
 
+| `maxPipelinedRequests`
+| Requests of a connection are executed one at a time: the requests a client pipelines wait for the request in flight.
+Once this many requests are waiting, James stops reading the connection until they are executed.
+It is an optional integer that defaults to 128.
+
+| `maxPipelinedRequestsBeforeClosing`
+| A single read can still decode many requests, especially with `COMPRESS`.
+Once this many requests are waiting, James answers `* BYE` and closes the connection.
+It is an optional integer that defaults to 4,096, and can not be lower than `maxPipelinedRequests`.
+
 | `disabledCaps`
 | Removes capabilities from the response of the IMAP CAPABILITY command.
 This is an optional, pipe-separated list of strings.
