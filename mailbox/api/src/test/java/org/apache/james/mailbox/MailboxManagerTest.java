@@ -784,6 +784,17 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void getAllAnnotationsShouldThrowNotFoundWhenMailboxIsNotVisible() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
+            MailboxSession ownerSession = mailboxManager.createSystemSession(USER_1);
+            MailboxPath ownerInbox = MailboxPath.inbox(ownerSession);
+            mailboxManager.createMailbox(ownerInbox, ownerSession);
+
+            assertThatThrownBy(() -> mailboxManager.getAllAnnotations(ownerInbox, mailboxManager.createSystemSession(USER_2)))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
         void updateAnnotationsShouldNotOverwriteWhenShareeHasOnlyReadRight() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
@@ -2958,6 +2969,31 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(inbox, sessionUser1);
 
             assertThatThrownBy(() -> mailboxManager.deleteMailbox(inbox, sessionUser2))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void deleteMailboxShouldThrowInsufficientRightsWhenUserCanOnlyLookup() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxSession sessionUser1 = mailboxManager.createSystemSession(USER_1);
+            MailboxSession sessionUser2 = mailboxManager.createSystemSession(USER_2);
+            MailboxPath inbox = MailboxPath.inbox(sessionUser1);
+            mailboxManager.createMailbox(inbox, sessionUser1);
+            mailboxManager.applyRightsCommand(inbox, MailboxACL.command().forUser(USER_2).rights(MailboxACL.Right.Lookup).asAddition(), sessionUser1);
+
+            assertThatThrownBy(() -> mailboxManager.deleteMailbox(inbox, sessionUser2))
+                .isInstanceOf(InsufficientRightsException.class);
+        }
+
+        @Test
+        void renameMailboxShouldNotTellWhetherAnotherUserMailboxExists() throws Exception {
+            MailboxSession sessionUser1 = mailboxManager.createSystemSession(USER_1);
+            MailboxSession sessionUser2 = mailboxManager.createSystemSession(USER_2);
+            mailboxManager.createMailbox(MailboxPath.forUser(USER_1, "existing"), sessionUser1);
+            MailboxPath ownMailbox = MailboxPath.forUser(USER_2, "mbx");
+            mailboxManager.createMailbox(ownMailbox, sessionUser2);
+
+            assertThatThrownBy(() -> mailboxManager.renameMailbox(ownMailbox, MailboxPath.forUser(USER_1, "existing"), sessionUser2))
                 .isInstanceOf(InsufficientRightsException.class);
         }
 
@@ -2971,8 +3007,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxId inboxId = mailboxManager.createMailbox(inbox, sessionUser1).get();
 
             assertThatThrownBy(() -> mailboxManager.deleteMailbox(inboxId, sessionUser2))
-                .isInstanceOf(InsufficientRightsException.class)
-                .hasMessageContaining("is not allowed to delete the mailbox");
+                .isInstanceOf(MailboxNotFoundException.class);
         }
 
         @Test

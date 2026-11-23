@@ -549,10 +549,12 @@ public class StoreMailboxManager implements MailboxManager {
         if (path.belongsTo(session)) {
             return Mono.just(mailbox);
         }
-        return Mono.from(hasRightReactive(path, Right.DeleteMailbox, session))
-            .flatMap(hasRight -> {
-                if (hasRight) {
+        return Mono.from(myRightsReactive(path, session))
+            .flatMap(rights -> {
+                if (rights.contains(Right.DeleteMailbox)) {
                     return Mono.just(mailbox);
+                } else if (!rights.contains(Right.Lookup)) {
+                    return Mono.error(new MailboxNotFoundException(path));
                 }
                 return Mono.error(new InsufficientRightsException("user '" + session.getUser().asString() + "' is not allowed to delete the mailbox '" + path.asString() + "'"));
             });
@@ -733,11 +735,12 @@ public class StoreMailboxManager implements MailboxManager {
 
         Function<MailboxPath, Mono<Boolean>> assertRightToCreate = newMailboxPath -> canCreateReactive(session, mailboxPath);
 
+        // Check the right to create first, not to tell whether a mailbox the user cannot create exists
         return Mono.fromCallable(() -> mailboxPath.sanitize(session.getPathDelimiter()))
-            .filterWhen(assertNewMailboxPathDoesNotExist)
-            .switchIfEmpty(Mono.error(() -> new MailboxExistsException(mailboxPath.toString())))
             .filterWhen(assertRightToCreate)
             .switchIfEmpty(Mono.error(() -> new InsufficientRightsException("user '" + session.getUser().asString() + "' is not allowed to create the mailbox '" + mailboxPath.asString() + "'")))
+            .filterWhen(assertNewMailboxPathDoesNotExist)
+            .switchIfEmpty(Mono.error(() -> new MailboxExistsException(mailboxPath.toString())))
             .flatMap(newMailboxPath -> Mono.fromCallable(() -> newMailboxPath.assertAcceptable(session.getPathDelimiter())));
     }
 
