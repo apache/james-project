@@ -60,6 +60,16 @@ WebAdmin used to send CORS headers allowing any origin whatever `cors.enable`. T
 is `true`, and `cors.origin` is then mandatory: WebAdmin refuses to start without it. A web console served from
 another origin needs both properties set.
 
+### LDAP verifies the host name of ldaps servers
+
+Date: 23/11/2026
+
+Concerned products: the LDAP users repository.
+
+The host name of an `ldaps` server is now checked against its certificate. Make sure the `ldapHost(s)` URLs use a name
+present in the server certificate. `verifyHostname="false"` on the `usersrepository` element restores the former
+behaviour. `trustAllCerts="true"` and `verifyHostname="false"` are reported by a warning at start.
+
 ### Passwords are hashed again at login
 
 Date: 23/11/2026

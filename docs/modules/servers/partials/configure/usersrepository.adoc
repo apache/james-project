@@ -75,19 +75,28 @@ Example:
 </usersrepository>
 ....
 
-SSL can be enabled by using `ldaps` scheme. `trustAllCerts` option can be used to trust all LDAP client certificates
-(optional, defaults to false).
+SSL can be enabled by using `ldaps` scheme. The certificate of the LDAP server is checked against the trust store of
+the JVM, and its host name against the certificate. Add the certificate authority of the LDAP server to a trust store
+given to the JVM, for instance in `jvm.properties`:
+
+....
+javax.net.ssl.trustStore=/root/conf/ldap-truststore.p12
+javax.net.ssl.trustStorePassword=changeit
+....
 
 Example:
 
 [source,xml]
 ....
 <usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldaps://myldapserver:636"
-    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"
-    trustAllCerts="true">
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid">
     <enableVirtualHosting>true</enableVirtualHosting>
 </usersrepository>
 ....
+
+`verifyHostname="false"` skips the check of the host name (optional, defaults to true). `trustAllCerts="true"` trusts
+any certificate (optional, defaults to false). Both leave the connection open to an attacker on the network path, and
+are reported by a warning at start: use them only for tests.
 
 Moreover, per domain base DN can be configured:
 
@@ -109,7 +118,7 @@ Example:
 [source,xml]
 ....
 <usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHosts="ldap://ldapServer1:389,ldaps://ldapServer2:636"
-    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid" trustAllCerts="true">
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid">
     <enableVirtualHosting>true</enableVirtualHosting>
 </usersrepository>
 ....
@@ -122,7 +131,7 @@ Example:
 [source,xml]
 ....
 <usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHosts="ldap://ldapServer1:389,ldaps://ldapServer2:636"
-    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" resolveLocalPartAttribute="uid" userIdAttribute="mail" trustAllCerts="true">
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" resolveLocalPartAttribute="uid" userIdAttribute="mail">
     <enableVirtualHosting>true</enableVirtualHosting>
 </usersrepository>
 ....
