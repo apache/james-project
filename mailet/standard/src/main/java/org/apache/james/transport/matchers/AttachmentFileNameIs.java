@@ -22,9 +22,11 @@ package org.apache.james.transport.matchers;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -101,11 +103,11 @@ public class AttachmentFileNameIs extends GenericMatcher {
      */
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        return new MimeWalk(configuration, this::partMatch)
+        return new MimeWalk(configuration, this::partMatch, MimeWalk.DESCEND_INTO_ATTACHED_MESSAGES)
             .matchMail(mail);
     }
 
-    private boolean partMatch(Part part) throws MessagingException {
+    private boolean partMatch(Part part) throws MessagingException, IOException {
         Optional<ContentDispositionField> contentDispositionField = Optional.ofNullable(part.getHeader("Content-Disposition"))
             .map(headers -> headers[0])
             .map(value -> "Content-Disposition: " + value)
@@ -119,24 +121,32 @@ public class AttachmentFileNameIs extends GenericMatcher {
             .map(Throwing.function(RawFieldParser.DEFAULT::parseField))
             .map(raw -> ContentTypeFieldLenientImpl.PARSER.parse(raw, DecodeMonitor.SILENT));
 
-        return extractFilename(contentTypeField, contentDispositionField)
+        List<String> fileNames = Stream.of(extractContentTypeName(contentTypeField), contentDispositionField.map(ContentDispositionField::getFilename))
+            .flatMap(Optional::stream)
+            .map(MimeUtil::unscrambleHeaderValue)
             .map(AttachmentFileNameIs::cleanFileName)
-            .map(Throwing.function(fileName -> {
-                if (matchFound(fileName)) {
-                    if (configuration.isDebug()) {
-                        LOGGER.debug("matched {}", fileName);
-                    }
-                    return true;
+            .distinct()
+            .toList();
+
+        for (String fileName : fileNames) {
+            if (matchFound(fileName)) {
+                if (configuration.isDebug()) {
+                    LOGGER.debug("matched {}", fileName);
                 }
-                if (configuration.unzipIsRequested() && fileName.endsWith(ZIP_SUFFIX) && matchFoundInZip(part)) {
-                    return true;
-                }
-                return false;
-            }))
-            .orElse(false);
+                return true;
+            }
+        }
+        return configuration.unzipIsRequested() && isZip(part, fileNames) && matchFoundInZip(part);
     }
 
-    private Optional<String> extractFilename(Optional<ContentTypeField> contentTypeField, Optional<ContentDispositionField> contentDispositionField) {
+    private boolean isZip(Part part, List<String> fileNames) throws MessagingException {
+        return fileNames.stream().anyMatch(fileName -> fileName.endsWith(ZIP_SUFFIX))
+            || part.isMimeType("application/zip")
+            || part.isMimeType("application/x-zip")
+            || part.isMimeType("application/x-zip-compressed");
+    }
+
+    private Optional<String> extractContentTypeName(Optional<ContentTypeField> contentTypeField) {
         Comparator<Map.Entry<String, String>> comparingName = (e1, e2) -> extractParameterName(e1.getKey()).compareTo(extractParameterName(e2.getKey()));
         Comparator<Map.Entry<String, String>> comparingPartNumbers = (e1, e2) -> Integer.compare(extractPartNumber(e1.getKey()),
             extractPartNumber(e2.getKey()));
@@ -148,9 +158,7 @@ public class AttachmentFileNameIs extends GenericMatcher {
                     .sorted(comparingName.thenComparing(comparingPartNumbers))
                     .forEach(e -> mimeParameterMapping.addParameter(e.getKey(), e.getValue()));
                 return Optional.ofNullable(mimeParameterMapping.get("name"));
-            })
-            .or(() -> contentDispositionField.map(ContentDispositionField::getFilename))
-            .map(MimeUtil::unscrambleHeaderValue);
+            });
     }
 
     String extractParameterName(String name) {

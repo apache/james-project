@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -667,6 +668,90 @@ class AttachmentFileNameIsTest {
         testee.init(FakeMatcherConfig.builder()
             .matcherName("AttachmentFileNameIs")
             .condition("-z *.exe")
+            .build());
+
+        assertThat(testee.match(mail))
+            .containsOnly(ANY_AT_JAMES);
+    }
+
+    @Test
+    void shouldMatchTheContentDispositionFileNameWhenTheContentTypeNameDiffers() throws Exception {
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .recipient(ANY_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromString("Content-Type: application/octet-stream; name=\"invoice.pdf\"\r\n" +
+                "Content-Disposition: attachment; filename=\"invoice.exe\"\r\n" +
+                "\r\n" +
+                "content\r\n"))
+            .build();
+
+        AttachmentFileNameIs testee = new AttachmentFileNameIs();
+
+        testee.init(FakeMatcherConfig.builder()
+            .matcherName("AttachmentFileNameIs")
+            .condition("*.exe")
+            .build());
+
+        assertThat(testee.match(mail))
+            .containsOnly(ANY_AT_JAMES);
+    }
+
+    @Test
+    void shouldLookupIntoZipNamedOnlyByTheContentDisposition() throws Exception {
+        ByteArrayOutputStream zip = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(zip)) {
+            zos.putNextEntry(new ZipEntry("x.exe"));
+            zos.write("content".getBytes(StandardCharsets.UTF_8));
+            zos.closeEntry();
+        }
+
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .recipient(ANY_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromString("Content-Type: application/octet-stream; name=\"a.txt\"\r\n" +
+                "Content-Disposition: attachment; filename=\"a.zip\"\r\n" +
+                "Content-Transfer-Encoding: base64\r\n" +
+                "\r\n" +
+                Base64.getMimeEncoder().encodeToString(zip.toByteArray()) + "\r\n"))
+            .build();
+
+        AttachmentFileNameIs testee = new AttachmentFileNameIs();
+
+        testee.init(FakeMatcherConfig.builder()
+            .matcherName("AttachmentFileNameIs")
+            .condition("-z *.exe")
+            .build());
+
+        assertThat(testee.match(mail))
+            .containsOnly(ANY_AT_JAMES);
+    }
+
+    @Test
+    void shouldMatchInAttachedMessages() throws Exception {
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .recipient(ANY_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromString("Content-Type: multipart/mixed; boundary=\"outer\"\r\n" +
+                "\r\n" +
+                "--outer\r\n" +
+                "Content-Type: message/rfc822\r\n" +
+                "\r\n" +
+                "Content-Type: multipart/mixed; boundary=\"inner\"\r\n" +
+                "\r\n" +
+                "--inner\r\n" +
+                "Content-Type: application/octet-stream\r\n" +
+                "Content-Disposition: attachment; filename=\"x.exe\"\r\n" +
+                "\r\n" +
+                "content\r\n" +
+                "--inner--\r\n" +
+                "--outer--\r\n"))
+            .build();
+
+        AttachmentFileNameIs testee = new AttachmentFileNameIs();
+
+        testee.init(FakeMatcherConfig.builder()
+            .matcherName("AttachmentFileNameIs")
+            .condition("*.exe")
             .build());
 
         assertThat(testee.match(mail))
