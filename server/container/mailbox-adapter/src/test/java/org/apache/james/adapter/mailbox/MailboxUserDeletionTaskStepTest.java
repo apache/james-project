@@ -205,6 +205,20 @@ class MailboxUserDeletionTaskStepTest {
     }
 
     @Test
+    void shouldRevokeRightsWithoutLookupOnSharedMailboxes() throws Exception {
+        MailboxSession bobSession = mailboxManager.createSystemSession(BOB);
+        mailboxManager.createMailbox(MailboxPath.inbox(BOB), MailboxManager.CreateOption.NONE, bobSession);
+        mailboxManager.applyRightsCommand(MailboxPath.inbox(BOB),
+            MailboxACL.command().forUser(ALICE).rights(MailboxACL.Right.Read).asAddition(),
+            bobSession);
+
+        Mono.from(testee.deleteUserData(ALICE)).block();
+
+        assertThat(mailboxManager.listRights(MailboxPath.inbox(BOB), bobSession).getEntries())
+            .doesNotContainKey(MailboxACL.EntryKey.createUserEntryKey(ALICE));
+    }
+
+    @Test
     void shouldBeIdempotent() {
         Mono.from(testee.deleteUserData(ALICE)).block();
 
