@@ -44,6 +44,7 @@ import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.protocols.api.Response;
+import org.apache.james.protocols.api.StartTlsResponse;
 import org.apache.james.protocols.api.handler.ClientAddressConnectHandler;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
@@ -215,7 +216,7 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                     // TODO: This kind of sucks but I was able to come up with something more elegant here
                     ((ProtocolSessionImpl) pSession).getProtocolTransport().writeResponse(response, pSession);
                 }
-                if (pSession.needsCommandInjectionDetection()) {
+                if (!(response instanceof StartTlsResponse)) {
                     // The line was processed without starting TLS: a refused STARTTLS must not block the next commands
                     AllButStartTlsLineBasedChannelHandler.clearStartTlsInFlight(ctx.channel());
                 }

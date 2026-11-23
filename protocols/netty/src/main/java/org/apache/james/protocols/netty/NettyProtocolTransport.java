@@ -113,6 +113,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
                 channel.config().setAutoRead(false);
                 channel.writeAndFlush(Unpooled.wrappedBuffer(bytes));
                 prepareStartTLS();
+                AllButStartTlsLineBasedChannelHandler.fireTlsHandlerInstalled(channel);
                 channel.config().setAutoRead(true);
             });
         }
@@ -128,6 +129,7 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
     protected void writeToClient(InputStream in, ProtocolSession session, boolean startTLS) {
         if (startTLS) {
             prepareStartTLS();
+            AllButStartTlsLineBasedChannelHandler.fireTlsHandlerInstalled(channel);
         }
         if (!isTLSStarted() && in instanceof FileInputStream) {
             FileChannel fChannel = ((FileInputStream) in).getChannel();

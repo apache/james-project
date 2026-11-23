@@ -54,10 +54,9 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
             } else {
                 writeToClient(toBytes(response), session, startTLS);
             }
-            // reset state on starttls
+            // reset state on starttls. The STARTTLS check is turned off once the TLS handler is in place
             if (startTLS) {
                 session.resetState();
-                session.stopDetectingCommandInjection();
             }
 
             if (response.isEndSession()) {
