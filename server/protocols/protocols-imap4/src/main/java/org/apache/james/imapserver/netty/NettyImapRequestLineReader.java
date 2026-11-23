@@ -130,7 +130,7 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         if (size + crlf > buffer.readableBytes() && !endsWithABareLf(size, extraCRLF)) {
             // ok let us throw a exception which till the decoder how many more
             // bytes we need
-            throw new NotEnoughDataException(size + read + crlf, crlf);
+            throw new NotEnoughDataException(readSoFar + size + crlf, crlf);
         }
 
         // Unset the next char.
