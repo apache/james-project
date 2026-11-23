@@ -224,6 +224,32 @@ class DropListRoutesTest {
     }
 
     @Test
+    void anEntryAddedWithUpperCaseShouldBeFoundAndRemovedThroughTheSameUrl() {
+        String path = DropListRoutes.DROP_LIST + "/user/Bob@Owner.com/Spam@Crime.com";
+        when().put(path).then().statusCode(HttpStatus.NO_CONTENT_204);
+
+        when().get(DropListRoutes.DROP_LIST + "/user/Bob@Owner.com")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body(".", containsInAnyOrder("spam@crime.com"));
+        when().head(path).then().statusCode(HttpStatus.NO_CONTENT_204);
+
+        when().delete(path).then().statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(getResultDropList("user", "bob@owner.com")).isEmpty();
+    }
+
+    @Test
+    void aDomainEntryAddedWithUpperCaseShouldBeRemovedThroughTheSameUrl() {
+        String path = DropListRoutes.DROP_LIST + "/domain/Owner.com/Crime.com";
+        when().put(path).then().statusCode(HttpStatus.NO_CONTENT_204);
+
+        when().delete(path).then().statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(getResultDropList("domain", "owner.com")).doesNotContain("crime.com");
+    }
+
+    @Test
     void deleteShouldReturnNotFoundWhenUsedWithEmptyEntry() {
         given()
             .delete(SEPARATOR)
