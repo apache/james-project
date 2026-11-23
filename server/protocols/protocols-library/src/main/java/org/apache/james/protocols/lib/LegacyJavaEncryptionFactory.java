@@ -19,6 +19,7 @@
 
 package org.apache.james.protocols.lib;
 
+import java.io.FileNotFoundException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertPathBuilder;
 import java.security.cert.PKIXBuilderParameters;
@@ -62,6 +63,11 @@ public class LegacyJavaEncryptionFactory implements Encryption.Factory {
             char[] passwordAsCharArray = Optional.ofNullable(sslConfig.getSecret())
                     .orElse("")
                     .toCharArray();
+            if (!fileSystem.getFile(sslConfig.getKeystore()).exists()) {
+                throw new FileNotFoundException("Keystore " + sslConfig.getKeystore() + " not found: provide a keystore at this location, "
+                    + "or point the keystore setting to an existing one (Guice applications can also generate one "
+                    + "with the --generate-keystore option)");
+            }
             LOGGER.debug("Building SSL config for keystore({}) at {}", sslConfig.getKeystoreType(), fileSystem.getFile(sslConfig.getKeystore()).toPath().toAbsolutePath());
             sslFactoryBuilder.withIdentityMaterial(
                     fileSystem.getFile(sslConfig.getKeystore()).toPath(),
