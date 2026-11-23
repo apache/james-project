@@ -50,7 +50,8 @@ public class RunningOptions {
                 try {
                     return Iterators.toStream(messageResult.getHeaders().headers())
                         .filter(header -> header.getName().equalsIgnoreCase(RspamdScanner.FLAG_MAIL.asString()))
-                        .findFirst()
+                        // The flag added by James comes after any copy written by the sender
+                        .reduce((first, second) -> second)
                         .map(header -> header.getValue().equalsIgnoreCase(value))
                         // Message was not classified by Rspamd, include it
                         .orElse(true);
