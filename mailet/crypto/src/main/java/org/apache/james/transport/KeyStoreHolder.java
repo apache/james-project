@@ -19,6 +19,7 @@
 
 package org.apache.james.transport;
 
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -61,6 +62,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * This class is used to handle in a simple way a keystore that contains a set
@@ -259,6 +261,18 @@ public class KeyStoreHolder {
         return false;
     }
 
+    private static final String EMAIL_PROTECTION = "1.3.6.1.5.5.7.3.4";
+    private static final int DIGITAL_SIGNATURE = 0;
+    private static final int NON_REPUDIATION = 1;
+
+    /**
+     * RFC 8550 section 4.4.2: the key usage, when present, allows digitalSignature or nonRepudiation.
+     */
+    private static boolean allowsSigningMail(X509Certificate certificate) {
+        boolean[] keyUsage = certificate.getKeyUsage();
+        return keyUsage == null || keyUsage[DIGITAL_SIGNATURE] || keyUsage[NON_REPUDIATION];
+    }
+
     private static PublicKey anchorKey(TrustAnchor anchor) {
         return Optional.ofNullable(anchor.getTrustedCert())
             .map(X509Certificate::getPublicKey)
@@ -307,8 +321,18 @@ public class KeyStoreHolder {
             throw new MessagingException("Error during the creation of the certpathbuilder.", e);
         }
         
+        if (!allowsSigningMail(cert)) {
+            LOGGER.info("{} is not a certificate for signing mail", cert.getSubjectX500Principal());
+            return null;
+        }
         X509CertSelector xcs = new X509CertSelector();
         xcs.setCertificate(cert);
+        try {
+            // A certificate without the extension allows every purpose (RFC 5280 section 4.2.1.12)
+            xcs.setExtendedKeyUsage(ImmutableSet.of(EMAIL_PROTECTION));
+        } catch (IOException e) {
+            throw new MessagingException("Invalid extended key usage", e);
+        }
         PKIXBuilderParameters params = new PKIXBuilderParameters(trustedStore, xcs);
         params.addCertStore(store);
         params.setRevocationEnabled(false);
