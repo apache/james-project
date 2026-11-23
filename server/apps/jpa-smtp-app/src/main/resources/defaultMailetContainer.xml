@@ -64,16 +64,12 @@
     </processor>
 
     <processor state="local-address-error" enableJmx="false">
-        <mailet match="All" class="Bounce">
-            <attachment>none</attachment>
-        </mailet>
+        <!-- No bounce: the sender of a refused mail is not authenticated, and could be forged -->
         <mailet match="All" class="Null"/>
     </processor>
 
     <processor state="relay-denied" enableJmx="false">
-        <mailet match="All" class="Bounce">
-            <attachment>none</attachment>
-        </mailet>
+        <!-- No bounce: the sender of a refused mail is not authenticated, and could be forged -->
         <mailet match="All" class="Null"/>
     </processor>
 
