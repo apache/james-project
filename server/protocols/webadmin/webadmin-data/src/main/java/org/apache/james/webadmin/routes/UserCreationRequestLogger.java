@@ -27,6 +27,8 @@ import static org.apache.james.webadmin.mdc.LoggingRequestFilter.METHOD;
 import static org.apache.james.webadmin.mdc.LoggingRequestFilter.QUERY_PARAMETERS;
 import static org.apache.james.webadmin.mdc.LoggingRequestFilter.REQUEST_ID;
 
+import java.util.regex.Pattern;
+
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.webadmin.mdc.RequestId;
 import org.apache.james.webadmin.mdc.RequestLogger;
@@ -35,12 +37,19 @@ import com.google.common.collect.ImmutableSet;
 
 import spark.Request;
 
-// This class skips logging of the body for user creation requests as it contains the user password
+// This class skips logging of the body for user creation and password verification requests as it contains the user password
 public class UserCreationRequestLogger implements RequestLogger {
+    private static final Pattern SLASHES = Pattern.compile("/+");
+
     @Override
     public boolean applies(Request request) {
-        return request.uri().startsWith(UserRoutes.USERS)
-            && request.requestMethod().equals("PUT");
+        // Route matching ignores empty path segments
+        String path = SLASHES.matcher(request.uri() + "/").replaceAll("/");
+        if (!path.startsWith(UserRoutes.USERS)) {
+            return false;
+        }
+        return request.requestMethod().equals("PUT")
+            || (request.requestMethod().equals("POST") && path.endsWith("/verify/"));
     }
 
     @Override
