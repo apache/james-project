@@ -29,9 +29,14 @@ import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RequestAware;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.acl.MailboxACLResolver;
+import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
+import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.transaction.Mapper;
@@ -47,6 +52,7 @@ import reactor.core.publisher.Mono;
  */
 public class StoreSubscriptionManager implements SubscriptionManager {
     private static final int INITIAL_SIZE = 32;
+    private static final MailboxACLResolver ACL_RESOLVER = new UnionMailboxACLResolver();
     
     protected SubscriptionMapperFactory mapperFactory;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
@@ -90,6 +96,7 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     private Mono<Void> dispatchSubscribedEvent(MailboxSession session, MailboxPath mailboxPath) {
         return mailboxSessionMapperFactory.getMailboxMapper(session)
             .findMailboxByPath(mailboxPath)
+            .filter(mailbox -> isVisible(session, mailbox))
             .flatMap(mailbox -> eventBus.dispatch(EventFactory.mailboxSubscribed()
                     .randomEventId()
                     .mailboxSession(session)
@@ -148,9 +155,23 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         dispatchUnSubscribedEvent(session, mailbox).block();
     }
 
+    private boolean isVisible(MailboxSession session, Mailbox mailbox) {
+        if (mailbox.generateAssociatedPath().belongsTo(session)) {
+            return true;
+        }
+        // The effective rights: those of anyone and of authenticated users count too
+        try {
+            return ACL_RESOLVER.resolveRights(session.getUser(), mailbox.getACL(), mailbox.getUser())
+                .contains(MailboxACL.Right.Lookup);
+        } catch (UnsupportedRightException e) {
+            return false;
+        }
+    }
+
     private Mono<Void> dispatchUnSubscribedEvent(MailboxSession session, MailboxPath mailboxPath) {
         return mailboxSessionMapperFactory.getMailboxMapper(session)
             .findMailboxByPath(mailboxPath)
+            .filter(mailbox -> isVisible(session, mailbox))
             .flatMap(mailbox -> eventBus.dispatch(EventFactory.mailboxUnSubscribed()
                     .randomEventId()
                     .mailboxSession(session)
