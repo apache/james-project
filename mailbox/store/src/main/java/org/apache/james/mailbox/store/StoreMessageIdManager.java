@@ -82,6 +82,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -599,13 +600,23 @@ public class StoreMessageIdManager implements MessageIdManager {
                             .userFlagFilter(f -> shouldPreserveFlags)
                             .build())
                     .build();
-                // RFC 3501 section 6.4.7: a copy is \Recent, as the range copies and moves of the mappers
-                flags.add(Flags.Flag.RECENT);
-                copy.setFlags(flags);
+                copy.setFlags(markRecent(flags, StoreMessageManager.HANDLE_RECENT));
 
                 return save(messageIdMapper, copy, mailbox, mailboxSession)
                     .map(metadata -> addedEvent(mailboxSession, mailbox, metadata, messageMoves));
             }).sneakyThrow());
+    }
+
+    /**
+     * RFC 3501 section 6.4.7: a copy is \Recent, as the range copies and moves of the mappers, unless the deployment
+     * turned the \Recent handling off, as for APPEND.
+     */
+    @VisibleForTesting
+    static Flags markRecent(Flags flags, boolean handleRecent) {
+        if (handleRecent) {
+            flags.add(Flags.Flag.RECENT);
+        }
+        return flags;
     }
 
     private EventWithRegistrationKey addedEvent(MailboxSession mailboxSession, Mailbox mailbox, MessageMetaData messageMetaData, MessageMovesWithMailbox messageMoves) {
