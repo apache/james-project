@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.time.DateTimeException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.Recur;
@@ -48,8 +50,10 @@ import net.fortuna.ical4j.model.property.RRule;
  * Custom timezones keep the rules supplied in the calendar.
  *
  * ical4j takes an ID out of a JVM wide pool (1500 by default) for each registered custom timezone, and only gives it
- * back once the registry is garbage collected: a calendar registers at most {@value #MAX_CUSTOM_TIMEZONES_PER_CALENDAR}
- * custom timezones, a repeated TZID being registered once (the first definition is kept).
+ * back once the registry is garbage collected, not when it is cleared: the custom timezones are counted against a
+ * budget ({@value #MAX_CUSTOM_TIMEZONES} by default) that registries may share, eg the calendars of a mail. A repeated
+ * TZID is registered once, the first definition being kept, update or not. Neither budget is given back by
+ * {@link #clear()}.
  *
  * Registering a custom timezone makes ical4j materialize all the occurrences of its recurrence rules, so their
  * cost is bounded first. One instance serves one calendar: the limit applies to all its timezones. A rule above
@@ -63,11 +67,27 @@ public class ICal4JTimeZoneRegistry implements TimeZoneRegistry {
     // Observance#getLatestOnset expands the rules up to 10 years ahead
     private static final int HORIZON_IN_YEARS = 10;
     // Invitations carry one timezone per distinct TZID they use, often a single one
-    static final int MAX_CUSTOM_TIMEZONES_PER_CALENDAR = 20;
+    public static final int MAX_CUSTOM_TIMEZONES = 20;
 
     private final TimeZoneRegistryImpl delegate = new TimeZoneRegistryImpl();
     private final Set<String> customTimezoneIds = new HashSet<>();
+    private final AtomicInteger remainingCustomTimezones;
     private long remainingOccurrences = MAX_OCCURRENCES_PER_CALENDAR;
+
+    public ICal4JTimeZoneRegistry() {
+        this(newCustomTimezoneBudget());
+    }
+
+    /**
+     * @param remainingCustomTimezones the custom timezones this registry may still register, shared with other registries
+     */
+    public ICal4JTimeZoneRegistry(AtomicInteger remainingCustomTimezones) {
+        this.remainingCustomTimezones = remainingCustomTimezones;
+    }
+
+    public static AtomicInteger newCustomTimezoneBudget() {
+        return new AtomicInteger(MAX_CUSTOM_TIMEZONES);
+    }
 
     @Override
     public void register(TimeZone timezone) {
@@ -82,8 +102,8 @@ public class ICal4JTimeZoneRegistry implements TimeZoneRegistry {
             if (customTimezoneIds.contains(timezone.getID())) {
                 return;
             }
-            if (customTimezoneIds.size() >= MAX_CUSTOM_TIMEZONES_PER_CALENDAR) {
-                throw new IllegalArgumentException("More than " + MAX_CUSTOM_TIMEZONES_PER_CALENDAR + " custom timezones in a calendar");
+            if (remainingCustomTimezones.getAndDecrement() <= 0) {
+                throw new IllegalArgumentException("Too many custom timezones, " + timezone.getID() + " is not registered");
             }
             assertRecurrenceCostIsBounded(timezone);
             delegate.register(timezone, update);
@@ -131,9 +151,19 @@ public class ICal4JTimeZoneRegistry implements TimeZoneRegistry {
     private OffsetDateTime initialOnset(Observance observance) {
         Optional<DtStart<Temporal>> dtStart = observance.getProperty(Property.DTSTART);
         return dtStart.map(DtStart::getDate)
-            .map(date -> date.isSupported(ChronoField.HOUR_OF_DAY) ? LocalDateTime.from(date) : LocalDate.from(date).atStartOfDay())
-            .orElse(LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC))
-            .atOffset(ZoneOffset.UTC);
+            .map(ICal4JTimeZoneRegistry::asUtcOnset)
+            .orElse(LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC).atOffset(ZoneOffset.UTC));
+    }
+
+    // A UTC DTSTART (eg 16010101T000000Z) is read as an Instant
+    private static OffsetDateTime asUtcOnset(Temporal date) {
+        if (date.isSupported(ChronoField.INSTANT_SECONDS)) {
+            return Instant.from(date).atOffset(ZoneOffset.UTC);
+        }
+        if (date.isSupported(ChronoField.HOUR_OF_DAY)) {
+            return LocalDateTime.from(date).atOffset(ZoneOffset.UTC);
+        }
+        return LocalDate.from(date).atStartOfDay().atOffset(ZoneOffset.UTC);
     }
 
     @Override
