@@ -61,7 +61,6 @@ import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -129,18 +128,25 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
 
     private Mono<MailboxStatusResponse> sendStatus(MailboxPath mailboxPath, StatusDataItems statusDataItems, Responder responder, ImapSession session, MailboxSession mailboxSession) {
         return Mono.from(getMailboxManager().getMailboxReactive(mailboxPath, mailboxSession))
-            .<MessageManager>handle(Throwing.biConsumer((mailbox, sink) -> {
-                if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.Read, mailboxSession)) {
-                    sink.next(mailbox);
-                } else {
-                    sink.error(new InsufficientRightsException("'r' right is needed to status a mailbox"));
-                }
-            }))
-            .flatMap(mailbox -> sendStatus(mailbox, statusDataItems, responder, session, mailboxSession));
+            .flatMap(mailbox -> sendStatusRequiringReadRight(mailbox, statusDataItems, responder, session, mailboxSession));
     }
 
+    /**
+     * Used by LIST RETURN (STATUS): no STATUS line is sent for a mailbox the user can not read.
+     */
     Mono<MailboxStatusResponse> sendStatus(MessageManager mailbox, StatusDataItems statusDataItems, Responder responder, ImapSession session, MailboxSession mailboxSession) {
-        return retrieveMetadata(mailbox, statusDataItems, mailboxSession)
+        return sendStatusRequiringReadRight(mailbox, statusDataItems, responder, session, mailboxSession)
+            .onErrorResume(InsufficientRightsException.class, e -> Mono.empty());
+    }
+
+    private Mono<MailboxStatusResponse> sendStatusRequiringReadRight(MessageManager mailbox, StatusDataItems statusDataItems, Responder responder, ImapSession session, MailboxSession mailboxSession) {
+        return Mono.fromCallable(() -> getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.Read, mailboxSession))
+            .flatMap(hasReadRight -> {
+                if (hasReadRight) {
+                    return retrieveMetadata(mailbox, statusDataItems, mailboxSession);
+                }
+                return Mono.error(new InsufficientRightsException("'r' right is needed to status a mailbox"));
+            })
             .flatMap(metaData -> computeStatusResponse(mailbox, statusDataItems, metaData, mailboxSession)
                 .doOnNext(response -> {
                     // Enable CONDSTORE as this is a CONDSTORE enabling command
