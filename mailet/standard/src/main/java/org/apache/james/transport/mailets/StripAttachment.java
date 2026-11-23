@@ -27,6 +27,8 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -280,6 +282,19 @@ public class StripAttachment extends GenericMailet {
         if (!isMultipart(part)) {
             return false;
         }
+        PartContents contents = new PartContents(attributeName.flatMap(name ->
+            AttributeUtils.getValueAndCastFromMail(mail, name, MAP_STRING_BYTES_CLASS)));
+        try {
+            return processMultipartPartMessage(part, mail, contents);
+        } finally {
+            attributeName.ifPresent(name -> contents.storeIn(mail, name));
+        }
+    }
+
+    private boolean processMultipartPartMessage(Part part, Mail mail, PartContents contents) throws MailetException {
+        if (!isMultipart(part)) {
+            return false;
+        }
 
         try {
             Multipart multipart = (Multipart) part.getContent();
@@ -288,7 +303,7 @@ public class StripAttachment extends GenericMailet {
             List<BodyPart> bodyParts = MultipartUtil.retrieveBodyParts(multipart);
             for (BodyPart bodyPart: bodyParts) {
                 if (isMultipart(bodyPart)) {
-                    if (processMultipartPartMessage(bodyPart, mail)) {
+                    if (processMultipartPartMessage(bodyPart, mail, contents)) {
                         subpartHasBeenChanged = true;
                     }
                     // Also covers multiparts parsed without any part (truncated input): Jakarta Mail can not write
@@ -297,7 +312,7 @@ public class StripAttachment extends GenericMailet {
                         multipart.removeBodyPart(bodyPart);
                     }
                 } else {
-                    if (shouldBeRemoved(bodyPart, mail)) {
+                    if (shouldBeRemoved(bodyPart, mail, contents)) {
                         multipart.removeBodyPart(bodyPart);
                         atLeastOneRemoved = true;
                     }
@@ -376,14 +391,14 @@ public class StripAttachment extends GenericMailet {
         }
     }
 
-    private boolean shouldBeRemoved(BodyPart bodyPart, Mail mail) throws MessagingException, Exception {
+    private boolean shouldBeRemoved(BodyPart bodyPart, Mail mail, PartContents contents) throws MessagingException, Exception {
         String fileName = getFilename(bodyPart);
 
         boolean shouldRemove = removeAttachments.equals(REMOVE_ALL);
         String decodedName = DecoderUtil.decodeEncodedWords(fileName, DecodeMonitor.SILENT);
         if (isMatching(bodyPart, decodedName)) {
             storeBodyPartAsFile(bodyPart, mail, decodedName);
-            storeBodyPartAsMailAttribute(bodyPart, mail, decodedName);
+            storeBodyPartAsMailAttribute(bodyPart, mail, decodedName, contents);
             if (removeAttachments.equals(REMOVE_MATCHED)) {
                 shouldRemove = true;
             }
@@ -417,26 +432,40 @@ public class StripAttachment extends GenericMailet {
         mail.setAttribute(new Attribute(attributeName, AttributeValue.of(attributeValues.build())));
     }
 
-    private void storeBodyPartAsMailAttribute(BodyPart bodyPart, Mail mail, String fileName) throws IOException, MessagingException {
-        attributeName.ifPresent(Throwing.<AttributeName>consumer(attributeName ->
-            addPartContent(bodyPart, mail, fileName, attributeName)).sneakyThrow());
+    private void storeBodyPartAsMailAttribute(BodyPart bodyPart, Mail mail, String fileName, PartContents contents) throws IOException, MessagingException {
+        if (attributeName.isPresent()) {
+            String key = contents.add(fileName, writeAsBytes(bodyPart));
+            if (!key.equals(fileName)) {
+                LOGGER.info("Duplicated file name {} for {}, stored as {}", fileName, mail.getName(), key);
+            }
+        }
     }
 
-    private void addPartContent(BodyPart bodyPart, Mail mail, String fileName, AttributeName attributeName) throws IOException, MessagingException {
-        ImmutableMap<String, AttributeValue<?>> result = AttributeUtils.getValueAndCastFromMail(mail, attributeName, MAP_STRING_BYTES_CLASS)
-            .map(Throwing.function(previous -> {
-                ImmutableMap.Builder<String, AttributeValue<?>> builder = ImmutableMap.<String, AttributeValue<?>>builder()
-                    .putAll(previous);
-                String key = uniqueKey(previous, fileName);
-                if (!key.equals(fileName)) {
-                    LOGGER.info("Duplicated file name {} for {}, stored as {}", fileName, mail.getName(), key);
-                }
-                builder.put(key, AttributeValue.of(writeAsBytes(bodyPart)));
-                return builder.build();
-            }))
-            .orElse(ImmutableMap.of(fileName, AttributeValue.of(writeAsBytes(bodyPart))));
+    /**
+     * The contents of the matched parts of a mail, set once as the attribute rather than copied for each part.
+     */
+    private static class PartContents {
+        private final Map<String, AttributeValue<?>> contents = new LinkedHashMap<>();
+        // Next counter to try for a duplicated file name
+        private final Map<String, Integer> counters = new HashMap<>();
+        private boolean changed = false;
 
-        mail.setAttribute(new Attribute(attributeName, AttributeValue.of(result)));
+        PartContents(Optional<Map<String, AttributeValue<byte[]>>> previous) {
+            previous.ifPresent(contents::putAll);
+        }
+
+        String add(String fileName, byte[] content) {
+            String key = uniqueKey(contents, fileName, counters);
+            contents.put(key, AttributeValue.of(content));
+            changed = true;
+            return key;
+        }
+
+        void storeIn(Mail mail, AttributeName attributeName) {
+            if (changed) {
+                mail.setAttribute(new Attribute(attributeName, AttributeValue.of(ImmutableMap.copyOf(contents))));
+            }
+        }
     }
 
     /**
@@ -445,15 +474,20 @@ public class StripAttachment extends GenericMailet {
      */
     @VisibleForTesting
     static String uniqueKey(Map<String, ?> existing, String fileName) {
+        return uniqueKey(existing, fileName, new HashMap<>());
+    }
+
+    private static String uniqueKey(Map<String, ?> existing, String fileName, Map<String, Integer> counters) {
         if (!existing.containsKey(fileName)) {
             return fileName;
         }
         int extensionIndex = fileName.lastIndexOf('.');
         String baseName = extensionIndex > 0 ? fileName.substring(0, extensionIndex) : fileName;
         String extension = extensionIndex > 0 ? fileName.substring(extensionIndex) : "";
-        for (int counter = 1; ; counter++) {
+        for (int counter = counters.getOrDefault(fileName, 1); ; counter++) {
             String candidate = baseName + "-" + counter + extension;
             if (!existing.containsKey(candidate)) {
+                counters.put(fileName, counter + 1);
                 return candidate;
             }
         }
