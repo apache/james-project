@@ -38,6 +38,17 @@ Change list:
  - [DKIMHook checks every malformed From header](#dkimhook-checks-every-malformed-from-header)
  - [POP3 UIDL unique-ids include the mailbox UIDVALIDITY](#pop3-uidl-unique-ids-include-the-mailbox-uidvalidity)
  - [WebAdmin CORS headers require cors.enable and cors.origin](#webadmin-cors-headers-require-corsenable-and-corsorigin)
+ - [IPv6 network prefixes apply as written](#ipv6-network-prefixes-apply-as-written)
+
+### IPv6 network prefixes apply as written
+
+Date: 23/11/2026
+
+Concerned products: configurations listing IPv6 networks, for instance `authorizedAddresses` in `smtpserver.xml`
+
+The prefix length of an IPv6 network (`2001:db8::/48`) was turned into a mask of whole bytes, which matched much wider
+or narrower networks than written. It now applies bit by bit, an address without prefix stands for itself (`/128`),
+and a prefix beyond 128 is refused. Review the IPv6 networks of your configuration.
 
 ### WebAdmin CORS headers require cors.enable and cors.origin
 

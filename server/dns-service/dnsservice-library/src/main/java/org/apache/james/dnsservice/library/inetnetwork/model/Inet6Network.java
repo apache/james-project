@@ -18,14 +18,17 @@
  ****************************************************************/
 package org.apache.james.dnsservice.library.inetnetwork.model;
 
+import java.math.BigInteger;
 import java.net.Inet6Address;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import org.apache.james.dnsservice.library.inetnetwork.InetNetworkBuilder;
 
+import com.google.common.net.InetAddresses;
+
 
 public class Inet6Network implements InetNetwork {
+    public static final int MAX_PREFIX_LENGTH = 128;
 
     /**
      * The IP address on which a subnet mask is applied.
@@ -45,6 +48,9 @@ public class Inet6Network implements InetNetwork {
      * @param netmask the InetAddress represent the netmask to init the class
      */
     public Inet6Network(InetAddress ip, Integer netmask) {
+        if (netmask < 0 || netmask > MAX_PREFIX_LENGTH) {
+            throw new IllegalArgumentException("Invalid IPv6 prefix length " + netmask);
+        }
         network = maskIP(ip, netmask);
         this.netmask = netmask;
     }
@@ -76,62 +82,15 @@ public class Inet6Network implements InetNetwork {
         return (obj instanceof InetNetwork) && ((((Inet6Network) obj).network.equals(network)) && (((Inet6Network) obj).netmask.equals(netmask)));
     }
 
-    private static InetAddress maskIP(InetAddress ip, Integer mask) {
-        byte[] maskBytes = new byte[16];
-        int i = 0;
-        while (mask > 0) {
-            maskBytes[i] = (byte) 255;
-            i++;
-            mask = (mask >> 1);
-        }
-        return maskIP(ip.getAddress(), maskBytes);
-    }
-
     /**
-     * Return InetAddress generated of the passed arguments. Return Null if any
-     * error occurs
-     *
-     * @param ip   the byte[] represent the ip
-     * @param mask the byte[] represent the netmask
-     * @return inetAddress the InetAddress generated of the passed arguments.
+     * The network part of the address: its first prefixLength bits, the following ones set to 0.
      */
-    private static InetAddress maskIP(byte[] ip, byte[] mask) {
-        if (ip.length != mask.length) {
-            throw new IllegalArgumentException("IP address and mask must be of the same length.");
+    private static InetAddress maskIP(InetAddress ip, int prefixLength) {
+        if (!(ip instanceof Inet6Address)) {
+            throw new IllegalArgumentException("Not an IPv6 address: " + ip);
         }
-        if (ip.length != 16) {
-            throw new IllegalArgumentException("IP address and mask length must be equal to 16.");
-        }
-        try {
-            byte[] maskedIp = new byte[ip.length];
-            for (int i = 0; i < ip.length; i++) {
-                maskedIp[i] = (byte) (ip[i] & mask[i]);
-            }
-            return getByAddress(maskedIp);
-        } catch (UnknownHostException e) {
-            return null;
-        }
+        int hostBits = MAX_PREFIX_LENGTH - prefixLength;
+        BigInteger networkPart = InetAddresses.toBigInteger(ip).shiftRight(hostBits).shiftLeft(hostBits);
+        return InetAddresses.fromIPv6BigInteger(networkPart);
     }
-
-    /**
-     * Return InetAddress which represent the given byte[]
-     *
-     * @param ip the byte[] represent the ip
-     * @return ip the InetAddress generated of the given byte[]
-     * @throws java.net.UnknownHostException
-     */
-    private static InetAddress getByAddress(byte[] ip) throws UnknownHostException {
-
-        InetAddress addr = Inet6Address.getByAddress(ip);
-
-        // TODO Don't know if this is correct?
-        if (addr == null) {
-            addr = InetAddress.getByName(Integer.toString(ip[0] & 0xFF, 10) + ":" + Integer.toString(ip[1] & 0xFF, 10) + ":" + Integer.toString(ip[2] & 0xFF, 10) + ":" + Integer.toString(ip[3] & 0xFF, 10) + ":" + Integer.toString(ip[4] & 0xFF, 10) + ":" + Integer.toString(ip[5] & 0xFF, 10) + ":"
-                    + Integer.toString(ip[6] & 0xFF, 10) + ":" + Integer.toString(ip[7] & 0xFF, 10) + ":" + Integer.toString(ip[8] & 0xFF, 10) + ":" + Integer.toString(ip[9] & 0xFF, 10) + ":" + Integer.toString(ip[10] & 0xFF, 10) + ":" + Integer.toString(ip[11] & 0xFF, 10) + ":"
-                    + Integer.toString(ip[12] & 0xFF, 10) + ":" + Integer.toString(ip[13] & 0xFF, 10) + ":" + Integer.toString(ip[14] & 0xFF, 10) + ":" + Integer.toString(ip[15] & 0xFF, 10));
-        }
-
-        return addr;
-    }
-
 }

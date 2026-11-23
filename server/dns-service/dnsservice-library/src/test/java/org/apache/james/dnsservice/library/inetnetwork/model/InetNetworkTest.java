@@ -19,6 +19,7 @@
 package org.apache.james.dnsservice.library.inetnetwork.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -143,6 +144,15 @@ class InetNetworkTest {
         assertThat(network4.toString()).isEqualTo("127.0.0.0/255.255.255.0");
     }
 
+    @Test
+    void inet6NetworkShouldNotContainAnAddressJustOutsideItsPrefix() throws UnknownHostException {
+        Inet6Network network = new Inet6Network(InetAddress.getByName("2001:db8:0:1::"), 64);
+
+        assertThat(network.contains(InetAddress.getByName("2001:db8:0:1:ffff:ffff:ffff:ffff"))).isTrue();
+        assertThat(network.contains(InetAddress.getByName("2001:db8:0:2::"))).isFalse();
+        assertThat(new Inet6Network(InetAddress.getByName("2001:db8::1"), 128).contains(InetAddress.getByName("2001:db8::2"))).isFalse();
+    }
+
     /**
      * Test the Inet6Network.
      */
@@ -159,17 +169,18 @@ class InetNetworkTest {
             assertThat(true).isTrue();
         }
 
-        // Test IP V6 with subnet mask 32768.
+        // Test IP V6 with a subnet mask beyond 128.
         address = InetAddress.getByAddress(getBytesFromAddress("2781:0db8:1234:8612:45ee:0000:f05e:0001"));
-        Integer subnetmask6 = 32768;
-        network6 = new Inet6Network(address, subnetmask6);
-        assertThat(network6.toString()).isEqualTo("2781:db8:1234:8612:45ee:0:f05e:1/32768");
+        InetAddress outOfRangeAddress = address;
+        assertThatThrownBy(() -> new Inet6Network(outOfRangeAddress, 32768))
+            .isInstanceOf(IllegalArgumentException.class);
+        Integer subnetmask6;
 
         // Test IP V6 with subnet mask 128.
         address = InetAddress.getByAddress(getBytesFromAddress("2781:0db8:1234:8612:45ee:0000:f05e:0001"));
         subnetmask6 = 128;
         network6 = new Inet6Network(address, subnetmask6);
-        assertThat(network6.toString()).isEqualTo("2781:db8:1234:8612:0:0:0:0/128");
+        assertThat(network6.toString()).isEqualTo("2781:db8:1234:8612:45ee:0:f05e:1/128");
 
         // Test IP V6 with subnet mask 48.
         address = InetAddress.getByAddress(getBytesFromAddress("2781:0db8:1234:8612:45ee:0000:f05e:0001"));
@@ -181,19 +192,19 @@ class InetNetworkTest {
         address = InetAddress.getByAddress(getBytesFromAddress("2781:0db8:1234:8612:45ee:0000:f05e:0001"));
         subnetmask6 = 16;
         network6 = new Inet6Network(address, subnetmask6);
-        assertThat(network6.toString()).isEqualTo("2781:db8:1200:0:0:0:0:0/16");
+        assertThat(network6.toString()).isEqualTo("2781:0:0:0:0:0:0:0/16");
 
         // Test IP V6 with subnet mask 2.
         address = InetAddress.getByAddress(getBytesFromAddress("2781:0db8:1234:8612:45ee:0000:f05e:0001"));
         subnetmask6 = 2;
         network6 = new Inet6Network(address, subnetmask6);
-        assertThat(network6.toString()).isEqualTo("2781:0:0:0:0:0:0:0/2");
+        assertThat(network6.toString()).isEqualTo("0:0:0:0:0:0:0:0/2");
 
         // Test IP V6 with subnet mask 1.
         address = InetAddress.getByAddress(getBytesFromAddress("2781:0db8:1234:8612:45ee:0000:f05e:0001"));
         subnetmask6 = 1;
         network6 = new Inet6Network(address, subnetmask6);
-        assertThat(network6.toString()).isEqualTo("2700:0:0:0:0:0:0:0/1");
+        assertThat(network6.toString()).isEqualTo("0:0:0:0:0:0:0:0/1");
 
         // Test IP V6 with subnet mask 0.
         address = InetAddress.getByAddress(getBytesFromAddress("2781:0db8:1234:8612:45ee:0000:f05e:0001"));
