@@ -3700,6 +3700,84 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             assertThat(mailboxManager.getMailbox(destination, session2).getMessageCount(session2)).isEqualTo(1);
         }
 
+        private Flags flagsSetByDelegate() {
+            Flags flags = new Flags(Flags.Flag.SEEN);
+            flags.add(Flags.Flag.FLAGGED);
+            flags.add(Flags.Flag.DELETED);
+            flags.add("$Hidden");
+            return flags;
+        }
+
+        private Flags storedFlags(MailboxPath path) throws Exception {
+            return mailboxManager.getMailbox(path, session)
+                .getMessages(MessageRange.all(), FetchGroup.MINIMAL, session)
+                .next()
+                .getFlags();
+        }
+
+        private MailboxPath sharedMailbox(MailboxACL.Right... rights) throws Exception {
+            MailboxPath path = MailboxPath.forUser(USER_1, "shared");
+            mailboxManager.createMailbox(path, session);
+            mailboxManager.setRights(path, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(rights)
+                    .asAddition()),
+                session);
+            return path;
+        }
+
+        @Test
+        void appendShouldDropFlagsTheDelegateIsNotAllowedToSet() throws Exception {
+            MailboxPath path = sharedMailbox(MailboxACL.Right.Lookup, MailboxACL.Right.Insert);
+
+            mailboxManager.getMailbox(path, session2)
+                .appendMessage(AppendCommand.builder().withFlags(flagsSetByDelegate()).build(message), session2);
+
+            Flags storedFlags = storedFlags(path);
+            assertThat(storedFlags.getSystemFlags()).doesNotContain(Flags.Flag.SEEN, Flags.Flag.FLAGGED, Flags.Flag.DELETED);
+            assertThat(storedFlags.getUserFlags()).isEmpty();
+        }
+
+        @Test
+        void appendShouldKeepFlagsTheDelegateIsAllowedToSet() throws Exception {
+            MailboxPath path = sharedMailbox(MailboxACL.Right.Lookup, MailboxACL.Right.Insert,
+                MailboxACL.Right.WriteSeenFlag, MailboxACL.Right.Write, MailboxACL.Right.DeleteMessages);
+
+            mailboxManager.getMailbox(path, session2)
+                .appendMessage(AppendCommand.builder().withFlags(flagsSetByDelegate()).build(message), session2);
+
+            assertThat(storedFlags(path).contains(flagsSetByDelegate())).isTrue();
+        }
+
+        @Test
+        void copyShouldDropFlagsTheDelegateIsNotAllowedToSet() throws Exception {
+            MailboxPath path = sharedMailbox(MailboxACL.Right.Lookup, MailboxACL.Right.Insert);
+            MailboxPath source = MailboxPath.inbox(session2);
+            mailboxManager.createMailbox(source, session2);
+            mailboxManager.getMailbox(source, session2)
+                .appendMessage(AppendCommand.builder().withFlags(flagsSetByDelegate()).build(message), session2);
+
+            mailboxManager.copyMessages(MessageRange.all(), source, path, session2);
+
+            Flags storedFlags = storedFlags(path);
+            assertThat(storedFlags.getSystemFlags()).doesNotContain(Flags.Flag.SEEN, Flags.Flag.FLAGGED, Flags.Flag.DELETED);
+            assertThat(storedFlags.getUserFlags()).isEmpty();
+        }
+
+        @Test
+        void copyShouldKeepFlagsTheDelegateIsAllowedToSet() throws Exception {
+            MailboxPath path = sharedMailbox(MailboxACL.Right.Lookup, MailboxACL.Right.Insert,
+                MailboxACL.Right.WriteSeenFlag, MailboxACL.Right.Write, MailboxACL.Right.DeleteMessages);
+            MailboxPath source = MailboxPath.inbox(session2);
+            mailboxManager.createMailbox(source, session2);
+            mailboxManager.getMailbox(source, session2)
+                .appendMessage(AppendCommand.builder().withFlags(flagsSetByDelegate()).build(message), session2);
+
+            mailboxManager.copyMessages(MessageRange.all(), source, path, session2);
+
+            assertThat(storedFlags(path).contains(flagsSetByDelegate())).isTrue();
+        }
+
         @Test
         void hasRightShouldThrowOnUnknownMailbox() {
             assertThatThrownBy(() -> mailboxManager.hasRight(
