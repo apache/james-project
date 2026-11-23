@@ -118,7 +118,7 @@ public class EnforcedHeaderLimitationHookIntegrationTest {
         smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost>");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
-        smtpProtocol.sendShortMessageData("From: bob@localhost\r\nFrom: bob@localhost\r\nto: aziz@localhost\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\nto: aziz@localhost\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
         assertThat(smtpProtocol.getReplyCode())
             .as("expected message to be sent")
