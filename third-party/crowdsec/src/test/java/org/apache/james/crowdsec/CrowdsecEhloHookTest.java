@@ -51,7 +51,7 @@ class CrowdsecEhloHookTest {
         banIP("--ip", "127.0.0.1");
         SMTPSession session = new BaseFakeSMTPSession() {};
 
-        assertThat(ehloHook.doHelo(session, "localhost")).isEqualTo(HookResult.DENY);
+        assertThat(ehloHook.doHelo(session, "localhost")).isEqualTo(CrowdsecEhloHook.DENY_AND_DISCONNECT);
     }
 
     @Test
@@ -59,7 +59,7 @@ class CrowdsecEhloHookTest {
         banIP("--range", "127.0.0.1/24");
         SMTPSession session = new BaseFakeSMTPSession() {};
 
-        assertThat(ehloHook.doHelo(session, "localhost")).isEqualTo(HookResult.DENY);
+        assertThat(ehloHook.doHelo(session, "localhost")).isEqualTo(CrowdsecEhloHook.DENY_AND_DISCONNECT);
     }
 
     @Test

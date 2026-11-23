@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 
-import org.apache.commons.net.util.SubnetUtils;
 import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
 import org.apache.james.crowdsec.client.CrowdsecHttpClient;
 import org.apache.james.crowdsec.model.CrowdsecDecision;
@@ -44,26 +43,8 @@ class CrowdsecService {
         return crowdsecHttpClient.getCrowdsecDecisions()
                 .map(decisions ->
                         decisions.stream().filter(
-                                decision -> isBanned(decision, remoteAddress.getAddress().getHostAddress())
+                                decision -> CrowdsecUtils.isBanned(decision, remoteAddress.getAddress().getHostAddress())
                         ).collect(Collectors.toList())
                 );
     }
-
-    private boolean isBanned(CrowdsecDecision decision, String ip) {
-        if (decision.getScope().equals("Ip") && ip.contains(decision.getValue())) {
-            return true;
-        }
-        if (decision.getScope().equals("Range") && belongsToNetwork(decision.getValue(), ip)) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean belongsToNetwork(String bannedRange, String ip) {
-        SubnetUtils subnetUtils = new SubnetUtils(bannedRange);
-        subnetUtils.setInclusiveHostCount(true);
-
-        return subnetUtils.getInfo().isInRange(ip);
-    }
-
 }

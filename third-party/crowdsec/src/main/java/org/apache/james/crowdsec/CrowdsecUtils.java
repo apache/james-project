@@ -19,21 +19,42 @@
 
 package org.apache.james.crowdsec;
 
-import org.apache.commons.net.util.SubnetUtils;
+import java.net.InetAddress;
+
 import org.apache.james.crowdsec.model.CrowdsecDecision;
+
+import com.google.common.net.InetAddresses;
 
 public class CrowdsecUtils {
     public static boolean isBanned(CrowdsecDecision decision, String ip) {
-        if (decision.getScope().equals("Ip") && ip.contains(decision.getValue())) {
-            return true;
+        try {
+            InetAddress address = InetAddresses.forString(ip);
+            if (decision.getScope().equals("Ip")) {
+                return InetAddresses.forString(decision.getValue()).equals(address);
+            }
+            return decision.getScope().equals("Range") && belongsToNetwork(decision.getValue(), address);
+        } catch (IllegalArgumentException e) {
+            return false;
         }
-        return decision.getScope().equals("Range") && belongToNetwork(decision.getValue(), ip);
     }
 
-    private static boolean belongToNetwork(String value, String ip) {
-        SubnetUtils subnetUtils = new SubnetUtils(value);
-        subnetUtils.setInclusiveHostCount(true);
-
-        return subnetUtils.getInfo().isInRange(ip);
+    private static boolean belongsToNetwork(String range, InetAddress address) {
+        int slash = range.indexOf('/');
+        if (slash < 0) {
+            return false;
+        }
+        byte[] network = InetAddresses.forString(range.substring(0, slash)).getAddress();
+        byte[] ip = address.getAddress();
+        int prefixLength = Integer.parseInt(range.substring(slash + 1));
+        if (network.length != ip.length || prefixLength < 0 || prefixLength > ip.length * Byte.SIZE) {
+            return false;
+        }
+        for (int bit = 0; bit < prefixLength; bit++) {
+            int mask = 0x80 >> (bit % Byte.SIZE);
+            if ((network[bit / Byte.SIZE] & mask) != (ip[bit / Byte.SIZE] & mask)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
