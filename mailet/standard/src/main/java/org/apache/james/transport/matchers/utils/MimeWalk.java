@@ -46,6 +46,9 @@ public class MimeWalk {
     /** Debug request parameter. */
     protected static final String DEBUG_REQUEST_PARAMETER = "-d";
 
+    public static final boolean DESCEND_INTO_ATTACHED_MESSAGES = true;
+    private static final int MAX_ATTACHED_MESSAGE_DEPTH = 10;
+
     @FunctionalInterface
     public interface PartMatch {
         boolean partMatch(Part part) throws MessagingException, IOException;
@@ -115,10 +118,16 @@ public class MimeWalk {
 
     private final Configuration configuration;
     private final PartMatch partMatch;
+    private final boolean descendIntoAttachedMessages;
 
     public MimeWalk(Configuration configuration, PartMatch partMatch) {
+        this(configuration, partMatch, !DESCEND_INTO_ATTACHED_MESSAGES);
+    }
+
+    public MimeWalk(Configuration configuration, PartMatch partMatch, boolean descendIntoAttachedMessages) {
         this.configuration = configuration;
         this.partMatch = partMatch;
+        this.descendIntoAttachedMessages = descendIntoAttachedMessages;
     }
 
     public Collection<MailAddress> matchMail(Mail mail) throws MessagingException {
@@ -145,6 +154,10 @@ public class MimeWalk {
      * @param part
      */
     protected boolean matchFound(Part part) throws Exception {
+        return matchFound(part, 0);
+    }
+
+    private boolean matchFound(Part part, int attachedMessageDepth) throws Exception {
 
         /*
          * if there is an attachment and no inline text,
@@ -171,7 +184,7 @@ public class MimeWalk {
             for (int i = 0; i < multipart.getCount(); i++) {
                 try {
                     Part bodyPart = multipart.getBodyPart(i);
-                    if (matchFound(bodyPart)) {
+                    if (matchFound(bodyPart, attachedMessageDepth)) {
                         return true; // matching file found
                     }
                 } catch (MessagingException e) {
@@ -180,6 +193,11 @@ public class MimeWalk {
             }
         } else {
             if (partMatch.partMatch(part)) {
+                return true;
+            }
+            if (descendIntoAttachedMessages && content instanceof MimeMessage attachedMessage
+                && attachedMessageDepth < MAX_ATTACHED_MESSAGE_DEPTH
+                && matchFound(attachedMessage, attachedMessageDepth + 1)) {
                 return true;
             }
         }
