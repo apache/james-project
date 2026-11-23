@@ -201,6 +201,32 @@ public class SubAddressingTest {
             .doesNotContain(Pair.of(recipient, TARGET));
     }
 
+    @Test
+    void shouldNotAddStorageDirectiveWhenOnlyTheUnauthenticatedSenderHasRight() throws Exception {
+        givePostRightForKey(MailboxACL.EntryKey.createUserEntryKey(senderUsername));
+
+        Mail mail = mailBuilder(TARGET).sender(SENDER1).build();
+        testee.service(mail);
+
+        AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
+        assertThat(mail.attributes().map(this::unbox))
+            .doesNotContain(Pair.of(recipient, TARGET));
+    }
+
+    @Test
+    void shouldAddStorageDirectiveWhenTheAuthenticatedUserHasRight() throws Exception {
+        givePostRightForKey(MailboxACL.EntryKey.createUserEntryKey(senderUsername));
+
+        Mail mail = mailBuilder(TARGET).sender(SENDER1)
+            .attribute(new Attribute(Mail.SMTP_AUTH_USER, AttributeValue.of(senderUsername.asString())))
+            .build();
+        testee.service(mail);
+
+        AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
+        assertThat(mail.attributes().filter(attribute -> attribute.getName().equals(recipient)).map(this::unbox))
+            .contains(Pair.of(recipient, TARGET));
+    }
+
     private FakeMail.Builder mailBuilder(String targetFolder) throws MessagingException {
         return FakeMail.builder()
             .name("name")

@@ -31,7 +31,6 @@ import jakarta.inject.Named;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -131,7 +130,7 @@ public class SubAddressing extends GenericMailet {
 
     protected Boolean hasPostRight(Mail mail, MailAddress recipient, Optional<MailboxPath> targetFolderPath) throws MailboxException, UsersRepositoryException {
         try {
-            return targetFolderPath.isPresent() && resolvePostRight(retrieveMailboxACL(recipient, targetFolderPath.get()), mail.getMaybeSender(), recipient);
+            return targetFolderPath.isPresent() && resolvePostRight(retrieveMailboxACL(recipient, targetFolderPath.get()), mail.loggedInUser(), recipient);
         } catch (MailboxNotFoundException e) {
             LOG.info("{}'s subfolder `{}` was tried to be addressed but it does not exist", recipient, targetFolderPath);
             return false;
@@ -147,11 +146,10 @@ public class SubAddressing extends GenericMailet {
             .getACL();
     }
 
-    private boolean resolvePostRight(MailboxACL acl, MaybeSender maybeSender, MailAddress recipient) throws UnsupportedRightException, UsersRepositoryException {
+    // The envelope sender is not authenticated: rights are resolved for the authenticated user, else only "anyone" applies
+    private boolean resolvePostRight(MailboxACL acl, Optional<Username> loggedInUser, MailAddress recipient) throws UnsupportedRightException, UsersRepositoryException {
         return new UnionMailboxACLResolver().resolveRights(
-                maybeSender.asOptional()
-                    .map(Throwing.function(usersRepository::getUsername))
-                    .orElse(NO_ASSOCIATED_USER), acl, usersRepository.getUsername(recipient))
+                loggedInUser.orElse(NO_ASSOCIATED_USER), acl, usersRepository.getUsername(recipient))
             .contains(MailboxACL.Right.Post);
     }
 }
