@@ -154,8 +154,12 @@ class RightsTest extends AnyWordSpec with Matchers {
       Rights.of(USER_ENTRYKEY, Seq(Right.Administer, Right.Expunge, Right.Lookup, Right.Read, Right.Administer, Right.Seen, Right.Write))
         .mayRemoveItems(USER_ENTRYKEY) must be(NotApplicable)
     }
-    "return true when delete right" in {
+    "return false when delete right without expunge right" in {
       Rights.of(USER_ENTRYKEY, Right.DeleteMessages)
+        .mayRemoveItems(USER_ENTRYKEY) must be(NotApplicable)
+    }
+    "return true when delete and expunge rights" in {
+      Rights.of(USER_ENTRYKEY, Seq(Right.DeleteMessages, Right.Expunge))
         .mayRemoveItems(USER_ENTRYKEY) must be(Applicable)
     }
   }
