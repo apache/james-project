@@ -35,6 +35,8 @@ import org.apache.james.protocols.api.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Ascii;
+
 
 /**
  *  A CommandDispatcher is responsible to call the right {@link CommandHandler} for a given Command
@@ -204,7 +206,8 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
         } else {
             curCommandName = cmdString;
         }
-        curCommandName = curCommandName.toUpperCase(Locale.US);
+        // ASCII only: Unicode case folding turns eg U+017F into 'S'
+        curCommandName = Ascii.toUpperCase(curCommandName);
 
         return new BaseRequest(curCommandName, curCommandArgument);
 
