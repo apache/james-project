@@ -7006,7 +7006,7 @@ trait EmailSetMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.DeleteMessages))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.DeleteMessages, Right.PerformExpunge))
 
     val request =
       s"""{

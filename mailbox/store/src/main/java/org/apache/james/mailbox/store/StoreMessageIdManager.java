@@ -292,7 +292,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     public Mono<DeleteResult> deleteReactive(List<MessageId> messageIds, List<MailboxId> mailboxIds, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
-        return assertRightsOnMailboxIds(mailboxIds, mailboxSession, Right.DeleteMessages)
+        return assertRightsOnMailboxIds(mailboxIds, mailboxSession, Right.DeleteMessages, Right.PerformExpunge)
             .then(messageIdMapper.findReactive(messageIds, MessageMapper.FetchType.METADATA)
                 .filter(inMailboxes(mailboxIds))
                 .collectList())
@@ -327,7 +327,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                     messageList
                         .stream()
                         .map(MailboxMessage::getMailboxId),
-                    Right.DeleteMessages)
+                    Right.DeleteMessages, Right.PerformExpunge)
                 .flatMap(allowedMailboxIds -> deleteInAllowedMailboxes(messageIds, mailboxSession, messageIdMapper, messageList, allowedMailboxIds)));
     }
 
@@ -472,7 +472,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     private Flux<EventWithRegistrationKey> applyMessageMoves(MailboxSession mailboxSession, List<MailboxMessage> currentMailboxMessages, MessageMovesWithMailbox messageMoves) throws MailboxNotFoundException {
         assertRightsOnMailboxes(messageMoves.addedMailboxes(), mailboxSession, Right.Insert);
-        assertRightsOnMailboxes(messageMoves.removedMailboxes(), mailboxSession, Right.DeleteMessages);
+        assertRightsOnMailboxes(messageMoves.removedMailboxes(), mailboxSession, Right.DeleteMessages, Right.PerformExpunge);
         assertRightsOnMailboxes(messageMoves.getTargetMailboxes(), mailboxSession, Right.Read);
 
         return applyMessageMoveNoMailboxChecks(mailboxSession, currentMailboxMessages, messageMoves);

@@ -1083,7 +1083,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
                                     "update": {
                                         "%s": {
                                             "sharedWith": {
-                                                "%s":["r", "l", "w", "t"]
+                                                "%s":["r", "l", "w", "t", "e"]
                                             }
                                         }
                                     }
