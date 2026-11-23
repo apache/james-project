@@ -757,4 +757,63 @@ class AttachmentFileNameIsTest {
         assertThat(testee.match(mail))
             .containsOnly(ANY_AT_JAMES);
     }
+
+    @Test
+    void shouldKeepWalkingWhenAnAttachedMessageCannotBeRead() throws Exception {
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .recipient(ANY_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromString("Content-Type: multipart/mixed; boundary=\"outer\"\r\n" +
+                "\r\n" +
+                "--outer\r\n" +
+                "Content-Type: message/rfc822\r\n" +
+                "Content-Transfer-Encoding: x-unknown\r\n" +
+                "\r\n" +
+                "Subject: unreadable\r\n" +
+                "\r\n" +
+                "content\r\n" +
+                "--outer\r\n" +
+                "Content-Type: application/octet-stream\r\n" +
+                "Content-Disposition: attachment; filename=\"x.exe\"\r\n" +
+                "\r\n" +
+                "content\r\n" +
+                "--outer--\r\n"))
+            .build();
+
+        AttachmentFileNameIs testee = new AttachmentFileNameIs();
+
+        testee.init(FakeMatcherConfig.builder()
+            .matcherName("AttachmentFileNameIs")
+            .condition("*.exe")
+            .build());
+
+        assertThat(testee.match(mail))
+            .containsOnly(ANY_AT_JAMES);
+    }
+
+    @Test
+    void shouldMatchAPartWithAnUnknownCharset() throws Exception {
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .recipient(ANY_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromString("Content-Type: multipart/mixed; boundary=\"b\"\r\n" +
+                "\r\n" +
+                "--b\r\n" +
+                "Content-Type: text/plain; charset=x-unknown\r\n" +
+                "Content-Disposition: attachment; filename=\"x.exe\"\r\n" +
+                "\r\n" +
+                "content\r\n" +
+                "--b--\r\n"))
+            .build();
+
+        AttachmentFileNameIs testee = new AttachmentFileNameIs();
+
+        testee.init(FakeMatcherConfig.builder()
+            .matcherName("AttachmentFileNameIs")
+            .condition("*.exe")
+            .build());
+
+        assertThat(testee.match(mail))
+            .containsOnly(ANY_AT_JAMES);
+    }
 }
