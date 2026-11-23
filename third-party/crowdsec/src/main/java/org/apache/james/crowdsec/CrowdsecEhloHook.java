@@ -28,8 +28,13 @@ import org.apache.james.crowdsec.model.CrowdsecDecision;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
+import org.apache.james.protocols.smtp.hook.HookReturnCode;
 
 public class CrowdsecEhloHook implements HeloHook {
+    static final HookResult DENY_AND_DISCONNECT = HookResult.builder()
+        .hookReturnCode(HookReturnCode.disconnected(HookReturnCode.Action.DENY))
+        .build();
+
     private final CrowdsecService crowdsecService;
 
     @Inject
@@ -47,7 +52,7 @@ public class CrowdsecEhloHook implements HeloHook {
     private HookResult apply(List<CrowdsecDecision> decisions) {
         return decisions.stream()
             .findFirst()
-            .map(banned -> HookResult.DENY)
+            .map(banned -> DENY_AND_DISCONNECT)
             .orElse(HookResult.DECLINED);
     }
 }
