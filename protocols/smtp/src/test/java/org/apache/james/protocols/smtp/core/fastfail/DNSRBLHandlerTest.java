@@ -269,4 +269,27 @@ public class DNSRBLHandlerTest {
     }
    
 
+
+    @Test
+    void reversedQueryPrefixShouldReverseIpv4Octets() {
+        assertThat(DNSRBLHandler.reversedQueryPrefix("192.0.2.99")).isEqualTo("99.2.0.192.");
+    }
+
+    @Test
+    void reversedQueryPrefixShouldReverseIpv6Nibbles() {
+        // RFC 5782 section 2.4
+        assertThat(DNSRBLHandler.reversedQueryPrefix("2001:db8:1:2:3:4:567:89ab"))
+            .isEqualTo("b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.8.b.d.0.1.0.0.2.");
+    }
+
+    @Test
+    void reversedQueryPrefixShouldReverseTheNibblesOfACompressedIpv6Address() {
+        assertThat(DNSRBLHandler.reversedQueryPrefix("2001:db8::1%eth0"))
+            .isEqualTo("1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.");
+    }
+
+    @Test
+    void reversedQueryPrefixShouldReverseTheOctetsOfAnIpv4MappedAddress() {
+        assertThat(DNSRBLHandler.reversedQueryPrefix("::ffff:192.0.2.99")).isEqualTo("99.2.0.192.");
+    }
 }
