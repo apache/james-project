@@ -27,6 +27,7 @@ import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.dlp.api.DLPConfigurationItem;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.metrics.api.GaugeRegistry;
@@ -121,11 +122,10 @@ public class Dlp extends GenericMatcher {
     private Optional<DLPConfigurationItem.Id> findFirstMatchingRule(Mail mail) {
         return mail.getMaybeSender()
                 .asOptional()
-                .flatMap(sender -> matchingRule(sender, mail));
-    }
-
-    private Optional<DLPConfigurationItem.Id> matchingRule(MailAddress address, Mail mail) {
-        return rulesLoader.load(address.getDomain()).match(mail);
+                .map(MailAddress::getDomain)
+                // A null reverse-path sent by an authenticated user is subject to the rules of its domain
+                .or(() -> mail.loggedInUser().flatMap(Username::getDomainPart))
+                .flatMap(domain -> rulesLoader.load(domain).match(mail));
     }
 
     @Override
