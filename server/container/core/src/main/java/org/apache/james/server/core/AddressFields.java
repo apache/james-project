@@ -27,13 +27,13 @@ import java.util.stream.Stream;
 
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeUtility;
 
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.stream.ParserCursor;
 import org.apache.james.mime4j.util.ByteSequence;
 import org.apache.james.mime4j.util.ContentUtil;
+import org.apache.james.mime4j.util.MimeUtil;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -50,7 +50,7 @@ public class AddressFields {
      * so that a check covers what any of them displays.
      */
     public static List<InternetAddress> parse(String field) throws AddressException {
-        String unfolded = MimeUtility.unfold(field);
+        String unfolded = MimeUtil.unfold(field);
         InternetAddress[] jakartaAddresses = InternetAddress.parseHeader(unfolded, true);
         Set<String> jakartaMailboxes = Arrays.stream(jakartaAddresses)
             .flatMap(AddressFields::flatten)

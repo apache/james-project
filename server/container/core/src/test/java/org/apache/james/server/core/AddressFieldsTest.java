@@ -29,6 +29,7 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 class AddressFieldsTest {
     @Test
@@ -125,6 +126,21 @@ class AddressFieldsTest {
     @Test
     void parseShouldReturnAnAddressAfterAnAngleAddressWhenItIsRawEightBit() throws Exception {
         assertThat(AddressFields.parse(fromFieldOfARawEightBitMessage("ầầầầầ <alice@domain.tld> bob@domain.tld")))
+            .extracting(InternetAddress::getAddress)
+            .containsExactly("alice@domain.tld", "bob@domain.tld");
+    }
+
+    @Test
+    @Timeout(2)
+    void parseShouldUnfoldManyFoldsInLinearTime() throws Exception {
+        assertThat(AddressFields.parse("alice@domain.tld" + "\r\n ".repeat(320_000)))
+            .extracting(InternetAddress::getAddress)
+            .containsExactly("alice@domain.tld");
+    }
+
+    @Test
+    void parseShouldUnfoldTheField() throws Exception {
+        assertThat(AddressFields.parse("Alice\r\n <alice@domain.tld>,\r\n\tbob@domain.tld"))
             .extracting(InternetAddress::getAddress)
             .containsExactly("alice@domain.tld", "bob@domain.tld");
     }
