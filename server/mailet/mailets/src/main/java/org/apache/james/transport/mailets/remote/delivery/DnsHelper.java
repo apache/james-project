@@ -43,7 +43,7 @@ public class DnsHelper {
 
     public Iterator<HostAddress> retrieveHostAddressIterator(String host, boolean smtps) throws TemporaryResolutionException {
         if (configuration.getGatewayServer().isEmpty()) {
-            return new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer, USE_SEVERAL_IP, smtps);
+            return MXHostAddressIterator.forMxRecords(dnsServer.findMXRecords(host).iterator(), dnsServer, USE_SEVERAL_IP, smtps);
         } else if (configuration.isLoadBalancing()) {
             List<String> gatewayList = new ArrayList<>(configuration.getGatewayServer());
             Collections.shuffle(gatewayList);

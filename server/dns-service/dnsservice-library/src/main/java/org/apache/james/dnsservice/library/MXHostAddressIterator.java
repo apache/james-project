@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.mailet.HostAddress;
@@ -46,6 +47,15 @@ import com.google.common.collect.Maps;
 public class MXHostAddressIterator implements Iterator<HostAddress> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MXHostAddressIterator.class);
     public static final boolean SMTP_ONLY = false;
+    private static final Pattern HOST_NAME = Pattern.compile("[\\p{L}\\p{M}\\p{N}._-]+");
+    private static final int MAX_PORT = 65535;
+
+    /**
+     * Host names coming from MX records are not parsed as host:port: the default port of the protocol is used.
+     */
+    public static MXHostAddressIterator forMxRecords(Iterator<String> mxRecords, DNSService dns, boolean useSingleIP, boolean smtps) {
+        return new MXHostAddressIterator(mxRecords, dns, useSingleIP, smtps, true);
+    }
 
     private final Iterator<HostAddress> addresses;
 
@@ -54,6 +64,10 @@ public class MXHostAddressIterator implements Iterator<HostAddress> {
     }
 
     public MXHostAddressIterator(Iterator<String> hosts, DNSService dns, boolean useSingleIP, boolean smtps) {
+        this(hosts, dns, useSingleIP, smtps, false);
+    }
+
+    private MXHostAddressIterator(Iterator<String> hosts, DNSService dns, boolean useSingleIP, boolean smtps, boolean mxRecords) {
         checkNotNull(hosts, "Hosts is null");
         checkNotNull(dns, "Dns is null");
         final List<HostAddress> hAddresses = Lists.newArrayList();
@@ -61,7 +75,20 @@ public class MXHostAddressIterator implements Iterator<HostAddress> {
         while (hosts.hasNext()) {
             String nextHostname = hosts.next();
 
-            Map.Entry<String, Optional<String>> hostAndPort = extractHostAndPort(nextHostname);
+            Map.Entry<String, Optional<String>> hostAndPort;
+            if (mxRecords) {
+                if (!HOST_NAME.matcher(nextHostname).matches()) {
+                    LOGGER.warn("Ignoring MX record {} as it is not a host name", nextHostname);
+                    continue;
+                }
+                hostAndPort = Maps.immutableEntry(nextHostname, Optional.empty());
+            } else {
+                hostAndPort = extractHostAndPort(nextHostname);
+                if (hostAndPort.getValue().isPresent() && !isValidPort(hostAndPort.getValue().get())) {
+                    LOGGER.error("Ignoring host {} as its port is invalid", nextHostname);
+                    continue;
+                }
+            }
 
             try {
                 final Collection<InetAddress> addrs;
@@ -102,6 +129,14 @@ public class MXHostAddressIterator implements Iterator<HostAddress> {
             port = Optional.empty();
         }
         return Maps.immutableEntry(hostname, port);
+    }
+
+    private static boolean isValidPort(String port) {
+        if (port.isEmpty() || port.length() > 5 || !port.chars().allMatch(Character::isDigit)) {
+            return false;
+        }
+        int value = Integer.parseInt(port);
+        return value >= 1 && value <= MAX_PORT;
     }
 
     @Override
