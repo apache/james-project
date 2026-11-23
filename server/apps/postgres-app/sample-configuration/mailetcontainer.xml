@@ -99,6 +99,11 @@
         <processor state="relay" enableJmx="true">
             <mailet match="All" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
+                <!-- Opportunistic STARTTLS: used when the receiving server offers it, without checking its certificate, as many MX
+                     use self-signed or expired ones. Mail still leaves in cleartext to a server not offering it. -->
+                <startTLS>true</startTLS>
+                <verifyServerIdentity>false</verifyServerIdentity>
+                <sslTrustAllCerts>true</sslTrustAllCerts>
                 <delayTime>5000, 100000, 500000</delayTime>
                 <maxRetries>3</maxRetries>
                 <maxDnsProblemRetries>0</maxDnsProblemRetries>
