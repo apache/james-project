@@ -19,8 +19,27 @@
 
 package org.apache.james.webadmin.authentication;
 
+import java.util.Locale;
+import java.util.Optional;
+
 import spark.Filter;
+import spark.Request;
 
 public interface AuthenticationFilter extends Filter {
     String LOGIN = "LOGIN";
+    String METHOD_OVERRIDE_HEADER = "X-HTTP-Method-Override";
+    String OPTIONS_METHOD = "OPTIONS";
+
+    /**
+     * The method of the route Spark dispatches the request to, which honors the method override header.
+     */
+    static String dispatchedMethod(Request request) {
+        return Optional.ofNullable(request.headers(METHOD_OVERRIDE_HEADER))
+            .map(method -> method.trim().toUpperCase(Locale.US))
+            .orElse(request.requestMethod());
+    }
+
+    static boolean isCorsPreflight(Request request) {
+        return dispatchedMethod(request).equals(OPTIONS_METHOD);
+    }
 }
