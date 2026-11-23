@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.inject.Inject;
 
@@ -193,16 +194,31 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
 
     private void pushContinuationHandler(SaslExchange exchange, ImapSession session, AuthenticateRequest request, Responder responder) {
         try {
-            session.pushLineHandler((requestSession, data) -> Mono.fromRunnable(() -> handleContinuationLine(exchange, requestSession, request, responder, data))
-                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-                .then());
+            AtomicBoolean awaitingResponse = new AtomicBoolean(true);
+            session.pushLineHandler((requestSession, data) -> {
+                if (!awaitingResponse.compareAndSet(true, false)) {
+                    return ignoreUnexpectedResponse();
+                }
+                return Mono.fromRunnable(() -> handleContinuationLine(exchange, requestSession, request, responder, data, () -> awaitingResponse.set(true)))
+                    .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+                    .then();
+            });
         } catch (RuntimeException e) {
             ImapSaslExchangeTracker.forSession(session).closeExchange(exchange);
             throw e;
         }
     }
 
-    private void handleContinuationLine(SaslExchange exchange, ImapSession session, AuthenticateRequest request, Responder responder, byte[] data) {
+    /**
+     * One response per challenge: a line sent before the previous one was answered is not a response to a challenge.
+     */
+    private Mono<Void> ignoreUnexpectedResponse() {
+        LOGGER.info("Ignoring an AUTHENTICATE line sent before the previous one was answered");
+        return Mono.empty();
+    }
+
+    private void handleContinuationLine(SaslExchange exchange, ImapSession session, AuthenticateRequest request, Responder responder, byte[] data,
+                                        Runnable onChallenge) {
         if (isAbort(exchange, session, data)) {
             closeActiveContinuation(exchange, session);
             // RFC 9051 section 6.2.2: the server MUST reject a cancelled AUTHENTICATE with a tagged BAD
@@ -212,7 +228,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         }
 
         nextStep(exchange, session, request, responder, data)
-            .ifPresent(step -> handleContinuationStep(exchange, step, session, request, responder));
+            .ifPresent(step -> handleContinuationStep(exchange, step, session, request, responder, onChallenge));
     }
 
     private Optional<SaslStep> nextStep(SaslExchange exchange, ImapSession session, AuthenticateRequest request, Responder responder, byte[] data) {
@@ -231,9 +247,11 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         }
     }
 
-    private void handleContinuationStep(SaslExchange exchange, SaslStep step, ImapSession session, AuthenticateRequest request, Responder responder) {
+    private void handleContinuationStep(SaslExchange exchange, SaslStep step, ImapSession session, AuthenticateRequest request, Responder responder,
+                                        Runnable onChallenge) {
         if (step instanceof SaslStep.Challenge challenge) {
             try {
+                onChallenge.run();
                 responder.respond(new AuthenticateResponse(SaslCodec.encode(challenge.payload())));
                 responder.flush();
             } catch (RuntimeException e) {
@@ -309,9 +327,15 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     private void pushSuccessDataAcknowledgementHandler(SaslExchange exchange, SaslStep.Success success, ImapSession session,
                                                        AuthenticateRequest request, Responder responder) {
         try {
-            session.pushLineHandler((requestSession, data) -> Mono.fromRunnable(() -> handleSuccessDataAcknowledgement(exchange, success, requestSession, request, responder, data))
-                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-                .then());
+            AtomicBoolean awaitingResponse = new AtomicBoolean(true);
+            session.pushLineHandler((requestSession, data) -> {
+                if (!awaitingResponse.compareAndSet(true, false)) {
+                    return ignoreUnexpectedResponse();
+                }
+                return Mono.fromRunnable(() -> handleSuccessDataAcknowledgement(exchange, success, requestSession, request, responder, data))
+                    .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+                    .then();
+            });
         } catch (RuntimeException e) {
             ImapSaslExchangeTracker.forSession(session).closeExchange(exchange);
             throw e;
