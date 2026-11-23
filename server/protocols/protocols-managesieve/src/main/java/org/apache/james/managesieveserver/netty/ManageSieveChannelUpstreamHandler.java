@@ -92,7 +92,6 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
                 turnSSLon(ctx.channel());
                 manageSieveSession.setSslEnabled(true);
                 manageSieveSession.setState(Session.State.UNAUTHENTICATED);
-                attachment.stopDetectingCommandInjection();
 
                 // RFC-5804 section 1.7 returning capabilities is mandated after STARTTLS
                 String capabilities = manageSieveProcessor.handleRequest(manageSieveSession, "CAPABILITY");
@@ -190,10 +189,13 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
         }
     }
 
+    // The responses are written from this thread: the TLS handler is installed before the capabilities are written. The
+    // STARTTLS check is turned off once it is in place, by an event following the frames read before it.
     private void turnSSLon(Channel channel) {
         if (secure != null) {
             channel.config().setAutoRead(false);
             channel.pipeline().addFirst(SSL_HANDLER, secure.sslHandler());
+            AllButStartTlsLineBasedChannelHandler.fireTlsHandlerInstalled(channel);
             channel.config().setAutoRead(true);
         }
     }
