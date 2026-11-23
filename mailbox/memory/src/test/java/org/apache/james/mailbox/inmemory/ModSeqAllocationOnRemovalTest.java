@@ -28,12 +28,14 @@ import static org.mockito.Mockito.spy;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusTestFixture;
+import org.apache.james.events.EventListener;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
 import org.apache.james.events.delivery.InVmEventDelivery;
@@ -41,6 +43,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -58,7 +62,8 @@ import reactor.core.publisher.Mono;
 
 /**
  * Allocating a mod-sequence is costly (a lightweight transaction on Cassandra): removing messages from a mailbox
- * should allocate a single one per operation, whatever the number of batches or ranges.
+ * should allocate a single one per operation, whatever the number of ranges. A move notifies other sessions batch
+ * per batch: each batch needs its own mod-sequence, allocated before its events are dispatched.
  */
 class ModSeqAllocationOnRemovalTest {
     private static final Username USER = Username.of("user");
@@ -104,23 +109,61 @@ class ModSeqAllocationOnRemovalTest {
     }
 
     @Test
-    void moveShouldAllocateASingleModSeqForAllItsBatches() throws Exception {
+    void moveShouldAllocateOneModSeqPerBatch() throws Exception {
         ModSeq before = highestModSeq();
 
         mailboxManager.moveMessages(MessageRange.all(), inbox.getId(), otherId, session);
 
-        assertThat(highestModSeq()).isEqualTo(before.next());
+        assertThat(highestModSeq().asLong()).isEqualTo(before.asLong() + MESSAGE_COUNT);
     }
 
     @Test
-    void moveOfSeveralRangesShouldAllocateASingleModSeq() throws Exception {
+    void moveOfSeveralRangesShouldAllocateOneModSeqPerBatch() throws Exception {
         ModSeq before = highestModSeq();
 
         Flux.from(mailboxManager.moveMessagesReactive(singleUidRanges(), inbox.getId(), otherId, session))
             .collectList()
             .block();
 
-        assertThat(highestModSeq()).isEqualTo(before.next());
+        assertThat(highestModSeq().asLong()).isEqualTo(before.asLong() + MESSAGE_COUNT);
+    }
+
+    @Test
+    void moveShouldRaiseTheModSeqBeforeNotifyingTheExpunge() throws Exception {
+        assertModSeqRaisedBeforeEachExpungeNotification(() ->
+            mailboxManager.moveMessages(MessageRange.all(), inbox.getId(), otherId, session));
+    }
+
+    @Test
+    void moveOfSeveralRangesShouldRaiseTheModSeqBeforeNotifyingTheExpunge() throws Exception {
+        assertModSeqRaisedBeforeEachExpungeNotification(() ->
+            Flux.from(mailboxManager.moveMessagesReactive(singleUidRanges(), inbox.getId(), otherId, session))
+                .collectList()
+                .block());
+    }
+
+    interface Operation {
+        void run() throws Exception;
+    }
+
+    private void assertModSeqRaisedBeforeEachExpungeNotification(Operation operation) throws Exception {
+        List<ModSeq> seenOnExpunge = new CopyOnWriteArrayList<>();
+        ModSeq before = highestModSeq();
+        Mono.from(eventBus.register((EventListener) event -> {
+            if (event instanceof Expunged) {
+                seenOnExpunge.add(highestModSeq());
+            }
+        }, new MailboxIdRegistrationKey(inbox.getId()))).block();
+
+        operation.run();
+
+        // A session notified of the expunge of a batch should see a HIGHESTMODSEQ covering it
+        assertThat(seenOnExpunge).hasSize(MESSAGE_COUNT);
+        ModSeq previous = before;
+        for (ModSeq seen : seenOnExpunge) {
+            assertThat(seen).isGreaterThan(previous);
+            previous = seen;
+        }
     }
 
     @Test
