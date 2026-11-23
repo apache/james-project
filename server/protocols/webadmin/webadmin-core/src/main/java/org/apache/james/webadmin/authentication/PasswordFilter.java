@@ -47,7 +47,7 @@ public class PasswordFilter implements AuthenticationFilter {
 
     @Override
     public void handle(Request request, Response response) throws Exception {
-        if (!request.requestMethod().equals(OPTIONS)) {
+        if (!AuthenticationFilter.isCorsPreflight(request)) {
             Optional<String> password = Optional.ofNullable(request.headers(PASSWORD));
 
             if (!password.isPresent()) {
