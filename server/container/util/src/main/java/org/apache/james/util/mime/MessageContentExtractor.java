@@ -20,6 +20,8 @@
 package org.apache.james.util.mime;
 
 import java.io.IOException;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -45,6 +47,7 @@ public class MessageContentExtractor {
     public static final String MULTIPART_ALTERNATIVE = "multipart/alternative";
     public static final String TEXT_HTML = "text/html";
     public static final String TEXT_PLAIN = "text/plain";
+    private static final int MAX_MULTIPART_DEPTH = 16;
 
     public MessageContent extract(org.apache.james.mime4j.dom.Message message) throws IOException {
         Body body = message.getBody();
@@ -52,7 +55,7 @@ public class MessageContentExtractor {
             return parseTextBody(message, (TextBody)body);
         }
         if (body instanceof Multipart) {
-            return parseMultipart(message, (Multipart)body);
+            return parseMultipart(message, (Multipart)body, new IdentityHashMap<>(), 1);
         }
         return MessageContent.empty();
     }
@@ -65,25 +68,33 @@ public class MessageContentExtractor {
         return MessageContent.ofTextOnly(bodyContent);
     }
 
-    private MessageContent parseMultipart(Entity entity, Multipart multipart) throws IOException {
-        MessageContent messageContent = parseMultipartContent(entity, multipart);
-        if (!messageContent.isEmpty()) {
-            return messageContent;
+    private MessageContent parseMultipart(Entity entity, Multipart multipart, Map<Entity, MessageContent> parsed, int depth) throws IOException {
+        if (depth > MAX_MULTIPART_DEPTH) {
+            return MessageContent.empty();
         }
-        return parseFirstFoundMultipart(multipart);
+        MessageContent alreadyParsed = parsed.get(entity);
+        if (alreadyParsed != null) {
+            return alreadyParsed;
+        }
+        MessageContent messageContent = parseMultipartContent(entity, multipart, parsed, depth);
+        if (messageContent.isEmpty()) {
+            messageContent = parseFirstFoundMultipart(multipart, parsed, depth);
+        }
+        parsed.put(entity, messageContent);
+        return messageContent;
     }
 
-    private MessageContent parseMultipartContent(Entity entity, Multipart multipart) throws IOException {
+    private MessageContent parseMultipartContent(Entity entity, Multipart multipart, Map<Entity, MessageContent> parsed, int depth) throws IOException {
         switch (entity.getMimeType()) {
         case MULTIPART_ALTERNATIVE:
-            return retrieveHtmlAndPlainTextContent(multipart);
+            return retrieveHtmlAndPlainTextContent(multipart, parsed, depth);
         default:
-            return retrieveFirstReadablePart(multipart);
+            return retrieveFirstReadablePart(multipart, parsed, depth);
         }
     }
 
-    private MessageContent parseFirstFoundMultipart(Multipart multipart) throws IOException {
-        ThrowingFunction<Entity, MessageContent> parseMultipart = firstPart -> parseMultipart(firstPart, (Multipart)firstPart.getBody());
+    private MessageContent parseFirstFoundMultipart(Multipart multipart, Map<Entity, MessageContent> parsed, int depth) throws IOException {
+        ThrowingFunction<Entity, MessageContent> parseMultipart = firstPart -> parseMultipart(firstPart, (Multipart)firstPart.getBody(), parsed, depth + 1);
         return multipart.getBodyParts()
             .stream()
             .filter(part -> part.getBody() instanceof Multipart)
@@ -98,32 +109,33 @@ public class MessageContentExtractor {
                 .orElse(org.apache.james.mime4j.Charsets.DEFAULT_CHARSET)));
     }
 
-    private MessageContent retrieveHtmlAndPlainTextContent(Multipart multipart) throws IOException {
+    private MessageContent retrieveHtmlAndPlainTextContent(Multipart multipart, Map<Entity, MessageContent> parsed, int depth) throws IOException {
         Optional<String> textBody = getFirstMatchingTextBody(multipart, TEXT_PLAIN);
         Optional<String> htmlBody = getFirstMatchingTextBody(multipart, TEXT_HTML);
         MessageContent directChildTextBodies = new MessageContent(textBody, htmlBody);
         if (!directChildTextBodies.isComplete()) {
-            MessageContent fromInnerMultipart = parseFirstFoundMultipart(multipart);
+            MessageContent fromInnerMultipart = parseFirstFoundMultipart(multipart, parsed, depth);
             return directChildTextBodies.merge(fromInnerMultipart);
         }
         return directChildTextBodies;
     }
 
-    private MessageContent retrieveFirstReadablePart(Multipart multipart) throws IOException {
-        return retrieveFirstReadablePartMatching(multipart, this::isNotAttachment)
-            .orElseGet(() -> retrieveFirstReadablePartMatching(multipart, this::isInlinedWithoutCid)
+    private MessageContent retrieveFirstReadablePart(Multipart multipart, Map<Entity, MessageContent> parsed, int depth) {
+        return retrieveFirstReadablePartMatching(multipart, this::isNotAttachment, parsed, depth)
+            .orElseGet(() -> retrieveFirstReadablePartMatching(multipart, this::isInlinedWithoutCid, parsed, depth)
                 .orElse(MessageContent.empty()));
     }
 
-    private Optional<MessageContent> retrieveFirstReadablePartMatching(Multipart multipart, Predicate<Entity> predicate) {
+    private Optional<MessageContent> retrieveFirstReadablePartMatching(Multipart multipart, Predicate<Entity> predicate, Map<Entity, MessageContent> parsed, int depth) {
+        ThrowingFunction<Entity, Stream<MessageContent>> extractContentIfReadable = part -> extractContentIfReadable(part, parsed, depth);
         return multipart.getBodyParts()
             .stream()
             .filter(predicate)
-            .flatMap(Throwing.function(this::extractContentIfReadable).sneakyThrow())
+            .flatMap(Throwing.function(extractContentIfReadable).sneakyThrow())
             .findFirst();
     }
 
-    private Stream<MessageContent> extractContentIfReadable(Entity entity) throws IOException {
+    private Stream<MessageContent> extractContentIfReadable(Entity entity, Map<Entity, MessageContent> parsed, int depth) throws IOException {
         if (TEXT_HTML.equals(entity.getMimeType()) && entity.getBody() instanceof TextBody) {
             return Stream.of(
                     MessageContent.ofHtmlOnly(asString((TextBody)entity.getBody())));
@@ -133,7 +145,7 @@ public class MessageContentExtractor {
                     MessageContent.ofTextOnly(asString((TextBody)entity.getBody())));
         }
         if (entity.isMultipart() && entity.getBody() instanceof Multipart) {
-            MessageContent innerMultipartContent = parseMultipart(entity, (Multipart)entity.getBody());
+            MessageContent innerMultipartContent = parseMultipart(entity, (Multipart)entity.getBody(), parsed, depth + 1);
             if (!innerMultipartContent.isEmpty()) {
                 return Stream.of(innerMultipartContent);
             }
