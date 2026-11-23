@@ -23,14 +23,28 @@ import eu.timepit.refined.auto._
 import org.apache.james.rate.limiter.api.Increment.Increment
 import org.apache.james.rate.limiter.api.{AllowedQuantity, Increment, Rule, Rules}
 import org.apache.james.transport.mailets.ConfigurationOps.{OptionOps, SizeOps}
+import org.apache.james.core.MailAddress
 import org.apache.james.util.DurationParser
 import org.apache.mailet.{Mail, MailetConfig}
 
 import java.time.Duration
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 import scala.util.Try
 
 case class KeyPrefix(value: String)
+
+object RateLimitedAddress {
+  private val DETAIL_DELIMITER = "+"
+
+  /**
+   * The sub-addresses and the case variants of an address reach the same mailbox: they share its counters.
+   */
+  def asKey(address: MailAddress): String = {
+    val withoutDetails = address.stripDetails(DETAIL_DELIMITER)
+    withoutDetails.getLocalPart.toLowerCase(Locale.US) + "@" + withoutDetails.getDomain.asString()
+  }
+}
 
 object ConfigurationOps {
 
