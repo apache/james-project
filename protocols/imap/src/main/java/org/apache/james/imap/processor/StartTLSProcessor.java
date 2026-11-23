@@ -24,6 +24,7 @@ import java.util.List;
 import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -52,7 +53,10 @@ public class StartTLSProcessor extends AbstractProcessor<StartTLSRequest> implem
     @Override
     protected Mono<Void> doProcess(StartTLSRequest request, Responder responder, ImapSession session) {
         return Mono.fromRunnable(() -> {
-            if (session.supportStartTLS()) {
+            if (session.getState() != ImapSessionState.NON_AUTHENTICATED) {
+                // The request could have been queued behind a LOGIN
+                responder.respond(factory.taggedNo(request.getTag(), request.getCommand(), HumanReadableText.INVALID_COMMAND));
+            } else if (session.supportStartTLS()) {
                 session.startTLS(() -> {
                     responder.respond(factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.STARTTLS));
                     responder.flush();
