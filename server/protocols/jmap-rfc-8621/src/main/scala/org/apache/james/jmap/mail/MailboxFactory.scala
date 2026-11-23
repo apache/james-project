@@ -25,8 +25,7 @@ import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.utils.quotas.QuotaLoader
 import org.apache.james.mailbox._
 import org.apache.james.mailbox.exception.{MailboxNameException, MailboxNotFoundException}
-import org.apache.james.mailbox.model.MailboxACL.EntryKey
-import org.apache.james.mailbox.model.{MailboxCounters, MailboxId, MailboxMetaData, MailboxPath, MailboxACL => JavaMailboxACL}
+import org.apache.james.mailbox.model.{MailboxCounters, MailboxId, MailboxMetaData, MailboxPath, Mailbox => JavaMailbox, MailboxACL => JavaMailboxACL}
 import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
@@ -97,14 +96,11 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
     .drop(1)
     .headOption
 
-  private def aclEntryKey(mailboxSession: MailboxSession): EntryKey = EntryKey.createUserEntryKey(mailboxSession.getUser)
-
-  private def getMyRights(mailboxPath: MailboxPath, resolveMailboxACL: JavaMailboxACL, mailboxSession: MailboxSession): MailboxRights = mailboxPath.belongsTo(mailboxSession) match {
+  // Effective rights of the user: negative, group and special entries of the ACL apply
+  private def getMyRights(mailbox: JavaMailbox, mailboxSession: MailboxSession): MailboxRights = mailbox.generateAssociatedPath().belongsTo(mailboxSession) match {
     case true => MailboxRights.FULL
     case false =>
-      val rights = Rfc4314Rights.fromJava(resolveMailboxACL
-        .getEntries
-        .getOrDefault(aclEntryKey(mailboxSession), JavaMailboxACL.NO_RIGHTS))
+      val rights = Rfc4314Rights.fromJava(mailboxManager.myRights(mailbox, mailboxSession))
         .toRights
       MailboxRights(
         mayReadItems = MayReadItems(rights.contains(Right.Read)),
@@ -118,6 +114,14 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
         maySubmit = MaySubmit(rights.contains(Right.Post)))
   }
 
+  // As Quota/get, only expose the quotas of the mailbox owner to users allowed to read the mailbox
+  private def getQuotas(mailboxPath: MailboxPath, myRights: MailboxRights, quotaLoader: QuotaLoader): SMono[Quotas] =
+    if (myRights.mayReadItems.value) {
+      SMono.fromPublisher(quotaLoader.getQuotas(mailboxPath))
+    } else {
+      SMono.just(Quotas.from(Map[QuotaId, Quota]()))
+    }
+
   def create(mailboxMetaData: MailboxMetaData,
              mailboxSession: MailboxSession,
              subscriptions: Subscriptions,
@@ -129,7 +133,8 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
     MailboxValidation.validate(mailboxMetaData.getPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
       case Left(error) => SMono.error(error)
       case scala.Right(mailboxValidation) =>
-        SMono.fromPublisher(quotaLoader.getQuotas(mailboxMetaData.getPath))
+        val myRights: MailboxRights = getMyRights(mailboxMetaData.getMailbox, mailboxSession)
+        getQuotas(mailboxMetaData.getPath, myRights, quotaLoader)
           .map(quotas => {
             val id: MailboxId = mailboxMetaData.getId
             val role: Option[Role] = MailboxFactory.getRole(mailboxMetaData.getPath, mailboxSession)
@@ -138,7 +143,6 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
             val namespace: MailboxNamespace = getNamespace(mailboxMetaData.getPath, mailboxSession)
             val parentPath: Option[MailboxPath] = getParentPath(mailboxMetaData.getPath, mailboxSession)
             val parentId: Option[MailboxId] = parentPath.flatMap(path => allMailboxesMetadata.get(path)).map(_.getId)
-            val myRights: MailboxRights = getMyRights(mailboxMetaData.getPath, mailboxMetaData.getResolvedAcls, mailboxSession)
             val isSubscribed: IsSubscribed = subscriptions.isSubscribed(mailboxMetaData)
 
             Mailbox(
@@ -175,18 +179,18 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
       MailboxValidation.validate(messageManager.getMailboxPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
         case Left(error) => SMono.error(error)
         case scala.Right(mailboxValidation) =>
+          val resolvedACL = messageManager.getResolvedAcl(mailboxSession)
+          val myRights: MailboxRights = getMyRights(messageManager.getMailboxEntity, mailboxSession)
 
           SMono.zip(array => (array(0).asInstanceOf[Option[MailboxId]],
               array(1).asInstanceOf[Quotas]),
               getParentId(messageManager, mailboxSession),
-              SMono.fromPublisher(quotaLoader.getQuotas(messageManager.getMailboxPath)))
+              getQuotas(messageManager.getMailboxPath, myRights, quotaLoader))
             .map(tuple2 => {
-              val resolvedACL = messageManager.getResolvedAcl(mailboxSession)
               val role: Option[Role] = MailboxFactory.getRole(messageManager.getMailboxPath, mailboxSession)
               val sortOrder: SortOrder = getSortOrder(role)
               val rights: Rights = getRights(resolvedACL)
               val namespace: MailboxNamespace = getNamespace(messageManager.getMailboxPath, mailboxSession)
-              val myRights: MailboxRights = getMyRights(messageManager.getMailboxPath, resolvedACL, mailboxSession)
               val isSubscribed: IsSubscribed = subscriptions.isSubscribed(messageManager.getMailboxPath)
 
               Mailbox(
