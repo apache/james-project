@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -38,6 +39,7 @@ class UseHeaderRecipientsTest {
     private static final String RECIPIENT1 = "abc1@apache1.org";
     private static final String RECIPIENT2 = "abc2@apache2.org";
     private static final String RECIPIENT3 = "abc3@apache3.org";
+    private static final Attribute RELAY_ALLOWED = Attribute.convertToAttribute("org.apache.james.SMTPIsAuthNetwork", true);
     private UseHeaderRecipients testee;
     private FakeMailContext mailetContext;
     private MailAddress mailAddress1;
@@ -59,6 +61,7 @@ class UseHeaderRecipientsTest {
     void serviceShouldSetMimeMessageRecipients() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .name("mail")
+            .attribute(RELAY_ALLOWED)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient(RECIPIENT1, RECIPIENT2))
@@ -74,6 +77,7 @@ class UseHeaderRecipientsTest {
     void serviceShouldSetToCcAndBccSpecifiedInTheMimeMessage() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .name("mail")
+            .attribute(RELAY_ALLOWED)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient(RECIPIENT1)
@@ -92,6 +96,7 @@ class UseHeaderRecipientsTest {
 
         FakeMail fakeMail = FakeMail.builder()
             .name("mail")
+            .attribute(RELAY_ALLOWED)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .build();
@@ -106,6 +111,7 @@ class UseHeaderRecipientsTest {
     void serviceShouldGhostEmail() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .name("mail")
+            .attribute(RELAY_ALLOWED)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageUtil.defaultMimeMessage())
             .build();
@@ -120,6 +126,7 @@ class UseHeaderRecipientsTest {
     void serviceShouldResendTheEmail() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .name("mail")
+            .attribute(RELAY_ALLOWED)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient(RECIPIENT1)
@@ -132,6 +139,7 @@ class UseHeaderRecipientsTest {
         assertThat(mailetContext.getSentMails())
             .containsOnly(FakeMailContext.sentMailBuilder()
                 .recipients(mailAddress1, mailAddress2, mailAddress3)
+                .attribute(RELAY_ALLOWED)
                 .fromMailet()
                 .build());
     }
@@ -140,6 +148,7 @@ class UseHeaderRecipientsTest {
     void serviceShouldThrowOnInvalidMailAddress() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .name("mail")
+            .attribute(RELAY_ALLOWED)
             .recipients(mailAddress1)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("invalid"))
@@ -152,6 +161,7 @@ class UseHeaderRecipientsTest {
     void serviceShouldSupportAddressList() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .name("mail")
+            .attribute(RELAY_ALLOWED)
             .recipients()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient(RECIPIENT1, RECIPIENT2))
@@ -167,6 +177,7 @@ class UseHeaderRecipientsTest {
     void serviceShouldSupportMailboxes() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .name("mail")
+            .attribute(RELAY_ALLOWED)
             .recipients()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .addToRecipient("APACHE" + "<" + UseHeaderRecipientsTest.RECIPIENT1 + ">"))
@@ -176,5 +187,39 @@ class UseHeaderRecipientsTest {
 
         assertThat(fakeMail.getRecipients())
             .containsOnly(mailAddress1);
+    }
+
+    @Test
+    void serviceShouldOnlyKeepLocalRecipientsWhenRelayIsNotAllowed() throws Exception {
+        FakeMail fakeMail = FakeMail.builder()
+            .name("unauthenticated")
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addToRecipient(RECIPIENT1, "local@localhost"))
+            .build();
+
+        testee.service(fakeMail);
+
+        assertThat(fakeMail.getRecipients())
+            .containsOnly(new MailAddress("local@localhost"));
+    }
+
+    @Test
+    void serviceShouldKeepRemoteRecipientsWhenNotTrustingOnlyAuthNetwork() throws Exception {
+        testee.init(FakeMailetConfig.builder()
+            .mailetContext(mailetContext)
+            .setProperty("trustOnlyAuthNetwork", "false")
+            .build());
+        FakeMail fakeMail = FakeMail.builder()
+            .name("unauthenticated")
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addToRecipient(RECIPIENT1, "local@localhost"))
+            .build();
+
+        testee.service(fakeMail);
+
+        assertThat(fakeMail.getRecipients())
+            .containsOnly(mailAddress1, new MailAddress("local@localhost"));
     }
 }

@@ -32,6 +32,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.util.MimeUtil;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -61,16 +62,24 @@ import com.google.common.collect.ImmutableList;
  *    &lt;/mailet&gt;
  * </code></pre>
  *
+ * <p>The headers are written by the sender. With <code>trustOnlyAuthNetwork</code> set to true (default), a mail that
+ * may not relay (neither authenticated nor received from an authorized network) only keeps its local recipients.
+ * Set it to false to keep every recipient of the headers as before, at the risk of letting senders relay through
+ * this mailet.</p>
+ *
  * @version 1.0.0, 24/11/2000
  */
 @Experimental
 public class UseHeaderRecipients extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(UseHeaderRecipients.class);
+    // Set by the SMTP server for mails received from a network allowed to relay
+    private static final AttributeName SMTP_AUTH_NETWORK = AttributeName.of("org.apache.james.SMTPIsAuthNetwork");
 
     /**
      * Controls certain log messages
      */
     private boolean isDebug = false;
+    private boolean trustOnlyAuthNetwork = true;
 
     /**
      * Initialize the mailet
@@ -80,6 +89,10 @@ public class UseHeaderRecipients extends GenericMailet {
     @Override
     public void init() {
         isDebug = (getInitParameter("debug") == null) ? false : Boolean.parseBoolean(getInitParameter("debug"));
+        trustOnlyAuthNetwork = getInitParameter("trustOnlyAuthNetwork", true);
+        if (!trustOnlyAuthNetwork) {
+            LOGGER.warn("UseHeaderRecipients with trustOnlyAuthNetwork=false: the headers of any mail, written by its sender, can address remote recipients");
+        }
     }
 
     /**
@@ -95,7 +108,14 @@ public class UseHeaderRecipients extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
 
-        mail.setRecipients(headersAddresses(message));
+        Collection<MailAddress> recipients = headersAddresses(message);
+        if (trustOnlyAuthNetwork && !relayAllowed(mail)) {
+            // Headers are written by the sender: unless it may relay, it only reaches local recipients
+            recipients = recipients.stream()
+                .filter(recipient -> getMailetContext().isLocalServer(recipient.getDomain()))
+                .collect(ImmutableList.toImmutableList());
+        }
+        mail.setRecipients(recipients);
 
         if (isDebug) {
             LOGGER.debug("All recipients = {}", mail.getRecipients());
@@ -105,6 +125,14 @@ public class UseHeaderRecipients extends GenericMailet {
         // Return email to the "root" process.
         getMailetContext().sendMail(mail.duplicate());
         mail.setState(Mail.GHOST);
+    }
+
+    private static boolean relayAllowed(Mail mail) {
+        return mail.loggedInUser().isPresent()
+            || mail.getAttribute(SMTP_AUTH_NETWORK)
+                .map(attribute -> attribute.getValue().value())
+                .filter(Boolean.TRUE::equals)
+                .isPresent();
     }
 
     public Collection<MailAddress> headersAddresses(MimeMessage mimeMessage) throws MessagingException {
