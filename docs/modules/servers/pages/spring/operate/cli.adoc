@@ -14,7 +14,7 @@ xref:{xref-base}/operate/jmx.adoc[its JMX endpoint] reachable.
 
 ....
 $ cd bin
-$ ./james-cli.sh -h 127.0.0.1 -p 9999 -username james-admin -password changeme COMMAND
+$ ./james-cli.sh -h 127.0.0.1 -p 9999 -username james-admin -password <password> COMMAND
 ....
 
 include::partial$operate/cli.adoc[]

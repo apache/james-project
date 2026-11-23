@@ -60,6 +60,17 @@ WebAdmin used to send CORS headers allowing any origin whatever `cors.enable`. T
 is `true`, and `cors.origin` is then mandatory: WebAdmin refuses to start without it. A web console served from
 another origin needs both properties set.
 
+### Spring app generates its JMX password
+
+Date: 23/11/2026
+
+Concerned products: the Spring app.
+
+`conf/jmxremote.password` no longer ships the `james-admin changeme` credentials: it is a commented template. At start,
+when the file holds no credentials, or still holds `james-admin changeme`, James generates a random password for
+`james-admin`, in a file readable by its owner only. Read it there, for instance for `james-cli`, or write your own
+`james-admin <password>` line in the file.
+
 ### Scaling Pulsar SMTP app verifies the sender identity
 
 Date: 23/11/2026

@@ -23,9 +23,8 @@ The endpoint is configured in xref:{xref-base}/configure/jmx.adoc[jmx.properties
 service:jmx:rmi:///jndi/rmi://localhost:9999/jmxrmi
 ....
 
-Authentication is read from `conf/jmxremote.password` and `conf/jmxremote.access`, which ship with a default
-`james-admin` / `changeme` pair holding `readwrite` permission. *Change that password.* Unlike the Guice
-applications, this one never generates credentials for you.
+Authentication is read from `conf/jmxremote.password` and `conf/jmxremote.access`. The `james-admin` user holds the
+`readwrite` permission; its password is generated at start when `conf/jmxremote.password` holds none.
 
 With `jconsole`, select the *MBeans* tab and open the `org.apache.james` node to browse the attributes and invoke
 the operations.

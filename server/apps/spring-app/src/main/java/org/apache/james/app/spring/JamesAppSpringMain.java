@@ -19,6 +19,7 @@
 package org.apache.james.app.spring;
 
 import java.lang.management.ManagementFactory;
+import java.nio.file.Path;
 import java.util.Calendar;
 
 import javax.management.MBeanServer;
@@ -39,6 +40,7 @@ import com.github.fge.lambdas.Throwing;
 public class JamesAppSpringMain implements Daemon {
     private static final ObjectName ALL_OBJECT_NAME = null;
     private static final QueryExp ALL_QUERY_EXP = null;
+    private static final String JMX_PASSWORD_FILE = "../conf/jmxremote.password";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JamesAppSpringMain.class.getName());
     private JamesServerApplicationContext context;
@@ -46,10 +48,8 @@ public class JamesAppSpringMain implements Daemon {
     public static void main(String[] args) throws Exception {
         unregisterLog4JMBeans();
 
-        if (System.getProperty("com.sun.management.jmxremote.password.file") == null) {
-            LOGGER.warn("No authentication setted up for the JMX component. This expose you to local privilege escalation attacks risk. " +
-                "This can be done via the 'com.sun.management.jmxremote.password.file' system property.");
-        }
+        // The file read by the JMX connector (spring-server.xml)
+        JmxPasswordFile.tryEnsurePassword(Path.of(JMX_PASSWORD_FILE));
 
         long start = Calendar.getInstance().getTimeInMillis();
 
