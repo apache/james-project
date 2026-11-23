@@ -22,13 +22,15 @@ package org.apache.james.protocols.smtp.core.fastfail;
 import java.net.UnknownHostException;
 
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.hook.HookResult;
 
 public class ReverseEqualsEhloHeloHandler extends ResolvableEhloHeloHandler {
 
+    @Override
     protected boolean isBadHelo(SMTPSession session, String argument) {
         try {
-            String reverse = resolve(session.getRemoteAddress().getAddress().getHostAddress());
-            if (!argument.equals(reverse)) {
+            String reverse = withoutTrailingDot(resolve(session.getRemoteAddress().getAddress().getHostAddress()));
+            if (!withoutTrailingDot(argument).equalsIgnoreCase(reverse)) {
                 return true;
             }
         } catch (UnknownHostException e) {
@@ -37,6 +39,22 @@ public class ReverseEqualsEhloHeloHandler extends ResolvableEhloHeloHandler {
 
         return false;
     }
-    
-    
+
+    /**
+     * Clients allowed to relay, authenticated ones included, are not checked.
+     */
+    @Override
+    protected HookResult doCheck(SMTPSession session) {
+        if (session.isRelayingAllowed() || session.getUsername() != null) {
+            return HookResult.DECLINED;
+        }
+        return super.doCheck(session);
+    }
+
+    private static String withoutTrailingDot(String name) {
+        if (name.endsWith(".")) {
+            return name.substring(0, name.length() - 1);
+        }
+        return name;
+    }
 }

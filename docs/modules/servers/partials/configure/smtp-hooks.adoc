@@ -223,9 +223,8 @@ Example configuration:
 
 == ReverseEqualsEhloHeloHandler
 
-Checks HELO/EHLO is equal the reverse of the connecting client before accept it
-If checkAuthNetworks is set to true sender domain will be checked also for clients that
-are allowed to relay. Default is false.
+Checks HELO/EHLO is equal the reverse of the connecting client before accept it.
+Clients that are authenticated or allowed to relay are not checked.
 
 This handler should be considered experimental.
 
