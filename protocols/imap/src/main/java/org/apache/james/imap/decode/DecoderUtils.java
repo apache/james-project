@@ -88,9 +88,9 @@ public final class DecoderUtils {
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid flag " + flagString);
             } else if (flagString.startsWith("\\")) {
                 // flag-extension = "\" atom is reserved to future standards (RFC 3501 section 9): an undefined
-                // system flag is not a keyword, it would be announced in FLAGS and PERMANENTFLAGS. It is dropped
-                // rather than rejected so that clients copying the flags of messages stored with it keep working.
-                return;
+                // system flag is not a keyword. Silently dropping it would turn STORE FLAGS (\Bogus) into a wipe
+                // of all the flags of the message, reject it instead.
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Undefined system flag " + flagString);
             } else {
                 // RFC3501 allows novel flags
                 flags.add(flagString);
