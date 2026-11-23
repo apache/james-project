@@ -35,6 +35,7 @@ import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.core.DataCmdHandler;
 import org.apache.james.protocols.smtp.core.DataLineFilter;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -158,7 +159,8 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
                 }
                 return new SMTPResponse(SMTPRetCode.QUOTA_EXCEEDED, quotaExceededDescription(session));
             } else {
-                return null;
+                // The discarded lines do not reach the downstream CRLF check
+                return DataCmdHandler.rejectLineNotEndingWithCrlf(session, line).orElse(null);
             }
         } else {
             if (isDataTerminated(line)) {
@@ -177,7 +179,8 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
                     // been hit.
                     session.setMessageFailed(true);
 
-                    return null;
+                    // This line does not reach the downstream CRLF check either
+                    return DataCmdHandler.rejectLineNotEndingWithCrlf(session, line).orElse(null);
                 } else {
                     return next.onLine(session, line);
                 }
