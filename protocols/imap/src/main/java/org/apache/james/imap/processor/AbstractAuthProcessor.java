@@ -19,9 +19,11 @@
 package org.apache.james.imap.processor;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConfiguration;
+import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -194,15 +196,9 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
     }
 
     protected void manageFailureCount(ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {
-        Integer currentNumberOfFailures = (Integer) session.getAttribute(ATTRIBUTE_NUMBER_OF_FAILURES);
-        int failures;
-        if (currentNumberOfFailures == null) {
-            failures = 1;
-        } else {
-            failures = currentNumberOfFailures + 1;
-        }
+        // Several authentication attempts of a session can run at the same time
+        int failures = failureCounter(session).incrementAndGet();
         if (failures < MAX_FAILURES) {
-            session.setAttribute(ATTRIBUTE_NUMBER_OF_FAILURES, failures);
             no(request, responder, failed);
         } else {
             LOGGER.info("Too many authentication failures. Closing connection.");
@@ -211,7 +207,24 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         }
     }
 
+    private AtomicInteger failureCounter(ImapSession session) {
+        synchronized (session) {
+            AtomicInteger counter = (AtomicInteger) session.getAttribute(ATTRIBUTE_NUMBER_OF_FAILURES);
+            if (counter == null) {
+                counter = new AtomicInteger();
+                session.setAttribute(ATTRIBUTE_NUMBER_OF_FAILURES, counter);
+            }
+            return counter;
+        }
+    }
+
     protected void authSuccess(ImapSession session, MailboxSession mailboxSession, ImapRequest request, Responder responder, String successLog) {
+        if (session.getState() != ImapSessionState.NON_AUTHENTICATED) {
+            // For instance closed after too many failures while this attempt was checked
+            LOGGER.info("Authentication succeeded on a session that no longer expects it: ignored");
+            no(request, responder, HumanReadableText.AUTHENTICATION_FAILED);
+            return;
+        }
         session.authenticated();
         session.setMailboxSession(mailboxSession);
         try {

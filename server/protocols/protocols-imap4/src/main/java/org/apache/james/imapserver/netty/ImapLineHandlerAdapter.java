@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 
@@ -51,6 +52,12 @@ public class ImapLineHandlerAdapter extends ChannelInboundHandlerAdapter {
         buf.readBytes(data);
         Mono.from(lineHandler.onLine(session, data))
             .then(Mono.fromRunnable(() -> ctx.channel().flush()))
+            .then(Mono.fromRunnable(() -> {
+                // Continuation lines do not go through the command handler, which closes a logged out session
+                if (session.getState() == ImapSessionState.LOGOUT) {
+                    ctx.channel().close();
+                }
+            }))
             .subscribe();
     }
 
