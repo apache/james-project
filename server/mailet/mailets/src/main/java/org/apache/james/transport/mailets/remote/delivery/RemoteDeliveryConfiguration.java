@@ -147,10 +147,14 @@ public class RemoteDeliveryConfiguration {
         String gatewayPort = mailetConfig.getInitParameter(GATEWAY_PORT);
         String gateway = mailetConfig.getInitParameter(GATEWAY);
         gatewayServer = computeGatewayServers(gatewayPort, gateway);
-        if (gateway != null) {
+        if (!gatewayServer.isEmpty()) {
             authUser = computeGatewayUser(mailetConfig);
             authPass = mailetConfig.getInitParameter(GATEWAY_PASSWORD);
         } else {
+            if (computeGatewayUser(mailetConfig) != null) {
+                // Without a gateway, the mail goes to the MX of the recipients: they must not get the gateway credentials
+                LOGGER.error("Gateway credentials are configured without any gateway: they are ignored");
+            }
             authUser = null;
             authPass = null;
         }
