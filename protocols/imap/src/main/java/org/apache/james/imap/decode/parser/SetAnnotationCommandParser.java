@@ -75,7 +75,7 @@ public class SetAnnotationCommandParser extends AbstractImapCommandParser {
             if (!hasPrefix(key, PRIVATE_PREFIX) && !hasPrefix(key, SHARED_PREFIX)) {
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Entry names must start with /private/ or /shared/");
             }
-            String value = request.nstring();
+            String value = request.nstringOfAnySize();
             // RFC 5464: only a literal8, which is not supported, can carry a NUL
             if (value != null && value.indexOf('\0') >= 0) {
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "A metadata value can not hold a NUL");

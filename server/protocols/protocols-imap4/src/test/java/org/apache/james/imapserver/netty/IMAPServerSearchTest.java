@@ -21,7 +21,6 @@ package org.apache.james.imapserver.netty;
 
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -133,15 +132,18 @@ class IMAPServerSearchTest extends AbstractIMAPServerTest {
         readStringUntil(clientConnection, s -> s.contains("a1 OK"));
 
 
+        // A string literal is at most 8 KiB: each one is refused from its announced size, its content discarded unread
         String literal = "a".repeat(32 * 1024); // 32 KB
         clientConnection.write(ByteBuffer.wrap(("a2 SEARCH CHARSET UTF-8 TO {" + literal.length() + "+}\r\n").getBytes(StandardCharsets.UTF_8)));
+        for (int i = 0; i < 10; i++) {
+            clientConnection.write(ByteBuffer.wrap((literal + " TO {" + literal.length() + "+}\r\n").getBytes(StandardCharsets.UTF_8)));
+        }
+        clientConnection.write(ByteBuffer.wrap((literal + " ALL\r\n").getBytes(StandardCharsets.UTF_8)));
+        clientConnection.write(ByteBuffer.wrap("a3 NOOP\r\n".getBytes(StandardCharsets.UTF_8)));
 
-        assertThatThrownBy(() -> {
-                for (int i = 0; i < 7000; i++) {
-                    clientConnection.write(ByteBuffer.wrap((literal + " TO {" + literal.length() + "+}\r\n").getBytes(StandardCharsets.UTF_8)));
-                }
-                clientConnection.write(ByteBuffer.wrap((literal + " ALL\r\n").getBytes(StandardCharsets.UTF_8)));
-            }).isInstanceOf(IOException.class);
+        assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK")))
+            .anySatisfy(line -> assertThat(line).startsWith("a2 BAD"))
+            .noneSatisfy(line -> assertThat(line).startsWith("a2 OK"));
     }
 
     @Test
