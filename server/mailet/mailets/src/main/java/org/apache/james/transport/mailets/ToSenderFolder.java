@@ -91,7 +91,7 @@ public class ToSenderFolder extends GenericMailet {
 
             mailboxAppender.append(mail.getMessage(), username, StorageDirective.builder().targetFolder(folder).build()).block();
 
-            LOGGER.error("Local delivery with ToSenderFolder mailet for mail {} with sender {} in folder {}", mail.getName(), sender, folder);
+            LOGGER.info("Local delivery with ToSenderFolder mailet for mail {} with sender {} in folder {}", mail.getName(), sender, folder);
         }
     }
 
