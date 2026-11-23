@@ -21,6 +21,7 @@ Change list:
 
 
 
+
 ### IPv6 network prefixes apply as written
 
 Date: 23/11/2026
@@ -95,6 +96,16 @@ Concerned products: the Spring app.
 when the file holds no credentials, or still holds `james-admin changeme`, James generates a random password for
 `james-admin`, in a file readable by its owner only. Read it there, for instance for `james-cli`, or write your own
 `james-admin <password>` line in the file.
+
+### Pulsar verifies the TLS host name of its endpoints
+
+Date: 23/11/2026
+
+Concerned products: the apps using Pulsar (experimental).
+
+Over TLS, the host name of the Pulsar broker and admin endpoints is now checked against their certificate. Set
+`tls.hostname.verification=false` in `pulsar.properties` to get the former behaviour back. `tls.trust.certs.file.path`
+sets the certificates (PEM) trusted for these endpoints.
 
 ## 3.9.1 version
 

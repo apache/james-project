@@ -39,17 +39,20 @@ object PulsarClients {
         basic
     }
 
-    val adminClient: PulsarAdmin =
-      PulsarAdmin.builder()
-        .serviceHttpUrl(configuration.adminUri)
-        .authentication(pulsarAuth)
-        .build()
+    val adminClientBuilder = PulsarAdmin.builder()
+      .serviceHttpUrl(configuration.adminUri)
+      .authentication(pulsarAuth)
+      .enableTlsHostnameVerification(configuration.tlsHostnameVerification)
+    configuration.tlsTrustCertsFilePath.foreach(path => adminClientBuilder.tlsTrustCertsFilePath(path))
+    val adminClient: PulsarAdmin = adminClientBuilder.build()
 
     val asyncClient: PulsarAsyncClient = {
       PulsarClient(
         PulsarClientConfig(
           serviceUrl = configuration.brokerUri,
-          authentication = Some(pulsarAuth)
+          authentication = Some(pulsarAuth),
+          enableTlsHostnameVerification = Some(configuration.tlsHostnameVerification),
+          tlsTrustCertsFilePath = configuration.tlsTrustCertsFilePath
         )
       )
     }
