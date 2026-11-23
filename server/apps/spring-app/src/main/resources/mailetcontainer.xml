@@ -317,6 +317,11 @@ Regards, Postmaster XXX.YYY
        <!-- using delay time to retry delivery and the maximum number of retries -->
        <mailet match="All" class="RemoteDelivery">
           <outgoing>outgoing</outgoing>
+          <!-- Opportunistic STARTTLS: used when the receiving server offers it, without checking its certificate, as many MX
+               use self-signed or expired ones. Mail still leaves in cleartext to a server not offering it. -->
+          <startTLS>true</startTLS>
+          <verifyServerIdentity>false</verifyServerIdentity>
+          <sslTrustAllCerts>true</sslTrustAllCerts>
 
           <!-- Delivery Schedule based upon RFC 2821, 4.5.4.1 -->
           <!-- 5 day retry period, with 4 attempts in the first

@@ -68,6 +68,11 @@
             </mailet>
             <mailet match="All" class="RemoteDelivery">
                 <outgoing>outgoing</outgoing>
+                <!-- Opportunistic STARTTLS: used when the receiving server offers it, without checking its certificate, as many MX
+                     use self-signed or expired ones. Mail still leaves in cleartext to a server not offering it. -->
+                <startTLS>true</startTLS>
+                <verifyServerIdentity>false</verifyServerIdentity>
+                <sslTrustAllCerts>true</sslTrustAllCerts>
                 <delayTime>10 seconds</delayTime>
                 <delayTime>30 seconds</delayTime>
 
