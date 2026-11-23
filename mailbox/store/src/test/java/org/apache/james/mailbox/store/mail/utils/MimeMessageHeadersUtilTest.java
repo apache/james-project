@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
@@ -56,6 +58,25 @@ class MimeMessageHeadersUtilTest {
         assertThat(MimeMessageHeadersUtil.parseReferences(header).get())
             .containsOnly(new MimeMessageId("<CANKoxfUNSvbjBuUaQSQiFavvDH-OvVig772-dKMrAbsisoZa1A@mail.gmail.com>"),
                 new MimeMessageId("<Mime4j.70b.9be3d6cb7586c526.198e07cfc57@linagora.com>"));
+    }
+
+    @Test
+    void parseReferencesShouldKeepOnlyTheMostRecentReferences() throws Exception {
+        Header header = parse("References:" + IntStream.range(0, 1000)
+            .mapToObj(i -> " <id" + i + "@example.com>")
+            .collect(Collectors.joining("\r\n")) + "\r\n").getHeader();
+
+        assertThat(MimeMessageHeadersUtil.parseReferences(header).get())
+            .hasSize(50)
+            .endsWith(new MimeMessageId("<id999@example.com>"));
+    }
+
+    @Test
+    void parseReferencesShouldIgnoreTooLongReferences() throws Exception {
+        Header header = parse("References: <" + "a".repeat(1000) + "@example.com> <id@example.com>\r\n").getHeader();
+
+        assertThat(MimeMessageHeadersUtil.parseReferences(header).get())
+            .containsOnly(new MimeMessageId("<id@example.com>"));
     }
 
     @Test
