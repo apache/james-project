@@ -37,6 +37,27 @@ class ImapResponseComposerImplTest {
     }
 
     @Test
+    void flagsShouldSkipStoredUserFlagsThatAreNotAtoms() throws Exception {
+        Flags flags = new Flags(Flags.Flag.SEEN);
+        flags.add("x)]");
+        flags.add("$Forwarded");
+        composer.flags(flags);
+        composer.end();
+        composer.flush();
+
+        assertThat(writer.getString()).isEqualTo(" FLAGS (\\Seen $Forwarded)\r\n");
+    }
+
+    @Test
+    void permanentFlagsShouldSkipStoredUserFlagsThatAreNotAtoms() {
+        Flags flags = new Flags(Flags.Flag.USER);
+        flags.add("x)]");
+        flags.add("$Forwarded");
+
+        assertThat(MessageFlags.names(flags)).containsExactly("$Forwarded", "\\*");
+    }
+
+    @Test
     void encodeShouldHandleQuotedChar128() throws Exception {
         Character c = 128;
         composer.quote(c.toString());
@@ -64,4 +85,24 @@ class ImapResponseComposerImplTest {
         assertThat(writer.getString()).isEqualTo(" \"PL?IN\"\r\n");
     }
 
+    @Test
+    void flagsShouldSkipStoredUserFlagsThatAreNotAtoms() throws Exception {
+        Flags flags = new Flags(Flags.Flag.SEEN);
+        flags.add("x)]");
+        flags.add("$Forwarded");
+        composer.flags(flags);
+        composer.end();
+        composer.flush();
+
+        assertThat(writer.getString()).isEqualTo(" FLAGS (\\Seen $Forwarded)\r\n");
+    }
+
+    @Test
+    void permanentFlagsShouldSkipStoredUserFlagsThatAreNotAtoms() {
+        Flags flags = new Flags(Flags.Flag.USER);
+        flags.add("x)]");
+        flags.add("$Forwarded");
+
+        assertThat(MessageFlags.names(flags)).containsExactly("$Forwarded", "\\*");
+    }
 }

@@ -33,6 +33,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.MessageFlags;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
@@ -138,7 +139,9 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         Flags permanentFlags = grantedPermanentFlags(mailboxPermanentFlags, selected, mailboxSession);
         if (permanentFlags.contains(Flags.Flag.USER)) {
             for (String keyword : selected.getApplicableFlags().getUserFlags()) {
-                permanentFlags.add(keyword);
+                if (MessageFlags.isKeyword(keyword)) {
+                    permanentFlags.add(keyword);
+                }
             }
         }
         final StatusResponse untaggedOk = factory.untaggedOk(HumanReadableText.permanentFlags(permanentFlags), ResponseCode.permanentFlags(permanentFlags));
