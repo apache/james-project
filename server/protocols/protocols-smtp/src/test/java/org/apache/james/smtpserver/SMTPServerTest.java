@@ -514,6 +514,27 @@ public class SMTPServerTest {
     }
 
     @Test
+    public void startTlsCommandShouldFailWhenFollowedByInjectedCommandAfterAMessage() throws Exception {
+        smtpConfiguration.setStartTLS();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.setSender("sender@example.com");
+        smtpProtocol.addRecipient("mail@localhost");
+        smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nbody\r\n");
+        assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+
+        smtpProtocol.sendCommand("STARTTLS\r\nAUTH PLAIN");
+        assertThat(smtpProtocol.getReplyCode()).isEqualTo(451);
+
+        smtpProtocol.disconnect();
+    }
+
+    @Test
     public void commandsShouldBeProcessedAfterARefusedStartTls() throws Exception {
         init(smtpConfiguration);
 

@@ -135,7 +135,6 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
     @Override
     public Response onCommand(SMTPSession session, Request request) {
         TimeMetric timeMetric = metricFactory.timer("SMTP-" + request.getCommand());
-        session.stopDetectingCommandInjection();
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addToContext(MDCBuilder.ACTION, request.getCommand())
@@ -144,7 +143,13 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
             Response response = doDATAFilter(session, parameters);
 
             if (response == null) {
-                return doDATA(session, parameters);
+                // The body may hold any text: detection applies again once its line handler is popped
+                session.stopDetectingCommandInjection();
+                Response dataResponse = doDATA(session, parameters);
+                if (!SMTPRetCode.DATA_READY.equals(dataResponse.getRetCode()) && !session.isTLSStarted()) {
+                    session.startDetectingCommandInjection();
+                }
+                return dataResponse;
             } else {
                 return response;
             }
@@ -152,7 +157,6 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
             throw new RuntimeException(e);
         } finally {
             timeMetric.stopAndPublish();
-            session.needsCommandInjectionDetection();
         }
     }
 
