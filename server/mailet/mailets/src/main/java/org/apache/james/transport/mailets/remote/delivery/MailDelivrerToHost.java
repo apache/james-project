@@ -60,6 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableListMultimap;
 
 @SuppressWarnings("deprecation")
@@ -71,7 +72,9 @@ public class MailDelivrerToHost {
     public static final String SMTPUTF8 = "SMTPUTF8";
     public static final String MT_PRIORITY = "MT-PRIORITY";
     public static final String MAIL_PRIORITY_ATTRIBUTE_NAME = "MAIL_PRIORITY";
-    private static final List<String> supportedSmtpExtensionsList = List.of(MT_PRIORITY, STARTTLS);
+    // Once STARTTLS succeeded, the server no longer announces STARTTLS (RFC 3207): REQUIRETLS mail only reaches a
+    // server announcing REQUIRETLS
+    private static final List<String> supportedSmtpExtensionsList = List.of(MT_PRIORITY, STARTTLS, REQUIRE_TLS);
     private static final List<String> supportedMailAttributesList = List.of(MAIL_PRIORITY_ATTRIBUTE_NAME, REQUIRE_TLS);
 
     private final RemoteDeliveryConfiguration configuration;
@@ -141,13 +144,18 @@ public class MailDelivrerToHost {
             props.put("mail.mime.allowutf8", "true");
         }
 
+        if (requiresTls(mail)) {
+            // RFC 8689: such a mail only leaves over TLS
+            props.put(inContext(session, "mail.smtp.starttls.enable"), "true");
+        }
+
         SMTPTransport transport = null;
         try {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost(props.getProperty(inContext(session, "mail.smtp.localhost"), configuration.getHeloNameProvider().getHeloName()));
             connect(outgoingMailServer, transport);
-            if (receiverDoesNotProvideNecessaryStartTls(mail, transport)) {
-                return ExecutionResult.permanentFailure(new SendFailedException("Mail delivery failed; the receiving server does not support STARTTLS"));
+            if (requireTlsNotSatisfied(mail, transport)) {
+                return ExecutionResult.permanentFailure(new SendFailedException("Mail delivery failed; REQUIRETLS mail needs a TLS connection to a server supporting REQUIRETLS"));
             }
             // We assume all MXes for a given destination domain advertise
             // the same set of SMTP extensions; this decision is made once,
@@ -169,7 +177,7 @@ public class MailDelivrerToHost {
                 sendDSNAwareEmail(mail, transport, addr);
             } else if (extensionsSupported(transport)) {
                 SMTPMessage smtpMessage = new SMTPMessage(adaptToTransport(mail.getMessage(), transport));
-                transport.sendMessage(toSmtpMessageWithExtensions(mail, smtpMessage), addr.toArray(InternetAddress[]::new));
+                transport.sendMessage(toSmtpMessageWithExtensions(mail, smtpMessage, transport), addr.toArray(InternetAddress[]::new));
             } else {
                 transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr.toArray(InternetAddress[]::new));
             }
@@ -258,7 +266,7 @@ public class MailDelivrerToHost {
                 });
 
         if (extensionsSupported(transport)) {
-            return toSmtpMessageWithExtensions(mail, smtpMessage);
+            return toSmtpMessageWithExtensions(mail, smtpMessage, transport);
         }
         return smtpMessage;
     }
@@ -275,26 +283,36 @@ public class MailDelivrerToHost {
         return out;
     }
 
-    private static boolean receiverDoesNotProvideNecessaryStartTls(Mail mail, SMTPTransport transport) {
-        return !transport.getLastServerResponse().contains(STARTTLS) &&
-                mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS)) &&
-                isRequireTlsAttribute(mail);
+    /**
+     * RFC 8689 section 4.2.1: the connection is actually secured by TLS, and the server announces REQUIRETLS.
+     */
+    @VisibleForTesting
+    static boolean requireTlsNotSatisfied(Mail mail, SMTPTransport transport) {
+        return requiresTls(mail) && !(transport.isSSL() && transport.supportsExtension(REQUIRE_TLS));
+    }
+
+    private static boolean requiresTls(Mail mail) {
+        return mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS)) && isRequireTlsAttribute(mail);
     }
 
     private static boolean isRequireTlsAttribute(Mail mail) {
         return mail.attributesMap().get(AttributeName.of(REQUIRE_TLS)).getValue().value().equals(Boolean.TRUE);
     }
 
-    private SMTPMessage toSmtpMessageWithExtensions(Mail mail, SMTPMessage smtpMessage) {
+    private SMTPMessage toSmtpMessageWithExtensions(Mail mail, SMTPMessage smtpMessage, SMTPTransport transport) {
         mail.attributesMap().forEach((attributeName, attribute) -> {
             if (supportedMailAttributesList.contains(attributeName.asString())) {
                 String existingMessageExtensions = Optional.ofNullable(smtpMessage.getMailExtension())
                     .map(extension -> " " + extension)
                     .orElse("");
                 switch (attributeName.asString()) {
-                    case MAIL_PRIORITY_ATTRIBUTE_NAME ->
-                        smtpMessage.setMailExtension(MT_PRIORITY + "=" + attribute.getValue().value() +
-                            existingMessageExtensions);
+                    case MAIL_PRIORITY_ATTRIBUTE_NAME -> {
+                        // Only a server announcing MT-PRIORITY accepts the parameter (RFC 6710)
+                        if (transport.supportsExtension(MT_PRIORITY)) {
+                            smtpMessage.setMailExtension(MT_PRIORITY + "=" + attribute.getValue().value() +
+                                existingMessageExtensions);
+                        }
+                    }
                     case REQUIRE_TLS -> {
                         if (isRequireTlsAttribute(mail)) {
                             smtpMessage.setMailExtension(REQUIRE_TLS + existingMessageExtensions);
