@@ -101,26 +101,25 @@ message is reindexed, so the space comes back progressively rather than at once.
 
 == Change the entropy of the blobId
 
-By default a blobId carries 128 bits of entropy: the leading 128 bits of the SHA-256 of the content it
-addresses for deduplicated blobs, and as many random bits for the randomly generated ones. The property
+By default a blobId carries 256 bits of entropy: the full SHA-256 of the content it addresses for
+deduplicated blobs, and as many random bits for the randomly generated ones. The property
 `james.blobid.entropy` changes that, in bits.
 
 Ex in `jvm.properties`
 ----
-james.blobid.entropy=256
+james.blobid.entropy=128
 ----
 
-Optional. Integer, a multiple of 8 within [96, 256]. Defaults to 128.
+Optional. Integer, a multiple of 8 within [96, 256]. Defaults to 256.
 
 The length of an id is paid everywhere it is stored. The object key itself, but above all the Cassandra
 columns referencing it, which hold one id per message rather than one per blob: 256 bits takes a body
 blob id from 28 to 50 characters. Ids below the full 256 bits are also left unpadded, which is worth two
 more characters.
 
-128 bits is ample for a content addressed store. The birthday bound puts a collision at `n^2/2^129`, ie.
-1.5e-19 for ten billion blobs, twenty orders of magnitude below the silent error rate of the storage
-underneath; and truncating a cryptographic hash to its leading bits is standard practice (NIST SP
-800-107, FIPS 180-4). `256` spells ids out the way releases up to 3.9.x did.
+128 bits is the sensible alternative to the default. The birthday bound puts a collision at `n^2/2^129`,
+ie. 1.5e-19 for ten billion blobs; and truncating a cryptographic hash to its leading bits is standard
+practice (NIST SP 800-107, FIPS 180-4). It shortens a body blob id from 50 to 28 characters.
 
 == Improve listing support for MinIO
 

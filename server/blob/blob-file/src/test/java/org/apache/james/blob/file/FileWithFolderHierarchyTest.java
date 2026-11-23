@@ -95,7 +95,7 @@ class FileWithFolderHierarchyTest implements BlobStoreContract {
         BlobId blobId = Mono.from(store.save(defaultBucketName, "toto", storagePolicy)).block();
         String blobIdString = blobId.asString();
 
-        assertThat(blobIdString).isEqualTo("1/628/M/f/emXjFVhqwZi9eYtmKc5A");
+        assertThat(blobIdString).isEqualTo("1/628/M/f/emXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY=");
         assertThat(blobId).isEqualTo(blobIdFactory().parse(blobIdString));
     }
 
