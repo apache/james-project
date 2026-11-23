@@ -71,8 +71,6 @@ import org.apache.james.mailbox.store.mail.FetchGroupConverter;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.FlagsFactory;
-import org.apache.james.mailbox.store.mail.model.FlagsFilter;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
@@ -597,17 +595,9 @@ public class StoreMessageIdManager implements MessageIdManager {
         return Flux.fromIterable(messageMoves.addedMailboxes())
             .flatMap(Throwing.<Mailbox, Mono<EventWithRegistrationKey>>function(mailbox -> {
                 MailboxACL.Rfc4314Rights myRights = rightManager.myRights(mailbox, mailboxSession);
-                boolean shouldPreserveFlags = myRights.contains(Right.Write);
                 MailboxMessage copy = mailboxMessage.copy(mailbox);
-                Flags flags = FlagsFactory
-                    .builder()
-                    .flags(mailboxMessage.createFlags())
-                    .filteringFlags(
-                        FlagsFilter.builder()
-                            .systemFlagFilter(f -> shouldPreserveFlags)
-                            .userFlagFilter(f -> shouldPreserveFlags)
-                            .build())
-                    .build();
+                Flags flags = mailboxMessage.createFlags();
+                flags.remove(StoreMessageManager.flagsNotAllowedToSet(flags, myRights));
                 copy.setFlags(markRecent(flags, StoreMessageManager.HANDLE_RECENT));
 
                 return save(messageIdMapper, copy, mailbox, mailboxSession)
