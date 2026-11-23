@@ -120,6 +120,14 @@ class SearchUtilTest {
     }
 
     @Test
+    void getBaseSubjectShouldBeFastOnManyBlobsFollowedByAnUnclosedBlobAfterRe() {
+        String subject = "[]".repeat(32_000) + "re [" + "x".repeat(64_000);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("re [" + "x".repeat(64_000)));
+    }
+
+    @Test
     void getBaseSubjectShouldBeFastOnManyBlobsNotFollowedByALeader() {
         String subject = "[a] ".repeat(20_000) + "]Re: w";
 
