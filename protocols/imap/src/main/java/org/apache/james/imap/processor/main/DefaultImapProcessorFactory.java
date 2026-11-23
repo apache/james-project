@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor.main;
 
+import java.util.List;
+
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -77,14 +79,53 @@ public class DefaultImapProcessorFactory {
                                                                EventBus eventBus, SubscriptionManager subscriptionManager,
                                                                MailboxTyper mailboxTyper, QuotaManager quotaManager,
                                                                QuotaRootResolver quotaRootResolver, MetricFactory metricFactory) {
+        return createXListSupportingProcessor(mailboxManager, saslAuthenticator, eventBus, subscriptionManager, mailboxTyper,
+            quotaManager, quotaRootResolver, metricFactory, PlainSaslMechanism.requiringTls());
+    }
 
+    /**
+     * Used by the Spring app, whose processor is shared by all its IMAP servers: see {@link #sharedPlainSaslMechanism}.
+     *
+     * @param imapServersConfiguration the content of imapserver.xml, holding the imapserver entries
+     */
+    public static ImapProcessor createXListSupportingProcessor(MailboxManager mailboxManager,
+                                                               JamesSaslAuthenticator saslAuthenticator,
+                                                               EventBus eventBus, SubscriptionManager subscriptionManager,
+                                                               MailboxTyper mailboxTyper, QuotaManager quotaManager,
+                                                               QuotaRootResolver quotaRootResolver, MetricFactory metricFactory,
+                                                               HierarchicalConfiguration<ImmutableNode> imapServersConfiguration) {
+        return createXListSupportingProcessor(mailboxManager, saslAuthenticator, eventBus, subscriptionManager, mailboxTyper,
+            quotaManager, quotaRootResolver, metricFactory, sharedPlainSaslMechanism(imapServersConfiguration));
+    }
+
+    /**
+     * The PLAIN mechanism of a processor shared by several IMAP servers: it requires TLS, as by default, unless every
+     * IMAP server allows plain authentication without TLS (plainAuthDisallowed or auth.requireSSL set to false).
+     */
+    public static PlainSaslMechanism sharedPlainSaslMechanism(HierarchicalConfiguration<ImmutableNode> imapServersConfiguration) {
+        PlainSaslMechanismFactory factory = new PlainSaslMechanismFactory();
+        List<HierarchicalConfiguration<ImmutableNode>> servers = imapServersConfiguration.configurationsAt("imapserver");
+        boolean everyServerAllowsCleartext = !servers.isEmpty() && servers.stream()
+            .allMatch(server -> factory.create(server).isAvailableOnTransport(false));
+        if (everyServerAllowsCleartext) {
+            return new PlainSaslMechanism(true, false);
+        }
+        return PlainSaslMechanism.requiringTls();
+    }
+
+    private static ImapProcessor createXListSupportingProcessor(MailboxManager mailboxManager,
+                                                                JamesSaslAuthenticator saslAuthenticator,
+                                                                EventBus eventBus, SubscriptionManager subscriptionManager,
+                                                                MailboxTyper mailboxTyper, QuotaManager quotaManager,
+                                                                QuotaRootResolver quotaRootResolver, MetricFactory metricFactory,
+                                                                PlainSaslMechanism plainSaslMechanism) {
         StatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         UnknownRequestProcessor unknownRequestImapProcessor = new UnknownRequestProcessor(statusResponseFactory);
 
         return DefaultProcessor.createDefaultProcessor(unknownRequestImapProcessor, mailboxManager,
             eventBus, subscriptionManager, statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver,
             MailboxCounterCorrector.DEFAULT, metricFactory,
-            FetchProcessor.LocalCacheConfiguration.DEFAULT, ImmutableList.of(new PlainSaslMechanism()), saslAuthenticator);
+            FetchProcessor.LocalCacheConfiguration.DEFAULT, ImmutableList.of(plainSaslMechanism), saslAuthenticator);
     }
 
     public static ImapProcessor createXListSupportingProcessor(MailboxManager mailboxManager,

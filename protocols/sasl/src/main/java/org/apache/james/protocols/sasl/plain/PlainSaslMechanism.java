@@ -55,6 +55,13 @@ public class PlainSaslMechanism implements SaslMechanism {
         this(true, false);
     }
 
+    /**
+     * Enabled, and only on an encrypted channel: the default of the configurations (plainAuthDisallowed).
+     */
+    public static PlainSaslMechanism requiringTls() {
+        return new PlainSaslMechanism(true, true);
+    }
+
     public PlainSaslMechanism(boolean enabled, boolean requiresSsl) {
         this.enabled = enabled;
         this.requiresSsl = requiresSsl;

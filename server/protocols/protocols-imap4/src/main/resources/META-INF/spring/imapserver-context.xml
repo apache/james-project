@@ -39,6 +39,12 @@
         <constructor-arg index="5" ref="quotaManager"/>
         <constructor-arg index="6" ref="quotaRootResolver"/>
         <constructor-arg index="7" ref="timeMetricFactory"/>
+        <!-- The PLAIN mechanism follows the plainAuthDisallowed setting of the IMAP servers -->
+        <constructor-arg index="8">
+            <bean factory-bean="configurationprovider" factory-method="getConfiguration">
+                <constructor-arg value="imapserver"/>
+            </bean>
+        </constructor-arg>
     </bean>
 
     <bean id="jamesSaslAuthenticator" class="org.apache.james.protocols.sasl.JamesSaslAuthenticator">

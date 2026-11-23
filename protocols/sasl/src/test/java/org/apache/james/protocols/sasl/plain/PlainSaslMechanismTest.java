@@ -43,6 +43,12 @@ class PlainSaslMechanismTest {
     private final PlainSaslMechanism testee = new PlainSaslMechanism();
 
     @Test
+    void requiringTlsShouldOnlyBeAvailableOnAnEncryptedChannel() {
+        assertThat(PlainSaslMechanism.requiringTls().isAvailableOnTransport(false)).isFalse();
+        assertThat(PlainSaslMechanism.requiringTls().isAvailableOnTransport(true)).isTrue();
+    }
+
+    @Test
     void shouldBeAvailableOnClearTransportByDefault() {
         assertThat(testee.isAvailableOnTransport(false)).isTrue();
     }
