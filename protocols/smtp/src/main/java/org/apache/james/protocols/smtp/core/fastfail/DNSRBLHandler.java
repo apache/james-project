@@ -18,11 +18,12 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.StringTokenizer;
+import java.util.List;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -36,6 +37,12 @@ import org.apache.james.protocols.smtp.hook.MailHook;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import com.google.common.io.BaseEncoding;
+import com.google.common.net.InetAddresses;
 
 /**
   * Handler for DNSRBL processing. The DNSRBL handler should be called as early as possible to
@@ -106,6 +113,29 @@ public class DNSRBLHandler implements MailHook, RcptHook {
     }
 
     /**
+     * RFC 5782: the reversed octets of an IPv4 address, the reversed nibbles of an IPv6 address (section 2.4), each
+     * followed by a dot.
+     */
+    static String reversedQueryPrefix(String ipAddress) {
+        // A literal, parsed without any DNS lookup
+        String literal = ipAddress.split("%")[0];
+        if (!InetAddresses.isInetAddress(literal)) {
+            LOGGER.warn("Invalid IP address {}", ipAddress);
+            return reversedLabels(Splitter.on('.').omitEmptyStrings().trimResults().splitToList(ipAddress));
+        }
+        InetAddress address = InetAddresses.forString(literal);
+        if (address instanceof Inet6Address) {
+            String nibbles = BaseEncoding.base16().lowerCase().encode(address.getAddress());
+            return reversedLabels(Lists.charactersOf(nibbles).stream().map(String::valueOf).toList());
+        }
+        return reversedLabels(Splitter.on('.').splitToList(address.getHostAddress()));
+    }
+
+    private static String reversedLabels(List<String> labels) {
+        return Joiner.on('.').join(Lists.reverse(labels)) + ".";
+    }
+
+    /**
      *
      * This checks DNSRBL whitelists and blacklists.  If the remote IP is whitelisted
      * it will be permitted to send e-mail, otherwise if the remote IP is blacklisted,
@@ -119,12 +149,7 @@ public class DNSRBLHandler implements MailHook, RcptHook {
             return;
         }
 
-        StringBuilder sb = new StringBuilder();
-        StringTokenizer st = new StringTokenizer(ipAddress, " .", false);
-        while (st.hasMoreTokens()) {
-            sb.insert(0, st.nextToken() + ".");
-        }
-        String reversedOctets = sb.toString();
+        String reversedOctets = reversedQueryPrefix(ipAddress);
 
         if (whitelist != null) {
             String[] rblList = whitelist;
