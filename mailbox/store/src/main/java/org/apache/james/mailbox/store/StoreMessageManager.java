@@ -295,8 +295,8 @@ public class StoreMessageManager implements MessageManager {
 
     @Override
     public Mono<Void> deleteReactive(List<MessageUid> uids, MailboxSession mailboxSession) {
-        if (!storeRightManager.hasRight(mailbox, MailboxACL.Right.DeleteMessages, mailboxSession)) {
-            return Mono.error(new InsufficientRightsException("Deleting messages requires 't' right"));
+        if (!storeRightManager.myRights(mailbox, mailboxSession).contains(MailboxACL.Right.DeleteMessages, MailboxACL.Right.PerformExpunge)) {
+            return Mono.error(new InsufficientRightsException("Deleting messages requires 't' and 'e' rights"));
         }
         return deleteMessages(uids, mailboxSession)
             .flatMap(deleteMessages -> dispatchExpungeEvent(mailboxSession, deleteMessages));
