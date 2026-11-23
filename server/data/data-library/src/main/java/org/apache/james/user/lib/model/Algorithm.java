@@ -20,6 +20,7 @@
 package org.apache.james.user.lib.model;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -65,9 +66,10 @@ public class Algorithm {
 
         @Override
         public byte[] digestString(String pass, String salt) throws NoSuchAlgorithmException {
-            MessageDigest md = MessageDigest.getInstance(algorithm.getName());
+            MessageDigest md = MessageDigest.getInstance(algorithm.digestName());
             String saltedPass = applySalt(algorithm, pass, salt);
-            return md.digest(saltedPass.getBytes(ISO_8859_1));
+            // Digests without the UTF-8 suffix were computed on ISO-8859-1, where any other character becomes '?'
+            return md.digest(saltedPass.getBytes(algorithm.isUtf8() ? UTF_8 : ISO_8859_1));
         }
 
         private String applySalt(Algorithm algorithm, String pass, String salt) {
@@ -236,6 +238,11 @@ public class Algorithm {
         }
     }
 
+    /**
+     * Suffix of the algorithms whose digest is computed on the UTF-8 bytes of the password.
+     */
+    public static final String UTF8_SUFFIX = "-utf8";
+
     public static Algorithm of(String algorithmName) {
         return Algorithm.of(algorithmName, HashingMode.PLAIN);
     }
@@ -281,6 +288,27 @@ public class Algorithm {
 
     public boolean isPBKDF2() {
         return hasher.isPBKDF2();
+    }
+
+    public boolean isUtf8() {
+        return rawValue.endsWith(UTF8_SUFFIX);
+    }
+
+    String digestName() {
+        if (isUtf8()) {
+            return rawValue.substring(0, rawValue.length() - UTF8_SUFFIX.length());
+        }
+        return rawValue;
+    }
+
+    /**
+     * The algorithm new digests are computed with: the digest family hashes the UTF-8 bytes of the password.
+     */
+    public Algorithm forNewDigests() {
+        if (isPBKDF2() || isUtf8()) {
+            return this;
+        }
+        return new Algorithm(rawValue + UTF8_SUFFIX, hashingMode);
     }
 
     public boolean isSalted() {

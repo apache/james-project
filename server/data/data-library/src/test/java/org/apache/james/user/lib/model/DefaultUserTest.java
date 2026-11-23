@@ -55,10 +55,26 @@ public class DefaultUserTest {
     @Test
     public void shouldSetPasswordUsingUpdateAlgorithm() {
         user.setPassword("secret2");
-        assertThat(user.getHashAlgorithm().asString()).isEqualTo("SHA-256/plain");
+        assertThat(user.getHashAlgorithm().asString()).isEqualTo("SHA-256-utf8/plain");
         assertThat(user.getHashAlgorithm().getHashingMode()).isEqualToIgnoringCase(PLAIN.name());
 
         assertThat(user.verifyPassword("secret2")).isTrue();
         assertThat(user.verifyPassword("secret")).isFalse();
+    }
+
+    @Test
+    public void shouldNotAcceptTheIsoTwinOfANonLatinPassword() {
+        user.setPassword("Привет");
+
+        assertThat(user.verifyPassword("Привет")).isTrue();
+        assertThat(user.verifyPassword("??????")).isFalse();
+    }
+
+    @Test
+    public void shouldStillVerifyIsoDigests() {
+        Algorithm iso = Algorithm.of("SHA-512");
+        DefaultUser isoUser = new DefaultUser(Username.of("joe"), iso.digest("Привет", "joe"), iso, iso);
+
+        assertThat(isoUser.verifyPassword("Привет")).isTrue();
     }
 }
