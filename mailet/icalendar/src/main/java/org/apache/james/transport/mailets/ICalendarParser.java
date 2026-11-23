@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import jakarta.mail.MessagingException;
@@ -119,9 +120,11 @@ public class ICalendarParser extends GenericMailet {
     }
 
     private void addCalendarsToAttribute(Mail mail, Map<String, AttributeValue<byte[]>> icsAttachments) {
+        // The calendars of a mail live as long as it is processed: their custom timezones share one budget
+        AtomicInteger remainingCustomTimezones = ICal4JTimeZoneRegistry.newCustomTimezoneBudget();
         Map<String, AttributeValue<?>> calendars = icsAttachments.entrySet()
             .stream()
-            .flatMap(entry -> createCalendar(entry.getKey(), entry.getValue().getValue()))
+            .flatMap(entry -> createCalendar(entry.getKey(), entry.getValue().getValue(), remainingCustomTimezones))
             .collect(ImmutableMap.toImmutableMap(Pair::getKey, pair -> AttributeValue.ofUnserializable(pair.getValue())));
 
         mail.setAttribute(new Attribute(destinationAttributeName, AttributeValue.of(calendars)));
@@ -132,12 +135,12 @@ public class ICalendarParser extends GenericMailet {
         return "Calendar Parser";
     }
 
-    private Stream<Pair<String, Calendar>> createCalendar(String key, byte[] icsContent) {
+    private Stream<Pair<String, Calendar>> createCalendar(String key, byte[] icsContent, AtomicInteger remainingCustomTimezones) {
         CalendarBuilder builder = new CalendarBuilder(
             CalendarParserFactory.getInstance().get(),
             new ContentHandlerContext().withSuppressInvalidProperties(true)
                 .withPropertyFactorySupplier(InMemoryAttachFactory::propertyFactories),
-            new ICal4JTimeZoneRegistry());
+            new ICal4JTimeZoneRegistry(remainingCustomTimezones));
         try {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(icsContent);
             return Stream.of(Pair.of(key, builder.build(inputStream)));
