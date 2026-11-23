@@ -157,11 +157,14 @@ public class WebAdminConfiguration {
         public WebAdminConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You need to explicitly enable or disable WebAdmin server");
             Preconditions.checkState(!enabled.get() || port.isPresent(), "You need to specify a port for WebAdminConfiguration");
+            boolean corsEnabled = enableCORS.orElse(DEFAULT_CORS_DISABLED);
+            Preconditions.checkState(!corsEnabled || urlCORSOrigin.filter(origin -> !origin.isBlank()).isPresent(),
+                "You need to specify the allowed origin (cors.origin) when enabling CORS");
 
             return new WebAdminConfiguration(enabled.get(),
                 port,
                 tlsConfiguration,
-                enableCORS.orElse(DEFAULT_CORS_DISABLED),
+                corsEnabled,
                 urlCORSOrigin.orElse(CORS_ALL_ORIGINS),
                 host.orElse(DEFAULT_HOST),
                 additionalRoutes.build(),

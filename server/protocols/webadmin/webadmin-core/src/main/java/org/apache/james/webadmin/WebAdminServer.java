@@ -233,7 +233,7 @@ public class WebAdminServer implements Startable {
     }
 
     private void configureCORS() {
-        if (configuration.isEnabled()) {
+        if (configuration.isEnableCORS()) {
             service.before(new CORSFilter(configuration.getUrlCORSOrigin()));
             new CORSRoute().define(service);
             LOGGER.info("Web admin set up to enable CORS from {}", configuration.getUrlCORSOrigin());

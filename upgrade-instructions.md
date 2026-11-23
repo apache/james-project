@@ -16,6 +16,7 @@ Change list:
 
  - [JAMES-4210 SMTP PLAIN/LOGIN authentication honors auth.requireSSL](#james-4210-smtp-plainlogin-authentication-honors-authrequiressl)
  - [Regex mappings are evaluated with RE2J](#regex-mappings-are-evaluated-with-re2j)
+ - [WebAdmin CORS headers require cors.enable and cors.origin](#webadmin-cors-headers-require-corsenable-and-corsorigin)
 
 ### JAMES-4210 SMTP PLAIN/LOGIN authentication honors auth.requireSSL
 
@@ -51,6 +52,16 @@ an already stored one is not applied: an error is logged when it is evaluated. R
 without any error.
 
 Please review your regex mappings before upgrading (`GET /mappings`). To keep the previous behaviour, set `james.rrt.regex.safe=false` in `jvm.properties`.
+
+### WebAdmin CORS headers require cors.enable and cors.origin
+
+Date: 23/11/2026
+
+Concerned products: WebAdmin
+
+WebAdmin used to send CORS headers allowing any origin whatever `cors.enable`. They are now only sent when `cors.enable`
+is `true`, and `cors.origin` is then mandatory: WebAdmin refuses to start without it. A web console served from
+another origin needs both properties set.
 
 ## 3.9.1 version
 
