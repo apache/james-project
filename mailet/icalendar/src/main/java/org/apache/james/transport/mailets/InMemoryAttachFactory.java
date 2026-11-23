@@ -70,7 +70,7 @@ public class InMemoryAttachFactory extends Attach.Factory {
         }
         try {
             byte[] decoded = DecoderFactory.getInstance().createBinaryDecoder(encoding.get())
-                .decode(value.getBytes(StandardCharsets.US_ASCII));
+                .decode(value.getBytes(StandardCharsets.UTF_8));
             return new Attach(parameters, ByteBuffer.wrap(decoded));
         } catch (UnsupportedEncodingException | DecoderException e) {
             return new Attach(parameters, value);

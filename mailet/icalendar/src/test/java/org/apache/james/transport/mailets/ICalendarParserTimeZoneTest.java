@@ -122,7 +122,7 @@ class ICalendarParserTimeZoneTest {
 
     @Test
     void shouldAcceptTheMaximumOfCustomTimezones() throws Exception {
-        String timezones = IntStream.range(0, ICal4JTimeZoneRegistry.MAX_CUSTOM_TIMEZONES_PER_CALENDAR)
+        String timezones = IntStream.range(0, ICal4JTimeZoneRegistry.MAX_CUSTOM_TIMEZONES)
             .mapToObj(i -> timezone("X-" + i))
             .collect(Collectors.joining());
 
@@ -139,6 +139,28 @@ class ICalendarParserTimeZoneTest {
 
         assertThat(calendars)
             .allSatisfy(calendar -> assertThat(start(calendar)).isEqualTo(Instant.parse("2026-07-15T09:45:00Z")));
+    }
+
+    @Test
+    void shouldBoundTheCustomTimezonesOfAllTheCalendarsOfAMail() throws Exception {
+        Map<String, AttributeValue<?>> attachments = IntStream.range(0, 80)
+            .boxed()
+            .collect(Collectors.toMap(i -> "calendar-" + i, i -> AttributeValue.of(calendarWith(IntStream.range(0, 20)
+                .mapToObj(j -> fixedOffsetTimezone("X-" + i + "-" + j))
+                .collect(Collectors.joining()), "X-" + i + "-0").getBytes(StandardCharsets.UTF_8))));
+
+        assertThat(parsedCalendars(attachments)).hasSize(1);
+        assertThat(start(parse(ICS.replace("{TZID}", "Custom James Time").replace("{DATE}", "20260715"))))
+            .isEqualTo(Instant.parse("2026-07-15T09:45:00Z"));
+    }
+
+    @Test
+    void shouldAcceptACustomTimezoneWhoseObservancesStartInUtc() throws Exception {
+        String timezone = timezone("Custom UTC Start")
+            .replace("DTSTART:19700329T020000", "DTSTART:19700329T010000Z")
+            .replace("DTSTART:19701025T030000", "DTSTART:19701025T010000Z");
+
+        assertThat(start(parse(calendarWith(timezone, "Custom UTC Start")))).isEqualTo(Instant.parse("2026-07-15T09:45:00Z"));
     }
 
     private static String timezone(String tzId) {
@@ -164,10 +186,14 @@ class ICalendarParserTimeZoneTest {
     }
 
     private Map<?, ?> parsedCalendars(String ics) throws Exception {
+        return parsedCalendars(Map.of("calendar", AttributeValue.of(ics.getBytes(StandardCharsets.UTF_8))));
+    }
+
+    private Map<?, ?> parsedCalendars(Map<String, AttributeValue<?>> attachments) throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("timezone-test")
             .attribute(new Attribute(AttributeName.of(ICalendarParser.SOURCE_ATTRIBUTE_PARAMETER_DEFAULT_VALUE),
-                AttributeValue.of(Map.of("calendar", AttributeValue.of(ics.getBytes(StandardCharsets.UTF_8))))))
+                AttributeValue.of(attachments)))
             .build();
 
         mailet.service(mail);
