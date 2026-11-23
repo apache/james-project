@@ -26,6 +26,7 @@ import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounc
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -432,7 +433,8 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         smtpChannelGroup.stream()
             .filter(channel -> {
                 if (channel.attr(SESSION_ATTRIBUTE_KEY).get() instanceof SMTPSession smtpSession) {
-                    return user.test(smtpSession.getUsername());
+                    return Optional.ofNullable(smtpSession.getUsername()).map(user::test).orElse(false)
+                        || authenticatedUser(smtpSession).map(user::test).orElse(false);
                 }
                 return false;
             })
@@ -454,8 +456,20 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
                     channel.isWritable(),
                     pSession.map(p -> p.getSSLSession().isPresent()).orElse(false),
                     pSession.flatMap(session -> Optional.ofNullable(session.getUsername())),
-                    ImmutableMap.of());
+                    delegationInformation(pSession));
             });
+    }
+
+    private static Optional<Username> authenticatedUser(ProtocolSession session) {
+        return session.getAttachment(AuthCmdHandler.AUTHENTICATED_USER, ProtocolSession.State.Connection);
+    }
+
+    private static Map<String, String> delegationInformation(Optional<ProtocolSession> session) {
+        // Only for a session acting for another user, so that it is listed for the user who authenticated
+        return session.flatMap(s -> authenticatedUser(s)
+                .filter(authenticated -> !authenticated.equals(s.getUsername())))
+            .map(authenticated -> ImmutableMap.of("loggedInUser", authenticated.asString()))
+            .orElse(ImmutableMap.of());
     }
 
     private String addressAsString(SocketAddress socketAddress) {

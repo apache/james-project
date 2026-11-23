@@ -225,7 +225,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
   override def disconnect(username: Predicate[Username]): Unit = {
     val contexts = connectedUsers.values()
       .stream()
-      .filter(context => username.test(context.session.getUser))
+      .filter(context => username.test(context.session.getUser) || context.session.getLoggedInUser.filter(username).isPresent)
       .toList
 
     contexts
@@ -250,6 +250,13 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
         writable,
         !encrypted,
         Optional.ofNullable(context.session.getUser),
-        ImmutableMap.of()))
+        delegationInformation(context.session)))
   }
+
+  // Only for a session acting for another user, so that it is listed for the user who authenticated
+  private def delegationInformation(session: MailboxSession): java.util.Map[String, String] =
+    session.getLoggedInUser
+      .filter(loggedInUser => !loggedInUser.equals(session.getUser))
+      .map[java.util.Map[String, String]](loggedInUser => ImmutableMap.of("loggedInUser", loggedInUser.asString()))
+      .orElse(ImmutableMap.of())
 }
