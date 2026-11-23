@@ -3794,6 +3794,12 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Flags storedFlags = storedFlags(path);
             assertThat(storedFlags.getSystemFlags()).doesNotContain(Flags.Flag.SEEN, Flags.Flag.FLAGGED, Flags.Flag.DELETED);
             assertThat(storedFlags.getUserFlags()).isEmpty();
+            assertThat(mailboxManager.getMailbox(source, session2)
+                    .getMessages(MessageRange.all(), FetchGroup.MINIMAL, session2)
+                    .next()
+                    .getFlags()
+                    .contains(flagsSetByDelegate()))
+                .isTrue();
         }
 
         @Test
@@ -3806,6 +3812,37 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .appendMessage(AppendCommand.builder().withFlags(flagsSetByDelegate()).build(message), session2);
 
             mailboxManager.copyMessages(MessageRange.all(), source, path, session2);
+
+            assertThat(storedFlags(path).contains(flagsSetByDelegate())).isTrue();
+        }
+
+        @Test
+        void moveShouldDropFlagsTheDelegateIsNotAllowedToSet() throws Exception {
+            MailboxPath path = sharedMailbox(MailboxACL.Right.Lookup, MailboxACL.Right.Insert);
+            MailboxPath source = MailboxPath.inbox(session2);
+            mailboxManager.createMailbox(source, session2);
+            mailboxManager.getMailbox(source, session2)
+                .appendMessage(AppendCommand.builder().withFlags(flagsSetByDelegate()).build(message), session2);
+
+            mailboxManager.moveMessages(MessageRange.all(), source, path, session2);
+
+            Flags storedFlags = storedFlags(path);
+            assertThat(storedFlags.getSystemFlags()).doesNotContain(Flags.Flag.SEEN, Flags.Flag.FLAGGED, Flags.Flag.DELETED);
+            assertThat(storedFlags.getUserFlags()).isEmpty();
+            assertThat(mailboxManager.getMailbox(path, session).getMessageCount(session)).isEqualTo(1);
+            assertThat(mailboxManager.getMailbox(source, session2).getMessageCount(session2)).isZero();
+        }
+
+        @Test
+        void moveShouldKeepFlagsTheDelegateIsAllowedToSet() throws Exception {
+            MailboxPath path = sharedMailbox(MailboxACL.Right.Lookup, MailboxACL.Right.Insert,
+                MailboxACL.Right.WriteSeenFlag, MailboxACL.Right.Write, MailboxACL.Right.DeleteMessages);
+            MailboxPath source = MailboxPath.inbox(session2);
+            mailboxManager.createMailbox(source, session2);
+            mailboxManager.getMailbox(source, session2)
+                .appendMessage(AppendCommand.builder().withFlags(flagsSetByDelegate()).build(message), session2);
+
+            mailboxManager.moveMessages(MessageRange.all(), source, path, session2);
 
             assertThat(storedFlags(path).contains(flagsSetByDelegate())).isTrue();
         }
