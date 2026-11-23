@@ -20,6 +20,9 @@
 package org.apache.mailet.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+
+import java.time.Duration;
 
 import org.junit.jupiter.api.Test;
 
@@ -391,5 +394,13 @@ public class FlowedMessageUtilsTest {
         String result = FlowedMessageUtils.flow(input, DEL_SP_YES);
 
         assertThat(result).isEqualTo(input);
+    }
+
+    @Test
+    void deflowShouldBeFastOnDeepQuotes() {
+        String input = ">".repeat(1_000_000);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(FlowedMessageUtils.deflow(input, DEL_SP_NO)).isEqualTo(input + " "));
     }
 }
