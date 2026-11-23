@@ -68,4 +68,13 @@ public abstract class ListingWithSharingTest implements ImapTestConstants {
             .withLocale(Locale.US)
             .run("ListWithSharedMailbox");
     }
+
+    @Test
+    public void listReturnStatusShouldOmitMailboxesWithoutReadRight() throws Exception {
+        scriptedTestProtocol
+            .withMailbox(OTHER_USER_SHARED_MAILBOX)
+            .withRights(OTHER_USER_SHARED_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("l"))
+            .withLocale(Locale.US)
+            .run("ListReturnStatusWithoutReadRight");
+    }
 }
