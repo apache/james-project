@@ -30,8 +30,10 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxMetaData;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
@@ -67,10 +69,10 @@ public class MailboxUserDeletionTaskStep implements DeleteUserDataTaskStep {
 
         return getAllMailboxesOfUser(mailboxSession)
             .concatMap(mailbox -> deleteMailbox(mailboxSession, mailbox)
-                .then(deleteSubscription(mailboxSession, mailbox)))
+                .then(deleteSubscription(mailboxSession, mailbox.getPath())))
             .then(getSharedMailboxesOfUser(mailboxSession)
                 .flatMap(sharedMailbox -> revokeACLs(username, sharedMailbox)
-                    .then(deleteSubscription(mailboxSession, sharedMailbox)))
+                    .then(deleteSubscription(mailboxSession, sharedMailbox.generateAssociatedPath())))
                 .then())
             .doFinally(any -> mailboxManager.endProcessingRequest(mailboxSession));
     }
@@ -84,25 +86,29 @@ public class MailboxUserDeletionTaskStep implements DeleteUserDataTaskStep {
         return mailboxManager.search(queryMailboxesOfUser, MailboxManager.MailboxSearchFetchType.Minimal, mailboxSession);
     }
 
-    private Flux<MailboxMetaData> getSharedMailboxesOfUser(MailboxSession mailboxSession) {
-        return mailboxManager.search(MailboxQuery.builder().matchesAllMailboxNames().build(), mailboxSession)
-            .filter(mailbox -> !mailbox.getPath().getUser().equals(mailboxSession.getUser()));
+    private Flux<Mailbox> getSharedMailboxesOfUser(MailboxSession mailboxSession) {
+        // Every right is looked up: a right without Lookup still grants access
+        MailboxMapper mailboxMapper = mailboxManager.getMapperFactory().getMailboxMapper(mailboxSession);
+        return Flux.fromArray(MailboxACL.Right.values())
+            .concatMap(right -> mailboxMapper.findNonPersonalMailboxes(mailboxSession.getUser(), right))
+            .distinct(Mailbox::getMailboxId)
+            .filter(mailbox -> !mailbox.getUser().equals(mailboxSession.getUser()));
     }
 
     private Mono<Mailbox> deleteMailbox(MailboxSession mailboxSession, MailboxMetaData mailbox) {
         return mailboxManager.deleteMailboxReactive(mailbox.getId(), mailboxSession);
     }
 
-    private Mono<Void> deleteSubscription(MailboxSession mailboxSession, MailboxMetaData mailbox) {
-        return Mono.from(subscriptionManager.unsubscribeReactive(mailbox.getPath(), mailboxSession));
+    private Mono<Void> deleteSubscription(MailboxSession mailboxSession, MailboxPath mailboxPath) {
+        return Mono.from(subscriptionManager.unsubscribeReactive(mailboxPath, mailboxSession));
     }
 
-    private Mono<Void> revokeACLs(Username username, MailboxMetaData mailbox) {
-        MailboxSession ownerSession = mailboxManager.createSystemSession(mailbox.getPath().getUser());
-        MailboxACL.Rfc4314Rights rights = Optional.ofNullable(mailbox.getMailbox().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(username)))
+    private Mono<Void> revokeACLs(Username username, Mailbox mailbox) {
+        MailboxSession ownerSession = mailboxManager.createSystemSession(mailbox.getUser());
+        MailboxACL.Rfc4314Rights rights = Optional.ofNullable(mailbox.getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(username)))
             .orElse(MailboxACL.NO_RIGHTS);
 
-        return Mono.fromRunnable(Throwing.runnable(() -> mailboxManager.applyRightsCommand(mailbox.getId(), MailboxACL.command().rights(rights).forUser(username).asRemoval(), ownerSession)))
+        return Mono.fromRunnable(Throwing.runnable(() -> mailboxManager.applyRightsCommand(mailbox.getMailboxId(), MailboxACL.command().rights(rights).forUser(username).asRemoval(), ownerSession)))
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .then()
             .doFinally(any -> mailboxManager.endProcessingRequest(ownerSession));

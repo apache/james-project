@@ -80,6 +80,21 @@ class ACLUsernameChangeTaskStepTest {
     }
 
     @Test
+    void shouldMigrateACLsWithoutLookup() throws Exception {
+        MailboxSession cedricSession = mailboxManager.createSystemSession(CEDRIC);
+        mailboxManager.createMailbox(MailboxPath.inbox(CEDRIC), MailboxManager.CreateOption.NONE, cedricSession);
+        mailboxManager.applyRightsCommand(MailboxPath.inbox(CEDRIC),
+            MailboxACL.command().forUser(ALICE).rights(MailboxACL.Right.Read).asAddition(),
+            cedricSession);
+
+        Mono.from(testee.changeUsername(ALICE, BOB)).block();
+
+        assertThat(mailboxManager.listRights(MailboxPath.inbox(CEDRIC), cedricSession).getEntries())
+            .doesNotContainKey(MailboxACL.EntryKey.createUserEntryKey(ALICE))
+            .containsEntry(MailboxACL.EntryKey.createUserEntryKey(BOB), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read));
+    }
+
+    @Test
     void shouldMigrateSubscriptionsOnDelegatedUsers() throws Exception {
         MailboxSession cedricSession = mailboxManager.createSystemSession(CEDRIC);
         mailboxManager.createMailbox(MailboxPath.inbox(CEDRIC), MailboxManager.CreateOption.NONE, cedricSession);
