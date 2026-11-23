@@ -135,7 +135,7 @@ Please note that only the ip get stored to identify an authenticated client.
 
 The expireTime is the time after which an ipAddress is handled as expired.
 
-This handler should be considered as unsupported.
+This handler should be considered as unsupported, and is deprecated: it grants relaying to an IP address, and the expiry of the grant is not enforced on every connection. Use SMTP authentication instead.
 
 Example configuration:
 
