@@ -287,4 +287,19 @@ class IMAPServerLiteralCleanupTest extends AbstractIMAPServerTest {
             .untilAsserted(() -> assertThat(Sets.difference(openBufferedLiterals(), openBefore)).isEmpty());
         channel.close();
     }
+
+    @Test
+    void spooledCommandShouldAcceptAsLongALineAsInMemory() throws Exception {
+        SocketChannel channel = connectLoginAndSelect();
+        String subject = "s".repeat(5000);
+        String text = "a".repeat(OVERSIZED);
+
+        write(channel, "a1 SEARCH OR SUBJECT \"" + subject + "\" TEXT {" + text.length() + "+}\r\n" + text + "\r\n");
+
+        assertThat(readStringUntil(channel, s -> s.contains("a1 ")))
+            .anyMatch(s -> s.contains("a1 OK"));
+        channel.close();
+
+        awaitNoLeftoverLiteral();
+    }
 }
