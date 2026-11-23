@@ -21,14 +21,21 @@ package org.apache.james.transport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.KeyPair;
 import java.security.KeyStore;
+import java.security.cert.X509Certificate;
+import java.util.Date;
 import java.util.Properties;
 
 import jakarta.mail.Session;
@@ -39,10 +46,25 @@ import jakarta.mail.internet.MimeMultipart;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.transport.KeyStoreHolderTest.Identity;
 import org.apache.james.transport.mailets.SMIMECheckSignature;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
+import org.bouncycastle.asn1.x509.KeyUsage;
+import org.bouncycastle.cert.jcajce.JcaCertStore;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoGeneratorBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.mail.smime.SMIMESignedGenerator;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -106,6 +128,20 @@ class SMIMECheckSignatureTest {
         return KeyStoreHolderTest.issue(subject, KeyStoreHolderTest.keyPair(), new X500Name("CN=Root"), root.keyPair(), false);
     }
 
+    static Identity mailSigner(String email, KeyPurposeId purpose) throws Exception {
+        KeyPair keyPair = KeyStoreHolderTest.keyPair();
+        JcaX509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(new X500Name("CN=Root"), BigInteger.valueOf(System.nanoTime()),
+            new Date(System.currentTimeMillis() - 3_600_000), new Date(System.currentTimeMillis() + 3_600_000),
+            new X500Name("CN=Mail signer"), keyPair.getPublic());
+        builder.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
+        builder.addExtension(Extension.subjectAlternativeName, false, new GeneralNames(new GeneralName(GeneralName.rfc822Name, email)));
+        builder.addExtension(Extension.extendedKeyUsage, false, new ExtendedKeyUsage(purpose));
+        builder.addExtension(Extension.keyUsage, true, new KeyUsage(KeyUsage.digitalSignature));
+        X509Certificate certificate = new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME)
+            .getCertificate(builder.build(new JcaContentSignerBuilder("SHA256withRSA").build(root.keyPair().getPrivate())));
+        return new Identity(keyPair, certificate);
+    }
+
     static Mail mail(MimeMultipart content, String from) throws Exception {
         MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
         message.setFrom(from);
@@ -124,10 +160,118 @@ class SMIMECheckSignatureTest {
 
     @Test
     void aValidSignatureFromATrustedSignerShouldBeGood() throws Exception {
-        Identity signer = signer("CN=Signer");
+        Identity signer = mailSigner("signer@domain.tld", KeyPurposeId.id_kp_emailProtection);
+
+        assertThat(status(mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "signer@DOMAIN.tld")))
+            .isEqualTo("Good signature");
+    }
+
+    @Test
+    void theLocalPartShouldBeComparedIgnoringItsCase() throws Exception {
+        Identity signer = mailSigner("signer@domain.tld", KeyPurposeId.id_kp_emailProtection);
+
+        assertThat(status(mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "Signer@domain.tld")))
+            .isEqualTo("Good signature");
+    }
+
+    @Test
+    void aValidSignatureFromACertificateNamingAnotherAddressShouldBeASignerMismatch() throws Exception {
+        Identity signer = mailSigner("other@domain.tld", KeyPurposeId.id_kp_emailProtection);
+        Mail mail = mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "signer@domain.tld");
+
+        assertThat(status(mail)).isEqualTo("Signer mismatch");
+        assertThat(mail.attributesMap()).doesNotContainKey(AttributeName.of("org.apache.james.SMIMECheckSignature"));
+    }
+
+    @Test
+    void aSignatureFromTheAuthorShouldBeGoodWhenAMailingListIsTheSender() throws Exception {
+        Identity signer = mailSigner("signer@domain.tld", KeyPurposeId.id_kp_emailProtection);
+        Mail mail = mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "signer@domain.tld");
+        mail.getMessage().setHeader("Sender", "list-bounces@lists.tld");
+        mail.getMessage().saveChanges();
+
+        assertThat(status(mail)).isEqualTo("Good signature");
+    }
+
+    @Test
+    void aMalformedFromShouldBeASignerMismatch() throws Exception {
+        Identity signer = mailSigner("signer@domain.tld", KeyPurposeId.id_kp_emailProtection);
+        Mail mail = mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "signer@domain.tld");
+        mail.getMessage().setHeader("From", "\"unterminated <signer@domain.tld>");
+        mail.getMessage().saveChanges();
+
+        assertThat(status(mail)).isEqualTo("Signer mismatch");
+    }
+
+    @Test
+    void severalFromFieldsShouldBeASignerMismatch() throws Exception {
+        Identity signer = mailSigner("signer@domain.tld", KeyPurposeId.id_kp_emailProtection);
+        Mail mail = mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "signer@domain.tld");
+        mail.getMessage().addHeader("From", "ceo@domain.tld");
+        mail.getMessage().saveChanges();
+
+        assertThat(status(mail)).isEqualTo("Signer mismatch");
+    }
+
+    @Test
+    void severalSenderFieldsShouldBeASignerMismatch() throws Exception {
+        Identity signer = mailSigner("signer@domain.tld", KeyPurposeId.id_kp_emailProtection);
+        Mail mail = mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "ceo@domain.tld");
+        mail.getMessage().addHeader("Sender", "signer@domain.tld");
+        mail.getMessage().addHeader("Sender", "ceo@domain.tld");
+        mail.getMessage().saveChanges();
+
+        assertThat(status(mail)).isEqualTo("Signer mismatch");
+    }
+
+    @Test
+    void aFromFieldNameHoldingACommentShouldBeASignerMismatch() throws Exception {
+        Identity signer = mailSigner("signer@domain.tld", KeyPurposeId.id_kp_emailProtection);
+        Mail mail = mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "signer@domain.tld");
+        mail.getMessage().addHeader("From(x)", "ceo@domain.tld");
+        mail.getMessage().saveChanges();
+
+        assertThat(status(mail)).isEqualTo("Signer mismatch");
+    }
+
+    @Test
+    void aFromReadDifferentlyByMime4jShouldBeASignerMismatch() throws Exception {
+        Identity signer = mailSigner("signer@domain.tld", KeyPurposeId.id_kp_emailProtection);
+        Mail mail = mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "signer@domain.tld");
+        // Jakarta Mail reads signer@domain.tld, mime4j (Email/get) signer@domain.tld.evil
+        mail.getMessage().setHeader("From", "signer@domain.tld(comment).evil");
+        mail.getMessage().saveChanges();
+
+        assertThat(status(mail)).isEqualTo("Signer mismatch");
+    }
+
+    @Test
+    void aCertificateWithoutTheEmailProtectionPurposeShouldNotBeTrusted() throws Exception {
+        Identity signer = mailSigner("signer@domain.tld", KeyPurposeId.id_kp_serverAuth);
 
         assertThat(status(mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "signer@domain.tld")))
-            .isEqualTo("Good signature");
+            .isEqualTo("Bad signature");
+    }
+
+    @Test
+    void anOpaqueSignatureWithoutSmimeTypeShouldBeGood() throws Exception {
+        Identity signer = mailSigner("signer@domain.tld", KeyPurposeId.id_kp_emailProtection);
+        SMIMESignedGenerator generator = new SMIMESignedGenerator();
+        generator.addSignerInfoGenerator(new JcaSimpleSignerInfoGeneratorBuilder()
+            .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+            .build("SHA256withRSA", signer.keyPair().getPrivate(), signer.certificate()));
+        generator.addCertificates(new JcaCertStore(ImmutableList.of(signer.certificate(), root.certificate())));
+        MimeBodyPart content = new MimeBodyPart();
+        content.setText("Hello");
+        ByteArrayOutputStream encapsulated = new ByteArrayOutputStream();
+        generator.generateEncapsulated(content).writeTo(encapsulated);
+        String withoutSmimeType = encapsulated.toString(StandardCharsets.US_ASCII)
+            .replaceAll(";\\s*smime-type=\"?signed-data\"?", "");
+        MimeMessage message = new MimeMessage(Session.getInstance(new Properties()),
+            new ByteArrayInputStream(("From: signer@domain.tld\r\n" + withoutSmimeType).getBytes(StandardCharsets.US_ASCII)));
+
+        assertThat(message.getContentType()).doesNotContain("smime-type");
+        assertThat(status(FakeMail.builder().name("mail").mimeMessage(message).build())).isEqualTo("Good signature");
     }
 
     @Test
@@ -152,5 +296,32 @@ class SMIMECheckSignatureTest {
         signed.addBodyPart(extra, 0);
 
         assertThat(status(mail(signed, "signer@domain.tld"))).isEqualTo("Not signed");
+    }
+
+    @Test
+    void aQuotedLocalPartShouldMatchItsSigner() throws Exception {
+        Identity signer = mailSigner("\"john doe\"@domain.tld", KeyPurposeId.id_kp_emailProtection);
+        Mail mail = mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "\"john doe\"@domain.tld");
+
+        assertThat(status(mail)).isEqualTo("Good signature");
+    }
+
+    @Test
+    void anUnrelatedInvalidFieldNameShouldNotBeASignerMismatch() throws Exception {
+        Identity signer = mailSigner("signer@domain.tld", KeyPurposeId.id_kp_emailProtection);
+        Mail mail = mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "signer@domain.tld");
+        mail.getMessage().addHeader("X Foo", "bar");
+        mail.getMessage().saveChanges();
+
+        assertThat(status(mail)).isEqualTo("Good signature");
+    }
+
+    @Test
+    void aCertificateNamingNoAddressShouldBeAccepted() throws Exception {
+        // RFC 8550 section 3: receivers accept certificates with no e-mail address
+        Identity signer = signer("CN=Signer");
+        Mail mail = mail(KeyStoreHolderTest.signedContent(signer, ImmutableList.of(signer.certificate(), root.certificate())), "signer@domain.tld");
+
+        assertThat(status(mail)).isEqualTo("Good signature");
     }
 }
