@@ -36,6 +36,7 @@ import org.apache.james.protocols.netty.BasicChannelInboundHandler;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ProtocolMDCContextFactory;
 import org.apache.james.protocols.pop3.POP3Protocol;
+import org.apache.james.protocols.pop3.core.UserCmdHandler;
 import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
 
 import com.google.common.collect.ImmutableList;
@@ -130,6 +131,10 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
         getProtocolHandlerChain()
             .getHandlers(PassCmdHandler.class)
             .forEach(handler -> handler.configurePlainSaslMechanism(passSaslMechanism));
+        boolean plainAuthRequiresTls = !passSaslMechanism.isAvailableOnTransport(false);
+        getProtocolHandlerChain()
+            .getHandlers(UserCmdHandler.class)
+            .forEach(handler -> handler.configureRequiresTls(plainAuthRequiresTls));
         protocol = new POP3Protocol(getProtocolHandlerChain(), theConfigData);
     }
 

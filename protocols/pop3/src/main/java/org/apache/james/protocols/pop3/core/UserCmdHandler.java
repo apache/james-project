@@ -43,12 +43,26 @@ public class UserCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
     private static final Logger LOGGER = LoggerFactory.getLogger(UserCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("USER");
     private static final Set<String> CAPS = ImmutableSet.of("USER");
+    private static final Response AUTH_REQUIRES_TLS = new POP3Response(POP3Response.ERR_RESPONSE, "Authentication requires TLS.").immutable();
 
     private final MetricFactory metricFactory;
+    private boolean requiresTls = false;
 
     @Inject
     public UserCmdHandler(MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
+    }
+
+    /**
+     * Applies to USER the plain authentication policy of PASS: when it requires TLS, USER is neither announced nor
+     * accepted before TLS is started, so that the client does not go on with its password.
+     */
+    public void configureRequiresTls(boolean requiresTls) {
+        this.requiresTls = requiresTls;
+    }
+
+    private boolean refusedOnThisTransport(POP3Session session) {
+        return requiresTls && !session.isTLSStarted();
     }
 
     /**
@@ -68,6 +82,9 @@ public class UserCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
 
     private Response user(POP3Session session, Request request) {
         LOGGER.trace("USER command received");
+        if (refusedOnThisTransport(session)) {
+            return AUTH_REQUIRES_TLS;
+        }
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.AUTHENTICATION_READY && parameters != null) {
             try {
@@ -85,6 +102,9 @@ public class UserCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
 
     @Override
     public Set<String> getImplementedCapabilities(POP3Session session) {
+        if (refusedOnThisTransport(session)) {
+            return ImmutableSet.of();
+        }
         return CAPS;
     }
 

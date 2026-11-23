@@ -1187,11 +1187,33 @@ public class POP3ServerTest {
             send(writer, "AUTH PLAIN " + plainInitialResponse("auth-user", "secret"));
             assertThat(reader.readLine()).isEqualTo("-ERR Authentication requires TLS.");
 
+            // USER is refused too, so that the client does not go on with its password
             send(writer, "USER auth-user");
-            assertThat(reader.readLine()).startsWith("+OK");
-            send(writer, "PASS secret");
             assertThat(reader.readLine()).isEqualTo("-ERR Authentication requires TLS.");
+            send(writer, "PASS secret");
+            assertThat(reader.readLine()).startsWith("-ERR");
         }
+    }
+
+    @Test
+    void capaShouldAdvertiseUserOnlyAfterStartTlsWhenRequireSSL() throws Exception {
+        pop3Configuration.setProperty("auth.requireSSL", true);
+        finishSetUp(pop3Configuration);
+
+        POP3SClient client = new POP3SClient(false, BogusSslContextFactory.getClientContext());
+        client.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
+        pop3Client = client;
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        assertThat(client.sendCommand("CAPA")).isEqualTo(POP3Reply.OK);
+        client.getAdditionalReply();
+        assertThat(client.getReplyStrings()).doesNotContain("USER");
+
+        assertThat(client.execTLS()).isTrue();
+        assertThat(client.sendCommand("CAPA")).isEqualTo(POP3Reply.OK);
+        client.getAdditionalReply();
+        assertThat(client.getReplyStrings()).contains("USER");
     }
 
     @Test
