@@ -145,6 +145,8 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JMSCacheableMailQueue.class);
+    private static final String LIKE_ESCAPE_CHARACTER = "\\";
+    private static final String LIKE_ESCAPE = " ESCAPE '" + LIKE_ESCAPE_CHARACTER + "'";
 
     public static final String FORCE_DELIVERY = "FORCE_DELIVERY";
 
@@ -648,23 +650,41 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
     @Override
     public long remove(Type type, String value) throws MailQueueException {
+        // The value is escaped: it must not alter the selector, nor act as a LIKE pattern
         switch (type) {
             case Name:
-                return count(removeWithSelector(JAMES_MAIL_NAME + " = '" + value + "'"));
+                return count(removeWithSelector(JAMES_MAIL_NAME + " = " + quote(value)));
             case Sender:
-                return count(removeWithSelector(JAMES_MAIL_SENDER + " = '" + value + "'"));
+                return count(removeWithSelector(JAMES_MAIL_SENDER + " = " + quote(value)));
             case Recipient:
+                String pattern = escapeLikePattern(value);
                 return count(removeWithSelector(
                     String.join(" or ",
-                        JAMES_MAIL_RECIPIENTS + " = '" + value + "'", // = value
-                        JAMES_MAIL_RECIPIENTS + " LIKE '" + value + JAMES_MAIL_SEPARATOR + "%'", // LIKE value;%
-                        JAMES_MAIL_RECIPIENTS + " LIKE '%" + JAMES_MAIL_SEPARATOR + value + JAMES_MAIL_SEPARATOR + "%'", // LIKE %;value;%
-                        JAMES_MAIL_RECIPIENTS + " LIKE '%" + JAMES_MAIL_SEPARATOR + value + "'" // LIKE %;value
+                        JAMES_MAIL_RECIPIENTS + " = " + quote(value), // = value
+                        JAMES_MAIL_RECIPIENTS + " LIKE " + quote(pattern + JAMES_MAIL_SEPARATOR + "%") + LIKE_ESCAPE, // LIKE value;%
+                        JAMES_MAIL_RECIPIENTS + " LIKE " + quote("%" + JAMES_MAIL_SEPARATOR + pattern + JAMES_MAIL_SEPARATOR + "%") + LIKE_ESCAPE, // LIKE %;value;%
+                        JAMES_MAIL_RECIPIENTS + " LIKE " + quote("%" + JAMES_MAIL_SEPARATOR + pattern) + LIKE_ESCAPE // LIKE %;value
                     )));
             default:
-                break;
+                return -1;
         }
-        return -1;
+    }
+
+    /**
+     * A string literal of a JMS message selector (SQL 92): its quotes are doubled.
+     */
+    private static String quote(String value) {
+        return "'" + value.replace("'", "''") + "'";
+    }
+
+    /**
+     * The value matched as is in a LIKE pattern: its wildcards, and the escape character itself, are escaped.
+     */
+    private static String escapeLikePattern(String value) {
+        return value.replace(LIKE_ESCAPE_CHARACTER, LIKE_ESCAPE_CHARACTER + LIKE_ESCAPE_CHARACTER)
+            .replace("%", LIKE_ESCAPE_CHARACTER + "%")
+            .replace("_", LIKE_ESCAPE_CHARACTER + "_");
+    }
     }
 
     @Override
