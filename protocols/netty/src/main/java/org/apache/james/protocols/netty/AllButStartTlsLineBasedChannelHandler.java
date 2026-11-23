@@ -69,6 +69,18 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
         channel.attr(ATTRIBUTE_KEY).set(true);
     }
 
+    /**
+     * Event fired through the pipeline once the TLS handler is installed after an accepted STARTTLS. It follows, in
+     * order, the frames read before the TLS handler: these are still checked, the later ones are not.
+     */
+    public enum TlsHandlerInstalled {
+        INSTANCE
+    }
+
+    public static void fireTlsHandlerInstalled(Channel channel) {
+        channel.pipeline().fireUserEventTriggered(TlsHandlerInstalled.INSTANCE);
+    }
+
     public AllButStartTlsLineBasedChannelHandler(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter, String pattern) {
         super(maxFrameLength, stripDelimiter, !FAIL_FAST);
         this.pipeline = pipeline;
@@ -133,6 +145,18 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
      */
     protected Object decodeLine(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
         return super.decode(ctx, buffer);
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt == TlsHandlerInstalled.INSTANCE) {
+            CommandDetectionSession session = retrieveSession(ctx);
+            if (session != null) {
+                session.stopDetectingCommandInjection();
+            }
+            clearStartTlsInFlight(ctx.channel());
+        }
+        super.userEventTriggered(ctx, evt);
     }
 
     protected CommandDetectionSession retrieveSession(ChannelHandlerContext ctx) {
