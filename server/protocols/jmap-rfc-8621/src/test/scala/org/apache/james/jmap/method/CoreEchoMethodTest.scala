@@ -20,12 +20,15 @@ package org.apache.james.jmap.method
 
 import org.apache.james.jmap.core.CapabilityIdentifier
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.Invocation
+import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.json.Fixture.{invocation1, invocation2}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.mockito.Mockito.mock
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.libs.json.Json
 import reactor.core.scala.publisher.SMono
 
 class CoreEchoMethodTest extends AnyWordSpec with Matchers {
@@ -40,6 +43,14 @@ class CoreEchoMethodTest extends AnyWordSpec with Matchers {
         val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, InvocationWithContext(invocation1,ProcessingContext(Map.empty, Map.empty)), mockedSession)).block()
 
         dataResponse shouldBe expectedResponse
+      }
+
+      "reject arguments above the size limit" in {
+        val bigInvocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj("p" -> "x" * (2 * 1024 * 1024))), MethodCallId("c1"))
+        val dataResponse = SMono.fromPublisher(echoMethod.process(capabilities, InvocationWithContext(bigInvocation, ProcessingContext(Map.empty, Map.empty)), mockedSession)).block()
+
+        dataResponse.invocation.methodName shouldBe MethodName("error")
+        (dataResponse.invocation.arguments.value \ "type").as[String] shouldBe "invalidArguments"
       }
 
       "success and not return anything else different than the original invocation" in {

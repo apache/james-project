@@ -22,17 +22,29 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.MethodName
-import org.apache.james.jmap.routes.IdPaths
+import org.apache.james.jmap.core.{ErrorCode, Invocation}
+import org.apache.james.jmap.method.CoreEchoMethod.MAX_ECHOED_SIZE
+import org.apache.james.jmap.routes.{IdPaths, JsonSize}
 import org.apache.james.mailbox.MailboxSession
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
+
+object CoreEchoMethod {
+  val MAX_ECHOED_SIZE: Long = 1024 * 1024
+}
 
 class CoreEchoMethod extends Method with IdArguments {
   override val methodName = MethodName("Core/echo")
   /** Arguments are returned unchanged (RFC 8620 §4): result references are resolved, creation references are not. */
   override val idPaths: IdPaths = IdPaths.NONE
 
-  override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] = SMono.just(invocation)
+  override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] =
+    if (JsonSize.upTo(invocation.invocation.arguments.value, MAX_ECHOED_SIZE) > MAX_ECHOED_SIZE) {
+      SMono.just(InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments,
+        s"Core/echo arguments are limited to $MAX_ECHOED_SIZE bytes", invocation.invocation.methodCallId), invocation.processingContext))
+    } else {
+      SMono.just(invocation)
+    }
 
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE)
 }
