@@ -37,7 +37,7 @@ to get some examples and hints.
 | Allow the Cross-origin resource sharing (default: false)
 
 | cors.origin
-| Specify ths CORS origin (default: null)
+| Specify the CORS origin. Required when `cors.enable` is true.
 
 | password.generate
 | Generates a random password upon start up when no `password` is configured, allowing a secure setup without

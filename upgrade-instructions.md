@@ -37,6 +37,17 @@ Change list:
  - [Sieve vacation and reject follow RFC 5230 and RFC 5429](#sieve-vacation-and-reject-follow-rfc-5230-and-rfc-5429)
  - [DKIMHook checks every malformed From header](#dkimhook-checks-every-malformed-from-header)
  - [POP3 UIDL unique-ids include the mailbox UIDVALIDITY](#pop3-uidl-unique-ids-include-the-mailbox-uidvalidity)
+ - [WebAdmin CORS headers require cors.enable and cors.origin](#webadmin-cors-headers-require-corsenable-and-corsorigin)
+
+### WebAdmin CORS headers require cors.enable and cors.origin
+
+Date: 23/11/2026
+
+Concerned products: WebAdmin
+
+WebAdmin used to send CORS headers allowing any origin whatever `cors.enable`. They are now only sent when `cors.enable`
+is `true`, and `cors.origin` is then mandatory: WebAdmin refuses to start without it. A web console served from
+another origin needs both properties set.
 
 ### POP3 UIDL unique-ids include the mailbox UIDVALIDITY
 

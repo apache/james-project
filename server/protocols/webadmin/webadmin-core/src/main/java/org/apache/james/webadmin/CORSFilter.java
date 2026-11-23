@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin;
 
+import org.apache.james.webadmin.routes.CORSRoute;
+
 import spark.Filter;
 import spark.Request;
 import spark.Response;
@@ -33,8 +35,8 @@ public class CORSFilter implements Filter {
 
     @Override
     public void handle(Request request, Response response) throws Exception {
-            response.header("Access-Control-Allow-Origin", urlCORSOrigin);
-            response.header("Access-Control-Request-Method", "DELETE, GET, POST, PUT");
-            response.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept");
+        response.header("Access-Control-Allow-Origin", urlCORSOrigin);
+        response.header("Access-Control-Allow-Methods", CORSRoute.ALLOWED_METHODS);
+        response.header("Access-Control-Allow-Headers", CORSRoute.ALLOWED_HEADERS);
     }
 }
