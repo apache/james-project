@@ -46,6 +46,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.server.core.AddressFields;
+import org.apache.james.server.core.SubmittedHeaderFields;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.MemoizedSupplier;
@@ -146,6 +147,13 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
             (nSession.senderVerificationConfiguration().mode() == SMTPConfiguration.SenderVerificationMode.RELAXED && session.getUsername() != null);
         if (shouldCheck) {
             try {
+                if (session.getUsername() != null) {
+                    Optional<SubmittedHeaderFields.Violation> violation = SubmittedHeaderFields.violation(mail.getMessage());
+                    if (violation.isPresent()) {
+                        LOGGER.warn("Local user {} attempted to send a mail with an ambiguous header: {}", session.getUsername().asString(), violation.get().description());
+                        return INVALID_AUTH;
+                    }
+                }
                 List<InternetAddress> fromAddresses = fromAddresses(mail.getMessage());
 
                 if (fromAddresses.isEmpty()) {

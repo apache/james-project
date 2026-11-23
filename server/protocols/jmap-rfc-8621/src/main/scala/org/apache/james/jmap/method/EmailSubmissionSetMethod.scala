@@ -50,7 +50,7 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
-import org.apache.james.server.core.{AddressFields, MailImpl, MimeMessageSource, MimeMessageWrapper}
+import org.apache.james.server.core.{AddressFields, MailImpl, MimeMessageSource, MimeMessageWrapper, SubmittedHeaderFields}
 import org.apache.james.util.{AuditTrail, ReactorUtils}
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue, Mail}
 import org.slf4j.{Logger, LoggerFactory}
@@ -73,6 +73,14 @@ object EmailSubmissionSetMethod {
   val formatter = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("Z"))
   val VALID_PARAMETER_NAME_SET: Set[ParameterName] = Set(ParameterName.holdFor, ParameterName.holdUntil)
   val NO_DELAY: Duration = Duration.ZERO
+
+  // Several From or Sender fields, or a field name read differently by Jakarta Mail and mime4j, could make the
+  // checked sender differ from the displayed one
+  def validateHeaderFields(mimeMessage: MimeMessage): SMono[MimeMessage] =
+    SubmittedHeaderFields.violation(mimeMessage).toScala match {
+      case Some(violation) => SMono.error(new IllegalArgumentException(violation.description()))
+      case None => SMono.just(mimeMessage)
+    }
 
   sealed trait CreationResult {
     def emailSubmissionCreationId: EmailSubmissionCreationId
@@ -452,6 +460,10 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
   // The From field defaults to the Sender field, as for MimeMessage::getFrom
   private def validate(session: MailboxSession)(mimeMessage: MimeMessage, envelope: Envelope): SMono[MimeMessage] =
+    EmailSubmissionSetMethod.validateHeaderFields(mimeMessage)
+      .flatMap(_ => validateSenderFields(session)(mimeMessage, envelope))
+
+  private def validateSenderFields(session: MailboxSession)(mimeMessage: MimeMessage, envelope: Envelope): SMono[MimeMessage] =
     SFlux.fromIterable(addresses(Option(mimeMessage.getHeader("Sender", null))) ++
         addresses(Option(mimeMessage.getHeader("From", ",")).orElse(Option(mimeMessage.getHeader("Sender", null)))))
       .map(_.getAddress)
