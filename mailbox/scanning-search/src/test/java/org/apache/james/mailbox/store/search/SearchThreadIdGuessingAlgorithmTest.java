@@ -19,14 +19,28 @@
 
 package org.apache.james.mailbox.store.search;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
+
+import org.apache.james.core.Username;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.inmemory.InMemoryCombinationManagerTestSystem;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.ThreadIdGuessingAlgorithmContract;
 import org.apache.james.mailbox.store.mail.SearchThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
+import org.apache.james.mailbox.store.mail.model.MimeMessageId;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.stream.RawField;
+import org.junit.jupiter.api.Test;
 
 public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
     @Override
@@ -53,4 +67,22 @@ public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorit
         return InMemoryMessageId.of(1000);
     }
 
+    @Test
+    void emptyInReplyToShouldNotJoinAnExistingThread() throws Exception {
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
+        SearchThreadIdGuessingAlgorithm algorithm = new SearchThreadIdGuessingAlgorithm(resources.getMailboxManager(), resources.getMessageIdManager());
+        MailboxSession session = resources.getMailboxManager().createSystemSession(Username.of("alice"));
+        resources.getMailboxManager().createMailbox(MailboxPath.inbox(session.getUser()), session);
+        resources.getMailboxManager().getMailbox(MailboxPath.inbox(session.getUser()), session)
+            .appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+                .setMessageId("<existing@example.com>")
+                .setField(new RawField("In-Reply-To", "<parent@example.com>"))
+                .setBody("testmail", StandardCharsets.UTF_8)), session);
+        MessageId newMessageId = InMemoryMessageId.of(100);
+
+        ThreadId threadId = algorithm.guessThreadIdReactive(newMessageId, Optional.empty(), Optional.of(new MimeMessageId("")),
+            Optional.empty(), Optional.empty(), session).block();
+
+        assertThat(threadId).isEqualTo(ThreadId.fromBaseMessageId(newMessageId));
+    }
 }
