@@ -32,9 +32,13 @@ public class ReverseEqualsEhloHeloHandler extends org.apache.james.protocols.smt
         this.dns = dns;
     }
 
+    /**
+     * DNSService::getByName does not perform any reverse lookup for an IP literal: the PTR record is
+     * looked up by DNSService::getHostName.
+     */
     @Override
     protected String resolve(String host) throws UnknownHostException {
-        return dns.getByName(host).getHostName();
+        return dns.getHostName(dns.getByName(host));
     }
     
 }
