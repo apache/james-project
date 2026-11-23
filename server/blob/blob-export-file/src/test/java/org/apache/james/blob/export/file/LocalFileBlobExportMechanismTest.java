@@ -39,6 +39,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.api.PlainBlobId;
+import org.apache.james.blob.export.api.BlobExportMechanism.BlobExportException;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.blob.export.file.LocalFileBlobExportMechanism.Configuration;
 import org.apache.james.blob.memory.MemoryBlobStoreFactory;
@@ -63,6 +64,7 @@ class LocalFileBlobExportMechanismTest {
     private BlobStore blobStore;
     private FakeMailContext mailetContext;
     private LocalFileBlobExportMechanism testee;
+    private DNSService dnsService;
 
     @BeforeEach
     void setUp(FileSystem fileSystem) throws Exception {
@@ -74,7 +76,7 @@ class LocalFileBlobExportMechanismTest {
 
         InetAddress localHost = mock(InetAddress.class);
         when(localHost.getHostName()).thenReturn(JAMES_HOST);
-        DNSService dnsService = mock(DNSService.class);
+        dnsService = mock(DNSService.class);
         when(dnsService.getLocalHost()).thenReturn(localHost);
 
         testee = new LocalFileBlobExportMechanism(mailetContext, blobStore, fileSystem, dnsService,
@@ -199,6 +201,70 @@ class LocalFileBlobExportMechanismTest {
                     throw new RuntimeException(e);
                 }
             });
+    }
+
+    @Test
+    void exportingBlobShouldBeRefusedWhenThePrefixIsNotAPlainFileName() {
+        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
+
+        assertThatThrownBy(() -> testee.blobId(blobId)
+                .with(MailAddressFixture.RECIPIENT1)
+                .explanation("The content of a deleted message vault had been shared with you.")
+                .filePrefix("deleted-message-of-../../etc/x@domain.tld")
+                .fileExtension(FileExtension.ZIP)
+                .export())
+            .isInstanceOf(BlobExportException.class);
+        assertThat(mailetContext.getSentMails()).isEmpty();
+    }
+
+    @Test
+    void exportingBlobShouldAcceptABlobIdWithAFolderHierarchy(FileSystem fileSystem) {
+        BlobStore hierarchicalBlobStore = MemoryBlobStoreFactory.builder()
+            .blobIdFactory(new PlainBlobId.Factory() {
+                @Override
+                public PlainBlobId of(String id) {
+                    return super.of(id.contains("/") ? id : "1/0/a/b/" + id);
+                }
+            })
+            .defaultBucketName()
+            .passthrough();
+        LocalFileBlobExportMechanism hierarchicalTestee = new LocalFileBlobExportMechanism(mailetContext, hierarchicalBlobStore, fileSystem,
+            dnsService, LocalFileBlobExportMechanism.Configuration.DEFAULT_CONFIGURATION);
+        BlobId blobId = Mono.from(hierarchicalBlobStore.save(hierarchicalBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
+
+        hierarchicalTestee.blobId(blobId)
+            .with(MailAddressFixture.RECIPIENT1)
+            .explanation("The content of a deleted message vault had been shared with you.")
+            .filePrefix("deleted-message-of-bob@domain.tld-")
+            .fileExtension(FileExtension.ZIP)
+            .export();
+
+        assertThat(mailetContext.getSentMails()).hasSize(1);
+    }
+
+    @Test
+    void exportingBlobShouldBeRefusedWhenTheBlobIdEscapesTheExportDirectory(FileSystem fileSystem) {
+        BlobStore escapingBlobStore = MemoryBlobStoreFactory.builder()
+            .blobIdFactory(new PlainBlobId.Factory() {
+                @Override
+                public PlainBlobId of(String id) {
+                    return super.of(id.startsWith("..") ? id : "../../" + id);
+                }
+            })
+            .defaultBucketName()
+            .passthrough();
+        LocalFileBlobExportMechanism escapingTestee = new LocalFileBlobExportMechanism(mailetContext, escapingBlobStore, fileSystem,
+            dnsService, LocalFileBlobExportMechanism.Configuration.DEFAULT_CONFIGURATION);
+        BlobId blobId = Mono.from(escapingBlobStore.save(escapingBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
+
+        assertThatThrownBy(() -> escapingTestee.blobId(blobId)
+                .with(MailAddressFixture.RECIPIENT1)
+                .explanation("The content of a deleted message vault had been shared with you.")
+                .noFileCustomPrefix()
+                .fileExtension(FileExtension.ZIP)
+                .export())
+            .isInstanceOf(BlobExportException.class);
+        assertThat(mailetContext.getSentMails()).isEmpty();
     }
 
     @Test
