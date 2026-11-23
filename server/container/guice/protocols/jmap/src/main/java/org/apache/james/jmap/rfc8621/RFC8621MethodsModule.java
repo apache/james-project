@@ -140,6 +140,9 @@ public class RFC8621MethodsModule extends AbstractModule {
         bind(ZoneIdProvider.class).to(SystemZoneIdProvider.class);
 
         bind(EmailSubmissionSetMethod.class).in(Scopes.SINGLETON);
+        // One instance serves, disconnects and describes the connections
+        bind(WebSocketRoutes.class).in(Scopes.SINGLETON);
+        bind(EventSourceRoutes.class).in(Scopes.SINGLETON);
         bind(MDNSendMethod.class).in(Scopes.SINGLETON);
 
         bind(DefaultWebPushClient.class).in(Scopes.SINGLETON);
