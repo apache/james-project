@@ -38,6 +38,8 @@ object PulsarConfiguration {
   val AUTHENTICATION_TOKEN_PROPERTY_NAME = "authentication.token"
   val AUTHENTICATION_BASIC_USERID_PROPERTY_NAME = "authentication.basic.userId"
   val AUTHENTICATION_BASIC_PASSWORD_PROPERTY_NAME = "authentication.basic.password"
+  val TLS_HOSTNAME_VERIFICATION_PROPERTY_NAME = "tls.hostname.verification"
+  val TLS_TRUST_CERTS_FILE_PATH_PROPERTY_NAME = "tls.trust.certs.file.path"
 
 
   def from(configuration: Configuration): PulsarConfiguration = {
@@ -69,7 +71,9 @@ object PulsarConfiguration {
     val namespace = configuration.getString(NAMESPACE_PROPERTY_NAME)
     if (Strings.isNullOrEmpty(namespace))
       throw new IllegalStateException(s"You need to specify the pulsar namespace as ${NAMESPACE_PROPERTY_NAME}")
-    new PulsarConfiguration(brokerUri, adminUri, Namespace(namespace), auth)
+    val tlsHostnameVerification = configuration.getBoolean(TLS_HOSTNAME_VERIFICATION_PROPERTY_NAME, true)
+    val tlsTrustCertsFilePath = Option(configuration.getString(TLS_TRUST_CERTS_FILE_PATH_PROPERTY_NAME)).filter(path => !path.isBlank)
+    new PulsarConfiguration(brokerUri, adminUri, Namespace(namespace), auth, tlsHostnameVerification, tlsTrustCertsFilePath)
   }
 
   private def extractUri(configuration: Configuration, uriPropertyName: String): String = {
@@ -104,4 +108,11 @@ object Auth {
   case class Basic(userId: String, password: String) extends Auth
 }
 
-case class PulsarConfiguration(brokerUri: String, adminUri: String, namespace: Namespace, auth: Auth = Auth.NoAuth)
+case class PulsarConfiguration(brokerUri: String, adminUri: String, namespace: Namespace, auth: Auth,
+                               tlsHostnameVerification: Boolean, tlsTrustCertsFilePath: Option[String]) {
+  def this(brokerUri: String, adminUri: String, namespace: Namespace, auth: Auth) =
+    this(brokerUri, adminUri, namespace, auth, true, None)
+
+  def this(brokerUri: String, adminUri: String, namespace: Namespace) =
+    this(brokerUri, adminUri, namespace, Auth.NoAuth)
+}

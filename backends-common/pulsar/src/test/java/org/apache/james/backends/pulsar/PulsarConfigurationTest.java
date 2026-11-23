@@ -161,6 +161,34 @@ class PulsarConfigurationTest {
     }
 
     @Test
+    void fromShouldVerifyTheTlsHostnameByDefault() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("broker.uri", "pulsar+ssl://localhost.test:6651/");
+        configuration.addProperty("admin.uri", "https://localhost:8443");
+        configuration.addProperty("namespace", "namespace");
+
+        PulsarConfiguration pulsarConfiguration = PulsarConfiguration.from(configuration);
+
+        assertThat(pulsarConfiguration.tlsHostnameVerification()).isTrue();
+        assertThat(pulsarConfiguration.tlsTrustCertsFilePath().isEmpty()).isTrue();
+    }
+
+    @Test
+    void fromShouldReadTheTlsOptions() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("broker.uri", "pulsar+ssl://localhost.test:6651/");
+        configuration.addProperty("admin.uri", "https://localhost:8443");
+        configuration.addProperty("namespace", "namespace");
+        configuration.addProperty("tls.hostname.verification", "false");
+        configuration.addProperty("tls.trust.certs.file.path", "/etc/pulsar/ca.pem");
+
+        PulsarConfiguration pulsarConfiguration = PulsarConfiguration.from(configuration);
+
+        assertThat(pulsarConfiguration.tlsHostnameVerification()).isFalse();
+        assertThat(pulsarConfiguration.tlsTrustCertsFilePath().get()).isEqualTo("/etc/pulsar/ca.pem");
+    }
+
+    @Test
     void fromShouldThrowWithTokenAuthenticationWhenTokenIsMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String brokerUri = "pulsar://localhost.test:6650/";
