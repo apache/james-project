@@ -47,11 +47,14 @@ public class BounceTest {
     private Bounce bounce;
     private FakeMailContext fakeMailContext;
 
+    private MailAddress postmaster;
+
     @BeforeEach
     void setUp() throws Exception {
         DNSService dnsService = mock(DNSService.class);
         bounce = new Bounce(dnsService);
-        fakeMailContext = FakeMailContext.defaultContext();
+        postmaster = new MailAddress("postmaster@domain.com");
+        fakeMailContext = FakeMailContext.builder().postmaster(postmaster).build();
 
         when(dnsService.getLocalHost()).thenThrow(new UnknownHostException());
     }
@@ -142,6 +145,29 @@ public class BounceTest {
             .fromMailet()
             .build();
         assertThat(fakeMailContext.getSentMails()).containsOnly(expected);
+    }
+
+    @Test
+    void bounceShouldBeSentFromThePostmasterByDefault() throws Exception {
+        bounce.init(FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build());
+
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(new MailAddress("sender@domain.com"))
+            .recipient(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addFrom("sender@domain.com")
+                .setText("My content"))
+            .build();
+
+        bounce.service(mail);
+
+        assertThat(fakeMailContext.getSentMails().get(0).getMsg().getFrom())
+            .extracting(Object::toString)
+            .containsExactly(postmaster.asString());
     }
 
     @Test
