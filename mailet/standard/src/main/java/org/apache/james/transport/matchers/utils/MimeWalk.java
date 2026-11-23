@@ -20,7 +20,6 @@
 package org.apache.james.transport.matchers.utils;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
@@ -168,19 +167,10 @@ public class MimeWalk {
             return false;
         }
 
-        Object content;
-
-        try {
-            content = part.getContent();
-        } catch (UnsupportedEncodingException uee) {
-            // in this case it is not an attachment, so ignore it
-            return false;
-        }
-
         Exception anException = null;
 
-        if (content instanceof Multipart) {
-            Multipart multipart = (Multipart) content;
+        // Decided on the type: decoding the content of a leaf fails eg for an unknown charset, which must not hide it
+        if (part.isMimeType("multipart/*") && part.getContent() instanceof Multipart multipart) {
             for (int i = 0; i < multipart.getCount(); i++) {
                 try {
                     Part bodyPart = multipart.getBodyPart(i);
@@ -195,9 +185,9 @@ public class MimeWalk {
             if (partMatch.partMatch(part)) {
                 return true;
             }
-            if (descendIntoAttachedMessages && content instanceof MimeMessage attachedMessage
+            if (descendIntoAttachedMessages && part.isMimeType("message/rfc822")
                 && attachedMessageDepth < MAX_ATTACHED_MESSAGE_DEPTH
-                && matchFound(attachedMessage, attachedMessageDepth + 1)) {
+                && attachedMessageMatches(part, attachedMessageDepth)) {
                 return true;
             }
         }
@@ -208,5 +198,17 @@ public class MimeWalk {
         }
 
         return false;
+    }
+
+    private boolean attachedMessageMatches(Part part, int attachedMessageDepth) throws Exception {
+        Object content;
+        try {
+            content = part.getContent();
+        } catch (IOException e) {
+            // For instance an unknown Content-Transfer-Encoding: that part does not match, the walk goes on
+            LOGGER.info("Could not read an attached message", e);
+            return false;
+        }
+        return content instanceof MimeMessage attachedMessage && matchFound(attachedMessage, attachedMessageDepth + 1);
     }
 }
