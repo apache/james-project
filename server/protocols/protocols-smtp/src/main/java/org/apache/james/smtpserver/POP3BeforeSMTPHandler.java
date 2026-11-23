@@ -30,17 +30,26 @@ import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.util.DurationParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This ConnectHandler can be used to activate pop-before-smtp
+ *
+ * @deprecated POP-before-SMTP grants relaying to an IP address, and the expiry of the grant is not enforced on every
+ * connection. Use SMTP authentication instead.
  */
+@Deprecated
 public class POP3BeforeSMTPHandler implements ConnectHandler<SMTPSession>, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(POP3BeforeSMTPHandler.class);
 
     /** The time after which ipAddresses should be handled as expired */
     private Duration expireTime = POP3BeforeSMTPHelper.EXPIRE_TIME;
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
+        LOGGER.error("POP3BeforeSMTPHandler is deprecated: POP-before-SMTP grants relaying to an IP address, and the expiry of "
+            + "the grant is not enforced on every connection. Use SMTP authentication instead.");
         try {
             setExpireTime(config.getString("expireTime", null));
         } catch (NumberFormatException e) {
