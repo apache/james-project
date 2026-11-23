@@ -19,8 +19,13 @@
 
 package org.apache.james.queue.jms;
 
+import static org.apache.james.queue.api.Mails.defaultMailNoRecipient;
+import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
+import org.apache.james.core.MailAddress;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
@@ -32,6 +37,7 @@ import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.PriorityManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.apache.mailet.Mail;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -133,5 +139,69 @@ public class JMSCacheableMailQueueTest implements DelayedManageableMailQueueCont
     @Disabled("JAMES-3687 Delayed deletes are buggy")
     public void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() {
 
+    }
+
+    @Test
+    void removeBySenderShouldNotInterpretTheValue() throws Exception {
+        MailAddress quotingSender = new MailAddress("x'or'1'='1'or'r'='r@attacker.example");
+        enQueue(defaultMailNoRecipient()
+            .name("name1")
+            .sender(new MailAddress("a@domain.tld"))
+            .recipient(RECIPIENT1)
+            .build());
+        enQueue(defaultMailNoRecipient()
+            .name("name2")
+            .sender(quotingSender)
+            .recipient(RECIPIENT1)
+            .build());
+
+        mailQueue.remove(ManageableMailQueue.Type.Sender, quotingSender.asString());
+
+        awaitRemove();
+
+        assertThat(mailQueue.browse())
+            .toIterable()
+            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
+            .extracting(Mail::getName)
+            .containsExactly("name1");
+    }
+
+    @Test
+    void removeByRecipientShouldNotTreatTheValueAsAPattern() throws Exception {
+        enQueue(defaultMailNoRecipient()
+            .name("name1")
+            .recipients(new MailAddress("axb@domain.tld"), new MailAddress("other@domain.tld"))
+            .build());
+
+        mailQueue.remove(ManageableMailQueue.Type.Recipient, "a_b@domain.tld");
+        mailQueue.remove(ManageableMailQueue.Type.Recipient, "%@domain.tld");
+
+        assertThat(mailQueue.browse())
+            .toIterable()
+            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
+            .extracting(Mail::getName)
+            .containsExactly("name1");
+    }
+
+    @Test
+    void removeByRecipientShouldMatchARecipientHoldingPatternCharacters() throws Exception {
+        enQueue(defaultMailNoRecipient()
+            .name("name1")
+            .recipients(new MailAddress("other@domain.tld"), new MailAddress("a_b%c@domain.tld"), new MailAddress("last@domain.tld"))
+            .build());
+        enQueue(defaultMailNoRecipient()
+            .name("name2")
+            .recipient(new MailAddress("other@domain.tld"))
+            .build());
+
+        mailQueue.remove(ManageableMailQueue.Type.Recipient, "a_b%c@domain.tld");
+
+        awaitRemove();
+
+        assertThat(mailQueue.browse())
+            .toIterable()
+            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
+            .extracting(Mail::getName)
+            .containsExactly("name2");
     }
 }
