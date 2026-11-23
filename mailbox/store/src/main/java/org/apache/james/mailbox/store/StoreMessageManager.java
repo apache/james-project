@@ -682,7 +682,7 @@ public class StoreMessageManager implements MessageManager {
 
     /**
      * RFC 4314: setting \Seen requires 's', \Deleted requires 't' and other flags require 'w', including when the
-     * flags are set by APPEND or COPY.
+     * flags are set by APPEND, COPY or MOVE.
      */
     private static Flags flagsNotAllowedToSet(Flags flags, MailboxACL.Rfc4314Rights myRights) {
         Flags notAllowed = new Flags();
@@ -937,7 +937,7 @@ public class StoreMessageManager implements MessageManager {
                         .mapToLong(MailboxMessage::getFullContentOctets)
                         .sum())).sneakyThrow())
                 .thenMany(messageMapper.executeReactive(
-                    messageMapper.copyReactive(getMailboxEntity(), withFlagsAllowedToSet(originalRows, session)))
+                    messageMapper.copyReactive(getMailboxEntity(), withFlagsAllowedToSet(originalRows, session).orElse(originalRows)))
                     .flatMapIterable(Function.identity()));
         } catch (MailboxException e) {
             return Flux.error(e);
@@ -948,12 +948,15 @@ public class StoreMessageManager implements MessageManager {
      * Replaces the rows carrying flags the session is not allowed to set on this mailbox by copies holding the allowed
      * flags only, so that each row is written once. The rows themselves are left untouched as a mapper may return the
      * instances it stores.
+     *
+     * @return the rows to write, or empty when no row had to be replaced
      */
-    private List<MailboxMessage> withFlagsAllowedToSet(List<MailboxMessage> rows, MailboxSession session) throws MailboxException {
+    private Optional<List<MailboxMessage>> withFlagsAllowedToSet(List<MailboxMessage> rows, MailboxSession session) throws MailboxException {
         MailboxACL.Rfc4314Rights myRights = storeRightManager.myRights(mailbox, session);
         if (myRights.contains(MailboxACL.Right.WriteSeenFlag, MailboxACL.Right.DeleteMessages, MailboxACL.Right.Write)) {
-            return rows;
+            return Optional.empty();
         }
+        boolean replaced = false;
         ImmutableList.Builder<MailboxMessage> result = ImmutableList.builder();
         for (MailboxMessage row : rows) {
             Flags flags = row.createFlags();
@@ -967,21 +970,41 @@ public class StoreMessageManager implements MessageManager {
                 flags.remove(notAllowed);
                 filteredRow.setFlags(flags);
                 result.add(filteredRow);
+                replaced = true;
             }
         }
-        return result.build();
+        if (replaced) {
+            return Optional.of(result.build());
+        }
+        return Optional.empty();
     }
 
-    private Mono<MoveResult> move(List<MailboxMessage> originalRows, MailboxSession session) {
+    private Mono<MoveResult> move(List<MailboxMessage> originalRows, Mailbox sourceMailbox, MailboxSession session) {
         List<MessageMetaData> originalRowsCopy = originalRows.stream()
             .map(MailboxMessage::metaData)
             .collect(ImmutableList.toImmutableList());
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
-        return messageMapper.executeReactive(messageMapper.moveReactive(getMailboxEntity(), originalRows))
+        Optional<List<MailboxMessage>> filteredRows;
+        try {
+            filteredRows = withFlagsAllowedToSet(originalRows, session);
+        } catch (MailboxException e) {
+            return Mono.error(e);
+        }
+        if (filteredRows.isEmpty()) {
+            return messageMapper.executeReactive(messageMapper.moveReactive(getMailboxEntity(), originalRows))
+                .map(data -> new MoveResult(data, originalRowsCopy));
+        }
+        List<MailboxMessage> rowsToWrite = filteredRows.get();
+        // The mappers move a row with its own flags: copy the rows holding the allowed flags, then delete the source rows
+        List<MessageUid> sourceUids = originalRowsCopy.stream()
+            .map(MessageMetaData::getUid)
+            .collect(ImmutableList.toImmutableList());
+        return messageMapper.executeReactive(messageMapper.copyReactive(getMailboxEntity(), rowsToWrite)
+                .flatMap(movedMessages -> messageMapper.deleteMessagesReactive(sourceMailbox, sourceUids)
+                    .thenReturn(movedMessages)))
             .map(data -> new MoveResult(data, originalRowsCopy));
     }
-
 
     private Flux<SortedMap<MessageUid, MessageMetaData>> copy(MessageRange set, StoreMessageManager to, MailboxSession session) {
         return retrieveOriginalRows(set, session)
@@ -1026,7 +1049,7 @@ public class StoreMessageManager implements MessageManager {
             .window(batchSizes.getCopyBatchSize().orElse(Integer.MAX_VALUE))
             .concatMap(window -> window
                 .collectList()
-                .flatMap(originalRows -> to.move(originalRows, session).flatMap(moveResult -> {
+                .flatMap(originalRows -> to.move(originalRows, mailbox, session).flatMap(moveResult -> {
                     SortedMap<MessageUid, MessageMetaData> moveUids = collectMetadata(moveResult.getMovedMessages().iterator());
 
                     ImmutableList<MessageId> messageIds = originalRows.stream()
