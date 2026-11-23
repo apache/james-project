@@ -135,7 +135,8 @@ public class ICalendarParser extends GenericMailet {
     private Stream<Pair<String, Calendar>> createCalendar(String key, byte[] icsContent) {
         CalendarBuilder builder = new CalendarBuilder(
             CalendarParserFactory.getInstance().get(),
-            new ContentHandlerContext().withSuppressInvalidProperties(true),
+            new ContentHandlerContext().withSuppressInvalidProperties(true)
+                .withPropertyFactorySupplier(InMemoryAttachFactory::propertyFactories),
             new ICal4JTimeZoneRegistry());
         try {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(icsContent);
