@@ -19,12 +19,14 @@
 package org.apache.james.dnsservice.library;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.net.InetAddress;
 import java.util.Arrays;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
+import org.apache.mailet.HostAddress;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -64,5 +66,27 @@ public class MXHostAddressIteratorTest {
         // See JAMES-1271
         MXHostAddressIterator it = new MXHostAddressIterator(Arrays.asList("localhost").iterator(), new InMemoryDNSService(), false);
         assertThat(it.hasNext()).isFalse();
+    }
+
+    @Test
+    void mxRecordsShouldNotBeParsedAsHostAndPort() throws Exception {
+        DNSService dns = new InMemoryDNSService()
+            .registerRecord("mx.domain.tld", ImmutableList.of(InetAddress.getByName("127.0.0.1")), ImmutableList.of(), ImmutableList.of());
+
+        assertThat(ImmutableList.copyOf(MXHostAddressIterator.forMxRecords(
+                Arrays.asList("127.0.0.1:2525/.", "mx.domain.tld:2525", "mx.domain.tld").iterator(), dns, false, false)))
+            .extracting(HostAddress::getHostName, HostAddress::getPort)
+            .containsExactly(tuple("mx.domain.tld", 25));
+    }
+
+    @Test
+    void gatewaysShouldBeParsedAsHostAndPort() throws Exception {
+        DNSService dns = new InMemoryDNSService()
+            .registerRecord("relay.domain.tld", ImmutableList.of(InetAddress.getByName("127.0.0.1")), ImmutableList.of(), ImmutableList.of());
+
+        assertThat(ImmutableList.copyOf(new MXHostAddressIterator(
+                Arrays.asList("relay.domain.tld:2525", "relay.domain.tld:99999", "relay.domain.tld:2525/.").iterator(), dns, false)))
+            .extracting(HostAddress::getHostName, HostAddress::getPort)
+            .containsExactly(tuple("relay.domain.tld", 2525));
     }
 }
