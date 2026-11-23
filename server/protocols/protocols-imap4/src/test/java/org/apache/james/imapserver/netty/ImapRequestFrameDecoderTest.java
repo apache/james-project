@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 
@@ -531,5 +532,29 @@ class ImapRequestFrameDecoderTest {
         assertThat(whole).last().asString().contains("tag=c, command=NOOP");
         assertThat(decode(true, 16, 5504, 3008, byteByByte(stream)))
             .isEqualTo(whole);
+    }
+
+    @Test
+    void neededDataShouldCountTheEarlierLiterals() {
+        EmbeddedChannel channel = new EmbeddedChannel();
+        FakeImapSession session = new FakeImapSession() {
+            @Override
+            public boolean needsCommandInjectionDetection() {
+                return false;
+            }
+        };
+        session.authenticated();
+        Map<String, Object> attachment = new ConcurrentHashMap<>();
+        channel.attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).set(session);
+        channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(attachment);
+        channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), 3008, false));
+        channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(), 50, 0, 3008));
+
+        // A literal of 5 bytes, then a literal of 100 bytes, above the in memory size limit, not received yet
+        channel.writeInbound(Unpooled.wrappedBuffer("a APPEND {5+}\r\nINBOX {100+}\r\n".getBytes(StandardCharsets.US_ASCII)));
+
+        // The 100 bytes of the literal, then the CRLF ending the command
+        assertThat(attachment.get(ImapRequestFrameDecoder.NEEDED_DATA)).isEqualTo(100 + 2);
+        channel.finishAndReleaseAll();
     }
 }
