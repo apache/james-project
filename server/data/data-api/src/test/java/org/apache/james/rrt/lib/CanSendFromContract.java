@@ -155,6 +155,27 @@ public interface CanSendFromContract {
     }
 
     @Test
+    default void userCanSendFromShouldBeFalseWhenTheAddressInTheAliasDomainIsRoutedToSomeoneElse() throws Exception {
+        Username fromUser = USER.withOtherDomain(OTHER_DOMAIN);
+
+        redirectDomain(OTHER_DOMAIN).to(DOMAIN).asAlias();
+        // The user level mapping takes precedence over the domain alias
+        redirectUser(fromUser).to(OTHER_USER);
+
+        assertThat(canSendFrom().userCanSendFrom(USER, fromUser)).isFalse();
+    }
+
+    @Test
+    default void userCanSendFromShouldBeTrueWhenTheAddressInTheAliasDomainIsRoutedToTheUser() throws Exception {
+        Username fromUser = USER.withOtherDomain(OTHER_DOMAIN);
+
+        redirectDomain(OTHER_DOMAIN).to(DOMAIN).asAlias();
+        redirectUser(fromUser).to(USER);
+
+        assertThat(canSendFrom().userCanSendFrom(USER, fromUser)).isTrue();
+    }
+
+    @Test
     default void userCanSendFromShouldBeFalseWhenDomainMapping() throws Exception {
         Username fromUser = USER.withOtherDomain(OTHER_DOMAIN);
 

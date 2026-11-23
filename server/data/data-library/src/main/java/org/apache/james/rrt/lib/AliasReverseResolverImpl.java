@@ -38,6 +38,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class AliasReverseResolverImpl implements AliasReverseResolver {
     private final RecipientRewriteTable recipientRewriteTable;
@@ -55,10 +56,23 @@ public class AliasReverseResolverImpl implements AliasReverseResolver {
             .flatMap(allowedUser -> user.getDomainPart()
                 .map(domain -> Flux.concat(
                     Flux.just(allowedUser),
-                    domains.fetch(domain).map(allowedUser::withOtherDomain)))
+                    domains.fetch(domain).map(allowedUser::withOtherDomain)
+                        .filterWhen(aliasDomainAddress -> resolvesTo(aliasDomainAddress, allowedUser))))
                 .orElseGet(() -> Flux.just(allowedUser)))
             .map(Throwing.function(Username::asMailAddress).sneakyThrow())
             .distinct();
+    }
+
+    /**
+     * The address in an alias domain reaches the user unless it has user level mappings of its own, which take
+     * precedence over the domain alias, and lead elsewhere.
+     */
+    private Mono<Boolean> resolvesTo(Username aliasDomainAddress, Username user) {
+        return Mono.fromCallable(() -> recipientRewriteTable.getStoredMappings(MappingSource.fromUser(aliasDomainAddress)))
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+            .map(mappings -> mappings.isEmpty() || mappings.asStream()
+                .flatMap(mapping -> mapping.asMailAddress().stream())
+                .anyMatch(address -> address.asString().equalsIgnoreCase(user.asString())));
     }
 
     private Flux<Username> relatedAliases(Username user) {
