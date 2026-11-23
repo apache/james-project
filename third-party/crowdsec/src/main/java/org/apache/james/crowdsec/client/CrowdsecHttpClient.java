@@ -19,6 +19,8 @@
 
 package org.apache.james.crowdsec.client;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -57,8 +59,35 @@ public class CrowdsecHttpClient {
     }
 
     public Mono<List<CrowdsecDecision>> getCrowdsecDecisions() {
+        return getDecisions(GET_DECISION)
+            .onErrorResume(TimeoutException.class, e -> Mono.fromRunnable(() -> LOGGER.warn("Timeout while questioning to CrowdSec. May need to check the CrowdSec configuration."))
+                .thenReturn(ImmutableList.of()));
+    }
+
+    /**
+     * @return the decisions applying to this IP, as matched by CrowdSec
+     */
+    public Mono<List<CrowdsecDecision>> getCrowdsecDecisions(String ip) {
+        return getDecisions(GET_DECISION + "?ip=" + URLEncoder.encode(ip, StandardCharsets.UTF_8))
+            .onErrorResume(TimeoutException.class, e -> Mono.fromRunnable(() -> LOGGER.warn("Timeout while questioning to CrowdSec. May need to check the CrowdSec configuration."))
+                .thenReturn(timeoutDecisions(ip)));
+    }
+
+    private List<CrowdsecDecision> timeoutDecisions(String ip) {
+        if (crowdsecConfiguration.isFailClosed()) {
+            return ImmutableList.of(CrowdsecDecision.builder()
+                .scope("Ip")
+                .value(ip)
+                .type(CrowdsecDecision.BAN)
+                .origin("james-timeout")
+                .build());
+        }
+        return ImmutableList.of();
+    }
+
+    private Mono<List<CrowdsecDecision>> getDecisions(String uri) {
         return httpClient.get()
-            .uri(GET_DECISION)
+            .uri(uri)
             .responseSingle((response, body) -> {
                 switch (response.status().code()) {
                     case HttpStatus.SC_OK:
@@ -69,9 +98,7 @@ public class CrowdsecHttpClient {
                         return Mono.error(new RuntimeException("Request failed with status code " + response.status().code()));
                 }
             })
-            .timeout(crowdsecConfiguration.getTimeout())
-            .onErrorResume(TimeoutException.class, e -> Mono.fromRunnable(() -> LOGGER.warn("Timeout while questioning to CrowdSec. May need to check the CrowdSec configuration."))
-                .thenReturn(ImmutableList.of()));
+            .timeout(crowdsecConfiguration.getTimeout());
     }
 
     private List<CrowdsecDecision> parseCrowdsecDecisions(String json) {

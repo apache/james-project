@@ -20,6 +20,7 @@
 package org.apache.james.imapserver.netty;
 
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.Set;
 
 import org.apache.james.imap.api.ConnectionCheck;
@@ -31,6 +32,7 @@ import reactor.core.publisher.Mono;
 
 public class IpConnectionCheck implements ConnectionCheck {
     private Set<String> bannedIps = Set.of();
+    private Duration delay = Duration.ZERO;
 
     @Override
     @VisibleForTesting
@@ -38,7 +40,8 @@ public class IpConnectionCheck implements ConnectionCheck {
         String ip = remoteAddress.getAddress().getHostAddress();
         // check against bannedIps
         if (bannedIps.contains(ip)) {
-            return Mono.error(() -> new RuntimeException("Banned"));
+            return Mono.<Void>error(() -> new RuntimeException("Banned"))
+                .delaySubscription(delay);
         } else {
             return Mono.empty();
         }
@@ -46,5 +49,9 @@ public class IpConnectionCheck implements ConnectionCheck {
 
     public void setBannedIps(Set<String> bannedIps) {
         this.bannedIps = bannedIps;
+    }
+
+    public void setDelay(Duration delay) {
+        this.delay = delay;
     }
 }

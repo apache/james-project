@@ -32,6 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.function.Predicate;
 
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
@@ -43,6 +44,7 @@ import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.protocols.api.Response;
+import org.apache.james.protocols.api.handler.ClientAddressConnectHandler;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
@@ -107,25 +109,35 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
             session.setAttachment(MDC_ATTRIBUTE_KEY, boundMDC, Connection);
             ctx.channel().attr(SESSION_ATTRIBUTE_KEY).set(session);
 
-            List<ConnectHandler> connectHandlers = chain.getHandlers(ConnectHandler.class);
-            List<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
-
             LOGGER.info("Connection established from {}", session.getRemoteAddress().getAddress().getHostAddress());
-            for (ConnectHandler cHandler : connectHandlers) {
-                long start = System.currentTimeMillis();
-                Response response = cHandler.onConnect(session);
-                long executionTime = System.currentTimeMillis() - start;
-
-                for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
-                    resultHandler.onResponse(session, response, executionTime, cHandler);
-                }
-                if (response != null) {
-                    // TODO: This kind of sucks but I was able to come up with something more elegant here
-                    ((ProtocolSessionImpl) session).getProtocolTransport().writeResponse(response, session);
-                }
-            }
+            // Behind the PROXY protocol, the handlers needing the client address run once the PROXY header is read
+            boolean awaitsProxyHeader = ctx.pipeline().get(HandlerConstants.PROXY_HANDLER) != null;
+            runConnectHandlers(session, handler -> !(awaitsProxyHeader && handler instanceof ClientAddressConnectHandler));
 
             super.channelActive(ctx);
+        }
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void runConnectHandlers(ProtocolSession session, Predicate<ConnectHandler> filter) {
+        List<ConnectHandler> connectHandlers = chain.getHandlers(ConnectHandler.class);
+        List<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
+
+        for (ConnectHandler cHandler : connectHandlers) {
+            if (!filter.test(cHandler)) {
+                continue;
+            }
+            long start = System.currentTimeMillis();
+            Response response = cHandler.onConnect(session);
+            long executionTime = System.currentTimeMillis() - start;
+
+            for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
+                resultHandler.onResponse(session, response, executionTime, cHandler);
+            }
+            if (response != null) {
+                // TODO: This kind of sucks but I was able to come up with something more elegant here
+                ((ProtocolSessionImpl) session).getProtocolTransport().writeResponse(response, session);
+            }
         }
     }
 
@@ -234,6 +246,10 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                     boundMDC.addToContext("proxy.destination", proxyInformation.getDestination().toString());
                     boundMDC.addToContext("proxy.ip", retrieveIp(ctx));
                     pSession.setAttachment(MDC_ATTRIBUTE_KEY, boundMDC, Connection);
+
+                    try (Closeable closeable = mdc(ctx).build()) {
+                        runConnectHandlers(pSession, ClientAddressConnectHandler.class::isInstance);
+                    }
                 }
             } else {
                 throw new IllegalArgumentException("Only TCP4/TCP6 are supported when using PROXY protocol.");
