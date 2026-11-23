@@ -28,9 +28,11 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.time.zone.ZoneRules;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.Recur;
@@ -45,6 +47,10 @@ import net.fortuna.ical4j.model.property.RRule;
  * Uses built-in rules for standard timezones to avoid exhausting the timezone ID pool.
  * Custom timezones keep the rules supplied in the calendar.
  *
+ * ical4j takes an ID out of a JVM wide pool (1500 by default) for each registered custom timezone, and only gives it
+ * back once the registry is garbage collected: a calendar registers at most {@value #MAX_CUSTOM_TIMEZONES_PER_CALENDAR}
+ * custom timezones, a repeated TZID being registered once (the first definition is kept).
+ *
  * Registering a custom timezone makes ical4j materialize all the occurrences of its recurrence rules, so their
  * cost is bounded first. One instance serves one calendar: the limit applies to all its timezones. A rule above
  * the limit throws an exception, which the ical4j parser reports as a ParserException.
@@ -56,8 +62,11 @@ public class ICal4JTimeZoneRegistry implements TimeZoneRegistry {
     private static final long MAX_BY_RULE_COMBINATIONS = 1_000;
     // Observance#getLatestOnset expands the rules up to 10 years ahead
     private static final int HORIZON_IN_YEARS = 10;
+    // Invitations carry one timezone per distinct TZID they use, often a single one
+    static final int MAX_CUSTOM_TIMEZONES_PER_CALENDAR = 20;
 
     private final TimeZoneRegistryImpl delegate = new TimeZoneRegistryImpl();
+    private final Set<String> customTimezoneIds = new HashSet<>();
     private long remainingOccurrences = MAX_OCCURRENCES_PER_CALENDAR;
 
     @Override
@@ -70,8 +79,15 @@ public class ICal4JTimeZoneRegistry implements TimeZoneRegistry {
         try {
             TimeZoneRegistry.getGlobalZoneId(timezone.getID());
         } catch (DateTimeException e) {
+            if (customTimezoneIds.contains(timezone.getID())) {
+                return;
+            }
+            if (customTimezoneIds.size() >= MAX_CUSTOM_TIMEZONES_PER_CALENDAR) {
+                throw new IllegalArgumentException("More than " + MAX_CUSTOM_TIMEZONES_PER_CALENDAR + " custom timezones in a calendar");
+            }
             assertRecurrenceCostIsBounded(timezone);
             delegate.register(timezone, update);
+            customTimezoneIds.add(timezone.getID());
         }
     }
 
@@ -123,6 +139,7 @@ public class ICal4JTimeZoneRegistry implements TimeZoneRegistry {
     @Override
     public void clear() {
         delegate.clear();
+        customTimezoneIds.clear();
     }
 
     @Override

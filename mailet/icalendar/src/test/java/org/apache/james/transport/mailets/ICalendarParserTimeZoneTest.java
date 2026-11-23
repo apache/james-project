@@ -27,6 +27,8 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -104,6 +106,74 @@ class ICalendarParserTimeZoneTest {
         Calendar calendar = parse(ICS.replace("{TZID}", "Custom James Time").replace("{DATE}", "20260715"));
 
         assertThat(start(calendar)).isEqualTo(Instant.parse("2026-07-15T09:45:00Z"));
+    }
+
+    @Test
+    void shouldRejectACalendarWithTooManyCustomTimezones() throws Exception {
+        // Without recurrence rules, the recurrence budget of the calendar does not stop the registrations
+        String timezones = IntStream.range(0, 1600)
+            .mapToObj(i -> fixedOffsetTimezone("X-" + i))
+            .collect(Collectors.joining());
+
+        assertThat(parsedCalendars(calendarWith(timezones, "X-0"))).isEmpty();
+        assertThat(start(parse(ICS.replace("{TZID}", "Custom James Time").replace("{DATE}", "20260715"))))
+            .isEqualTo(Instant.parse("2026-07-15T09:45:00Z"));
+    }
+
+    @Test
+    void shouldAcceptTheMaximumOfCustomTimezones() throws Exception {
+        String timezones = IntStream.range(0, ICal4JTimeZoneRegistry.MAX_CUSTOM_TIMEZONES_PER_CALENDAR)
+            .mapToObj(i -> timezone("X-" + i))
+            .collect(Collectors.joining());
+
+        assertThat(start(parse(calendarWith(timezones, "X-1")))).isEqualTo(Instant.parse("2026-07-15T09:45:00Z"));
+    }
+
+    @Test
+    void shouldRegisterARepeatedCustomTimezoneOnce() throws Exception {
+        String timezones = timezone("Custom James Time").repeat(1600);
+        List<Calendar> calendars = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            calendars.add(parse(calendarWith(timezones, "Custom James Time")));
+        }
+
+        assertThat(calendars)
+            .allSatisfy(calendar -> assertThat(start(calendar)).isEqualTo(Instant.parse("2026-07-15T09:45:00Z")));
+    }
+
+    private static String timezone(String tzId) {
+        return ICS.substring(ICS.indexOf("BEGIN:VTIMEZONE"), ICS.indexOf("BEGIN:VEVENT")).replace("{TZID}", tzId);
+    }
+
+    private static String fixedOffsetTimezone(String tzId) {
+        return """
+            BEGIN:VTIMEZONE
+            TZID:%s
+            BEGIN:STANDARD
+            DTSTART:19700101T000000
+            TZOFFSETFROM:+0100
+            TZOFFSETTO:+0100
+            END:STANDARD
+            END:VTIMEZONE
+            """.formatted(tzId);
+    }
+
+    private static String calendarWith(String timezones, String usedTzId) {
+        String event = ICS.substring(ICS.indexOf("BEGIN:VEVENT")).replace("{TZID}", usedTzId).replace("{DATE}", "20260715");
+        return ICS.substring(0, ICS.indexOf("BEGIN:VTIMEZONE")) + timezones + event;
+    }
+
+    private Map<?, ?> parsedCalendars(String ics) throws Exception {
+        FakeMail mail = FakeMail.builder()
+            .name("timezone-test")
+            .attribute(new Attribute(AttributeName.of(ICalendarParser.SOURCE_ATTRIBUTE_PARAMETER_DEFAULT_VALUE),
+                AttributeValue.of(Map.of("calendar", AttributeValue.of(ics.getBytes(StandardCharsets.UTF_8))))))
+            .build();
+
+        mailet.service(mail);
+
+        return (Map<?, ?>) mail.getAttribute(AttributeName.of(ICalendarParser.DESTINATION_ATTRIBUTE_PARAMETER_DEFAULT_VALUE))
+            .orElseThrow().getValue().value();
     }
 
     private Calendar parse(String ics) throws Exception {
