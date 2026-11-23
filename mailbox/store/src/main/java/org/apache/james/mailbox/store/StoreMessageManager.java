@@ -923,17 +923,15 @@ public class StoreMessageManager implements MessageManager {
                             .session(session)
                             .build(),
                             registrationKeys);
-                        return Mono.from(eventBus.dispatch(ImmutableList.of(added, expunged, moved)))
+                        // The mod-sequence must cover the expunge before other sessions get notified of it
+                        return raiseHighestModSeq(!moveResult.getOriginalMessages().isEmpty(), session)
+                            .then(Mono.from(eventBus.dispatch(ImmutableList.of(added, expunged, moved))))
                             .thenReturn(moveUids);
                     })))
             .reduce((SortedMap<MessageUid, MessageMetaData>) new TreeMap<MessageUid, MessageMetaData>(), (acc, batchUids) -> {
                 acc.putAll(batchUids);
                 return acc;
-            })
-            // One new mod-sequence for the whole move, not one per batch: allocating it is costly (LWT)
-            .flatMap(movedUids -> raiseHighestModSeq(!movedUids.isEmpty(), session).thenReturn(movedUids))
-            // Some messages may have left the mailbox before the failure
-            .onErrorResume(e -> raiseHighestModSeq(true, session).then(Mono.error(e)));
+            });
     }
 
     @Override
@@ -1143,15 +1141,14 @@ public class StoreMessageManager implements MessageManager {
                         .session(session)
                         .build(),
                         messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(ImmutableSet.toImmutableSet()));
-                    return Mono.from(eventBus.dispatch(ImmutableList.of(added, expunged, moved)))
+                    // The mod-sequence must cover the expunge before other sessions get notified of it
+                    return raiseHighestModSeq(!moveResult.getOriginalMessages().isEmpty(), session)
+                        .then(Mono.from(eventBus.dispatch(ImmutableList.of(added, expunged, moved))))
                         .thenReturn(moveUids);
                 })))
+            // Run all the batches before emitting: the JVM locker only keeps the first element and cancels the rest
             .collectList()
-            // One new mod-sequence for the whole move, not one per batch: allocating it is costly (LWT)
-            // Some messages may have left the mailbox before the failure
-            .onErrorResume(e -> raiseHighestModSeq(true, session).then(Mono.error(e)))
-            .flatMapMany(batches -> raiseHighestModSeq(batches.stream().anyMatch(batch -> !batch.isEmpty()), session)
-                .thenMany(Flux.fromIterable(batches)));
+            .flatMapMany(Flux::fromIterable);
     }
 
     private Flux<MailboxMessage> retrieveOriginalRows(MessageRange set, MailboxSession session) {
