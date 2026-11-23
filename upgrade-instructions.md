@@ -22,6 +22,7 @@ Change list:
 
 
 
+
 ### IPv6 network prefixes apply as written
 
 Date: 23/11/2026
@@ -106,6 +107,21 @@ Concerned products: the apps using Pulsar (experimental).
 Over TLS, the host name of the Pulsar broker and admin endpoints is now checked against their certificate. Set
 `tls.hostname.verification=false` in `pulsar.properties` to get the former behaviour back. `tls.trust.certs.file.path`
 sets the certificates (PEM) trusted for these endpoints.
+
+### Passwords are hashed again at login
+
+Date: 23/11/2026
+
+Concerned products: the users repositories storing password digests (memory, Cassandra, Postgres). The
+JPA users repository does not hash passwords again.
+
+At a successful login, a password stored with another algorithm than the configured one is hashed again with it. New
+digests of the SHA family are computed on the UTF-8 bytes of the password, under an algorithm carrying the `-utf8`
+suffix (for instance `SHA-512-utf8`), and a password stored as an ISO-8859-1 digest is hashed again with it.
+
+Older versions of James can not verify the passwords hashed again after the upgrade, nor the `-utf8` digests. Running
+a cluster mixing versions, or rolling back, is therefore not supported once users have logged in after the upgrade:
+their passwords would no longer be verified by the older nodes.
 
 ## 3.9.1 version
 
