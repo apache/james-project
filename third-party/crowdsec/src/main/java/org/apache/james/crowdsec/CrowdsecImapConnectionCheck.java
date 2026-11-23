@@ -43,7 +43,7 @@ public class CrowdsecImapConnectionCheck implements ConnectionCheck {
     public Publisher<Void> validate(InetSocketAddress remoteAddress) {
         String ip = remoteAddress.getAddress().getHostAddress();
 
-        return client.getCrowdsecDecisions()
+        return client.getCrowdsecDecisions(ip)
             .filter(decisions -> decisions.stream().anyMatch(decision -> isBanned(decision, ip)))
             .handle((crowdsecDecisions, synchronousSink) -> synchronousSink.error(new CrowdsecException("Ip " + ip + " is not allowed to connect to IMAP server by Crowdsec")));
     }

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.InetSocketAddress;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.net.smtp.SMTPConnectionClosedException;
 import org.apache.commons.net.smtp.SMTPReply;
@@ -31,6 +32,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.ProxyInformation;
+import org.apache.james.protocols.api.handler.ClientAddressConnectHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
@@ -40,6 +42,7 @@ import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.smtp.SMTPConfigurationImpl;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
+import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.junit.jupiter.api.AfterEach;
@@ -84,6 +87,26 @@ class NettyProxySMTPServerTest {
         }
         chain.wireExtensibleHandlers();
         return new SMTPProtocol(chain, new SMTPConfigurationImpl());
+    }
+
+    @Test
+    void clientAddressConnectHandlersShouldSeeTheProxiedClientAddress() throws Exception {
+        AtomicReference<String> connectingAddress = new AtomicReference<>();
+        server = createServer(createProtocol(Optional.of((ClientAddressConnectHandler<SMTPSession>) session -> {
+            connectingAddress.set(session.getRemoteAddress().getHostString());
+            return null;
+        })));
+
+        smptClient = createClient();
+
+        server.bind();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+        smptClient.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smptClient.sendCommand("PROXY TCP4 255.255.255.254 255.255.255.255 65535 65535\r\nHELO localhost");
+
+        assertThat(SMTPReply.isPositiveCompletion(smptClient.getReplyCode())).isTrue();
+        assertThat(connectingAddress.get()).isEqualTo("255.255.255.254");
     }
 
     @Test
