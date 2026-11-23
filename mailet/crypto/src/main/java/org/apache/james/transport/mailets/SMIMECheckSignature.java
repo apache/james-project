@@ -38,6 +38,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.transport.KeyStoreHolder;
 import org.apache.james.transport.KeyStoreHolderConfiguration;
 import org.apache.james.transport.KeyStoreHolderFactory;
+import org.apache.james.transport.SMIMESignedMessages;
 import org.apache.james.transport.SMIMESignerInfo;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -269,6 +270,9 @@ public class SMIMECheckSignature extends GenericMailet {
     }
 
     private SMIMESigned asSMIMESigned(MimeMessage message) throws IOException, MessagingException, CMSException, SMIMEException {
+        if (!SMIMESignedMessages.isSigned(message)) {
+            return null;
+        }
         Object obj = message.getContent();
         SMIMESigned signed;
         if (obj instanceof MimeMultipart) {

@@ -24,6 +24,7 @@ import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.util.Base64;
 import java.util.Properties;
 
 import jakarta.mail.Session;
@@ -32,6 +33,9 @@ import jakarta.mail.internet.MimeMessage;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.cms.CMSObjectIdentifiers;
+import org.bouncycastle.asn1.cms.ContentInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -87,15 +91,33 @@ class IsSMIMESignedTest {
     }
 
     @Test
-    void shouldMatchPkcs7SignatureMail() throws Exception {
+    void shouldNotMatchABarePkcs7SignatureMail() throws Exception {
         assertThat(testee.match(mailWithContentType("application/pkcs7-signature")))
-            .containsOnly(ANY_AT_JAMES);
+            .isNull();
     }
 
     @Test
     void shouldMatchPkcs7MimeSignedData() throws Exception {
         assertThat(testee.match(mailWithContentType("application/pkcs7-mime; smime-type=signed-data; name=smime.p7m")))
             .containsOnly(ANY_AT_JAMES);
+    }
+
+    @Test
+    void shouldMatchPkcs7MimeSignedDataWithoutSmimeType() throws Exception {
+        assertThat(testee.match(pkcs7MimeMail(CMSObjectIdentifiers.signedData)))
+            .containsOnly(ANY_AT_JAMES);
+    }
+
+    @Test
+    void shouldNotMatchPkcs7MimeEnvelopedDataWithoutSmimeType() throws Exception {
+        assertThat(testee.match(pkcs7MimeMail(CMSObjectIdentifiers.envelopedData)))
+            .isNull();
+    }
+
+    @Test
+    void shouldNotMatchPkcs7MimeWithoutSmimeTypeNorCmsContent() throws Exception {
+        assertThat(testee.match(mailWithContentType("application/pkcs7-mime; name=smime.p7m")))
+            .isNull();
     }
 
     @Test
@@ -110,6 +132,38 @@ class IsSMIMESignedTest {
             .isNull();
     }
 
+    @Test
+    void shouldNotMatchMultipartSignedWithThreeParts() throws Exception {
+        String message = "Subject: any\r\n"
+            + "Content-Type: multipart/signed; protocol=\"application/pkcs7-signature\"; micalg=sha-256; boundary=\"bound\"\r\n"
+            + "\r\n"
+            + "--bound\r\n"
+            + "Content-Type: text/plain\r\n"
+            + "\r\n"
+            + "content\r\n"
+            + "--bound\r\n"
+            + "Content-Type: text/plain\r\n"
+            + "\r\n"
+            + "other content\r\n"
+            + "--bound\r\n"
+            + "Content-Type: application/pkcs7-signature\r\n"
+            + "\r\n"
+            + "signature\r\n"
+            + "--bound--\r\n";
+
+        assertThat(testee.match(mail(message))).isNull();
+    }
+
+    private Mail pkcs7MimeMail(ASN1ObjectIdentifier cmsContentType) throws Exception {
+        String message = "Subject: any\r\n"
+            + "Content-Type: application/pkcs7-mime; name=smime.p7m\r\n"
+            + "Content-Transfer-Encoding: base64\r\n"
+            + "\r\n"
+            + Base64.getMimeEncoder().encodeToString(new ContentInfo(cmsContentType, null).getEncoded()) + "\r\n";
+
+        return mail(message);
+    }
+
     private Mail mailWithContentType(String contentType) throws Exception {
         String message = "Subject: any\r\n"
             + "Content-Type: " + contentType + "\r\n"
@@ -118,8 +172,16 @@ class IsSMIMESignedTest {
             + "Content-Type: text/plain\r\n"
             + "\r\n"
             + "content\r\n"
+            + "--bound\r\n"
+            + "Content-Type: application/pkcs7-signature\r\n"
+            + "\r\n"
+            + "signature\r\n"
             + "--bound--\r\n";
 
+        return mail(message);
+    }
+
+    private Mail mail(String message) throws Exception {
         return FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
