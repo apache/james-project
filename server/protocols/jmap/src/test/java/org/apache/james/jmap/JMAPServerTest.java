@@ -114,6 +114,96 @@ class JMAPServerTest {
     }
 
     @Test
+    void serverShouldAnswerWhenStartedWithPemTls() {
+        JMAPConfiguration configuration = JMAPConfiguration.builder()
+            .enable()
+            .randomPort()
+            .certificates("classpath:certs.self-signed.csr")
+            .privateKey("classpath:private.nopass.key")
+            .build();
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
+        JMAPServer jmapServer = new JMAPServer(configuration, NO_ROUTES_HANDLERS, versionParser, new org.apache.james.filesystem.api.FileSystem() {
+            @Override
+            public java.io.InputStream getResource(String url) throws java.io.IOException {
+                String resourceName = url.replace("classpath:", "");
+                java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(resourceName);
+                if (is == null) {
+                    throw new java.io.FileNotFoundException(url);
+                }
+                return is;
+            }
+
+            @Override
+            public java.io.File getFile(String fileURL) throws java.io.FileNotFoundException {
+                throw new java.io.FileNotFoundException(fileURL);
+            }
+
+            @Override
+            public java.io.File getBasedir() throws java.io.FileNotFoundException {
+                throw new java.io.FileNotFoundException();
+            }
+        });
+        jmapServer.start();
+
+        try {
+            given()
+                .relaxedHTTPSValidation()
+                .baseUri("https://localhost:" + jmapServer.getPort().getValue())
+            .when()
+                .get()
+            .then()
+                .statusCode(404);
+        } finally {
+            jmapServer.stop();
+        }
+    }
+
+    @Test
+    void serverShouldAnswerWhenStartedWithKeystoreTls() {
+        JMAPConfiguration configuration = JMAPConfiguration.builder()
+            .enable()
+            .randomPort()
+            .keystore("classpath:keystore")
+            .secret("james72laBalle")
+            .build();
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
+        JMAPServer jmapServer = new JMAPServer(configuration, NO_ROUTES_HANDLERS, versionParser, new org.apache.james.filesystem.api.FileSystem() {
+            @Override
+            public java.io.InputStream getResource(String url) throws java.io.IOException {
+                String resourceName = url.replace("classpath:", "");
+                java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(resourceName);
+                if (is == null) {
+                    throw new java.io.FileNotFoundException(url);
+                }
+                return is;
+            }
+
+            @Override
+            public java.io.File getFile(String fileURL) throws java.io.FileNotFoundException {
+                throw new java.io.FileNotFoundException(fileURL);
+            }
+
+            @Override
+            public java.io.File getBasedir() throws java.io.FileNotFoundException {
+                throw new java.io.FileNotFoundException();
+            }
+        });
+        jmapServer.start();
+
+        try {
+            given()
+                .relaxedHTTPSValidation()
+                .baseUri("https://localhost:" + jmapServer.getPort().getValue())
+            .when()
+                .get()
+            .then()
+                .statusCode(404);
+        } finally {
+            jmapServer.stop();
+        }
+    }
+
+    @Test
     void startShouldNotThrowWhenConfigurationDisabled() {
         VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
         JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS, versionParser);
