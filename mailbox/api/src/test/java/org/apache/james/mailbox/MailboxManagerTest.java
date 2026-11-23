@@ -1647,6 +1647,38 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void searchForMessageShouldNotReturnMessagesFromDelegatedMailboxesWhoseReadRightIsNegated() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxSession sessionFromDelegater = mailboxManager.createSystemSession(USER_2);
+            MailboxPath delegatedMailboxPath = MailboxPath.forUser(USER_2, "SHARED");
+            MailboxId delegatedMailboxId = mailboxManager.createMailbox(delegatedMailboxPath, sessionFromDelegater).get();
+            MessageManager delegatedMessageManager = mailboxManager.getMailbox(delegatedMailboxId, sessionFromDelegater);
+
+            delegatedMessageManager.appendMessage(AppendCommand.from(message), sessionFromDelegater);
+
+            mailboxManager.setRights(delegatedMailboxPath,
+                MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_1)
+                    .rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup)
+                    .asAddition())
+                    .apply(MailboxACL.command()
+                        .key(MailboxACL.EntryKey.createUserEntryKey(USER_1, MailboxACL.NEGATIVE_KEY))
+                        .rights(MailboxACL.Right.Read)
+                        .asAddition()),
+                sessionFromDelegater);
+
+            MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
+                .from(SearchQuery.matchAll())
+                .build();
+
+            assertThat(Flux.from(mailboxManager.search(multiMailboxesQuery, session, DEFAULT_MAXIMUM_LIMIT))
+                .collectList().block())
+                .isEmpty();
+        }
+
+        @Test
         void searchForMessageShouldOnlySearchInMailboxICanRead() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 

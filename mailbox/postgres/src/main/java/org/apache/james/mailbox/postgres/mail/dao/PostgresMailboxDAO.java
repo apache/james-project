@@ -190,10 +190,7 @@ public class PostgresMailboxDAO {
                     MAILBOX_NAMESPACE,
                     MAILBOX_LAST_UID,
                     MAILBOX_HIGHEST_MODSEQ,
-                    DSL.function("slice",
-                        DefaultDataType.getDefaultDataType("hstore"),
-                        MAILBOX_ACL,
-                        DSL.array(userNameParam)).as(MAILBOX_ACL)
+                    DSL.field(MAILBOX_ACL.getName(), DefaultDataType.getDefaultDataType("hstore")).as(MAILBOX_ACL)
                 ).from(TABLE_NAME)
                 .where(DSL.condition("defined({0}, {1})", MAILBOX_ACL, userNameParam))), PostgresExecutor.EAGER_FETCH)
             .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION);

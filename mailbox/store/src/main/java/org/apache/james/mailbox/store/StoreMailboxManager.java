@@ -922,6 +922,7 @@ public class StoreMailboxManager implements MailboxManager {
             return Flux.empty();
         }
         return mailboxMapper.findNonPersonalMailboxes(session.getUser(), right)
+            .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)))
             .filter(mailbox -> !mailbox.getUser().equals(session.getUser()))
             .map(Mailbox::getMailboxId);
     }
