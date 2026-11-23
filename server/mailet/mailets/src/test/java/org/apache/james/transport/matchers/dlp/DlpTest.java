@@ -41,6 +41,7 @@ import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.assertj.core.api.SoftAssertions;
@@ -120,6 +121,26 @@ class DlpTest {
         FakeMail mail = FakeMail.builder().name("name").sender(MailAddress.nullSender()).recipient(RECIPIENT1).build();
 
         assertThat(dlp.match(mail)).isEmpty();
+    }
+
+    @Test
+    void nullSenderOfAnAuthenticatedUserShouldBeSubjectToTheRulesOfItsDomain() throws Exception {
+        Dlp dlp = new Dlp(
+            asRulesLoaderFor(
+                JAMES_APACHE_ORG_DOMAIN,
+                DlpDomainRules.builder().recipientRule(Id.of("match all recipient"), Pattern.compile(".*")).build()), new NoopGaugeRegistry());
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .sender(MailAddress.nullSender())
+            .recipient(RECIPIENT1)
+            .attribute(new Attribute(Mail.SMTP_AUTH_USER, AttributeValue.of(ANY_AT_JAMES.asString())))
+            .build();
+
+        assertThat(dlp.match(mail)).contains(RECIPIENT1);
+        AttributeName name = AttributeName.of("DlpMatchedRule");
+        assertThat(mail.getAttribute(name))
+            .contains(new Attribute(name, AttributeValue.of("match all recipient")));
     }
 
     @Test
