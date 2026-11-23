@@ -46,6 +46,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.api.model.UsernamePredicate;
+import org.apache.james.user.lib.model.DefaultUser;
 import org.apache.james.util.DurationParser;
 import org.reactivestreams.Publisher;
 import org.slf4j.LoggerFactory;
@@ -228,9 +229,10 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
 
     @Override
     public Optional<Username> test(Username name, String password) throws UsersRepositoryException {
-        Optional<Username> translatedUsername = usersDAO.getUserByName(name)
-            .filter(user -> user.verifyPassword(password))
-            .map(User::getUserName);
+        Optional<? extends User> verifiedUser = usersDAO.getUserByName(name)
+            .filter(user -> user.verifyPassword(password));
+        verifiedUser.ifPresent(user -> rehashIfNeeded(user, password));
+        Optional<Username> translatedUsername = verifiedUser.map(User::getUserName);
 
         if (translatedUsername.isEmpty()) {
             LOGGER.info("Could not retrieve user {}. Password is unverified.", name);
@@ -244,6 +246,21 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
         }
 
         return translatedUsername;
+    }
+
+    /**
+     * A password stored with another algorithm than the configured one, or with an ISO-8859-1 digest, is hashed again
+     * once the user proved to know it.
+     */
+    private void rehashIfNeeded(User user, String password) {
+        if (user instanceof DefaultUser defaultUser && defaultUser.needsRehash(password)) {
+            try {
+                defaultUser.setPassword(password);
+                usersDAO.updateUser(defaultUser);
+            } catch (Exception e) {
+                LOGGER.warn("Could not hash again the password of {}", user.getUserName().asString(), e);
+            }
+        }
     }
 
     @Override
