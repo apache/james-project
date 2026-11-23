@@ -20,6 +20,7 @@
 package org.apache.james.user.lib.model;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
@@ -93,6 +94,20 @@ public class DefaultUser implements User, Serializable {
     }
 
 
+
+    /**
+     * @return true when the password is not stored with the algorithm new passwords are stored with, and the verified
+     * password is known to be the real one: an ISO-8859-1 digest maps every other character to '?', so a password with
+     * such characters, or with '?', may only be a twin of the real one.
+     */
+    public boolean needsRehash(String verifiedPassword) {
+        return !currentAlgorithm.equals(preferredAlgorithm.forNewDigests())
+            && (currentAlgorithm.isPBKDF2() || currentAlgorithm.isUtf8() || isLosslessInIso(verifiedPassword));
+    }
+
+    private static boolean isLosslessInIso(String password) {
+        return password.indexOf('?') < 0 && StandardCharsets.ISO_8859_1.newEncoder().canEncode(password);
+    }
 
     /**
      * Method to access hash of password
