@@ -27,6 +27,8 @@ import jakarta.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
+import org.apache.james.mailbox.acl.MailboxACLResolver;
+import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -41,6 +43,7 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -83,11 +86,17 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
 
     private final SessionProvider sessionProvider;
     private final MailboxSessionMapperFactory factory;
+    private final MailboxACLResolver aclResolver;
 
     @Inject
-    public DefaultUserQuotaRootResolver(SessionProvider sessionProvider, MailboxSessionMapperFactory factory) {
+    public DefaultUserQuotaRootResolver(SessionProvider sessionProvider, MailboxSessionMapperFactory factory, MailboxACLResolver aclResolver) {
         this.sessionProvider = sessionProvider;
         this.factory = factory;
+        this.aclResolver = aclResolver;
+    }
+
+    public DefaultUserQuotaRootResolver(SessionProvider sessionProvider, MailboxSessionMapperFactory factory) {
+        this(sessionProvider, factory, new UnionMailboxACLResolver());
     }
 
     @Override
@@ -143,6 +152,8 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
 
         Flux<QuotaRoot> quotaRootListFromDelegatedMailboxes = factory.getMailboxMapper(session)
             .findNonPersonalMailboxes(username, MailboxACL.Right.Read)
+            .filter(Throwing.<Mailbox>predicate(mailbox -> aclResolver.resolveRights(username, mailbox.getACL(), mailbox.getUser())
+                .contains(MailboxACL.Right.Read)).sneakyThrow())
             .flatMap(this::getQuotaRootReactive, ReactorUtils.DEFAULT_CONCURRENCY)
             .distinct();
 
