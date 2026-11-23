@@ -107,7 +107,7 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
       MailboxRights(
         mayReadItems = MayReadItems(rights.contains(Right.Read)),
         mayAddItems = MayAddItems(rights.contains(Right.Insert)),
-        mayRemoveItems = MayRemoveItems(rights.contains(Right.DeleteMessages)),
+        mayRemoveItems = MayRemoveItems(rights.contains(Right.DeleteMessages) && rights.contains(Right.Expunge)),
         maySetSeen = MaySetSeen(rights.contains(Right.Seen)),
         maySetKeywords = MaySetKeywords(rights.contains(Right.Write)),
         mayCreateChild = MayCreateChild(false),

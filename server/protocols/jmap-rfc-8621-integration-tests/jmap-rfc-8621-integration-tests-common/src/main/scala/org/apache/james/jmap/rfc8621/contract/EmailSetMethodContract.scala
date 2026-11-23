@@ -6637,7 +6637,7 @@ trait EmailSetMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.DeleteMessages))
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.DeleteMessages, Right.PerformExpunge))
 
     val request =
       s"""{

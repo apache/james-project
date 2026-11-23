@@ -894,7 +894,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
                     .forUser(BOB)
-                    .rights(new Rfc4314Rights(Right.Lookup, Right.Read, Right.DeleteMessages))
+                    .rights(new Rfc4314Rights(Right.Lookup, Right.Read, Right.DeleteMessages, Right.PerformExpunge))
                     .asAddition()),
             aliceSession);
         MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
@@ -942,6 +942,28 @@ public abstract class AbstractMessageIdManagerStorageTest {
     }
 
     @Test
+    void setInMailboxesShouldDenyMovingMessagesFromASharedMailboxWhenNoExpungeRight() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(BOB)
+                    .rights(Rfc4314Rights.allExcept(Right.PerformExpunge))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        assertThatThrownBy(() ->
+            messageIdManager.setInMailboxes(messageId,
+                ImmutableList.of(bobMailbox1.getMailboxId()),
+                bobSession))
+            .isInstanceOf(MailboxNotFoundException.class);
+
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession))
+            .extracting(MessageResult::getMailboxId)
+            .containsOnly(aliceMailbox1.getMailboxId());
+    }
+
+    @Test
     void setInMailboxShouldAllowDistinctMailboxSetForShareeAndOwner() throws Exception {
         //Given
         testingData.setACL(aliceMailbox2.getMailboxId(),
@@ -983,7 +1005,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
                     .forUser(BOB)
-                    .rights(new Rfc4314Rights(Right.Read, Right.Lookup, Right.DeleteMessages))
+                    .rights(new Rfc4314Rights(Right.Read, Right.Lookup, Right.DeleteMessages, Right.PerformExpunge))
                     .asAddition()),
             aliceSession);
         MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
@@ -1014,6 +1036,61 @@ public abstract class AbstractMessageIdManagerStorageTest {
         assertThat(messages)
             .extracting(MessageResult::getMessageId)
             .containsOnly(messageId);
+    }
+
+    @Test
+    void deleteShouldNotRemoveMessagesFromSharedMailboxWhenNoExpungeRight() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(BOB)
+                    .rights(Rfc4314Rights.allExcept(Right.PerformExpunge))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        assertThatThrownBy(() ->
+            messageIdManager.delete(messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession))
+            .isInstanceOf(MailboxNotFoundException.class);
+
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession))
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId);
+    }
+
+    @Test
+    void deleteAllShouldNotRemoveMessagesFromSharedMailboxWhenNoExpungeRight() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(BOB)
+                    .rights(Rfc4314Rights.allExcept(Right.PerformExpunge))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        assertThat(messageIdManager.delete(messageId, bobSession))
+            .isEqualTo(DeleteResult.notFound(messageId));
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession))
+            .extracting(MessageResult::getMessageId)
+            .containsOnly(messageId);
+    }
+
+    @Test
+    void deleteAllShouldRemoveMessagesFromSharedMailboxWhenDeleteAndExpungeRights() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(BOB)
+                    .rights(new Rfc4314Rights(Right.Read, Right.Lookup, Right.DeleteMessages, Right.PerformExpunge))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        assertThat(messageIdManager.delete(messageId, bobSession))
+            .isEqualTo(DeleteResult.destroyed(messageId));
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession))
+            .isEmpty();
     }
 
     @Test
