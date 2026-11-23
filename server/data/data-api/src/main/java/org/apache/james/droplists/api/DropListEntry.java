@@ -23,6 +23,7 @@ import static org.apache.james.droplists.api.OwnerScope.GLOBAL;
 import static org.apache.james.droplists.api.OwnerScope.USER;
 
 import java.io.Serializable;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -46,7 +47,8 @@ public class DropListEntry implements Serializable {
 
         public Builder userOwner(MailAddress mailAddress) {
             Preconditions.checkNotNull(mailAddress);
-            this.owner = Optional.of(mailAddress.toString());
+            // Addresses are stored lower cased, as they are queried
+            this.owner = Optional.of(mailAddress.toString().toLowerCase(Locale.US));
             this.ownerScope = USER;
             return this;
         }
@@ -72,7 +74,7 @@ public class DropListEntry implements Serializable {
 
         public Builder denyAddress(MailAddress mailAddress) {
             Preconditions.checkNotNull(mailAddress);
-            this.deniedEntity = mailAddress.toString();
+            this.deniedEntity = mailAddress.toString().toLowerCase(Locale.US);
             this.deniedEntityType = DeniedEntityType.ADDRESS;
             return this;
         }

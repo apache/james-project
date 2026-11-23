@@ -25,12 +25,15 @@ import static org.apache.james.droplists.api.OwnerScope.USER;
 import static reactor.function.TupleUtils.function;
 
 import java.util.Collection;
+import java.util.Locale;
 
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.droplists.api.DropList;
+import org.apache.james.droplists.api.OwnerScope;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -65,12 +68,32 @@ public class IsInDropList extends GenericMatcher {
 
     private Boolean isRecipientAllowed(Mail mail, MailAddress recipient) {
         MailAddress sender = mail.getMaybeSender().get();
-        Mono<DropList.Status> globalStatusQuery = dropList.query(GLOBAL, recipient.asString(), sender);
-        Mono<DropList.Status> domainStatusQuery = dropList.query(DOMAIN, recipient.getDomain().asString(), sender);
-        Mono<DropList.Status> userStatusQuery = dropList.query(USER, recipient.asString(), sender);
+        Mono<DropList.Status> globalStatusQuery = query(GLOBAL, recipient.asString(), sender);
+        Mono<DropList.Status> domainStatusQuery = query(DOMAIN, recipient.getDomain().asString(), sender);
+        Mono<DropList.Status> userStatusQuery = query(USER, recipient.asString(), sender);
         return Mono.zip(globalStatusQuery, domainStatusQuery, userStatusQuery)
             .map(function(IsInDropList::isAllowed))
             .block();
+    }
+
+    // Entries are stored lower cased. Entries written before that keep their original case: the original form is queried too
+    private Mono<DropList.Status> query(OwnerScope scope, String owner, MailAddress sender) {
+        String lowerCasedOwner = owner.toLowerCase(Locale.US);
+        MailAddress lowerCasedSender = lowerCase(sender);
+        Mono<DropList.Status> normalized = dropList.query(scope, lowerCasedOwner, lowerCasedSender);
+        if (lowerCasedOwner.equals(owner) && lowerCasedSender.asString().equals(sender.asString())) {
+            return normalized;
+        }
+        return Mono.zip(normalized, dropList.query(scope, owner, sender))
+            .map(function((first, second) -> first == ALLOWED && second == ALLOWED ? ALLOWED : DropList.Status.BLOCKED));
+    }
+
+    private static MailAddress lowerCase(MailAddress address) {
+        try {
+            return new MailAddress(address.asString().toLowerCase(Locale.US));
+        } catch (AddressException e) {
+            return address;
+        }
     }
 
     private static boolean isAllowed(DropList.Status globalStatus, DropList.Status domainStatus, DropList.Status userStatus) {

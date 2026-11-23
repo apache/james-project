@@ -36,6 +36,7 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -110,6 +111,23 @@ class IsInDropListTest {
             .build();
 
         assertThat(matcher.match(mail)).contains(new MailAddress(OWNER_RECIPIENT), new MailAddress(NO_OWNER_RECIPIENT));
+    }
+
+    @Test
+    void matchShouldIgnoreTheCaseOfTheOwnerAndTheSender() throws MessagingException {
+        curentDroplistEntry = DropListEntry.builder()
+            .userOwner(new MailAddress("owner@example.com"))
+            .denyAddress(new MailAddress("harasser@other.org"))
+            .build();
+        dropList.add(curentDroplistEntry).block();
+
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .sender("Harasser@other.org")
+            .recipient("Owner@example.com")
+            .build();
+
+        assertThat(matcher.match(mail)).isEmpty();
     }
 
     static Stream<DropListEntry> getDropListTestEntries() throws AddressException {
