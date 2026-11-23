@@ -53,8 +53,15 @@ import reactor.core.publisher.Mono;
 public class MimeDescriptorImpl implements MimeDescriptor {
 
     private static final LenientFieldParser FIELD_PARSER = new LenientFieldParser();
+    // Each embedded message is parsed by its own parser, so mime4j nesting limit does not apply across them:
+    // the multipart levels count too, past this depth an embedded message is not described
+    private static final int MAX_EMBEDDED_MESSAGE_DEPTH = 64;
 
     public static MimeDescriptorImpl build(InputStream stream) throws IOException, MimeException {
+        return build(stream, 0);
+    }
+
+    private static MimeDescriptorImpl build(InputStream stream, int depth) throws IOException, MimeException {
         // Disable line length limit
         // See https://issues.apache.org/jira/browse/IMAP-132
         MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE,
@@ -63,10 +70,10 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         parser.setRecursionMode(RecursionMode.M_NO_RECURSE);
         parser.parse(stream);
 
-        return createDescriptor(parser);
+        return createDescriptor(parser, depth);
     }
 
-    private static MimeDescriptorImpl createDescriptor(MimeTokenStream parser) throws IOException, MimeException {
+    private static MimeDescriptorImpl createDescriptor(MimeTokenStream parser, int depth) throws IOException, MimeException {
         EntityState next = parser.next();
         final Collection<Header> headers = new ArrayList<>();
         while (next != EntityState.T_BODY
@@ -82,10 +89,10 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         final MimeDescriptorImpl mimeDescriptorImpl;
         switch (next) {
             case T_BODY:
-                mimeDescriptorImpl = simplePartDescriptor(parser, headers);
+                mimeDescriptorImpl = simplePartDescriptor(parser, headers, depth);
                 break;
             case T_START_MULTIPART:
-                mimeDescriptorImpl = compositePartDescriptor(parser, headers);
+                mimeDescriptorImpl = compositePartDescriptor(parser, headers, depth);
                 break;
             case T_END_OF_STREAM:
                 throw new MimeException("Premature end of stream");
@@ -95,7 +102,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         return mimeDescriptorImpl;
     }
 
-    private static MimeDescriptorImpl compositePartDescriptor(MimeTokenStream parser, Collection<Header> headers)
+    private static MimeDescriptorImpl compositePartDescriptor(MimeTokenStream parser, Collection<Header> headers, int depth)
             throws IOException, MimeException {
         MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser
                 .getBodyDescriptor();
@@ -105,21 +112,26 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         while (next != EntityState.T_END_MULTIPART
                 && next != EntityState.T_END_OF_STREAM) {
             if (next == EntityState.T_START_BODYPART) {
-                mimeDescriptor.addPart(createDescriptor(parser));
+                mimeDescriptor.addPart(createDescriptor(parser, depth + 1));
             }
             next = parser.next();
         }
         return mimeDescriptor;
     }
 
-    private static MimeDescriptorImpl simplePartDescriptor(MimeTokenStream parser, Collection<Header> headers)
+    private static MimeDescriptorImpl simplePartDescriptor(MimeTokenStream parser, Collection<Header> headers, int depth)
             throws IOException, MimeException {
         MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser.getBodyDescriptor();
 
         if ("message".equalsIgnoreCase(descriptor.getMediaType())
                 && "rfc822".equalsIgnoreCase(descriptor.getSubType())) {
             CountingInputStream messageStream = new CountingInputStream(parser.getDecodedInputStream());
-            MimeDescriptorImpl embeddedMessageDescriptor = build(messageStream);
+            if (depth >= MAX_EMBEDDED_MESSAGE_DEPTH) {
+                messageStream.readAll();
+                return createDescriptor(messageStream.getOctetCount(), messageStream.getLineCount(),
+                    descriptor, null, headers);
+            }
+            MimeDescriptorImpl embeddedMessageDescriptor = build(messageStream, depth + 1);
 
             return createDescriptor(messageStream.getOctetCount(), messageStream.getLineCount(),
                     descriptor, embeddedMessageDescriptor, headers);

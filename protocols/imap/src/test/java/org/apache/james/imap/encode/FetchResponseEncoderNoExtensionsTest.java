@@ -108,4 +108,19 @@ class FetchResponseEncoderNoExtensionsTest {
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) BODYSTRUCTURE (\"TEXT\" \"HTML\" (\"CHARSET\" \"US-ASCII\") \"\" \"\" \"7BIT\" 2279 48) UID 72)\r\n");
 
     }
+
+    @Test
+    void shouldEncodeEmbeddedMessageWithoutStructureAsBasicPart() throws Exception {
+        FetchResponse message = new FetchResponse(MSN, null, MessageUid.of(72), null, null,
+                null, null, null, null, stubStructure, null, null, null);
+
+        when(stubStructure.getMediaType()).thenReturn("MESSAGE");
+        when(stubStructure.getSubType()).thenReturn("RFC822");
+        when(stubStructure.getOctets()).thenReturn(10L);
+        when(stubStructure.getEncoding()).thenReturn("7BIT");
+
+        encoder.encode(message, composer);
+        composer.flush();
+        assertThat(writer.getString()).isEqualTo("* 100 FETCH (BODYSTRUCTURE (\"APPLICATION\" \"OCTET-STREAM\" NIL NIL NIL \"7BIT\" 10) UID 72)\r\n");
+    }
 }

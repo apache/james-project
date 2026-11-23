@@ -157,8 +157,12 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
 
         } else {
             if (ImapConstants.MIME_TYPE_MESSAGE.equalsIgnoreCase(mediaType) && ImapConstants.MIME_SUBTYPE_RFC822.equalsIgnoreCase(subType)) {
-
-                encodeRfc822Message(composer, structure, mediaType, subType, includeOptionalExtensions);
+                if (structure.getBody() != null) {
+                    encodeRfc822Message(composer, structure, mediaType, subType, includeOptionalExtensions);
+                } else {
+                    // Too deeply nested to be described: a basic "MESSAGE" "RFC822" part would lack the envelope, body and lines RFC 9051 requires
+                    encodeBasic(composer, structure, includeOptionalExtensions, "APPLICATION", "OCTET-STREAM");
+                }
             } else {
                 encodeBasic(composer, structure, includeOptionalExtensions, mediaType, subType);
             }
