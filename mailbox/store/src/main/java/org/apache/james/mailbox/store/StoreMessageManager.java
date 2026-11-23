@@ -493,7 +493,7 @@ public class StoreMessageManager implements MessageManager {
 
             // Check if we need to trim the flags
             trimFlags(flags, mailboxSession);
-
+            flags.remove(flagsNotAllowedToSet(flags, storeRightManager.myRights(mailbox, mailboxSession)));
         }
         if (isRecent) {
             flags.add(Flag.RECENT);
@@ -678,6 +678,31 @@ public class StoreMessageManager implements MessageManager {
             }
         }
 
+    }
+
+    /**
+     * RFC 4314: setting \Seen requires 's', \Deleted requires 't' and other flags require 'w', including when the
+     * flags are set by APPEND or COPY.
+     */
+    private static Flags flagsNotAllowedToSet(Flags flags, MailboxACL.Rfc4314Rights myRights) {
+        Flags notAllowed = new Flags();
+        if (flags.contains(Flag.SEEN) && !myRights.contains(MailboxACL.Right.WriteSeenFlag)) {
+            notAllowed.add(Flag.SEEN);
+        }
+        if (flags.contains(Flag.DELETED) && !myRights.contains(MailboxACL.Right.DeleteMessages)) {
+            notAllowed.add(Flag.DELETED);
+        }
+        if (!myRights.contains(MailboxACL.Right.Write)) {
+            for (Flag flag : flags.getSystemFlags()) {
+                if (flag != Flag.SEEN && flag != Flag.DELETED && flag != Flag.RECENT) {
+                    notAllowed.add(flag);
+                }
+            }
+            for (String userFlag : flags.getUserFlags()) {
+                notAllowed.add(userFlag);
+            }
+        }
+        return notAllowed;
     }
 
     public Optional<MailboxException> ensureFlagsWrite(Flags flags, FlagsUpdateMode flagsUpdateMode, MailboxSession mailboxSession) {
@@ -912,11 +937,39 @@ public class StoreMessageManager implements MessageManager {
                         .mapToLong(MailboxMessage::getFullContentOctets)
                         .sum())).sneakyThrow())
                 .thenMany(messageMapper.executeReactive(
-                    messageMapper.copyReactive(getMailboxEntity(), originalRows))
+                    messageMapper.copyReactive(getMailboxEntity(), withFlagsAllowedToSet(originalRows, session)))
                     .flatMapIterable(Function.identity()));
         } catch (MailboxException e) {
             return Flux.error(e);
         }
+    }
+
+    /**
+     * Replaces the rows carrying flags the session is not allowed to set on this mailbox by copies holding the allowed
+     * flags only, so that each row is written once. The rows themselves are left untouched as a mapper may return the
+     * instances it stores.
+     */
+    private List<MailboxMessage> withFlagsAllowedToSet(List<MailboxMessage> rows, MailboxSession session) throws MailboxException {
+        MailboxACL.Rfc4314Rights myRights = storeRightManager.myRights(mailbox, session);
+        if (myRights.contains(MailboxACL.Right.WriteSeenFlag, MailboxACL.Right.DeleteMessages, MailboxACL.Right.Write)) {
+            return rows;
+        }
+        ImmutableList.Builder<MailboxMessage> result = ImmutableList.builder();
+        for (MailboxMessage row : rows) {
+            Flags flags = row.createFlags();
+            Flags notAllowed = flagsNotAllowedToSet(flags, myRights);
+            if (notAllowed.getSystemFlags().length == 0 && notAllowed.getUserFlags().length == 0) {
+                result.add(row);
+            } else {
+                MailboxMessage filteredRow = row.copy(mailbox);
+                filteredRow.setUid(row.getUid());
+                filteredRow.setModSeq(row.getModSeq());
+                flags.remove(notAllowed);
+                filteredRow.setFlags(flags);
+                result.add(filteredRow);
+            }
+        }
+        return result.build();
     }
 
     private Mono<MoveResult> move(List<MailboxMessage> originalRows, MailboxSession session) {
