@@ -557,4 +557,53 @@ class ImapRequestFrameDecoderTest {
         assertThat(attachment.get(ImapRequestFrameDecoder.NEEDED_DATA)).isEqualTo(100 + 2);
         channel.finishAndReleaseAll();
     }
+
+    @Test
+    void neededDataShouldNotOverflowForTheLargestLiteral() {
+        EmbeddedChannel channel = new EmbeddedChannel();
+        FakeImapSession session = new FakeImapSession() {
+            @Override
+            public boolean needsCommandInjectionDetection() {
+                return false;
+            }
+        };
+        session.authenticated();
+        Map<String, Object> attachment = new ConcurrentHashMap<>();
+        channel.attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).set(session);
+        channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(attachment);
+        channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), 3008, false));
+        // No literal size limit
+        channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(), 50, 0, 3008));
+
+        channel.writeInbound(Unpooled.wrappedBuffer("a APPEND INBOX {2147483647+}\r\n".getBytes(StandardCharsets.US_ASCII)));
+
+        // The literal and the CRLF ending the command exceed what can be counted: the command is rejected
+        assertThat(attachment.get(ImapRequestFrameDecoder.NEEDED_DATA)).isNull();
+        channel.finishAndReleaseAll();
+    }
+
+    @Test
+    void theLargestSynchronizingLiteralShouldNotGetAContinuationRequest() {
+        EmbeddedChannel channel = new EmbeddedChannel();
+        FakeImapSession session = new FakeImapSession() {
+            @Override
+            public boolean needsCommandInjectionDetection() {
+                return false;
+            }
+        };
+        session.authenticated();
+        channel.attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).set(session);
+        channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(new ConcurrentHashMap<>());
+        channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), 3008, false));
+        // No literal size limit
+        channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(), 50, 0, 3008));
+
+        channel.writeInbound(Unpooled.wrappedBuffer("a APPEND INBOX {2147483647}\r\n".getBytes(StandardCharsets.US_ASCII)));
+
+        // The literal is refused: the client is not invited to send it
+        Object inbound = channel.readInbound();
+        assertThat(String.valueOf(inbound)).contains("serverResponseType=BAD");
+        assertThat((Object) channel.readOutbound()).isNull();
+        channel.finishAndReleaseAll();
+    }
 }

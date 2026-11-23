@@ -104,6 +104,11 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         if (maxLiteralSize > 0 && ((long) readSoFar + size) > maxLiteralSize) {
             throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Specified literals total size is greater then the allowed size. " + ((long) readSoFar + size) + " instead of " + maxLiteralSize + " limit.");
         }
+        // The size still needed counts the end of the announcement line and the CRLF ending the command too: it has to
+        // be counted as an int. Refused here, before the continuation request, rather than once the client sent it.
+        if ((long) readSoFar + size + 4 > Integer.MAX_VALUE) {
+            throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Specified literals total size is greater then the allowed size. " + ((long) readSoFar + size) + " instead of " + Integer.MAX_VALUE + " limit.");
+        }
     }
 
     /**
@@ -122,15 +127,21 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
             throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Too many literals. " + MAXIMUM_LITERAL_COUNT + " allowed but got " + literalCount);
         }
         literalCount++;
-        if (maxLiteralSize > 0 && (readSoFar + size) > maxLiteralSize) {
-            throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Specified literals total size is greater then the allowed size. " + (readSoFar + size) + " instead of " + maxLiteralSize + " limit.");
+        long literalsSize = (long) readSoFar + size;
+        if (maxLiteralSize > 0 && literalsSize > maxLiteralSize) {
+            throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Specified literals total size is greater then the allowed size. " + literalsSize + " instead of " + maxLiteralSize + " limit.");
+        }
+        long neededSize = literalsSize + crlf;
+        // Already refused by assertLiteralSizeAccepted: kept as a guard for the cast below
+        if (neededSize > Integer.MAX_VALUE) {
+            throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Specified literals total size is greater then the allowed size. " + neededSize + " instead of " + Integer.MAX_VALUE + " limit.");
         }
         // Check if we have enough data. eol() accepts a bare LF after the literal: when it is the last byte
         // received, waiting for a second end of line byte would wait for a byte the client will not send.
         if (size + crlf > buffer.readableBytes() && !endsWithABareLf(size, extraCRLF)) {
             // ok let us throw a exception which till the decoder how many more
             // bytes we need
-            throw new NotEnoughDataException(readSoFar + size + crlf, crlf);
+            throw new NotEnoughDataException((int) neededSize, crlf);
         }
 
         // Unset the next char.
@@ -157,7 +168,7 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
 
     private boolean endsWithABareLf(int size, boolean extraCRLF) {
         return extraCRLF
-            && buffer.readableBytes() >= size + 1
+            && buffer.readableBytes() >= (long) size + 1
             && buffer.getByte(buffer.readerIndex() + size) == '\n';
     }
 
