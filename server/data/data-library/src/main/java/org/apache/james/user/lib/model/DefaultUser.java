@@ -86,8 +86,9 @@ public class DefaultUser implements User, Serializable {
 
     @Override
     public boolean setPassword(String newPass) {
-        hashedPassword = digestString(newPass, preferredAlgorithm, userName.asString());
-        currentAlgorithm = preferredAlgorithm;
+        Algorithm algorithm = preferredAlgorithm.forNewDigests();
+        hashedPassword = digestString(newPass, algorithm, userName.asString());
+        currentAlgorithm = algorithm;
         return true;
     }
 
