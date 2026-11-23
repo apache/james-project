@@ -45,13 +45,17 @@ class UnitParser {
         }
     }
 
-    private static final String PATTERN_STRING = "\\s*(-?[0-9]+)\\s*([a-z,A-Z]*)\\s*";
+    private static final String PATTERN_STRING = "\\s*+(-?[0-9]++)\\s*+([a-zA-Z]*+)\\s*+";
+    private static final int MAX_LENGTH = 64;
     private static final int AMOUNT = 1;
     private static final int UNIT = 2;
 
     private static Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
     static ParsingResult parse(String rawString) throws NumberFormatException {
+        if (rawString.length() > MAX_LENGTH) {
+            throw new NumberFormatException("Supplied value is longer than " + MAX_LENGTH + " characters");
+        }
         Matcher res = PATTERN.matcher(rawString);
         if (res.matches()) {
             String unitAsString = res.group(UNIT);
