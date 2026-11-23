@@ -128,12 +128,35 @@ public class PrefixedRegex implements MailboxNameExpression {
 
     private Pattern constructEscapedRegex(String regex) {
         StringBuilder stringBuilder = new StringBuilder();
-        StringTokenizer tokenizer = new StringTokenizer(regex, "*%", true);
+        StringTokenizer tokenizer = new StringTokenizer(collapseWildcardRuns(regex), "*%", true);
         while (tokenizer.hasMoreTokens()) {
             stringBuilder.append(getRegexPartAssociatedWithToken(tokenizer));
         }
         // DOTALL: the '*' wildcard matches any character, line terminators included (RFC 3501 6.3.8)
         return Pattern.compile(stringBuilder.toString(), Pattern.DOTALL);
+    }
+
+    /**
+     * A run of wildcards matches as its widest wildcard: "%%" as "%", and a run holding a "*" as "*".
+     */
+    static String collapseWildcardRuns(String regex) {
+        StringBuilder result = new StringBuilder(regex.length());
+        int position = 0;
+        while (position < regex.length()) {
+            char c = regex.charAt(position);
+            if (c != '*' && c != '%') {
+                result.append(c);
+                position++;
+                continue;
+            }
+            boolean containsStar = false;
+            while (position < regex.length() && (regex.charAt(position) == '*' || regex.charAt(position) == '%')) {
+                containsStar |= regex.charAt(position) == '*';
+                position++;
+            }
+            result.append(containsStar ? '*' : '%');
+        }
+        return result.toString();
     }
 
     private String getRegexPartAssociatedWithToken(StringTokenizer tokenizer) {

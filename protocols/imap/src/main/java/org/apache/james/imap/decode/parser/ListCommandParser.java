@@ -48,6 +48,9 @@ import com.google.common.collect.ImmutableList;
  * Parse LIST commands
  */
 public class ListCommandParser extends AbstractUidCommandParser {
+    private static final int MAX_PATTERN_LENGTH = 1024;
+    private static final int MAX_PATTERN_COUNT = 32;
+    private static final int MAX_PATTERNS_TOTAL_LENGTH = 8 * 1024;
 
     private static class ListCharValidator extends AtomCharValidator {
         public static final ImapRequestLineReader.CharacterValidator INSTANCE = new ListCharValidator();
@@ -82,15 +85,26 @@ public class ListCommandParser extends AbstractUidCommandParser {
     }
 
     private String listMailbox(ImapRequestLineReader request, boolean withinPatternList) throws DecodingException {
+        return assertDecodable(assertLength(readListMailbox(request, withinPatternList)));
+    }
+
+    private String readListMailbox(ImapRequestLineReader request, boolean withinPatternList) throws DecodingException {
         char next = request.nextWordChar();
         switch (next) {
         case '"':
-            return assertDecodable(request.consumeQuoted());
+            return request.consumeQuoted();
         case '{':
-            return assertDecodable(request.consumeLiteral(null));
+            return request.consumeLiteral(null);
         default:
-            return assertDecodable(request.consumeWord(ListCharValidator.INSTANCE, withinPatternList));
+            return request.consumeWord(ListCharValidator.INSTANCE, withinPatternList);
         }
+    }
+
+    private String assertLength(String mailboxPattern) throws DecodingException {
+        if (mailboxPattern.length() > MAX_PATTERN_LENGTH) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Mailbox pattern longer than " + MAX_PATTERN_LENGTH + " characters");
+        }
+        return mailboxPattern;
     }
 
     /**
@@ -109,8 +123,16 @@ public class ListCommandParser extends AbstractUidCommandParser {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expecting at least one mailbox pattern");
         }
         ImmutableList.Builder<String> patterns = ImmutableList.builder();
+        int patternCount = 0;
+        int totalLength = 0;
         while (request.nextWordChar() != ')') {
             String pattern = listMailbox(request, true);
+            patternCount++;
+            totalLength += pattern.length();
+            if (patternCount > MAX_PATTERN_COUNT || totalLength > MAX_PATTERNS_TOTAL_LENGTH) {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Too many mailbox patterns: at most " + MAX_PATTERN_COUNT
+                    + " patterns and " + MAX_PATTERNS_TOTAL_LENGTH + " characters are allowed");
+            }
             if (!pattern.isEmpty()) {
                 patterns.add(pattern);
             }
