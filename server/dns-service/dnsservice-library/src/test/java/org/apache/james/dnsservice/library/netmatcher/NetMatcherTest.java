@@ -54,7 +54,7 @@ class NetMatcherTest {
     @Test
     void testIpV6NetworksUniqueness() {
         netMatcher = new NetMatcher(DNSFixture.LOCALHOST_IP_V6_ADDRESSES_DUPLICATE, DNSFixture.DNS_SERVER_IPV6_MOCK);
-        assertThat(netMatcher.toString()).isEqualTo("[0:0:0:0:0:0:0:1/32768, 2781:db8:1234:0:0:0:0:0/48]");
+        assertThat(netMatcher.toString()).isEqualTo("[0:0:0:0:0:0:0:1/128, 2781:db8:1234:0:0:0:0:0/48]");
     }
 
     /**
