@@ -21,31 +21,40 @@ package org.apache.james.imapserver.netty;
 
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.MessageResult;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -179,5 +188,103 @@ class IMAPServerLiteralCleanupTest extends AbstractIMAPServerTest {
         releaseFirstAppend.countDown();
 
         awaitNoLeftoverLiteral();
+    }
+
+    private byte[] storedInboxMessage() throws Exception {
+        MailboxSession session = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+        MessageManager inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), session);
+        ImmutableList<MessageResult> messages = ImmutableList.copyOf(inbox.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session));
+        assertThat(messages).hasSize(1);
+        try (InputStream content = messages.get(0).getFullContent().getInputStream()) {
+            return content.readAllBytes();
+        }
+    }
+
+    @Test
+    void oversizedAppendWithAMailboxNameLiteralShouldStoreTheMessage() throws Exception {
+        SocketChannel channel = connectAndLogin();
+        String message = message(OVERSIZED);
+
+        write(channel, "a1 APPEND {5+}\r\nINBOX {" + message.length() + "+}\r\n" + message + "\r\n");
+
+        assertThat(readStringUntil(channel, s -> s.contains("a1 ")))
+            .anyMatch(s -> s.contains("a1 OK") && s.contains("APPEND completed"));
+        assertThat(storedInboxMessage()).isEqualTo(message.getBytes(StandardCharsets.US_ASCII));
+        channel.close();
+
+        awaitNoLeftoverLiteral();
+    }
+
+    @Test
+    void oversizedAppendWithSynchronizingLiteralsShouldStoreTheMessage() throws Exception {
+        SocketChannel channel = connectAndLogin();
+        String message = message(OVERSIZED);
+
+        write(channel, "a1 APPEND {5}\r\n");
+        readStringUntil(channel, s -> s.startsWith("+"));
+        write(channel, "INBOX {" + message.length() + "}\r\n");
+        readStringUntil(channel, s -> s.startsWith("+"));
+        write(channel, message + "\r\n");
+
+        assertThat(readStringUntil(channel, s -> s.contains("a1 ")))
+            .anyMatch(s -> s.contains("a1 OK") && s.contains("APPEND completed"));
+        assertThat(storedInboxMessage()).isEqualTo(message.getBytes(StandardCharsets.US_ASCII));
+        channel.close();
+
+        awaitNoLeftoverLiteral();
+    }
+
+    @Test
+    void failingOversizedAppendWithAMailboxNameLiteralShouldNotLeaveItsLiteralOnDisk() throws Exception {
+        SocketChannel channel = connectAndLogin();
+        String message = message(OVERSIZED);
+
+        write(channel, "a1 APPEND {7+}\r\nmissing {" + message.length() + "+}\r\n" + message + "\r\n");
+
+        assertThat(readStringUntil(channel, s -> s.contains("a1 ")))
+            .anyMatch(s -> s.contains("a1 NO"));
+        channel.close();
+
+        awaitNoLeftoverLiteral();
+    }
+
+    private static Set<String> openBufferedLiterals() throws IOException {
+        try (var descriptors = Files.list(Paths.get("/proc/self/fd"))) {
+            return descriptors
+                .flatMap(descriptor -> {
+                    try {
+                        return Stream.of(Files.readSymbolicLink(descriptor).toString());
+                    } catch (IOException e) {
+                        // closed in the meantime
+                        return Stream.empty();
+                    }
+                })
+                .filter(target -> target.contains("imap-literal"))
+                .collect(ImmutableSet.toImmutableSet());
+        }
+    }
+
+    private SocketChannel connectLoginAndSelect() throws Exception {
+        SocketChannel channel = connectAndLogin();
+        write(channel, "s SELECT INBOX\r\n");
+        readStringUntil(channel, s -> s.contains("s OK"));
+        return channel;
+    }
+
+    @Test
+    void spooledSearchShouldNotKeepItsLiteralOpen() throws Exception {
+        assumeThat(Files.isDirectory(Path.of("/proc/self/fd"))).isTrue();
+        Set<String> openBefore = openBufferedLiterals();
+        SocketChannel channel = connectLoginAndSelect();
+        String text = "a".repeat(OVERSIZED);
+
+        write(channel, "a1 SEARCH TEXT {" + text.length() + "+}\r\n" + text + "\r\n");
+
+        assertThat(readStringUntil(channel, s -> s.contains("a1 ")))
+            .anyMatch(s -> s.contains("a1 OK"));
+        awaitNoLeftoverLiteral();
+        await().atMost(AWAIT_TIMEOUT)
+            .untilAsserted(() -> assertThat(Sets.difference(openBufferedLiterals(), openBefore)).isEmpty());
+        channel.close();
     }
 }
