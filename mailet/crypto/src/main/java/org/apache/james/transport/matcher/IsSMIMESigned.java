@@ -26,6 +26,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.transport.SMIMESignedMessages;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -34,7 +35,6 @@ import org.apache.mailet.base.GenericMatcher;
 
  */
 public class IsSMIMESigned extends GenericMatcher {
-
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         if (mail == null) {
@@ -46,11 +46,7 @@ public class IsSMIMESigned extends GenericMatcher {
             return null;
         }
 
-        if (message.isMimeType("multipart/signed") 
-                || message.isMimeType("application/pkcs7-signature")
-                || message.isMimeType("application/x-pkcs7-signature")
-                || ((message.isMimeType("application/pkcs7-mime") || message.isMimeType("application/x-pkcs7-mime")) 
-                        && message.getContentType().contains("signed-data"))) {
+        if (SMIMESignedMessages.isSigned(message)) {
             return mail.getRecipients();
         } else {
             return null;
