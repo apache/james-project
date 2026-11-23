@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.time.Duration;
 
 import org.apache.james.core.Username;
@@ -26,7 +28,10 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -61,4 +66,13 @@ class JVMMailboxPathLockerTest {
             .runSuccessfullyWithin(Duration.ofMinutes(1));
     }
 
+    @ParameterizedTest
+    @EnumSource(MailboxPathLocker.LockType.class)
+    void executeReactiveWithLockReactiveShouldRunTheWholeExecution(MailboxPathLocker.LockType lockType) {
+        assertThat(Flux.from(testee.executeReactiveWithLockReactive(MailboxPath.inbox(Username.of("bob")),
+                Flux.just(1, 2, 3), lockType))
+            .collectList()
+            .block())
+            .containsExactly(1, 2, 3);
+    }
 }

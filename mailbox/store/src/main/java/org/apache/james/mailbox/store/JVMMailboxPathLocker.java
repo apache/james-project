@@ -34,7 +34,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
@@ -67,12 +66,12 @@ public final class JVMMailboxPathLocker implements MailboxPathLocker {
         switch (lockType) {
             case Read:
                 return Flux.using(stampedLock::readLock,
-                        stamp -> Mono.from(execution),
+                        stamp -> Flux.from(execution),
                         stampedLock::unlockRead)
                     .subscribeOn(LOCKER_WRAPPER);
             case Write:
                 return Flux.using(stampedLock::writeLock,
-                        stamp -> Mono.from(execution),
+                        stamp -> Flux.from(execution),
                         stampedLock::unlockWrite)
                     .subscribeOn(LOCKER_WRAPPER);
             default:
