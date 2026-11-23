@@ -97,7 +97,7 @@ public class PasswordFilter implements AuthenticationFilter {
 
     @Override
     public void handle(Request request, Response response) throws Exception {
-        if (!request.requestMethod().equals(OPTIONS)) {
+        if (!AuthenticationFilter.isCorsPreflight(request)) {
             Optional<String> password = Optional.ofNullable(request.headers(PASSWORD));
             Optional<String> authorization = Optional.ofNullable(request.headers(AUTHORIZATION_HEADER_NAME));
 
@@ -117,7 +117,7 @@ public class PasswordFilter implements AuthenticationFilter {
                 return;
             }
 
-            if (!isAccessAllowed(accessLevel, request.requestMethod())) {
+            if (!isAccessAllowed(accessLevel, AuthenticationFilter.dispatchedMethod(request))) {
                 halt(HttpStatus.FORBIDDEN_403, "Insufficient permissions for this operation.");
             }
         }

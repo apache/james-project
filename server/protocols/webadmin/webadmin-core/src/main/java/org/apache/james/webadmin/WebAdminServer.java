@@ -25,12 +25,15 @@ import static org.apache.james.webadmin.utils.ErrorResponder.ErrorType.SERVER_ER
 import static org.eclipse.jetty.http.HttpStatus.BAD_REQUEST_400;
 import static org.eclipse.jetty.http.HttpStatus.INTERNAL_SERVER_ERROR_500;
 import static org.eclipse.jetty.http.HttpStatus.NOT_FOUND_404;
+import static spark.Spark.halt;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
@@ -54,18 +57,25 @@ import org.eclipse.jetty.io.EofException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import spark.Filter;
 import spark.Service;
 import spark.embeddedserver.EmbeddedServers;
+import spark.routematch.RouteMatch;
+import spark.utils.SparkUtils;
 
 public class WebAdminServer implements Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebAdminServer.class);
 
     public static final int DEFAULT_PORT = 8080;
     private static final int DEFAULTS = -1;
+    private static final String AUTHENTICATION_DONE = "webadmin-authentication-done";
+    private static final String ALL_ACCEPT_TYPES = "*/*";
+    private static final Splitter PATH_SPLITTER = Splitter.on('/').omitEmptyStrings();
 
     private final WebAdminConfiguration configuration;
     private final List<Routes> privateRoutes;
@@ -126,12 +136,9 @@ public class WebAdminServer implements Startable {
             configureMetrics();
             service.before((request, response) -> response.type(Constants.JSON_CONTENT_TYPE));
             configureMDC();
-            privateRoutes.forEach(routes -> {
-                service.before(routes.getBasePath(), authenticationFilter);
-                service.before(routes.getBasePath() + "/*", authenticationFilter);
-                routes.define(service);
-            });
+            privateRoutes.forEach(routes -> routes.define(service));
             publicRoutes.forEach(routes -> routes.define(service));
+            configureAuthentication();
 
             Mono.fromRunnable(service::awaitInitialization)
                 .subscribeOn(Schedulers.boundedElastic())
@@ -141,6 +148,54 @@ public class WebAdminServer implements Startable {
                 .block();
         }
         return this;
+    }
+
+    /**
+     * A single filter, on all paths, decides from the path itself whether the request needs authentication.
+     *
+     * Spark only runs a filter whose accept type matches the Accept header of the request: the filter is thus
+     * registered for each accept type of the routes, so that no route can be reached without it.
+     */
+    private void configureAuthentication() {
+        List<List<String>> privatePaths = pathSegments(privateRoutes);
+        List<List<String>> publicPaths = pathSegments(publicRoutes);
+        Filter filter = (request, response) -> {
+            if (request.headers(AuthenticationFilter.METHOD_OVERRIDE_HEADER) != null) {
+                halt(BAD_REQUEST_400, AuthenticationFilter.METHOD_OVERRIDE_HEADER + " is not supported");
+            }
+            if (request.attribute(AUTHENTICATION_DONE) != null) {
+                return;
+            }
+            List<String> segments = segments(request.uri());
+            boolean isPublic = publicPaths.stream().anyMatch(path -> startsWith(segments, path))
+                && privatePaths.stream().noneMatch(path -> startsWith(segments, path));
+            if (!isPublic) {
+                authenticationFilter.handle(request, response);
+            }
+            request.attribute(AUTHENTICATION_DONE, true);
+        };
+
+        Stream.concat(Stream.of(ALL_ACCEPT_TYPES), service.routes().stream().map(RouteMatch::getAcceptType))
+            .filter(Objects::nonNull)
+            .distinct()
+            .forEach(acceptType -> service.before(SparkUtils.ALL_PATHS, acceptType, filter));
+    }
+
+    private static List<List<String>> pathSegments(List<? extends Routes> routes) {
+        return routes.stream()
+            .map(Routes::getBasePath)
+            .filter(Objects::nonNull)
+            .map(WebAdminServer::segments)
+            .collect(ImmutableList.toImmutableList());
+    }
+
+    // Like Spark route matching, empty path segments are ignored
+    private static List<String> segments(String path) {
+        return PATH_SPLITTER.splitToList(path);
+    }
+
+    private static boolean startsWith(List<String> segments, List<String> prefix) {
+        return segments.size() >= prefix.size() && segments.subList(0, prefix.size()).equals(prefix);
     }
 
     private String listeningIP() {
