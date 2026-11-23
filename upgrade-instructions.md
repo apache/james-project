@@ -60,6 +60,15 @@ WebAdmin used to send CORS headers allowing any origin whatever `cors.enable`. T
 is `true`, and `cors.origin` is then mandatory: WebAdmin refuses to start without it. A web console served from
 another origin needs both properties set.
 
+### Scaling Pulsar SMTP app verifies the sender identity
+
+Date: 23/11/2026
+
+Concerned products: the scaling Pulsar SMTP app.
+
+Its sample `smtpserver.xml` now sets `verifyIdentity` to `strict` on ports 465 and 587, and to `relaxed` on port 25,
+like the distributed app: an authenticated user can only send mail as one of its own addresses.
+
 ### POP3 UIDL unique-ids include the mailbox UIDVALIDITY
 
 Date: 16/11/2026
