@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
@@ -32,6 +33,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -153,10 +155,30 @@ class DefaultUserQuotaRootResolverTest {
 
         Mailbox delegatedMailbox = new Mailbox(MailboxPath.forUser(Username.of("delegated"), "test"),
             UidValidity.of(11), TestId.of(1));
+        delegatedMailbox.setACL(new MailboxACL(Map.of(MailboxACL.EntryKey.createUserEntryKey(BENWA),
+            new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read))));
         when(mockedMapper.findNonPersonalMailboxes(any(), any())).thenReturn(Flux.just(delegatedMailbox));
 
         assertThat(Flux.from(testee.listAllAccessibleQuotaRoots(BENWA)).collectList().block())
             .containsExactlyInAnyOrder(QUOTA_ROOT, testee.getQuotaRoot(delegatedMailbox));
+    }
+
+    @Test
+    void listAllAccessibleQuotaRootsShouldIgnoreDelegatedMailboxesWhoseReadRightIsNegated() {
+        MailboxMapper mockedMapper = mock(MailboxMapper.class);
+        MailboxSession mockSession = mock(MailboxSession.class);
+        when(mockSessionProvider.createSystemSession(BENWA)).thenReturn(mockSession);
+        when(mockedFactory.getMailboxMapper(mockSession)).thenReturn(mockedMapper);
+
+        Mailbox delegatedMailbox = new Mailbox(MailboxPath.forUser(Username.of("delegated"), "test"),
+            UidValidity.of(11), TestId.of(1));
+        delegatedMailbox.setACL(new MailboxACL(Map.of(
+            MailboxACL.EntryKey.createUserEntryKey(BENWA), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read),
+            MailboxACL.EntryKey.createUserEntryKey(BENWA, MailboxACL.NEGATIVE_KEY), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read))));
+        when(mockedMapper.findNonPersonalMailboxes(any(), any())).thenReturn(Flux.just(delegatedMailbox));
+
+        assertThat(Flux.from(testee.listAllAccessibleQuotaRoots(BENWA)).collectList().block())
+            .containsExactly(QUOTA_ROOT);
     }
 
 }
