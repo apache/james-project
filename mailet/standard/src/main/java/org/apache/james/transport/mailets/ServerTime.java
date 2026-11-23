@@ -21,13 +21,20 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Arrays;
+
 import jakarta.mail.Address;
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -38,9 +45,25 @@ import com.github.fge.lambdas.Throwing;
  * &lt;/mailet&gt;
  * </code></pre>
  *
+ * <p>The reply addresses are written by the sender. With <code>trustOnlyAuthNetwork</code> set to true (default), the
+ * answer to a mail that may not relay (neither authenticated nor received from an authorized network) only goes to
+ * its local reply addresses. Set it to false to answer every reply address as before, at the risk of letting senders
+ * send the answer to anyone.</p>
  */
 @Experimental
 public class ServerTime extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerTime.class);
+
+    private boolean trustOnlyAuthNetwork = true;
+
+    @Override
+    public void init() {
+        trustOnlyAuthNetwork = getInitParameter("trustOnlyAuthNetwork", true);
+        if (!trustOnlyAuthNetwork) {
+            LOGGER.warn("ServerTime with trustOnlyAuthNetwork=false: the answer goes to the reply addresses of any mail, written by its sender");
+        }
+    }
+
     /**
      * Sends a message back to the sender indicating what time the server thinks it is.
      *
@@ -73,8 +96,30 @@ public class ServerTime extends GenericMailet {
             response.setRecipients(MimeMessage.RecipientType.TO, mail.getMaybeSender().get().toString());
         }
 
+        if (trustOnlyAuthNetwork && !UseHeaderRecipients.relayAllowed(mail)) {
+            // The reply addresses are written by the sender: unless it may relay, only local ones are answered
+            Address[] localRecipients = Arrays.stream(response.getAllRecipients())
+                .filter(this::isLocal)
+                .toArray(Address[]::new);
+            if (localRecipients.length == 0) {
+                return;
+            }
+            response.setRecipients(MimeMessage.RecipientType.TO, localRecipients);
+            response.setRecipients(MimeMessage.RecipientType.CC, (Address[]) null);
+            response.setRecipients(MimeMessage.RecipientType.BCC, (Address[]) null);
+        }
+
         response.saveChanges();
         getMailetContext().sendMail(response);
+    }
+
+    private boolean isLocal(Address address) {
+        try {
+            return address instanceof InternetAddress internetAddress
+                && getMailetContext().isLocalServer(new MailAddress(internetAddress.getAddress()).getDomain());
+        } catch (AddressException e) {
+            return false;
+        }
     }
 
     @Override
