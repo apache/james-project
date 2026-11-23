@@ -24,13 +24,13 @@ import java.util.Optional;
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxMetaData;
-import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
@@ -41,11 +41,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ACLUsernameChangeTaskStep implements UsernameChangeTaskStep {
-    private final MailboxManager mailboxManager;
+    private final StoreMailboxManager mailboxManager;
     private final SubscriptionManager subscriptionManager;
 
     @Inject
-    public ACLUsernameChangeTaskStep(MailboxManager mailboxManager, SubscriptionManager subscriptionManager) {
+    public ACLUsernameChangeTaskStep(StoreMailboxManager mailboxManager, SubscriptionManager subscriptionManager) {
         this.mailboxManager = mailboxManager;
         this.subscriptionManager = subscriptionManager;
     }
@@ -64,8 +64,12 @@ public class ACLUsernameChangeTaskStep implements UsernameChangeTaskStep {
     public Publisher<Void> changeUsername(Username oldUsername, Username newUsername) {
         MailboxSession oldSession = mailboxManager.createSystemSession(oldUsername);
         MailboxSession newSession = mailboxManager.createSystemSession(newUsername);
-        return mailboxManager.search(MailboxQuery.builder().matchesAllMailboxNames().build(), oldSession)
-            .filter(mailbox -> !mailbox.getPath().getUser().equals(oldUsername))
+        // Every right is looked up: a right without Lookup still grants access
+        MailboxMapper mailboxMapper = mailboxManager.getMapperFactory().getMailboxMapper(oldSession);
+        return Flux.fromArray(MailboxACL.Right.values())
+            .concatMap(right -> mailboxMapper.findNonPersonalMailboxes(oldUsername, right))
+            .distinct(Mailbox::getMailboxId)
+            .filter(mailbox -> !mailbox.getUser().equals(oldUsername))
             .concatMap(mailbox -> migrateACLs(oldUsername, newUsername, mailbox))
             .then(updateSubscriptionsOnDeletedMailboxes(oldUsername, oldSession, newSession))
             .doFinally(any -> mailboxManager.endProcessingRequest(oldSession))
@@ -84,13 +88,13 @@ public class ACLUsernameChangeTaskStep implements UsernameChangeTaskStep {
         }
     }
 
-    private Publisher<? extends Void> migrateACLs(Username oldUsername, Username newUsername, MailboxMetaData mailbox) {
-        MailboxSession ownerSession = mailboxManager.createSystemSession(mailbox.getPath().getUser());
-        MailboxACL.Rfc4314Rights rights = Optional.ofNullable(mailbox.getMailbox().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(oldUsername)))
+    private Publisher<? extends Void> migrateACLs(Username oldUsername, Username newUsername, Mailbox mailbox) {
+        MailboxSession ownerSession = mailboxManager.createSystemSession(mailbox.getUser());
+        MailboxACL.Rfc4314Rights rights = Optional.ofNullable(mailbox.getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(oldUsername)))
             .orElse(MailboxACL.NO_RIGHTS);
 
-        return Mono.fromRunnable(Throwing.runnable(() -> mailboxManager.applyRightsCommand(mailbox.getId(), MailboxACL.command().rights(rights).forUser(newUsername).asAddition(), ownerSession)))
-            .then(Mono.fromRunnable(Throwing.runnable(() -> mailboxManager.applyRightsCommand(mailbox.getId(), MailboxACL.command().rights(rights).forUser(oldUsername).asRemoval(), ownerSession))))
+        return Mono.fromRunnable(Throwing.runnable(() -> mailboxManager.applyRightsCommand(mailbox.getMailboxId(), MailboxACL.command().rights(rights).forUser(newUsername).asAddition(), ownerSession)))
+            .then(Mono.fromRunnable(Throwing.runnable(() -> mailboxManager.applyRightsCommand(mailbox.getMailboxId(), MailboxACL.command().rights(rights).forUser(oldUsername).asRemoval(), ownerSession))))
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .then()
             .doFinally(any -> mailboxManager.endProcessingRequest(ownerSession));
