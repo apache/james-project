@@ -20,6 +20,7 @@
 package org.apache.james.protocols.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,7 +30,9 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.filesystem.api.FileSystem;
@@ -48,6 +51,7 @@ class AbstractConfigurableAsyncServerTest {
     private static class MemoryFileSystem implements FileSystem {
 
         private final Map<String, String> fileResources = new HashMap<>();
+        private final Set<String> missingFiles = new HashSet<>();
 
         @Override
         public InputStream getResource(String url) throws IOException {
@@ -63,6 +67,9 @@ class AbstractConfigurableAsyncServerTest {
 
         @Override
         public File getFile(String fileURL) throws FileNotFoundException {
+            if (missingFiles.contains(fileURL)) {
+                return new File("/nonexistent/" + fileURL.hashCode());
+            }
             String resourceName = fileResources.get(fileURL);
             if (resourceName != null) {
                 URL resource = ClassLoader.getSystemResource(resourceName);
@@ -206,6 +213,16 @@ class AbstractConfigurableAsyncServerTest {
         assertThat(testServer.getEncryption().getEnabledCipherSuites()).isEmpty(); // no default constraints
         assertThat(testServer.getEncryption().getClientAuth()).isEqualTo(ClientAuth.NONE);
         assertThat(testServer.getEncryption().supportsEncryption()).isTrue();
+    }
+
+    @Test
+    void buildSSLContextShouldExplainAMissingKeystore() throws Exception {
+        memoryFileSystem.missingFiles.add("file://conf/keystore");
+
+        initTestServer("testServerTLS.xml");
+
+        assertThatThrownBy(() -> testServer.buildSSLContext())
+            .hasStackTraceContaining("not found: provide a keystore at this location");
     }
 
     @Test
