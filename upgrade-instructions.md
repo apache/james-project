@@ -60,6 +60,16 @@ WebAdmin used to send CORS headers allowing any origin whatever `cors.enable`. T
 is `true`, and `cors.origin` is then mandatory: WebAdmin refuses to start without it. A web console served from
 another origin needs both properties set.
 
+### Pulsar verifies the TLS host name of its endpoints
+
+Date: 23/11/2026
+
+Concerned products: the apps using Pulsar (experimental).
+
+Over TLS, the host name of the Pulsar broker and admin endpoints is now checked against their certificate. Set
+`tls.hostname.verification=false` in `pulsar.properties` to get the former behaviour back. `tls.trust.certs.file.path`
+sets the certificates (PEM) trusted for these endpoints.
+
 ### Spring app generates its JMX password
 
 Date: 23/11/2026
