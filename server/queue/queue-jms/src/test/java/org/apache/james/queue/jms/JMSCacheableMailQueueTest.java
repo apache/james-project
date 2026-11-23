@@ -21,7 +21,13 @@ package org.apache.james.queue.jms;
 
 import static org.apache.james.queue.api.Mails.defaultMailNoRecipient;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
+import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
@@ -44,16 +50,21 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import reactor.core.publisher.Flux;
+
 @ExtendWith(BrokerExtension.class)
 public class JMSCacheableMailQueueTest implements DelayedManageableMailQueueContract, PriorityManageableMailQueueContract, DelayedPriorityMailQueueContract,
     MailQueueMetricContract {
 
     private JMSCacheableMailQueue mailQueue;
+    private ActiveMQConnectionFactory connectionFactory;
+    private MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem;
 
     @BeforeEach
     void setUp(EmbeddedActiveMQ broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         // Use InVM transport - broker ID matches BrokerExtension instance counter
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://0");
+        this.metricTestSystem = metricTestSystem;
+        connectionFactory = new ActiveMQConnectionFactory("vm://0");
         connectionFactory.setConsumerWindowSize(0);
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         MetricFactory metricFactory = metricTestSystem.getMetricFactory();
@@ -203,5 +214,43 @@ public class JMSCacheableMailQueueTest implements DelayedManageableMailQueueCont
             .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
             .containsExactly("name2");
+    }
+
+    @Test
+    void recipientHoldingTheSeparatorShouldBeDequeuedAsIs() throws Exception {
+        MailAddress recipient = new MailAddress("\"x;a@b.example;y\"@c.example");
+        enQueue(defaultMailNoRecipient()
+            .name("name1")
+            .recipient(recipient)
+            .build());
+
+        MailQueue.MailQueueItem item = Flux.from(mailQueue.deQueue()).blockFirst();
+
+        assertThat(item.getMail().getRecipients()).containsExactly(recipient);
+    }
+
+    @Test
+    void mailsEnqueuedWithoutTheRecipientListShouldStillBeRead() throws Exception {
+        JMSCacheableMailQueue formerFormatQueue = new JMSCacheableMailQueue(connectionFactory, new RawMailQueueItemDecoratorFactory(),
+            mailQueue.getName(), metricTestSystem.getMetricFactory(), metricTestSystem.getSpyGaugeRegistry()) {
+            @Override
+            protected Map<String, Object> getJMSProperties(Mail mail, long nextDelivery) throws MessagingException {
+                Map<String, Object> properties = new HashMap<>(super.getJMSProperties(mail, nextDelivery));
+                properties.remove(JMSSupport.JAMES_MAIL_RECIPIENTS_LIST);
+                return properties;
+            }
+        };
+        try {
+            formerFormatQueue.enQueue(defaultMailNoRecipient()
+                .name("name1")
+                .recipients(RECIPIENT1, RECIPIENT2)
+                .build());
+        } finally {
+            formerFormatQueue.dispose();
+        }
+
+        MailQueue.MailQueueItem item = Flux.from(mailQueue.deQueue()).blockFirst();
+
+        assertThat(item.getMail().getRecipients()).containsExactly(RECIPIENT1, RECIPIENT2);
     }
 }

@@ -25,6 +25,7 @@ public interface JMSSupport {
 
     /** JMS Property which holds the recipient as String */
     String JAMES_MAIL_RECIPIENTS = "JAMES_MAIL_RECIPIENTS";
+    String JAMES_MAIL_RECIPIENTS_LIST = "JAMES_MAIL_RECIPIENTS_LIST";
 
     /** JMS Property which holds the sender as String */
     String JAMES_MAIL_SENDER = "JAMES_MAIL_SENDER";
