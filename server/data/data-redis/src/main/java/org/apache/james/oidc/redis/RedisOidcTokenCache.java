@@ -19,11 +19,14 @@
 
 package org.apache.james.oidc.redis;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.oidc.Aud;
@@ -36,10 +39,8 @@ import org.apache.james.oidc.TokenInfoResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 
 import io.lettuce.core.KeyValue;
@@ -60,11 +61,14 @@ public class RedisOidcTokenCache implements OidcTokenCache {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisOidcTokenCache.class);
 
     private static final String AUD_DELIMITER = ";";
+    private static final String ABSENT_AUD = "-";
 
     public interface TokenFields {
         String EMAIL = "email";
         String EXP = "exp";
-        String AUD = "aud";
+        // Each audience is URL encoded and prefixed by the delimiter, so that the list reads back as resolved.
+        // The former "aud" field, joining the audiences, is not read: such entries are cache misses.
+        String AUD_LIST = "aud-list";
         String SID = "sid";
     }
 
@@ -113,6 +117,8 @@ public class RedisOidcTokenCache implements OidcTokenCache {
         return redisCommands.hgetall(tokenRedisKey)
             .collectMap(KeyValue::getKey, KeyValue::getValue)
             .filter(mapData -> !mapData.isEmpty())
+            // Entries written before the audience list field are read as a cache miss
+            .filter(mapData -> mapData.containsKey(TokenFields.AUD_LIST))
             .map(this::parseTokenInfo);
     }
 
@@ -120,7 +126,7 @@ public class RedisOidcTokenCache implements OidcTokenCache {
         String rawEmail = mapData.get(TokenFields.EMAIL);
         String rawSid = mapData.get(TokenFields.SID);
         String rawExp = mapData.get(TokenFields.EXP);
-        String rawAud = mapData.get(TokenFields.AUD);
+        String rawAud = mapData.get(TokenFields.AUD_LIST);
 
         if (StringUtils.isBlank(rawEmail) || StringUtils.isBlank(rawExp)) {
             throw new TokenParseException("Missing required fields in token data: " + mapData);
@@ -131,18 +137,36 @@ public class RedisOidcTokenCache implements OidcTokenCache {
                 .map(Sid::new);
             Instant exp = Instant.ofEpochSecond(Long.parseLong(rawExp));
 
-            Optional<List<Aud>> maybeAudList = Optional.ofNullable(rawAud)
-                .filter(StringUtils::isNotBlank)
-                .map(value -> Splitter.on(AUD_DELIMITER)
-                    .omitEmptyStrings()
-                    .splitToStream(value)
-                    .map(Aud::new)
-                    .toList());
+            Optional<List<Aud>> maybeAudList = parseAudList(rawAud);
 
             return new TokenInfo(rawEmail, sid, exp, maybeAudList);
         } catch (Exception e) {
             throw new TokenParseException("Failed to parse token fields from cache: " + mapData, e);
         }
+    }
+
+    private static Optional<List<Aud>> parseAudList(String rawAud) {
+        if (rawAud.equals(ABSENT_AUD)) {
+            return Optional.empty();
+        }
+        if (rawAud.isEmpty()) {
+            return Optional.of(List.of());
+        }
+        if (!rawAud.startsWith(AUD_DELIMITER)) {
+            throw new IllegalArgumentException("Invalid audience list " + rawAud);
+        }
+        return Optional.of(Splitter.on(AUD_DELIMITER)
+            .splitToStream(rawAud.substring(AUD_DELIMITER.length()))
+            .map(value -> new Aud(URLDecoder.decode(value, StandardCharsets.UTF_8)))
+            .toList());
+    }
+
+    private static String serializeAudList(Optional<List<Aud>> audList) {
+        return audList
+            .map(list -> list.stream()
+                .map(aud -> AUD_DELIMITER + URLEncoder.encode(aud.value(), StandardCharsets.UTF_8))
+                .collect(Collectors.joining()))
+            .orElse(ABSENT_AUD);
     }
 
     private Mono<TokenInfo> resolveTokenInfoAndCache(Token token, String tokenRedisKey) {
@@ -167,9 +191,7 @@ public class RedisOidcTokenCache implements OidcTokenCache {
         Map<String, String> mapData = ImmutableMap.of(
             TokenFields.EMAIL, tokenInfo.email(),
             TokenFields.EXP, String.valueOf(tokenInfo.exp().getEpochSecond()),
-            TokenFields.AUD, tokenInfo.aud()
-                .map(audList -> Joiner.on(AUD_DELIMITER).skipNulls().join(Lists.transform(audList, Aud::value)))
-                .orElse(StringUtils.EMPTY),
+            TokenFields.AUD_LIST, serializeAudList(tokenInfo.aud()),
             TokenFields.SID, tokenInfo.sid().map(Sid::value).orElse(StringUtils.EMPTY));
 
         return redisCommands.hset(tokenRedisKey, mapData)
