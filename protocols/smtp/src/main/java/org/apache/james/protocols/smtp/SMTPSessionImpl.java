@@ -59,6 +59,15 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
     }
 
     @Override
+    public void popLineHandler() {
+        super.popLineHandler();
+        // Detection is only turned off while reading a message body: back to commands, it applies again
+        if (!isTLSStarted()) {
+            startDetectingCommandInjection();
+        }
+    }
+
+    @Override
     public void setProxyInformation(ProxyInformation proxyInformation) {
         super.setProxyInformation(proxyInformation);
         relayingAllowed = computeRelayingAllowed((SMTPConfiguration) config);
