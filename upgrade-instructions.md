@@ -23,6 +23,7 @@ Change list:
 
 
 
+
 ### IPv6 network prefixes apply as written
 
 Date: 23/11/2026
@@ -122,6 +123,16 @@ suffix (for instance `SHA-512-utf8`), and a password stored as an ISO-8859-1 dig
 Older versions of James can not verify the passwords hashed again after the upgrade, nor the `-utf8` digests. Running
 a cluster mixing versions, or rolling back, is therefore not supported once users have logged in after the upgrade:
 their passwords would no longer be verified by the older nodes.
+
+### LDAP verifies the host name of ldaps servers
+
+Date: 23/11/2026
+
+Concerned products: the LDAP users repository.
+
+The host name of an `ldaps` server is now checked against its certificate. Make sure the `ldapHost(s)` URLs use a name
+present in the server certificate. `verifyHostname="false"` on the `usersrepository` element restores the former
+behaviour. `trustAllCerts="true"` and `verifyHostname="false"` are reported by a warning at start.
 
 ## 3.9.1 version
 

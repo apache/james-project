@@ -64,6 +64,7 @@ public class LdapRepositoryConfiguration {
         private Optional<Integer> poolSize;
         private Optional<Integer> maxWaitTime;
         private Optional<Boolean> trustAllCerts;
+        private Optional<Boolean> verifyHostname = Optional.empty();
         private ImmutableMap.Builder<Domain, String> perDomainBaseDN;
 
         public Builder() {
@@ -137,6 +138,11 @@ public class LdapRepositoryConfiguration {
             return this;
         }
 
+        public Builder verifyHostname(boolean verifyHostname) {
+            this.verifyHostname = Optional.of(verifyHostname);
+            return this;
+        }
+
         public Builder addPerDomainDN(Domain domain, String dn) {
             this.perDomainBaseDN.put(domain, dn);
             return this;
@@ -168,7 +174,7 @@ public class LdapRepositoryConfiguration {
                 NO_RESTRICTION,
                 NO_FILTER,
                 NO_ADMINISTRATOR_ID,
-                trustAllCerts.orElse(false), perDomainBaseDN.build());
+                trustAllCerts.orElse(false), verifyHostname.orElse(true), perDomainBaseDN.build());
         }
     }
 
@@ -211,6 +217,7 @@ public class LdapRepositoryConfiguration {
         //see if there is a filter argument
         String filter = configuration.getString("[@filter]");
         Boolean trustAllCerts = configuration.getBoolean("[@trustAllCerts]", false);
+        boolean verifyHostname = configuration.getBoolean("[@verifyHostname]", true);
 
         Optional<String> administratorId = Optional.ofNullable(configuration.getString("[@administratorId]"));
         int poolSize = Optional.ofNullable(configuration.getInteger("[@poolSize]", null))
@@ -248,7 +255,7 @@ public class LdapRepositoryConfiguration {
             restriction,
             filter,
             administratorId,
-            trustAllCerts, builder.build());
+            trustAllCerts, verifyHostname, builder.build());
     }
 
     /**
@@ -357,12 +364,14 @@ public class LdapRepositoryConfiguration {
 
     private final boolean trustAllCerts;
 
+    private final boolean verifyHostname;
+
     private final ImmutableMap<Domain, String> perDomainBaseDN;
 
     private LdapRepositoryConfiguration(List<URI> ldapHosts, String principal, String credentials, String userBase, String userListBase, String userIdAttribute,
                                         Optional<String> resolveLocalPartAttribute, Optional<String> usernameAttribute, String userObjectClass, int connectionTimeout, int readTimeout,
                                         boolean supportsVirtualHosting, int poolSize, int maxWaitTime, ReadOnlyLDAPGroupRestriction restriction, String filter,
-                                        Optional<String> administratorId, boolean trustAllCerts,
+                                        Optional<String> administratorId, boolean trustAllCerts, boolean verifyHostname,
                                         ImmutableMap<Domain, String> perDomainBaseDN) throws ConfigurationException {
         this.ldapHosts = ldapHosts;
         this.principal = principal;
@@ -382,6 +391,7 @@ public class LdapRepositoryConfiguration {
         this.filter = filter;
         this.administratorId = administratorId.map(Username::of);
         this.trustAllCerts = trustAllCerts;
+        this.verifyHostname = verifyHostname;
         this.perDomainBaseDN = perDomainBaseDN;
 
         checkState();
@@ -467,6 +477,13 @@ public class LdapRepositoryConfiguration {
         return trustAllCerts;
     }
 
+    /**
+     * Whether the host name of an ldaps server is checked against its certificate. True by default.
+     */
+    public boolean isVerifyHostname() {
+        return verifyHostname;
+    }
+
     public ImmutableMap<Domain, String> getPerDomainBaseDN() {
         return perDomainBaseDN;
     }
@@ -504,6 +521,7 @@ public class LdapRepositoryConfiguration {
                 && Objects.equals(this.poolSize, that.poolSize)
                 && Objects.equals(this.administratorId, that.administratorId)
                 && Objects.equals(this.trustAllCerts, that.trustAllCerts)
+                && Objects.equals(this.verifyHostname, that.verifyHostname)
                 && Objects.equals(this.usernameAttribute, that.usernameAttribute)
                 && Objects.equals(this.perDomainBaseDN, that.perDomainBaseDN);
         }
@@ -514,6 +532,6 @@ public class LdapRepositoryConfiguration {
     public final int hashCode() {
         return Objects.hash(ldapHosts, principal, credentials, userBase, userListBase, userIdAttribute, resolveLocalPartAttribute, userObjectClass,
             connectionTimeout, readTimeout, supportsVirtualHosting, restriction, filter, administratorId, poolSize,
-            trustAllCerts, perDomainBaseDN, usernameAttribute);
+            trustAllCerts, verifyHostname, perDomainBaseDN, usernameAttribute);
     }
 }
