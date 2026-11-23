@@ -119,10 +119,7 @@ public final class FlowedMessageUtils {
             // With quote changes or signatures it could be the following line to void the flow.
             if (!resultLineFlowed && i > 0) {
                 if (resultLineQuoteDepth > 0) {
-                    resultLine.insert(0, RFC2646_SPACE);
-                }
-                for (int j = 0; j < resultLineQuoteDepth; j++) {
-                    resultLine.insert(0, RFC2646_QUOTE);
+                    resultLine.insert(0, String.valueOf(RFC2646_QUOTE).repeat(resultLineQuoteDepth) + RFC2646_SPACE);
                 }
                 if (result == null) {
                     result = new StringBuffer();
