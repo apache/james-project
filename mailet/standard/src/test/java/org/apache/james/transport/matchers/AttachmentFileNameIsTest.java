@@ -23,6 +23,7 @@ import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -30,7 +31,6 @@ import java.util.zip.ZipOutputStream;
 import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
-import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
@@ -38,6 +38,16 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.Test;
 
 class AttachmentFileNameIsTest {
+    private static byte[] zip(String entryName, byte[] content) throws IOException {
+        ByteArrayOutputStream zip = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(zip)) {
+            zos.putNextEntry(new ZipEntry(entryName));
+            zos.write(content);
+            zos.closeEntry();
+        }
+        return zip.toByteArray();
+    }
+
     @Test
     void shouldMatchWhenMultipartMixedAndRightFileName() throws Exception {
         Mail mail = FakeMail.builder()
@@ -572,7 +582,7 @@ class AttachmentFileNameIsTest {
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
                     .filename("sonde.zip")
-                    .data(ClassLoaderUtils.getSystemResourceAsByteArray("sonde.zip")))
+                    .data(zip("sonde.txt", "content".getBytes(StandardCharsets.UTF_8))))
                 .build())
             .build();
 
@@ -595,7 +605,7 @@ class AttachmentFileNameIsTest {
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
                     .filename("sonde.zip")
-                    .data(ClassLoaderUtils.getSystemResourceAsByteArray("nested.zip")))
+                    .data(zip("sonde.zip", zip("sonde.txt", "content".getBytes(StandardCharsets.UTF_8)))))
                 .build())
             .build();
 
@@ -618,7 +628,7 @@ class AttachmentFileNameIsTest {
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setMultipartWithBodyParts(MimeMessageBuilder.bodyPartBuilder()
                     .filename("sonde.zip")
-                    .data(ClassLoaderUtils.getSystemResourceAsByteArray("sonde.zip")))
+                    .data(zip("sonde.txt", "content".getBytes(StandardCharsets.UTF_8))))
                 .build())
             .build();
 
