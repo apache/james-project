@@ -629,6 +629,20 @@ class RemoteDeliveryConfigurationTest {
     }
 
     @Test
+    void getAuthUserShouldBeNullWhenGatewayIsBlank() {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .setProperty(RemoteDeliveryConfiguration.GATEWAY, " ")
+            .setProperty(RemoteDeliveryConfiguration.GATEWAY_USERNAME, "name")
+            .setProperty(RemoteDeliveryConfiguration.GATEWAY_PASSWORD, "secret")
+            .build();
+
+        RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(mailetConfig, mock(DomainList.class));
+
+        assertThat(configuration.getAuthUser()).isNull();
+        assertThat(configuration.getAuthPass()).isNull();
+    }
+
+    @Test
     void getAuthUserShouldReturnSpecifiedValueWhenGatewaySpecified() {
         String value = "name";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
