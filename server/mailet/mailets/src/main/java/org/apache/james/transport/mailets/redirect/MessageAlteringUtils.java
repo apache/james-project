@@ -20,6 +20,7 @@ package org.apache.james.transport.mailets.redirect;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Enumeration;
+import java.util.Optional;
 
 import jakarta.mail.BodyPart;
 import jakarta.mail.Header;
@@ -37,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 
 public class MessageAlteringUtils {
@@ -166,8 +168,12 @@ public class MessageAlteringUtils {
     }
 
     @VisibleForTesting String getFileName(String subject) {
-        if (subject != null && !subject.trim().isEmpty()) {
-            return subject.trim();
+        // The decoded Subject may hold line breaks, that would end up in the header block of the attachment part
+        String fileName = Optional.ofNullable(subject)
+            .map(value -> CharMatcher.javaIsoControl().replaceFrom(value, ' ').trim())
+            .orElse("");
+        if (!fileName.isEmpty()) {
+            return fileName;
         }
         return "No Subject";
     }
