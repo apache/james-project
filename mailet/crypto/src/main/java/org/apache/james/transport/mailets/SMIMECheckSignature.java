@@ -24,22 +24,37 @@ package org.apache.james.transport.mailets;
 import java.io.IOException;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
+import jakarta.mail.Address;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mime4j.MimeException;
+import org.apache.james.mime4j.dom.address.Mailbox;
+import org.apache.james.mime4j.field.address.LenientAddressParser;
+import org.apache.james.mime4j.stream.RawFieldParser;
+import org.apache.james.mime4j.util.ContentUtil;
+import org.apache.james.mime4j.util.MimeUtil;
+import org.apache.james.server.core.SubmittedHeaderFields;
 import org.apache.james.transport.KeyStoreHolder;
 import org.apache.james.transport.KeyStoreHolderConfiguration;
 import org.apache.james.transport.KeyStoreHolderFactory;
 import org.apache.james.transport.SMIMESignedMessages;
 import org.apache.james.transport.SMIMESignerInfo;
+import org.apache.james.transport.SignerAddresses;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -52,6 +67,8 @@ import org.bouncycastle.mail.smime.SMIMESigned;
 import org.eclipse.angus.mail.util.BASE64DecoderStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>
@@ -79,6 +96,15 @@ import org.slf4j.LoggerFactory;
  * the trust path.
  * </p>
  * <p>
+ * A trusted signer is accepted only when its certificate names the sender: one of the rfc822Name of its
+ * subjectAltName, or the EMAILADDRESS of its subject when it has none, matches the <code>From</code> or the
+ * <code>Sender</code> of the message (RFC 8550 section 3), unless it names no e-mail address. The address is compared
+ * ignoring its case. A message with several From or Sender fields, or whose From or Sender is read differently by
+ * Jakarta Mail and mime4j, names no sender. Otherwise the status is <code>Signer mismatch</code> and no signer is recorded. The
+ * certificate must allow e-mail protection when it restricts its extended key usage, and digitalSignature
+ * or nonRepudiation when it restricts its key usage.
+ * </p>
+ * <p>
  * Optionally, specifying the parameter <code>strip</code>, the signature of
  * the message can be stripped after the check. The message will become a
  * standard message without an attached s/mime signature.
@@ -93,7 +119,8 @@ import org.slf4j.LoggerFactory;
  * standard java certificate store format, but pkcs12 is also quite common and
  * compatible with standard email clients like Outlook Express and Thunderbird.
  * <li>keyStoreFileName (default: JAVA_HOME/jre/lib/security/cacert): Certificate
- * store path.
+ * store path. The default store of the JDK holds the authorities of the web PKI, which issue server
+ * certificates: configure a store of the authorities you trust for mail signing instead.
  * <li>keyStorePassword (default: ""): Certificate store password.
  * </ul>
  * Other parameters configure the behavior of the mailet:
@@ -181,6 +208,7 @@ public class SMIMECheckSignature extends GenericMailet {
 
         boolean isMessageSigned = false;
         boolean isSignatureGood = false;
+        boolean isSignerMismatch = false;
         
         try {
             SMIMESigned signed = asSMIMESigned(message);
@@ -209,31 +237,160 @@ public class SMIMECheckSignature extends GenericMailet {
         // If at least one mail signer is found 
         // the mail attributes are set.
         if (signers != null) {
-            ArrayList<AttributeValue<?>> signerinfolist = signerInfoList(signers);
+            List<SMIMESignerInfo> acceptedSigners = acceptedSigners(signers);
+            List<SMIMESignerInfo> senderSigners = senderSigners(acceptedSigners, message);
+            ArrayList<AttributeValue<?>> signerinfolist = signerInfoList(senderSigners);
 
             if (!signerinfolist.isEmpty()) {
                 mail.setAttribute(new Attribute(mailAttribute, AttributeValue.of(signerinfolist)));
                 isSignatureGood = true;
             } else {
+                isSignerMismatch = !acceptedSigners.isEmpty();
                 // if no valid signers are found the message is not modified.
                 strippedMessage = null;
             }
         }
 
-        setSMIMEStatus(mail, isMessageSigned, isSignatureGood);
+        setSMIMEStatus(mail, isMessageSigned, isSignatureGood, isSignerMismatch);
 
         if (stripSignature && strippedMessage != null) {
             stripSignature(mail, message, strippedMessage);
         }
     }
 
-    private void setSMIMEStatus(Mail mail, boolean isMessageSigned, boolean isSignatureGood) throws MessagingException {
+    private void setSMIMEStatus(Mail mail, boolean isMessageSigned, boolean isSignatureGood, boolean isSignerMismatch) throws MessagingException {
         if (!isMessageSigned) {
             mail.getMessage().setHeader(SMIME_STATUS_HEADER, "Not signed");
         } else if (isSignatureGood) {
             mail.getMessage().setHeader(SMIME_STATUS_HEADER, "Good signature");
+        } else if (isSignerMismatch) {
+            mail.getMessage().setHeader(SMIME_STATUS_HEADER, "Signer mismatch");
         } else {
             mail.getMessage().setHeader(SMIME_STATUS_HEADER, "Bad signature");
+        }
+    }
+
+    private List<SMIMESignerInfo> acceptedSigners(List<SMIMESignerInfo> signers) {
+        return signers.stream()
+            .filter(info -> info.isSignValid() && (!onlyTrusted || info.getCertPath() != null))
+            .toList();
+    }
+
+    /**
+     * RFC 8550 section 3: the signer certificate names the sender, the From or the Sender of the message. A
+     * certificate naming no e-mail address is accepted: the check applies only when it names some.
+     */
+    private List<SMIMESignerInfo> senderSigners(List<SMIMESignerInfo> signers, MimeMessage message) {
+        List<MailAddress> senders = senders(message);
+        return signers.stream()
+            .filter(info -> {
+                List<MailAddress> signerAddresses = SignerAddresses.of(info.getSignerCertificate());
+                return signerAddresses.isEmpty() || signerAddresses.stream()
+                    .anyMatch(signerAddress -> senders.stream().anyMatch(sender -> SignerAddresses.sameAddress(signerAddress, sender)));
+            })
+            .toList();
+    }
+
+    /**
+     * The From and the Sender of the message: a signer matching either of them is accepted (RFC 8550 section 3). A
+     * malformed header names no sender.
+     *
+     * Mail readers may display other addresses than the ones Jakarta Mail reads: a message with several From or Sender
+     * fields, or a field name that mime4j only reads as From or Sender, names no sender, and an address is a sender
+     * only when mime4j (used for instance by JMAP Email/get) reads it too.
+     */
+    private List<MailAddress> senders(MimeMessage message) {
+        if (hasAmbiguousSenderFields(message)) {
+            return List.of();
+        }
+        Set<String> mime4jAddresses = Stream.of("From", "Sender")
+            .flatMap(name -> mime4jAddresses(message, name))
+            .map(SMIMECheckSignature::comparable)
+            .collect(ImmutableSet.toImmutableSet());
+        return Stream.concat(from(message).stream(), sender(message).stream())
+            .filter(InternetAddress.class::isInstance)
+            .map(address -> ((InternetAddress) address).getAddress())
+            .filter(address -> address != null && mime4jAddresses.contains(comparable(address)))
+            .flatMap(address -> SignerAddresses.parse(address).stream())
+            .toList();
+    }
+
+    /**
+     * Jakarta Mail keeps the quotes of a quoted local part, mime4j drops them.
+     */
+    private static String comparable(String address) {
+        int at = address.lastIndexOf('@');
+        String localPart = at < 0 ? address : address.substring(0, at);
+        if (localPart.length() >= 2 && localPart.startsWith("\"") && localPart.endsWith("\"")) {
+            localPart = localPart.substring(1, localPart.length() - 1);
+        }
+        return (at < 0 ? localPart : localPart + address.substring(at)).toLowerCase(Locale.ROOT);
+    }
+
+    private boolean hasAmbiguousSenderFields(MimeMessage message) {
+        try {
+            return SubmittedHeaderFields.violation(message)
+                .filter(violation -> violation != SubmittedHeaderFields.Violation.INVALID_FIELD_NAME)
+                .isPresent()
+                || Collections.list(message.getAllHeaderLines()).stream().anyMatch(SMIMECheckSignature::readsAsAnotherSenderField);
+        } catch (MessagingException e) {
+            LOGGER.info("Could not read the header fields of a signed message", e);
+            return true;
+        }
+    }
+
+    /**
+     * A field that Jakarta Mail does not name From or Sender, while mime4j does (eg "From(x):").
+     */
+    private static boolean readsAsAnotherSenderField(String line) {
+        int colon = line.indexOf(':');
+        if (colon <= 0) {
+            return false;
+        }
+        String jakartaName = line.substring(0, colon).trim();
+        if (jakartaName.equalsIgnoreCase("From") || jakartaName.equalsIgnoreCase("Sender")) {
+            return false;
+        }
+        try {
+            String mime4jName = RawFieldParser.DEFAULT.parseField(ContentUtil.encode(line)).getName();
+            return mime4jName.equalsIgnoreCase("From") || mime4jName.equalsIgnoreCase("Sender");
+        } catch (MimeException | RuntimeException e) {
+            return false;
+        }
+    }
+
+    private Stream<String> mime4jAddresses(MimeMessage message, String name) {
+        try {
+            String field = message.getHeader(name, null);
+            if (field == null) {
+                return Stream.empty();
+            }
+            // As text, not as bytes: an internationalized address keeps its characters
+            return LenientAddressParser.DEFAULT.parseAddressList(MimeUtil.unfold(field))
+                .flatten()
+                .stream()
+                .map(Mailbox::getAddress);
+        } catch (MessagingException | RuntimeException e) {
+            LOGGER.info("Could not parse the {} of a signed message", name, e);
+            return Stream.empty();
+        }
+    }
+
+    private List<Address> from(MimeMessage message) {
+        try {
+            return Optional.ofNullable(message.getFrom()).map(List::of).orElse(List.of());
+        } catch (MessagingException e) {
+            LOGGER.info("Could not parse the From of a signed message", e);
+            return List.of();
+        }
+    }
+
+    private Optional<Address> sender(MimeMessage message) {
+        try {
+            return Optional.ofNullable(message.getSender());
+        } catch (MessagingException e) {
+            LOGGER.info("Could not parse the Sender of a signed message", e);
+            return Optional.empty();
         }
     }
 
@@ -241,13 +398,10 @@ public class SMIMECheckSignature extends GenericMailet {
         ArrayList<AttributeValue<?>> signerinfolist = new ArrayList<>();
 
         for (SMIMESignerInfo info : signers) {
-            if (info.isSignValid()
-                    && (!onlyTrusted || info.getCertPath() != null)) {
-                try {
-                    signerinfolist.add(AttributeValue.of(info.getSignerCertificate().getEncoded()));
-                } catch (CertificateEncodingException e) {
-                    LOGGER.warn("Failed to encode certificate", e);
-                }
+            try {
+                signerinfolist.add(AttributeValue.of(info.getSignerCertificate().getEncoded()));
+            } catch (CertificateEncodingException e) {
+                LOGGER.warn("Failed to encode certificate", e);
             }
         }
         return signerinfolist;
