@@ -35,6 +35,14 @@ import org.slf4j.LoggerFactory;
 public class URIScanner {
     private static final Logger LOGGER = LoggerFactory.getLogger(URIScanner.class);
 
+    // Bounds keeping the scan linear in the size of the content
+    private static final int MAX_SCANNED_LENGTH = 1024 * 1024;
+    private static final int MAX_HOSTS = 1000;
+    private static final int LOCAL_PART_WINDOW = 64;
+    private static final int DOMAIN_WINDOW = 255;
+    private static final int MAX_HOST_LENGTH = 253;
+    private static final int MAX_LABEL_LENGTH = 63;
+
     // These regular expressions "inspired" by Spamassassin
     private static final String reserved = ";/?:@&=+$,[]\\#|";
 
@@ -207,12 +215,13 @@ public class URIScanner {
      *            a character sequence to be scanned for URIs
      * @return a HashSet containing host strings
      */
-    protected static HashSet<String> scanContentForHosts(CharSequence content) {
+    protected static HashSet<String> scanContentForHosts(CharSequence fullContent) {
         HashSet<String> set = new HashSet<>();
+        String content = fullContent.subSequence(0, Math.min(fullContent.length(), MAX_SCANNED_LENGTH)).toString();
 
         // look for URIs
         Matcher mat = uriPattern.matcher(content);
-        while (mat.find()) {
+        while (mat.find() && set.size() < MAX_HOSTS) {
             String found = mat.group();
             Matcher cleanMat = uriCleanup.matcher(found);
             if (cleanMat.find()) {
@@ -245,22 +254,47 @@ public class URIScanner {
             }
         }
 
-        // look for "schemeless" email addresses, too
+        // look for "schemeless" email addresses, too: the pattern is only applied around each '@'
         mat = emailAddrPattern.matcher(content);
-        while (mat.find()) {
-            String found = mat.group();
-            LOGGER.debug("******** mailfound=\"{}\"", found);
-            found = "mailto://" + found;
-            LOGGER.debug("*******6 mailfoundfound=\"{}\" after cleanup 6", found);
-
-            String host = hostFromUriStr(found);
-            if (null != host) {
-
-                host = host.toLowerCase(Locale.US);
-                set.add(host);
+        int at = content.indexOf('@');
+        while (at >= 0 && set.size() < MAX_HOSTS) {
+            mat.region(Math.max(0, at - LOCAL_PART_WINDOW), Math.min(content.length(), at + DOMAIN_WINDOW + 1));
+            boolean found = mat.find();
+            while (found && mat.end() <= at) {
+                found = mat.find();
+            }
+            if (found && mat.start() <= at) {
+                addEmailAddressHost(set, mat.group());
+                at = content.indexOf('@', mat.end());
+            } else {
+                at = content.indexOf('@', at + 1);
             }
         }
         return set;
+    }
+
+    private static void addEmailAddressHost(HashSet<String> set, String address) {
+        LOGGER.debug("******** mailfound=\"{}\"", address);
+        String host = hostFromUriStr("mailto://" + address);
+        if (null != host) {
+            set.add(host.toLowerCase(Locale.US));
+        }
+    }
+
+    private static boolean isValidHostLength(String host) {
+        if (host.length() > MAX_HOST_LENGTH) {
+            return false;
+        }
+        int labelStart = 0;
+        for (int i = 0; i <= host.length(); i++) {
+            if (i == host.length() || host.charAt(i) == '.') {
+                if (i - labelStart > MAX_LABEL_LENGTH) {
+                    return false;
+                }
+                labelStart = i + 1;
+            }
+        }
+        return true;
     }
 
     /**
@@ -301,6 +335,9 @@ public class URIScanner {
      */
     protected static String domainFromHost(String host) {
         LOGGER.debug("domainFromHost(\"{}\")", host);
+        if (!isValidHostLength(host)) {
+            return null;
+        }
         String domain = null;
         Matcher mat;
 
