@@ -23,13 +23,18 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.cert.CRL;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathBuilder;
 import java.security.cert.CertPathBuilderException;
-import java.security.cert.CertPathBuilderResult;
 import java.security.cert.CertStore;
+import java.security.cert.CertStoreException;
 import java.security.cert.CollectionCertStoreParameters;
 import java.security.cert.PKIXBuilderParameters;
+import java.security.cert.PKIXCertPathBuilderResult;
+import java.security.cert.TrustAnchor;
+import java.security.cert.X509CRL;
 import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -70,7 +75,7 @@ public class KeyStoreHolder {
      * Bounds the work a remote sender can make the signature check do: each SignerInfo can lead to a certification
      * path search over all the certificates of the message.
      */
-    public record VerificationLimits(int maxSignerInfos, int maxCertificates) {
+    public record VerificationLimits(int maxSignerInfos, int maxCertificates, int maxCrls) {
         /**
          * The number of certification path searches per message is bounded by maxSignerInfos.
          */
@@ -78,11 +83,17 @@ public class KeyStoreHolder {
             return maxSignerInfos;
         }
 
-        public static final VerificationLimits DEFAULT = new VerificationLimits(10, 50);
+        public static final int DEFAULT_MAX_CRLS = 16;
+        public static final VerificationLimits DEFAULT = new VerificationLimits(10, 50, DEFAULT_MAX_CRLS);
 
         public VerificationLimits {
             Preconditions.checkArgument(maxSignerInfos > 0, "maxSignerInfos must be strictly positive");
             Preconditions.checkArgument(maxCertificates > 0, "maxCertificates must be strictly positive");
+            Preconditions.checkArgument(maxCrls >= 0, "maxCrls must be positive");
+        }
+
+        public VerificationLimits(int maxSignerInfos, int maxCertificates) {
+            this(maxSignerInfos, maxCertificates, DEFAULT_MAX_CRLS);
         }
     }
 
@@ -115,7 +126,8 @@ public class KeyStoreHolder {
     /**
      * Verifies the signature of a SMIME message, like {@link #verifySignatures(SMIMESigned)}.
      *
-     * A message with more SignerInfos or certificates than the limits allow is not checked: no signer is returned.
+     * A message with more SignerInfos, certificates or revocation lists than the limits allow is not checked: no
+     * signer is returned.
      */
     @SuppressWarnings("unchecked")
     public List<SMIMESignerInfo> verifySignatures(SMIMESigned signed, VerificationLimits limits) throws Exception {
@@ -124,6 +136,12 @@ public class KeyStoreHolder {
         if (certificateCount > limits.maxCertificates() || signerInfoCount > limits.maxSignerInfos()) {
             LOGGER.warn("Not checking a S/MIME signature with {} SignerInfos and {} certificates: limits are {} and {}",
                 signerInfoCount, certificateCount, limits.maxSignerInfos(), limits.maxCertificates());
+            return ImmutableList.of();
+        }
+        // Each revocation list is checked against each certificate of a path
+        int crlCount = signed.getCRLs().getMatches(null).size();
+        if (crlCount > limits.maxCrls()) {
+            LOGGER.warn("Not checking a S/MIME signature with {} revocation lists: the limit is {}", crlCount, limits.maxCrls());
             return ImmutableList.of();
         }
 
@@ -136,6 +154,7 @@ public class KeyStoreHolder {
         // A legitimate chain holds very few certificates per name (key rollover, cross certification).
         Collection<X509Certificate> intermediates = boundCandidatesPerSubject(
             (Collection<X509Certificate>) certs.getCertificates(null));
+        Collection<? extends CRL> crls = certs.getCRLs(null);
         AtomicInteger remainingCertPathSearches = new AtomicInteger(limits.maxCertPathSearches());
         SignerInformationStore siginfo = signed.getSignerInfos();
         Collection<SignerInformation> sigCol = siginfo.getSigners();
@@ -163,7 +182,7 @@ public class KeyStoreHolder {
                 // to a trusted certificate), null otherwise.
                 CertPath path = null;
                 if (remainingCertPathSearches.getAndDecrement() > 0) {
-                    path = verifyCertificate(signerCert, pathStore(signerCert, intermediates), keyStore);
+                    path = verifyCertificate(signerCert, pathStore(signerCert, intermediates, crls), keyStore);
                 } else {
                     LOGGER.warn("Not searching a certification path for {}: {} searches were already done for this message",
                         signerCert.getSubjectX500Principal(), limits.maxCertPathSearches());
@@ -193,11 +212,13 @@ public class KeyStoreHolder {
             .collect(ImmutableList.toImmutableList());
     }
 
-    private static CertStore pathStore(X509Certificate signerCert, Collection<X509Certificate> intermediates)
+    private static CertStore pathStore(X509Certificate signerCert, Collection<X509Certificate> intermediates, Collection<? extends CRL> crls)
         throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        return CertStore.getInstance("Collection", new CollectionCertStoreParameters(ImmutableList.<X509Certificate>builder()
+        return CertStore.getInstance("Collection", new CollectionCertStoreParameters(ImmutableList.builder()
             .add(signerCert)
             .addAll(intermediates.stream().filter(certificate -> !certificate.equals(signerCert)).iterator())
+            // The revocation lists carried by the message
+            .addAll(crls)
             .build()));
     }
 
@@ -207,6 +228,48 @@ public class KeyStoreHolder {
             return info.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider(BC).build(signerCert));
         } catch (Exception e) {
             LOGGER.debug("Invalid S/MIME signature for {}", signerCert.getSubjectX500Principal(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Soft fail revocation check: a certificate of the path listed by a revocation list carried by the message, and
+     * signed by its issuer, is revoked. Without such a list, nothing changes. Nothing is fetched from the network:
+     * neither OCSP nor the distribution points of the certificates.
+     */
+    @SuppressWarnings("unchecked")
+    private static boolean revokedByAvailableCrl(PKIXCertPathBuilderResult result, CertStore store) throws CertStoreException {
+        Collection<X509CRL> crls = (Collection<X509CRL>) store.getCRLs(null);
+        if (crls.isEmpty()) {
+            return false;
+        }
+        List<X509Certificate> path = (List<X509Certificate>) result.getCertPath().getCertificates();
+        for (int i = 0; i < path.size(); i++) {
+            X509Certificate certificate = path.get(i);
+            PublicKey issuerKey = i + 1 < path.size() ? path.get(i + 1).getPublicKey() : anchorKey(result.getTrustAnchor());
+            boolean revoked = crls.stream()
+                .filter(crl -> crl.getIssuerX500Principal().equals(certificate.getIssuerX500Principal()))
+                .filter(crl -> signedBy(crl, issuerKey))
+                .anyMatch(crl -> crl.isRevoked(certificate));
+            if (revoked) {
+                LOGGER.info("{} is revoked by a revocation list of the message", certificate.getSubjectX500Principal());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static PublicKey anchorKey(TrustAnchor anchor) {
+        return Optional.ofNullable(anchor.getTrustedCert())
+            .map(X509Certificate::getPublicKey)
+            .orElseGet(anchor::getCAPublicKey);
+    }
+
+    private static boolean signedBy(X509CRL crl, PublicKey issuerKey) {
+        try {
+            crl.verify(issuerKey, BC);
+            return true;
+        } catch (Exception e) {
             return false;
         }
     }
@@ -251,9 +314,12 @@ public class KeyStoreHolder {
         params.setRevocationEnabled(false);
         
         try {
-            CertPathBuilderResult result = pathBuilder.build(params);
+            PKIXCertPathBuilderResult result = (PKIXCertPathBuilderResult) pathBuilder.build(params);
+            if (revokedByAvailableCrl(result, store)) {
+                return null;
+            }
             return result.getCertPath();
-        } catch (CertPathBuilderException e) {
+        } catch (CertPathBuilderException | CertStoreException e) {
             // A certification path is not found, so null is returned.
             return null;
         } catch (InvalidAlgorithmParameterException e) {

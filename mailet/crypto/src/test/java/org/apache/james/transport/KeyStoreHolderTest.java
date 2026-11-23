@@ -27,6 +27,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.Security;
+import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Date;
@@ -40,9 +41,13 @@ import jakarta.mail.internet.MimeMultipart;
 import org.assertj.core.api.SoftAssertions;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.cert.jcajce.JcaCRLStore;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
+import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v2CRLBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoGeneratorBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -89,7 +94,14 @@ class KeyStoreHolderTest {
     }
 
     static SMIMESigned sign(Identity signer, List<X509Certificate> attachedCertificates) throws Exception {
+        return sign(signer, attachedCertificates, ImmutableList.of());
+    }
+
+    static SMIMESigned sign(Identity signer, List<X509Certificate> attachedCertificates, List<X509CRL> attachedCrls) throws Exception {
         SMIMESignedGenerator generator = new SMIMESignedGenerator();
+        if (!attachedCrls.isEmpty()) {
+            generator.addCRLs(new JcaCRLStore(attachedCrls));
+        }
         generator.addSignerInfoGenerator(new JcaSimpleSignerInfoGeneratorBuilder()
             .setProvider(BouncyCastleProvider.PROVIDER_NAME)
             .build("SHA256withRSA", signer.keyPair().getPrivate(), signer.certificate()));
@@ -151,6 +163,58 @@ class KeyStoreHolderTest {
                 assertThat(info.isSignValid()).isTrue();
                 assertThat(info.getCertPath()).isNull();
             });
+    }
+
+    @Test
+    void verifySignaturesShouldNotTrustASignerRevokedByARevocationListOfTheMessage() throws Exception {
+        Identity root = selfSigned("CN=Root");
+        Identity signer = issue("CN=Signer", keyPair(), new X500Name("CN=Root"), root.keyPair(), false);
+
+        List<SMIMESignerInfo> signerInfos = new KeyStoreHolder(trusting(root.certificate()))
+            .verifySignatures(sign(signer, ImmutableList.of(signer.certificate(), root.certificate()), ImmutableList.of(revoking(root, signer))));
+
+        assertThat(signerInfos).singleElement()
+            .satisfies(info -> {
+                assertThat(info.isSignValid()).isTrue();
+                assertThat(info.getCertPath()).isNull();
+            });
+    }
+
+    @Test
+    void verifySignaturesShouldTrustASignerWhenTheMessageCarriesNoRevocationList() throws Exception {
+        Identity root = selfSigned("CN=Root");
+        Identity signer = issue("CN=Signer", keyPair(), new X500Name("CN=Root"), root.keyPair(), false);
+
+        List<SMIMESignerInfo> signerInfos = new KeyStoreHolder(trusting(root.certificate()))
+            .verifySignatures(sign(signer, ImmutableList.of(signer.certificate(), root.certificate())));
+
+        assertThat(signerInfos).singleElement()
+            .satisfies(info -> assertThat(info.getCertPath()).isNotNull());
+    }
+
+    @Test
+    void verifySignaturesShouldNotCheckMessagesWithTooManyRevocationLists() throws Exception {
+        Identity root = selfSigned("CN=Root");
+        Identity signer = issue("CN=Signer", keyPair(), new X500Name("CN=Root"), root.keyPair(), false);
+        ImmutableList.Builder<X509CRL> crls = ImmutableList.builder();
+        for (int i = 0; i < 3; i++) {
+            crls.add(revoking(root, selfSigned("CN=Other " + i)));
+        }
+
+        List<SMIMESignerInfo> signerInfos = new KeyStoreHolder(trusting(root.certificate()))
+            .verifySignatures(sign(signer, ImmutableList.of(signer.certificate(), root.certificate()), crls.build()),
+                new KeyStoreHolder.VerificationLimits(10, 50, 2));
+
+        assertThat(signerInfos).isEmpty();
+    }
+
+    static X509CRL revoking(Identity issuer, Identity revoked) throws Exception {
+        Date now = new Date();
+        JcaX509v2CRLBuilder builder = new JcaX509v2CRLBuilder(issuer.certificate(), new Date(now.getTime() - 60_000));
+        builder.setNextUpdate(new Date(now.getTime() + 3_600_000));
+        builder.addCRLEntry(revoked.certificate().getSerialNumber(), new Date(now.getTime() - 60_000), CRLReason.keyCompromise);
+        return new JcaX509CRLConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME)
+            .getCRL(builder.build(new JcaContentSignerBuilder("SHA256withRSA").build(issuer.keyPair().getPrivate())));
     }
 
     @Test
