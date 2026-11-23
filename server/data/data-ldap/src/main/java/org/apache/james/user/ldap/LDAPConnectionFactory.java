@@ -31,8 +31,12 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.unboundid.ldap.sdk.BindRequest;
 import com.unboundid.ldap.sdk.FailoverServerSet;
@@ -42,8 +46,10 @@ import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.ServerSet;
 import com.unboundid.ldap.sdk.SimpleBindRequest;
 import com.unboundid.ldap.sdk.SingleServerSet;
+import com.unboundid.util.ssl.HostNameSSLSocketVerifier;
 
 public class LDAPConnectionFactory {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LDAPConnectionFactory.class);
 
     private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
         @Override
@@ -68,9 +74,7 @@ public class LDAPConnectionFactory {
     public LDAPConnectionFactory(LdapRepositoryConfiguration configuration) throws LDAPException {
         this.configuration = configuration;
 
-        LDAPConnectionOptions connectionOptions = new LDAPConnectionOptions();
-        connectionOptions.setConnectTimeoutMillis(configuration.getConnectionTimeout());
-        connectionOptions.setResponseTimeoutMillis(configuration.getReadTimeout());
+        LDAPConnectionOptions connectionOptions = connectionOptions(configuration);
 
         BindRequest bindRequest = new SimpleBindRequest(configuration.getPrincipal(), configuration.getCredentials());
 
@@ -83,6 +87,21 @@ public class LDAPConnectionFactory {
         ldapConnectionPool = new LDAPConnectionPool(failoverServerSet, bindRequest, configuration.getPoolSize());
         ldapConnectionPool.setRetryFailedOperationsDueToInvalidConnections(true);
         ldapConnectionPool.setMaxWaitTimeMillis(configuration.getMaxWaitTime());
+    }
+
+    @VisibleForTesting
+    static LDAPConnectionOptions connectionOptions(LdapRepositoryConfiguration configuration) {
+        LDAPConnectionOptions connectionOptions = new LDAPConnectionOptions();
+        connectionOptions.setConnectTimeoutMillis(configuration.getConnectionTimeout());
+        connectionOptions.setResponseTimeoutMillis(configuration.getReadTimeout());
+        if (configuration.isTrustAllCerts()) {
+            LOGGER.warn("LDAP trustAllCerts is set: the certificate of ldaps servers is not checked");
+        } else if (!configuration.isVerifyHostname()) {
+            LOGGER.warn("LDAP verifyHostname is false: the host name of ldaps servers is not checked against their certificate");
+        } else {
+            connectionOptions.setSSLSocketVerifier(new HostNameSSLSocketVerifier(true));
+        }
+        return connectionOptions;
     }
 
     private ThrowingFunction<URI, SingleServerSet> toSingleServerSet(LDAPConnectionOptions connectionOptions, BindRequest bindRequest) {

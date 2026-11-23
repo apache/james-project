@@ -31,6 +31,8 @@ import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
+import com.unboundid.util.ssl.HostNameSSLSocketVerifier;
+
 class LdapRepositoryConfigurationTest {
     public static XMLConfiguration getConfig(String configurationFile) throws Exception {
         InputStream configStream = ClassLoaderUtils.getSystemResourceAsSharedStream(configurationFile);
@@ -62,5 +64,26 @@ class LdapRepositoryConfigurationTest {
     void shouldSupportLDAPSpecificValue() throws Exception {
         LdapRepositoryConfiguration configuration = LdapRepositoryConfiguration.from(getConfig("usersrepository-supportsVirtualHosting.xml"));
         assertThat(configuration.supportsVirtualHosting()).isTrue();
+    }
+
+    @Test
+    void shouldVerifyTheHostnameByDefault() throws Exception {
+        LdapRepositoryConfiguration configuration = LdapRepositoryConfiguration.from(getConfig("usersrepository-default.xml"));
+
+        assertThat(configuration.isVerifyHostname()).isTrue();
+        assertThat(LDAPConnectionFactory.connectionOptions(configuration).getSSLSocketVerifier())
+            .isInstanceOf(HostNameSSLSocketVerifier.class);
+    }
+
+    @Test
+    void shouldNotVerifyTheHostnameWhenDisabled() throws Exception {
+        XMLConfiguration xmlConfiguration = getConfig("usersrepository-default.xml");
+        xmlConfiguration.addProperty("[@verifyHostname]", "false");
+
+        LdapRepositoryConfiguration configuration = LdapRepositoryConfiguration.from(xmlConfiguration);
+
+        assertThat(configuration.isVerifyHostname()).isFalse();
+        assertThat(LDAPConnectionFactory.connectionOptions(configuration).getSSLSocketVerifier())
+            .isNotInstanceOf(HostNameSSLSocketVerifier.class);
     }
 }
