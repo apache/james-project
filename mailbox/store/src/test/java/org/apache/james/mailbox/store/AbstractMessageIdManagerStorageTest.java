@@ -818,6 +818,27 @@ public abstract class AbstractMessageIdManagerStorageTest {
     }
 
     @Test
+    void setInMailboxesShouldNotCopyFlagsOfACopyTheUserCannotRead() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(BOB)
+                    .rights(new Rfc4314Rights(Right.Read))
+                    .asAddition()),
+            aliceSession);
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox1.getMailboxId(), bobMailbox1.getMailboxId()), bobSession);
+        messageIdManager.setFlags(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(bobMailbox1.getMailboxId()), bobSession);
+
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox2.getMailboxId()), aliceSession);
+
+        // The copy is marked \Recent, but does not get the \Flagged of Bob's copy
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession))
+            .extracting(MessageResult::getFlags)
+            .containsOnly(new Flags(Flags.Flag.RECENT));
+    }
+
+    @Test
     void setInMailboxesShouldAllowCopyingMessageFromReadOnlySharedMailbox() throws Exception {
         //Given
         testingData.setACL(aliceMailbox1.getMailboxId(),
