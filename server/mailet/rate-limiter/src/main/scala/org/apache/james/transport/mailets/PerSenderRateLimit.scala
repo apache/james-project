@@ -49,8 +49,8 @@ case class PerSenderRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Opt
 }
 
 case class SenderKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, mailAddress: MailAddress) extends RateLimitingKey {
-  override def asString(): String = keyPrefix.map(prefix => s"${prefix.value}_${entityType.asString}_${mailAddress.asString()}")
-    .getOrElse(s"${entityType.asString}_${mailAddress.asString()}")
+  override def asString(): String = keyPrefix.map(prefix => s"${prefix.value}_${entityType.asString}_${RateLimitedAddress.asKey(mailAddress)}")
+    .getOrElse(s"${entityType.asString}_${RateLimitedAddress.asKey(mailAddress)}")
 }
 
 /**

@@ -69,6 +69,39 @@ class PerSenderRateLimitTest {
   }
 
   @Test
+  def subAddressesAndCaseVariantsOfASenderShouldShareItsLimit(): Unit = {
+    val mailet = testee(FakeMailetConfig.builder()
+      .mailetName("PerSenderRateLimit")
+      .setProperty("duration", "20s")
+      .setProperty("precision", "1s")
+      .setProperty("count", "1")
+      .setProperty("exceededProcessor", "tooMuchMails")
+      .build())
+
+    val mail1: Mail = FakeMail.builder()
+      .name("mail1")
+      .sender("ALICE@domain.tld")
+      .recipients("rcpt1@linagora.com")
+      .state("transport")
+      .build()
+
+    val mail2: Mail = FakeMail.builder()
+      .name("mail2")
+      .sender("alice+1@domain.tld")
+      .recipients("rcpt1@linagora.com")
+      .state("transport")
+      .build()
+
+    mailet.service(mail1)
+    mailet.service(mail2)
+
+    SoftAssertions.assertSoftly(softly => {
+      softly.assertThat(mail1.getState).isEqualTo("transport")
+      softly.assertThat(mail2.getState).isEqualTo("tooMuchMails")
+    })
+  }
+
+  @Test
   def rateLimitedEmailsShouldFlowToTheIntendedProcessor(): Unit = {
     val mailet = testee(FakeMailetConfig.builder()
       .mailetName("PerSenderRateLimit")
