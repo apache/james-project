@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.routes
 
+import java.util.concurrent.atomic.AtomicLong
+
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.numeric.NonNegInt
@@ -118,12 +120,61 @@ case class BackReference(name: MethodName, path: JsonPath, resultOf: MethodCallI
 
 case class InvalidResultReferenceException(message: String) extends IllegalArgumentException
 
+object JsonSize {
+  /** An estimate of the serialized size of the value, computed up to the given limit. */
+  def upTo(value: JsValue, limit: Long): Long = {
+    var size = 0L
+    var pending: List[JsValue] = List(value)
+    while (pending.nonEmpty && size <= limit) {
+      val head = pending.head
+      pending = pending.tail
+      head match {
+        case JsObject(underlying) =>
+          size += 2
+          underlying.foreach { case (key, entryValue) =>
+            size += key.length + 4
+            pending = entryValue :: pending
+          }
+        case JsArray(values) =>
+          size += 2 + values.size
+          pending = values.toList ++ pending
+        case JsString(string) => size += string.length + 2
+        // Numbers, booleans and null
+        case _ => size += 8
+      }
+    }
+    size
+  }
+}
+
+/**
+ * Shared by the contexts of one request: bounds what the resolution of its result references produces.
+ * It carries no data of the request, so it plays no part in the equality of contexts.
+ */
+class ResultReferenceBudget(max: Long) {
+  private val used: AtomicLong = new AtomicLong(0)
+
+  def consume(value: JsValue): Boolean = {
+    val remaining = max - used.get()
+    used.addAndGet(JsonSize.upTo(value, remaining)) <= max
+  }
+
+  override def equals(other: Any): Boolean = other.isInstanceOf[ResultReferenceBudget]
+
+  override def hashCode(): Int = 0
+}
+
+object ProcessingContext {
+  val MAX_RESOLVED_RESULT_REFERENCES_SIZE: Long = 10L * 1024 * 1024
+}
+
 case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, ServerId],
-                             private val invocations: ImmutableMap[MethodCallId, Invocation]) {
+                             private val invocations: ImmutableMap[MethodCallId, Invocation],
+                             private val resultReferenceBudget: ResultReferenceBudget = new ResultReferenceBudget(ProcessingContext.MAX_RESOLVED_RESULT_REFERENCES_SIZE)) {
 
-  def recordCreatedId(clientId: ClientId, serverId: ServerId): ProcessingContext = ProcessingContext(creationIds + (clientId -> serverId), invocations)
+  def recordCreatedId(clientId: ClientId, serverId: ServerId): ProcessingContext = ProcessingContext(creationIds + (clientId -> serverId), invocations, resultReferenceBudget)
 
-  def recordInvocation(invocation: Invocation): ProcessingContext = ProcessingContext(creationIds, invocations + (invocation.methodCallId -> invocation))
+  def recordInvocation(invocation: Invocation): ProcessingContext = ProcessingContext(creationIds, invocations + (invocation.methodCallId -> invocation), resultReferenceBudget)
 
   def resolveBackReferences(invocation: Invocation): Either[InvalidResultReferenceException, Invocation] =
     backReferenceResolver.reads(invocation.arguments.value) match {
@@ -195,6 +246,11 @@ case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, Ser
   private def resolve(backReference: BackReference): JsResult[JsValue] = retrieveInvocation(backReference.resultOf)
     .map(backReference.resolve)
     .getOrElse(JsError("Back reference could not be resolved"))
+    .flatMap(resolved => if (resultReferenceBudget.consume(resolved)) {
+      JsSuccess(resolved)
+    } else {
+      JsError(s"The result references of this request resolve to more than ${ProcessingContext.MAX_RESOLVED_RESULT_REFERENCES_SIZE} bytes")
+    })
 
   private def resolveCreationId(creationId: String): Either[IllegalArgumentException, ServerId] =
     Id.validate(creationId)
