@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +31,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -548,6 +550,33 @@ class StripAttachmentTest {
 
         assertThat(AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of("rawIcalendar"), MAP_STRING_BYTES_CLASS))
             .hasValueSatisfying(map -> assertThat(map).containsOnlyKeys("invite.ics", "invite-1.ics"));
+    }
+
+    @Test
+    void serviceShouldStoreManyPartsWithTheSameNameInLinearTime() throws Exception {
+        StripAttachment mailet = new StripAttachment();
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("mimeType", "text/calendar")
+            .setProperty("attribute", "rawIcalendar")
+            .build());
+
+        int partCount = 10_000;
+        String raw = "Content-Type: multipart/mixed; boundary=\"outer\"\r\n\r\n"
+            + ("--outer\r\n"
+            + "Content-Type: text/calendar; method=REQUEST; name=\"invite.ics\"\r\n\r\n"
+            + "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n").repeat(partCount)
+            + "--outer--\r\n";
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(new MimeMessage(Session.getDefaultInstance(new Properties()),
+                new ByteArrayInputStream(raw.getBytes(StandardCharsets.US_ASCII))))
+            .build();
+
+        assertTimeoutPreemptively(Duration.ofSeconds(30), () -> mailet.service(mail));
+
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of("rawIcalendar"), MAP_STRING_BYTES_CLASS))
+            .hasValueSatisfying(map -> assertThat(map).hasSize(partCount).containsKey("invite-9999.ics"));
     }
 
     @Test
