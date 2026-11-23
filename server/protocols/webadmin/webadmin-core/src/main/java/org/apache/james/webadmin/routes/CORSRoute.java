@@ -19,13 +19,14 @@
 
 package org.apache.james.webadmin.routes;
 
-import java.util.Optional;
-
 import org.apache.james.webadmin.Routes;
 
 import spark.Service;
 
 public class CORSRoute implements Routes {
+    // Fixed lists: echoing the request would grant any method or header, eg X-HTTP-Method-Override
+    public static final String ALLOWED_METHODS = "GET, POST, PUT, PATCH, DELETE";
+    public static final String ALLOWED_HEADERS = "Content-Type, Accept, Authorization, Password";
 
     @Override
     public String getBasePath() {
@@ -35,13 +36,8 @@ public class CORSRoute implements Routes {
     @Override
     public void define(Service service) {
         service.options("/*", (request, response) -> {
-
-            Optional.ofNullable(request.headers("Access-Control-Request-Headers"))
-                .ifPresent(header -> response.header("Access-Control-Allow-Headers", header));
-
-            Optional.ofNullable(request.headers("Access-Control-Request-Method"))
-                .ifPresent(header -> response.header("Access-Control-Allow-Methods", header));
-
+            response.header("Access-Control-Allow-Methods", ALLOWED_METHODS);
+            response.header("Access-Control-Allow-Headers", ALLOWED_HEADERS);
             return "";
         });
     }

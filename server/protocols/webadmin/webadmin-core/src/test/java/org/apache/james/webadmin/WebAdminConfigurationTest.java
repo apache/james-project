@@ -125,21 +125,21 @@ class WebAdminConfigurationTest {
                 .enabled()
                 .port(PORT)
                 .corsEnabled()
+                .urlCORSOrigin("https://admin.example")
                 .build())
             .extracting(WebAdminConfiguration::isEnableCORS)
             .isEqualTo(true);
     }
 
     @Test
-    void builderShouldAcceptAllOriginsByDefault() {
-        assertThat(
+    void builderShouldRequireAnOriginWhenCORSIsEnabled() {
+        assertThatThrownBy(() ->
             WebAdminConfiguration.builder()
                 .enabled()
                 .port(PORT)
                 .corsEnabled()
                 .build())
-            .extracting(WebAdminConfiguration::getUrlCORSOrigin)
-            .isEqualTo("*");
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
