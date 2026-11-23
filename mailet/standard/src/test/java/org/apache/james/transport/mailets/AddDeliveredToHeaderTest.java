@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -79,4 +80,21 @@ public class AddDeliveredToHeaderTest {
             .isEqualTo(expectedResult);
     }
 
+    @Test
+    public void serviceShouldRemoveTheDeliveredToFieldsOfTheMessage() throws Exception {
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .recipient(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader(AddDeliveredToHeader.DELIVERED_TO, "victim@domain.tld")
+                .setText("content"))
+            .build();
+
+        testee.service(mail);
+
+        assertThat(mail.getMessage().getHeader(AddDeliveredToHeader.DELIVERED_TO)).isNull();
+        assertThat(mail.getPerRecipientSpecificHeaders().getHeadersForRecipient(MailAddressFixture.ANY_AT_JAMES))
+            .extracting(PerRecipientHeaders.Header::getValue)
+            .containsExactly(MailAddressFixture.ANY_AT_JAMES.asString());
+    }
 }

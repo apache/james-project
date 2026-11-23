@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
@@ -41,6 +42,12 @@ public class AddDeliveredToHeader extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
+        // A Delivered-To written by the sender would be taken for one set by this server
+        MimeMessage message = mail.getMessage();
+        if (message != null && message.getHeader(DELIVERED_TO) != null) {
+            message.removeHeader(DELIVERED_TO);
+            message.saveChanges();
+        }
         for (MailAddress recipient: mail.getRecipients()) {
             mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder()
                 .name(DELIVERED_TO)
