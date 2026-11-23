@@ -20,6 +20,7 @@ package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -29,6 +30,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class DurationParserTest {
+    @Test
+    void parseShouldQuicklyRejectLongWhitespaceRuns() {
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThatThrownBy(() -> DurationParser.parse("1" + " ".repeat(100_000) + "!"))
+                .isInstanceOf(NumberFormatException.class));
+    }
+
     @Test
     void parseShouldUseMsAsDefaultUnit() {
         assertThat(DurationParser.parse("2"))
