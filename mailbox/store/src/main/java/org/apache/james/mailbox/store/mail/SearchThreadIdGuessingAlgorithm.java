@@ -57,7 +57,11 @@ public class SearchThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorith
 
     @Override
     public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) {
-        MultimailboxesSearchQuery expression = buildSearchQuery(mimeMessageId, inReplyTo, references, subject);
+        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(mimeMessageId, inReplyTo, references);
+        if (mimeMessageIds.isEmpty()) {
+            return Mono.just(ThreadId.fromBaseMessageId(messageId));
+        }
+        MultimailboxesSearchQuery expression = buildSearchQuery(mimeMessageIds, subject);
 
         return Flux.from(mailboxManager.search(expression, session, 1))
             .collectList()
@@ -82,9 +86,7 @@ public class SearchThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorith
             .switchIfEmpty(Mono.error(() -> new ThreadNotFoundException(threadId)));
     }
 
-    private MultimailboxesSearchQuery buildSearchQuery(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject) {
-        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(mimeMessageId, inReplyTo, references);
-
+    private MultimailboxesSearchQuery buildSearchQuery(Set<MimeMessageId> mimeMessageIds, Optional<Subject> subject) {
         ImmutableList.Builder<SearchQuery.Criterion> mimeMessageIdCriteriaBuilder = ImmutableList.builder();
         mimeMessageIds.forEach(value -> {
             mimeMessageIdCriteriaBuilder.add(SearchQuery.mimeMessageID(value.getValue()));
@@ -106,6 +108,8 @@ public class SearchThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorith
         mimeMessageId.ifPresent(mimeMessageIds::add);
         inReplyTo.ifPresent(mimeMessageIds::add);
         references.ifPresent(mimeMessageIds::addAll);
+        // A blank value would match every message having the header
+        mimeMessageIds.removeIf(value -> value.getValue().isBlank());
         return mimeMessageIds;
     }
 }
