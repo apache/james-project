@@ -127,7 +127,7 @@ public class UseHeaderRecipients extends GenericMailet {
         mail.setState(Mail.GHOST);
     }
 
-    private static boolean relayAllowed(Mail mail) {
+    static boolean relayAllowed(Mail mail) {
         return mail.loggedInUser().isPresent()
             || mail.getAttribute(SMTP_AUTH_NETWORK)
                 .map(attribute -> attribute.getValue().value())
