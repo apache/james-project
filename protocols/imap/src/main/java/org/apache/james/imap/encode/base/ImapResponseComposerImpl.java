@@ -34,6 +34,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.MessageFlags;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.ImapResponseWriter;
@@ -221,7 +222,9 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         
         String[] userFlags = flags.getUserFlags();
         for (String userFlag : userFlags) {
-            message(userFlag);
+            if (MessageFlags.isKeyword(userFlag)) {
+                message(userFlag);
+            }
         }
         closeParen();
         return this;
