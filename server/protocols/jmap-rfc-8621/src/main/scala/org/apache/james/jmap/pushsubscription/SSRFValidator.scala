@@ -27,14 +27,19 @@ import com.google.common.net.InetAddresses
 import io.netty.resolver.{AddressResolver, AddressResolverGroup, InetNameResolver}
 import io.netty.util.concurrent.{EventExecutor, Promise}
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
-import org.apache.james.jmap.pushsubscription.SSRFValidator.{ALLOWED_SCHEMES, HostResolver, SYSTEM_HOST_RESOLVER, forbiddenReason}
+import org.apache.james.jmap.pushsubscription.SSRFValidator.{ALLOWED_SCHEMES, HostResolver, LOGGER, SYSTEM_HOST_RESOLVER, forbiddenReason}
+import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 
+case class ForbiddenPushServerAddressException(message: String) extends IllegalArgumentException(message)
+
 object SSRFValidator {
+  private val LOGGER = LoggerFactory.getLogger(classOf[SSRFValidator])
+
   /**
    * Resolves a host name into the addresses it points to. Extracted as a function so that tests can
    * exercise multi-record and DNS rebinding scenarios without relying on an actual DNS server.
@@ -164,8 +169,10 @@ class SSRFValidator(hostResolver: HostResolver = SYSTEM_HOST_RESOLVER,
 
     addresses.flatMap(address => policy(address).map(reason => (address, reason)))
       .headOption match {
-        case Some((address, reason)) => throw new IllegalArgumentException(
-          s"$context is targeting $reason $address. This could be an attempt for server-side request forgery.")
+        case Some((address, reason)) =>
+          LOGGER.warn("{} is targeting {} {}", context, reason, address)
+          throw ForbiddenPushServerAddressException(
+            s"$context is targeting $reason. This could be an attempt for server-side request forgery.")
         case None => addresses
       }
   }
