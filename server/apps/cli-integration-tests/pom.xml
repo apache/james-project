@@ -89,6 +89,10 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <reuseForks>false</reuseForks>
+                    <systemPropertyVariables>
+                        <!-- The servers of these tests have no conf directory to hold a generated JMX password file -->
+                        <james.jmx.credential.generation>false</james.jmx.credential.generation>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
