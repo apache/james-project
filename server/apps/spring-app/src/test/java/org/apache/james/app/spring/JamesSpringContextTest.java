@@ -48,7 +48,7 @@ class JamesSpringContextTest {
         File passwordFile = new File("../conf/jmxremote.password");
         passwordFile.createNewFile();
         try (FileOutputStream out = new FileOutputStream(passwordFile)) {
-            out.write("james-admin changeme\r\n".getBytes());
+            out.write("james-admin test-password\r\n".getBytes());
             out.flush();
         }
         context = new JamesServerApplicationContext(new String[] { "META-INF/org/apache/james/spring-server.xml" });

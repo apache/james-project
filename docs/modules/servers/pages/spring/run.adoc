@@ -48,8 +48,7 @@ The `conf` folder ships every configuration file with sane defaults, which you n
 production. Read xref:spring/configure/index.adoc[the configuration section]. At the very least:
 
 * Set the postmaster address in `conf/mailetcontainer.xml`.
-* Change the JMX credentials in `conf/jmxremote.password`, which ships with a default `james-admin` / `changeme`
-pair.
+* Read the JMX password generated at first start in `conf/jmxremote.password`, or set your own there.
 * Generate a keystore if you intend to run SSL or STARTTLS:
 
 ....
@@ -82,8 +81,8 @@ xref:spring/operate/cli.adoc[command line interface], which talks JMX:
 
 ....
 $ cd bin
-$ ./james-cli.sh -h 127.0.0.1 -p 9999 -username james-admin -password changeme adddomain mydomain.tld
-$ ./james-cli.sh -h 127.0.0.1 -p 9999 -username james-admin -password changeme adduser myuser@mydomain.tld mypassword
+$ ./james-cli.sh -h 127.0.0.1 -p 9999 -username james-admin -password <password> adddomain mydomain.tld
+$ ./james-cli.sh -h 127.0.0.1 -p 9999 -username james-admin -password <password> adduser myuser@mydomain.tld mypassword
 ....
 
 Virtual hosting is enabled by default, so the user name is the full email address.

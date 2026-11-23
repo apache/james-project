@@ -15,6 +15,6 @@ include::partial$spring/deprecated.adoc[]
 include::partial$configure/jmx.adoc[]
 
 NOTE: Unlike the Guice applications, the {server-name} always starts its JMX server: there is no `jmx.enabled`
-switch, and credentials are never generated. `conf/jmxremote.password` ships with a default `james-admin` /
-`changeme` pair *that you must change*, and `conf/jmxremote.access` grants it `readwrite`. Both files are read
-relatively to the `conf` folder.
+switch. When `conf/jmxremote.password` holds no credentials, as shipped, a random password is generated for
+`james-admin` at start, in a file readable by its owner only; `conf/jmxremote.access` grants it `readwrite`. Both
+files are read relatively to the `conf` folder.
