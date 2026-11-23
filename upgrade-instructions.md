@@ -25,7 +25,7 @@ Change list:
  - [JAMES-4210 SMTP PLAIN/LOGIN authentication honors auth.requireSSL](#james-4210-smtp-plainlogin-authentication-honors-authrequiressl)
  - [JAMES-4210 POP3 USER/PASS requires TLS by default](#james-4210-pop3-userpass-requires-tls-by-default)
  - [JAMES-4210 ManageSieve SASL adoption](#james-4210-managesieve-sasl-adoption)
- - [JAMES-4225 Blob ids default to 128 bits of entropy](#james-4225-blob-ids-default-to-128-bits-of-entropy)
+ - [JAMES-4225 Configurable blob id entropy](#james-4225-configurable-blob-id-entropy)
  - [Dropping unneeded Cassandra schema columns](#dropping-unneeded-cassandra-schema-columns)
  - [Cassandra schema version 16: mandatory message denormalization migration](#cassandra-schema-version-16-mandatory-message-denormalization-migration)
  - [Migration of embedded mail queue broker from ActiveMQ Classic to ActiveMQ Artemis](#migration-of-embedded-mail-queue-broker-from-activemq-classic-to-activemq-artemis)
@@ -345,22 +345,18 @@ curl -XPOST 'http://ip:port/cassandra/version/upgrade' -d '16'
 
 Later releases will drop this backward support and drop soon-to-be-useless collumns.
 
-### JAMES-4225 Blob ids default to 128 bits of entropy
+### JAMES-4225 Configurable blob id entropy
 
 Date: 05/09/2026
 
 Concerned products: all products using a blob store
 
-Blob ids now carry 128 bits of entropy instead of the full 256 bits of a SHA-256, which shortens a body
-blob id from 50 to 28 characters in the object key and in every metadata store column referencing it.
+Blob ids keep the full 256 bits of a SHA-256 by default. `james.blobid.entropy=128` in `jvm.properties`
+shortens a body blob id from 50 to 28 characters in the object key and in every metadata store column
+referencing it.
 
-Existing blobs stay readable. However, content stored under the previous spelling will not deduplicate
-against its shorter counterpart until it is rewritten. To keep the previous behaviour, add to
-`jvm.properties`:
-
-```
-james.blobid.entropy=256
-```
+Deployments that ran a build defaulting to 128 bits should set `james.blobid.entropy=128` to keep
+deduplicating against the blobs they stored. Blobs stay readable either way.
 
 ### JAMES-4210 SMTP PLAIN/LOGIN authentication honors auth.requireSSL
 

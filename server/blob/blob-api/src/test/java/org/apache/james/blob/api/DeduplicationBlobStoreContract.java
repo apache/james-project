@@ -47,7 +47,7 @@ public interface DeduplicationBlobStoreContract {
     String SHORT_STRING = "toto";
     /** The SHA-256 of {@link #SHORT_STRING}, which every content addressed store spells its id from. */
     byte[] SHORT_STRING_HASH = BaseEncoding.base64Url().decode("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY=");
-    /** That hash, truncated and spelled at the entropy the tests run with: "MfemXjFVhqwZi9eYtmKc5A" at the default 128 bits. */
+    /** That hash, truncated and spelled at the entropy the tests run with: "MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY=" at the default 256 bits. */
     String SHORT_STRING_BLOB_ID = new BlobIdEncoding(BaseEncoding.base64Url()).encode(BlobIdEntropy.truncate(SHORT_STRING_HASH));
 
     BlobStore testee();

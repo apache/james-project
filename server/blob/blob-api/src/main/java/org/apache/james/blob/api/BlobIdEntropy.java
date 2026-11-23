@@ -29,14 +29,15 @@ import com.google.common.base.Preconditions;
 /**
  * How many bits of entropy a blob id carries, as set by the {@code james.blobid.entropy} system property.
  *
- * <p>Defaults to {@value #DEFAULT_ENTROPY_BITS} bits: the birthday bound puts a collision at
- * {@code n^2/2^129}, ie. 1.5e-19 for ten billion blobs, and truncating a cryptographic hash to its
- * leading bits is standard practice (NIST SP 800-107, FIPS 180-4). {@value #MAX_ENTROPY_BITS}, the full
- * SHA-256 output, spells ids out the way releases up to 3.9.x did.</p>
+ * <p>Defaults to {@value #DEFAULT_ENTROPY_BITS} bits, the full SHA-256 output: a deduplicated blob is then
+ * addressed by the whole hash of its content, as in releases up to 3.9.x. Shorter ids, down to 128 bits,
+ * cost less to store: the birthday bound puts a collision at {@code n^2/2^129}, ie. 1.5e-19 for ten
+ * billion blobs, and truncating a cryptographic hash to its leading bits is standard practice (NIST SP
+ * 800-107, FIPS 180-4).</p>
  */
 public class BlobIdEntropy {
     public static final String ENTROPY_BITS_PROPERTY = "james.blobid.entropy";
-    public static final int DEFAULT_ENTROPY_BITS = 128;
+    public static final int DEFAULT_ENTROPY_BITS = 256;
     @VisibleForTesting
     static final int MIN_ENTROPY_BITS = 96;
     /** The full SHA-256 output: the longest an id can usefully get. */

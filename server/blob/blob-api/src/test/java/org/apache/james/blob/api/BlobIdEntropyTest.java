@@ -49,8 +49,8 @@ class BlobIdEntropyTest {
     }
 
     @Test
-    void defaultShouldBeTruncated() {
-        assertThat(BlobIdEntropy.DEFAULT_ENTROPY_BITS).isEqualTo(128);
+    void defaultShouldBeTheFullHash() {
+        assertThat(BlobIdEntropy.DEFAULT_ENTROPY_BITS).isEqualTo(256);
     }
 
     @Test
