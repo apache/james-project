@@ -150,7 +150,11 @@ case class Rights(rights: Map[EntryKey, Seq[Right]]) {
 
   def mayAddItems(entryKey: EntryKey): RightsApplicability = containsRight(entryKey, Right.Insert)
 
-  def mayRemoveItems(entryKey: EntryKey): RightsApplicability = containsRight(entryKey, Right.DeleteMessages)
+  // RFC 8621 section 2: mayRemoveItems maps to the 't' and 'e' rights
+  def mayRemoveItems(entryKey: EntryKey): RightsApplicability = (containsRight(entryKey, Right.DeleteMessages), containsRight(entryKey, Right.Expunge)) match {
+    case (Applicable, Applicable) => Applicable
+    case _ => NotApplicable
+  }
 
   def mayCreateChild(entryKey: EntryKey): RightsApplicability = Unsupported
 
