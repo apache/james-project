@@ -74,11 +74,14 @@ S: f1 OK FETCH completed.
 C: f9 STORE 1 +FLAGS ("foo")
 S: f9 BAD STORE failed. Illegal arguments.
 
-# flag-extension is reserved to future standards: an undefined system flag is dropped
+# flag-extension is reserved to future standards: an undefined system flag is rejected
 C: f10 STORE 1 +FLAGS (\Bogus \Seen)
-S: \* 1 FETCH \(FLAGS \(\\Deleted \\Flagged \\Recent \\Seen\)\)
-S: f10 OK STORE completed.
+S: f10 BAD STORE failed. Illegal arguments.
 
-C: f11 FETCH 1 (FLAGS)
-S: \* 1 FETCH \(FLAGS \(\\Deleted \\Flagged \\Recent \\Seen\)\)
-S: f11 OK FETCH completed.
+# Rather than turning a replace into a wipe of all the flags
+C: f11 STORE 1 FLAGS (\Bogus)
+S: f11 BAD STORE failed. Illegal arguments.
+
+C: f12 FETCH 1 (FLAGS)
+S: \* 1 FETCH \(FLAGS \(\\Deleted \\Flagged \\Recent\)\)
+S: f12 OK FETCH completed.

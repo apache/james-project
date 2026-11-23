@@ -75,10 +75,9 @@ class DecoderUtilsTest {
 
     @ParameterizedTest
     @ValueSource(strings = {EXTENSION_FLAG, "\\Bogus", "\\Other", "\\"})
-    void setFlagShouldDropUndefinedSystemFlags(String flag) throws Exception {
-        Flags flags = new Flags();
-        DecoderUtils.setFlag(flag, flags);
-        assertThat(flags).isEqualTo(new Flags());
+    void setFlagShouldRejectUndefinedSystemFlags(String flag) {
+        assertThatThrownBy(() -> DecoderUtils.setFlag(flag, new Flags()))
+            .isInstanceOf(DecodingException.class);
     }
 
     @ParameterizedTest
