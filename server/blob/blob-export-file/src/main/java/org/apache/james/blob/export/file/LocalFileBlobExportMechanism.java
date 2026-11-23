@@ -118,13 +118,25 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
     private String copyBlobToFile(BlobId blobId,
                                   Optional<String> fileCustomPrefix,
                                   Optional<FileExtension> fileExtension) {
+        // The prefix holds a user name: it must be a plain file name
+        fileCustomPrefix
+            .filter(prefix -> prefix.contains("/") || prefix.contains("\\") || prefix.contains(".."))
+            .ifPresent(prefix -> {
+                throw new BlobExportException("Refusing to export the blob",
+                    new IllegalArgumentException("'" + prefix + "' is not a plain file name"));
+            });
+        String fileName = ExportedFileNamesGenerator.generateFileName(fileCustomPrefix, blobId, fileExtension);
         try {
             File exportingDirectory = fileSystem.getFile(configuration.exportDirectory);
             FileUtils.forceMkdir(exportingDirectory);
 
-            String fileName = ExportedFileNamesGenerator.generateFileName(fileCustomPrefix, blobId, fileExtension);
             String fileURL = configuration.exportDirectory + "/" + fileName;
             File file = fileSystem.getFile(fileURL);
+            // A blob id may hold '/' (folder hierarchy, base64): the file may land in a sub directory, never outside
+            if (!file.toPath().toAbsolutePath().normalize().startsWith(exportingDirectory.toPath().toAbsolutePath().normalize())) {
+                throw new BlobExportException("Refusing to export the blob",
+                    new IllegalArgumentException("'" + fileName + "' is outside the export directory"));
+            }
             try (InputStream in = blobStore.read(blobStore.getDefaultBucketName(), blobId, LOW_COST)) {
                 FileUtils.copyToFile(in, file);
             }
