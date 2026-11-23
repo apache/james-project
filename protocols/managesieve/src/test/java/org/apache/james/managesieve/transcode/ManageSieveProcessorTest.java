@@ -57,6 +57,11 @@ class ManageSieveProcessorTest {
     }
 
     @Test
+    void nonAsciiCommandShouldNotMatchStartTls() throws Exception {
+        assertThat(processor.handleRequest(session, "ſTARTTLS\r\n")).startsWith("NO");
+    }
+
+    @Test
     void putScriptShouldStoreTheLiteralOctetsWhenNoFinalLineBreak() throws Exception {
         String response = processor.handleRequest(session, "PUTSCRIPT \"a\" {11+}\r\n# é\r\nkeep;\r\n");
 

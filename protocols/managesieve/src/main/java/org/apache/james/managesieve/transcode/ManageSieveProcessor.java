@@ -29,6 +29,8 @@ import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.util.ParserUtils;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 
+import com.google.common.base.Ascii;
+
 public class ManageSieveProcessor {
 
     public static final String AUTHENTICATE = "AUTHENTICATE";
@@ -102,7 +104,7 @@ public class ManageSieveProcessor {
         if (session.getState() == Session.State.AUTHENTICATION_IN_PROGRESS) {
             return argumentParser.authenticate(session, arguments);
         }
-        if (command.equalsIgnoreCase(AUTHENTICATE)) {
+        if (Ascii.equalsIgnoreCase(command, AUTHENTICATE)) {
             if (StringUtils.countMatches(arguments, "\"") == 4) {
                 argumentParser.chooseMechanism(session, arguments);
                 int bracket1 = arguments.indexOf('\"');
@@ -113,31 +115,31 @@ public class ManageSieveProcessor {
                 return argumentParser.authenticate(session, arguments.substring(bracket3 + 1, bracket4));
             }
             return argumentParser.chooseMechanism(session, arguments);
-        } else if (command.equalsIgnoreCase(CAPABILITY)) {
+        } else if (Ascii.equalsIgnoreCase(command, CAPABILITY)) {
             return argumentParser.capability(session, arguments);
-        } else if (command.equalsIgnoreCase(CHECKSCRIPT)) {
+        } else if (Ascii.equalsIgnoreCase(command, CHECKSCRIPT)) {
             return argumentParser.checkScript(session, rawArguments);
-        } else if (command.equalsIgnoreCase(DELETESCRIPT)) {
+        } else if (Ascii.equalsIgnoreCase(command, DELETESCRIPT)) {
             return argumentParser.deleteScript(session, arguments);
-        } else if (command.equalsIgnoreCase(GETSCRIPT)) {
+        } else if (Ascii.equalsIgnoreCase(command, GETSCRIPT)) {
             return argumentParser.getScript(session, arguments);
-        } else if (command.equalsIgnoreCase(HAVESPACE)) {
+        } else if (Ascii.equalsIgnoreCase(command, HAVESPACE)) {
             return argumentParser.haveSpace(session, arguments);
-        } else if (command.equalsIgnoreCase(LISTSCRIPTS)) {
+        } else if (Ascii.equalsIgnoreCase(command, LISTSCRIPTS)) {
             return argumentParser.listScripts(session, arguments);
-        } else if (command.equalsIgnoreCase(LOGOUT)) {
+        } else if (Ascii.equalsIgnoreCase(command, LOGOUT)) {
             argumentParser.logout();
-        } else if (command.equalsIgnoreCase(NOOP)) {
+        } else if (Ascii.equalsIgnoreCase(command, NOOP)) {
             return argumentParser.noop(arguments);
-        } else if (command.equalsIgnoreCase(PUTSCRIPT)) {
+        } else if (Ascii.equalsIgnoreCase(command, PUTSCRIPT)) {
             return argumentParser.putScript(session, rawArguments);
-        } else if (command.equalsIgnoreCase(RENAMESCRIPT)) {
+        } else if (Ascii.equalsIgnoreCase(command, RENAMESCRIPT)) {
             return argumentParser.renameScript(session, arguments);
-        } else if (command.equalsIgnoreCase(SETACTIVE)) {
+        } else if (Ascii.equalsIgnoreCase(command, SETACTIVE)) {
             return argumentParser.setActive(session, arguments);
-        } else if (command.equalsIgnoreCase(STARTTLS)) {
+        } else if (Ascii.equalsIgnoreCase(command, STARTTLS)) {
             return argumentParser.startTLS(session);
-        } else if (command.equalsIgnoreCase(UNAUTHENTICATE)) {
+        } else if (Ascii.equalsIgnoreCase(command, UNAUTHENTICATE)) {
             return argumentParser.unauthenticate(session, arguments);
         }
         return "NO " + ParserUtils.quote("unknown " + command + " command");
