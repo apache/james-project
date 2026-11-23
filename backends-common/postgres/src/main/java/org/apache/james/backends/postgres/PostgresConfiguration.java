@@ -26,12 +26,15 @@ import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.james.util.DurationParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
 import io.r2dbc.postgresql.client.SSLMode;
 
 public class PostgresConfiguration {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresConfiguration.class);
     public static final String POSTGRES_CONFIGURATION_NAME = "postgres";
 
     public static final String DATABASE_NAME = "database.name";
@@ -56,7 +59,8 @@ public class PostgresConfiguration {
     public static final String BY_PASS_RLS_POOL_MAX_SIZE = "by-pass-rls.pool.max.size";
     public static final int BY_PASS_RLS_POOL_MAX_SIZE_DEFAULT_VALUE = 10;
     public static final String SSL_MODE = "ssl.mode";
-    public static final String SSL_MODE_DEFAULT_VALUE = "allow";
+    public static final String SSL_MODE_DEFAULT_VALUE = "prefer";
+    public static final String SSL_ROOT_CERT_FILE = "ssl.root.cert.file";
     public static final String JOOQ_REACTIVE_TIMEOUT = "jooq.reactive.timeout";
     public static final Duration JOOQ_REACTIVE_TIMEOUT_DEFAULT_VALUE = Duration.ofSeconds(10);
     public static final String ATTACHMENT_STORAGE_ENABLED = "attachment.storage.enabled";
@@ -96,6 +100,7 @@ public class PostgresConfiguration {
         private Optional<Integer> byPassRLSPoolInitialSize = Optional.empty();
         private Optional<Integer> byPassRLSPoolMaxSize = Optional.empty();
         private Optional<String> sslMode = Optional.empty();
+        private Optional<String> sslRootCertFile = Optional.empty();
         private Optional<Duration> jooqReactiveTimeout = Optional.empty();
         private Optional<Boolean> attachmentStorageEnabled = Optional.empty();
 
@@ -239,6 +244,16 @@ public class PostgresConfiguration {
             return this;
         }
 
+        public Builder sslRootCertFile(Optional<String> sslRootCertFile) {
+            this.sslRootCertFile = sslRootCertFile;
+            return this;
+        }
+
+        public Builder sslRootCertFile(String sslRootCertFile) {
+            this.sslRootCertFile = Optional.of(sslRootCertFile);
+            return this;
+        }
+
         public Builder jooqReactiveTimeout(Optional<Duration> jooqReactiveTimeout) {
             this.jooqReactiveTimeout = jooqReactiveTimeout;
             return this;
@@ -275,6 +290,7 @@ public class PostgresConfiguration {
                     byPassRLSPoolInitialSize.orElse(BY_PASS_RLS_POOL_INITIAL_SIZE_DEFAULT_VALUE),
                     byPassRLSPoolMaxSize.orElse(BY_PASS_RLS_POOL_MAX_SIZE_DEFAULT_VALUE),
                     SSLMode.fromValue(sslMode.orElse(SSL_MODE_DEFAULT_VALUE)),
+                    sslRootCertFile.filter(file -> !file.isBlank()),
                     jooqReactiveTimeout.orElse(JOOQ_REACTIVE_TIMEOUT_DEFAULT_VALUE),
                     attachmentStorageEnabled.orElse(ATTACHMENT_STORAGE_ENABLED_DEFAULT_VALUE));
         }
@@ -285,7 +301,7 @@ public class PostgresConfiguration {
     }
 
     public static PostgresConfiguration from(Configuration propertiesConfiguration) {
-        return builder()
+        PostgresConfiguration configuration = builder()
                 .databaseName(Optional.ofNullable(propertiesConfiguration.getString(DATABASE_NAME)))
                 .databaseSchema(Optional.ofNullable(propertiesConfiguration.getString(DATABASE_SCHEMA)))
                 .host(Optional.ofNullable(propertiesConfiguration.getString(HOST)))
@@ -300,10 +316,16 @@ public class PostgresConfiguration {
                 .byPassRLSPoolInitialSize(Optional.ofNullable(propertiesConfiguration.getInteger(BY_PASS_RLS_POOL_INITIAL_SIZE, null)))
                 .byPassRLSPoolMaxSize(Optional.ofNullable(propertiesConfiguration.getInteger(BY_PASS_RLS_POOL_MAX_SIZE, null)))
                 .sslMode(Optional.ofNullable(propertiesConfiguration.getString(SSL_MODE)))
+                .sslRootCertFile(Optional.ofNullable(propertiesConfiguration.getString(SSL_ROOT_CERT_FILE)))
                 .jooqReactiveTimeout(Optional.ofNullable(propertiesConfiguration.getString(JOOQ_REACTIVE_TIMEOUT))
                         .map(value -> DurationParser.parse(value, ChronoUnit.SECONDS)))
                 .attachmentStorageEnabled(propertiesConfiguration.getBoolean(ATTACHMENT_STORAGE_ENABLED, ATTACHMENT_STORAGE_ENABLED_DEFAULT_VALUE))
                 .build();
+        if (configuration.sslMode == SSLMode.DISABLE || configuration.sslMode == SSLMode.ALLOW || configuration.sslMode == SSLMode.PREFER) {
+            LOGGER.warn("Postgres {} is '{}': the connection to the database may be in cleartext, or to a server whose "
+                + "certificate is not checked. Use 'verify-full' with {} to secure it.", SSL_MODE, propertiesConfiguration.getString(SSL_MODE, SSL_MODE_DEFAULT_VALUE), SSL_ROOT_CERT_FILE);
+        }
+        return configuration;
     }
 
     private final String host;
@@ -318,6 +340,7 @@ public class PostgresConfiguration {
     private final Integer byPassRLSPoolInitialSize;
     private final Integer byPassRLSPoolMaxSize;
     private final SSLMode sslMode;
+    private final Optional<String> sslRootCertFile;
     private final Duration jooqReactiveTimeout;
     private final boolean attachmentStorageEnabled;
 
@@ -325,7 +348,7 @@ public class PostgresConfiguration {
                                   Credential defaultCredential, Credential byPassRLSCredential, RowLevelSecurity rowLevelSecurity,
                                   Integer poolInitialSize, Integer poolMaxSize,
                                   Integer byPassRLSPoolInitialSize, Integer byPassRLSPoolMaxSize,
-                                  SSLMode sslMode, Duration jooqReactiveTimeout, boolean attachmentStorageEnabled) {
+                                  SSLMode sslMode, Optional<String> sslRootCertFile, Duration jooqReactiveTimeout, boolean attachmentStorageEnabled) {
         this.host = host;
         this.port = port;
         this.databaseName = databaseName;
@@ -338,6 +361,7 @@ public class PostgresConfiguration {
         this.byPassRLSPoolInitialSize = byPassRLSPoolInitialSize;
         this.byPassRLSPoolMaxSize = byPassRLSPoolMaxSize;
         this.sslMode = sslMode;
+        this.sslRootCertFile = sslRootCertFile;
         this.jooqReactiveTimeout = jooqReactiveTimeout;
         this.attachmentStorageEnabled = attachmentStorageEnabled;
     }
@@ -390,6 +414,10 @@ public class PostgresConfiguration {
         return sslMode;
     }
 
+    public Optional<String> getSslRootCertFile() {
+        return sslRootCertFile;
+    }
+
     public Duration getJooqReactiveTimeout() {
         return jooqReactiveTimeout;
     }
@@ -400,7 +428,7 @@ public class PostgresConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(host, port, databaseName, databaseSchema, defaultCredential, byPassRLSCredential, rowLevelSecurity, poolInitialSize, poolMaxSize, sslMode, jooqReactiveTimeout, attachmentStorageEnabled);
+        return Objects.hash(host, port, databaseName, databaseSchema, defaultCredential, byPassRLSCredential, rowLevelSecurity, poolInitialSize, poolMaxSize, sslMode, sslRootCertFile, jooqReactiveTimeout, attachmentStorageEnabled);
     }
 
     @Override
@@ -418,6 +446,7 @@ public class PostgresConfiguration {
                    && Objects.equals(this.poolInitialSize, that.poolInitialSize)
                    && Objects.equals(this.poolMaxSize, that.poolMaxSize)
                    && Objects.equals(this.sslMode, that.sslMode)
+                   && Objects.equals(this.sslRootCertFile, that.sslRootCertFile)
                    && Objects.equals(this.jooqReactiveTimeout, that.jooqReactiveTimeout)
                    && Objects.equals(this.attachmentStorageEnabled, that.attachmentStorageEnabled);
         }

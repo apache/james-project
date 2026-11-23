@@ -102,30 +102,32 @@ public class PostgresCommonModule extends AbstractModule {
     @Provides
     @Singleton
     ConnectionFactory postgresqlConnectionFactory(PostgresConfiguration postgresConfiguration) {
-        return new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
+        PostgresqlConnectionConfiguration.Builder builder = PostgresqlConnectionConfiguration.builder()
             .host(postgresConfiguration.getHost())
             .port(postgresConfiguration.getPort())
             .username(postgresConfiguration.getDefaultCredential().getUsername())
             .password(postgresConfiguration.getDefaultCredential().getPassword())
             .database(postgresConfiguration.getDatabaseName())
             .schema(postgresConfiguration.getDatabaseSchema())
-            .sslMode(postgresConfiguration.getSslMode())
-            .build());
+            .sslMode(postgresConfiguration.getSslMode());
+        postgresConfiguration.getSslRootCertFile().ifPresent(builder::sslRootCert);
+        return new PostgresqlConnectionFactory(builder.build());
     }
 
     @Provides
     @Named(JamesPostgresConnectionFactory.BY_PASS_RLS_INJECT)
     @Singleton
     ConnectionFactory postgresqlConnectionFactoryRLSBypass(PostgresConfiguration postgresConfiguration) {
-        return new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
+        PostgresqlConnectionConfiguration.Builder builder = PostgresqlConnectionConfiguration.builder()
             .host(postgresConfiguration.getHost())
             .port(postgresConfiguration.getPort())
             .username(postgresConfiguration.getByPassRLSCredential().getUsername())
             .password(postgresConfiguration.getByPassRLSCredential().getPassword())
             .database(postgresConfiguration.getDatabaseName())
             .schema(postgresConfiguration.getDatabaseSchema())
-            .sslMode(postgresConfiguration.getSslMode())
-            .build());
+            .sslMode(postgresConfiguration.getSslMode());
+        postgresConfiguration.getSslRootCertFile().ifPresent(builder::sslRootCert);
+        return new PostgresqlConnectionFactory(builder.build());
     }
 
     @Provides

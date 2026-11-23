@@ -22,6 +22,7 @@ package org.apache.james.backends.postgres;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.junit.jupiter.api.Test;
 
 import io.r2dbc.postgresql.client.SSLMode;
@@ -69,7 +70,22 @@ class PostgresConfigurationTest {
         assertThat(configuration.getByPassRLSCredential().getUsername()).isEqualTo("james");
         assertThat(configuration.getByPassRLSCredential().getPassword()).isEqualTo("1");
         assertThat(configuration.getRowLevelSecurity()).isEqualTo(RowLevelSecurity.DISABLED);
-        assertThat(configuration.getSslMode()).isEqualTo(SSLMode.ALLOW);
+        assertThat(configuration.getSslMode()).isEqualTo(SSLMode.PREFER);
+        assertThat(configuration.getSslRootCertFile()).isEmpty();
+    }
+
+    @Test
+    void fromShouldReadTheRootCertificateFile() {
+        PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
+        propertiesConfiguration.addProperty("database.username", "james");
+        propertiesConfiguration.addProperty("database.password", "1");
+        propertiesConfiguration.addProperty("ssl.mode", "verify-full");
+        propertiesConfiguration.addProperty("ssl.root.cert.file", "/root/conf/postgres-ca.pem");
+
+        PostgresConfiguration configuration = PostgresConfiguration.from(propertiesConfiguration);
+
+        assertThat(configuration.getSslMode()).isEqualTo(SSLMode.VERIFY_FULL);
+        assertThat(configuration.getSslRootCertFile()).contains("/root/conf/postgres-ca.pem");
     }
 
     @Test
