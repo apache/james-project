@@ -34,6 +34,7 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
@@ -51,6 +52,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class MailAttributesListToMimeHeaders extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailAttributesListToMimeHeaders.class);
+    private static final CharMatcher CRLF = CharMatcher.anyOf("\r\n");
 
     private Map<AttributeName, String> attributeNameToHeader;
 
@@ -95,7 +97,10 @@ public class MailAttributesListToMimeHeaders extends GenericMailet {
 
     private void addValueToHeader(MimeMessage message, String headerName, Object value) {
         try {
-            if (value instanceof String) {
+            if (value instanceof String && CRLF.matchesAnyOf((String) value)) {
+                // addHeader does not fold: a line break would add header lines
+                LOGGER.warn("Ignoring a value holding a line break for header {}", headerName);
+            } else if (value instanceof String) {
                 message.addHeader(headerName, (String) value);
             } else {
                 if (value != null) {
