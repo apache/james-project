@@ -33,6 +33,9 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 
 public record SubjectsDto(@JsonValue Set<String> subjects) {
+    private static final int MAX_QUALIFIER_LENGTH = 100;
+    private static final int MAX_QUALIFIERS = 20;
+
     public static SubjectsDto from(Set<String> subjects) {
         return new SubjectsDto(subjects.stream()
             .flatMap(SubjectsDto::withSubjectQualifiers)
@@ -60,11 +63,14 @@ public record SubjectsDto(@JsonValue Set<String> subjects) {
                 inBrackets = true;
                 current.setLength(0); // reset
             } else if (c == ']') {
-                if (inBrackets) {
+                if (inBrackets && current.length() <= MAX_QUALIFIER_LENGTH) {
                     result.add(current.toString());
                     result.addAll(domainTokens(current.toString()));
-                    inBrackets = false;
+                    if (result.size() >= MAX_QUALIFIERS) {
+                        return result.subList(0, MAX_QUALIFIERS);
+                    }
                 }
+                inBrackets = false;
             } else if (inBrackets) {
                 current.append(c);
             }
