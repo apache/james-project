@@ -20,6 +20,7 @@ package org.apache.james.pop3server.core;
 
 import static org.apache.james.pop3server.core.AuthCmdHandler.AUTH_REQUIRES_TLS;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -54,6 +55,7 @@ import com.github.fge.lambdas.Throwing;
  */
 public class PassCmdHandler extends AbstractPassCmdHandler  {
     private static final Logger LOGGER = LoggerFactory.getLogger(PassCmdHandler.class);
+    public static final String REMOTE_IP_MDC = "remoteIP";
 
     private final Pop3MailboxProvider mailboxProvider;
     private final SaslAuthenticator saslAuthenticator;
@@ -135,9 +137,13 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
                 .orElseGet(() -> new IOException("Unable to authenticate POP3 user " + session.getUsername().asString()));
         }
 
-        LOGGER.info("Bad credential supplied for {} with remote address {}",
-            session.getUsername().asString(),
-            session.getRemoteAddress().getAddress().getHostAddress());
+        String remoteIp = session.getRemoteAddress().getAddress().getHostAddress();
+        // The client IP is also exposed as a MDC field, so that log parsers do not need to read it from the message
+        try (Closeable closeable = MDCBuilder.ofValue(REMOTE_IP_MDC, remoteIp).build()) {
+            LOGGER.info("Bad credential supplied for {} with remote address {}",
+                session.getUsername().asString(),
+                remoteIp);
+        }
         return null;
     }
 

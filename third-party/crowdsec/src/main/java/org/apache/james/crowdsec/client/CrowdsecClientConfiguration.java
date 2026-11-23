@@ -39,6 +39,7 @@ public class CrowdsecClientConfiguration {
     private final URL url;
     private final String apiKey;
     private final Duration timeout;
+    private final boolean failClosed;
 
     public static CrowdsecClientConfiguration from(Configuration config) {
         URL crowdsecUrl = Optional.ofNullable(config.getString("crowdsecUrl", null))
@@ -53,20 +54,25 @@ public class CrowdsecClientConfiguration {
             .map(value -> DurationParser.parse(value, ChronoUnit.SECONDS))
             .orElse(DEFAULT_TIMEOUT);
 
-        return new CrowdsecClientConfiguration(crowdsecUrl, apiKey, timeout);
+        boolean failClosed = config.getBoolean("failClosed", false);
+
+        return new CrowdsecClientConfiguration(crowdsecUrl, apiKey, timeout, failClosed);
     }
 
-    public CrowdsecClientConfiguration(URL url, String apiKey, Duration timeout) {
+    public CrowdsecClientConfiguration(URL url, String apiKey, Duration timeout, boolean failClosed) {
         this.url = url;
         this.apiKey = apiKey;
         this.timeout = timeout;
+        this.failClosed = failClosed;
+    }
+
+    public CrowdsecClientConfiguration(URL url, String apiKey, Duration timeout) {
+        this(url, apiKey, timeout, false);
     }
 
     @VisibleForTesting
     public CrowdsecClientConfiguration(URL url, String apiKey) {
-        this.url = url;
-        this.apiKey = apiKey;
-        this.timeout = TEST_TIMEOUT;
+        this(url, apiKey, TEST_TIMEOUT);
     }
 
     public URL getUrl() {
@@ -79,5 +85,12 @@ public class CrowdsecClientConfiguration {
 
     public Duration getTimeout() {
         return timeout;
+    }
+
+    /**
+     * @return true when a client must be refused when CrowdSec does not answer in time
+     */
+    public boolean isFailClosed() {
+        return failClosed;
     }
 }

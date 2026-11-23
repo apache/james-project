@@ -10,6 +10,7 @@ This module is for developing and delivering extensions to James for the [Crowds
     - `apiKey` : String. Required. Api key for pass authentication when request to Crowdsec.
     - `timeout` : Duration. Optional. Default to `500ms`. Timeout questioning to CrowdSec. 
       E.g. `500ms`, `1 second`,...
+    - `failClosed` : Boolean. Optional. Default to `false`. Whether a client is refused when CrowdSec does not answer within the timeout.
 
 - Declare the `extensions.properties` for this module.
 

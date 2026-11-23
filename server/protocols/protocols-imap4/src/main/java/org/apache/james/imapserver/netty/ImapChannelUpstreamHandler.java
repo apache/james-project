@@ -309,6 +309,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             .addToContext(MDCBuilder.SESSION_ID, sessionId.asString());
         imapsession.setAttribute(MDC_KEY, boundMDC);
 
+        // No command is read before the connection checks accept the connection
+        ctx.channel().config().setAutoRead(false);
         performConnectionCheck(imapsession.getRemoteAddress())
             .then(Mono.fromRunnable(() -> ctx.executor().execute(Throwing.runnable(() -> acceptConnection(ctx, imapsession)))))
             .subscribe(any -> {
@@ -328,6 +330,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             response.untagged().message("OK").message(hello).end();
             response.flush();
             super.channelActive(ctx);
+            ctx.channel().config().setAutoRead(true);
         }
     }
 

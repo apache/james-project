@@ -26,12 +26,12 @@ import jakarta.inject.Inject;
 
 import org.apache.james.crowdsec.model.CrowdsecDecision;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.ConnectHandler;
+import org.apache.james.protocols.api.handler.ClientAddressConnectHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CrowdsecSMTPConnectHandler implements ConnectHandler<SMTPSession> {
+public class CrowdsecSMTPConnectHandler implements ClientAddressConnectHandler<SMTPSession> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CrowdsecSMTPConnectHandler.class);
 
     public static final Response NOOP = new Response() {

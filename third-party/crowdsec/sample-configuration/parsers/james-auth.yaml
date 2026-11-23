@@ -5,11 +5,11 @@ name: linagora/james-auth
 description: "Parser for James IMAP and SMTP authentication "
 
 pattern_syntax:
-  IMAP_AUTH_FAIL_BAD_CREDENTIALS: 'Password authentication failed because of bad credentials%{DATA:data}'
-  IMAP_AUTH_FAIL_DELEGATION_BAD_CREDENTIALS: 'Password authentication with delegation failed because of bad credentials%{DATA:data}'
-  IMAP_AUTH_FAIL_NO_EXISTING_DELEGATION: 'Delegation target user does not exist%{DATA:data}'
-  SMTP_AUTH_FAIL: 'SMTP Authentication failed%{DATA:data}'
-  POP3_AUTH_FAIL: 'Bad credential supplied for %{DATA:user} with remote address %{IP:source_ip}'
+  IMAP_AUTH_FAIL_BAD_CREDENTIALS: '^Password authentication failed because of bad credentials%{DATA:data}'
+  IMAP_AUTH_FAIL_DELEGATION_BAD_CREDENTIALS: '^Password authentication with delegation failed because of bad credentials%{DATA:data}'
+  IMAP_AUTH_FAIL_NO_EXISTING_DELEGATION: '^Delegation target user does not exist%{DATA:data}'
+  SMTP_AUTH_FAIL: '^SMTP Authentication failed%{DATA:data}'
+  POP3_AUTH_FAIL: '^Bad credential supplied for %{DATA:user} with remote address %{IP}$'
 nodes:
   - grok:
       name: "IMAP_AUTH_FAIL_BAD_CREDENTIALS"
@@ -80,4 +80,4 @@ nodes:
         - meta: log_type
           value: pop3-auth-fail
         - meta: source_ip
-          expression: evt.Parsed.source_ip
+          expression: evt.Parsed.mdc_remoteIP

@@ -23,15 +23,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Set;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import reactor.core.publisher.Mono;
 
 @SuppressWarnings("checkstyle:membername")
 class IMAPServerConnectionCheckTest extends AbstractIMAPServerTest {
@@ -61,6 +68,33 @@ class IMAPServerConnectionCheckTest extends AbstractIMAPServerTest {
         assertThatThrownBy(() -> testIMAPClient.connect("127.0.0.1", port)
             .login(USER.asString(), USER_PASS)
             .append("INBOX", SMALL_MESSAGE));
+    }
+
+    @Test
+    void commandsSentBeforeTheCheckCompletesShouldNotBeProcessed() throws Exception {
+        imapServer.getConnectionChecks().stream()
+            .filter(check -> check instanceof IpConnectionCheck)
+            .map(check -> (IpConnectionCheck) check)
+            .forEach(ipCheck -> {
+                ipCheck.setBannedIps(Set.of("127.0.0.1"));
+                ipCheck.setDelay(Duration.ofMillis(500));
+            });
+
+        try (Socket socket = new Socket("127.0.0.1", port)) {
+            socket.setSoTimeout(5000);
+            socket.getOutputStream().write(("a1 LOGIN " + USER.asString() + " " + USER_PASS + "\r\na2 CREATE pwned\r\n").getBytes(StandardCharsets.US_ASCII));
+            socket.getOutputStream().flush();
+            try {
+                while (socket.getInputStream().read() != -1) {
+                    // wait for the server to close the connection
+                }
+            } catch (IOException e) {
+                // connection reset
+            }
+        }
+
+        MailboxSession session = mailboxManager.createSystemSession(USER);
+        assertThat(Mono.from(mailboxManager.mailboxExists(MailboxPath.forUser(USER, "pwned"), session)).block()).isFalse();
     }
 
     @Test

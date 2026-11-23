@@ -30,10 +30,10 @@ import jakarta.inject.Inject;
 import org.apache.james.crowdsec.client.CrowdsecHttpClient;
 import org.apache.james.crowdsec.model.CrowdsecDecision;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.ConnectHandler;
+import org.apache.james.protocols.api.handler.ClientAddressConnectHandler;
 import org.apache.james.protocols.pop3.POP3Session;
 
-public class CrowdsecPOP3CheckHandler implements ConnectHandler<POP3Session> {
+public class CrowdsecPOP3CheckHandler implements ClientAddressConnectHandler<POP3Session> {
     private final CrowdsecHttpClient crowdsecHttpClient;
 
     @Inject
@@ -43,10 +43,10 @@ public class CrowdsecPOP3CheckHandler implements ConnectHandler<POP3Session> {
 
     @Override
     public Response onConnect(POP3Session session) {
-        // rely on the Netty transport layer to get the real client IP, and just be application layer agnostic
-        String realClientIp = session.getLocalAddress().getAddress().getHostAddress();
+        // Behind the PROXY protocol, connect handlers run once the PROXY header is read: this is the real client IP
+        String realClientIp = session.getRemoteAddress().getAddress().getHostAddress();
 
-        return crowdsecHttpClient.getCrowdsecDecisions()
+        return crowdsecHttpClient.getCrowdsecDecisions(realClientIp)
             .map(decisions -> toResponse(decisions, realClientIp))
             .block();
     }

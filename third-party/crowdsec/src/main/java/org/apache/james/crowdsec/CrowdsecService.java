@@ -40,7 +40,7 @@ class CrowdsecService {
     }
 
     public Mono<List<CrowdsecDecision>> findBanDecisions(InetSocketAddress remoteAddress) {
-        return crowdsecHttpClient.getCrowdsecDecisions()
+        return crowdsecHttpClient.getCrowdsecDecisions(remoteAddress.getAddress().getHostAddress())
                 .map(decisions ->
                         decisions.stream().filter(
                                 decision -> CrowdsecUtils.isBanned(decision, remoteAddress.getAddress().getHostAddress())
