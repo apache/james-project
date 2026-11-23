@@ -37,6 +37,37 @@ import reactor.core.scala.publisher.SFlux
 
 class ProcessingContextTest {
   @Test
+  def resolveBackReferencesShouldStopAChainOfResultReferencesThatDoublesEachTime(): Unit = {
+    var context = ProcessingContext(Map.empty, Map.empty)
+      .recordInvocation(Invocation(MethodName("Core/echo"), Arguments(Json.obj("p" -> "x" * (1024 * 1024))), MethodCallId("c0")))
+
+    val results = (1 to 5).map { index =>
+      val previous = s"c${index - 1}"
+      val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj(
+        "#a" -> Json.obj("resultOf" -> previous, "name" -> "Core/echo", "path" -> ""),
+        "#b" -> Json.obj("resultOf" -> previous, "name" -> "Core/echo", "path" -> ""))), MethodCallId(s"c$index"))
+      val result = context.resolveBackReferences(invocation)
+      result.foreach(resolved => context = context.recordInvocation(resolved))
+      result
+    }
+
+    // 2, 4 then 8 MiB: the third doubling goes past the budget of the request
+    assertThat(results.take(2).forall(_.isRight)).isTrue()
+    assertThat(results(2).left.toOption.get).isInstanceOf(classOf[InvalidResultReferenceException])
+  }
+
+  @Test
+  def resolveBackReferencesShouldResolveAnEmailQueryReferenceFromEmailGet(): Unit = {
+    val context = ProcessingContext(Map.empty, Map.empty)
+      .recordInvocation(Invocation(MethodName("Email/query"), Arguments(Json.obj("ids" -> Json.arr("1", "2"))), MethodCallId("c0")))
+    val invocation = Invocation(MethodName("Email/get"), Arguments(Json.obj(
+      "#ids" -> Json.obj("resultOf" -> "c0", "name" -> "Email/query", "path" -> "/ids"))), MethodCallId("c1"))
+
+    assertThat(context.resolveBackReferences(invocation))
+      .isEqualTo(Right(invocation.copy(arguments = Arguments(Json.obj("ids" -> Json.arr("1", "2"))))))
+  }
+
+  @Test
   def resolveBackReferencesShouldPreserveAnEmptyArgumentObject(): Unit = {
     val invocation = Invocation(MethodName("Core/echo"), Arguments(Json.obj()), MethodCallId("echo"))
     val context = ProcessingContext(Map.empty, Map.empty)
