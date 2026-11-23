@@ -669,7 +669,7 @@
         <!-- maven-mailetdocs-plugin artifacts -->
         <maven-artifact.version>3.0-alpha-1</maven-artifact.version>
         <maven-plugin-annotations.version>3.16.0</maven-plugin-annotations.version>
-        <maven-plugin-api.version>3.10.1</maven-plugin-api.version>
+        <maven-plugin-api.version>3.10.2</maven-plugin-api.version>
         <maven-reporting-impl.version>4.0.0</maven-reporting-impl.version>
         <maven-reporting-api.version>4.1.0</maven-reporting-api.version>
         <maven-surefire-plugin.version>3.6.1</maven-surefire-plugin.version>
