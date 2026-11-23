@@ -60,6 +60,21 @@ WebAdmin used to send CORS headers allowing any origin whatever `cors.enable`. T
 is `true`, and `cors.origin` is then mandatory: WebAdmin refuses to start without it. A web console served from
 another origin needs both properties set.
 
+### Passwords are hashed again at login
+
+Date: 23/11/2026
+
+Concerned products: the users repositories storing password digests (memory, Cassandra, Postgres). The
+JPA users repository does not hash passwords again.
+
+At a successful login, a password stored with another algorithm than the configured one is hashed again with it. New
+digests of the SHA family are computed on the UTF-8 bytes of the password, under an algorithm carrying the `-utf8`
+suffix (for instance `SHA-512-utf8`), and a password stored as an ISO-8859-1 digest is hashed again with it.
+
+Older versions of James can not verify the passwords hashed again after the upgrade, nor the `-utf8` digests. Running
+a cluster mixing versions, or rolling back, is therefore not supported once users have logged in after the upgrade:
+their passwords would no longer be verified by the older nodes.
+
 ### Pulsar verifies the TLS host name of its endpoints
 
 Date: 23/11/2026
