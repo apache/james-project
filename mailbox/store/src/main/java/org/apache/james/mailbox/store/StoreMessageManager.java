@@ -684,7 +684,7 @@ public class StoreMessageManager implements MessageManager {
      * RFC 4314: setting \Seen requires 's', \Deleted requires 't' and other flags require 'w', including when the
      * flags are set by APPEND, COPY or MOVE.
      */
-    private static Flags flagsNotAllowedToSet(Flags flags, MailboxACL.Rfc4314Rights myRights) {
+    static Flags flagsNotAllowedToSet(Flags flags, MailboxACL.Rfc4314Rights myRights) {
         Flags notAllowed = new Flags();
         if (flags.contains(Flag.SEEN) && !myRights.contains(MailboxACL.Right.WriteSeenFlag)) {
             notAllowed.add(Flag.SEEN);

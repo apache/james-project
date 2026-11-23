@@ -1166,4 +1166,26 @@ public abstract class AbstractMessageIdManagerStorageTest {
             .extracting(MessageResult::getFlags)
             .containsOnly(FlagsBuilder.builder().add(flags).add(Flags.Flag.RECENT).build());
     }
+
+    @Test
+    void setInMailboxesShouldFilterSeenAndDeletedFlagsByTheirOwnRights() throws Exception {
+        testingData.setACL(aliceMailbox1.getMailboxId(),
+            MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .forUser(BOB)
+                    .rights(new Rfc4314Rights(Right.Read, Right.Lookup, Right.Insert, Right.Write))
+                    .asAddition()),
+            aliceSession);
+        Flags flags = new Flags(Flags.Flag.FLAGGED);
+        flags.add(Flags.Flag.SEEN);
+        flags.add(Flags.Flag.DELETED);
+        MessageId messageId = testingData.persist(bobMailbox1.getMailboxId(), messageUid1, flags, bobSession);
+
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), bobSession);
+
+        List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession);
+        assertThat(messages)
+            .extracting(MessageResult::getFlags)
+            .containsOnly(FlagsBuilder.builder().add(Flags.Flag.FLAGGED, Flags.Flag.RECENT).build());
+    }
 }
