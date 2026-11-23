@@ -55,4 +55,20 @@ class PostgresMailboxMapperACLTest extends MailboxMapperACLTest {
         assertThat(mailboxMapper.findNonPersonalMailboxes(trickyUser, MailboxACL.Right.Lookup).collectList().block())
             .containsOnly(benwaInboxMailbox);
     }
+
+    @Test
+    void findNonPersonalMailboxesShouldReturnTheNegativeEntriesOfTheACL() {
+        Username user = Username.of("user@domain.tld");
+        MailboxACL.EntryKey key = MailboxACL.EntryKey.createUserEntryKey(user);
+        MailboxACL.EntryKey negativeKey = MailboxACL.EntryKey.createUserEntryKey(user, MailboxACL.NEGATIVE_KEY);
+        mailboxMapper.updateACL(benwaInboxMailbox, MailboxACL.command().key(key)
+            .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read)).asReplacement()).block();
+        mailboxMapper.updateACL(benwaInboxMailbox, MailboxACL.command().key(negativeKey)
+            .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read)).asReplacement()).block();
+
+        assertThat(mailboxMapper.findNonPersonalMailboxes(user, MailboxACL.Right.Lookup).collectList().block())
+            .singleElement()
+            .satisfies(mailbox -> assertThat(mailbox.getACL().getEntries())
+                .containsEntry(negativeKey, new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read)));
+    }
 }
