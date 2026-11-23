@@ -20,8 +20,8 @@
 package org.apache.james.imap.api.message;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import jakarta.mail.Flags;
 
@@ -74,6 +74,17 @@ public class MessageFlags {
     
 
     /**
+     * RFC 9051: a keyword is an atom. A stored user flag that is not one, set by an older version or a mailet,
+     * would break the responses it is written into.
+     */
+    public static boolean isKeyword(String userFlag) {
+        return !userFlag.isEmpty() && userFlag.chars()
+            .allMatch(c -> c > 0x20 && c < 0x7F && NON_ATOM_CHARS.indexOf(c) < 0);
+    }
+
+    private static final String NON_ATOM_CHARS = "(){%*\"\\]";
+
+    /**
      * Returns IMAP formatted String naming flags.
      * 
      * @return <code>Collection</code> of <code>String</code>'s naming the
@@ -101,8 +112,9 @@ public class MessageFlags {
         }
         
         // Add user flags
-        String[] userFlags = flags.getUserFlags();
-        Collections.addAll(results, userFlags);
+        Arrays.stream(flags.getUserFlags())
+            .filter(MessageFlags::isKeyword)
+            .forEach(results::add);
 
         if (flags.contains(Flags.Flag.USER)) {
             results.add(USER_OUTPUT_CAPITALISED);
