@@ -126,6 +126,15 @@ class SSRFValidatorTest {
   }
 
   @Test
+  def validateShouldNotExposeTheResolvedAddress(): Unit = {
+    val validator = new SSRFValidator(resolvingTo(InetAddress.getByAddress("cassandra", Array[Byte](10, 42, 3, 17))))
+
+    assertThatThrownBy(() => validator.validate(url("http://cassandra")).block()).asInstanceOf[ThrowableAssert[Throwable]]
+      .isInstanceOf(classOf[IllegalArgumentException])
+      .hasMessageNotContaining("10.42.3.17")
+  }
+
+  @Test
   def validateShouldRejectAHostResolvingToBothAPublicAndAForbiddenAddress(): Unit = {
     // Validating the first address only would let the connection land on the second one
     val validator = new SSRFValidator(resolvingTo(PUBLIC_ADDRESS, LOOPBACK_ADDRESS))

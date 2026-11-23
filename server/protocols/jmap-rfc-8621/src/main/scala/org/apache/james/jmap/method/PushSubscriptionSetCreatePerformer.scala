@@ -1,5 +1,6 @@
 package org.apache.james.jmap.method
 
+import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 
 import eu.timepit.refined.auto._
@@ -10,7 +11,7 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, PushSubscriptionCreation, PushSubscriptionCreationId, PushSubscriptionCreationParseException, PushSubscriptionCreationResponse, PushSubscriptionSetRequest, SetError}
 import org.apache.james.jmap.json.{PushSerializer, PushSubscriptionSerializer}
 import org.apache.james.jmap.method.PushSubscriptionSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
-import org.apache.james.jmap.pushsubscription.{PushRequest, PushTTL, WebPushClient}
+import org.apache.james.jmap.pushsubscription.{ForbiddenPushServerAddressException, PushRequest, PushTTL, WebPushClient}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsObject, JsPath, Json, JsonValidationError}
@@ -33,6 +34,9 @@ object PushSubscriptionSetCreatePerformer {
       case e: DeviceClientIdInvalidException =>
         LOGGER.info("Invalid deviceId for push subscription: {}", e.getMessage)
         SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e@(_: ForbiddenPushServerAddressException | _: UnknownHostException) =>
+        LOGGER.info("Refused push server URL in PushSubscription/set create", e)
+        SetError.invalidArguments(SetErrorDescription("The push URL is not allowed"), Some(Properties("url")))
       case e: IllegalArgumentException =>
         LOGGER.info("Illegal argument in PushSubscription/set create", e)
         SetError.invalidArguments(SetErrorDescription(e.getMessage))
