@@ -918,7 +918,7 @@ public class StoreMessageManager implements MessageManager {
             .window(batchSizes.getCopyBatchSize().orElse(Integer.MAX_VALUE))
             .concatMap(window -> window
                 .collectList()
-                .flatMap(originalRows -> to.move(originalRows, mailbox, session)
+                .flatMap(originalRows -> to.move(originalRows, this, session)
                     .flatMap(moveResult -> {
                         SortedMap<MessageUid, MessageMetaData> moveUids = collectMetadata(moveResult.getMovedMessages().iterator());
                         ImmutableList<MessageId> messageIds = originalRows.stream()
@@ -1063,11 +1063,7 @@ public class StoreMessageManager implements MessageManager {
 
         try {
             QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(getMailboxPath());
-            return Mono.from(quotaManager.getQuotasReactive(quotaRoot))
-                .doOnNext(Throwing.<QuotaManager.Quotas>consumer(quotas -> new QuotaChecker(quotas, quotaRoot)
-                    .tryAddition(originalRows.size(), originalRows.stream()
-                        .mapToLong(MailboxMessage::getFullContentOctets)
-                        .sum())).sneakyThrow())
+            return checkQuota(quotaRoot, originalRows)
                 .thenMany(messageMapper.executeReactive(
                     messageMapper.copyReactive(getMailboxEntity(), withFlagsAllowedToSet(originalRows, session).orElse(originalRows)))
                     .flatMapIterable(Function.identity()));
@@ -1111,20 +1107,36 @@ public class StoreMessageManager implements MessageManager {
         return Optional.empty();
     }
 
-    private Mono<MoveResult> move(List<MailboxMessage> originalRows, Mailbox sourceMailbox, MailboxSession session) {
+    private Mono<Void> checkQuota(QuotaRoot quotaRoot, List<MailboxMessage> addedRows) {
+        return Mono.from(quotaManager.getQuotasReactive(quotaRoot))
+            .doOnNext(Throwing.<QuotaManager.Quotas>consumer(quotas -> new QuotaChecker(quotas, quotaRoot)
+                .tryAddition(addedRows.size(), addedRows.stream()
+                    .mapToLong(MailboxMessage::getFullContentOctets)
+                    .sum())).sneakyThrow())
+            .then();
+    }
+
+    private Mono<MoveResult> move(List<MailboxMessage> originalRows, StoreMessageManager from, MailboxSession session) {
         List<MessageMetaData> originalRowsCopy = originalRows.stream()
             .map(MailboxMessage::metaData)
             .collect(ImmutableList.toImmutableList());
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
         Optional<List<MailboxMessage>> filteredRows;
+        Mono<Void> quotaCheck;
         try {
             filteredRows = withFlagsAllowedToSet(originalRows, session);
+            QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(getMailboxPath());
+            // A move within a quota root does not change its usage
+            quotaCheck = quotaRoot.equals(quotaRootResolver.getQuotaRoot(from.getMailboxPath()))
+                ? Mono.empty()
+                : checkQuota(quotaRoot, originalRows);
         } catch (MailboxException e) {
             return Mono.error(e);
         }
         if (filteredRows.isEmpty()) {
-            return messageMapper.executeReactive(messageMapper.moveReactive(getMailboxEntity(), originalRows))
+            return quotaCheck
+                .then(messageMapper.executeReactive(messageMapper.moveReactive(getMailboxEntity(), originalRows)))
                 .map(data -> new MoveResult(data, originalRowsCopy));
         }
         List<MailboxMessage> rowsToWrite = filteredRows.get();
@@ -1132,9 +1144,10 @@ public class StoreMessageManager implements MessageManager {
         List<MessageUid> sourceUids = originalRowsCopy.stream()
             .map(MessageMetaData::getUid)
             .collect(ImmutableList.toImmutableList());
-        return messageMapper.executeReactive(messageMapper.copyReactive(getMailboxEntity(), rowsToWrite)
-                .flatMap(movedMessages -> messageMapper.deleteMessagesReactive(sourceMailbox, sourceUids)
-                    .thenReturn(movedMessages)))
+        return quotaCheck
+            .then(messageMapper.executeReactive(messageMapper.copyReactive(getMailboxEntity(), rowsToWrite)
+                .flatMap(movedMessages -> messageMapper.deleteMessagesReactive(from.getMailboxEntity(), sourceUids)
+                    .thenReturn(movedMessages))))
             .map(data -> new MoveResult(data, originalRowsCopy));
     }
 
@@ -1181,7 +1194,7 @@ public class StoreMessageManager implements MessageManager {
             .window(batchSizes.getCopyBatchSize().orElse(Integer.MAX_VALUE))
             .concatMap(window -> window
                 .collectList()
-                .flatMap(originalRows -> to.move(originalRows, mailbox, session).flatMap(moveResult -> {
+                .flatMap(originalRows -> to.move(originalRows, this, session).flatMap(moveResult -> {
                     SortedMap<MessageUid, MessageMetaData> moveUids = collectMetadata(moveResult.getMovedMessages().iterator());
 
                     ImmutableList<MessageId> messageIds = originalRows.stream()
