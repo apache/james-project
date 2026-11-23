@@ -406,10 +406,20 @@ public class StoreMessageIdManager implements MessageIdManager {
                         return Flux.error(() -> new MailboxNotFoundException(unreadablePreviousMailbox));
                     }
                     if (refined.isChange()) {
-                        return applyMessageMoves(mailboxSession, currentMailboxMessages, refined);
+                        return applyMessageMoves(mailboxSession, messagesInPreviousMailboxes(currentMailboxMessages, refined), refined);
                     }
                     return Flux.empty();
                 }).sneakyThrow()));
+    }
+
+    private List<MailboxMessage> messagesInPreviousMailboxes(List<MailboxMessage> messages, MessageMovesWithMailbox messageMoves) {
+        // The copies in mailboxes the user cannot read must not be used as a template for the new copies
+        ImmutableSet<MailboxId> previousMailboxIds = messageMoves.getPreviousMailboxes().stream()
+            .map(Mailbox::getMailboxId)
+            .collect(ImmutableSet.toImmutableSet());
+        return messages.stream()
+            .filter(message -> previousMailboxIds.contains(message.getMailboxId()))
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override
