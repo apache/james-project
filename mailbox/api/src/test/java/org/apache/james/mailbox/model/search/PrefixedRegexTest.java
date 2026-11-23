@@ -29,6 +29,8 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxFolderDelimiterAwareTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import com.google.re2j.Pattern;
 
@@ -1168,6 +1170,21 @@ class PrefixedRegexTest {
         }
 
         @Test
+        void isExpressionMatchShouldSupportLongWildcardRuns() {
+            PrefixedRegex testee = new PrefixedRegex(EMPTY_PREFIX, "a" + "%*".repeat(50_000) + "b", folderDelimiter());
+
+            assertThat(testee.isExpressionMatch("a" + folderDelimiter() + "xb")).isTrue();
+        }
+
+        @Test
+        void isExpressionMatchShouldCollapseLocalWildcardRuns() {
+            PrefixedRegex testee = new PrefixedRegex(EMPTY_PREFIX, "a%%%b", folderDelimiter());
+
+            assertThat(testee.isExpressionMatch("axb")).isTrue();
+            assertThat(testee.isExpressionMatch("a" + folderDelimiter() + "b")).isFalse();
+        }
+
+        @Test
         void isExpressionMatchShouldNotEscapeFreeWildcard() {
             PrefixedRegex testee = new PrefixedRegex(EMPTY_PREFIX, "folder\\*", folderDelimiter());
 
@@ -1184,5 +1201,24 @@ class PrefixedRegexTest {
 
             assertThat(actual).isTrue();
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "'', ''",
+        "abc, abc",
+        "%, %",
+        "*, *",
+        "%%, %",
+        "**, *",
+        "%*, *",
+        "*%, *",
+        "%*%%, *",
+        "a%%b, a%b",
+        "a**b, a*b",
+        "%%a**b%*c%, %a*b*c%",
+        "a%b*c, a%b*c"})
+    void collapseWildcardRunsShouldReplaceEachRunByItsWidestWildcard(String pattern, String expected) {
+        assertThat(PrefixedRegex.collapseWildcardRuns(pattern)).isEqualTo(expected);
     }
 }

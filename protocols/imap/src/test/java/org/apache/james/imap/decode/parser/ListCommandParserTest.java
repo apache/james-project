@@ -111,4 +111,28 @@ class ListCommandParserTest {
         assertThatThrownBy(() -> decode(input))
             .isInstanceOf(DecodingException.class);
     }
+
+    @Test
+    void decodeShouldRejectATooLongQuotedPattern() {
+        assertThatThrownBy(() -> decode("\"\" \"" + "a".repeat(1025) + "\"\r\n"))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeShouldRejectATooLongLiteralPattern() {
+        assertThatThrownBy(() -> decode("\"\" {1025+}\r\n" + "a".repeat(1025) + "\r\n"))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeShouldAcceptAPatternOfTheMaximumLength() throws Exception {
+        assertThat(decode("\"\" \"" + "a".repeat(1024) + "\"\r\n").getMailboxPatterns())
+            .containsExactly("a".repeat(1024));
+    }
+
+    @Test
+    void decodeShouldRejectTooManyPatterns() {
+        assertThatThrownBy(() -> decode("\"\" (" + "INBOX ".repeat(33).trim() + ")\r\n"))
+            .isInstanceOf(DecodingException.class);
+    }
 }
