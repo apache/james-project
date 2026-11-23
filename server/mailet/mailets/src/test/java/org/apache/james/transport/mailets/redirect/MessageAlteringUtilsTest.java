@@ -72,6 +72,17 @@ class MessageAlteringUtilsTest {
     }
 
     @Test
+    void getFileNameShouldReplaceLineBreaks() {
+        MessageAlteringUtils alteredMailUtils = MessageAlteringUtils.from(mock(RedirectNotify.class))
+                .originalMail(mock(Mail.class))
+                .build();
+
+        String fileName = alteredMailUtils.getFileName("report\r\nContent-Type: text/html");
+
+        assertThat(fileName).isEqualTo("report  Content-Type: text/html");
+    }
+
+    @Test
     void getFileNameShouldReturnSubjectWhenSubjectIsGiven() {
         MessageAlteringUtils alteredMailUtils = MessageAlteringUtils.from(mock(RedirectNotify.class))
                 .originalMail(mock(Mail.class))
