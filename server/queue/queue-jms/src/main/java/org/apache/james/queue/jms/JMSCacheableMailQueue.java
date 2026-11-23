@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -78,7 +79,10 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -147,6 +151,8 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     private static final Logger LOGGER = LoggerFactory.getLogger(JMSCacheableMailQueue.class);
     private static final String LIKE_ESCAPE_CHARACTER = "\\";
     private static final String LIKE_ESCAPE = " ESCAPE '" + LIKE_ESCAPE_CHARACTER + "'";
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final TypeReference<List<String>> RECIPIENT_LIST_TYPE = new TypeReference<>() { };
 
     public static final String FORCE_DELIVERY = "FORCE_DELIVERY";
     private static final String JAMES_MAIL_ATTR_PROP_PREFIX = "JAMES_ATTR_";
@@ -419,6 +425,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         String recipientsAsString = joiner.join(mail.getRecipients());
 
         props.put(JAMES_MAIL_RECIPIENTS, recipientsAsString);
+        props.put(JAMES_MAIL_RECIPIENTS_LIST, recipientsAsJson(mail));
         props.put(JAMES_MAIL_REMOTEADDR, mail.getRemoteAddr());
         props.put(JAMES_MAIL_REMOTEHOST, mail.getRemoteHost());
 
@@ -509,17 +516,14 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
             builder.addAllHeadersForRecipients(perRecipientHeaders);
         }
 
-        String recipients = message.getStringProperty(JAMES_MAIL_RECIPIENTS);
-        StringTokenizer recipientTokenizer = new StringTokenizer(recipients, JAMES_MAIL_SEPARATOR);
-        while (recipientTokenizer.hasMoreTokens()) {
-            String token = recipientTokenizer.nextToken();
+        Optional<String> invalidRecipient = Optional.empty();
+        for (String token : recipients(message)) {
             try {
                 MailAddress rcpt = new MailAddress(token);
                 builder.addRecipient(rcpt);
             } catch (AddressException e) {
-                // Should never happen as long as the user does not modify the
-                // the header by himself
-                LOGGER.error("Unable to parse the recipient address {} for builder {}, so we ignore it", token, name, e);
+                LOGGER.error("Unable to parse the recipient address {} for mail {}", token, name, e);
+                invalidRecipient = Optional.of(token);
             }
         }
         builder.remoteAddr(message.getStringProperty(JAMES_MAIL_REMOTEADDR));
@@ -534,7 +538,47 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
         builder.sender(MaybeSender.getMailSender(message.getStringProperty(JAMES_MAIL_SENDER)).asOptional());
         builder.state(message.getStringProperty(JAMES_MAIL_STATE));
+        // Do not process a mail missing some of its recipients as if it was valid
+        invalidRecipient.ifPresent(token -> builder.state(Mail.ERROR)
+            .errorMessage("Unable to parse the recipient address " + token));
         return builder;
+    }
+
+    private static String recipientsAsJson(Mail mail) throws MessagingException {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(mail.getRecipients().stream()
+                .map(MailAddress::asString)
+                .collect(ImmutableList.toImmutableList()));
+        } catch (JsonProcessingException e) {
+            throw new MessagingException("Unable to serialize the recipients", e);
+        }
+    }
+
+    /**
+     * Reads the recipient list, falling back to the ';' separated property for messages enqueued before
+     * the unambiguous list property was written.
+     */
+    private static List<String> recipients(Message message) throws JMSException {
+        String recipientList = message.getStringProperty(JAMES_MAIL_RECIPIENTS_LIST);
+        if (recipientList != null) {
+            try {
+                return OBJECT_MAPPER.readValue(recipientList, RECIPIENT_LIST_TYPE);
+            } catch (JsonProcessingException e) {
+                JMSException jmsException = new JMSException("Unable to read the recipient list " + recipientList);
+                jmsException.initCause(e);
+                throw jmsException;
+            }
+        }
+        String recipients = message.getStringProperty(JAMES_MAIL_RECIPIENTS);
+        if (recipients == null) {
+            return ImmutableList.of();
+        }
+        List<String> tokens = new ArrayList<>();
+        StringTokenizer recipientTokenizer = new StringTokenizer(recipients, JAMES_MAIL_SEPARATOR);
+        while (recipientTokenizer.hasMoreTokens()) {
+            tokens.add(recipientTokenizer.nextToken());
+        }
+        return tokens;
     }
 
     private Stream<Attribute> mailAttribute(Message message, String name) {
@@ -753,7 +797,6 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         return value.replace(LIKE_ESCAPE_CHARACTER, LIKE_ESCAPE_CHARACTER + LIKE_ESCAPE_CHARACTER)
             .replace("%", LIKE_ESCAPE_CHARACTER + "%")
             .replace("_", LIKE_ESCAPE_CHARACTER + "_");
-    }
     }
 
     @Override
