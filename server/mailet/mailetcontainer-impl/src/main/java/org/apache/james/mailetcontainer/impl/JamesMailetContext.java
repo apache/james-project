@@ -281,7 +281,7 @@ public class JamesMailetContext implements MailetContext, Configurable, Disposab
     @Deprecated
     public Iterator<org.apache.mailet.HostAddress> getSMTPHostAddresses(Domain domainName) {
         try {
-            return new MXHostAddressIterator(dns.findMXRecords(domainName.asString()).iterator(), dns, false);
+            return MXHostAddressIterator.forMxRecords(dns.findMXRecords(domainName.asString()).iterator(), dns, false, MXHostAddressIterator.SMTP_ONLY);
         } catch (TemporaryResolutionException e) {
             // TODO: We only do this to not break backward compatiblity. Should
             // fixed later
