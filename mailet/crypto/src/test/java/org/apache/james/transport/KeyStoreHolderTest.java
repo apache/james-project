@@ -112,6 +112,17 @@ class KeyStoreHolderTest {
         return new SMIMESigned(multipart);
     }
 
+    static MimeMultipart signedContent(Identity signer, List<X509Certificate> attachedCertificates) throws Exception {
+        SMIMESignedGenerator generator = new SMIMESignedGenerator();
+        generator.addSignerInfoGenerator(new JcaSimpleSignerInfoGeneratorBuilder()
+            .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+            .build("SHA256withRSA", signer.keyPair().getPrivate(), signer.certificate()));
+        generator.addCertificates(new JcaCertStore(attachedCertificates));
+        MimeBodyPart content = new MimeBodyPart();
+        content.setText("Hello");
+        return generator.generate(content);
+    }
+
     static KeyStore trusting(X509Certificate... certificates) throws Exception {
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(null, null);
