@@ -2001,6 +2001,72 @@ public class SMTPServerTest {
         }
     }
 
+    @Test
+    void bareLineFeedShouldCloseTheSessionEvenWhenSizeLimitIsExceeded() throws Exception {
+        smtpConfiguration.setMaxMessageSize(1); // set message limit to 1kb
+        init(smtpConfiguration);
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        try (Socket client = new Socket(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort())) {
+            client.setSoTimeout(10000);
+            OutputStream out = client.getOutputStream();
+            out.write(("EHLO localhost\r\n"
+                + "MAIL FROM:<mail@localhost>\r\n"
+                + "RCPT TO:<mail@localhost>\r\n"
+                + "DATA\r\n"
+                + "Subject: test\r\n\r\n"
+                + "0123456789".repeat(200) + "\r\n" // over 1 KB
+                + "x\n.\r\n"
+                + "MAIL FROM:<a@b>\r\n"
+                + "RCPT TO:<mail@localhost>\r\n"
+                + "DATA\r\n"
+                + "Subject: smuggled\r\n\r\nhi\r\n.\r\n").getBytes(UTF_8));
+            out.flush();
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream(), UTF_8));
+            List<String> replies = new ArrayList<>();
+            String line;
+            while ((line = in.readLine()) != null) {
+                replies.add(line);
+            }
+
+            assertThat(replies.get(replies.size() - 1)).startsWith("500");
+            assertThat(testSystem.queue.getLastMail()).isNull();
+        }
+    }
+
+    @Test
+    void bareLineFeedShouldCloseTheSessionWhenItEndsTheLineExceedingTheSizeLimit() throws Exception {
+        smtpConfiguration.setMaxMessageSize(1); // set message limit to 1kb
+        init(smtpConfiguration);
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        try (Socket client = new Socket(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort())) {
+            client.setSoTimeout(10000);
+            OutputStream out = client.getOutputStream();
+            out.write(("EHLO localhost\r\n"
+                + "MAIL FROM:<mail@localhost>\r\n"
+                + "RCPT TO:<mail@localhost>\r\n"
+                + "DATA\r\n"
+                + "Subject: test\r\n\r\n"
+                + "0123456789".repeat(200) + "\n" // over 1 KB, ending with a bare LF
+                + ".\r\n"
+                + "MAIL FROM:<a@b>\r\n"
+                + "RCPT TO:<mail@localhost>\r\n"
+                + "DATA\r\n"
+                + "Subject: smuggled\r\n\r\nhi\r\n.\r\n").getBytes(UTF_8));
+            out.flush();
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream(), UTF_8));
+            List<String> replies = new ArrayList<>();
+            String line;
+            while ((line = in.readLine()) != null) {
+                replies.add(line);
+            }
+
+            assertThat(replies.get(replies.size() - 1)).startsWith("500");
+            assertThat(testSystem.queue.getLastMail()).isNull();
+        }
+    }
+
     // Check if auth users get not rejected cause rbl. See JAMES-566
 
     @Test

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -59,11 +60,40 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
     private static final Response UNEXPECTED_ARG = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.DELIVERY_INVALID_ARG) + " Unexpected argument provided with DATA command").immutable();
     private static final Response DATA_READY = new SMTPResponse(SMTPRetCode.DATA_READY, "Ok Send data ending with <CRLF>.<CRLF>").immutable();
     private static final Collection<String> COMMANDS = ImmutableSet.of("DATA");
+    private static final boolean ENFORCE_CRLF = System.getProperty("james.prevent.smtp.smuggling", "true").equals("true");
+
+    /**
+     * Rejects, closing the session, a DATA line that does not end with CRLF. Same check as
+     * DataLineJamesMessageHookHandler, for the lines that do not reach it.
+     *
+     * @return the response to send, empty when the line ends with CRLF
+     */
+    public static Optional<SMTPResponse> rejectLineNotEndingWithCrlf(SMTPSession session, byte[] line) {
+        if (!ENFORCE_CRLF || endsWithCrlf(line)) {
+            return Optional.empty();
+        }
+        SMTPResponse response = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.UNDEFINED_STATUS) + " line delimiter must be CRLF");
+        response.setEndSession(true);
+        session.popLineHandler();
+        return Optional.of(response);
+    }
+
+    private static boolean endsWithCrlf(byte[] line) {
+        int length = line.length;
+        boolean longEnoughForCrlf = length >= 2;
+        return longEnoughForCrlf
+            && line[length - 2] == '\r'
+            && line[length - 1] == '\n';
+    }
 
     public static final class DataConsumerLineHandler implements LineHandler<SMTPSession> {
 
         @Override
         public SMTPResponse onLine(SMTPSession session, byte[] line) {
+            Optional<SMTPResponse> rejection = rejectLineNotEndingWithCrlf(session, line);
+            if (rejection.isPresent()) {
+                return rejection.get();
+            }
             // Discard everything until the end of DATA session
             if (line.length == 3 && line[0] == 46) {
                 session.popLineHandler();
