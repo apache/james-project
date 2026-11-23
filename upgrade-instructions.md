@@ -19,6 +19,7 @@ Change list:
  - [WebAdmin CORS headers require cors.enable and cors.origin](#webadmin-cors-headers-require-corsenable-and-corsorigin)
  - [IPv6 network prefixes apply as written](#ipv6-network-prefixes-apply-as-written)
 
+
 ### IPv6 network prefixes apply as written
 
 Date: 23/11/2026
@@ -73,6 +74,15 @@ Concerned products: WebAdmin
 WebAdmin used to send CORS headers allowing any origin whatever `cors.enable`. They are now only sent when `cors.enable`
 is `true`, and `cors.origin` is then mandatory: WebAdmin refuses to start without it. A web console served from
 another origin needs both properties set.
+
+### Scaling Pulsar SMTP app verifies the sender identity
+
+Date: 23/11/2026
+
+Concerned products: the scaling Pulsar SMTP app.
+
+Its sample `smtpserver.xml` now sets `verifyIdentity` to `strict` on ports 465 and 587, and to `relaxed` on port 25,
+like the distributed app: an authenticated user can only send mail as one of its own addresses.
 
 ## 3.9.1 version
 
