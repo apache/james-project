@@ -21,6 +21,8 @@ package org.apache.james.oidc.redis;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -40,12 +42,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 
 public abstract class RedisOidcTokenCacheContract extends OidcTokenCacheContract {
     public abstract void pauseRedis();
 
     private RedisOidcTokenCache redisOidcTokenCache;
+    private RedisTokenCacheCommands redisCommands;
 
     @BeforeEach
     void setUp() {
@@ -59,6 +63,7 @@ public abstract class RedisOidcTokenCacheContract extends OidcTokenCacheContract
         RedisTokenCacheCommands redisReactiveCommands = redisReactiveCommandsFactory.create(
             commands -> RedisTokenCacheCommands.of(commands, RedisOidcTokenCacheConfiguration.DEFAULT.commandTimeout()),
             commands -> RedisTokenCacheCommands.of(commands, RedisOidcTokenCacheConfiguration.DEFAULT.commandTimeout()));
+        redisCommands = redisReactiveCommands;
         redisOidcTokenCache = new RedisOidcTokenCache(tokenInfoResolver,
             OidcTokenCacheConfiguration.DEFAULT, redisReactiveCommands, RedisOidcTokenCacheKeyPrefix.JAMES_DEFAULT);
     }
@@ -76,6 +81,20 @@ public abstract class RedisOidcTokenCacheContract extends OidcTokenCacheContract
             .map(TokenInfo::email)
             .map(Username::of)
             .blockOptional();
+    }
+
+    @Test
+    public void entriesWithoutTheAudienceListShouldBeCacheMisses() {
+        redisCommands.hset("james_oidc_hash_" + Hashing.sha512().hashString(token.value(), StandardCharsets.UTF_8), ImmutableMap.of(
+                "email", EMAIL,
+                "exp", String.valueOf(EXPIRES_AT.getEpochSecond()),
+                "aud", "",
+                "sid", SID_STRING))
+            .block();
+
+        testee().associatedInformation(token).block();
+
+        verify(tokenInfoResolver, times(1)).apply(token);
     }
 
     @Timeout(value = 30, unit = TimeUnit.SECONDS)

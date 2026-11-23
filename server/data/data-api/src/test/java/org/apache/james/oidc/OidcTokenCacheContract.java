@@ -209,6 +209,27 @@ public abstract class OidcTokenCacheContract {
         assertThat(getUsernameFromCache(token)).contains(Username.of(EMAIL));
     }
 
+    @Test
+    void cacheHitShouldReturnTheAudienceAsResolved() {
+        List<List<Aud>> audLists = ImmutableList.of(
+            ImmutableList.of(),
+            ImmutableList.of(new Aud("")),
+            ImmutableList.of(new Aud(";")),
+            ImmutableList.of(new Aud("other;james")),
+            ImmutableList.of(new Aud("other"), new Aud("james")));
+
+        for (List<Aud> audList : audLists) {
+            Token token = new Token("token-" + UUID.randomUUID());
+            mockTokenInfoResolverSuccess(token, new TokenInfo(EMAIL, Optional.of(SID), EXPIRES_AT, Optional.of(audList)));
+
+            testee().associatedInformation(token).block();
+
+            assertThat(testee().associatedInformation(token).block().aud())
+                .contains(audList);
+            verify(tokenInfoResolver, times(1)).apply(token);
+        }
+    }
+
     public void mockTokenInfoResolverSuccess(Token token, TokenInfo expected) {
         when(tokenInfoResolver.apply(token))
             .thenReturn(Mono.just(expected));
