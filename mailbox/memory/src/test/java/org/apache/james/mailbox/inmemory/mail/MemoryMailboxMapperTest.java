@@ -19,12 +19,20 @@
 
 package org.apache.james.mailbox.inmemory.mail;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
+import org.junit.jupiter.api.Test;
 
 class MemoryMailboxMapperTest extends MailboxMapperTest {
 
@@ -38,5 +46,18 @@ class MemoryMailboxMapperTest extends MailboxMapperTest {
     @Override
     protected MailboxId generateId() {
         return InMemoryId.of(counter.incrementAndGet());
+    }
+
+    @Test
+    void renameShouldKeepTheStoredACL() throws Exception {
+        Mailbox mailbox = mailboxMapper.create(MailboxPath.forUser(Username.of("alice"), "shared"), UidValidity.of(1L)).block();
+        Mailbox outdatedCopy = mailboxMapper.findMailboxById(mailbox.getMailboxId()).block();
+        MailboxACL acl = new MailboxACL().apply(MailboxACL.command().forUser(Username.of("bob")).rights(MailboxACL.Right.Read).asAddition());
+        mailboxMapper.setACL(mailbox, acl).block();
+
+        outdatedCopy.setName("renamed");
+        mailboxMapper.rename(outdatedCopy).block();
+
+        assertThat(mailboxMapper.findMailboxById(mailbox.getMailboxId()).block().getACL()).isEqualTo(acl);
     }
 }

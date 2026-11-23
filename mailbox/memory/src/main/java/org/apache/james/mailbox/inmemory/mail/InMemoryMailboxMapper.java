@@ -114,10 +114,17 @@ public class InMemoryMailboxMapper implements MailboxMapper {
                 if (exist) {
                     return Mono.error(new MailboxExistsException(mailbox.generateAssociatedPath().getName()));
                 }
-                return Mono.defer(() -> Mono.justOrEmpty(mailboxesById.computeIfPresent(mailbox.getMailboxId(), (mailboxId, existingMailbox) -> mailbox))
+                return Mono.defer(() -> Mono.justOrEmpty(mailboxesById.computeIfPresent(mailbox.getMailboxId(), (mailboxId, existingMailbox) -> renamed(mailbox, existingMailbox)))
                     .map(Mailbox::getMailboxId)
                     .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailbox.getMailboxId()))));
             });
+    }
+
+    private Mailbox renamed(Mailbox mailbox, Mailbox existingMailbox) {
+        // Keep the stored ACL: the one of the given mailbox might be outdated
+        Mailbox renamed = new Mailbox(mailbox);
+        renamed.setACL(existingMailbox.getACL());
+        return renamed;
     }
 
     private Mono<Void> saveMailbox(Mailbox mailbox) {
