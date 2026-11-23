@@ -50,7 +50,7 @@ case class RecipientKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, ma
   override def asString(): String = s"${
     keyPrefix.map(prefix => prefix.value + "_")
       .getOrElse("")
-  }${entityType.asString}_${mailAddress.asString()}"
+  }${entityType.asString}_${RateLimitedAddress.asKey(mailAddress)}"
 }
 
 /**
