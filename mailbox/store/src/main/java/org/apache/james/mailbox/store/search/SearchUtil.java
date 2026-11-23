@@ -275,9 +275,8 @@ public class SearchUtil {
         private final String subject;
         private int start;
         private int end;
-        // No bracket in [bracketSearchFrom, nextBracket), and nextBracket is a bracket or the subject length
-        private int bracketSearchFrom = -1;
-        private int nextBracket = -1;
+        // nextBrackets[i] is the position of the first bracket at or after i, or the subject length. Computed on first use
+        private int[] nextBrackets;
         // The blobs starting at any blob boundary within [blobRunFrom, blobRunEnd] end at blobRunEnd, for this end
         private int blobRunFrom = -1;
         private int blobRunEnd = -1;
@@ -467,21 +466,24 @@ public class SearchUtil {
         }
 
         /**
-         * Positions only grow, so caching the last lookup keeps the overall scan linear.
+         * The next bracket of every position is computed in one pass, so lookups do not depend on their order.
          */
         private int nextBracket(int from) {
-            if (from >= bracketSearchFrom && from <= nextBracket) {
-                return nextBracket;
+            if (from >= subject.length()) {
+                return subject.length();
             }
-            int position = from;
-            while (position < subject.length()
-                && subject.charAt(position) != OPEN_SQUARE_BRACKED
-                && subject.charAt(position) != CLOSE_SQUARE_BRACKED) {
-                position++;
+            if (nextBrackets == null) {
+                nextBrackets = new int[subject.length()];
+                int next = subject.length();
+                for (int position = subject.length() - 1; position >= 0; position--) {
+                    char c = subject.charAt(position);
+                    if (c == OPEN_SQUARE_BRACKED || c == CLOSE_SQUARE_BRACKED) {
+                        next = position;
+                    }
+                    nextBrackets[position] = next;
+                }
             }
-            bracketSearchFrom = from;
-            nextBracket = position;
-            return position;
+            return nextBrackets[from];
         }
 
         private int skipWhiteSpaces(int from) {
