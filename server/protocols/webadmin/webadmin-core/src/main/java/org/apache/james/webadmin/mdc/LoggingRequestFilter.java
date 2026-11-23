@@ -27,6 +27,7 @@ import java.util.Set;
 import jakarta.inject.Inject;
 
 import org.apache.james.util.MDCStructuredLogger;
+import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,16 +48,21 @@ public class LoggingRequestFilter implements Filter {
 
         @Override
         public void log(Request request, RequestId requestId) {
-            MDCStructuredLogger.forLogger(LOGGER)
+            StructuredLogger structuredLogger = MDCStructuredLogger.forLogger(LOGGER)
                     .field(REQUEST_ID, requestId.asString())
                     .field(IP, request.ip())
                     .field("real-ip", Optional.ofNullable(request.headers("X-Real-IP")).orElse(""))
                     .field(ENDPOINT, request.url())
                     .field(METHOD, request.requestMethod())
                     .field(LOGIN, request.attribute(LOGIN))
-                    .field(QUERY_PARAMETERS, ImmutableSet.copyOf(request.queryParams()).toString())
-                    .field(REQUEST_BODY, request.body())
-                    .log(logger -> logger.info("WebAdmin request received"));
+                    .field(QUERY_PARAMETERS, ImmutableSet.copyOf(request.queryParams()).toString());
+            // The body might carry secrets: only log it in DEBUG
+            if (LOGGER.isDebugEnabled()) {
+                structuredLogger.field(REQUEST_BODY, request.body())
+                    .log(logger -> logger.debug("WebAdmin request received"));
+            } else {
+                structuredLogger.log(logger -> logger.info("WebAdmin request received"));
+            }
         }
     }
 
