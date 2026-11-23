@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mailet;
@@ -58,6 +59,26 @@ class MailAttributesListToMimeHeadersTest {
     @BeforeEach
     void setup() {
         mailet = new MailAttributesListToMimeHeaders();
+    }
+
+    @Test
+    void shouldIgnoreValuesHoldingALineBreak() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("simplemapping", MAIL_ATTRIBUTE_NAME1 + "; " + HEADER_NAME1)
+            .build());
+
+        FakeMail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(MailUtil.createMimeMessage())
+            .attribute(Attribute.convertToAttribute(MAIL_ATTRIBUTE_NAME1,
+                ImmutableList.of(AttributeValue.of("x\r\nX-Injected: 1"), AttributeValue.of(VALUE_1_1))))
+            .build();
+
+        mailet.service(mail);
+
+        assertThat(MimeMessageUtil.mimeMessageFromString(MimeMessageUtil.asString(mail.getMessage())).getHeader("X-Injected")).isNull();
+        assertThat(mail.getMessage().getHeader(HEADER_NAME1)).containsExactly(VALUE_1_1);
     }
 
     @Test
