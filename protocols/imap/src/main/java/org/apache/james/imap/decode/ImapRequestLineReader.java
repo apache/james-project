@@ -21,7 +21,6 @@ package org.apache.james.imap.decode;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -688,6 +687,9 @@ public abstract class ImapRequestLineReader {
         } else {
             try {
                 ImmutablePair<Integer, Literal> literal = consumeLiteral(false);
+                // Only the stream read here is closed, not the literal: a literal may be backed by a resource shared
+                // by the whole command (eg the file a large APPEND is spooled to), released by its owner once the
+                // command ends.
                 try (InputStream in = literal.right.getInputStream()) {
                     Integer size = literal.left;
                     byte[] data = IOUtils.readFully(in, size);
@@ -695,14 +697,6 @@ public abstract class ImapRequestLineReader {
                     return decode(charset, buffer);
                 } catch (IOException e) {
                     throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
-                } finally {
-                    if (literal.right instanceof Closeable) {
-                        try {
-                            ((Closeable) literal.right).close();
-                        } catch (IOException e) {
-                            // silent
-                        }
-                    }
                 }
             } catch (DecodingException e) {
                 throw e;
