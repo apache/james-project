@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
@@ -84,7 +85,7 @@ public class DropListRoutes implements Routes {
 
     public ImmutableSet<String> getDropList(Request request, Response response) {
         OwnerScope ownerScope = checkValidOwnerScope(request.params(OWNER_SCOPE));
-        String owner = Optional.ofNullable(request.params(OWNER)).orElse("");
+        String owner = normalize(Optional.ofNullable(request.params(OWNER)).orElse(""));
         Optional<DeniedEntityType> deniedEntityType = checkValidDeniedEntityType(request.queryParams(DENIED_ENTITY_TYPE));
         if (deniedEntityType.isPresent()) {
             return dropList.list(ownerScope, owner)
@@ -102,8 +103,8 @@ public class DropListRoutes implements Routes {
 
     public String addDropListEntry(Request request, Response response) {
         OwnerScope ownerScope = checkValidOwnerScope(request.params(OWNER_SCOPE));
-        String owner = Optional.ofNullable(request.params(OWNER)).orElse("");
-        String deniedEntity = request.params(DENIED_ENTITY);
+        String owner = normalize(Optional.ofNullable(request.params(OWNER)).orElse(""));
+        String deniedEntity = normalize(request.params(DENIED_ENTITY));
         DropListEntry dropListEntry = getDropListEntry(ownerScope, owner, deniedEntity);
         dropList.add(dropListEntry).block();
         return Responses.returnNoContent(response);
@@ -111,8 +112,8 @@ public class DropListRoutes implements Routes {
 
     public String removeDropListEntry(Request request, Response response) {
         OwnerScope ownerScope = checkValidOwnerScope(request.params(OWNER_SCOPE));
-        String owner = Optional.ofNullable(request.params(OWNER)).orElse("");
-        String deniedEntity = request.params(DENIED_ENTITY);
+        String owner = normalize(Optional.ofNullable(request.params(OWNER)).orElse(""));
+        String deniedEntity = normalize(request.params(DENIED_ENTITY));
         dropList.list(ownerScope, owner)
             .filter(dropListEntry -> dropListEntry.getDeniedEntity().equals(deniedEntity))
             .collectList()
@@ -123,8 +124,8 @@ public class DropListRoutes implements Routes {
 
     public String dropListEntryExist(Request request, Response response) {
         OwnerScope ownerScope = checkValidOwnerScope(request.params(OWNER_SCOPE));
-        String owner = Optional.ofNullable(request.params(OWNER)).orElse("");
-        String deniedEntity = request.params(DENIED_ENTITY);
+        String owner = normalize(Optional.ofNullable(request.params(OWNER)).orElse(""));
+        String deniedEntity = normalize(request.params(DENIED_ENTITY));
         boolean entryExists = dropList.list(ownerScope, owner)
             .any(dropListEntry -> dropListEntry.getDeniedEntity().equals(deniedEntity))
             .block();
@@ -134,6 +135,11 @@ public class DropListRoutes implements Routes {
             response.status(HttpStatus.NOT_FOUND_404);
         }
         return Constants.EMPTY_BODY;
+    }
+
+    // Entries are stored lower cased: the owner and the denied entity of the URL must be looked up the same way
+    private static String normalize(String value) {
+        return value.toLowerCase(Locale.US);
     }
 
     private Optional<DeniedEntityType> checkValidDeniedEntityType(String deniedEntityType) {
