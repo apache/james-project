@@ -26,8 +26,10 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Base64;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,5 +67,20 @@ class IMAPServerAdminUsersTest extends AbstractIMAPServerTest {
         String reply = readStringUntil(clientConnection, s -> s.startsWith("a0")).getLast();
 
         assertThat(reply).startsWith("a0 OK");
+    }
+
+    @Test
+    void disconnectShouldCloseTheSessionsTheUserOpenedForAnotherUser() throws Exception {
+        clientConnection.write(ByteBuffer.wrap("a0 AUTHENTICATE PLAIN\r\n".getBytes(StandardCharsets.UTF_8)));
+        readStringUntil(clientConnection, s -> s.startsWith("+"));
+        // USER authenticates and acts as USER2
+        clientConnection.write(ByteBuffer.wrap((Base64.getEncoder().encodeToString((USER2.asString() + "\0" + USER.asString() + "\0" + USER_PASS).getBytes(StandardCharsets.US_ASCII)) + "\r\n").getBytes(StandardCharsets.US_ASCII)));
+        assertThat(readStringUntil(clientConnection, s -> s.startsWith("a0")).getLast()).startsWith("a0 OK");
+
+        imapServer.disconnect(USER::equals);
+
+        clientConnection.configureBlocking(false);
+        Awaitility.await().atMost(Duration.ofSeconds(5))
+            .until(() -> clientConnection.read(ByteBuffer.allocate(1024)) == -1);
     }
 }

@@ -33,6 +33,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -53,6 +54,7 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.mailet.Mail;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -1420,6 +1422,31 @@ public class SMTPServerTest {
 
         smtpProtocol.quit();
 
+    }
+
+    @Test
+    void disconnectShouldCloseTheSessionsTheUserOpenedForAnotherUser() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+        testSystem.usersRepository.addUser(Username.of("bob@localhost"), "pwd");
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smtpProtocol.sendCommand("ehlo", "localhost");
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        // Bob authenticates and acts as Alice
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("alice@localhost\0bob@localhost\0pwd").getBytes(UTF_8)));
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
+
+        testSystem.smtpServer.disconnect(Username.of("bob@localhost")::equals);
+
+        Awaitility.await().atMost(Duration.ofSeconds(5))
+            .untilAsserted(() -> assertThatThrownBy(() -> smtpProtocol.sendCommand("NOOP"))
+                .isInstanceOf(IOException.class));
     }
 
     // Test for JAMES-939

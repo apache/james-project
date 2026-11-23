@@ -25,7 +25,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Base64;
 
 import org.apache.james.DisconnectorNotifier;
 import org.apache.james.core.Username;
@@ -80,7 +82,8 @@ class ProtocolServerRoutesChannelsTest {
 
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .authenticator(authenticator)
-            .authorizator(FakeAuthorizator.defaultReject())
+            // Bob may act for Alice
+            .authorizator(FakeAuthorizator.forGivenUserAndDelegatedUser(BOB, ALICE))
             .inVmEventBus()
             .defaultAnnotationLimits()
             .defaultMessageParser()
@@ -279,6 +282,37 @@ class ProtocolServerRoutesChannelsTest {
 
         given(spec).get("/servers/channels?sortBy=unknownField")
             .then().statusCode(200).body("", hasSize(1));
+    }
+
+    @Test
+    void getChannelsByUserShouldListTheSessionsTheUserOpenedForAnotherAccount() throws Exception {
+        bobClient.connect("127.0.0.1", imapPort);
+        assertThat(bobClient.sendCommand(authenticateAsAliceWithBobCredentials())).contains("OK AUTHENTICATE completed.");
+
+        awaitChannelCount(1);
+
+        given(spec).get("/servers/channels/" + BOB.asString())
+            .then().statusCode(200)
+            .body("", hasSize(1))
+            .body("[0].username", equalTo(ALICE.asString()));
+    }
+
+    @Test
+    void deleteChannelsByUserShouldDisconnectTheSessionsTheUserOpenedForAnotherAccount() throws Exception {
+        bobClient.connect("127.0.0.1", imapPort);
+        assertThat(bobClient.sendCommand(authenticateAsAliceWithBobCredentials())).contains("OK AUTHENTICATE completed.");
+
+        awaitChannelCount(1);
+
+        given(spec).delete("/servers/channels/" + BOB.asString())
+            .then().statusCode(204);
+
+        awaitChannelCount(0);
+    }
+
+    private String authenticateAsAliceWithBobCredentials() {
+        String credentials = ALICE.asString() + "\0" + BOB.asString() + "\0" + PASSWORD;
+        return "AUTHENTICATE PLAIN " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
     }
 
     private void awaitChannelCount(int expected) {

@@ -169,7 +169,9 @@ public class ProtocolServerRoutes implements Routes {
             Username username = Parsers.parseUsername(request.params("user"));
             ChannelsQueryParameters params = ChannelsQueryParameters.from(request);
             return OBJECT_MAPPER.writeValueAsString(params.apply(connectionDescriptionSupplier.describeConnections()
-                .filter(connectionDescription -> connectionDescription.username().map(username::equals).orElse(false))
+                // A session opened by the user for another account names the user as loggedInUser
+                .filter(connectionDescription -> connectionDescription.username().map(username::equals).orElse(false)
+                    || username.asString().equals(connectionDescription.protocolSpecificInformation().get("loggedInUser")))
                 .map(ConnectionDescriptionDTO::from))
                 .toList());
         });

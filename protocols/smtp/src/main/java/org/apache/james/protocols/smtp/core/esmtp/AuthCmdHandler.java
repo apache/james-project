@@ -78,6 +78,10 @@ public class AuthCmdHandler
     private static final ProtocolSession.AttachmentKey<SaslExchange> ACTIVE_SASL_EXCHANGE =
         ProtocolSession.AttachmentKey.of("SMTP_ACTIVE_SASL_EXCHANGE", SaslExchange.class);
 
+    // The user who authenticated, which differs from the session username when acting for another user
+    public static final ProtocolSession.AttachmentKey<Username> AUTHENTICATED_USER =
+        ProtocolSession.AttachmentKey.of("SMTP_AUTHENTICATED_USER", Username.class);
+
     private static final ProtocolSession.AttachmentKey<Integer> AUTHENTICATION_FAILURES =
         ProtocolSession.AttachmentKey.of("SMTP_AUTHENTICATION_FAILURES", Integer.class);
     // Same limit as the IMAP server
@@ -260,6 +264,7 @@ public class AuthCmdHandler
     private Response applySaslSuccess(SMTPSession session, String authType, SaslExchange exchange, SaslStep.Success success) {
         Username username = success.identity().authorizationId();
         session.setUsername(username);
+        session.setAttachment(AUTHENTICATED_USER, success.identity().authenticationId(), ProtocolSession.State.Connection);
         session.setRelayingAllowed(true);
         saslAuthResultHooks.forEach(hook -> hook.onSuccess(session, authType, success.identity()));
 
