@@ -20,6 +20,7 @@ Change list:
  - [IPv6 network prefixes apply as written](#ipv6-network-prefixes-apply-as-written)
 
 
+
 ### IPv6 network prefixes apply as written
 
 Date: 23/11/2026
@@ -83,6 +84,17 @@ Concerned products: the scaling Pulsar SMTP app.
 
 Its sample `smtpserver.xml` now sets `verifyIdentity` to `strict` on ports 465 and 587, and to `relaxed` on port 25,
 like the distributed app: an authenticated user can only send mail as one of its own addresses.
+
+### Spring app generates its JMX password
+
+Date: 23/11/2026
+
+Concerned products: the Spring app.
+
+`conf/jmxremote.password` no longer ships the `james-admin changeme` credentials: it is a commented template. At start,
+when the file holds no credentials, or still holds `james-admin changeme`, James generates a random password for
+`james-admin`, in a file readable by its owner only. Read it there, for instance for `james-cli`, or write your own
+`james-admin <password>` line in the file.
 
 ## 3.9.1 version
 
