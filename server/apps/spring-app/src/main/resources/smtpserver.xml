@@ -213,8 +213,7 @@
              -->
             
             <!-- Checks HELO/EHLO is equal the reverse of the connecting client before accept it -->
-            <!-- If checkAuthNetworks is set to true sender domain will be checked also for clients that -->
-            <!-- are allowed to relay. Default is false. -->
+            <!-- Clients that are authenticated or allowed to relay are not checked. -->
             <!--
             <handler class="org.apache.james.smtpserver.fastfail.ReverseEqualsEhloHeloHandler"/>
              -->

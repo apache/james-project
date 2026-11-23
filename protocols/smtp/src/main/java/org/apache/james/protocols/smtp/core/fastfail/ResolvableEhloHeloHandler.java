@@ -52,13 +52,17 @@ public class ResolvableEhloHeloHandler implements HeloHook, MailHook, RcptHook {
      *            The argument
      */
     protected void checkEhloHelo(SMTPSession session, String argument) {
-        if (isBadHelo(argument)) {
+        if (isBadHelo(session, argument)) {
             session.setAttachment(BAD_EHLO_HELO, true, State.Transaction);
         }
     }
     
     protected String resolve(String host) throws UnknownHostException {
         return InetAddress.getByName(host).getHostName();
+    }
+
+    protected boolean isBadHelo(SMTPSession session, String argument) {
+        return isBadHelo(argument);
     }
 
     protected boolean isBadHelo(String argument) {
