@@ -36,6 +36,8 @@ import com.google.common.collect.ImmutableList;
 
 public class MimeMessageHeadersUtil {
     private static final Splitter SPLITTER = Splitter.on(' ').omitEmptyStrings().trimResults();
+    private static final int MAX_REFERENCES = 50;
+    private static final int MAX_REFERENCE_LENGTH = 998;
 
     public static Optional<MimeMessageId> parseMimeMessageId(Header headers) {
         return Optional.ofNullable(headers.getField("Message-ID")).map(field -> new MimeMessageId(field.getBody()));
@@ -56,9 +58,11 @@ public class MimeMessageHeadersUtil {
                 .map(Field::getBody)
                 .map(MimeUtil::unfold)
                 .flatMap(SPLITTER::splitToStream)
+                .filter(reference -> reference.length() <= MAX_REFERENCE_LENGTH)
                 .map(MimeMessageId::new)
                 .collect(ImmutableList.toImmutableList());
-            return Optional.of(mimeMessageIdList);
+            // The most recent references are enough to find the thread
+            return Optional.of(mimeMessageIdList.subList(Math.max(0, mimeMessageIdList.size() - MAX_REFERENCES), mimeMessageIdList.size()));
         }
         return Optional.empty();
     }
