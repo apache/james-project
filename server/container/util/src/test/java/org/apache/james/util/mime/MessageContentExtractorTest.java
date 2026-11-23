@@ -40,6 +40,7 @@ import org.apache.james.mime4j.util.ByteSequence;
 import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -522,5 +523,42 @@ class MessageContentExtractorTest {
                 .build();
         MessageContent actual = testee.extract(message);
         assertThat(actual.getTextBody()).contains("????\r\n????\r\n????");
+    }
+
+    @Test
+    @Timeout(10)
+    void extractShouldReturnEmptyWhenDeeplyNestedMultipartMixed() throws IOException {
+        Message message = nestedMultiparts("mixed", 30, BodyPartBuilder.create().setBody(new byte[1], "application/octet-stream"));
+
+        assertThat(testee.extract(message).isEmpty()).isTrue();
+    }
+
+    @Test
+    @Timeout(10)
+    void extractShouldReturnEmptyWhenDeeplyNestedMultipartAlternative() throws IOException {
+        Message message = nestedMultiparts("alternative", 30, BodyPartBuilder.create().setBody(new byte[1], "application/octet-stream"));
+
+        assertThat(testee.extract(message).isEmpty()).isTrue();
+    }
+
+    @Test
+    void extractShouldReturnTextWhenNestedFifteenLevels() throws IOException {
+        Message message = nestedMultiparts("mixed", 15, textPart);
+
+        assertThat(testee.extract(message).getTextBody()).contains(TEXT_CONTENT);
+    }
+
+    private Message nestedMultiparts(String subtype, int levels, BodyPartBuilder leaf) throws IOException {
+        Multipart multipart = MultipartBuilder.create(subtype)
+            .addBodyPart(leaf)
+            .build();
+        for (int i = 1; i < levels; i++) {
+            multipart = MultipartBuilder.create(subtype)
+                .addBodyPart(BodyPartBuilder.create().setBody(multipart).build())
+                .build();
+        }
+        return Message.Builder.of()
+            .setBody(multipart)
+            .build();
     }
 }
