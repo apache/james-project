@@ -181,6 +181,21 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
+    void startTlsShouldFailWhenFollowedByInjectedCommandAfterARefusedData() throws Exception {
+        server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
+        smtpsClient = createClient();
+
+        server.bind();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+        smtpsClient.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        smtpsClient.sendCommand("EHLO localhost");
+        smtpsClient.sendCommand("DATA");
+
+        smtpsClient.sendCommand("STARTTLS\r\nRSET\r\n");
+        assertThat(SMTPReply.isPositiveCompletion(smtpsClient.getReplyCode())).isFalse();
+    }
+
+    @Test
     void startTlsShouldFailWhenFollowedByInjectedCommandAndNotAtBeginningOfLine() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
