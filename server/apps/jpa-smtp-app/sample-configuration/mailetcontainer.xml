@@ -100,18 +100,14 @@
         </processor>
 
         <processor state="local-address-error" enableJmx="true">
-            <mailet match="All" class="Bounce">
-                <attachment>none</attachment>
-            </mailet>
+            <!-- No bounce: the sender of a refused mail is not authenticated, and could be forged -->
             <mailet match="All" class="ToRepository">
                 <repositoryPath>file://var/mail/address-error/</repositoryPath>
             </mailet>
         </processor>
 
         <processor state="relay-denied" enableJmx="true">
-            <mailet match="All" class="Bounce">
-                <attachment>none</attachment>
-            </mailet>
+            <!-- No bounce: the sender of a refused mail is not authenticated, and could be forged -->
             <mailet match="All" class="ToRepository">
                 <repositoryPath>file://var/mail/relay-denied/</repositoryPath>
                 <notice>Warning: You are sending an e-mail to a remote server. You must be authentified to perform such an operation</notice>
