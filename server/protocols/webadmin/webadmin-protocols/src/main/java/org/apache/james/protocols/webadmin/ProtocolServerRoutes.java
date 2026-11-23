@@ -162,7 +162,9 @@ public class ProtocolServerRoutes implements Routes {
         service.get(SERVERS + "/channels/:user", (request, response) -> {
             Username username = Username.of(request.params("user"));
             return OBJECT_MAPPER.writeValueAsString(connectionDescriptionSupplier.describeConnections()
-                .filter(connectionDescription -> connectionDescription.username().map(username::equals).orElse(false))
+                // A session opened by the user for another account names the user as loggedInUser
+                .filter(connectionDescription -> connectionDescription.username().map(username::equals).orElse(false)
+                    || username.asString().equals(connectionDescription.protocolSpecificInformation().get("loggedInUser")))
                 .map(ConnectionDescriptionDTO::from)
                 .toList());
         });

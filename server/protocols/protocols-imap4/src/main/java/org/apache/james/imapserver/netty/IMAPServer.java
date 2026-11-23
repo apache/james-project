@@ -239,11 +239,18 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     @Override
     public void disconnect(Predicate<Username> user) {
         imapChannelGroup.stream()
-            .filter(channel -> Optional.ofNullable(channel.attr(IMAP_SESSION_ATTRIBUTE_KEY).get())
-                .flatMap(session -> Optional.ofNullable(session.getUserName()))
-                .map(user::test)
-                .orElse(false))
+            .filter(channel -> Optional.ofNullable(channel.attr(IMAP_SESSION_ATTRIBUTE_KEY).get()).stream()
+                .flatMap(IMAPServer::sessionUsers)
+                .anyMatch(user))
             .forEach(channel -> channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE));
+    }
+
+    /**
+     * The user the session acts as, and the user who authenticated: they differ for a delegated session.
+     */
+    private static Stream<Username> sessionUsers(ImapSession session) {
+        return Stream.concat(Optional.ofNullable(session.getUserName()).stream(),
+            Optional.ofNullable(session.getMailboxSession()).flatMap(MailboxSession::getLoggedInUser).stream());
     }
 
     private static Integer parseLiteralSizeLimit(HierarchicalConfiguration<ImmutableNode> configuration) {

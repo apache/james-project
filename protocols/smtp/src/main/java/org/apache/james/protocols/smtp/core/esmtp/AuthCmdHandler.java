@@ -79,6 +79,10 @@ public class AuthCmdHandler
     private static final String[] MAIL_PARAMS = { "AUTH" };
     private static final String AUTH_TYPES_DELIMITER = " ";
 
+    // The user who authenticated, which differs from the session username when acting for another user
+    public static final ProtocolSession.AttachmentKey<Username> AUTHENTICATED_USER =
+        ProtocolSession.AttachmentKey.of("SMTP_AUTHENTICATED_USER", Username.class);
+
     private static final ProtocolSession.AttachmentKey<Integer> AUTHENTICATION_FAILURES =
         ProtocolSession.AttachmentKey.of("SMTP_AUTHENTICATION_FAILURES", Integer.class);
     // Same limit as the IMAP server
@@ -408,6 +412,7 @@ public class AuthCmdHandler
                     } else if (SMTPRetCode.AUTH_OK.equals(res.getRetCode())) {
                         // TODO: Make this string a more useful debug message
                         AUTHENTICATION_DEDICATED_LOGGER.debug("AUTH method {} succeeded", authType);
+                        session.setAttachment(AUTHENTICATED_USER, username.get(), ProtocolSession.State.Connection);
 
                         AuditTrail.entry()
                             .username(username.get()::asString)
