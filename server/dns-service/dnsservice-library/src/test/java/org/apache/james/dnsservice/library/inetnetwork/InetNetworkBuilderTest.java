@@ -55,7 +55,7 @@ public class InetNetworkBuilderTest {
         inetNetworkBuilder = new InetNetworkBuilder(DNSFixture.DNS_SERVER_IPV6_MOCK);
 
         inetNetwork = inetNetworkBuilder.getFromString(DNSFixture.LOCALHOST_IP_V6_ADDRESS_0);
-        assertThat(inetNetwork.toString()).isEqualTo("0:0:0:0:0:0:0:1/32768");
+        assertThat(inetNetwork.toString()).isEqualTo("0:0:0:0:0:0:0:1/128");
 
         inetNetwork = inetNetworkBuilder.getFromString(DNSFixture.LOCALHOST_IP_V6_ADDRESS_1);
         assertThat(inetNetwork.toString()).isEqualTo("2781:db8:1234:0:0:0:0:0/48");

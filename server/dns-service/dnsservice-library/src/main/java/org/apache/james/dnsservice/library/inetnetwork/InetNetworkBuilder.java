@@ -155,7 +155,7 @@ public class InetNetworkBuilder {
         netspec = netspec.replaceAll("%", "/");
 
         if (netspec.indexOf('/') == -1) {
-            netspec += "/32768";
+            netspec += "/" + Inet6Network.MAX_PREFIX_LENGTH;
         }
 
         return new Inet6Network(dnsService.getByName(netspec.substring(0, netspec.indexOf('/'))), Integer.valueOf(netspec.substring(netspec.indexOf('/') + 1)));
