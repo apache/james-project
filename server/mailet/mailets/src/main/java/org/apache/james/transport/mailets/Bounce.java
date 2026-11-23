@@ -221,7 +221,8 @@ public class Bounce extends GenericMailet implements RedirectNotify {
     @Override
     public Optional<MailAddress> getSender() throws MessagingException {
         return SpecialAddressesUtils.from(this)
-                .getFirstSpecialAddressIfMatchingOrGivenAddress(getInitParameters().getSender(), RedirectNotify.SENDER_ALLOWED_SPECIALS);
+                .getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of(getInitParameters().getSender().orElse("postmaster")),
+                    RedirectNotify.SENDER_ALLOWED_SPECIALS);
     }
 
     @Override
