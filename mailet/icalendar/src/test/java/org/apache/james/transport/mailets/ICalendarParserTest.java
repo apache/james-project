@@ -22,9 +22,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -48,6 +52,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.google.common.collect.ImmutableMap;
 
 import net.fortuna.ical4j.model.Calendar;
+import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.property.Attach;
 
 class ICalendarParserTest {
     static final String DESTINATION_ATTRIBUTE = "destinationAttribute";
@@ -169,6 +176,38 @@ class ICalendarParserTest {
     @Test
     void serviceShouldKeepCalendarWhenCustomTimeZoneHasARegularRecurrence() throws Exception {
         assertThat(parse(calendar(timeZone("Custom Time", "FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU")))).hasSize(1);
+    }
+
+    @Test
+    void serviceShouldDecodeInlineAttachmentsWithoutTemporaryFiles() throws Exception {
+        String ics = """
+            BEGIN:VCALENDAR
+            VERSION:2.0
+            PRODID:x
+            BEGIN:VEVENT
+            UID:a
+            DTSTAMP:20260401T100000Z
+            DTSTART:20260401T100000Z
+            ATTACH;ENCODING=BASE64;VALUE=BINARY;FMTTYPE=text/plain:aGVsbG8=
+            ATTACH:https://example.com/a.pdf
+            END:VEVENT
+            END:VCALENDAR
+            """;
+        List<Path> before = ical4jAttachFiles();
+
+        Calendar calendar = (Calendar) parse(ics).get("event.ics").getValue();
+
+        assertThat(ical4jAttachFiles()).isEqualTo(before);
+        List<Attach> attachments = calendar.getComponent(Component.VEVENT).orElseThrow().getProperties(Property.ATTACH);
+        assertThat(attachments).hasSize(2);
+        assertThat(new String(attachments.get(0).getBinaryData(), StandardCharsets.US_ASCII)).isEqualTo("hello");
+        assertThat(attachments.get(1).getUri()).hasToString("https://example.com/a.pdf");
+    }
+
+    private static List<Path> ical4jAttachFiles() throws IOException {
+        try (Stream<Path> files = Files.list(Path.of(System.getProperty("java.io.tmpdir")))) {
+            return files.filter(file -> file.getFileName().toString().startsWith("ical4j-attach")).sorted().toList();
+        }
     }
 
     @Test
