@@ -31,7 +31,7 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mime4j.field.address.DefaultAddressParser
-import org.apache.james.server.core.MimeMessageUtil
+import org.apache.james.server.core.{MimeMessageUtil, SubmittedHeaderFields}
 import org.apache.james.user.api.UsersRepository
 import org.apache.james.util.ReactorUtils
 import org.apache.mailet.Mail
@@ -60,6 +60,7 @@ class SenderHeaderEmailSubmissionSetValidation @Inject()(usersRepository: UsersR
         // Sender field checked here could differ from the one shown to recipients, or even be hidden from
         // Jakarta Mail when the bare CRs make it read an empty line
         !MimeMessageUtil.headerBlockHoldsABareCarriageReturn(mail.getMessage) &&
+          SubmittedHeaderFields.violation(mail.getMessage).isEmpty &&
           senderFields.forall(field => disclosesOnly(field, loggedInUser))
       })
       .map {

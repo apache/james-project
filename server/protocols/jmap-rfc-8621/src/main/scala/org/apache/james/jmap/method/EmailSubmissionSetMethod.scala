@@ -50,7 +50,7 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
-import org.apache.james.server.core.{AddressFields, MailImpl, MimeMessageSource, MimeMessageWrapper}
+import org.apache.james.server.core.{AddressFields, MailImpl, MimeMessageSource, MimeMessageWrapper, SubmittedHeaderFields}
 import org.apache.james.util.{AuditTrail, ReactorUtils}
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue, Mail}
 import org.slf4j.{Logger, LoggerFactory}
@@ -81,6 +81,16 @@ object EmailSubmissionSetMethod {
       SMono.just(mimeMessage)
     } else {
       SMono.error(MissingFromHeaderException())
+    }
+
+  // Several From or Sender fields, or a field name read differently by Jakarta Mail and mime4j, could make the
+  // checked sender differ from the displayed one
+  def validateHeaderFields(mimeMessage: MimeMessage): SMono[MimeMessage] =
+    SubmittedHeaderFields.violation(mimeMessage).toScala match {
+      case Some(SubmittedHeaderFields.Violation.SEVERAL_FROM) => SMono.error(ForbiddenFromException(Nil, Properties("from")))
+      case Some(SubmittedHeaderFields.Violation.SEVERAL_SENDER) => SMono.error(ForbiddenFromException(Nil, Properties("sender")))
+      case Some(violation) => SMono.error(new IllegalArgumentException(violation.description()))
+      case None => SMono.just(mimeMessage)
     }
 
   sealed trait CreationResult {
@@ -547,6 +557,10 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
   // The From field defaults to the Sender field, as for MimeMessage::getFrom
   private def validate(session: MailboxSession)(mimeMessage: MimeMessage, envelope: Envelope): SMono[MimeMessage] =
+    EmailSubmissionSetMethod.validateHeaderFields(mimeMessage)
+      .flatMap(_ => validateSenderFields(session)(mimeMessage, envelope))
+
+  private def validateSenderFields(session: MailboxSession)(mimeMessage: MimeMessage, envelope: Envelope): SMono[MimeMessage] =
     SFlux.fromIterable(addresses(Option(mimeMessage.getHeader("Sender", null))).map("sender" -> _) ++
         addresses(Option(mimeMessage.getHeader("From", ",")).orElse(Option(mimeMessage.getHeader("Sender", null)))).map("from" -> _))
       .map { case (header, address) => header -> address.asInstanceOf[InternetAddress].getAddress }

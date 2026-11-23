@@ -97,4 +97,32 @@ class EmailSubmissionSetMethodTest {
 
     assertThat(EmailSubmissionSetMethod.validateFromHeader(message).block()).isSameAs(message)
   }
+
+  private def message(headers: String): MimeMessage =
+    new MimeMessage(Session.getInstance(new java.util.Properties()),
+      new java.io.ByteArrayInputStream((headers + "Subject: test\r\n\r\nbody\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8)))
+
+  @Test
+  def shouldRejectSeveralFromFields(): Unit =
+    assertThatThrownBy(() => EmailSubmissionSetMethod.validateHeaderFields(message("From: bob@example.com\r\nFrom: ceo@example.com\r\n")).block())
+      .cause()
+      .isEqualTo(ForbiddenFromException(Nil, Properties("from")))
+
+  @Test
+  def shouldRejectSeveralSenderFields(): Unit =
+    assertThatThrownBy(() => EmailSubmissionSetMethod.validateHeaderFields(message("From: bob@example.com\r\nSender: bob@example.com\r\nSender: ceo@example.com\r\n")).block())
+      .cause()
+      .isEqualTo(ForbiddenFromException(Nil, Properties("sender")))
+
+  @Test
+  def shouldRejectAFieldNameHoldingAComment(): Unit =
+    assertThatThrownBy(() => EmailSubmissionSetMethod.validateHeaderFields(message("From: bob@example.com\r\nFrom(x): ceo@example.com\r\n")).block())
+      .isInstanceOf(classOf[IllegalArgumentException])
+
+  @Test
+  def shouldAcceptASingleFromAndSender(): Unit = {
+    val mimeMessage = message("From: bob@example.com\r\nSender: bob@example.com\r\n")
+
+    assertThat(EmailSubmissionSetMethod.validateHeaderFields(mimeMessage).block()).isSameAs(mimeMessage)
+  }
 }

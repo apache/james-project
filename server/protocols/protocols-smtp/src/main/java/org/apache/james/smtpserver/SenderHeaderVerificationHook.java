@@ -21,6 +21,7 @@ package org.apache.james.smtpserver;
 
 import java.io.IOException;
 import java.text.Normalizer;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
@@ -44,6 +45,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.SaslAuthResultHook;
 import org.apache.james.server.core.MimeMessageUtil;
+import org.apache.james.server.core.SubmittedHeaderFields;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
@@ -120,6 +122,11 @@ public class SenderHeaderVerificationHook implements JamesMessageHook, SaslAuthR
                 // Sender field checked here could differ from the one shown to recipients, or even be hidden from
                 // Jakarta Mail when the bare CRs make it read an empty line
                 LOGGER.warn("{} tried to send a mail with a bare CR in its header block", loggedInUser.asString());
+                return SENDER_MISMATCH;
+            }
+            Optional<SubmittedHeaderFields.Violation> violation = SubmittedHeaderFields.violation(mail.getMessage());
+            if (violation.isPresent()) {
+                LOGGER.warn("{} tried to send a mail with an ambiguous header: {}", loggedInUser.asString(), violation.get().description());
                 return SENDER_MISMATCH;
             }
             String[] senderFields = mail.getMessage().getHeader(SENDER);
