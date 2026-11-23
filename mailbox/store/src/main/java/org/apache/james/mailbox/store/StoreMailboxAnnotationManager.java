@@ -183,10 +183,14 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     private Mono<Mailbox> checkThenGetMailbox(MailboxPath mailboxPath, MailboxSession session, Right... requiredRights) {
         return mailboxSessionMapperFactory.getMailboxMapper(session).findMailboxByPath(mailboxPath)
             .flatMap(mailbox -> rightManager.myRightsReactive(mailboxPath, session)
-                .map(rights -> rights.contains(requiredRights))
-                .filter(FunctionalUtils.identityPredicate().negate())
-                .flatMap(hasRight -> Mono.<Mailbox>error(new InsufficientRightsException("Not enough rights on " + mailboxPath)))
-                .switchIfEmpty(Mono.just(mailbox)));
+                // A mailbox the user cannot look up is reported as not found
+                .filter(rights -> rights.contains(Right.Lookup))
+                .flatMap(rights -> {
+                    if (rights.contains(requiredRights)) {
+                        return Mono.just(mailbox);
+                    }
+                    return Mono.error(new InsufficientRightsException("Not enough rights on " + mailboxPath));
+                }));
     }
 
     /**
