@@ -64,6 +64,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.TooLongFrameException;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -102,6 +103,8 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private final LiteralAnnouncementScanner rejectedLineScanner = new LiteralAnnouncementScanner();
     private final AtomicBoolean awaitingFileBackedLiteral = new AtomicBoolean(false);
     private boolean commandInjectionDetected = false;
+    // Length of a line longer than maxFrameLength, being discarded up to its end, see rejectTooLongLine
+    private long tooLongLineLength = -1;
     // Non synchronizing literal announced at the end of the line of a file-backed literal: discarded from the event
     // loop once that command is decoded
     private volatile Optional<Long> literalToDiscardAfterFileBackedCommand = Optional.empty();
@@ -150,6 +153,10 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
         ChannelInboundHandlerAdapter override = behaviourOverrides.peekFirst();
         if (override != null) {
+            // The FRAMER hands a too long line over: see rejectTooLongLine
+            if (rejectTooLongLine(ctx, in)) {
+                return;
+            }
             override.channelRead(ctx, in);
             return;
         }
@@ -170,9 +177,15 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             return;
         }
 
-        int readerIndex = in.readerIndex();
-
         Map<String, Object> attachment = ctx.channel().attr(FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).get();
+
+        if (tooLongLineLength >= 0 || (pending.isEmpty() && !attachment.containsKey(NEEDED_DATA))) {
+            if (rejectTooLongLine(ctx, in)) {
+                return;
+            }
+        }
+
+        int readerIndex = in.readerIndex();
 
         ParseAttempt attempt = obtainReader(ctx, in, attachment, readerIndex);
         if (attempt == null) {
@@ -195,6 +208,68 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             return;
         }
         message.ifPresent(out::add);
+    }
+
+    /**
+     * A line longer than maxFrameLength is rejected here, whether framed or not: the FRAMER hands it over (see
+     * {@link SwitchableLineBasedFrameDecoder}), and what follows a literal in its segment reaches this decoder without
+     * being framed. So the outcome does not depend on how the stream was split into segments. As LineBasedFrameDecoder
+     * (not failing fast) does, the line is discarded up to its end, then a {@link TooLongFrameException} is raised. A
+     * non synchronizing literal announced at its end is discarded too.
+     *
+     * @return true when {@code in} starts with such a line, consumed by this call
+     */
+    private boolean rejectTooLongLine(ChannelHandlerContext ctx, ByteBuf in) throws IOException {
+        int start = in.readerIndex();
+        int endOfLine = in.bytesBefore((byte) '\n');
+        if (tooLongLineLength >= 0) {
+            if (endOfLine < 0) {
+                tooLongLineLength += in.readableBytes();
+                rejectedLineScanner.scan(in, start, start + in.readableBytes());
+                in.skipBytes(in.readableBytes());
+            } else {
+                long length = tooLongLineLength + endOfLine + 1;
+                tooLongLineLength = -1;
+                rejectedLineScanner.scan(in, start, start + endOfLine + 1);
+                in.skipBytes(endOfLine + 1);
+                onTooLongLineEnd(ctx, new TooLongFrameException("frame length exceeds " + maxFrameLength + ": " + length + " - discarded"));
+            }
+            return true;
+        }
+        if (endOfLine < 0) {
+            if (in.readableBytes() > maxFrameLength) {
+                tooLongLineLength = in.readableBytes();
+                rejectedLineScanner.reset();
+                rejectedLineScanner.scan(in, start, start + in.readableBytes());
+                in.skipBytes(in.readableBytes());
+                return true;
+            }
+            return false;
+        }
+        int length = endOfLine > 0 && in.getByte(start + endOfLine - 1) == '\r' ? endOfLine - 1 : endOfLine;
+        if (length > maxFrameLength) {
+            rejectedLineScanner.reset();
+            rejectedLineScanner.scan(in, start, start + endOfLine + 1);
+            in.skipBytes(endOfLine + 1);
+            onTooLongLineEnd(ctx, new TooLongFrameException("frame length (" + length + ") exceeds the allowed maximum (" + maxFrameLength + ")"));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * The client sends a non synchronizing literal announced at the end of the rejected line anyway: it is not a
+     * command (RFC 7888 section 4).
+     */
+    private void onTooLongLineEnd(ChannelHandlerContext ctx, TooLongFrameException exception) throws IOException {
+        // The session handler drops the session once told of the exception: the literal is discarded within its limits
+        ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+        ctx.fireExceptionCaught(exception);
+        onRejectedLineEnd(session);
+        if (literalBytesToDiscard > 0) {
+            // Literal content is not split into lines
+            disableFraming(ctx);
+        }
     }
 
     /**

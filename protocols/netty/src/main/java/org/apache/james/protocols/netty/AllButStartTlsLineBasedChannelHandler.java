@@ -95,6 +95,13 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
                 ctx.channel().attr(ATTRIBUTE_KEY).set(true);
             }
         }
+        return decodeLine(ctx, buffer);
+    }
+
+    /**
+     * Frames the next line, once the STARTTLS checks passed.
+     */
+    protected Object decodeLine(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
         return super.decode(ctx, buffer);
     }
 
