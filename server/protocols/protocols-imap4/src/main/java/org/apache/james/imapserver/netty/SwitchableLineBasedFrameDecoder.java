@@ -25,14 +25,40 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.netty.AllButStartTlsLineBasedChannelHandler;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 
 public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChannelHandler {
     public static final String PATTERN = ImapConstants.STARTTLS_COMMAND.getName().toLowerCase();
 
+    private final int maxFrameLength;
+
     public SwitchableLineBasedFrameDecoder(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter) {
         super(pipeline, maxFrameLength, stripDelimiter, PATTERN);
+        this.maxFrameLength = maxFrameLength;
+    }
+
+    /**
+     * A line longer than maxFrameLength is handed over as is (or what was received of it), for
+     * {@link ImapRequestFrameDecoder} to reject it, as it does for a line that was not framed (eg one following a
+     * literal in its segment), and to skip a literal announced at its end.
+     */
+    @Override
+    protected Object decodeLine(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+        int endOfLine = buffer.bytesBefore((byte) '\n');
+        int lineLength;
+        if (endOfLine < 0) {
+            lineLength = buffer.readableBytes();
+        } else if (endOfLine > 0 && buffer.getByte(buffer.readerIndex() + endOfLine - 1) == '\r') {
+            lineLength = endOfLine - 1;
+        } else {
+            lineLength = endOfLine;
+        }
+        if (lineLength > maxFrameLength) {
+            return buffer.readRetainedSlice(endOfLine < 0 ? buffer.readableBytes() : endOfLine + 1);
+        }
+        return super.decodeLine(ctx, buffer);
     }
 
     @Override
