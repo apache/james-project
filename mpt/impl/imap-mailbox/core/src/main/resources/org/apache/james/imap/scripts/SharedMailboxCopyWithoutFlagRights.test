@@ -1,0 +1,72 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+# A delegate without the s, t and w rights copies a message: the copy has none of its flags, the source keeps them
+C: a0 CREATE source
+S: a0 OK \[MAILBOXID \(.+\)\] CREATE completed.
+
+C: a1 APPEND source (\Seen \Flagged $Hidden) {310+}
+C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: afternoon meeting
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Hello Joe, do you think we can meet at 3:30 tomorrow?
+C:
+S: a1 OK (\[.+\] )?APPEND completed.
+
+C: a2 SELECT source
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(.*\)
+S: \* 1 EXISTS
+S: \* \d+ RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[PERMANENTFLAGS .*\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 2\].*
+S: a2 OK \[READ-WRITE\] SELECT completed.
+
+C: a3 COPY 1 #user.boby.sharedMailbox
+S: a3 OK (\[.+\] )?COPY completed.
+
+C: a4 FETCH 1 FLAGS
+S: \* 1 FETCH \(FLAGS \(\\Flagged \\Recent \\Seen \$Hidden\)\)
+S: a4 OK FETCH completed.
+
+C: a5 UNSELECT
+S: a5 OK UNSELECT completed.
+
+C: a6 SELECT #user.boby.sharedMailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(.*\)
+S: \* 1 EXISTS
+S: \* \d+ RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1\].*
+S: \* OK \[PERMANENTFLAGS .*\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 2\].*
+S: a6 OK \[READ-WRITE\] SELECT completed.
+
+C: a7 FETCH 1 FLAGS
+S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
+S: a7 OK FETCH completed.
