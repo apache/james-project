@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.postgres.object.compaction;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -56,8 +55,6 @@ public class PostgresBlobIdUpdater implements BlobIdUpdater {
 
         @Override
         public Mono<BlobIdUpdater> forPredicate(Predicate<BlobId> generationCondition, Consumer<BlobId> referencedBlobIdObserver) {
-            Objects.requireNonNull(generationCondition);
-            Objects.requireNonNull(referencedBlobIdObserver);
             return Mono.usingWhen(
                 Mono.fromSupplier(() -> new PostgresBlobIdUpdater(RunId.generate(), index)),
                 updater -> updater.createIndex.then(Mono.fromRunnable(updater::startHeartbeat))
@@ -98,8 +95,6 @@ public class PostgresBlobIdUpdater implements BlobIdUpdater {
 
     @Override
     public Mono<Void> replaceReferences(BlobId oldId, BlobId newId) {
-        Objects.requireNonNull(oldId);
-        Objects.requireNonNull(newId);
         return Mono.defer(() -> {
             checkUsable();
             // Keep the snapshot until cleanup so a failure can be retried safely.

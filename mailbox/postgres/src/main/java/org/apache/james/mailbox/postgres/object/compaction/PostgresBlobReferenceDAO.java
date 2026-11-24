@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.postgres.object.compaction;
 
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.EAGER_FETCH;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,7 +31,6 @@ import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailbox.postgres.mail.PostgresAttachmentDataDefinition.PostgresAttachmentTable;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable;
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Table;
@@ -42,7 +39,6 @@ import org.jooq.impl.DSL;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /** Pages through the PostgreSQL mailbox tables owning blob references, using keyset pagination. */
 public class PostgresBlobReferenceDAO {
@@ -76,32 +72,22 @@ public class PostgresBlobReferenceDAO {
     }
 
     /**
-     * Each page is fetched eagerly so its connection returns to the pool before the caller processes it.
+     * Pages are re-batched for index writes. Paging by primary key keeps each query bounded and releases its connection.
      */
     Flux<List<Reference>> listReferencePages() {
         return Flux.concat(
-            pages(MessageTable.TABLE_NAME, MessageTable.MESSAGE_ID, MessageTable.BODY_BLOB_ID, Reference::message),
-            pages(PostgresAttachmentTable.TABLE_NAME, PostgresAttachmentTable.ID, PostgresAttachmentTable.BLOB_ID, Reference::attachment));
+                references(MessageTable.TABLE_NAME, MessageTable.MESSAGE_ID, MessageTable.BODY_BLOB_ID, Reference::message),
+                references(PostgresAttachmentTable.TABLE_NAME, PostgresAttachmentTable.ID, PostgresAttachmentTable.BLOB_ID, Reference::attachment))
+            .buffer(pageSize);
     }
 
-    private <K> Flux<List<Reference>> pages(Table<Record> table, Field<K> key, Field<String> blobId, BiFunction<BlobId, K, Reference> toReference) {
-        return page(table, key, blobId, Optional.empty())
-            .expand(page -> page.size() < pageSize
-                ? Mono.empty()
-                : page(table, key, blobId, Optional.of(page.get(page.size() - 1).get(key))))
-            .map(page -> page.stream()
-                .filter(record -> record.get(blobId) != null)
-                .map(record -> toReference.apply(blobIdFactory.parse(record.get(blobId)), record.get(key)))
-                .toList());
-    }
-
-    private <K> Mono<List<Record>> page(Table<Record> table, Field<K> key, Field<String> blobId, Optional<K> after) {
-        Condition afterKey = after.map(key::gt).orElse(DSL.noCondition());
-        return executor.executeRows(dsl -> Flux.from(dsl.select(key, blobId)
+    private <K> Flux<Reference> references(Table<Record> table, Field<K> key, Field<String> blobId, BiFunction<BlobId, K, Reference> toReference) {
+        return executor.executeRowsPaginated((dsl, lastRecord) -> dsl.select(key, blobId)
                     .from(table)
-                    .where(afterKey)
-                    .orderBy(key)
-                    .limit(pageSize)), EAGER_FETCH)
-            .collectList();
+                    .where(lastRecord.map(record -> key.gt(record.get(key))).orElse(DSL.noCondition()))
+                    .orderBy(key),
+                pageSize)
+            .filter(record -> record.get(blobId) != null)
+            .map(record -> toReference.apply(blobIdFactory.parse(record.get(blobId)), record.get(key)));
     }
 }
