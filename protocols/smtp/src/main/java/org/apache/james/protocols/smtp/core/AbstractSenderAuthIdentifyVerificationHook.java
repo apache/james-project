@@ -40,7 +40,7 @@ import com.google.common.base.Preconditions;
 public abstract class AbstractSenderAuthIdentifyVerificationHook implements MailHook, RcptHook {
     protected static final HookResult INVALID_AUTH = HookResult.builder()
         .hookReturnCode(HookReturnCode.deny())
-        .smtpReturnCode(SMTPRetCode.BAD_SEQUENCE)
+        .smtpReturnCode(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE)
         .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
             + " Incorrect Authentication for Specified Email Address")
         .build();
