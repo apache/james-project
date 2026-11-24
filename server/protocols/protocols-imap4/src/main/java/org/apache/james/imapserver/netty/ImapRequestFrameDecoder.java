@@ -247,7 +247,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             return true;
         }
         if (endOfLine < 0) {
-            if (in.readableBytes() > maxFrameLength) {
+            if (lengthWithoutATrailingCr(in) > maxFrameLength) {
                 tooLongLineLength = in.readableBytes();
                 rejectedLineScanner.reset();
                 rejectedLineScanner.scan(in, start, start + in.readableBytes());
@@ -265,6 +265,14 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             return true;
         }
         return false;
+    }
+
+    /**
+     * The length of a line whose LF has not been received yet: a last CR may be the start of its CRLF.
+     */
+    static int lengthWithoutATrailingCr(ByteBuf in) {
+        int readable = in.readableBytes();
+        return readable > 0 && in.getByte(in.writerIndex() - 1) == '\r' ? readable - 1 : readable;
     }
 
     /**

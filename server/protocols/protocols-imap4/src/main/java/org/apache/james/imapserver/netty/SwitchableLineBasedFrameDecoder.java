@@ -54,7 +54,7 @@ public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChan
         int endOfLine = buffer.bytesBefore((byte) '\n');
         int lineLength;
         if (endOfLine < 0) {
-            lineLength = buffer.readableBytes();
+            lineLength = ImapRequestFrameDecoder.lengthWithoutATrailingCr(buffer);
         } else if (endOfLine > 0 && buffer.getByte(buffer.readerIndex() + endOfLine - 1) == '\r') {
             lineLength = endOfLine - 1;
         } else {

@@ -771,4 +771,31 @@ class ImapRequestFrameDecoderTest {
             .anySatisfy(message -> assertThat(message).contains("tag=b, command=NOOP"))
             .anySatisfy(message -> assertThat(message).contains("tag=c, command=NOOP"));
     }
+
+    @Test
+    void aLineOfExactlyMaxFrameLengthShouldNotDependOnWhereItsCrlfIsSplit() {
+        int maxFrameLength = 256;
+        // 10 + 245 + 1 = 256 octets before the CRLF
+        String line = "a SELECT \"" + "x".repeat(245) + "\"";
+
+        List<String> whole = decodeWithErrors(4096, maxFrameLength,
+            List.of((line + "\r\n").getBytes(StandardCharsets.US_ASCII)));
+        List<String> crThenLf = decodeWithErrors(4096, maxFrameLength, List.of(
+            (line + "\r").getBytes(StandardCharsets.US_ASCII),
+            "\n".getBytes(StandardCharsets.US_ASCII)));
+
+        assertThat(whole).hasSize(1);
+        assertThat(whole.get(0)).doesNotContain(TooLongFrameException.class.getName());
+        assertThat(crThenLf).isEqualTo(whole);
+    }
+
+    @Test
+    void aLineOfMaxFrameLengthPlusOneShouldBeRejectedWhenItsCrArrivesAlone() {
+        String line = "a SELECT \"" + "x".repeat(246) + "\"";
+
+        assertThat(decodeWithErrors(4096, 256, List.of(
+                (line + "\r").getBytes(StandardCharsets.US_ASCII),
+                "\n".getBytes(StandardCharsets.US_ASCII))))
+            .containsExactly(TooLongFrameException.class.getName());
+    }
 }
