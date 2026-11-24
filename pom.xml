@@ -684,8 +684,8 @@
         <tink.version>1.17.0</tink.version>
         <zstd-jni.version>1.5.7-25</zstd-jni.version>
         <lettuce.core.version>6.8.2.RELEASE</lettuce.core.version>
-        <io.micrometer.core.version>1.17.2</io.micrometer.core.version>
-        <io.micrometer.tracing.version>1.7.2</io.micrometer.tracing.version>
+        <io.micrometer.core.version>1.18.0</io.micrometer.core.version>
+        <io.micrometer.tracing.version>1.8.0</io.micrometer.tracing.version>
         <opentelemetry.version>1.68.0</opentelemetry.version>
 
         <bouncycastle.version>1.87</bouncycastle.version>
