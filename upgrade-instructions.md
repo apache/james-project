@@ -18,6 +18,19 @@ Change list:
  - [Regex mappings are evaluated with RE2J](#regex-mappings-are-evaluated-with-re2j)
  - [WebAdmin CORS headers require cors.enable and cors.origin](#webadmin-cors-headers-require-corsenable-and-corsorigin)
  - [IPv6 network prefixes apply as written](#ipv6-network-prefixes-apply-as-written)
+ - [Spring app IMAP enables STARTTLS](#spring-app-imap-enables-starttls)
+
+### Spring app IMAP enables STARTTLS
+
+Date: 23/11/2026
+
+Concerned products: the Spring app.
+
+Plain authentication (LOGIN, AUTHENTICATE PLAIN) on IMAP requires TLS, so the shipped `imapserver.xml` now enables
+STARTTLS on port 143. When `conf/keystore` does not exist, James generates a self-signed one at start, readable by its
+owner only, with the `secret` of `imapserver.xml`. Replace it with a certificate your clients trust. Clients have to
+use STARTTLS, or port 993 if you enable it. Setting `plainAuthDisallowed` to `false` on every IMAP server of
+`imapserver.xml` allows plain authentication without TLS again: the IMAP servers of the Spring app share it.
 
 
 
