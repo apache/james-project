@@ -60,7 +60,8 @@ class MessageUtils {
         ImmutableList.Builder<UpdatedFlags> updatedFlags = ImmutableList.builder();
         ImmutableList.Builder<MailboxMessage> changedFlags = ImmutableList.builder();
 
-        ModSeq modSeq = nextModSeq(mailbox);
+        // Allocated upon the first flags change only: an update changing nothing keeps the highest mod-sequence
+        ModSeq modSeq = null;
 
         while (messages.hasNext()) {
             MailboxMessage member = messages.next();
@@ -68,6 +69,9 @@ class MessageUtils {
             member.setFlags(flagsUpdateCalculator.buildNewFlags(originalFlags));
             Flags newFlags = member.createFlags();
             if (UpdatedFlags.flagsChanged(originalFlags, newFlags)) {
+                if (modSeq == null) {
+                    modSeq = nextModSeq(mailbox);
+                }
                 member.setModSeq(modSeq);
                 changedFlags.add(member);
             }

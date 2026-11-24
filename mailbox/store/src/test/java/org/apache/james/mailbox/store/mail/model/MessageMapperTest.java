@@ -374,6 +374,46 @@ public abstract class MessageMapperTest {
     }
 
     @Test
+    void resetRecentsShouldNotIncrementModSeqOfAnEmptyMailbox() throws MailboxException {
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
+
+        messageMapper.resetRecent(benwaInboxMailbox);
+
+        assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isEqualTo(modSeq);
+    }
+
+    @Test
+    void resetRecentsShouldNotIncrementModSeqWhenNoRecentMessage() throws MailboxException {
+        saveMessages();
+        messageMapper.resetRecent(benwaInboxMailbox);
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
+
+        messageMapper.resetRecent(benwaInboxMailbox);
+
+        assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isEqualTo(modSeq);
+    }
+
+    @Test
+    void updateFlagsShouldNotIncrementModSeqWhenNoMessageMatches() throws MailboxException {
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
+
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD), MessageRange.all());
+
+        assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isEqualTo(modSeq);
+    }
+
+    @Test
+    void updateFlagsShouldNotIncrementModSeqWhenNoFlagChanges() throws MailboxException {
+        saveMessages();
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD), MessageRange.all());
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
+
+        messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD), MessageRange.all());
+
+        assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isEqualTo(modSeq);
+    }
+
+    @Test
     void resetRecentsShouldRemoveAllRecentFlags() throws MailboxException {
         saveMessages();
         FlagsUpdateCalculator setRecent = new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REPLACE);
