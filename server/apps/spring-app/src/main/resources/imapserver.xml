@@ -44,8 +44,10 @@
        <connectionBacklog>200</connectionBacklog>
 
        <!-- Set to true to use TLS for the Socket.
+            STARTTLS is on: plain authentication requires it. When conf/keystore does not exist, a self-signed one is
+            generated at first start: replace it with a certificate your clients trust.
         -->
-       <tls socketTLS="false" startTLS="false">
+       <tls socketTLS="false" startTLS="true">
            <!-- To create a new keystore execute:
              keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore /path/to/james/conf/keystore
             -->
