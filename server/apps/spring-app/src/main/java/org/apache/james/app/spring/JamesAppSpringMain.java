@@ -40,7 +40,8 @@ import com.github.fge.lambdas.Throwing;
 public class JamesAppSpringMain implements Daemon {
     private static final ObjectName ALL_OBJECT_NAME = null;
     private static final QueryExp ALL_QUERY_EXP = null;
-    private static final String JMX_PASSWORD_FILE = "../conf/jmxremote.password";
+    private static final String CONF_DIRECTORY = "../conf";
+    private static final String JMX_PASSWORD_FILE = CONF_DIRECTORY + "/jmxremote.password";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JamesAppSpringMain.class.getName());
     private JamesServerApplicationContext context;
@@ -50,6 +51,8 @@ public class JamesAppSpringMain implements Daemon {
 
         // The file read by the JMX connector (spring-server.xml)
         JmxPasswordFile.tryEnsurePassword(Path.of(JMX_PASSWORD_FILE));
+        // The IMAP servers use STARTTLS: each installation gets its own key
+        TlsKeystore.ensureImapKeystores(Path.of(CONF_DIRECTORY));
 
         long start = Calendar.getInstance().getTimeInMillis();
 
