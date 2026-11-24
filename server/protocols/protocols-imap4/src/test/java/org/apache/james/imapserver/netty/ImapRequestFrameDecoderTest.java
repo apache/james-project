@@ -704,4 +704,46 @@ class ImapRequestFrameDecoderTest {
         assertThat(decodeWithErrors(32, 256, byteByByte))
             .isEqualTo(whole);
     }
+
+    @Test
+    void theRestOfALiteralWhoseSpoolingFailedShouldNotBeDecodedAsCommands() {
+        List<String> events = new ArrayList<>();
+        EmbeddedChannel channel = new EmbeddedChannel();
+        FakeImapSession session = new FakeImapSession() {
+            @Override
+            public boolean needsCommandInjectionDetection() {
+                return false;
+            }
+        };
+        session.authenticated();
+        channel.attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).set(session);
+        channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(new ConcurrentHashMap<>());
+        channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), 3008, false));
+        channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(),
+            16, 0, 3008, () -> new ImapRequestFrameDecoder.FileChunkConsumer() {
+                @Override
+                public void accept(byte[] next) {
+                    throw new RuntimeException("No space left on device");
+                }
+            }));
+        channel.pipeline().addLast("collector", new ChannelInboundHandlerAdapter() {
+            @Override
+            public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                events.add(msg.toString());
+            }
+
+            @Override
+            public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                events.add(cause.getClass().getName());
+            }
+        });
+
+        String literal = "0123456789\r\nx1 CREATE pwn\r\nx2 NOOP\r\n";
+        channel.writeInbound(Unpooled.wrappedBuffer(("a APPEND INBOX {" + literal.length() + "+}\r\n" + literal.substring(0, 5))
+            .getBytes(StandardCharsets.US_ASCII)));
+        channel.writeInbound(Unpooled.wrappedBuffer((literal.substring(5) + "\r\n").getBytes(StandardCharsets.US_ASCII)));
+        channel.finishAndReleaseAll();
+
+        assertThat(events).containsExactly(RuntimeException.class.getName());
+    }
 }
