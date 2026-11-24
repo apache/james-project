@@ -640,6 +640,10 @@ class ImapRequestFrameDecoderTest {
      * handler would get them.
      */
     private static List<String> decodeWithErrors(int inMemorySizeLimit, int maxFrameLength, List<byte[]> chunks) {
+        return decodeWithErrors(inMemorySizeLimit, 0, maxFrameLength, chunks);
+    }
+
+    private static List<String> decodeWithErrors(int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength, List<byte[]> chunks) {
         List<String> events = new ArrayList<>();
         EmbeddedChannel channel = new EmbeddedChannel();
         FakeImapSession session = new FakeImapSession() {
@@ -653,7 +657,7 @@ class ImapRequestFrameDecoderTest {
         channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(new ConcurrentHashMap<>());
         channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), maxFrameLength, false));
         channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(),
-            inMemorySizeLimit, 0, maxFrameLength));
+            inMemorySizeLimit, literalSizeLimit, maxFrameLength));
         channel.pipeline().addLast("collector", new ChannelInboundHandlerAdapter() {
             @Override
             public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -797,5 +801,17 @@ class ImapRequestFrameDecoderTest {
                 (line + "\r").getBytes(StandardCharsets.US_ASCII),
                 "\n".getBytes(StandardCharsets.US_ASCII))))
             .containsExactly(TooLongFrameException.class.getName());
+    }
+
+    @Test
+    void aRejectedCommandEndingWithATooBigNonSynchronizingLiteralShouldBeAnsweredWhateverTheSegmentation() {
+        String head = "a APPEND INBOX {3+}\r\nabc x ";
+        String tail = "{600+}\r\nb NOOP\r\n";
+        List<String> whole = decodeWithErrors(4096, 384, 8192, List.of((head + tail).getBytes(StandardCharsets.US_ASCII)));
+        List<String> chunked = decodeWithErrors(4096, 384, 8192,
+            List.of(head.getBytes(StandardCharsets.US_ASCII), tail.getBytes(StandardCharsets.US_ASCII)));
+
+        assertThat(chunked.get(0)).contains("BAD").contains("tag=a");
+        assertThat(whole).isEqualTo(chunked);
     }
 }
