@@ -44,6 +44,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.handler.codec.TooLongFrameException;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
@@ -632,5 +633,75 @@ class ImapRequestFrameDecoderTest {
         assertThat(String.valueOf(inbound)).contains("serverResponseType=BAD");
         assertThat((Object) channel.readOutbound()).isNull();
         channel.finishAndReleaseAll();
+    }
+
+    /**
+     * As {@link #decode(boolean, int, int, int, List)}, also recording the exceptions raised, in order, as the session
+     * handler would get them.
+     */
+    private static List<String> decodeWithErrors(int inMemorySizeLimit, int maxFrameLength, List<byte[]> chunks) {
+        List<String> events = new ArrayList<>();
+        EmbeddedChannel channel = new EmbeddedChannel();
+        FakeImapSession session = new FakeImapSession() {
+            @Override
+            public boolean needsCommandInjectionDetection() {
+                return false;
+            }
+        };
+        session.authenticated();
+        channel.attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).set(session);
+        channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(new ConcurrentHashMap<>());
+        channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), maxFrameLength, false));
+        channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(),
+            inMemorySizeLimit, 0, maxFrameLength));
+        channel.pipeline().addLast("collector", new ChannelInboundHandlerAdapter() {
+            @Override
+            public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                events.add(msg.toString());
+            }
+
+            @Override
+            public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                events.add(cause.getClass().getName());
+            }
+        });
+
+        chunks.forEach(chunk -> channel.writeInbound(Unpooled.wrappedBuffer(chunk)));
+        channel.finishAndReleaseAll();
+        return events;
+    }
+
+    @Test
+    void aTooLongLineAfterALiteralShouldNotDependOnSegmentation() {
+        String literalCommand = "a SETMETADATA INBOX (/private/comment {20}\r\n" + "x".repeat(20) + "\n";
+        String rest = "b SELECT " + "x".repeat(300) + "\r\nc NOOP\r\n";
+        byte[] stream = (literalCommand + rest).getBytes(StandardCharsets.US_ASCII);
+        List<String> whole = decodeWithErrors(32, 256, List.of(stream));
+        List<String> chunked = decodeWithErrors(32, 256, List.of(literalCommand.getBytes(StandardCharsets.US_ASCII), rest.getBytes(StandardCharsets.US_ASCII)));
+        assertThat(whole).isEqualTo(chunked);
+        assertThat(whole).hasSize(3);
+        assertThat(whole.get(1)).isEqualTo(TooLongFrameException.class.getName());
+        assertThat(whole.get(2)).contains("tag=c, command=NOOP");
+    }
+
+    @Test
+    void aLiteralAnnouncedAtTheEndOfATooLongLineShouldNotBeDecodedAsCommands() {
+        String literalCommand = "a SETMETADATA INBOX (/private/comment {20}\r\n" + "x".repeat(20) + "\n";
+        String rest = "b SELECT " + "x".repeat(300) + " {14+}\r\nc DELETE INBOX\r\nd NOOP\r\n";
+        byte[] stream = (literalCommand + rest).getBytes(StandardCharsets.US_ASCII);
+        byte[] restBytes = rest.getBytes(StandardCharsets.US_ASCII);
+        List<byte[]> byteByByte = new ArrayList<>();
+        byteByByte.add(literalCommand.getBytes(StandardCharsets.US_ASCII));
+        byteByByte.addAll(byteByByte(restBytes));
+
+        List<String> whole = decodeWithErrors(32, 256, List.of(stream));
+        assertThat(whole).hasSize(3);
+        assertThat(whole.get(0)).contains("tag=a");
+        assertThat(whole.get(1)).isEqualTo(TooLongFrameException.class.getName());
+        assertThat(whole.get(2)).contains("tag=d, command=NOOP");
+        assertThat(decodeWithErrors(32, 256, List.of(literalCommand.getBytes(StandardCharsets.US_ASCII), restBytes)))
+            .isEqualTo(whole);
+        assertThat(decodeWithErrors(32, 256, byteByByte))
+            .isEqualTo(whole);
     }
 }
