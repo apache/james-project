@@ -19,6 +19,11 @@ Change list:
  - [WebAdmin CORS headers require cors.enable and cors.origin](#webadmin-cors-headers-require-corsenable-and-corsorigin)
  - [IPv6 network prefixes apply as written](#ipv6-network-prefixes-apply-as-written)
  - [Spring app IMAP enables STARTTLS](#spring-app-imap-enables-starttls)
+ - [LDAP verifies the host name of ldaps servers](#ldap-verifies-the-host-name-of-ldaps-servers)
+ - [Passwords are hashed again at login](#passwords-are-hashed-again-at-login)
+ - [Pulsar verifies the TLS host name of its endpoints](#pulsar-verifies-the-tls-host-name-of-its-endpoints)
+ - [Spring app generates its JMX password](#spring-app-generates-its-jmx-password)
+ - [Scaling Pulsar SMTP app verifies the sender identity](#scaling-pulsar-smtp-app-verifies-the-sender-identity)
 
 ### Spring app IMAP enables STARTTLS
 
