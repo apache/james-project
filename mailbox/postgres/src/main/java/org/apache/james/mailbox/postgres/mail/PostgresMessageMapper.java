@@ -291,14 +291,15 @@ public class PostgresMessageMapper implements MessageMapper {
     private Flux<UpdatedFlags> updatedFlags(List<ComposedMessageIdWithMetaData> listMessagesMetaData,
                                             Mailbox mailbox,
                                             FlagsUpdateCalculator flagsUpdateCalculator) {
-        return modSeqProvider.nextModSeqReactive(mailbox.getMailboxId())
-            .flatMapMany(newModSeq -> Flux.fromIterable(listMessagesMetaData)
-                .flatMapSequential(messageMetaData -> updateFlags(messageMetaData, flagsUpdateCalculator, newModSeq), DEFAULT_CONCURRENCY));
+        // Allocated upon the first flags change only: an update changing nothing keeps the highest mod-sequence
+        Mono<ModSeq> newModSeq = modSeqProvider.nextModSeqReactive(mailbox.getMailboxId()).cache();
+        return Flux.fromIterable(listMessagesMetaData)
+            .flatMapSequential(messageMetaData -> updateFlags(messageMetaData, flagsUpdateCalculator, newModSeq), DEFAULT_CONCURRENCY);
     }
 
     private Mono<UpdatedFlags> updateFlags(ComposedMessageIdWithMetaData currentMetaData,
                                            FlagsUpdateCalculator flagsUpdateCalculator,
-                                           ModSeq newModSeq) {
+                                           Mono<ModSeq> newModSeqPublisher) {
         Flags oldFlags = currentMetaData.getFlags();
         ComposedMessageId composedMessageId = currentMetaData.getComposedMessageId();
         Mono<Optional<Date>> internalDate = mailboxMessageDAO.retrieveInternalDate((PostgresMailboxId) composedMessageId.getMailboxId(), composedMessageId.getUid());
@@ -313,7 +314,7 @@ public class PostgresMessageMapper implements MessageMapper {
                 .modSeq(currentMetaData.getModSeq())
                 .build());
         } else {
-            return Mono.just(flagsUpdateCalculator.getMode())
+            return newModSeqPublisher.flatMap(newModSeq -> Mono.just(flagsUpdateCalculator.getMode())
                 .flatMap(mode -> {
                     switch (mode) {
                         case ADD:
@@ -333,7 +334,7 @@ public class PostgresMessageMapper implements MessageMapper {
                         .newFlags(updatedFlags)
                         .uid(composedMessageId.getUid())
                         .modSeq(newModSeq)
-                        .build()));
+                        .build())));
         }
     }
 
@@ -351,6 +352,10 @@ public class PostgresMessageMapper implements MessageMapper {
     }
 
     private Flux<UpdatedFlags> resetRecentFlag(PostgresMailboxId mailboxId, List<ComposedMessageIdWithMetaData> messageIdWithMetaDataList) {
+        if (messageIdWithMetaDataList.isEmpty()) {
+            // No message to update: do not allocate a mod-sequence
+            return Flux.empty();
+        }
         return Flux.fromIterable(messageIdWithMetaDataList)
             .collectMap(m -> m.getComposedMessageId().getUid(), Function.identity())
             .flatMapMany(uidMapping -> modSeqProvider.nextModSeqReactive(mailboxId)

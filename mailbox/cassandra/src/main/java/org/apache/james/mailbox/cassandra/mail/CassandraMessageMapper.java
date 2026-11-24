@@ -507,9 +507,10 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private Mono<FlagsUpdateStageResult> runUpdateStage(CassandraId mailboxId, Flux<ComposedMessageIdWithMetaData> toBeUpdated, FlagsUpdateCalculator flagsUpdateCalculator) {
-        return computeNewModSeq(mailboxId)
-            .flatMapMany(newModSeq -> toBeUpdated
-            .flatMap(metadata -> tryFlagsUpdate(flagsUpdateCalculator, newModSeq, metadata), reactorConcurrency))
+        // Allocated upon the first flags change only: an update changing nothing keeps the highest mod-sequence
+        Mono<ModSeq> newModSeq = computeNewModSeq(mailboxId).cache();
+        return toBeUpdated
+            .flatMap(metadata -> tryFlagsUpdate(flagsUpdateCalculator, newModSeq, metadata), reactorConcurrency)
             .reduce(FlagsUpdateStageResult.none(), FlagsUpdateStageResult::merge)
             .flatMap(result -> updateIndexesForUpdatesResult(mailboxId, result));
     }
@@ -648,7 +649,7 @@ public class CassandraMessageMapper implements MessageMapper {
             .then(indexTableHandler.updateIndexOnAdd(messages, mailboxId));
     }
 
-    private Mono<FlagsUpdateStageResult> tryFlagsUpdate(FlagsUpdateCalculator flagUpdateCalculator, ModSeq newModSeq, ComposedMessageIdWithMetaData oldMetaData) {
+    private Mono<FlagsUpdateStageResult> tryFlagsUpdate(FlagsUpdateCalculator flagUpdateCalculator, Mono<ModSeq> newModSeqPublisher, ComposedMessageIdWithMetaData oldMetaData) {
         Flags oldFlags = oldMetaData.getFlags();
         Flags newFlags = flagUpdateCalculator.buildNewFlags(oldFlags);
 
@@ -665,7 +666,7 @@ public class CassandraMessageMapper implements MessageMapper {
                         .build()));
                 }
 
-                return updateFlags(oldMetaData, newFlags, newModSeq, internalDate)
+                return newModSeqPublisher.flatMap(newModSeq -> updateFlags(oldMetaData, newFlags, newModSeq, internalDate)
                     .map(success -> {
                         if (success) {
                             return FlagsUpdateStageResult.success(UpdatedFlags.builder()
@@ -679,7 +680,7 @@ public class CassandraMessageMapper implements MessageMapper {
                         } else {
                             return FlagsUpdateStageResult.fail(oldMetaData.getComposedMessageId());
                         }
-                    });
+                    }));
             });
     }
 

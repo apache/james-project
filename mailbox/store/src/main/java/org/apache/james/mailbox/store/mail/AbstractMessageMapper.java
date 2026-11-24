@@ -91,13 +91,17 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
         if (!messages.hasNext()) {
             return ImmutableList.<UpdatedFlags>of().iterator();
         }
-        ModSeq modSeq = modSeqProvider.nextModSeq(mailbox);
+        // Allocated upon the first flags change only: an update changing nothing keeps the highest mod-sequence
+        ModSeq modSeq = null;
         while (messages.hasNext()) {
             final MailboxMessage member = messages.next();
             Flags originalFlags = member.createFlags();
             member.setFlags(flagsUpdateCalculator.buildNewFlags(originalFlags));
             Flags newFlags = member.createFlags();
             if (UpdatedFlags.flagsChanged(originalFlags, newFlags)) {
+                if (modSeq == null) {
+                    modSeq = modSeqProvider.nextModSeq(mailbox);
+                }
                 // increase the mod-seq as we changed the flags
                 member.setModSeq(modSeq);
                 save(mailbox, member);

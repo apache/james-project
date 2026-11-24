@@ -2009,6 +2009,63 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void resetRecentOfAnEmptyMailboxShouldNotRaiseTheHighestModSeq() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath inbox = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(inbox, session);
+            MessageManager messageManager = mailboxManager.getMailbox(inbox, session);
+            ModSeq initialHighestModSeq = messageManager
+                .getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq();
+
+            // As a read-write IMAP SELECT does
+            messageManager.getMetaData(MessageManager.MailboxMetaData.RecentMode.RESET, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN);
+            messageManager.getMetaData(MessageManager.MailboxMetaData.RecentMode.RESET, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN);
+
+            // RFC 7162: nothing changed in the mailbox
+            assertThat(messageManager.getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq())
+                .isEqualTo(initialHighestModSeq);
+        }
+
+        @Test
+        void setFlagsMatchingNoMessageShouldNotRaiseTheHighestModSeq() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath inbox = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(inbox, session);
+            MessageManager messageManager = mailboxManager.getMailbox(inbox, session);
+            ModSeq initialHighestModSeq = messageManager
+                .getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq();
+
+            messageManager.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
+
+            assertThat(messageManager.getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq())
+                .isEqualTo(initialHighestModSeq);
+        }
+
+        @Test
+        void setFlagsChangingNoFlagShouldNotRaiseTheHighestModSeq() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath inbox = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(inbox, session);
+            MessageManager messageManager = mailboxManager.getMailbox(inbox, session);
+            messageManager.appendMessage(AppendCommand.builder()
+                .withFlags(new Flags(Flags.Flag.SEEN))
+                .build(message), session);
+            ModSeq highestModSeq = messageManager
+                .getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq();
+
+            messageManager.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
+
+            assertThat(messageManager.getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_UNSEEN)
+                .getHighestModSeq())
+                .isEqualTo(highestModSeq);
+        }
+
+        @Test
         void getMailboxCountersShouldReturnDefaultValueWhenNoReadRight() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
             MailboxSession session1 = mailboxManager.createSystemSession(USER_1);

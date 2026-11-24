@@ -113,9 +113,10 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             FlagsUpdateCalculator markAsRead = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD);
             messageMapper.updateFlags(benwaInboxMailbox, markAsRead, MessageRange.all());
 
+            // The retry finds no message to update thus allocates no mod-sequence
             assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatementStartingWith(
                 "UPDATE modseq SET nextmodseq=:nextmodseq WHERE mailboxid=:mailboxid")))
-                .hasSize(2);
+                .hasSize(1);
         }
 
         @Test
