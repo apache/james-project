@@ -814,4 +814,16 @@ class ImapRequestFrameDecoderTest {
         assertThat(chunked.get(0)).contains("BAD").contains("tag=a");
         assertThat(whole).isEqualTo(chunked);
     }
+
+    @Test
+    void aTooLongLineRejectedBeforeItsEndAfterALiteralShouldNotDependOnSegmentation() {
+        String head = "a FOO {3+}\r\nabc\r\nc FOO ";
+        String tail = "x".repeat(300) + "\r\nb NOOP\r\n";
+        List<String> whole = decodeWithErrors(32, 256, List.of((head + tail).getBytes(StandardCharsets.US_ASCII)));
+        List<String> chunked = decodeWithErrors(32, 256,
+            List.of(head.getBytes(StandardCharsets.US_ASCII), tail.getBytes(StandardCharsets.US_ASCII)));
+
+        assertThat(whole).contains(TooLongFrameException.class.getName());
+        assertThat(chunked).isEqualTo(whole);
+    }
 }

@@ -193,6 +193,11 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             if (rejectTooLongLine(ctx, in)) {
                 return;
             }
+            if (in.bytesBefore((byte) '\n') < 0) {
+                // A line that follows a literal in its segment reaches this decoder unframed: as the framer
+                // does, wait for its end, so that its length is checked whatever the segmentation.
+                return;
+            }
         }
 
         int readerIndex = in.readerIndex();
