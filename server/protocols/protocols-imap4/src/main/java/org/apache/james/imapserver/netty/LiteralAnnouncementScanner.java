@@ -24,9 +24,11 @@ import java.util.Optional;
 import io.netty.buffer.ByteBuf;
 
 /**
- * Spots a non synchronizing literal ({@code {n+}}, or {@code ~{n+}} for a binary one) announced at the end of a
- * line, whatever the number of bytes of the line and however it is split into segments: the line is fed to it
- * from its first byte, with no bound on the size announcement (eg leading zeros).
+ * Spots a literal announced at the end of a line: non synchronizing ({@code {n+}}, or {@code ~{n+}} for a binary
+ * one), see {@link #announcedLiteralSize()}, or synchronizing ({@code {n}} or {@code ~{n}}), see
+ * {@link #announcedSynchronizingLiteralSize()}. This holds whatever the number of bytes of the line and however it is
+ * split into segments: the line is fed to it from its first byte, with no bound on the size announcement (eg leading
+ * zeros).
  */
 class LiteralAnnouncementScanner {
     private static final long TOO_BIG = Integer.MAX_VALUE + 1L;
@@ -43,6 +45,7 @@ class LiteralAnnouncementScanner {
 
     private State state = State.NONE;
     private long size = 0;
+    private boolean synchronizing = false;
 
     void scan(ByteBuf buffer, int from, int to) {
         for (int i = from; i < to; i++) {
@@ -54,12 +57,14 @@ class LiteralAnnouncementScanner {
         if (b == '{') {
             state = State.OPENING_BRACE;
             size = 0;
+            synchronizing = false;
         } else if (b >= '0' && b <= '9' && (state == State.OPENING_BRACE || state == State.DIGITS)) {
             state = State.DIGITS;
             size = Math.min(size * 10 + (b - '0'), TOO_BIG);
         } else if (b == '+' && state == State.DIGITS) {
             state = State.PLUS;
-        } else if (b == '}' && state == State.PLUS) {
+        } else if (b == '}' && (state == State.PLUS || state == State.DIGITS)) {
+            synchronizing = state == State.DIGITS;
             state = State.CLOSING_BRACE;
         } else if (b == '\r' && state == State.CLOSING_BRACE) {
             state = State.CR;
@@ -75,7 +80,19 @@ class LiteralAnnouncementScanner {
      * range is reported as {@code Integer.MAX_VALUE + 1}.
      */
     Optional<Long> announcedLiteralSize() {
-        if (state == State.ANNOUNCED) {
+        if (state == State.ANNOUNCED && !synchronizing) {
+            return Optional.of(size);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * @return the size of the synchronizing literal announced at the end of the line scanned, if any: the client
+     * waits for a continuation request before sending it. A size beyond the int range is reported as
+     * {@code Integer.MAX_VALUE + 1}.
+     */
+    Optional<Long> announcedSynchronizingLiteralSize() {
+        if (state == State.ANNOUNCED && synchronizing) {
             return Optional.of(size);
         }
         return Optional.empty();
@@ -84,5 +101,6 @@ class LiteralAnnouncementScanner {
     void reset() {
         state = State.NONE;
         size = 0;
+        synchronizing = false;
     }
 }

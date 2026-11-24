@@ -505,18 +505,45 @@ class ImapRequestFrameDecoderTest {
     }
 
     @Test
-    void aSynchronizingLiteralAfterAFileBackedLiteralShouldRejectTheCommand() {
-        // The client waits for a continuation request before sending that literal: it gets the BAD response instead
-        byte[] stream = ("b SETMETADATA INBOX (/private/comment {34}\r\n" + "y".repeat(34)
-            + " /private/other {13}\r\n"
-            + "c NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+    void aSecondLiteralOnTheLineOfAFileBackedLiteralShouldBeDecoded() {
+        List<byte[]> chunks = List.of(
+            "c SETMETADATA INBOX (/private/comment {34}\r\n".getBytes(StandardCharsets.US_ASCII),
+            ("y".repeat(34) + " /private/other {3+}\r\nabc)\r\n").getBytes(StandardCharsets.US_ASCII));
+        assertThat(decode(true, 32, 0, 3008, chunks)).isEqualTo(decode(true, 4096, 0, 3008, chunks));
+        assertThat(decode(true, 32, 0, 3008, chunks)).last().asString().contains("SetMetadataRequest").contains("/private/other");
+    }
 
-        List<String> whole = decode(true, 16, 5504, 3008, List.of(stream));
-        assertThat(whole).hasSize(2);
-        assertThat(whole.get(0)).contains("serverResponseType=BAD, tag=b");
-        assertThat(whole.get(1)).contains("tag=c, command=NOOP");
-        assertThat(decode(true, 16, 5504, 3008, byteByByte(stream)))
-            .isEqualTo(whole);
+    @Test
+    void aSynchronizingSecondLiteralOnTheLineOfAFileBackedLiteralShouldGetItsContinuationRequest() {
+        Collector collector = new Collector();
+        EmbeddedChannel channel = new EmbeddedChannel();
+        FakeImapSession session = new FakeImapSession() {
+            @Override
+            public boolean needsCommandInjectionDetection() {
+                return false;
+            }
+        };
+        session.authenticated();
+        channel.attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).set(session);
+        channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(new ConcurrentHashMap<>());
+        channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), 3008, false));
+        channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(), 32, 0, 3008));
+        channel.pipeline().addLast("collector", collector);
+
+        channel.writeInbound(Unpooled.wrappedBuffer("c SETMETADATA INBOX (/private/comment {34}\r\n".getBytes(StandardCharsets.US_ASCII)));
+        channel.writeInbound(Unpooled.wrappedBuffer(("y".repeat(34) + " /private/other {3}\r\n").getBytes(StandardCharsets.US_ASCII)));
+        List<String> continuationRequests = new ArrayList<>();
+        Object outbound;
+        while ((outbound = channel.readOutbound()) != null) {
+            continuationRequests.add(((ByteBuf) outbound).toString(StandardCharsets.US_ASCII));
+        }
+        // The client sends the synchronizing literal once invited to
+        channel.writeInbound(Unpooled.wrappedBuffer("abc)\r\n".getBytes(StandardCharsets.US_ASCII)));
+        channel.finishAndReleaseAll();
+
+        assertThat(continuationRequests).containsExactly("+ Ok\r\n", "+ Ok\r\n");
+        assertThat(collector.messages).hasSize(1)
+            .first().asString().contains("SetMetadataRequest", "/private/other", "abc");
     }
 
     @Test
