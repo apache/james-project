@@ -746,4 +746,29 @@ class ImapRequestFrameDecoderTest {
 
         assertThat(events).containsExactly(RuntimeException.class.getName());
     }
+
+    @Test
+    void commandsAfterATooLongLineReceivedInSeveralSegmentsShouldBeDecoded() {
+        List<byte[]> chunks = List.of(
+            ("a " + "x".repeat(200)).getBytes(StandardCharsets.US_ASCII),
+            "x".repeat(100).getBytes(StandardCharsets.US_ASCII),
+            "\r\nb NOOP\r\nc NOOP\r\n".getBytes(StandardCharsets.US_ASCII));
+
+        List<String> chunked = decodeWithErrors(4096, 256, chunks);
+        assertThat(chunked).hasSize(3);
+        assertThat(chunked.get(0)).isEqualTo(TooLongFrameException.class.getName());
+        assertThat(chunked.get(1)).contains("tag=b, command=NOOP");
+        assertThat(chunked.get(2)).contains("tag=c, command=NOOP");
+        assertThat(decodeWithErrors(4096, 256, List.of(String.join("", "a ", "x".repeat(300), "\r\nb NOOP\r\nc NOOP\r\n").getBytes(StandardCharsets.US_ASCII))))
+            .isEqualTo(chunked);
+    }
+
+    @Test
+    void literalContentOfARejectedAppendShouldNotBeTakenForALiteralAnnouncement() {
+        byte[] stream = "a APPEND INBOX {3+}\r\n{9+}\r\nb NOOP\r\nc NOOP\r\n".getBytes(StandardCharsets.US_ASCII);
+
+        assertThat(decode(true, 4096, 0, 8192, List.of(stream)))
+            .anySatisfy(message -> assertThat(message).contains("tag=b, command=NOOP"))
+            .anySatisfy(message -> assertThat(message).contains("tag=c, command=NOOP"));
+    }
 }
