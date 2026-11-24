@@ -64,8 +64,8 @@ class ConfiguredAuthOtherIdentityTest {
 
         smtpProtocol.setSender(END_USER);
 
-        assertThat(smtpProtocol.getReplyCode())
-            .isEqualTo(503);
+        assertThat(smtpProtocol.getReplyString())
+            .startsWith("550 5.7.1 Incorrect Authentication for Specified Email Address");
     }
 
     @Test

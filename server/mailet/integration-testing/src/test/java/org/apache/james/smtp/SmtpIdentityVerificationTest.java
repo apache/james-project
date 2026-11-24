@@ -144,7 +144,7 @@ class SmtpIdentityVerificationTest {
         assertThatThrownBy(() -> new SMTPMessageSender("127.0.0.1").connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(USER, PASSWORD)
             .sendMessage("other@james.org", USER)).isInstanceOf(SMTPSendingException.class)
-            .hasMessageContaining("Error upon step Sender: 503 5.7.1 Incorrect Authentication for Specified Email Address");
+            .hasMessageContaining("Error upon step Sender: 550 5.7.1 Incorrect Authentication for Specified Email Address");
     }
 
     @Test
@@ -206,7 +206,7 @@ class SmtpIdentityVerificationTest {
                 .authenticate(USER, PASSWORD)
                 .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
             .isInstanceOf(SMTPSendingException.class)
-            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+            .hasMessageContaining("550 5.7.1 Incorrect Authentication for Specified Email Address");
     }
 
     @Test
@@ -228,7 +228,7 @@ class SmtpIdentityVerificationTest {
                 .authenticate(USER, PASSWORD)
                 .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
             .isInstanceOf(SMTPSendingException.class)
-            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+            .hasMessageContaining("550 5.7.1 Incorrect Authentication for Specified Email Address");
     }
 
     @Test
@@ -249,7 +249,7 @@ class SmtpIdentityVerificationTest {
                 .authenticate(USER, PASSWORD)
                 .sendMessageWithHeaders("", ImmutableList.of(USER), message))
             .isInstanceOf(SMTPSendingException.class)
-            .hasMessageContaining("503 5.5.4 Missing From header");
+            .hasMessageContaining("554 5.5.4 Missing From header");
     }
 
     @Test
@@ -271,7 +271,7 @@ class SmtpIdentityVerificationTest {
                 .authenticate(USER, PASSWORD)
                 .sendMessageWithHeaders("", ImmutableList.of(USER), message))
             .isInstanceOf(SMTPSendingException.class)
-            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+            .hasMessageContaining("550 5.7.1 Incorrect Authentication for Specified Email Address");
     }
 
     @Test
@@ -312,7 +312,7 @@ class SmtpIdentityVerificationTest {
                 .authenticate(USER, PASSWORD)
                 .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
             .isInstanceOf(SMTPSendingException.class)
-            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+            .hasMessageContaining("550 5.7.1 Incorrect Authentication for Specified Email Address");
     }
 
     @Test
@@ -334,7 +334,7 @@ class SmtpIdentityVerificationTest {
                 .authenticate(USER, PASSWORD)
                 .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
             .isInstanceOf(SMTPSendingException.class)
-            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+            .hasMessageContaining("550 5.7.1 Incorrect Authentication for Specified Email Address");
     }
 
     @Test
@@ -356,7 +356,7 @@ class SmtpIdentityVerificationTest {
                 .authenticate(USER, PASSWORD)
                 .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
             .isInstanceOf(SMTPSendingException.class)
-            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+            .hasMessageContaining("550 5.7.1 Incorrect Authentication for Specified Email Address");
     }
 
     @Test
@@ -438,7 +438,7 @@ class SmtpIdentityVerificationTest {
                 .authenticate(USER, PASSWORD)
                 .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
             .isInstanceOf(SMTPSendingException.class)
-            .hasMessageContaining("503 5.5.4 Missing From header");
+            .hasMessageContaining("554 5.5.4 Missing From header");
     }
 
     @Test
@@ -460,7 +460,7 @@ class SmtpIdentityVerificationTest {
                 .authenticate(USER, PASSWORD)
                 .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
             .isInstanceOf(SMTPSendingException.class)
-            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+            .hasMessageContaining("550 5.7.1 Incorrect Authentication for Specified Email Address");
     }
 
     @Test
@@ -530,6 +530,6 @@ class SmtpIdentityVerificationTest {
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(ATTACKER, ATTACKER_PASSWORD)
                 .sendMessage(USER, USER))
-            .isEqualTo(new SMTPSendingException(SmtpSendingStep.Sender, "503 5.7.1 Incorrect Authentication for Specified Email Address\n"));
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.Sender, "550 5.7.1 Incorrect Authentication for Specified Email Address\n"));
     }
 }
