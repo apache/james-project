@@ -93,6 +93,7 @@ C: a12 LIST "" "*"
 SUB {
 S: \* LIST \(\\HasNoChildren\) \".\" \"INBOX\"
 S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.otherSharedMailbox\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.otherSharedMailbox.sub1\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.otherSharedMailbox.sub1.newChild1\"
 S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox-eilprstwx\"
