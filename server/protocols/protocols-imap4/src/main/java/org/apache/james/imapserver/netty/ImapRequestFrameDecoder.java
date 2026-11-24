@@ -334,7 +334,15 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 // A rejected command is the exception: whatever is left of its line is not a
                 // command of its own, wherever the parse stopped.
                 if (attempt.size() == -1 || message instanceof StatusResponse) {
-                    consumeRestOfLine(session, attempt, message instanceof StatusResponse);
+                    try {
+                        consumeRestOfLine(session, attempt, message instanceof StatusResponse);
+                    } catch (TooBigNonSynchronizingLiteralException e) {
+                        // As when the rest of the line arrives in a later segment: the rejected command is
+                        // answered before the connection is closed
+                        attachment.clear();
+                        ctx.fireChannelRead(message);
+                        throw e;
+                    }
                 }
                 if (message instanceof StatusResponse && attempt.buffer() != null) {
                     // The client sends the literals of a command whatever its outcome: they are not commands
@@ -443,10 +451,16 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             .addListener(ChannelFutureListener.CLOSE);
     }
 
+    private static class TooBigNonSynchronizingLiteralException extends IOException {
+        TooBigNonSynchronizingLiteralException(String message) {
+            super(message);
+        }
+    }
+
     private IOException tooBigNonSynchronizingLiteral(String message) {
         // The connection is going to be closed: nothing that follows is to be decoded
         literalBytesToDiscard = Long.MAX_VALUE;
-        return new IOException(message);
+        return new TooBigNonSynchronizingLiteralException(message);
     }
 
     private void discardLiteral(ImapSession session, long size) throws IOException {
