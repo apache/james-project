@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -103,6 +104,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private final LiteralAnnouncementScanner rejectedLineScanner = new LiteralAnnouncementScanner();
     private final AtomicBoolean awaitingFileBackedLiteral = new AtomicBoolean(false);
     private boolean commandInjectionDetected = false;
+    // Spooling a literal to a file failed: the connection is being closed
+    private final AtomicBoolean spoolingFailed = new AtomicBoolean(false);
+    private final Supplier<FileChunkConsumer> fileChunkConsumers;
     // Length of a line longer than maxFrameLength, being discarded up to its end, see rejectTooLongLine
     private long tooLongLineLength = -1;
     // Non synchronizing literal announced at the end of the line of a file-backed literal: discarded from the event
@@ -110,6 +114,12 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private volatile Optional<Long> literalToDiscardAfterFileBackedCommand = Optional.empty();
 
     public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength) {
+        this(decoder, inMemorySizeLimit, literalSizeLimit, maxFrameLength, FileChunkConsumer::new);
+    }
+
+    @VisibleForTesting
+    ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength, Supplier<FileChunkConsumer> fileChunkConsumers) {
+        this.fileChunkConsumers = fileChunkConsumers;
         this.decoder = decoder;
         this.inMemorySizeLimit = inMemorySizeLimit;
         this.literalSizeLimit = literalSizeLimit;
@@ -145,8 +155,8 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     @Override
     @SuppressWarnings("unchecked")
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        if (commandInjectionDetected) {
-            // The connection is being closed: nothing it still holds is a command.
+        if (commandInjectionDetected || spoolingFailed.get()) {
+            // The connection is being closed: nothing it still holds is a command (eg the rest of a literal).
             in.skipBytes(in.readableBytes());
             return;
         }
@@ -356,6 +366,8 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 requestMoreData(ctx, in, attachment, e, readerIndex);
             }
         } else {
+            // Nothing is left to decode for this command
+            attachment.clear();
             // The session was null so may be the case because the channel was already closed but there were still bytes in the buffer.
             // We now try to disconnect the client if still connected
             if (ctx.channel().isActive()) {
@@ -602,15 +614,19 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             sink = Pair.of(Sinks.many().unicast().onBackpressureBuffer(), new AtomicInteger(0));
             attachment.put(SINK, sink);
 
-            FileChunkConsumer fileChunkConsumer = new FileChunkConsumer();
+            FileChunkConsumer fileChunkConsumer = fileChunkConsumers.get();
             Disposable subscribe = sink.getLeft().asFlux()
                 .publishOn(Schedulers.boundedElastic())
                 .subscribe(fileChunkConsumer,
                     e -> {
+                        // What is still to come of the literal is not a command: drop everything from now on, the
+                        // connection is closed on that error
+                        spoolingFailed.set(true);
                         fileChunkConsumer.discard();
-                        attachment.clear();
-                        ctx.fireExceptionCaught(e);
-                        resumeAfterFileBackedLiteral(ctx);
+                        ctx.executor().execute(() -> {
+                            attachment.clear();
+                            ctx.fireExceptionCaught(e);
+                        });
                     },
                     () -> {
                         fileChunkConsumer.finalizeDataTransfer();
@@ -654,6 +670,10 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             attachment.put(SPOOLED_FROM_PENDING, pending.stream().mapToInt(bytes -> bytes.length).sum());
             pending.forEach(bytes -> sink.getLeft().emitNext(bytes, FAIL_FAST));
             pending.clear();
+        }
+        if (spoolingFailed.get()) {
+            in.skipBytes(in.readableBytes());
+            return;
         }
         int readableBytes = in.readableBytes();
         byte[] bytes = new byte[readableBytes];
