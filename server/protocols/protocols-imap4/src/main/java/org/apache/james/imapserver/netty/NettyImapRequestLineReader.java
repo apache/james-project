@@ -148,7 +148,9 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         nextSeen = false;
         nextChar = 0;
         literalContentConsumed();
-
+        // The line resumes after the literal content, even when the end of line check after it fails:
+        // the content of a literal must not be scanned for a literal announcement.
+        lineStart = buffer.readerIndex() + size;
 
         try {
             // limit the size via commons-io as ByteBufInputStream size limiting is buggy
