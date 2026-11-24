@@ -1765,7 +1765,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
         List<String> capabilitieslist = new ArrayList<>();
@@ -1786,6 +1786,9 @@ public class SMTPServerTest {
             .isEqualTo(235);
 
         smtpProtocol.setSender(sender);
+        assertThat(smtpProtocol.getReplyString())
+            .as("expected error")
+            .startsWith("550 5.7.1 Incorrect Authentication for Specified Email Address");
         smtpProtocol.addRecipient("mail@sample.com");
         smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
 
@@ -1801,12 +1804,8 @@ public class SMTPServerTest {
             .isNull();
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "<test_user_smtp@localhost> other@localhost",
-        "test_user_smtp@localhost (c) other@localhost",
-        "test_user_smtp@localhost(c).evil"})
-    public void testAuthShouldRejectAnotherAddressHiddenInTheFromHeader(String fromHeader) throws Exception {
+    @Test
+    public void testAuthShouldRejectAMessageWithoutFromHeader() throws Exception {
         smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
         smtpConfiguration.setAuthorizingAnnounce();
         init(smtpConfiguration);
@@ -1815,23 +1814,23 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
 
-        testSystem.usersRepository.addUser(Username.of(USER_LOCALHOST), "pwd");
+        testSystem.usersRepository.addUser(Username.of(USER_LOCAL_DOMAIN), "pwd");
 
         smtpProtocol.sendCommand("AUTH PLAIN");
-        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + USER_LOCALHOST + "\0pwd\0").getBytes(UTF_8)));
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + USER_LOCAL_DOMAIN + "\0pwd\0").getBytes(UTF_8)));
         assertThat(smtpProtocol.getReplyCode())
             .as("authenticated")
             .isEqualTo(235);
 
-        smtpProtocol.setSender(USER_LOCALHOST);
+        smtpProtocol.setSender(USER_LOCAL_DOMAIN);
         smtpProtocol.addRecipient("mail@sample.com");
-        smtpProtocol.sendShortMessageData("From: " + fromHeader + "\r\nSubject: test\r\n\r\nTest body\r\n");
+        smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body\r\n");
 
-        assertThat(smtpProtocol.getReplyCode())
+        assertThat(smtpProtocol.getReplyString())
             .as("expected error")
-            .isEqualTo(503);
+            .startsWith("554 5.5.4 Missing From header");
 
         smtpProtocol.quit();
 
@@ -1842,9 +1841,50 @@ public class SMTPServerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-        "From: test_user_smtp@localhost\r\nFrom: other@localhost\r\n",
-        "From: test_user_smtp@localhost\r\nSender: test_user_smtp@localhost\r\nSender: other@localhost\r\n",
-        "From: test_user_smtp@localhost\r\nFrom(x): other@localhost\r\n"})
+        "<test_user_smtp@example.local> other@example.local",
+        "test_user_smtp@example.local (c) other@example.local",
+        "test_user_smtp@example.local(c).evil"})
+    public void testAuthShouldRejectAnotherAddressHiddenInTheFromHeader(String fromHeader) throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", "localhost");
+
+        testSystem.usersRepository.addUser(Username.of(USER_LOCAL_DOMAIN), "pwd");
+
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + USER_LOCAL_DOMAIN + "\0pwd\0").getBytes(UTF_8)));
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
+
+        smtpProtocol.setSender(USER_LOCAL_DOMAIN);
+        smtpProtocol.addRecipient("mail@sample.com");
+        smtpProtocol.sendShortMessageData("From: " + fromHeader + "\r\nSubject: test\r\n\r\nTest body\r\n");
+
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected error")
+            .isEqualTo(550);
+        assertThat(smtpProtocol.getReplyString())
+            .startsWith("550 5.7.1");
+
+        smtpProtocol.quit();
+
+        assertThat(testSystem.queue.getLastMail())
+            .as("mail received by mail server")
+            .isNull();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "From: test_user_smtp@example.local\r\nFrom: other@example.local\r\n",
+        "From: test_user_smtp@example.local\r\nSender: test_user_smtp@example.local\r\nSender: other@example.local\r\n",
+        "From: test_user_smtp@example.local\r\nFrom(x): other@example.local\r\n"})
     public void testAuthShouldRejectAmbiguousSenderFields(String headers) throws Exception {
         smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
         smtpConfiguration.setAuthorizingAnnounce();
@@ -1854,23 +1894,23 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
 
-        testSystem.usersRepository.addUser(Username.of(USER_LOCALHOST), "pwd");
+        testSystem.usersRepository.addUser(Username.of(USER_LOCAL_DOMAIN), "pwd");
 
         smtpProtocol.sendCommand("AUTH PLAIN");
-        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + USER_LOCALHOST + "\0pwd\0").getBytes(UTF_8)));
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + USER_LOCAL_DOMAIN + "\0pwd\0").getBytes(UTF_8)));
         assertThat(smtpProtocol.getReplyCode())
             .as("authenticated")
             .isEqualTo(235);
 
-        smtpProtocol.setSender(USER_LOCALHOST);
+        smtpProtocol.setSender(USER_LOCAL_DOMAIN);
         smtpProtocol.addRecipient("mail@sample.com");
         smtpProtocol.sendShortMessageData(headers + "Subject: test\r\n\r\nTest body\r\n");
 
-        assertThat(smtpProtocol.getReplyCode())
+        assertThat(smtpProtocol.getReplyString())
             .as("expected error")
-            .isEqualTo(503);
+            .startsWith("550 5.7.1");
 
         smtpProtocol.quit();
 
@@ -1940,7 +1980,9 @@ public class SMTPServerTest {
 
         assertThat(smtpProtocol.getReplyCode())
             .as("expected error")
-            .isEqualTo(503);
+            .isEqualTo(550);
+        assertThat(smtpProtocol.getReplyString())
+            .startsWith("550 5.7.1");
 
         smtpProtocol.quit();
 
