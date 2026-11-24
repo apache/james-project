@@ -80,6 +80,8 @@ class IMAPServerIdleSSLCompressTest extends AbstractIMAPServerTest {
     @Test
     void idleShouldBeInterruptible() {
         send(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS));
+        // COMPRESS requires the authenticated state
+        Awaitility.await().until(() -> responses.stream().anyMatch(s -> s.contains("a0 OK")));
 
         send("a1 COMPRESS DEFLATE\r\n");
 
