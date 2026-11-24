@@ -80,6 +80,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private static final String TRAILING_EOL_SIZE = "TRAILING_EOL_SIZE";
     private static final String SINK = "SINK";
     private static final String LITERAL_LINE_LENGTH = "LITERAL_LINE_LENGTH";
+    private static final String FURTHER_SPOOLED_LITERALS = "FURTHER_SPOOLED_LITERALS";
+    // Bytes of the command received before it was spooled to a file (eg its earlier literals), see uploadToAFile
+    private static final String SPOOLED_FROM_PENDING = "SPOOLED_FROM_PENDING";
     private static final String SUBSCRIPTION = "SUBSCRIPTION";
     public static final int UNAUTHENTICATE_LITERAL_MAX_SIZE = Optional.ofNullable(System.getProperty("james.imap.unauthenticated.literal.max.size"))
         .map(Integer::parseInt)
@@ -473,8 +476,10 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         int size = retry ? (Integer) rawSize : NettyImapRequestLineReader.NotEnoughDataException.UNKNOWN_SIZE;
 
         // check if we have a inMemorySize limit and if so if the expected size will fit into it
-        if (size != NettyImapRequestLineReader.NotEnoughDataException.UNKNOWN_SIZE
-            && inMemorySizeLimit > 0 && inMemorySizeLimit < size) {
+        // Once a command is spooled to a file, its further literals go there too.
+        boolean spooling = attachment.containsKey(SINK);
+        if (spooling || (size != NettyImapRequestLineReader.NotEnoughDataException.UNKNOWN_SIZE
+            && inMemorySizeLimit > 0 && inMemorySizeLimit < size)) {
 
             ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
             int literalSizeLimit = literalSizeLimit(session);
@@ -570,6 +575,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 fileChunkConsumer.discard();
             });
 
+            attachment.put(SPOOLED_FROM_PENDING, pending.stream().mapToInt(bytes -> bytes.length).sum());
             pending.forEach(bytes -> sink.getLeft().emitNext(bytes, FAIL_FAST));
             pending.clear();
         }
@@ -608,6 +614,10 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         in.skipBytes(accepted);
         sink.getLeft().emitNext(accepted == readableBytes ? bytes : Arrays.copyOf(bytes, accepted), FAIL_FAST);
         sink.getRight().addAndGet(accepted);
+        if (lineEnded && spoolFurtherLiteral(ctx, attachment, sink.getRight().get())) {
+            // The command goes on with that literal: wait for it
+            return;
+        }
         if (lineEnded || lineTooLong) {
             if (lineTooLong) {
                 // The command will be rejected: drop the rest of that line.
@@ -615,13 +625,53 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             }
             awaitingFileBackedLiteral.set(true);
             if (lineEnded) {
-                // A further non synchronizing literal ends the line: the file holds the command up to its announcement
-                // only, so the command is rejected, and the client sends that literal anyway. It is not a command.
+                // A further non synchronizing literal ends the line, beyond what can be spooled: the file holds the
+                // command up to its announcement only, so the command is rejected, and the client sends that literal
+                // anyway. It is not a command.
                 literalToDiscardAfterFileBackedCommand = rejectedLineScanner.announcedLiteralSize();
                 rejectedLineScanner.reset();
             }
             sink.getLeft().tryEmitComplete();
         }
+    }
+
+    /**
+     * A further literal announced at the end of the line of a file-backed literal belongs to the same command: spool it,
+     * and the rest of its line, to the same file, as the command would be decoded in memory. A synchronizing literal
+     * gets its continuation request.
+     *
+     * @param received what was spooled so far from the network, see {@link #uploadToAFile}
+     * @return false when there is no such literal, or when it exceeds the limits: the command is then decoded as
+     * spooled so far, and rejected.
+     */
+    private boolean spoolFurtherLiteral(ChannelHandlerContext ctx, Map<String, Object> attachment, int received) {
+        Optional<Long> nonSynchronizing = rejectedLineScanner.announcedLiteralSize();
+        Optional<Long> synchronizing = rejectedLineScanner.announcedSynchronizingLiteralSize();
+        Optional<Long> announced = nonSynchronizing.or(() -> synchronizing);
+        if (announced.isEmpty()) {
+            return false;
+        }
+        long needed = received + announced.get();
+        // As in memory, the limit applies to the whole command so far
+        long commandSize = needed + (Integer) attachment.getOrDefault(SPOOLED_FROM_PENDING, 0);
+        int limit = literalSizeLimit(ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get());
+        int furtherLiterals = (Integer) attachment.getOrDefault(FURTHER_SPOOLED_LITERALS, 0);
+        if (commandSize > Integer.MAX_VALUE
+            || (limit > 0 && commandSize > limit)
+            || furtherLiterals >= NettyImapRequestLineReader.MAXIMUM_LITERAL_COUNT) {
+            return false;
+        }
+        rejectedLineScanner.reset();
+        attachment.put(FURTHER_SPOOLED_LITERALS, furtherLiterals + 1);
+        attachment.put(NEEDED_DATA, (int) needed);
+        attachment.put(TRAILING_EOL_SIZE, 0);
+        attachment.put(LITERAL_LINE_LENGTH, 0);
+        if (synchronizing.isPresent()) {
+            // Unlike in memory, the continuation request is sent before the command is parsed: the client may then send
+            // the literal of a command that turns out to be rejected. It is spooled with the command, and dropped with it.
+            ctx.channel().writeAndFlush(Unpooled.wrappedBuffer("+ Ok\r\n".getBytes(StandardCharsets.US_ASCII)));
+        }
+        return true;
     }
 
     /**
