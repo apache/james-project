@@ -154,7 +154,7 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
                 if (fromAddresses.isEmpty()) {
                     return HookResult.builder()
                         .hookReturnCode(HookReturnCode.deny())
-                        .smtpReturnCode(SMTPRetCode.BAD_SEQUENCE)
+                        .smtpReturnCode(SMTPRetCode.TRANSACTION_FAILED)
                         .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG)
                             + " Missing From header")
                         .build();
