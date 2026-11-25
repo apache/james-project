@@ -67,7 +67,7 @@ services:
 
   redis:
     container_name: redis.example.com
-    image: redis:8.2.1-bookworm
+    image: redis:8.12.0
     command: ["redis-server", "--requirepass", "secret1"]
     networks:
       - james

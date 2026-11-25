@@ -32,7 +32,7 @@ services:
       - "8000:8000"
 
   opensearch:
-    image: opensearchproject/opensearch:2.19.2
+    image: opensearchproject/opensearch:3.10.0
     environment:
       - discovery.type=single-node
       - DISABLE_INSTALL_DEMO_CONFIG=true
@@ -62,7 +62,7 @@ services:
       - james
 
   rabbitmq:
-    image: rabbitmq:4.1.1-management
+    image: rabbitmq:4.2.9-management
     ports:
       - "5672:5672"
       - "15672:15672"

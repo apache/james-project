@@ -3,7 +3,7 @@ version: '3'
 services:
 
   redis:
-    image: redis:8.0.2
+    image: redis:8.12.0
     command:
       - "--loglevel"
       - "debug"
