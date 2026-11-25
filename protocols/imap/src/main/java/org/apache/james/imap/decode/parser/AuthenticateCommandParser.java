@@ -51,7 +51,8 @@ public class AuthenticateCommandParser extends AbstractImapCommandParser {
             request.eol();
         } catch (DecodingException e) {
             // Ok this means we have some SASL-IR request to parse
-            String initialClientResponse = request.astring();
+            // A SASL initial response can exceed the size of string literals, for instance an OAUTHBEARER token
+            String initialClientResponse = request.astringOfAnySize();
             result = new IRAuthenticateRequest(authType, tag, initialClientResponse);
 
             request.eol();

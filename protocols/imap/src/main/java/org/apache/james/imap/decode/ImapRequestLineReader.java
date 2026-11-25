@@ -62,6 +62,8 @@ import com.google.common.base.CharMatcher;
  */
 public abstract class ImapRequestLineReader {
     private static final String UTF8_APPEND_DATA_KEYWORD = "UTF8";
+    // Literals read as strings (mailbox names, patterns, search strings...) are loaded in memory: messages are not
+    public static final int MAX_STRING_LITERAL_SIZE = 8 * 1024;
 
     public record LiteralHeader(long size, boolean synchronizing, boolean continuationSent, boolean sizeAccepted) {
         public boolean isSentByTheClient() {
@@ -488,15 +490,38 @@ public abstract class ImapRequestLineReader {
     }
 
     /**
+     * Reads an argument of type "astring" from the request, without the size limit of the string literals: the
+     * caller bounds the value.
+     */
+    public String astringOfAnySize() throws DecodingException {
+        if (nextWordChar() == '{') {
+            return consumeLiteral(UTF_8, Integer.MAX_VALUE);
+        }
+        return astring();
+    }
+
+    /**
      * Reads an argument of type "nstring" from the request.
      */
     public String nstring() throws DecodingException {
+        return nstring(MAX_STRING_LITERAL_SIZE);
+    }
+
+    /**
+     * Reads an argument of type "nstring" from the request, without the size limit of the string literals: the
+     * caller bounds the value.
+     */
+    public String nstringOfAnySize() throws DecodingException {
+        return nstring(Integer.MAX_VALUE);
+    }
+
+    private String nstring(int maxLiteralSize) throws DecodingException {
         char next = nextWordChar();
         switch (next) {
         case '"':
             return consumeQuoted();
         case '{':
-            return consumeLiteral(null);
+            return consumeLiteral(UTF_8, maxLiteralSize);
         default:
             String value = atom();
             if ("NIL".equals(value)) {
@@ -678,31 +703,31 @@ public abstract class ImapRequestLineReader {
      *            , or null for <code>UTF-8</code>
      */
     public String consumeLiteral(Charset charset) throws DecodingException {
-        if (charset == null) {
-            // RFC 9051/6855: literals carry UTF-8 octets once UTF8=ACCEPT is
-            // enabled. Accept them unconditionally, as consumeQuoted() does:
-            // UTF-8 is a superset of US-ASCII, so unextended sessions are
-            // unaffected except that 8-bit octets are no longer rejected.
-            return consumeLiteral(UTF_8);
-        } else {
-            try {
-                ImmutablePair<Integer, Literal> literal = consumeLiteral(false);
-                // Only the stream read here is closed, not the literal: a literal may be backed by a resource shared
-                // by the whole command (eg the file a large APPEND is spooled to), released by its owner once the
-                // command ends.
-                try (InputStream in = literal.right.getInputStream()) {
-                    Integer size = literal.left;
-                    byte[] data = IOUtils.readFully(in, size);
-                    ByteBuffer buffer = ByteBuffer.wrap(data);
-                    return decode(charset, buffer);
-                } catch (IOException e) {
-                    throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
-                }
-            } catch (DecodingException e) {
-                throw e;
+        // RFC 9051/6855: literals carry UTF-8 octets once UTF8=ACCEPT is
+        // enabled. Accept them unconditionally, as consumeQuoted() does:
+        // UTF-8 is a superset of US-ASCII, so unextended sessions are
+        // unaffected except that 8-bit octets are no longer rejected.
+        return consumeLiteral(Optional.ofNullable(charset).orElse(UTF_8), MAX_STRING_LITERAL_SIZE);
+    }
+
+    private String consumeLiteral(Charset charset, int maxSize) throws DecodingException {
+        try {
+            ImmutablePair<Integer, Literal> literal = consumeLiteral(false, maxSize);
+            // Only the stream read here is closed, not the literal: a literal may be backed by a resource shared
+            // by the whole command (eg the file a large APPEND is spooled to), released by its owner once the
+            // command ends.
+            try (InputStream in = literal.right.getInputStream()) {
+                Integer size = literal.left;
+                byte[] data = IOUtils.readFully(in, size);
+                ByteBuffer buffer = ByteBuffer.wrap(data);
+                return decode(charset, buffer);
             } catch (IOException e) {
-                throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Could not read literal", e);
+                throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
             }
+        } catch (DecodingException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Could not read literal", e);
         }
     }
 
@@ -734,6 +759,10 @@ public abstract class ImapRequestLineReader {
      * @return the literal data and its expected size
      */
     public ImmutablePair<Integer, Literal> consumeLiteral(boolean extraCRLF) throws IOException {
+        return consumeLiteral(extraCRLF, Integer.MAX_VALUE);
+    }
+
+    private ImmutablePair<Integer, Literal> consumeLiteral(boolean extraCRLF, int maxSize) throws IOException {
         // The 1st character must be '{'
         consumeChar('{');
 
@@ -774,6 +803,10 @@ public abstract class ImapRequestLineReader {
         int size = (int) announcedSize;
         assertLiteralSizeAccepted(size);
         unreadLiteral = Optional.of(new LiteralHeader(announcedSize, synchronizedLiteral, false, true));
+        if (size > maxSize) {
+            // Refused before inviting the client to send it. A non synchronizing literal is still discarded.
+            throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Literal size " + size + " is greater than the allowed size " + maxSize);
+        }
 
         if (synchronizedLiteral) {
             commandContinuationRequest();
