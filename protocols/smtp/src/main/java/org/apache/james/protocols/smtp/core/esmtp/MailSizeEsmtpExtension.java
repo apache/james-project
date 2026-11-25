@@ -164,12 +164,12 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
                 return next.onLine(session, line);
             } else {
                 Long newSize = Optional.ofNullable(session.currentMessageSize())
-                    .map(currentSize -> Long.valueOf(currentSize.intValue() + line.length))
+                    .map(currentSize -> currentSize + line.length)
                     .orElseGet(() -> Long.valueOf(line.length));
 
                 session.setCurrentMessageSize(newSize);
 
-                if (session.getConfiguration().getMaxMessageSize() > 0 && newSize.intValue() > session.getConfiguration().getMaxMessageSize()) {
+                if (session.getConfiguration().getMaxMessageSize() > 0 && newSize > session.getConfiguration().getMaxMessageSize()) {
                     // Add an item to the state to suppress
                     // logging of extra lines of data
                     // that are sent after the size limit has
