@@ -43,6 +43,9 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
     private static final AttributeKey<Object> ATTRIBUTE_KEY = AttributeKey.valueOf("startTlsInFlight");
     private final ChannelPipeline pipeline;
     private final String pattern;
+    // Bytes after the reader index already searched for a line end, so that a line received in many segments is not
+    // searched again from its start on each of them
+    private int scannedWithoutLineEnd = 0;
 
     private static final AttributeKey<CommandDetectionSession> sessionAttributeKey =
             AttributeKey.valueOf("session");
@@ -77,13 +80,20 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
         CommandDetectionSession session = retrieveSession(ctx);
 
         if (session == null || session.needsCommandInjectionDetection()) {
-            String trimedLowerCasedInput = readAll(buffer).trim().toLowerCase(Locale.US);
             Boolean startTlsInFlight = Optional.ofNullable(ctx.channel().attr(ATTRIBUTE_KEY))
                 .map(attr -> attr.get())
                 .filter(Boolean.class::isInstance)
                 .map(Boolean.class::cast)
                 .orElse(false);
-            if (hasCommandInjection(trimedLowerCasedInput) || startTlsInFlight) {
+            if (startTlsInFlight) {
+                throw new CommandInjectionDetectedException(readAll(buffer).trim().toLowerCase(Locale.US));
+            }
+        }
+        if ((session == null || session.needsCommandInjectionDetection()) && bytesBeforeLineEnd(buffer) >= 0) {
+            // Checked once a line is complete: until then nothing is framed, and a partial line is not read again
+            // on each segment
+            String trimedLowerCasedInput = readAll(buffer).trim().toLowerCase(Locale.US);
+            if (hasCommandInjection(trimedLowerCasedInput)) {
                 throw new CommandInjectionDetectedException(trimedLowerCasedInput);
             }
             // Prevents further reads on this channel to avoid race conditions
@@ -95,7 +105,27 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
                 ctx.channel().attr(ATTRIBUTE_KEY).set(true);
             }
         }
-        return decodeLine(ctx, buffer);
+        int readerIndex = buffer.readerIndex();
+        Object frame = decodeLine(ctx, buffer);
+        if (buffer.readerIndex() != readerIndex) {
+            scannedWithoutLineEnd = 0;
+        }
+        return frame;
+    }
+
+    /**
+     * The number of bytes before the next line end, -1 when there is none yet. Only the bytes received since the
+     * previous search are searched: to be called on the buffer being decoded only, and before consuming from it.
+     */
+    protected final int bytesBeforeLineEnd(ByteBuf buffer) {
+        int searchFrom = buffer.readerIndex() + Math.min(scannedWithoutLineEnd, buffer.readableBytes());
+        int lineEnd = buffer.indexOf(searchFrom, buffer.writerIndex(), (byte) '\n');
+        if (lineEnd < 0) {
+            scannedWithoutLineEnd = buffer.readableBytes();
+            return -1;
+        }
+        scannedWithoutLineEnd = lineEnd - buffer.readerIndex();
+        return lineEnd - buffer.readerIndex();
     }
 
     /**
