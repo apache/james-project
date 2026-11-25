@@ -1,0 +1,14 @@
+
+<imapserver enabled="true">
+    <jmxName>imapserver</jmxName>
+    <bind>0.0.0.0:0</bind>
+    <connectionBacklog>200</connectionBacklog>
+    <connectionLimit>0</connectionLimit>
+    <connectionLimitPerIP>0</connectionLimitPerIP>
+    <idleTimeInterval>120</idleTimeInterval>
+    <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
+    <enableIdle>true</enableIdle>
+    <inMemorySizeLimit>4096</inMemorySizeLimit> <!-- 4 KB: string literals, at most 8 KB, can be spooled to a file -->
+    <plainAuthDisallowed>false</plainAuthDisallowed>
+    <gracefulShutdown>false</gracefulShutdown>
+</imapserver>

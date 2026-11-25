@@ -65,6 +65,8 @@ import reactor.core.scheduler.Schedulers;
 class IMAPServerLiteralCleanupTest extends AbstractIMAPServerTest {
     // imapServerNoLimits.xml sets inMemorySizeLimit to 64 KB and no APPEND limit.
     private static final int OVERSIZED = 70 * 1024;
+    // imapServerSmallInMemoryLimit.xml sets inMemorySizeLimit to 4 KB: a string literal, at most 8 KB, is spooled above
+    private static final int SPOOLED_STRING_LITERAL = 6 * 1024;
     private static final Duration AWAIT_TIMEOUT = Duration.ofSeconds(30);
 
     IMAPServer imapServer;
@@ -78,6 +80,12 @@ class IMAPServerLiteralCleanupTest extends AbstractIMAPServerTest {
         MailboxSession session = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
         memoryIntegrationResources.getMailboxManager().createMailbox(MailboxPath.inbox(USER), session);
         literalsBefore = bufferedLiterals();
+    }
+
+    private void useASmallInMemorySizeLimit() throws Exception {
+        imapServer.destroy();
+        imapServer = createImapServer("imapServerSmallInMemoryLimit.xml");
+        port = imapServer.getListenAddresses().get(0).getPort();
     }
 
     @AfterEach
@@ -274,9 +282,10 @@ class IMAPServerLiteralCleanupTest extends AbstractIMAPServerTest {
     @Test
     void spooledSearchShouldNotKeepItsLiteralOpen() throws Exception {
         assumeThat(Files.isDirectory(Path.of("/proc/self/fd"))).isTrue();
+        useASmallInMemorySizeLimit();
         Set<String> openBefore = openBufferedLiterals();
         SocketChannel channel = connectLoginAndSelect();
-        String text = "a".repeat(OVERSIZED);
+        String text = "a".repeat(SPOOLED_STRING_LITERAL);
 
         write(channel, "a1 SEARCH TEXT {" + text.length() + "+}\r\n" + text + "\r\n");
 
@@ -290,9 +299,10 @@ class IMAPServerLiteralCleanupTest extends AbstractIMAPServerTest {
 
     @Test
     void spooledCommandShouldAcceptAsLongALineAsInMemory() throws Exception {
+        useASmallInMemorySizeLimit();
         SocketChannel channel = connectLoginAndSelect();
         String subject = "s".repeat(5000);
-        String text = "a".repeat(OVERSIZED);
+        String text = "a".repeat(SPOOLED_STRING_LITERAL);
 
         write(channel, "a1 SEARCH OR SUBJECT \"" + subject + "\" TEXT {" + text.length() + "+}\r\n" + text + "\r\n");
 

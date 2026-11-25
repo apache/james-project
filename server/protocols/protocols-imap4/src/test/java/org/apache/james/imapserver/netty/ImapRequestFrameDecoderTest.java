@@ -884,4 +884,62 @@ class ImapRequestFrameDecoderTest {
         assertThat(decoder.bytesBeforeLineEnd(buffer)).isEqualTo(length);
         assertThat(searchedBytes.get()).isLessThanOrEqualTo(length + 1);
     }
+
+    @Test
+    void aSynchronizingStringLiteralAboveTheLimitShouldBeRejectedBeforeTheContinuationRequest() {
+        EmbeddedChannel channel = new EmbeddedChannel();
+        FakeImapSession session = new FakeImapSession() {
+            @Override
+            public boolean needsCommandInjectionDetection() {
+                return false;
+            }
+        };
+        session.authenticated();
+        channel.attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).set(session);
+        channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(new ConcurrentHashMap<>());
+        channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), 3008, false));
+        channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(),
+            1024, 0, 3008));
+
+        channel.writeInbound(Unpooled.wrappedBuffer("a SELECT {8193}\r\n".getBytes(StandardCharsets.US_ASCII)));
+
+        assertThat((Object) channel.readOutbound()).isNull();
+        assertThat(channel.readInbound().toString()).contains("BAD");
+        channel.finishAndReleaseAll();
+    }
+
+    @Test
+    void aNonSynchronizingStringLiteralAboveTheLimitShouldBeRejectedAndDiscarded() {
+        String literal = "x NOOP\r\n".repeat(1024) + "x";
+        List<byte[]> chunks = List.of(
+            ("a SELECT {8193+}\r\n" + literal + "\r\nb NOOP\r\n").getBytes(StandardCharsets.US_ASCII));
+
+        assertThat(decode(true, 1024, 0, 3008, chunks))
+            .hasSize(2)
+            .satisfies(messages -> assertThat(messages.get(0)).contains("BAD"))
+            .satisfies(messages -> assertThat(messages.get(1)).contains("tag=b, command=NOOP"));
+    }
+
+    @Test
+    void anAppendAboveTheStringLiteralLimitShouldBeDecoded() {
+        int size = 1024 * 1024;
+        List<byte[]> chunks = List.of(
+            ("a APPEND INBOX {" + size + "+}\r\n" + "x".repeat(size) + "\r\nb NOOP\r\n").getBytes(StandardCharsets.US_ASCII));
+
+        assertThat(decode(true, 2 * size, 0, 3008, chunks))
+            .hasSize(2)
+            .satisfies(messages -> assertThat(messages.get(0)).startsWith("AppendRequest{mailboxName=INBOX"))
+            .satisfies(messages -> assertThat(messages.get(1)).contains("tag=b, command=NOOP"));
+    }
+
+    @Test
+    void aMetadataValueAboveTheStringLiteralLimitShouldBeDecoded() {
+        List<byte[]> chunks = List.of(
+            ("a SETMETADATA INBOX (/private/comment {9000+}\r\n" + "x".repeat(9000) + ")\r\nb NOOP\r\n").getBytes(StandardCharsets.US_ASCII));
+
+        assertThat(decode(true, 1024 * 1024, 0, 3008, chunks))
+            .hasSize(2)
+            .satisfies(messages -> assertThat(messages.get(0)).doesNotContain("BAD"))
+            .satisfies(messages -> assertThat(messages.get(1)).contains("tag=b, command=NOOP"));
+    }
 }
