@@ -65,7 +65,7 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
 
     private class Pop3ChannelInboundHandler extends BasicChannelInboundHandler {
         private Pop3ChannelInboundHandler() {
-            super(new ProtocolMDCContextFactory.Standard(), POP3Server.this.protocol, POP3Server.this.getEncryption(), false);
+            super(new ProtocolMDCContextFactory.Standard(), POP3Server.this.protocol, POP3Server.this.getEncryption(), POP3Server.this.proxyRequired);
         }
 
         @Override
