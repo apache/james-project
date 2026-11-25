@@ -95,6 +95,13 @@ class DelegateSetCreatePerformer @Inject()(delegationStore: DelegationStore,
   }
 
   private def create(delegateCreationId: DelegateCreationId, request: DelegateCreationRequest, mailboxSession: MailboxSession): SMono[CreationResult] =
+    if (request.username.asString().equalsIgnoreCase(mailboxSession.getUser.asString())) {
+      SMono.just[CreationResult](CreationFailure(delegateCreationId, new IllegalArgumentException("Cannot delegate an account to its owner")))
+    } else {
+      addDelegation(delegateCreationId, request, mailboxSession)
+    }
+
+  private def addDelegation(delegateCreationId: DelegateCreationId, request: DelegateCreationRequest, mailboxSession: MailboxSession): SMono[CreationResult] =
     SMono.fromPublisher(usersRepository.containsReactive(request.username))
       .filter(bool => bool)
       .flatMap(_ => SMono.fromPublisher(delegationStore.addAuthorizedUser(mailboxSession.getUser, request.username))
