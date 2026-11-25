@@ -111,6 +111,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -1577,6 +1579,24 @@ class UserMailboxesRoutesTest {
                     .body("statusCode", Matchers.is(404))
                     .body("type", Matchers.is("notFound"))
                     .body("message", Matchers.is("User does not exist"));
+            }
+
+            @ParameterizedTest
+            @ValueSource(strings = {"0", "-1"})
+            void userReprocessingShouldFailWithNonPositiveMessagesPerSecond(String messagesPerSecond) {
+                given()
+                    .queryParam("task", "reIndex")
+                    .queryParam("messagesPerSecond", messagesPerSecond)
+                .when()
+                    .post()
+                .then()
+                    .statusCode(BAD_REQUEST_400)
+                    .body("statusCode", Matchers.is(400))
+                    .body("type", Matchers.is("InvalidArgument"))
+                    .body("message", Matchers.is("Invalid arguments supplied in the user request"))
+                    .body("details", Matchers.is("Illegal value supplied for query parameter 'messagesPerSecond', expecting a strictly positive optional integer"));
+
+                assertThat(taskManager.list()).isEmpty();
             }
         }
 
