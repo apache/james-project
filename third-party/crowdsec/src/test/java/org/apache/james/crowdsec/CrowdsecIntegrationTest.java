@@ -323,6 +323,18 @@ class CrowdsecIntegrationTest {
 
     @Nested
     class POP3 {
+        // Behind the PROXY protocol, the client address is checked once the PROXY header is read, the greeting
+        // being already sent: the connection of a banned client is then closed before any command
+        private void awaitProxiedConnectionClosedBeforeAnyCommand() {
+            CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+                .untilAsserted(() -> assertThatThrownBy(() -> {
+                        pop3Client.connect(LOCALHOST_IP, haProxyExtension.getProxiedPop3Port());
+                        pop3Client.sendCommand("noop");
+                    })
+                    .isInstanceOf(EOFException.class)
+                    .hasMessage("Connection closed without indication."));
+        }
+
         @Test
         void shouldRejectConnectionAfterThreeFailedPop3Authentications(GuiceJamesServer server) {
             IntStream.range(0, 3)
@@ -351,10 +363,7 @@ class CrowdsecIntegrationTest {
                     assertThat(pop3Client.getReplyString()).startsWith("-ERR");
                 }));
 
-            CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
-                .untilAsserted(() -> assertThatThrownBy(() -> pop3Client.connect(LOCALHOST_IP, haProxyExtension.getProxiedPop3Port()))
-                    .isInstanceOf(EOFException.class)
-                    .hasMessage("Connection closed without indication."));
+            awaitProxiedConnectionClosedBeforeAnyCommand();
         }
 
         @Test
@@ -368,10 +377,7 @@ class CrowdsecIntegrationTest {
                     assertThat(pop3Client.getReplyString()).startsWith("-ERR");
                 }));
 
-            CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
-                .untilAsserted(() -> assertThatThrownBy(() -> pop3Client.connect(LOCALHOST_IP, haProxyExtension.getProxiedPop3Port()))
-                    .isInstanceOf(EOFException.class)
-                    .hasMessage("Connection closed without indication."));
+            awaitProxiedConnectionClosedBeforeAnyCommand();
 
             // THEN real client IP must be banned, not proxy IP
             String realClientIp = haProxyExtension.getHaproxyContainer().getContainerInfo().getNetworkSettings()
