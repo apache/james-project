@@ -63,7 +63,8 @@ on the *streamPort* just obtained;
 * sends the mime message to CLAMD (using {@link MimeMessage#writeTo(java.io.OutputStream)})
 through the *stream connection*;
 * closes the *stream connection*;
-* gets the "*OK*" or "*... FOUND*" answer from the main connection;
+* gets the "*OK*" or "*... FOUND*" answer from the main connection: any other answer, or failing to reach CLAMD, is
+logged and the mail goes on unmarked, neither clean nor infected;
 * closes the main connection;
 * sets the "*org.apache.james.infected*" *mail attribute* to either
 "*true*" or "*false*";
