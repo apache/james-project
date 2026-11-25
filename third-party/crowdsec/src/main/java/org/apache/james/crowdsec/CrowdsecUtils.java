@@ -22,11 +22,19 @@ package org.apache.james.crowdsec;
 import java.net.InetAddress;
 
 import org.apache.james.crowdsec.model.CrowdsecDecision;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.net.InetAddresses;
 
 public class CrowdsecUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CrowdsecUtils.class);
+
     public static boolean isBanned(CrowdsecDecision decision, String ip) {
+        // Only a ban refuses the connection: these protocols cannot offer a captcha, nor throttle a client
+        if (!CrowdsecDecision.BAN.equalsIgnoreCase(decision.getType())) {
+            return false;
+        }
         try {
             InetAddress address = InetAddresses.forString(ip);
             if (decision.getScope().equals("Ip")) {
@@ -34,6 +42,7 @@ public class CrowdsecUtils {
             }
             return decision.getScope().equals("Range") && belongsToNetwork(decision.getValue(), address);
         } catch (IllegalArgumentException e) {
+            LOGGER.warn("Ignoring the CrowdSec decision {} {} for {}: {}", decision.getScope(), decision.getValue(), ip, e.getMessage());
             return false;
         }
     }

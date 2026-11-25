@@ -27,10 +27,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 class CrowdsecUtilsTest {
     private static CrowdsecDecision decision(String scope, String value) {
+        return decision(scope, value, CrowdsecDecision.BAN);
+    }
+
+    private static CrowdsecDecision decision(String scope, String value, String type) {
         return CrowdsecDecision.builder()
             .scope(scope)
             .value(value)
-            .type(CrowdsecDecision.BAN)
+            .type(type)
             .build();
     }
 
@@ -51,9 +55,20 @@ class CrowdsecUtilsTest {
         "Ip, 1.2.3.4, 1.2.3.40",
         "Range, 1.2.3.0/24, 1.2.4.1",
         "Range, 2001:db8::/32, 2001:db9:0:0:0:0:0:1",
-        "Range, 1.2.3.0/24, 0:0:0:0:0:0:0:1"
+        "Range, 1.2.3.0/24, 0:0:0:0:0:0:0:1",
+        "Range, 2001:db8::/64, 10.0.0.1",
+        "Range, 10.0.0.0/8, 2001:db8:0:0:0:0:0:2",
+        "Range, not-a-range, 10.0.0.1",
+        "Range, 10.0.0.0/x, 10.0.0.1",
+        "Ip, not-an-ip, 10.0.0.1"
     })
     void isBannedShouldNotMatchOtherAddresses(String scope, String value, String ip) {
         assertThat(CrowdsecUtils.isBanned(decision(scope, value), ip)).isFalse();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"captcha", "throttle"})
+    void isBannedShouldIgnoreDecisionsOtherThanBans(String type) {
+        assertThat(CrowdsecUtils.isBanned(decision("Ip", "1.2.3.4", type), "1.2.3.4")).isFalse();
     }
 }
