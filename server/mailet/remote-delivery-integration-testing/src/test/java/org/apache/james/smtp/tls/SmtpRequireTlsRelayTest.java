@@ -275,7 +275,7 @@ class SmtpRequireTlsRelayTest {
                 .awaitMessageCount(awaitAtMostOneMinute, 1)
                 .readFirstMessage();
 
-        Assertions.assertThat(dsnMessage).contains("Mail delivery failed; the receiving server does not support STARTTLS");
+        Assertions.assertThat(dsnMessage).contains("Mail delivery failed; REQUIRETLS mail needs a TLS connection to a server supporting REQUIRETLS");
     }
 
     @AfterEach
