@@ -35,6 +35,8 @@ for the socket timeout when scanning a message.
 The default is *5000* (5 seconds).
 * *<streamBufferSize>*: the BufferedOutputStream buffer size to use
 writing to the *stream connection*. The default is *8192*.
+* *<notScannedProcessor>*: the processor a mail that could not be scanned (CLAMD unreachable, or replying an error
+such as its size limit) is sent to, eg to store it in a mail repository. None by default: such a mail goes on unmarked.
 
 The actions performed are as follows:
 
@@ -64,7 +66,7 @@ on the *streamPort* just obtained;
 through the *stream connection*;
 * closes the *stream connection*;
 * gets the "*OK*" or "*... FOUND*" answer from the main connection: any other answer, or failing to reach CLAMD, is
-logged and the mail goes on unmarked, neither clean nor infected;
+logged and the mail goes on unmarked, neither clean nor infected, or to *<notScannedProcessor>* when set;
 * closes the main connection;
 * sets the "*org.apache.james.infected*" *mail attribute* to either
 "*true*" or "*false*";
@@ -121,3 +123,20 @@ and handling the infected messages:
   <mailet match="All" class="Null" />
 </processor>
 ....
+
+To keep the mails that could not be scanned in a mail repository rather than let them go on:
+
+....
+<mailet match="All" class="ClamAVScan" onMailetException="ignore">
+    <notScannedProcessor>not-scanned</notScannedProcessor>
+</mailet>
+
+<processor state="not-scanned" enableJmx="true">
+    <mailet match="All" class="ToRepository">
+        <repositoryPath>file://var/mail/not-scanned/</repositoryPath>
+    </mailet>
+</processor>
+....
+
+Such a mail carries no *org.apache.james.infected* attribute: sending it back to the processor holding ClamAVScan
+scans it again.
