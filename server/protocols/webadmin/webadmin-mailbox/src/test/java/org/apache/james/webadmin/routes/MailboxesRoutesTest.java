@@ -212,6 +212,26 @@ class MailboxesRoutesTest {
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("Invalid arguments supplied in the user request"))
                     .body("details", is("Illegal value supplied for query parameter 'messagesPerSecond', expecting a strictly positive optional integer"));
+
+                assertThat(taskManager.list()).isEmpty();
+            }
+
+            @ParameterizedTest
+            @ValueSource(strings = {"abc", "1.5", "2147483648"})
+            void fullReIndexingShouldFailWithInvalidMessagesPerSecond(String messagesPerSecond) {
+                given()
+                    .queryParam("task", "reIndex")
+                    .queryParam("messagesPerSecond", messagesPerSecond)
+                .when()
+                    .post("/mailboxes")
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Illegal value supplied for query parameter 'messagesPerSecond', expecting a strictly positive optional integer"));
+
+                assertThat(taskManager.list()).isEmpty();
             }
 
             @Test
@@ -224,6 +244,8 @@ class MailboxesRoutesTest {
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("Invalid arguments supplied in the user request"))
                     .body("details", is("Illegal value supplied for query parameter 'mode': 'bogus'. Supported values are [rebuildAll, rebuildAllNoCleanup, fixOutdated]"));
+
+                assertThat(taskManager.list()).isEmpty();
             }
         }
 
@@ -751,6 +773,27 @@ class MailboxesRoutesTest {
                     .body("statusCode", is(404))
                     .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
                     .body("message", is("mailbox not found"));
+            }
+
+            @ParameterizedTest
+            @ValueSource(strings = {"0", "-1"})
+            void mailboxReIndexingShouldFailWithNonPositiveMessagesPerSecond(String messagesPerSecond) throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+
+                given()
+                    .queryParam("task", "reIndex")
+                    .queryParam("messagesPerSecond", messagesPerSecond)
+                .when()
+                    .post("/mailboxes/" + mailboxId.serialize())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Illegal value supplied for query parameter 'messagesPerSecond', expecting a strictly positive optional integer"));
+
+                assertThat(taskManager.list()).isEmpty();
             }
         }
 
@@ -1349,6 +1392,34 @@ class MailboxesRoutesTest {
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("Invalid arguments supplied in the user request"))
                     .body("details", is("Invalid value supplied for query parameter 'task': bad. Supported values are [reIndex]"));
+            }
+
+            @ParameterizedTest
+            @ValueSource(strings = {"0", "-1"})
+            void fixingReIndexingShouldFailWithNonPositiveMessagesPerSecond(String messagesPerSecond) {
+                String taskId = with()
+                    .post("/mailboxes?task=reIndex")
+                    .jsonPath()
+                    .get("taskId");
+
+                with()
+                    .basePath(TasksRoutes.BASE)
+                    .get(taskId + "/await");
+
+                given()
+                    .queryParam("reIndexFailedMessagesOf", taskId)
+                    .queryParam("task", "reIndex")
+                    .queryParam("messagesPerSecond", messagesPerSecond)
+                .when()
+                    .post("/mailboxes")
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Illegal value supplied for query parameter 'messagesPerSecond', expecting a strictly positive optional integer"));
+
+                assertThat(taskManager.list()).hasSize(1);
             }
         }
 
