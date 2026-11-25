@@ -61,8 +61,15 @@ object WebSocketRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[WebSocketRoutes])
 }
 
-case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration: AtomicReference[Registration], session: MailboxSession) {
+case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration: AtomicReference[Registration], session: MailboxSession,
+                         closeSignal: Sinks.Empty[Void] = Sinks.empty[Void]()) {
   def withRegistration(registration: Registration): Unit = withRegistration(Some(registration))
+
+  // Completing the push sink leaves the socket open: the client only reconnects once it is closed
+  def close(): Unit = {
+    clean()
+    closeSignal.tryEmitEmpty()
+  }
 
   def clean(): Unit ={
     withRegistration(None)
@@ -116,11 +123,12 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
     openingConnectionsMetric.increment()
 
     val context = ClientContext(sink, new AtomicReference[Registration](), session)
+    // Known from its opening, whatever it sends, so that a disconnect finds it
+    connectedUsers.put(context, context)
     val responseFlux: SFlux[OutboundMessage] = SFlux[WebSocketFrame](in.aggregateFrames()
       .receiveFrames())
       .filter(frame => frame.isInstanceOf[TextWebSocketFrame])
       .map(frame => frame.asInstanceOf[TextWebSocketFrame].text())
-      .doOnNext(_ => connectedUsers.put(context, context))
       .doOnNext(_ => requestCountMetric.increment())
       .flatMap(message => handleClientMessages(context)(message))
       .doOnTerminate(() => {
@@ -142,7 +150,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       .map(interval => responseAndSinkFlux.mergeWith(pingMessagePublisher(interval)))
       .getOrElse(responseAndSinkFlux)
 
-    out.sendObject(resultFlux).`then`()
+    out.sendObject(resultFlux.asJava().takeUntilOther(context.closeSignal.asMono())).`then`()
   }
 
   private def pingMessagePublisher(duration: Duration): SFlux[WebSocketFrame] =
@@ -170,7 +178,6 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
               .doOnNext(newRegistration => clientContext.withRegistration(newRegistration))
               .`then`(sendPushStateIfRequested(pushEnable, clientContext))
           case WebSocketPushDisable => SMono.fromCallable(() => clientContext.clean())
-            .`then`(SMono.fromCallable(() => connectedUsers.remove(clientContext)))
           .`then`(SMono.empty)
       })
 
@@ -219,7 +226,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
 
     contexts
       .forEach(context => {
-        context.clean()
+        context.close()
         connectedUsers.remove(context)
       })
   }
