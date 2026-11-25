@@ -441,6 +441,53 @@ trait DelegateSetContract {
   }
 
   @Test
+  def delegateSetShouldFailWhenDelegatingToTheOwner(): Unit = {
+    val request =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:apache:james:params:jmap:delegation"],
+         |	"methodCalls": [
+         |		[
+         |			"Delegate/set", {
+         |				"accountId": "$bobAccountId",
+         |				"create": {
+         |					"4f29": {
+         |						"username": "${bobUsername.asString()}"
+         |					}
+         |				}
+         |			}, "0"
+         |		],
+         |		["Delegate/get", {"accountId": "$bobAccountId", "ids": null}, "1"]
+         |	]
+         |}""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo(
+        s"""{
+           |	"4f29": {
+           |		"type": "invalidArguments",
+           |		"description": "Cannot delegate an account to its owner"
+           |	}
+           |}""".stripMargin)
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list")
+      .isArray
+      .isEmpty()
+  }
+
+  @Test
   def delegateSetShouldBeIdempotent(server: GuiceJamesServer): Unit = {
     val request =
       s"""{
