@@ -111,9 +111,10 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
             ctx.channel().attr(SESSION_ATTRIBUTE_KEY).set(session);
 
             LOGGER.info("Connection established from {}", session.getRemoteAddress().getAddress().getHostAddress());
-            // Behind the PROXY protocol, the handlers needing the client address run once the PROXY header is read
-            boolean awaitsProxyHeader = ctx.pipeline().get(HandlerConstants.PROXY_HANDLER) != null;
-            runConnectHandlers(session, handler -> !(awaitsProxyHeader && handler instanceof ClientAddressConnectHandler));
+            // Behind the PROXY protocol, the handlers needing the client address run once the PROXY header is read.
+            // This handler runs on its own executor: the PROXY handler, on the IO thread, may already have decoded
+            // the header and left the pipeline, hence the configuration, and not the pipeline, decides.
+            runConnectHandlers(session, handler -> !(proxyRequired && handler instanceof ClientAddressConnectHandler));
 
             super.channelActive(ctx);
         }
