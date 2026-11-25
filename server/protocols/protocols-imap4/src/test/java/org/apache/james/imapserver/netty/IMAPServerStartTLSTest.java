@@ -23,8 +23,11 @@ import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.BufferedReader;
 import java.io.EOFException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -99,6 +102,22 @@ class IMAPServerStartTLSTest extends AbstractIMAPServerTest {
         assertThatThrownBy(() -> imapClient.sendCommand("NOOP\r\n A1 STARTTLS\r\nA2 NOOP"))
             .isInstanceOf(EOFException.class)
             .hasMessage("Connection closed without indication.");
+    }
+
+    @Test
+    void aStartTLSLineReceivedInSeveralSegmentsShouldBeAccepted() throws Exception {
+        try (Socket socket = new Socket("127.0.0.1", port)) {
+            socket.setSoTimeout(5000);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
+            reader.readLine();
+            socket.getOutputStream().write("A1 STARTTLS".getBytes(StandardCharsets.US_ASCII));
+            socket.getOutputStream().flush();
+            Thread.sleep(200);
+            socket.getOutputStream().write("\r\n".getBytes(StandardCharsets.US_ASCII));
+            socket.getOutputStream().flush();
+
+            assertThat(reader.readLine()).startsWith("A1 OK");
+        }
     }
 
     @Test
