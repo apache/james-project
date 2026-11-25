@@ -19,9 +19,9 @@
 
 package org.apache.james.crowdsec;
 
+import static org.apache.james.crowdsec.CrowdsecSMTPConnectHandler.NOOP;
 import static org.apache.james.crowdsec.CrowdsecUtils.isBanned;
 import static org.apache.james.protocols.api.Response.DISCONNECT;
-import static org.apache.james.protocols.pop3.POP3Response.OK;
 
 import java.util.List;
 
@@ -55,6 +55,7 @@ public class CrowdsecPOP3CheckHandler implements ClientAddressConnectHandler<POP
         if (decisions.stream().anyMatch(decision -> isBanned(decision, ip))) {
             return DISCONNECT;
         }
-        return OK;
+        // No reply: the greeting is the only line a POP3 client expects on connection
+        return NOOP;
     }
 }
