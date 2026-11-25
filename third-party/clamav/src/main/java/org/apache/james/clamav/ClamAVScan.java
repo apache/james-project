@@ -92,6 +92,9 @@ import com.google.common.collect.ImmutableSet;
  * The default is <I>30000</I> (30 seconds).</LI>
  * <LI><CODE>&lt;streamBufferSize&gt;</CODE>: the BufferedOutputStream buffer size to use
  * writing to the <I>stream connection</I>. The default is <I>8192</I>.</LI>
+ * <LI><CODE>&lt;notScannedProcessor&gt;</CODE>: the processor a mail that could not be scanned (CLAMD unreachable,
+ * or replying an error such as its size limit) is sent to, eg to store it in a mail repository. None by default:
+ * such a mail goes on unmarked.</LI>
  * </UL>
  * <p/>
  * <P>The actions performed are as follows:</P>
@@ -251,6 +254,11 @@ public class ClamAVScan extends GenericMailet {
      */
     private int nextAddressIndex;
 
+    /**
+     * The processor of the mails that could not be scanned, if any.
+     */
+    private Optional<String> notScannedProcessor = Optional.empty();
+
     @Override
     public String getMailetInfo() {
         return "Antivirus Check using ClamAV (CLAMD)";
@@ -267,7 +275,9 @@ public class ClamAVScan extends GenericMailet {
                 "port",
                 "maxPings",
                 "pingIntervalMilli",
-                "streamBufferSize"
+                "socketTimeout",
+                "streamBufferSize",
+                "notScannedProcessor"
         );
     }
 
@@ -528,6 +538,9 @@ public class ClamAVScan extends GenericMailet {
      * @throws ConnectException if no CLAMD in the round-robin address list has accepted the connection
      */
     protected Socket getClamdSocket() throws ConnectException {
+        if (getAddresses() == null) {
+            throw new ConnectException("CLAMD host " + getHost() + " could not be resolved at startup");
+        }
 
         InetAddress address;
 
@@ -560,6 +573,11 @@ public class ClamAVScan extends GenericMailet {
 
         // check that all init parameters have been declared in allowedInitParameters
         checkInitParameters(getAllowedInitParameters());
+
+        // first, so that a CLAMD that can not be reached at startup does not lose it
+        notScannedProcessor = Optional.ofNullable(getInitParameter("notScannedProcessor"))
+            .map(String::trim)
+            .filter(processor -> !processor.isEmpty());
 
         try {
             initDebug();
@@ -645,8 +663,10 @@ public class ClamAVScan extends GenericMailet {
             }
             saveChanges(mimeMessage);
         } catch (IOException ex) {
-            // Not scanned is not clean, but the mail goes on: a CLAMD outage must not stop the traffic
+            // Not scanned is not clean, but unless a notScannedProcessor is set the mail goes on: a CLAMD
+            // outage must not stop the traffic
             LOGGER.error("Exception caught calling CLAMD, mail {} is not marked: {}", mail.getName(), ex.getMessage());
+            notScannedProcessor.ifPresent(mail::setState);
             if (mimeMessage.getHeader(INFECTED_HEADER_NAME) != null) {
                 // nor does it keep a verdict the sender may have written
                 mimeMessage.removeHeader(INFECTED_HEADER_NAME);

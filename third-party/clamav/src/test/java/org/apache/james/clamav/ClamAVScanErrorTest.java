@@ -62,6 +62,10 @@ class ClamAVScanErrorTest {
     }
 
     private ClamAVScan clamAVScanAgainst(Session session) throws Exception {
+        return clamAVScanAgainst(session, FakeMailetConfig.builder());
+    }
+
+    private ClamAVScan clamAVScanAgainst(Session session, FakeMailetConfig.Builder config) throws Exception {
         fakeClamd = new ServerSocket(0);
         fakeClamdThread = new Thread(() -> {
             try (Socket socket = fakeClamd.accept()) {
@@ -75,7 +79,7 @@ class ClamAVScanErrorTest {
         fakeClamdThread.start();
 
         ClamAVScan clamAVScan = new ClamAVScan();
-        clamAVScan.init(FakeMailetConfig.builder()
+        clamAVScan.init(config
             .mailetName("Test")
             .setProperty("host", "localhost")
             .setProperty("port", String.valueOf(fakeClamd.getLocalPort()))
@@ -183,5 +187,86 @@ class ClamAVScanErrorTest {
         });
 
         assertNotScanned(clamAVScan, mailClaimingToBeClean());
+    }
+
+    @Test
+    void anUnscannedMailShouldKeepItsStateByDefault() throws Exception {
+        ClamAVScan clamAVScan = clamAVScanAgainst((in, out) -> {
+            readUntilTheEndOfTheStream(in);
+            out.write(SIZE_LIMIT_EXCEEDED.getBytes(StandardCharsets.US_ASCII));
+        });
+        Mail mail = mail();
+        mail.setState(Mail.DEFAULT);
+
+        clamAVScan.service(mail);
+
+        assertThat(mail.getState()).isEqualTo(Mail.DEFAULT);
+    }
+
+    @Test
+    void anUnscannedMailShouldGoToTheNotScannedProcessorWhenSet() throws Exception {
+        ClamAVScan clamAVScan = clamAVScanAgainst((in, out) -> {
+            readUntilTheEndOfTheStream(in);
+            out.write(SIZE_LIMIT_EXCEEDED.getBytes(StandardCharsets.US_ASCII));
+        }, FakeMailetConfig.builder().setProperty("notScannedProcessor", "not-scanned"));
+        Mail mail = mail();
+        mail.setState(Mail.DEFAULT);
+
+        clamAVScan.service(mail);
+
+        assertThat(mail.getState()).isEqualTo("not-scanned");
+        assertThat(mail.getAttribute(INFECTED_MAIL_ATTRIBUTE_NAME)).isEmpty();
+    }
+
+    @Test
+    void aMailThatCouldNotReachClamdShouldGoToTheNotScannedProcessorWhenSet() throws Exception {
+        int closedPort;
+        try (ServerSocket socket = new ServerSocket(0)) {
+            closedPort = socket.getLocalPort();
+        }
+        ClamAVScan clamAVScan = new ClamAVScan();
+        clamAVScan.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("host", "localhost")
+            .setProperty("port", String.valueOf(closedPort))
+            .setProperty("maxPings", "0")
+            .setProperty("notScannedProcessor", "not-scanned")
+            .build());
+        Mail mail = mail();
+        mail.setState(Mail.DEFAULT);
+
+        clamAVScan.service(mail);
+
+        assertThat(mail.getState()).isEqualTo("not-scanned");
+    }
+
+    @Test
+    void theDocumentedSocketTimeoutShouldBeAccepted() throws Exception {
+        ClamAVScan clamAVScan = clamAVScanAgainst((in, out) -> {
+            readUntilTheEndOfTheStream(in);
+            out.write("stream: OK\0".getBytes(StandardCharsets.US_ASCII));
+        }, FakeMailetConfig.builder().setProperty("socketTimeout", "2s"));
+        Mail mail = mail();
+
+        clamAVScan.service(mail);
+
+        assertThat(mail.getMessage().getHeader(INFECTED_HEADER_NAME)).containsExactly("false");
+    }
+
+    @Test
+    void aClamdHostUnresolvedAtStartupShouldSendTheMailToTheNotScannedProcessor() throws Exception {
+        ClamAVScan clamAVScan = new ClamAVScan();
+        clamAVScan.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("host", "clamav.invalid")
+            .setProperty("maxPings", "0")
+            .setProperty("notScannedProcessor", "not-scanned")
+            .build());
+        Mail mail = mail();
+        mail.setState(Mail.DEFAULT);
+
+        clamAVScan.service(mail);
+
+        assertThat(mail.getState()).isEqualTo("not-scanned");
     }
 }
