@@ -19,6 +19,8 @@
 
 package org.apache.james.mock.smtp.server;
 
+import javax.net.ssl.SSLContext;
+
 import org.apache.james.util.Port;
 import org.subethamail.smtp.server.SMTPServer;
 
@@ -33,10 +35,24 @@ class MockSMTPServer {
         return new MockSMTPServer(behaviorRepository, mailRepository, port.getValue());
     }
 
+    /**
+     * STARTTLS is accepted, using the given context, but only announced when configured as an SMTP extension.
+     */
+    static MockSMTPServer onRandomPortWithStartTls(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository, SSLContext sslContext) {
+        return new MockSMTPServer(behaviorRepository, mailRepository, SMTPServer.port(RANDOM_PORT)
+            .enableTLS()
+            .hideTLS()
+            .startTlsSocketFactory(sslContext));
+    }
+
     private final SMTPServer server;
 
     private MockSMTPServer(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository, int port) {
-        this.server = SMTPServer.port(port).messageHandlerFactory(ctx -> new MockMessageHandler(mailRepository, behaviorRepository)).build();
+        this(behaviorRepository, mailRepository, SMTPServer.port(port));
+    }
+
+    private MockSMTPServer(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository, SMTPServer.Builder builder) {
+        this.server = builder.messageHandlerFactory(ctx -> new MockMessageHandler(mailRepository, behaviorRepository)).build();
         this.server.getCommandHandler().addCommand(new ExtendedEhloCommand(behaviorRepository));
         this.server.getCommandHandler().addCommand(new ExtendedMailFromCommand());
         this.server.getCommandHandler().addCommand(new ExtendedRcptToCommand());
