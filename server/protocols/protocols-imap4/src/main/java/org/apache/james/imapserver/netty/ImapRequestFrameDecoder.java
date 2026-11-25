@@ -109,6 +109,11 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private final Supplier<FileChunkConsumer> fileChunkConsumers;
     // Length of a line longer than maxFrameLength, being discarded up to its end, see rejectTooLongLine
     private long tooLongLineLength = -1;
+    // The bytes after the reader index of this input known to hold no line end, so that a line received in many
+    // segments is not searched again from its start on each of them. Forgotten as soon as the input is consumed.
+    private ByteBuf scannedInput;
+    private int scannedReaderIndex = -1;
+    private int scannedWithoutLineEnd = 0;
     // Non synchronizing literal announced at the end of the line of a file-backed literal: discarded from the event
     // loop once that command is decoded
     private volatile Optional<Long> literalToDiscardAfterFileBackedCommand = Optional.empty();
@@ -150,11 +155,43 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             ((Disposable) subscription).dispose();
         }
         super.channelInactive(ctx);
+        // After the last decoding of what was still buffered
+        scannedInput = null;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        int readerIndex = in.readerIndex();
+        try {
+            decodeInput(ctx, in, out);
+        } finally {
+            if (in.readerIndex() != readerIndex) {
+                scannedReaderIndex = -1;
+            }
+        }
+    }
+
+    /**
+     * The number of bytes of the input before its next line end, -1 when there is none yet. Only the bytes received
+     * since the previous search are searched.
+     */
+    int bytesBeforeLineEnd(ByteBuf in) {
+        // Valid for the input it was computed on, as long as nothing was consumed from it since
+        boolean sameInput = in == scannedInput && in.readerIndex() == scannedReaderIndex;
+        int alreadyScanned = sameInput ? Math.min(scannedWithoutLineEnd, in.readableBytes()) : 0;
+        int lineEnd = in.indexOf(in.readerIndex() + alreadyScanned, in.writerIndex(), (byte) '\n');
+        scannedInput = in;
+        scannedReaderIndex = in.readerIndex();
+        if (lineEnd < 0) {
+            scannedWithoutLineEnd = in.readableBytes();
+            return -1;
+        }
+        scannedWithoutLineEnd = lineEnd - in.readerIndex();
+        return lineEnd - in.readerIndex();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void decodeInput(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         if (commandInjectionDetected || spoolingFailed.get()) {
             // The connection is being closed: nothing it still holds is a command (eg the rest of a literal).
             in.skipBytes(in.readableBytes());
@@ -193,7 +230,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             if (rejectTooLongLine(ctx, in)) {
                 return;
             }
-            if (in.bytesBefore((byte) '\n') < 0) {
+            if (bytesBeforeLineEnd(in) < 0) {
                 // A line that follows a literal in its segment reaches this decoder unframed: as the framer
                 // does, wait for its end, so that its length is checked whatever the segmentation.
                 return;
@@ -218,7 +255,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
             // the rest of `pending` first, then `in`.
             ctx.fireChannelRead(message.get());
             if (!ctx.isRemoved()) {
-                decode(ctx, in, out);
+                decodeInput(ctx, in, out);
             }
             return;
         }
@@ -236,7 +273,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
      */
     private boolean rejectTooLongLine(ChannelHandlerContext ctx, ByteBuf in) throws IOException {
         int start = in.readerIndex();
-        int endOfLine = in.bytesBefore((byte) '\n');
+        int endOfLine = bytesBeforeLineEnd(in);
         if (tooLongLineLength >= 0) {
             if (endOfLine < 0) {
                 tooLongLineLength += in.readableBytes();
