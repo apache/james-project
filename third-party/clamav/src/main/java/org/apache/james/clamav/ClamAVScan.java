@@ -116,7 +116,8 @@ import com.google.common.collect.ImmutableSet;
  * in the list unless all of them have failed;</LI>
  * <LI>sends a "<CODE>INSTREAM</CODE>" request;</LI>
  * <LI>sends the mime message to CLAMD;</LI>
- * <LI>gets the "<CODE>OK</CODE>" or "<CODE>... FOUND</CODE>" answer from the connection;</LI>
+ * <LI>gets the "<CODE>OK</CODE>" or "<CODE>... FOUND</CODE>" answer from the connection: any other answer, or
+ * failing to reach CLAMD, is logged and the mail goes on unmarked, neither clean nor infected;</LI>
  * <LI>closes the connection;</LI>
  * <LI>sets the "<CODE>org.apache.james.infected</CODE>" <I>mail attribute</I> to either
  * "<CODE>true</CODE>" or "<CODE>false</CODE>";</LI>
@@ -644,7 +645,13 @@ public class ClamAVScan extends GenericMailet {
             }
             saveChanges(mimeMessage);
         } catch (IOException ex) {
-            LOGGER.error("Exception caught calling CLAMD: {}", ex.getMessage());
+            // Not scanned is not clean, but the mail goes on: a CLAMD outage must not stop the traffic
+            LOGGER.error("Exception caught calling CLAMD, mail {} is not marked: {}", mail.getName(), ex.getMessage());
+            if (mimeMessage.getHeader(INFECTED_HEADER_NAME) != null) {
+                // nor does it keep a verdict the sender may have written
+                mimeMessage.removeHeader(INFECTED_HEADER_NAME);
+                saveChanges(mimeMessage);
+            }
         }
     }
 
@@ -769,12 +776,23 @@ public class ClamAVScan extends GenericMailet {
             }
             clamAVOutputStream.write(new byte[]{0, 0, 0, 0});
             clamAVOutputStream.flush();
-            return replyContainsFound(new String(clamAvInputStream.readAllBytes()));
+            return isInfected(new String(clamAvInputStream.readAllBytes(), StandardCharsets.US_ASCII));
         }
     }
 
-    private boolean replyContainsFound(String reply) {
-        return reply.contains(FOUND_STRING);
+    /**
+     * Only "stream: OK" is clean and "stream: ... FOUND" infected: any other reply (eg "INSTREAM size limit
+     * exceeded. ERROR") means the mail was not scanned.
+     */
+    private boolean isInfected(String rawReply) throws IOException {
+        String reply = rawReply.replace("\0", "").trim();
+        if (reply.endsWith(" " + FOUND_STRING)) {
+            return true;
+        }
+        if (reply.endsWith(": OK")) {
+            return false;
+        }
+        throw new IOException("Unexpected reply from CLAMD: " + reply);
     }
 }
 
