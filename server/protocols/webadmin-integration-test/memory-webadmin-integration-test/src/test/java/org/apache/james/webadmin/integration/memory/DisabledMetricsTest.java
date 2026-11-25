@@ -31,7 +31,6 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.RandomPortSupplier;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.integration.UnauthorizedModule;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,8 +46,8 @@ class DisabledMetricsTest {
             .configurationFromClasspath()
             .usersRepository(DEFAULT)
             .build())
+        // No authentication: every path but the public routes requires it, hence would answer 401 whatever the route
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
-            .overrideWith(new UnauthorizedModule())
             .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
                 .toInstance(WebAdminConfiguration.builder()
                     .enabled()
