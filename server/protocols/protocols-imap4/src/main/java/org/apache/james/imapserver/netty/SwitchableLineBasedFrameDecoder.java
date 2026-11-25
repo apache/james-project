@@ -51,7 +51,7 @@ public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChan
      */
     @Override
     protected Object decodeLine(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
-        int endOfLine = buffer.bytesBefore((byte) '\n');
+        int endOfLine = bytesBeforeLineEnd(buffer);
         int lineLength;
         if (endOfLine < 0) {
             lineLength = ImapRequestFrameDecoder.lengthWithoutATrailingCr(buffer);

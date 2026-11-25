@@ -21,6 +21,12 @@ package org.apache.james.imapserver.netty;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.anyByte;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.withSettings;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -29,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.FakeImapSession;
@@ -41,6 +48,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.UnpooledHeapByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -825,5 +834,54 @@ class ImapRequestFrameDecoderTest {
 
         assertThat(whole).contains(TooLongFrameException.class.getName());
         assertThat(chunked).isEqualTo(whole);
+    }
+
+    @Test
+    void aLongLineReceivedByteByByteShouldBeDecodedAsWhenReceivedAtOnce() {
+        String line = "a SELECT \"" + "x".repeat(2900) + "\"\r\n";
+        byte[] stream = (line + "b NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decodeWithErrors(32, 3008, List.of(stream));
+
+        assertThat(whole).hasSize(2);
+        assertThat(decodeWithErrors(32, 3008, byteByByte(stream))).isEqualTo(whole);
+    }
+
+    @Test
+    void aLongLineFollowingALiteralReceivedByteByByteShouldBeDecodedAsWhenReceivedAtOnce() {
+        String head = "a SETMETADATA INBOX (/private/comment {3+}\r\nabc)\r\n";
+        String line = "b SELECT \"" + "x".repeat(2900) + "\"\r\n";
+        byte[] stream = (head + line + "c NOOP\r\n").getBytes(StandardCharsets.US_ASCII);
+
+        List<String> whole = decodeWithErrors(32, 3008, List.of(stream));
+
+        assertThat(whole).hasSize(3);
+        assertThat(decodeWithErrors(32, 3008, byteByByte(stream))).isEqualTo(whole);
+    }
+
+    @Test
+    void aLineReceivedByteByByteShouldBeSearchedOnce() {
+        ImapRequestFrameDecoder decoder = new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(), 1024, 0, 65536);
+        // Not recording the invocations: a regression would search the buffer a lot
+        ByteBuf buffer = mock(UnpooledHeapByteBuf.class, withSettings()
+            .spiedInstance(new UnpooledHeapByteBuf(UnpooledByteBufAllocator.DEFAULT, 16, 65536))
+            .defaultAnswer(CALLS_REAL_METHODS)
+            .stubOnly());
+        // bytesBefore searches through indexOf too
+        AtomicLong searchedBytes = new AtomicLong();
+        doAnswer(invocation -> {
+            searchedBytes.addAndGet((int) invocation.getArgument(1) - (int) invocation.getArgument(0));
+            return invocation.callRealMethod();
+        }).when(buffer).indexOf(anyInt(), anyInt(), anyByte());
+        int length = 4_000;
+
+        for (int i = 0; i < length; i++) {
+            buffer.writeByte('x');
+            assertThat(decoder.bytesBeforeLineEnd(buffer)).isEqualTo(-1);
+        }
+        buffer.writeByte('\n');
+
+        assertThat(decoder.bytesBeforeLineEnd(buffer)).isEqualTo(length);
+        assertThat(searchedBytes.get()).isLessThanOrEqualTo(length + 1);
     }
 }
