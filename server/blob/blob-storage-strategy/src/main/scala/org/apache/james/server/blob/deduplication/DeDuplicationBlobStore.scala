@@ -55,7 +55,17 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   }
 
   override def save(bucketName: BucketName, data: InputStream, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    save(bucketName, data, withBlobId, storagePolicy)
+    // The buffered content must outlive the underlying DAO save: resetting the FileBackedOutputStream
+    // closes its backing file, invalidating any InputStream opened from it.
+    val ressourceSupplier: Callable[FileBackedOutputStream] = () => new FileBackedOutputStream(DeDuplicationBlobStore.FILE_THRESHOLD)
+    val sourceSupplier: FileBackedOutputStream => Mono[BlobId] =
+      (fileBackedOutputStream: FileBackedOutputStream) => Mono.from(save(bucketName, data, withBlobId(fileBackedOutputStream), storagePolicy))
+
+    Mono.using[BlobId, FileBackedOutputStream](
+      ressourceSupplier,
+      sourceSupplier.asJava,
+      ((fileBackedOutputStream: FileBackedOutputStream) => fileBackedOutputStream.reset()).asJava,
+      DeDuplicationBlobStore.LAZY_RESOURCE_CLEANUP)
   }
 
   override def save(bucketName: BucketName, data: ByteSource, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
@@ -82,23 +92,13 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
       .subscribeOn(Schedulers.boundedElastic())
   }
 
-  private def withBlobId: BlobIdProvider[InputStream] = data => {
+  private def withBlobId(fileBackedOutputStream: FileBackedOutputStream): BlobIdProvider[InputStream] = data => {
     val hashingInputStream = new HashingInputStream(Hashing.sha256, data)
-    val ressourceSupplier: Callable[FileBackedOutputStream] = () => new FileBackedOutputStream(DeDuplicationBlobStore.FILE_THRESHOLD)
-    val sourceSupplier: FileBackedOutputStream => Mono[(BlobId, InputStream)] =
-      (fileBackedOutputStream: FileBackedOutputStream) =>
-        SMono.fromCallable(() => {
-          IOUtils.copy(hashingInputStream, fileBackedOutputStream)
-          (blobIdFactory.ofHash(hashingInputStream.hash.asBytes), fileBackedOutputStream.asByteSource.openStream())
-        }).asJava()
-
-    Mono.using[(BlobId, InputStream),FileBackedOutputStream](
-      ressourceSupplier,
-      sourceSupplier.asJava,
-      ((fileBackedOutputStream: FileBackedOutputStream) => fileBackedOutputStream.reset()).asJava,
-      DeDuplicationBlobStore.LAZY_RESOURCE_CLEANUP)
+    SMono.fromCallable(() => {
+      IOUtils.copy(hashingInputStream, fileBackedOutputStream)
+      Tuples.of(blobIdFactory.ofHash(hashingInputStream.hash.asBytes), fileBackedOutputStream.asByteSource.openStream())
+    }).asJava()
       .subscribeOn(Schedulers.boundedElastic())
-      .map{ case (blobId, data) => Tuples.of(blobId, data)}
   }
 
   private def withBlobIdFromByteSource: BlobIdProvider[ByteSource] =
