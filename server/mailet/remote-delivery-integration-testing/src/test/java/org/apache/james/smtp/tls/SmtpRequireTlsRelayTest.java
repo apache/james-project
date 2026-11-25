@@ -44,11 +44,10 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
+import org.apache.james.mock.smtp.server.StartTlsMockSmtpServer;
 import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.mock.smtp.server.model.SMTPExtension;
 import org.apache.james.mock.smtp.server.model.SMTPExtensions;
-import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension;
-import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension.DockerMockSmtp;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
@@ -68,7 +67,9 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.TestIMAPClient;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -85,18 +86,27 @@ class SmtpRequireTlsRelayTest {
 
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
-    @RegisterExtension
-    public static MockSmtpServerExtension mockSmtpExtension = new MockSmtpServerExtension();
+    // REQUIRETLS mail leaves only over an actual TLS session: unlike the docker mock server, this one accepts STARTTLS
+    private static StartTlsMockSmtpServer mockSmtp;
 
     private TemporaryJamesServer jamesServer;
 
+    @BeforeAll
+    static void startMockSmtp() {
+        mockSmtp = StartTlsMockSmtpServer.start(BogusSslContextFactory.getServerContext());
+    }
+
+    @AfterAll
+    static void stopMockSmtp() {
+        mockSmtp.stop();
+    }
+
     @BeforeEach
-    void setUp(@TempDir File temporaryFolder, DockerMockSmtp mockSmtp, TestInfo testInfo) throws Exception {
+    void setUp(@TempDir File temporaryFolder, TestInfo testInfo) throws Exception {
         boolean usePriority = testInfo.getTags().stream().anyMatch(tag -> tag.contains("usePriority=true"));
 
         inMemoryDNSService = new InMemoryDNSService()
-                .registerMxRecord(DEFAULT_DOMAIN, LOCALHOST_IP)
-                .registerMxRecord(ANOTHER_DOMAIN, mockSmtp.getIPAddress());
+                .registerMxRecord(DEFAULT_DOMAIN, LOCALHOST_IP);
 
         SmtpConfiguration.Builder smtpConfiguration = SmtpConfiguration.builder()
                 .requireStartTls()
@@ -122,7 +132,7 @@ class SmtpRequireTlsRelayTest {
                 .withMailetContainer(MailetContainer.builder()
                         .putProcessor(CommonProcessors.simpleRoot())
                         .putProcessor(CommonProcessors.error())
-                        .putProcessor(directResolutionTransport(usePriority))
+                        .putProcessor(relayToMockSmtpTransport(usePriority))
                         .putProcessor(CommonProcessors.bounces()))
                 .withSmtpConfiguration(smtpConfiguration)
                 .build(temporaryFolder);
@@ -133,11 +143,12 @@ class SmtpRequireTlsRelayTest {
                 .addDomain(DEFAULT_DOMAIN)
                 .addUser(FROM, PASSWORD);
 
-        mockSmtp.getConfigurationClient().setSMTPExtensions(SMTPExtensions.of(SMTPExtension.of("STARTTLS"), SMTPExtension.of("dsn")));
+        mockSmtp.getConfigurationClient().setSMTPExtensions(SMTPExtensions.of(SMTPExtension.of("STARTTLS"), SMTPExtension.of("REQUIRETLS"), SMTPExtension.of("dsn"), SMTPExtension.of("MT-PRIORITY")));
         assertThat(mockSmtp.getConfigurationClient().version()).isEqualTo("0.4");
     }
 
-    private ProcessorConfiguration.Builder directResolutionTransport(Boolean usePriority) {
+    // The mock server listens on a random port: it is reached as a gateway, its certificate being trusted
+    private ProcessorConfiguration.Builder relayToMockSmtpTransport(Boolean usePriority) {
         return ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.LOCAL_DELIVERY)
@@ -145,6 +156,9 @@ class SmtpRequireTlsRelayTest {
                         .mailet(RemoteDelivery.class)
                         .matcher(All.class)
                         .addProperty("usePriority", usePriority.toString())
+                        .addProperty("gateway", LOCALHOST_IP + ":" + mockSmtp.getSmtpPort().getValue())
+                        .addProperty("mail.smtp.ssl.trust", "*")
+                        .addProperty("verifyServerIdentity", "false")
                         .addProperty("outgoing", "outgoing")
                         .addProperty("delayTime", "3 * 10 ms")
                         .addProperty("maxRetries", "1")
@@ -155,7 +169,7 @@ class SmtpRequireTlsRelayTest {
 
     @Test
     @Tag("usePriority=false")
-    void remoteDeliveryShouldRequireTls(DockerMockSmtp mockSmtp) throws Exception {
+    void remoteDeliveryShouldRequireTls() throws Exception {
 
         SMTPSClient smtpClient = initSMTPSClient();
         smtpClient.mail("<" + FROM + "> REQUIRETLS");
@@ -178,7 +192,7 @@ class SmtpRequireTlsRelayTest {
 
     @Test
     @Tag("usePriority=false")
-    void remoteDeliveryShouldRequireTlsWhenTlsRequiredHeaderExists(DockerMockSmtp mockSmtp) throws Exception {
+    void remoteDeliveryShouldRequireTlsWhenTlsRequiredHeaderExists() throws Exception {
 
         SMTPSClient smtpClient = initSMTPSClient();
         SimpleSMTPHeader header = new SimpleSMTPHeader(FROM, RECIPIENT, "Just testing");
@@ -203,7 +217,7 @@ class SmtpRequireTlsRelayTest {
 
     @Test
     @Tag("usePriority=false")
-    void remoteDeliveryShouldNotRequireTlsWhenTlsRequiredHeaderExistsAndFromCommandDoesNotContainRequireTls(DockerMockSmtp mockSmtp) throws Exception {
+    void remoteDeliveryShouldNotRequireTlsWhenTlsRequiredHeaderExistsAndFromCommandDoesNotContainRequireTls() throws Exception {
 
         SMTPSClient smtpClient = initSMTPSClient();
         SimpleSMTPHeader header = new SimpleSMTPHeader(FROM, RECIPIENT, "Just testing");
@@ -225,7 +239,7 @@ class SmtpRequireTlsRelayTest {
 
     @Test
     @Tag("usePriority=true")
-    void remoteDeliveryWhenShouldRequireTlsAndDsnAndMtPriorityTogether(DockerMockSmtp mockSmtp) throws Exception {
+    void remoteDeliveryWhenShouldRequireTlsAndDsnAndMtPriorityTogether() throws Exception {
         String expectedPriorityValue = "3";
 
         SMTPSClient smtpClient = initSMTPSClient();
@@ -260,7 +274,7 @@ class SmtpRequireTlsRelayTest {
     }
 
     @Test
-    void remoteDeliveryShouldFailsWhenServerNotAllowStartTls(DockerMockSmtp mockSmtp) throws Exception {
+    void remoteDeliveryShouldFailsWhenServerNotAllowStartTls() throws Exception {
 
         mockSmtp.getConfigurationClient().clearSMTPExtensions();
 
@@ -281,6 +295,7 @@ class SmtpRequireTlsRelayTest {
     @AfterEach
     void tearDown() {
         jamesServer.shutdown();
+        mockSmtp.getConfigurationClient().cleanServer();
     }
 
     private void authenticate(SMTPSClient smtpProtocol) throws IOException {
