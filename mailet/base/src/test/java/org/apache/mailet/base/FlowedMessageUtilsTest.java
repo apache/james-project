@@ -335,11 +335,8 @@ public class FlowedMessageUtilsTest {
 
         String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
 
-        assertThat(result).isEqualTo(
-            ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> A \r\n" +
-                ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> few \r\n" +
-                ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> words"
-        );
+        // The quote prefix alone fills the width: wrapping cannot help, the line is kept whole
+        assertThat(result).isEqualTo(input);
     }
 
     @Test
@@ -402,5 +399,38 @@ public class FlowedMessageUtilsTest {
 
         assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
             assertThat(FlowedMessageUtils.deflow(input, DEL_SP_NO)).isEqualTo(input + " "));
+    }
+
+    @Test
+    void flowShouldNotRepeatDeepQuotePrefixForEveryWord() {
+        String quotes = ">".repeat(100_000);
+        String words = "a ".repeat(100_000).trim();
+        String input = quotes + " " + words + "\r\n";
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(FlowedMessageUtils.flow(input, DEL_SP_NO)).isEqualTo(input));
+    }
+
+    @Test
+    void flowWithDelSpShouldNotRepeatDeepQuotePrefixForEveryWord() {
+        String quotes = ">".repeat(100_000);
+        String words = "a ".repeat(100_000).trim();
+        String input = quotes + " " + words + "\r\n";
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+            assertThat(FlowedMessageUtils.flow(input, DEL_SP_YES)).isEqualTo(input));
+    }
+
+    @Test
+    void flowShouldStillWrapWhenQuotePrefixLeavesRoom() {
+        String quotes = ">".repeat(70);
+        String input = quotes + " aaa bbb ccc\r\n";
+
+        String result = FlowedMessageUtils.flow(input, DEL_SP_NO);
+
+        assertThat(result).isEqualTo(
+            quotes + " aaa \r\n" +
+            quotes + " bbb \r\n" +
+            quotes + " ccc\r\n");
     }
 }
