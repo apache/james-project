@@ -43,6 +43,7 @@ public class ImapConfiguration {
     public static final int DEFAULT_CONCURRENT_REQUESTS = 128;
     public static final int DEFAULT_QUEUE_SIZE = 4096;
     public static final boolean DEFAULT_PROVISION_DEFAULT_MAILBOXES = true;
+    public static final Duration DEFAULT_SELECTED_MAILBOX_CACHE_TTL = Duration.ofSeconds(60);
 
     public static Builder builder() {
         return new Builder();
@@ -69,6 +70,7 @@ public class ImapConfiguration {
         private ImmutableSet<String> additionalConnectionChecks;
         private ImmutableList<String> adminUsers;
         private ImmutableMap<String, String> idFieldsResponse;
+        private Optional<Duration> selectedMailboxCacheTtl;
 
         private Builder() {
             this.appendLimit = Optional.empty();
@@ -84,6 +86,18 @@ public class ImapConfiguration {
             this.additionalConnectionChecks = ImmutableSet.of();
             this.idFieldsResponse = ImmutableMap.of();
             this.adminUsers = ImmutableList.of();
+            this.selectedMailboxCacheTtl = Optional.empty();
+        }
+
+        public Builder selectedMailboxCacheTtl(Duration selectedMailboxCacheTtl) {
+            Preconditions.checkArgument(!selectedMailboxCacheTtl.isNegative(), "'selectedMailboxCacheTtl' should not be negative");
+            this.selectedMailboxCacheTtl = Optional.of(selectedMailboxCacheTtl);
+            return this;
+        }
+
+        public Builder selectedMailboxCacheTtl(Optional<Duration> selectedMailboxCacheTtl) {
+            selectedMailboxCacheTtl.ifPresent(this::selectedMailboxCacheTtl);
+            return this;
         }
 
         public Builder idleTimeInterval(long idleTimeInterval) {
@@ -193,7 +207,8 @@ public class ImapConfiguration {
                 customProperties.orElseGet(Properties::new),
                 additionalConnectionChecks,
                 adminUsers,
-                idFieldsResponse);
+                idFieldsResponse,
+                selectedMailboxCacheTtl.orElse(DEFAULT_SELECTED_MAILBOX_CACHE_TTL));
         }
     }
 
@@ -210,6 +225,7 @@ public class ImapConfiguration {
     private final ImmutableSet<String> additionalConnectionChecks;
     private final List<String> adminUsers;
     private final ImmutableMap<String, String> idFieldsResponse;
+    private final Duration selectedMailboxCacheTtl;
 
     private ImapConfiguration(Optional<Long> appendLimit,
                               boolean enableIdle,
@@ -223,7 +239,8 @@ public class ImapConfiguration {
                               Properties customProperties,
                               ImmutableSet<String> additionalConnectionChecks,
                               List<String> adminUsers,
-                              ImmutableMap<String, String> idFieldsResponse) {
+                              ImmutableMap<String, String> idFieldsResponse,
+                              Duration selectedMailboxCacheTtl) {
         this.appendLimit = appendLimit;
         this.enableIdle = enableIdle;
         this.idleTimeInterval = idleTimeInterval;
@@ -237,6 +254,7 @@ public class ImapConfiguration {
         this.additionalConnectionChecks = additionalConnectionChecks;
         this.adminUsers = adminUsers;
         this.idFieldsResponse = idFieldsResponse;
+        this.selectedMailboxCacheTtl = selectedMailboxCacheTtl;
     }
 
     public Optional<Long> getAppendLimit() {
@@ -295,6 +313,13 @@ public class ImapConfiguration {
         return adminUsers;
     }
 
+    /**
+     * How long the selected mailbox may be served from memory. {@link Duration#ZERO} disables this cache.
+     */
+    public Duration getSelectedMailboxCacheTtl() {
+        return selectedMailboxCacheTtl;
+    }
+
     @Override
     public final boolean equals(Object obj) {
         if (obj instanceof ImapConfiguration that) {
@@ -310,7 +335,8 @@ public class ImapConfiguration {
                 && Objects.equal(that.isCondstoreEnable(), isCondstoreEnable)
                 && Objects.equal(that.getAdditionalConnectionChecks(), additionalConnectionChecks)
                 && Objects.equal(that.getIdFieldsResponse(), idFieldsResponse)
-                && Objects.equal(that.getAdminUsers(), adminUsers);
+                && Objects.equal(that.getAdminUsers(), adminUsers)
+                && Objects.equal(that.getSelectedMailboxCacheTtl(), selectedMailboxCacheTtl);
         }
         return false;
     }
@@ -319,7 +345,7 @@ public class ImapConfiguration {
     public final int hashCode() {
         return Objects.hashCode(enableIdle, idleTimeInterval, idleTimeIntervalUnit, disabledCaps, isCondstoreEnable,
             concurrentRequests, maxQueueSize, appendLimit, provisionDefaultMailboxes, customProperties, additionalConnectionChecks,
-            idFieldsResponse, adminUsers);
+            idFieldsResponse, adminUsers, selectedMailboxCacheTtl);
     }
 
     @Override
@@ -338,6 +364,7 @@ public class ImapConfiguration {
                 .add("additionalConnectionChecks", additionalConnectionChecks)
                 .add("idFieldsResponse", idFieldsResponse)
                 .add("adminUsers", adminUsers)
+                .add("selectedMailboxCacheTtl", selectedMailboxCacheTtl)
                 .toString();
     }
 }

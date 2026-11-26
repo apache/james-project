@@ -135,8 +135,8 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         responder.respond(new FlagsResponse(selected.getApplicableFlags()));
     }
 
-    protected void permanentFlags(Responder responder, Flags mailboxPermanentFlags, SelectedMailbox selected, MailboxSession mailboxSession) {
-        Flags permanentFlags = grantedPermanentFlags(mailboxPermanentFlags, selected, mailboxSession);
+    protected void permanentFlags(Responder responder, Flags mailboxPermanentFlags, SelectedMailbox selected, MessageManager messageManager, MailboxSession mailboxSession) {
+        Flags permanentFlags = grantedPermanentFlags(mailboxPermanentFlags, selected, messageManager, mailboxSession);
         if (permanentFlags.contains(Flags.Flag.USER)) {
             for (String keyword : selected.getApplicableFlags().getUserFlags()) {
                 if (MessageFlags.isKeyword(keyword)) {
@@ -153,13 +153,13 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
      * selected read-only, and only those its rights allow otherwise (RFC 4314 section 4: \Seen needs the 's'
      * right, \Deleted the 't' right, the other flags and the keywords the 'w' right).
      */
-    private Flags grantedPermanentFlags(Flags permanentFlags, SelectedMailbox selected, MailboxSession mailboxSession) {
+    private Flags grantedPermanentFlags(Flags permanentFlags, SelectedMailbox selected, MessageManager messageManager, MailboxSession mailboxSession) {
         if (selected.isReadOnly()) {
             return new Flags();
         }
         MailboxACL.Rfc4314Rights rights;
         try {
-            rights = getMailboxManager().myRights(selected.getMessageManager().getMailboxEntity(), mailboxSession);
+            rights = getMailboxManager().myRights(messageManager.getMailboxEntity(), mailboxSession);
         } catch (MailboxException e) {
             LOGGER.warn("Could not read the rights on mailbox {}", selected.getMailboxId().serialize(), e);
             return new Flags();
@@ -255,29 +255,25 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     }
     
     private Mono<Void> addFlagsResponses(ImapSession session, SelectedMailbox selected, ImapProcessor.Responder responder, boolean useUid) {
-        MessageManager messageManager = selected.getMessageManager();
         MailboxSession mailboxSession = session.getMailboxSession();
 
         Collection<MessageUid> flagUpdateUids = selected.flagUpdateUids();
-        if (!flagUpdateUids.isEmpty()) {
-
-            return Mono.fromRunnable(() -> addApplicableFlagResponse(session, selected, responder, useUid))
+        if (flagUpdateUids.isEmpty() && !selected.hasNewApplicableFlags()) {
+            return Mono.empty();
+        }
+        return selected.messageManager()
+            .flatMap(messageManager -> Mono.fromRunnable(() -> addApplicableFlagResponse(session, selected, responder, messageManager))
                 .then(Flux.fromIterable(MessageRange.toRanges(flagUpdateUids))
                     .concatMap(range ->
                         addFlagsResponses(session, selected, responder, useUid, range, messageManager, mailboxSession))
-                    .then()
-                    .onErrorResume(MailboxException.class, e -> {
-                        handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
-                        return Mono.empty();
-                    }));
-        } else {
-            return Mono.fromRunnable(() -> addApplicableFlagResponse(session, selected, responder, useUid));
-        }
+                    .then()))
+            .onErrorResume(MailboxException.class, e -> {
+                handleResponseException(responder, e, HumanReadableText.FAILURE_TO_LOAD_FLAGS, session);
+                return Mono.empty();
+            });
     }
 
-    private void addApplicableFlagResponse(ImapSession session, SelectedMailbox selected, ImapProcessor.Responder responder, boolean useUid) {
-        // To be lazily initialized only if needed, which is in minority of cases.
-        MessageManager messageManager = selected.getMessageManager();
+    private void addApplicableFlagResponse(ImapSession session, SelectedMailbox selected, ImapProcessor.Responder responder, MessageManager messageManager) {
         MailboxSession mailboxSession = session.getMailboxSession();
 
         // Check if we need to send a FLAGS and PERMANENTFLAGS response before the FETCH response
@@ -285,7 +281,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         // See IMAP-303
         if (selected.hasNewApplicableFlags()) {
             flags(responder, selected);
-            permanentFlags(responder, messageManager.getPermanentFlags(mailboxSession), selected, mailboxSession);
+            permanentFlags(responder, messageManager.getPermanentFlags(mailboxSession), selected, messageManager, mailboxSession);
             selected.resetNewApplicableFlags();
         }
     }
@@ -468,8 +464,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
 
     protected Mono<MessageManager> getSelectedMailboxReactive(ImapSession session, Mono<MessageManager> ifEmpty) {
         return Optional.ofNullable(session.getSelected())
-            .map(selectedMailbox -> Mono.from(getMailboxManager()
-                .getMailboxReactive(selectedMailbox.getMailboxId(), session.getMailboxSession())))
+            .map(SelectedMailbox::messageManager)
             .orElse(ifEmpty);
     }
 

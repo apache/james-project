@@ -113,7 +113,11 @@ public interface SelectedMailbox {
      */
     MailboxId getMailboxId();
 
-    MessageManager getMessageManager();
+    /**
+     * @return the {@link MessageManager} of this mailbox, served from memory while it is fresh and read from the
+     * mailbox manager otherwise
+     */
+    Mono<MessageManager> messageManager();
 
     /**
      * Is the given uid recent ?

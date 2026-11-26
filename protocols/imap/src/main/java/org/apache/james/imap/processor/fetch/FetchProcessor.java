@@ -279,7 +279,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
     private Mono<Void> processFetch(FetchRequest request, ImapSession session, Responder responder, SelectedMailbox selected, FetchData fetch, long changedSince) {
         MailboxSession mailboxSession = session.getMailboxSession();
-        return Mono.from(getMailboxManager().getMailboxReactive(selected.getMailboxId(), mailboxSession))
+        return selected.messageManager()
             .flatMap(Throwing.<MessageManager, Mono<Void>>function(mailbox -> {
                 boolean vanished = fetch.getVanished();
                 if (vanished && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
