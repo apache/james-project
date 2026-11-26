@@ -60,6 +60,10 @@ public class Scenario {
         Behavior RETURN_EMPTY = (session, statement) -> session.executeReactive(
             "SELECT value FROM schemaVersion WHERE key=49128560-bb80-11ea-bad6-e3b96c9cd431;");
 
+        // Hack. A lightweight transaction on a key that does not exist is never applied
+        Behavior CAS_NOT_APPLIED = (session, statement) -> session.executeReactive(
+            "DELETE FROM schemaVersion WHERE key=49128560-bb80-11ea-bad6-e3b96c9cd431 AND value=0 IF EXISTS;");
+
         static Behavior awaitOn(Barrier barrier, Behavior behavior) {
             return (session, statement) -> new AwaitingReactiveResultSet(behavior.execute(session, statement), barrier);
         }
@@ -260,6 +264,13 @@ public class Scenario {
             return validity -> statementPredicate -> new ExecutionHook(
                 statementPredicate,
                 Behavior.RETURN_EMPTY,
+                validity);
+        }
+
+        static RequiresValidity casNotApplied() {
+            return validity -> statementPredicate -> new ExecutionHook(
+                statementPredicate,
+                Behavior.CAS_NOT_APPLIED,
                 validity);
         }
 

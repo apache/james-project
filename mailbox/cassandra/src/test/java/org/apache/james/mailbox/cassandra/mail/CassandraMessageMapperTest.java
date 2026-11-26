@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static org.apache.james.backends.cassandra.Scenario.Builder.casNotApplied;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.ONE_SECOND;
@@ -352,6 +353,23 @@ class CassandraMessageMapperTest extends MessageMapperTest {
                 softly.assertThat(imapUidDAO.retrieve((CassandraMessageId) message1.getMessageId(), Optional.empty()).collectList().block())
                     .hasSize(1);
             }));
+        }
+
+        @Test
+        void updateFlagsShouldRetrySeveralTimesUponFailedCompareAndSet(CassandraCluster cassandra) throws Exception {
+            saveMessages();
+
+            cassandra.getConf()
+                .registerScenario(casNotApplied()
+                    .times(3)
+                    .whenQueryStartsWith("UPDATE imapuidtable"));
+
+            FlagsUpdateCalculator markAsRead = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD);
+            messageMapper.updateFlags(benwaInboxMailbox, markAsRead, MessageRange.one(message1.getUid()));
+
+            assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.METADATA, 1).next()
+                .createFlags())
+                .isEqualTo(new Flags(Flags.Flag.SEEN));
         }
 
         @Test
