@@ -19,16 +19,13 @@
 package org.apache.james.protocols.netty;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayDeque;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.apache.james.protocols.api.CommandDetectionSession;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
-import com.google.common.base.Suppliers;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -44,9 +41,11 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
     private static final CharMatcher CRLF_MATCHER = CharMatcher.anyOf("\r\n");
     private static final Splitter CRLF_SPLITTER = Splitter.on(CRLF_MATCHER).omitEmptyStrings();
     private static final AttributeKey<Object> ATTRIBUTE_KEY = AttributeKey.valueOf("startTlsInFlight");
-    // Matched by no pattern: ends an input handed to hasStartTLS, so that the white spaces ending the part before it
-    // are not trimmed
+    // U+FFFD REPLACEMENT CHARACTER, what US-ASCII decodes a byte above 0x7F to: matched by no pattern, holding no
+    // space. Ends an input handed to hasStartTLS, so that the white spaces ending the part before it are not trimmed
     private static final String NO_MATCH = "�";
+    // Continues on white spaces, as trimmed by String::trim
+    private static final ByteProcessor WHITE_SPACE = value -> (value & 0xFF) <= ' ';
     private final ChannelPipeline pipeline;
     private final String pattern;
     // Bytes after the reader index already searched for a line end, so that a line received in many segments is not
@@ -114,7 +113,7 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
             // on each segment. The checks are about the whole read input, the lines following this one included:
             // these are split once, not once per line framed
             parts.update(buffer);
-            if (parts.hasCommandInjection()) {
+            if (parts.hasCommandInjection(buffer)) {
                 throw new CommandInjectionDetectedException(readAll(buffer).trim().toLowerCase(Locale.US));
             }
             // Prevents further reads on this channel to avoid race conditions
@@ -122,7 +121,7 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
             // not yet encrypted allowing man-in-the-middle attacks relying on race conditions
             // Disabling auto-read when framing STARTTLS prevents accepting other frames until STARTTLS
             // is fully active.
-            if (parts.hasStartTLS()) {
+            if (parts.hasStartTLS(buffer)) {
                 ctx.channel().attr(ATTRIBUTE_KEY).set(true);
             }
         } else if (!detection) {
@@ -134,7 +133,7 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
         if (buffer.readerIndex() != readerIndex) {
             scannedWithoutLineEnd = 0;
         }
-        parts.consumed(readableBytes - buffer.readableBytes());
+        parts.consumed(buffer, readableBytes - buffer.readableBytes());
         return frame;
     }
 
@@ -179,8 +178,10 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
     /**
      * Whether the read input, trimmed and lower cased, holds a STARTTLS command.
      *
-     * When the input holds several parts (separated by CR or LF), only its first part is handed over, followed by
-     * the first part holding a space when the first part does not: that is what a tag removal reads.
+     * When the input holds several parts (separated by CR or LF), what is handed over is not the whole input but its
+     * first part followed by a U+FFFD part, or the first part holding a space after the first part, between U+FFFD
+     * parts: that is what a tag removal reads. Overrides shall treat these U+FFFD parts as opaque: they match no
+     * pattern and hold no space.
      */
     protected boolean hasStartTLS(String trimedLowerCasedInput) {
         return CRLF_SPLITTER.splitToStream(trimedLowerCasedInput)
@@ -203,211 +204,244 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
         return buffer.toString(StandardCharsets.US_ASCII);
     }
 
-    private static String trimLeading(String input) {
-        int start = 0;
-        while (start < input.length() && input.charAt(start) <= ' ') {
-            start++;
-        }
-        return input.substring(start);
-    }
-
-    /**
-     * A part of the read input, between two CR or LF, lower cased, with what the STARTTLS checks need to know about it
-     * for each place it can take in the trimmed input. Each is computed once, when needed: the checks of the
-     * following lines do not read the part again.
-     */
-    private class Part {
-        private final long start;
-        private final long end;
-        // Holds something else than white spaces, thus is not trimmed away
-        private final boolean significant;
-        private final boolean hasSpace;
-        // Starts with the pattern, as a part following the first one
-        private final boolean matches;
-        // As the only part of the input: trimmed
-        private final Supplier<Boolean> onlyInjection;
-        private final Supplier<Boolean> onlyStartTls;
-        // As the first part of the input, followed by others: leading white spaces trimmed
-        private final Supplier<Boolean> firstMatches;
-        private final Supplier<Boolean> firstHasSpace;
-        private final Supplier<Boolean> firstStartTls;
-        // As the part holding the first space of the input, followed by others or not
-        private final Supplier<Boolean> middleStartTls;
-        private final Supplier<Boolean> lastStartTls;
-
-        Part(long start, String lowerCased) {
-            this.start = start;
-            this.end = start + lowerCased.length();
-            this.significant = lowerCased.chars().anyMatch(c -> c > ' ');
-            this.hasSpace = lowerCased.indexOf(' ') >= 0;
-            this.matches = significant && startsWithPattern(lowerCased);
-            this.onlyInjection = Suppliers.memoize(() -> startsWithPattern(lowerCased.trim()) && !endsWithPattern(lowerCased.trim()));
-            this.onlyStartTls = Suppliers.memoize(() -> hasStartTLS(lowerCased.trim()));
-            this.firstMatches = Suppliers.memoize(() -> startsWithPattern(trimLeading(lowerCased)));
-            this.firstHasSpace = Suppliers.memoize(() -> trimLeading(lowerCased).indexOf(' ') >= 0);
-            this.firstStartTls = Suppliers.memoize(() -> hasStartTLS(trimLeading(lowerCased) + "\n" + NO_MATCH));
-            this.middleStartTls = Suppliers.memoize(() -> hasStartTLS(NO_MATCH + "\n" + lowerCased + "\n" + NO_MATCH));
-            this.lastStartTls = Suppliers.memoize(() -> hasStartTLS(NO_MATCH + "\n" + lowerCased));
-        }
-    }
-
     /**
      * The read input not consumed yet, as the STARTTLS checks see it: trimmed, lower cased and split in parts on CR
      * or LF.
      *
-     * Each byte is split once, rather than once per line framed while it is in the read buffer. Positions count the
-     * bytes read since the handler creation.
+     * The checks only need the first significant part (holding something else than white spaces), whether a
+     * significant part follows it, whether a following part starts with the pattern, and the first part holding a
+     * space. These are positions found by searches resuming where the previous one stopped, and answers computed once
+     * per part: each byte is read a bounded number of times, not once per line framed, and the memory used does not
+     * depend on the number of parts. Positions count the bytes read since the handler creation.
      */
     private class Parts {
-        // Parts followed by a CR or a LF, from the first significant one
-        private final ArrayDeque<Part> complete = new ArrayDeque<>();
-        private final ArrayDeque<Part> completeWithSpace = new ArrayDeque<>();
-        private int completeMatching = 0;
-        // null when no complete part is significant
-        private Part lastSignificantComplete = null;
-        // What follows the last CR or LF, null when nothing
-        private Part tail = null;
         // Position of the reader index
         private long position = 0;
-        // Position following the last CR or LF split
+        // The bytes before were split on CR or LF
         private long splitUpTo = 0;
+        // Start of the part following the last CR or LF split
+        private long partStart = 0;
+        // The last significant byte, -1 when none
+        private long lastSignificant = -1;
+        // Start of the last part followed by a CR or LF that starts with the pattern, -1 when none
+        private long lastMatching = -1;
+        private final Search firstSignificant = new Search(WHITE_SPACE);
+        private final Search firstPartEnd = new Search(ByteProcessor.FIND_CRLF);
+        private final Search firstSpace = new Search(ByteProcessor.FIND_ASCII_SPACE);
+        private final Search partWithSpaceEnd = new Search(ByteProcessor.FIND_CRLF);
+        // Answers about the first part, the last part not followed by a CR or LF, and the first part holding a space,
+        // for the bounds they were computed for
+        private long firstChecksStart = -1;
+        private long firstChecksEnd = -1;
+        private boolean firstMatches;
+        private boolean firstHasSpace;
+        private boolean firstStartTls;
+        private long onlyChecksStart = -1;
+        private long onlyChecksEnd = -1;
+        private boolean onlyInjection;
+        private boolean onlyStartTls;
+        private long tailChecksStart = -1;
+        private long tailChecksEnd = -1;
+        private boolean tailMatches;
+        private long spaceChecksAt = -1;
+        private long spaceChecksEnd = -1;
+        private boolean spaceChecksLast;
+        private boolean spaceStartTls;
 
-        void consumed(int bytes) {
+        /**
+         * Searches the first byte the processor stops on, from positions that never decrease.
+         */
+        private class Search {
+            private final ByteProcessor processor;
+            private long found = -1;
+            private long searchedUpTo = 0;
+
+            Search(ByteProcessor processor) {
+                this.processor = processor;
+            }
+
+            long from(ByteBuf buffer, long from) {
+                if (found >= from) {
+                    return found;
+                }
+                long start = Math.max(from, searchedUpTo);
+                long end = position + buffer.readableBytes();
+                int index = start < end ? buffer.forEachByte(toIndex(buffer, start), (int) (end - start), processor) : -1;
+                if (index < 0) {
+                    found = -1;
+                    searchedUpTo = Math.max(searchedUpTo, end);
+                    return -1;
+                }
+                found = toPosition(buffer, index);
+                searchedUpTo = found;
+                return found;
+            }
+
+            void reset() {
+                found = -1;
+                searchedUpTo = position;
+            }
+        }
+
+        void consumed(ByteBuf buffer, int bytes) {
             position += bytes;
+            if (bytes > 0 && position < splitUpTo) {
+                byte previous = buffer.getByte(buffer.readerIndex() - 1);
+                if (previous != '\n' && previous != '\r') {
+                    // Not consumed up to a CR or a LF: what was split is not relevant anymore
+                    reset();
+                }
+            }
         }
 
         void reset() {
-            complete.clear();
-            completeWithSpace.clear();
-            completeMatching = 0;
-            lastSignificantComplete = null;
-            tail = null;
             splitUpTo = position;
+            partStart = position;
+            lastSignificant = -1;
+            lastMatching = -1;
+            firstSignificant.reset();
+            firstPartEnd.reset();
+            firstSpace.reset();
+            partWithSpaceEnd.reset();
         }
 
         void update(ByteBuf buffer) {
-            while (!complete.isEmpty() && complete.peekFirst().start < position) {
-                if (complete.peekFirst().end >= position) {
-                    // Not consumed up to a CR or a LF
-                    reset();
-                    break;
-                }
-                removeFirst();
-            }
             long end = position + buffer.readableBytes();
             if (splitUpTo < position || splitUpTo > end) {
+                // Consumed further than split, eg a too long line being discarded
                 reset();
             }
-            int index = buffer.readerIndex() + (int) (splitUpTo - position);
+            partStart = Math.max(partStart, position);
+            if (splitUpTo == end) {
+                return;
+            }
+            int index = toIndex(buffer, splitUpTo);
             int endIndex = buffer.writerIndex();
+            int significant = buffer.forEachByteDesc(index, endIndex - index, WHITE_SPACE);
+            if (significant >= 0) {
+                lastSignificant = toPosition(buffer, significant);
+            }
             int lineEnd = buffer.forEachByte(index, endIndex - index, ByteProcessor.FIND_CRLF);
             while (lineEnd >= 0) {
-                add(new Part(position + index - buffer.readerIndex(), lowerCased(buffer, index, lineEnd)));
+                long lineEndPosition = toPosition(buffer, lineEnd);
+                if (lineEndPosition > partStart && startsWithPattern(lowerCased(buffer, partStart, lineEndPosition))) {
+                    lastMatching = partStart;
+                }
+                partStart = lineEndPosition + 1;
                 index = lineEnd + 1;
                 lineEnd = buffer.forEachByte(index, endIndex - index, ByteProcessor.FIND_CRLF);
             }
-            splitUpTo = position + index - buffer.readerIndex();
-            if (index == endIndex) {
-                tail = null;
-            } else if (tail == null || tail.start != splitUpTo || tail.end != end) {
-                tail = new Part(splitUpTo, lowerCased(buffer, index, endIndex));
-            }
-            // Leading white spaces are trimmed whatever follows them
-            while (!complete.isEmpty() && !complete.peekFirst().significant) {
-                removeFirst();
-            }
+            splitUpTo = end;
         }
 
-        boolean hasCommandInjection() {
-            Part first = first();
-            if (first == null) {
+        boolean hasCommandInjection(ByteBuf buffer) {
+            long first = firstSignificant.from(buffer, position);
+            if (first < 0) {
                 return false;
             }
-            Part last = last();
-            if (first == last) {
-                return first.onlyInjection.get();
+            long firstEnd = firstPartEnd.from(buffer, first + 1);
+            if (firstEnd < 0 || lastSignificant < firstEnd) {
+                checkOnlyPart(buffer, first);
+                return onlyInjection;
             }
-            int tailMatching = tail == last && tail.matches ? 1 : 0;
-            int firstMatching = first.matches ? 1 : 0;
-            return first.firstMatches.get() || completeMatching - firstMatching + tailMatching > 0;
+            checkFirstPart(buffer, first, firstEnd);
+            return firstMatches || lastMatching > firstEnd || tailMatches(buffer);
         }
 
         /**
          * To be called once no command injection was found.
          */
-        boolean hasStartTLS() {
-            Part first = first();
-            if (first == null) {
+        boolean hasStartTLS(ByteBuf buffer) {
+            long first = firstSignificant.from(buffer, position);
+            if (first < 0) {
                 return false;
             }
-            Part last = last();
-            if (first == last) {
-                return first.onlyStartTls.get();
+            long firstEnd = firstPartEnd.from(buffer, first + 1);
+            if (firstEnd < 0 || lastSignificant < firstEnd) {
+                checkOnlyPart(buffer, first);
+                return onlyStartTls;
             }
-            if (first.firstHasSpace.get()) {
-                return first.firstStartTls.get();
+            checkFirstPart(buffer, first, firstEnd);
+            if (firstHasSpace) {
+                return firstStartTls;
             }
-            while (!completeWithSpace.isEmpty() && completeWithSpace.peekFirst().start <= first.start) {
-                completeWithSpace.removeFirst();
+            long space = firstSpace.from(buffer, firstEnd + 1);
+            if (space < 0 || space > lastSignificant) {
+                return firstStartTls;
             }
-            Part withSpace = completeWithSpace.isEmpty() && tail == last && tail.hasSpace ? tail : completeWithSpace.peekFirst();
-            if (withSpace == null || withSpace.start > last.start) {
-                return first.firstStartTls.get();
-            }
-            if (withSpace == last) {
-                return withSpace.lastStartTls.get();
-            }
-            return withSpace.middleStartTls.get();
+            checkPartWithSpace(buffer, firstEnd, space);
+            return spaceStartTls;
         }
 
-        private Part first() {
-            if (!complete.isEmpty()) {
-                return complete.peekFirst();
-            }
-            if (tail != null && tail.significant) {
-                return tail;
-            }
-            return null;
-        }
-
-        private Part last() {
-            if (tail != null && tail.significant) {
-                return tail;
-            }
-            return lastSignificantComplete;
-        }
-
-        private String lowerCased(ByteBuf buffer, int index, int endIndex) {
-            return buffer.toString(index, endIndex - index, StandardCharsets.US_ASCII).toLowerCase(Locale.US);
-        }
-
-        private void add(Part part) {
-            if (part.start == part.end) {
+        private void checkOnlyPart(ByteBuf buffer, long first) {
+            long end = lastSignificant + 1;
+            if (onlyChecksStart == first && onlyChecksEnd == end) {
                 return;
             }
-            complete.addLast(part);
-            if (part.matches) {
-                completeMatching++;
-            }
-            if (part.significant) {
-                lastSignificantComplete = part;
-            }
-            if (part.hasSpace) {
-                completeWithSpace.addLast(part);
-            }
+            String part = lowerCased(buffer, first, end);
+            onlyInjection = startsWithPattern(part) && !endsWithPattern(part);
+            onlyStartTls = AllButStartTlsLineBasedChannelHandler.this.hasStartTLS(part);
+            onlyChecksStart = first;
+            onlyChecksEnd = end;
         }
 
-        private void removeFirst() {
-            Part part = complete.removeFirst();
-            if (part.matches) {
-                completeMatching--;
+        private void checkFirstPart(ByteBuf buffer, long first, long firstEnd) {
+            if (firstChecksStart == first && firstChecksEnd == firstEnd) {
+                return;
             }
-            if (part == lastSignificantComplete) {
-                lastSignificantComplete = null;
+            String part = lowerCased(buffer, first, firstEnd);
+            firstMatches = startsWithPattern(part);
+            firstHasSpace = part.indexOf(' ') >= 0;
+            firstStartTls = AllButStartTlsLineBasedChannelHandler.this.hasStartTLS(part + "\n" + NO_MATCH);
+            firstChecksStart = first;
+            firstChecksEnd = firstEnd;
+        }
+
+        /**
+         * Whether the part not followed by a CR or LF, once others precede it, starts with the pattern.
+         */
+        private boolean tailMatches(ByteBuf buffer) {
+            long end = position + buffer.readableBytes();
+            if (partStart >= end || lastSignificant < partStart) {
+                return false;
             }
-            while (!completeWithSpace.isEmpty() && completeWithSpace.peekFirst().start <= part.start) {
-                completeWithSpace.removeFirst();
+            if (tailChecksStart != partStart || tailChecksEnd != end) {
+                tailMatches = startsWithPattern(lowerCased(buffer, partStart, end));
+                tailChecksStart = partStart;
+                tailChecksEnd = end;
             }
+            return tailMatches;
+        }
+
+        private void checkPartWithSpace(ByteBuf buffer, long firstEnd, long space) {
+            long lineEnd = partWithSpaceEnd.from(buffer, space + 1);
+            long end = lineEnd < 0 ? position + buffer.readableBytes() : lineEnd;
+            boolean last = lastSignificant < end;
+            if (spaceChecksAt == space && spaceChecksEnd == end && spaceChecksLast == last) {
+                return;
+            }
+            int startIndex = buffer.forEachByteDesc(toIndex(buffer, firstEnd), (int) (space - firstEnd), ByteProcessor.FIND_CRLF);
+            String part = lowerCased(buffer, toPosition(buffer, startIndex) + 1, end);
+            if (last) {
+                spaceStartTls = AllButStartTlsLineBasedChannelHandler.this.hasStartTLS(NO_MATCH + "\n" + part);
+            } else {
+                spaceStartTls = AllButStartTlsLineBasedChannelHandler.this.hasStartTLS(NO_MATCH + "\n" + part + "\n" + NO_MATCH);
+            }
+            spaceChecksAt = space;
+            spaceChecksEnd = end;
+            spaceChecksLast = last;
+        }
+
+        private String lowerCased(ByteBuf buffer, long start, long end) {
+            return buffer.toString(toIndex(buffer, start), (int) (end - start), StandardCharsets.US_ASCII).toLowerCase(Locale.US);
+        }
+
+        private int toIndex(ByteBuf buffer, long streamPosition) {
+            return buffer.readerIndex() + (int) (streamPosition - position);
+        }
+
+        private long toPosition(ByteBuf buffer, int index) {
+            return position + index - buffer.readerIndex();
         }
     }
 }

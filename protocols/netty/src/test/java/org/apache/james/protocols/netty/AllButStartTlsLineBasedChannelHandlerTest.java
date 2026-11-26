@@ -31,7 +31,6 @@ import static org.mockito.Mockito.withSettings;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -44,10 +43,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.buffer.UnpooledHeapByteBuf;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.AttributeKey;
+import io.netty.util.ByteProcessor;
 
 class AllButStartTlsLineBasedChannelHandlerTest {
     private static class DetectionSession implements CommandDetectionSession {
@@ -144,15 +143,15 @@ class AllButStartTlsLineBasedChannelHandlerTest {
         return frames;
     }
 
-    @Test
-    void manyLinesInASingleSegmentShouldBeReadOnce() throws Exception {
-        AllButStartTlsLineBasedChannelHandler handler = (AllButStartTlsLineBasedChannelHandler) channel.pipeline().get(HandlerConstants.FRAMER);
-        ChannelHandlerContext ctx = channel.pipeline().context(HandlerConstants.FRAMER);
-        int count = 10_000;
-        byte[] input = "NOOP\r\n".repeat(count).getBytes(StandardCharsets.US_ASCII);
+    /**
+     * Writes the input as a single segment, returning the number of bytes decoded or searched. The segment becomes the
+     * read buffer of the framer: its reads are counted.
+     */
+    private long readBytesWriting(String input) {
+        byte[] bytes = input.getBytes(StandardCharsets.US_ASCII);
         // Not recording the invocations: a regression would read the buffer a lot
         ByteBuf buffer = mock(UnpooledHeapByteBuf.class, withSettings()
-            .spiedInstance(new UnpooledHeapByteBuf(UnpooledByteBufAllocator.DEFAULT, input.length, input.length))
+            .spiedInstance(new UnpooledHeapByteBuf(UnpooledByteBufAllocator.DEFAULT, bytes.length, bytes.length))
             .defaultAnswer(CALLS_REAL_METHODS)
             .stubOnly());
         AtomicLong readBytes = new AtomicLong();
@@ -160,31 +159,55 @@ class AllButStartTlsLineBasedChannelHandlerTest {
             readBytes.addAndGet((int) invocation.getArgument(1));
             return invocation.callRealMethod();
         }).when(buffer).toString(anyInt(), anyInt(), any(Charset.class));
-        buffer.writeBytes(input);
+        // Searches stop on the byte found: counting the bytes visited
+        doAnswer(invocation -> {
+            int index = invocation.getArgument(0);
+            int length = invocation.getArgument(1);
+            int found = (int) invocation.callRealMethod();
+            readBytes.addAndGet(found < 0 ? length : found - index + 1);
+            return found;
+        }).when(buffer).forEachByte(anyInt(), anyInt(), any(ByteProcessor.class));
+        doAnswer(invocation -> {
+            int index = invocation.getArgument(0);
+            int length = invocation.getArgument(1);
+            int found = (int) invocation.callRealMethod();
+            readBytes.addAndGet(found < 0 ? length : index + length - found);
+            return found;
+        }).when(buffer).forEachByteDesc(anyInt(), anyInt(), any(ByteProcessor.class));
+        doAnswer(invocation -> {
+            int from = invocation.getArgument(0);
+            int to = invocation.getArgument(1);
+            int found = (int) invocation.callRealMethod();
+            readBytes.addAndGet(found < 0 ? Math.abs(to - from) : Math.abs(found - from) + 1);
+            return found;
+        }).when(buffer).indexOf(anyInt(), anyInt(), anyByte());
+        buffer.writeBytes(bytes);
 
-        int frames = 0;
-        Object frame = handler.decode(ctx, buffer);
-        while (frame != null) {
-            frames++;
-            ((ByteBuf) frame).release();
-            frame = handler.decode(ctx, buffer);
-        }
-
-        assertThat(frames).isEqualTo(count);
-        assertThat(readBytes.get()).isLessThanOrEqualTo(2L * input.length);
+        channel.writeInbound(buffer);
+        return readBytes.get();
     }
 
     @Test
-    void manyLinesInASingleSegmentShouldBeFramedInLinearTime() {
-        int count = 100_000;
+    void manyLinesInASingleSegmentShouldBeReadABoundedNumberOfTimes() {
+        int count = 2_000;
+        String input = "NOOP\r\n".repeat(count);
 
-        long start = System.nanoTime();
-        channel.writeInbound(line("NOOP\r\n".repeat(count)));
-        Duration elapsed = Duration.ofNanos(System.nanoTime() - start);
+        long readBytes = readBytesWriting(input);
 
-        // Scanning the whole read buffer for each line takes minutes
+        // Reading the whole read buffer for each line reads it thousands of times
         assertThat(frames()).hasSize(count);
-        assertThat(elapsed).isLessThan(Duration.ofSeconds(20));
+        assertThat(readBytes).isLessThanOrEqualTo(10L * input.length());
+    }
+
+    @Test
+    void manyLinesFollowedByALongPartialLineShouldBeReadABoundedNumberOfTimes() {
+        int count = 2_048;
+        String input = "a\n".repeat(count) + "x".repeat(4 * 1024);
+
+        long readBytes = readBytesWriting(input);
+
+        assertThat(frames()).hasSize(count);
+        assertThat(readBytes).isLessThanOrEqualTo(10L * input.length());
     }
 
     @Test

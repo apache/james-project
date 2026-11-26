@@ -49,7 +49,7 @@ import io.netty.util.AttributeKey;
 class StartTlsCheckReferenceTest {
     private static final AttributeKey<Object> START_TLS_IN_FLIGHT = AttributeKey.valueOf("startTlsInFlight");
     private static final List<String> TOKENS = List.of("starttls", "STARTTLS", "stls", "noop", "a", "x", " ", "  ",
-        "\t", "\r", "\n", "\r\n", "\r\n", "\r\n", "starttls\r\n", "a starttls", "starttls x", "é");
+        "\t", "\r", "\n", "\r\n", "\r\n", "\r\n", "starttls\r\n", "a starttls", "starttls x", "a longer line ", "starttls starttls", "é");
 
     /**
      * The STARTTLS checks as they were, on the whole read buffer, for each line.
@@ -58,8 +58,8 @@ class StartTlsCheckReferenceTest {
         private static final Splitter CRLF_SPLITTER = Splitter.on(CharMatcher.anyOf("\r\n")).omitEmptyStrings();
         private final String pattern;
 
-        WholeBufferCheck(String pattern) {
-            super(1024, false, false);
+        WholeBufferCheck(String pattern, int maxFrameLength) {
+            super(maxFrameLength, false, false);
             this.pattern = pattern;
         }
 
@@ -112,9 +112,11 @@ class StartTlsCheckReferenceTest {
     void answersShouldBeTheOnesOfTheWholeBufferCheck(String pattern) {
         Random random = new Random(42);
         for (int trial = 0; trial < 20_000; trial++) {
-            EmbeddedChannel expected = new EmbeddedChannel(new WholeBufferCheck(pattern));
+            // Short lines exercise the discarding of too long lines
+            int maxFrameLength = random.nextBoolean() ? 1024 : 1 + random.nextInt(12);
+            EmbeddedChannel expected = new EmbeddedChannel(new WholeBufferCheck(pattern, maxFrameLength));
             EmbeddedChannel actual = new EmbeddedChannel();
-            actual.pipeline().addLast(HandlerConstants.FRAMER, new AllButStartTlsLineBasedChannelHandler(actual.pipeline(), 1024, false, pattern));
+            actual.pipeline().addLast(HandlerConstants.FRAMER, new AllButStartTlsLineBasedChannelHandler(actual.pipeline(), maxFrameLength, false, pattern));
             actual.pipeline().addLast(HandlerConstants.CORE_HANDLER, new ChannelInboundHandlerAdapter());
 
             StringBuilder input = new StringBuilder();
@@ -134,9 +136,9 @@ class StartTlsCheckReferenceTest {
                 Outcome expectedOutcome = write(expected, segment);
                 Outcome actualOutcome = write(actual, segment);
                 assertThat(actualOutcome)
-                    .describedAs("segments %s", segments)
+                    .describedAs("segments %s, max frame length %d", segments, maxFrameLength)
                     .isEqualTo(expectedOutcome);
-                if (expectedOutcome.error().isPresent()) {
+                if (expectedOutcome.error().filter(error -> error.startsWith("Client input")).isPresent()) {
                     break;
                 }
             }
