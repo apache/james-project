@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import java.lang.ref.Cleaner;
 import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -34,16 +35,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryImpl;
+import net.fortuna.ical4j.model.ZoneRulesProviderImpl;
 import net.fortuna.ical4j.model.component.Observance;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.RRule;
+import net.fortuna.ical4j.util.Configurator;
 
 /**
  * Uses built-in rules for standard timezones to avoid exhausting the timezone ID pool.
@@ -54,6 +60,12 @@ import net.fortuna.ical4j.model.property.RRule;
  * budget ({@value #MAX_CUSTOM_TIMEZONES} by default) that registries may share, eg the calendars of a mail. A repeated
  * TZID is registered once, the first definition being kept, update or not. Neither budget is given back by
  * {@link #clear()}.
+ *
+ * The custom timezones of all the registries of the JVM are counted against a second budget, two thirds of the pool:
+ * mails processed concurrently, or whose calendars are not collected yet, can not empty the pool. Over this budget, the
+ * calendar is rejected like a calendar with too many custom timezones. The calendars keep using the zone IDs of their
+ * registry: this budget is given back once the registry is garbage collected, like the pool IDs, or by
+ * {@link #releaseCustomTimezones()} when no calendar uses the registry.
  *
  * Registering a custom timezone makes ical4j materialize all the occurrences of its recurrence rules, so their
  * cost is bounded first. One instance serves one calendar: the limit applies to all its timezones. A rule above
@@ -68,10 +80,32 @@ public class ICal4JTimeZoneRegistry implements TimeZoneRegistry {
     private static final int HORIZON_IN_YEARS = 10;
     // Invitations carry one timezone per distinct TZID they use, often a single one
     public static final int MAX_CUSTOM_TIMEZONES = 20;
+    // Read as ical4j does
+    @VisibleForTesting
+    static final int ZONE_ID_POOL_SIZE = Configurator.getIntProperty("net.fortuna.ical4j.timezone.id.pool.size").orElse(1500);
+    // The third left of the pool is a safety margin for the other ical4j users of the JVM
+    @VisibleForTesting
+    static final int MAX_JVM_WIDE_CUSTOM_TIMEZONES = ZONE_ID_POOL_SIZE * 2 / 3;
+    private static final Semaphore JVM_WIDE_CUSTOM_TIMEZONES = new Semaphore(MAX_JVM_WIDE_CUSTOM_TIMEZONES);
+    private static final Cleaner CLEANER = Cleaner.create();
+
+    /**
+     * Gives back the JVM wide budget taken by a registry. It must not reference the registry, which it would keep alive.
+     */
+    private static class HeldCustomTimezones implements Runnable {
+        private final AtomicInteger count = new AtomicInteger();
+
+        @Override
+        public void run() {
+            JVM_WIDE_CUSTOM_TIMEZONES.release(count.getAndSet(0));
+        }
+    }
 
     private final TimeZoneRegistryImpl delegate = new TimeZoneRegistryImpl();
     private final Set<String> customTimezoneIds = new HashSet<>();
     private final AtomicInteger remainingCustomTimezones;
+    private final HeldCustomTimezones heldCustomTimezones = new HeldCustomTimezones();
+    private final Cleaner.Cleanable cleanable = CLEANER.register(this, heldCustomTimezones);
     private long remainingOccurrences = MAX_OCCURRENCES_PER_CALENDAR;
 
     public ICal4JTimeZoneRegistry() {
@@ -106,9 +140,40 @@ public class ICal4JTimeZoneRegistry implements TimeZoneRegistry {
                 throw new IllegalArgumentException("Too many custom timezones, " + timezone.getID() + " is not registered");
             }
             assertRecurrenceCostIsBounded(timezone);
-            delegate.register(timezone, update);
-            customTimezoneIds.add(timezone.getID());
+            if (!JVM_WIDE_CUSTOM_TIMEZONES.tryAcquire()) {
+                throw new IllegalArgumentException("Too many custom timezones in use, " + timezone.getID() + " is not registered");
+            }
+            registerCustomTimezone(timezone, update);
         }
+    }
+
+    private void registerCustomTimezone(TimeZone timezone, boolean update) {
+        try {
+            delegate.register(timezone, update);
+        } catch (RuntimeException e) {
+            JVM_WIDE_CUSTOM_TIMEZONES.release();
+            throw e;
+        }
+        heldCustomTimezones.count.incrementAndGet();
+        customTimezoneIds.add(timezone.getID());
+    }
+
+    /**
+     * Gives back the pool IDs and the JVM wide budget of the custom timezones, before garbage collection.
+     *
+     * Only call it when no calendar built with this registry is used anymore, eg its parsing failed: the rules of its
+     * custom timezones are no longer resolved. This registry must not be used afterward.
+     */
+    public void releaseCustomTimezones() {
+        ZoneRulesProviderImpl.getInstance()
+            .ifPresent(provider -> delegate.getZoneRules().keySet()
+                .forEach(provider.getZoneIdPool()::release));
+        cleanable.clean();
+    }
+
+    @VisibleForTesting
+    static int availableJvmWideCustomTimezones() {
+        return JVM_WIDE_CUSTOM_TIMEZONES.availablePermits();
     }
 
     private void assertRecurrenceCostIsBounded(TimeZone timezone) {

@@ -21,28 +21,40 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import jakarta.mail.MessagingException;
+
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.github.fge.lambdas.Throwing;
+
+import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.TimeZoneRegistryImpl;
 import net.fortuna.ical4j.model.component.VEvent;
 
 class ICalendarParserTimeZoneTest {
@@ -163,6 +175,82 @@ class ICalendarParserTimeZoneTest {
         assertThat(start(parse(calendarWith(timezone, "Custom UTC Start")))).isEqualTo(Instant.parse("2026-07-15T09:45:00Z"));
     }
 
+    @Test
+    void shouldGiveBackTheCustomTimezonesOfRejectedCalendarsWithoutWaitingForGc() throws Exception {
+        int availableBefore = ICal4JTimeZoneRegistry.availableJvmWideCustomTimezones();
+
+        // Each calendar registers 20 custom timezones before being rejected on the 21st: 2000 IDs, more than the pool
+        for (int i = 0; i < 2 * ICal4JTimeZoneRegistry.ZONE_ID_POOL_SIZE / ICal4JTimeZoneRegistry.MAX_CUSTOM_TIMEZONES; i++) {
+            assertThat(parsedCalendars(calendarWith(distinctCustomTimezones("rejected-" + i, ICal4JTimeZoneRegistry.MAX_CUSTOM_TIMEZONES + 1),
+                "rejected-" + i + "-0"))).isEmpty();
+        }
+
+        assertThat(ICal4JTimeZoneRegistry.availableJvmWideCustomTimezones()).isGreaterThanOrEqualTo(availableBefore);
+        assertThat(start(parse(ICS.replace("{TZID}", "Custom James Time").replace("{DATE}", "20260715"))))
+            .isEqualTo(Instant.parse("2026-07-15T09:45:00Z"));
+    }
+
+    @Test
+    void shouldNotExhaustTheZoneIdPoolWithTheCalendarsOfMailsInFlight() throws Exception {
+        // Retained mails keep their calendars, hence their zone IDs, whatever the GC does: 3000 IDs, twice the pool
+        int mailCount = 2 * ICal4JTimeZoneRegistry.ZONE_ID_POOL_SIZE / ICal4JTimeZoneRegistry.MAX_CUSTOM_TIMEZONES;
+        Queue<FakeMail> mailsInFlight = new ConcurrentLinkedQueue<>();
+        ConcurrentTestRunner.builder()
+            .operation((thread, step) -> {
+                String prefix = "in-flight-" + thread + "-" + step;
+                mailsInFlight.add(processed(mailWith(calendarWith(distinctCustomTimezones(prefix, ICal4JTimeZoneRegistry.MAX_CUSTOM_TIMEZONES), prefix + "-0"))));
+            })
+            .threadCount(10)
+            .operationCount(mailCount / 10)
+            .runSuccessfullyWithin(Duration.ofMinutes(2));
+
+        long parsedMails = mailsInFlight.stream().filter(mail -> !calendarsOf(mail).isEmpty()).count();
+        assertThat(parsedMails).isPositive();
+        // Mails rejected concurrently may leave less than 20 custom timezones of budget: use them up one by one
+        int toppedUpMails = useUpTheJvmWideBudget(mailsInFlight);
+        // Over the JVM wide budget, custom timezones are rejected
+        assertThat(parsedMails * ICal4JTimeZoneRegistry.MAX_CUSTOM_TIMEZONES + toppedUpMails)
+            .isLessThanOrEqualTo(ICal4JTimeZoneRegistry.MAX_JVM_WIDE_CUSTOM_TIMEZONES);
+        // Standard timezones are still parsed
+        assertThat(start(parse(ICS.replace("{TZID}", "Europe/Paris").replace("{DATE}", "20260715"))))
+            .isEqualTo(Instant.parse("2026-07-15T09:45:00Z"));
+        // The pool keeps room for the other ical4j users of the JVM
+        Calendar parsedByAnotherUser = new CalendarBuilder(new TimeZoneRegistryImpl())
+            .build(new StringReader(ICS.replace("{TZID}", "Custom James Time").replace("{DATE}", "20260715")));
+        assertThat(start(parsedByAnotherUser)).isEqualTo(Instant.parse("2026-07-15T09:45:00Z"));
+
+        mailsInFlight.clear();
+
+        // Once the mails are processed, their calendars are collected and give the budget back
+        Awaitility.await()
+            .atMost(Duration.ofMinutes(1))
+            .pollInterval(Duration.ofMillis(100))
+            .untilAsserted(() -> {
+                System.gc();
+                assertThat(ICal4JTimeZoneRegistry.availableJvmWideCustomTimezones()).isEqualTo(ICal4JTimeZoneRegistry.MAX_JVM_WIDE_CUSTOM_TIMEZONES);
+            });
+        assertThat(start(parse(ICS.replace("{TZID}", "Custom James Time").replace("{DATE}", "20260715"))))
+            .isEqualTo(Instant.parse("2026-07-15T09:45:00Z"));
+    }
+
+    // Processes mails with one custom timezone until one is rejected
+    private int useUpTheJvmWideBudget(Queue<FakeMail> mailsInFlight) {
+        List<FakeMail> parsedMails = IntStream.rangeClosed(0, ICal4JTimeZoneRegistry.MAX_JVM_WIDE_CUSTOM_TIMEZONES)
+            .mapToObj(i -> ICS.replace("{TZID}", "top-up-" + i).replace("{DATE}", "20260715"))
+            .map(Throwing.<String, FakeMail>function(ICalendarParserTimeZoneTest::mailWith).sneakyThrow())
+            .map(this::processed)
+            .takeWhile(mail -> !calendarsOf(mail).isEmpty())
+            .toList();
+        mailsInFlight.addAll(parsedMails);
+        return parsedMails.size();
+    }
+
+    private static String distinctCustomTimezones(String prefix, int count) {
+        return IntStream.range(0, count)
+            .mapToObj(i -> fixedOffsetTimezone(prefix + "-" + i))
+            .collect(Collectors.joining());
+    }
+
     private static String timezone(String tzId) {
         return ICS.substring(ICS.indexOf("BEGIN:VTIMEZONE"), ICS.indexOf("BEGIN:VEVENT")).replace("{TZID}", tzId);
     }
@@ -190,29 +278,37 @@ class ICalendarParserTimeZoneTest {
     }
 
     private Map<?, ?> parsedCalendars(Map<String, AttributeValue<?>> attachments) throws Exception {
-        FakeMail mail = FakeMail.builder()
+        return calendarsOf(processed(mailWith(attachments)));
+    }
+
+    private static FakeMail mailWith(String ics) throws MessagingException {
+        return mailWith(Map.of("calendar", AttributeValue.of(ics.getBytes(StandardCharsets.UTF_8))));
+    }
+
+    private static FakeMail mailWith(Map<String, AttributeValue<?>> attachments) throws MessagingException {
+        return FakeMail.builder()
             .name("timezone-test")
             .attribute(new Attribute(AttributeName.of(ICalendarParser.SOURCE_ATTRIBUTE_PARAMETER_DEFAULT_VALUE),
                 AttributeValue.of(attachments)))
             .build();
+    }
 
-        mailet.service(mail);
+    private FakeMail processed(FakeMail mail) {
+        try {
+            mailet.service(mail);
+            return mail;
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    private static Map<?, ?> calendarsOf(FakeMail mail) {
         return (Map<?, ?>) mail.getAttribute(AttributeName.of(ICalendarParser.DESTINATION_ATTRIBUTE_PARAMETER_DEFAULT_VALUE))
             .orElseThrow().getValue().value();
     }
 
     private Calendar parse(String ics) throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .name("timezone-test")
-            .attribute(new Attribute(AttributeName.of(ICalendarParser.SOURCE_ATTRIBUTE_PARAMETER_DEFAULT_VALUE),
-                AttributeValue.of(Map.of("calendar", AttributeValue.of(ics.getBytes(StandardCharsets.UTF_8))))))
-            .build();
-
-        mailet.service(mail);
-
-        Map<?, ?> calendars = (Map<?, ?>) mail.getAttribute(AttributeName.of(ICalendarParser.DESTINATION_ATTRIBUTE_PARAMETER_DEFAULT_VALUE))
-            .orElseThrow().getValue().value();
+        Map<?, ?> calendars = calendarsOf(processed(mailWith(ics)));
         assertThat(calendars).hasSize(1);
         return (Calendar) ((AttributeValue<?>) calendars.get("calendar")).getValue();
     }

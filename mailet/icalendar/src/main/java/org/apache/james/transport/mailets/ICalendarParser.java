@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -136,28 +137,43 @@ public class ICalendarParser extends GenericMailet {
     }
 
     private Stream<Pair<String, Calendar>> createCalendar(String key, byte[] icsContent, AtomicInteger remainingCustomTimezones) {
+        ICal4JTimeZoneRegistry timeZoneRegistry = new ICal4JTimeZoneRegistry(remainingCustomTimezones);
+        try {
+            Optional<Calendar> calendar = parse(icsContent, timeZoneRegistry);
+            if (calendar.isEmpty()) {
+                // No calendar uses the custom timezones registered before the failure: give them back without waiting for GC
+                timeZoneRegistry.releaseCustomTimezones();
+            }
+            return calendar.map(value -> Pair.of(key, value)).stream();
+        } catch (RuntimeException e) {
+            timeZoneRegistry.releaseCustomTimezones();
+            throw e;
+        }
+    }
+
+    private Optional<Calendar> parse(byte[] icsContent, ICal4JTimeZoneRegistry timeZoneRegistry) {
         CalendarBuilder builder = new CalendarBuilder(
             CalendarParserFactory.getInstance().get(),
             new ContentHandlerContext().withSuppressInvalidProperties(true)
                 .withPropertyFactorySupplier(InMemoryAttachFactory::propertyFactories),
-            new ICal4JTimeZoneRegistry(remainingCustomTimezones));
+            timeZoneRegistry);
         try {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(icsContent);
-            return Stream.of(Pair.of(key, builder.build(inputStream)));
+            return Optional.of(builder.build(inputStream));
         } catch (IOException e) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Error while reading calendar input: " + new String(icsContent, StandardCharsets.UTF_8), e);
             } else {
                 LOGGER.info("Error while reading calendar input", e);
             }
-            return Stream.of();
+            return Optional.empty();
         } catch (ParserException e) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Error while parsing ICal object: " + new String(icsContent, StandardCharsets.UTF_8), e);
             } else {
                 LOGGER.info("Error while parsing ICal object", e);
             }
-            return Stream.of();
+            return Optional.empty();
         }
     }
 }
