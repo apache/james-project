@@ -19,30 +19,83 @@
 
 package org.apache.james.jmap.json
 
-import java.io.ByteArrayInputStream
+import java.io.{ByteArrayInputStream, InputStream}
+import java.lang.Boolean.TRUE
 import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.util.concurrent.atomic.AtomicInteger
 
+import org.apache.commons.io.input.CountingInputStream
 import org.apache.james.core.{MailAddress, Username}
+import org.apache.james.jmap.api.model.Size.sanitizeSize
+import org.apache.james.jmap.api.model.{Upload, UploadId}
 import org.apache.james.jmap.json.EmailSetSerializerTest.SERIALIZER
-import org.apache.james.jmap.mail.EmailCreationRequest
-import org.apache.james.jmap.routes.{BlobResolver, BlobResolvers}
+import org.apache.james.jmap.mail.{AttachmentsTooLargeException, BlobId, EmailCreationLimits, EmailCreationRequest, TooManyAttachmentsException}
+import org.apache.james.jmap.routes.{Applicable, BlobResolutionResult, BlobResolver, BlobResolvers, UploadedBlob}
 import org.apache.james.jmap.utils.JsoupHtmlTextExtractor
-import org.apache.james.mailbox.MailboxSessionUtil
-import org.apache.james.mime4j.dom.Message
+import org.apache.james.mailbox.model.ContentType
+import org.apache.james.mailbox.{MailboxSession, MailboxSessionUtil}
+import org.apache.james.mime4j.dom.{Message, Multipart}
 import org.apache.james.mime4j.message.{DefaultMessageBuilder, DefaultMessageWriter}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
+import reactor.core.scala.publisher.SMono
+
+import scala.util.Try
+
+object EmailCreationRequestTest {
+  private val LIMITS: EmailCreationLimits = EmailCreationLimits(maxAttachments = 256, maxSizeAttachments = 20_000_000L)
+
+  /**
+   * Resolves "uploads-<n>" to an uploaded blob of n bytes, counting resolutions, content reads and bytes read.
+   * When declaredSize is set the blob advertises it instead of its real size.
+   */
+  class CountingBlobResolver(declaredSize: Option[Long] = None) extends BlobResolver {
+    val resolutions: AtomicInteger = new AtomicInteger(0)
+    val contentReads: AtomicInteger = new AtomicInteger(0)
+    val bytesRead: AtomicInteger = new AtomicInteger(0)
+
+    override def resolve(blobId: BlobId, mailboxSession: MailboxSession): SMono[BlobResolutionResult] = {
+      resolutions.incrementAndGet()
+      val size: Int = blobId.value.value.stripPrefix("uploads-").toInt
+      val upload = Upload(UploadId.random(), sanitizeSize(declaredSize.getOrElse(size.toLong)), ContentType.of("text/plain"), Instant.now(),
+        () => content(size))
+      SMono.just(Applicable(SMono.just(UploadedBlob(blobId, upload))))
+    }
+
+    private def content(size: Int): InputStream = {
+      contentReads.incrementAndGet()
+      new CountingInputStream(new ByteArrayInputStream(Array.fill[Byte](size)('a'.toByte))) {
+        override def afterRead(n: Int): Unit = {
+          super.afterRead(n)
+          if (n > 0) {
+            bytesRead.addAndGet(n)
+          }
+        }
+      }
+    }
+
+    override def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] = SMono.just(TRUE)
+  }
+}
 
 class EmailCreationRequestTest extends AnyWordSpec with Matchers {
-  private def toMessage(json: String): Message = {
+  import EmailCreationRequestTest._
+
+  private def toMessage(json: String): Message = toMessage(json, new BlobResolvers(Set[BlobResolver]()), LIMITS).get
+
+  private def toMessage(json: String, blobResolvers: BlobResolvers, limits: EmailCreationLimits): Try[Message] = {
     val request: EmailCreationRequest = SERIALIZER.deserializeCreationRequest(Json.parse(json)).get
     request.validateRequest.isRight shouldBe true
 
-    request.toMime4JMessage(new BlobResolvers(Set[BlobResolver]()), new JsoupHtmlTextExtractor(),
-        MailboxSessionUtil.create(Username.of("bob@domain.tld")))
-      .block()
+    Try(request.toMime4JMessage(blobResolvers, new JsoupHtmlTextExtractor(),
+        MailboxSessionUtil.create(Username.of("bob@domain.tld")), limits)
+      .block())
   }
+
+  private def withAttachments(blobIds: Seq[String]): String =
+    s"""{"mailboxIds":{"1":true},"attachments":[${blobIds.map(id => s"""{"blobId":"$id","type":"text/plain"}""").mkString(",")}]}"""
 
   private def rewrite(message: Message): Message =
     new DefaultMessageBuilder().parseMessage(new ByteArrayInputStream(DefaultMessageWriter.asBytes(message)))
@@ -122,6 +175,81 @@ class EmailCreationRequestTest extends AnyWordSpec with Matchers {
       val reparsed = rewrite(message)
       reparsed.getHeader.getField("X-A").getBody shouldBe "b c"
       reparsed.getReplyTo.flatten().get(0).getAddress shouldBe "reply@example.com"
+    }
+  }
+
+  "toMime4JMessage attachment limits" should {
+    "accept attachments whose total size equals the limit" in {
+      val resolver = new CountingBlobResolver()
+
+      val message = toMessage(withAttachments(Seq.fill(5)("uploads-20")), new BlobResolvers(Set[BlobResolver](resolver)),
+        LIMITS.copy(maxSizeAttachments = 100L))
+
+      message.get.getBody.asInstanceOf[Multipart].getBodyParts.size() shouldBe 6
+      resolver.contentReads.get() shouldBe 5
+    }
+
+    "reject a blob referenced many times once the total size exceeds the limit, without reading the remaining references" in {
+      val resolver = new CountingBlobResolver()
+
+      val result = toMessage(withAttachments(Seq.fill(10)("uploads-40")), new BlobResolvers(Set[BlobResolver](resolver)),
+        LIMITS.copy(maxSizeAttachments = 100L))
+
+      result.failed.get shouldBe AttachmentsTooLargeException(100L)
+      resolver.contentReads.get() shouldBe 2
+      resolver.resolutions.get() shouldBe 3
+    }
+
+    "reject a single attachment bigger than the limit without reading it" in {
+      val resolver = new CountingBlobResolver()
+
+      val result = toMessage(withAttachments(Seq("uploads-101")), new BlobResolvers(Set[BlobResolver](resolver)),
+        LIMITS.copy(maxSizeAttachments = 100L))
+
+      result.failed.get shouldBe AttachmentsTooLargeException(100L)
+      resolver.contentReads.get() shouldBe 0
+    }
+
+    "read at most the limit plus one byte of a blob under-advertising its size" in {
+      val resolver = new CountingBlobResolver(declaredSize = Some(1L))
+
+      val result = toMessage(withAttachments(Seq("uploads-10000")), new BlobResolvers(Set[BlobResolver](resolver)),
+        LIMITS.copy(maxSizeAttachments = 100L))
+
+      result.failed.get shouldBe AttachmentsTooLargeException(100L)
+      resolver.bytesRead.get() should be <= 101
+    }
+
+    "count a blob based text body in the total size" in {
+      val resolver = new CountingBlobResolver()
+
+      val result = toMessage(
+        """{"mailboxIds":{"1":true},
+          |"textBody":[{"blobId":"uploads-60","type":"text/plain"}],
+          |"attachments":[{"blobId":"uploads-60","type":"text/plain"}]}""".stripMargin,
+        new BlobResolvers(Set[BlobResolver](resolver)),
+        LIMITS.copy(maxSizeAttachments = 100L))
+
+      result.failed.get shouldBe AttachmentsTooLargeException(100L)
+      resolver.contentReads.get() shouldBe 1
+    }
+
+    "accept as many attachments as the count limit" in {
+      val resolver = new CountingBlobResolver()
+
+      val message = toMessage(withAttachments(Seq.fill(256)("uploads-1")), new BlobResolvers(Set[BlobResolver](resolver)), LIMITS)
+
+      message.get.getBody.asInstanceOf[Multipart].getBodyParts.size() shouldBe 257
+    }
+
+    "reject more attachments than the count limit without resolving any blob" in {
+      val resolver = new CountingBlobResolver()
+
+      val result = toMessage(withAttachments(Seq.fill(257)("uploads-1")), new BlobResolvers(Set[BlobResolver](resolver)), LIMITS)
+
+      result.failed.get shouldBe TooManyAttachmentsException(257, 256)
+      resolver.resolutions.get() shouldBe 0
+      resolver.contentReads.get() shouldBe 0
     }
   }
 

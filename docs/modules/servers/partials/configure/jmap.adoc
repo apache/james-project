@@ -46,7 +46,12 @@ Default value: None. Supported units are B (bytes) K (KB) M (MB) G (GB).
 `urn:ietf:params:jmap:mail` capability. This needs to be at least 33% lower than `email.send.max.size` property
 (in order to account for text body, headers, base64 encoding and MIME structures).
 JMAP clients would use this property in order not to create too big emails.
+Email/set create rejects with `tooLarge` an email whose attachments (and blob based bodies) exceed this total size.
 Default value: None. Supported units are B (bytes) K (KB) M (MB) G (GB).
+
+| max.attachments.per.mail
+| Optional. Defaults to 256. Maximum count of attachments of an email created with Email/set create. Creations
+referencing more attachments are rejected with `tooLarge`.
 
 | upload.max.size
 | Optional. Configuration max size for each upload file in new JMAP-RFC-8621.

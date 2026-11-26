@@ -20,6 +20,7 @@ package org.apache.james.jmap.mail
 
 import java.nio.charset.{StandardCharsets, Charset => NioCharset}
 import java.util.Date
+import java.util.concurrent.atomic.AtomicLong
 
 import cats.implicits._
 import com.google.common.net.MediaType
@@ -52,9 +53,46 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
-import scala.util.{Right, Try}
+import scala.util.{Right, Try, Using}
 
 case class AttachmentNotFoundException(blobId: BlobId) extends RuntimeException
+
+case class AttachmentsTooLargeException(maximumSize: Long) extends RuntimeException(
+  s"Attachments of this email exceed the maximum allowed total size of $maximumSize bytes (maxSizeAttachmentsPerEmail)")
+
+case class TooManyAttachmentsException(actualCount: Int, maximumCount: Int) extends RuntimeException(
+  s"This email has $actualCount attachments while the maximum allowed is $maximumCount")
+
+case class EmailCreationLimits(maxAttachments: Int, maxSizeAttachments: Long)
+
+object AttachmentsSizeBudget {
+  // Arrays cannot be much bigger than this
+  private val MAX_READ: Long = Integer.MAX_VALUE - 8
+}
+
+/**
+ * Running total of the blobs that one Email/set creation embeds (attachments, every reference counted,
+ * and blob based text/html bodies).
+ *
+ * The size advertised by the blob is checked before anything is read, and the content is read bounded by the
+ * remaining budget, so that a wrong advertised size does not make us read more than the limit.
+ */
+class AttachmentsSizeBudget(maximumSize: Long) {
+  private val consumed: AtomicLong = new AtomicLong(0L)
+
+  def read(blob: Blob): Array[Byte] = {
+    blob.size.toOption.foreach(size => ensureFits(consumed.get() + size.value))
+    val remaining: Long = maximumSize - consumed.get()
+    val content: Array[Byte] = Using.resource(blob.content)(_.readNBytes(Math.min(remaining + 1, AttachmentsSizeBudget.MAX_READ).toInt))
+    ensureFits(consumed.addAndGet(content.length))
+    content
+  }
+
+  private def ensureFits(total: Long): Unit =
+    if (total > maximumSize) {
+      throw AttachmentsTooLargeException(maximumSize)
+    }
+}
 
 object EmailSet {
   def asUnparsed(messageId: MessageId): UnparsedMessageId = refined.refineV[IdConstraint](messageId.serialize()) match {
@@ -230,7 +268,20 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
 
   def toMime4JMessage(blobResolvers: BlobResolvers,
                       htmlTextExtractor: HtmlTextExtractor,
-                      mailboxSession: MailboxSession): SMono[Message] = {
+                      mailboxSession: MailboxSession,
+                      limits: EmailCreationLimits): SMono[Message] = {
+    val attachmentCount: Int = attachments.map(_.size).getOrElse(0)
+    if (attachmentCount > limits.maxAttachments) {
+      SMono.error(TooManyAttachmentsException(attachmentCount, limits.maxAttachments))
+    } else {
+      buildMessage(blobResolvers, htmlTextExtractor, mailboxSession, new AttachmentsSizeBudget(limits.maxSizeAttachments))
+    }
+  }
+
+  private def buildMessage(blobResolvers: BlobResolvers,
+                           htmlTextExtractor: HtmlTextExtractor,
+                           mailboxSession: MailboxSession,
+                           sizeBudget: AttachmentsSizeBudget): SMono[Message] = {
 
     val baseMessageBuilderPublisher: SMono[Message.Builder] = SMono.fromCallable(() => {
         val builder: Message.Builder = Message.Builder.of
@@ -255,12 +306,12 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
       .flatMap(_.fold(SMono.error, SMono.just))
 
     for {
-      maybeHtmlBody  <- validateHtmlBody(blobResolvers, mailboxSession).map(Some(_)).switchIfEmpty(SMono.just(None))
-      maybeTextBody  <- validateTextBody(blobResolvers, mailboxSession).map(Some(_)).switchIfEmpty(SMono.just(None))
+      maybeHtmlBody  <- validateHtmlBody(blobResolvers, mailboxSession, sizeBudget).map(Some(_)).switchIfEmpty(SMono.just(None))
+      maybeTextBody  <- validateTextBody(blobResolvers, mailboxSession, sizeBudget).map(Some(_)).switchIfEmpty(SMono.just(None))
       messageBuilder <- baseMessageBuilderPublisher
       multipartBody  <- attachments match {
         case None | Some(Nil) => SMono.just(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor))
-        case Some(attachmentList) => createMultipartWithAttachments(maybeHtmlBody, maybeTextBody, attachmentList, blobResolvers, htmlTextExtractor, mailboxSession)
+        case Some(attachmentList) => createMultipartWithAttachments(maybeHtmlBody, maybeTextBody, attachmentList, blobResolvers, htmlTextExtractor, mailboxSession, sizeBudget)
       }
     } yield {
       messageBuilder.setBody(multipartBody)
@@ -299,9 +350,10 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                              attachments: List[Attachment],
                                              blobResolvers: BlobResolvers,
                                              htmlTextExtractor: HtmlTextExtractor,
-                                             mailboxSession: MailboxSession): SMono[MultipartBuilder] =
+                                             mailboxSession: MailboxSession,
+                                             sizeBudget: AttachmentsSizeBudget): SMono[MultipartBuilder] =
     SFlux.fromIterable(attachments)
-      .concatMap(loadWithMetadata(blobResolvers, mailboxSession), ReactorUtils.LOW_CONCURRENCY)
+      .concatMap(loadWithMetadata(blobResolvers, mailboxSession, sizeBudget), ReactorUtils.LOW_CONCURRENCY)
       .collectSeq()
       .map(list => {
         (list.filter(_.isInline), list.filter(!_.isInline)) match {
@@ -311,13 +363,13 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
         }
       })
 
-  private def loadWithMetadata(blobResolvers: BlobResolvers, mailboxSession: MailboxSession)(attachment: Attachment): SMono[LoadedAttachment] =
+  private def loadWithMetadata(blobResolvers: BlobResolvers, mailboxSession: MailboxSession, sizeBudget: AttachmentsSizeBudget)(attachment: Attachment): SMono[LoadedAttachment] =
     blobResolvers.resolve(attachment.blobId, mailboxSession)
       .onErrorMap {
         case notFoundException: BlobNotFoundException => AttachmentNotFoundException(notFoundException.blobId)
         case e => e
       }
-      .map(blob => LoadedAttachment(attachment, blob, blob.content.readAllBytes()))
+      .map(blob => LoadedAttachment(attachment, blob, sizeBudget.read(blob)))
 
   private def createMixedRelatedBody(maybeHtmlBody: Option[ClientBodyPart],
                                      maybeTextBody: Option[ClientBodyPart],
@@ -397,20 +449,20 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
       .filter(!_._1.equalsIgnoreCase("charset"))
       .toMap
 
-  private def validateHtmlBody(blobResolvers: BlobResolvers, mailboxSession: MailboxSession): SMono[ClientBodyPart] =
+  private def validateHtmlBody(blobResolvers: BlobResolvers, mailboxSession: MailboxSession, sizeBudget: AttachmentsSizeBudget): SMono[ClientBodyPart] =
     htmlBody match {
       case None => SMono.empty
       case Some(html :: Nil) if !html.`type`.value.equals("text/html") => SMono.error(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
-      case Some(html :: Nil) => retrieveCorrespondingBody(html, blobResolvers, mailboxSession)
+      case Some(html :: Nil) => retrieveCorrespondingBody(html, blobResolvers, mailboxSession, sizeBudget)
         .switchIfEmpty(SMono.error(new IllegalArgumentException("Expecting bodyValues to contain the part specified in htmlBody")))
       case _ => SMono.error(new IllegalArgumentException("Expecting htmlBody to contains only 1 part"))
     }
 
-  private def validateTextBody(blobResolvers: BlobResolvers, mailboxSession: MailboxSession): SMono[ClientBodyPart] =
+  private def validateTextBody(blobResolvers: BlobResolvers, mailboxSession: MailboxSession, sizeBudget: AttachmentsSizeBudget): SMono[ClientBodyPart] =
     textBody match {
       case None => SMono.empty
       case Some(text :: Nil) if !text.`type`.value.equals("text/plain") => SMono.error(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
-      case Some(text :: Nil) => retrieveCorrespondingBody(text, blobResolvers, mailboxSession)
+      case Some(text :: Nil) => retrieveCorrespondingBody(text, blobResolvers, mailboxSession, sizeBudget)
         .switchIfEmpty(SMono.error(new IllegalArgumentException("Expecting bodyValues to contain the part specified in textBody")))
       case _ => SMono.error(new IllegalArgumentException("Expecting textBody to contains only 1 part"))
     }
@@ -437,17 +489,19 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
 
   private def retrieveCorrespondingBody(clientBody: ClientBody,
                                         blobResolvers: BlobResolvers,
-                                        mailboxSession: MailboxSession): SMono[ClientBodyPart] =
+                                        mailboxSession: MailboxSession,
+                                        sizeBudget: AttachmentsSizeBudget): SMono[ClientBodyPart] =
     (clientBody.partId, clientBody.blobId) match {
       case (None, None) => SMono.error(new IllegalArgumentException("Expecting either partId or blobId to be defined"))
       case (Some(_), Some(_)) => SMono.error(new IllegalArgumentException("Expecting only one of partId or blobId to be defined"))
       case (Some(_), None) => retrieveCorrespondingBodyFromPartId(clientBody)
-      case (None, Some(_)) => retrieveCorrespondingBodyFromBlobId(clientBody, blobResolvers, mailboxSession)
+      case (None, Some(_)) => retrieveCorrespondingBodyFromBlobId(clientBody, blobResolvers, mailboxSession, sizeBudget)
     }
 
   private def retrieveCorrespondingBodyFromBlobId(clientBody: ClientBody,
                                                   blobResolvers: BlobResolvers,
-                                                  mailboxSession: MailboxSession): SMono[ClientBodyPart] = {
+                                                  mailboxSession: MailboxSession,
+                                                  sizeBudget: AttachmentsSizeBudget): SMono[ClientBodyPart] = {
     SMono.justOrEmpty(clientBody.blobId)
       .flatMap(blobResolvers.resolve(_, mailboxSession))
       .flatMap {
@@ -455,7 +509,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
           val mimeType: String = uploadedBlob.contentType.mimeType().asString()
           if (mimeType == "text/plain" || mimeType == "text/html") {
             val charset = uploadedBlob.contentType.charset().orElse(StandardCharsets.UTF_8)
-            val content = new String(uploadedBlob.content.readAllBytes(), charset)
+            val content = new String(sizeBudget.read(uploadedBlob), charset)
             SMono.just(ClientBodyPart(content, clientBody.specificHeaders))
           } else {
             SMono.error(new IllegalArgumentException("Blob: Unsupported content type. Expecting text/plain or text/html"))
