@@ -26,10 +26,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.util.mime.MessageContentExtractor;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -81,6 +84,24 @@ class PreviewTest {
     void fromShouldNotThrowWhenValueLengthIsEqualsToMaximum256() {
         assertThatCode(() -> Preview.from(Strings.repeat("a", 256)))
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void factoryShouldOnlyConvertTheStartOfALargeHtmlBody() throws Exception {
+        List<String> convertedHtml = new ArrayList<>();
+        Preview.Factory factory = new Preview.Factory(new MessageContentExtractor(), html -> {
+            convertedHtml.add(html);
+            return html;
+        });
+        String message = "Content-Type: text/html; charset=UTF-8\r\n" +
+            "\r\n" +
+            "<p>" + Strings.repeat("<p>x", 100_000) + "\r\n";
+
+        factory.fromMessageAsString(message);
+
+        assertThat(convertedHtml)
+            .singleElement()
+            .satisfies(html -> assertThat(html).hasSize(Preview.Factory.MAX_HTML_LENGTH));
     }
 
     @Nested
