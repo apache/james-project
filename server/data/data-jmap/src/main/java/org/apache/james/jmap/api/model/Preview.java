@@ -43,6 +43,17 @@ import com.google.common.base.Preconditions;
 
 public class Preview {
     public static class Factory {
+        /**
+         * How many characters of the HTML body are handed to the HTML to text conversion.
+         *
+         * <p>A preview only keeps the first few hundred characters of text, so the start of the HTML body is
+         * enough to compute it. Bounding the input also bounds the cost of parsing it: some HTML parsers can be
+         * driven to build a DOM thousands of times larger than their input, and a preview is computed for every
+         * delivered message.</p>
+         */
+        @VisibleForTesting
+        static final int MAX_HTML_LENGTH = 16 * 1024;
+
         private final MessageContentExtractor messageContentExtractor;
         private final HtmlTextExtractor htmlTextExtractor;
 
@@ -73,7 +84,7 @@ public class Preview {
 
         public Preview fromMime4JMessage(Message mimeMessage) throws IOException {
             MessageContentExtractor.MessageContent messageContent = messageContentExtractor.extract(mimeMessage);
-            return messageContent.extractMainTextContent(htmlTextExtractor)
+            return messageContent.extractMainTextContent(html -> htmlTextExtractor.toPlainText(StringUtils.left(html, MAX_HTML_LENGTH)))
                 .map(Preview::compute)
                 .orElse(Preview.EMPTY);
         }
