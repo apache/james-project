@@ -217,6 +217,7 @@ public final class FlowedMessageUtils {
             if (quoteDepth > 0 && lineStartIndex + 1 <= lastIndex && text.charAt(lineStartIndex) == RFC2646_SPACE) {
                 lineStartIndex++;
             }
+            String quotePrefix = String.valueOf(RFC2646_QUOTE).repeat(quoteDepth);
 
             // We support both LF and CRLF line endings. To cover both cases we search for LF.
             int lineFeedIndex = text.indexOf(LF, lineStartIndex);
@@ -233,9 +234,7 @@ public final class FlowedMessageUtils {
                 text.regionMatches(lineStartIndex, RFC2646_SIGNATURE, 0, RFC2646_SIGNATURE.length())
             ) {
                 if (quoteDepth > 0) {
-                    for (int i = 0; i < quoteDepth; i++) {
-                        result.append(RFC2646_QUOTE);
-                    }
+                    result.append(quotePrefix);
                     result.append(RFC2646_SPACE);
                 }
                 result.append(RFC2646_SIGNATURE);
@@ -252,9 +251,7 @@ public final class FlowedMessageUtils {
 
             // Special case: a quoted line without any content
             if (lineStartIndex == lineEndIndex && quoteDepth > 0) {
-                for (int i = 0; i < quoteDepth; i++) {
-                    result.append(RFC2646_QUOTE);
-                }
+                result.append(quotePrefix);
             }
 
             while (lineStartIndex < lineEndIndex) {
@@ -269,9 +266,7 @@ public final class FlowedMessageUtils {
                         prefixLength = 1;
                     }
                 } else {
-                    for (int i = 0; i < quoteDepth; i++) {
-                        result.append(RFC2646_QUOTE);
-                    }
+                    result.append(quotePrefix);
                     result.append(RFC2646_SPACE);
                     prefixLength = quoteDepth + 1;
                 }
@@ -285,7 +280,9 @@ public final class FlowedMessageUtils {
                 }
 
                 int breakIndex = lineStartIndex + remainingWidth;
-                if (breakIndex >= lineEndIndex) {
+                if (breakIndex >= lineEndIndex || quoteDepth > 0 && remainingWidth == 0) {
+                    // Either the remainder fits, or the quote prefix alone fills the width: wrapping would
+                    // then repeat the whole prefix for every word, making the output quadratic in the input.
                     breakIndex = lineEndIndex;
                 } else {
                     while (breakIndex >= lineStartIndex &&
