@@ -19,8 +19,6 @@
 
 package org.apache.james.imapserver.netty;
 
-import java.util.List;
-
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.netty.AllButStartTlsLineBasedChannelHandler;
@@ -80,17 +78,13 @@ public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChan
     }
 
     @Override
-    protected boolean multiPartsAndOneStartTls(List<String> parts) {
-        return parts.stream()
-            .map(this::removeTag)
-            .anyMatch(line -> line.startsWith(PATTERN)) && parts.size() > 1;
+    protected boolean startsWithPattern(String part) {
+        return removeTag(part).startsWith(PATTERN);
     }
 
     @Override
-    protected boolean hasInvalidStartTlsPart(List<String> parts) {
-        return parts.stream()
-            .map(this::removeTag)
-            .anyMatch(line -> line.startsWith(PATTERN) && !line.endsWith(PATTERN));
+    protected boolean endsWithPattern(String part) {
+        return removeTag(part).endsWith(PATTERN);
     }
 
     protected String removeTag(String input) {

@@ -21,6 +21,7 @@ package org.apache.james.protocols.netty;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyByte;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
@@ -28,7 +29,11 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.withSettings;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.protocols.api.CommandDetectionSession;
@@ -39,6 +44,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.buffer.UnpooledHeapByteBuf;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.AttributeKey;
@@ -122,5 +128,118 @@ class AllButStartTlsLineBasedChannelHandlerTest {
 
         assertThat(handler.bytesBeforeLineEnd(buffer)).isEqualTo(length);
         assertThat(searchedBytes.get()).isLessThanOrEqualTo(length + 1);
+    }
+
+    private static boolean isCommandInjection(Throwable e) {
+        return e instanceof CommandInjectionDetectedException || e.getCause() instanceof CommandInjectionDetectedException;
+    }
+
+    private List<String> frames() {
+        List<String> frames = new ArrayList<>();
+        ByteBuf frame;
+        while ((frame = channel.readInbound()) != null) {
+            frames.add(frame.toString(StandardCharsets.US_ASCII));
+            frame.release();
+        }
+        return frames;
+    }
+
+    @Test
+    void manyLinesInASingleSegmentShouldBeReadOnce() throws Exception {
+        AllButStartTlsLineBasedChannelHandler handler = (AllButStartTlsLineBasedChannelHandler) channel.pipeline().get(HandlerConstants.FRAMER);
+        ChannelHandlerContext ctx = channel.pipeline().context(HandlerConstants.FRAMER);
+        int count = 10_000;
+        byte[] input = "NOOP\r\n".repeat(count).getBytes(StandardCharsets.US_ASCII);
+        // Not recording the invocations: a regression would read the buffer a lot
+        ByteBuf buffer = mock(UnpooledHeapByteBuf.class, withSettings()
+            .spiedInstance(new UnpooledHeapByteBuf(UnpooledByteBufAllocator.DEFAULT, input.length, input.length))
+            .defaultAnswer(CALLS_REAL_METHODS)
+            .stubOnly());
+        AtomicLong readBytes = new AtomicLong();
+        doAnswer(invocation -> {
+            readBytes.addAndGet((int) invocation.getArgument(1));
+            return invocation.callRealMethod();
+        }).when(buffer).toString(anyInt(), anyInt(), any(Charset.class));
+        buffer.writeBytes(input);
+
+        int frames = 0;
+        Object frame = handler.decode(ctx, buffer);
+        while (frame != null) {
+            frames++;
+            ((ByteBuf) frame).release();
+            frame = handler.decode(ctx, buffer);
+        }
+
+        assertThat(frames).isEqualTo(count);
+        assertThat(readBytes.get()).isLessThanOrEqualTo(2L * input.length);
+    }
+
+    @Test
+    void manyLinesInASingleSegmentShouldBeFramedInLinearTime() {
+        int count = 100_000;
+
+        long start = System.nanoTime();
+        channel.writeInbound(line("NOOP\r\n".repeat(count)));
+        Duration elapsed = Duration.ofNanos(System.nanoTime() - start);
+
+        // Scanning the whole read buffer for each line takes minutes
+        assertThat(frames()).hasSize(count);
+        assertThat(elapsed).isLessThan(Duration.ofSeconds(20));
+    }
+
+    @Test
+    void pipelinedCommandsShouldBeFramed() {
+        channel.writeInbound(line("EHLO example.com\r\nMAIL FROM:<a@example.com>\r\nRCPT TO:<b@example.com>\r\nDATA\r\n"));
+
+        assertThat(frames()).containsExactly("EHLO example.com\r\n", "MAIL FROM:<a@example.com>\r\n", "RCPT TO:<b@example.com>\r\n", "DATA\r\n");
+    }
+
+    @Test
+    void linesSplitAcrossSegmentsShouldBeFramed() {
+        channel.writeInbound(line("NO"));
+        channel.writeInbound(line("OP\r\nRS"));
+        channel.writeInbound(line("ET\r"));
+        channel.writeInbound(line("\nQUIT\r\n"));
+
+        assertThat(frames()).containsExactly("NOOP\r\n", "RSET\r\n", "QUIT\r\n");
+    }
+
+    @Test
+    void startTlsFollowedByCommandsInTheSameSegmentShouldBeRejected() {
+        assertThatThrownBy(() -> channel.writeInbound(line("STARTTLS\r\nRSET\r\nMAIL FROM:<a@example.com>\r\n")))
+            .matches(AllButStartTlsLineBasedChannelHandlerTest::isCommandInjection);
+        assertThat(frames()).isEmpty();
+    }
+
+    @Test
+    void startTlsFollowedByCommandsAfterManyLinesInTheSameSegmentShouldBeRejected() {
+        assertThatThrownBy(() -> channel.writeInbound(line("NOOP\r\n".repeat(1000) + "STARTTLS\r\nRSET\r\n")))
+            .matches(AllButStartTlsLineBasedChannelHandlerTest::isCommandInjection);
+        assertThat(frames()).isEmpty();
+    }
+
+    @Test
+    void startTlsSplitAcrossSegmentsFollowedByCommandsShouldBeRejected() {
+        channel.writeInbound(line("STAR"));
+
+        assertThatThrownBy(() -> channel.writeInbound(line("TTLS\r\nRSET\r\n")))
+            .matches(AllButStartTlsLineBasedChannelHandlerTest::isCommandInjection);
+        assertThat(frames()).isEmpty();
+    }
+
+    @Test
+    void startTlsFollowedByCommandsInTheNextSegmentShouldBeRejected() {
+        channel.writeInbound(line("NOOP\r\nRSET\r\n"));
+        channel.writeInbound(line("STARTTLS\r\n"));
+
+        assertThatThrownBy(() -> channel.writeInbound(line("RSET\r\nQUIT\r\n")))
+            .matches(AllButStartTlsLineBasedChannelHandlerTest::isCommandInjection);
+        assertThat(frames()).containsExactly("NOOP\r\n", "RSET\r\n", "STARTTLS\r\n");
+    }
+
+    @Test
+    void startTlsWithArgumentsShouldBeRejected() {
+        assertThatThrownBy(() -> channel.writeInbound(line("STARTTLS RSET\r\n")))
+            .matches(AllButStartTlsLineBasedChannelHandlerTest::isCommandInjection);
     }
 }
