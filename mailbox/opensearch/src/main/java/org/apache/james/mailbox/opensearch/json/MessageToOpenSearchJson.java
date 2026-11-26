@@ -21,6 +21,7 @@ package org.apache.james.mailbox.opensearch.json;
 
 import static org.apache.james.mailbox.opensearch.json.IndexableMessage.DATE_TIME_FORMATTER;
 
+import java.text.Normalizer;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -100,7 +101,7 @@ public class MessageToOpenSearchJson {
             .indexBody(indexBody)
             .user(indexUser, session.getUser().asString())
             .build()
-            .map(Throwing.function(mapper::writeValueAsString));
+            .map(Throwing.function(this::asJson));
     }
 
     public Mono<String> convertToJsonWithoutAttachment(MailboxMessage message, MailboxSession session) {
@@ -113,7 +114,7 @@ public class MessageToOpenSearchJson {
             .user(indexUser, session.getUser().asString())
             .indexBody(indexBody)
             .build()
-            .map(Throwing.function(mapper::writeValueAsString));
+            .map(Throwing.function(this::asJson));
     }
 
     public Mono<String> convertToJson(MailboxMessage message) {
@@ -127,7 +128,7 @@ public class MessageToOpenSearchJson {
             .indexHeaders(indexHeaders)
             .indexBody(indexBody)
             .build()
-            .map(Throwing.function(mapper::writeValueAsString));
+            .map(Throwing.function(this::asJson));
     }
 
     public Mono<String> convertToJsonWithoutAttachment(MailboxMessage message) {
@@ -139,7 +140,19 @@ public class MessageToOpenSearchJson {
             .indexHeaders(indexHeaders)
             .indexBody(indexBody)
             .build()
-            .map(Throwing.function(mapper::writeValueAsString));
+            .map(Throwing.function(this::asJson));
+    }
+
+    /**
+     * Text is indexed in its composed form (NFC): U+00E9 and "e" followed by the combining acute accent U+0301 read the
+     * same, yet OpenSearch analyzers would see different tokens. Searched values are normalized the same way, see
+     * {@link org.apache.james.mailbox.opensearch.query.DefaultCriterionConverter}.
+     *
+     * Normalizing the serialized document is safe: JSON syntax is ASCII and no combining mark composes with a JSON
+     * structural character.
+     */
+    private String asJson(IndexableMessage indexableMessage) throws JsonProcessingException {
+        return Normalizer.normalize(mapper.writeValueAsString(indexableMessage), Normalizer.Form.NFC);
     }
 
     public String getUpdatedJsonMessagePart(Flags flags, ModSeq modSeq) throws JsonProcessingException {

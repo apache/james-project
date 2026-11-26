@@ -15,6 +15,7 @@ Note: this section is in progress. It will be updated during all the development
 Changes to apply between 3.9.x and 3.10.0 will be reported here.
 
 Change list:
+ - [OpenSearch normalizes indexed and searched text to NFC](#opensearch-normalizes-indexed-and-searched-text-to-nfc)
  - [SMTP authentication requires TLS by default](#smtp-authentication-requires-tls-by-default)
  - [SMTP AUTH is refused when not announced](#smtp-auth-is-refused-when-not-announced)
  - [Adding metadata column to blob tables](#adding-metadata-column-to-blob-tables)
@@ -45,6 +46,22 @@ Change list:
  - [Pulsar verifies the TLS host name of its endpoints](#pulsar-verifies-the-tls-host-name-of-its-endpoints)
  - [Spring app generates its JMX password](#spring-app-generates-its-jmx-password)
  - [Scaling Pulsar SMTP app verifies the sender identity](#scaling-pulsar-smtp-app-verifies-the-sender-identity)
+
+### OpenSearch normalizes indexed and searched text to NFC
+
+Date: 26/11/2026
+
+Concerned products: James apps relying on OpenSearch as the search index
+
+An accented letter can be written composed (`é` as U+00E9) or decomposed (`e` followed by the combining accent U+0301).
+Both read the same, yet OpenSearch saw different words, so a search typed composed missed a mail written decomposed.
+James now normalizes the indexed text and the searched values to their composed form (Unicode NFC). The mapping is
+unchanged.
+
+Messages indexed before the upgrade keep their old tokens until they are reindexed. As searched values are now
+composed, a decomposed word these messages contain is not found until then, even when the search is typed decomposed.
+To apply the change to existing messages,
+[reindex all mails](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails).
 
 ### Spring app IMAP enables STARTTLS
 

@@ -25,12 +25,14 @@ import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.IndexName;
@@ -76,6 +78,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
@@ -99,6 +103,8 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
             .await();
     static final int SEARCH_SIZE = 1;
+    private static final String COMPOSED_ZOE = "Zoé";
+    private static final String DECOMPOSED_ZOE = Normalizer.normalize(COMPOSED_ZOE, Normalizer.Form.NFD);
     private final QueryConverter queryConverter = new QueryConverter(new DefaultCriterionConverter(openSearchMailboxConfiguration()));
 
     @RegisterExtension
@@ -829,6 +835,91 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 messageId4.getUid(),
                 messageId5.getUid(),
                 messageId6.getUid());
+    }
+
+    static Stream<Arguments> unicodeForms() {
+        return Stream.of(
+            Arguments.of(COMPOSED_ZOE, COMPOSED_ZOE),
+            Arguments.of(COMPOSED_ZOE, DECOMPOSED_ZOE),
+            Arguments.of(DECOMPOSED_ZOE, COMPOSED_ZOE),
+            Arguments.of(DECOMPOSED_ZOE, DECOMPOSED_ZOE));
+    }
+
+    @ParameterizedTest
+    @MethodSource("unicodeForms")
+    void subjectSearchShouldMatchWhateverTheUnicodeForm(String indexed, String searched) throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        ComposedMessageId messageId = messageManager.appendMessage(messageWithSubject("Lunch with " + indexed + " Martin"), session).getId();
+
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 14);
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.subject(searched)), session)).toStream())
+            .containsOnly(messageId.getUid());
+    }
+
+    @ParameterizedTest
+    @MethodSource("unicodeForms")
+    void textSearchShouldMatchBodyWhateverTheUnicodeForm(String indexed, String searched) throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        ComposedMessageId messageId = messageManager.appendMessage(MessageManager.AppendCommand.builder().build(
+                Message.Builder
+                    .of()
+                    .setSubject("Lunch")
+                    .setBody(indexed + " Martin says hello.", StandardCharsets.UTF_8)),
+            session).getId();
+
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 14);
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.mailContains(searched)), session)).toStream())
+            .containsOnly(messageId.getUid());
+    }
+
+    @ParameterizedTest
+    @MethodSource("unicodeForms")
+    void fromSearchShouldMatchWhateverTheUnicodeForm(String indexed, String searched) throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        ComposedMessageId messageId = messageManager.appendMessage(MessageManager.AppendCommand.builder().build(
+                Message.Builder
+                    .of()
+                    .setSubject("Lunch")
+                    .setBody("testmail", StandardCharsets.UTF_8)
+                    .addField(new RawField("From", indexed + " Martin <zoe@domain.tld>"))),
+            session).getId();
+
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 14);
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.From, searched)), session)).toStream())
+            .containsOnly(messageId.getUid());
+    }
+
+    @ParameterizedTest
+    @MethodSource("unicodeForms")
+    void headerSearchShouldMatchWhateverTheUnicodeForm(String indexed, String searched) throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        ComposedMessageId messageId = messageManager.appendMessage(MessageManager.AppendCommand.builder().build(
+                Message.Builder
+                    .of()
+                    .setSubject("Lunch")
+                    .setBody("testmail", StandardCharsets.UTF_8)
+                    .addField(new RawField("X-Guest", indexed + " Martin"))),
+            session).getId();
+
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 14);
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.headerContains("X-Guest", searched)), session)).toStream())
+            .containsOnly(messageId.getUid());
     }
 
     private static MessageManager.AppendCommand messageWithSubject(String subject) throws IOException {

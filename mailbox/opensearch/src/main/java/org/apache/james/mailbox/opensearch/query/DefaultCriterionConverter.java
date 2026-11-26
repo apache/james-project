@@ -22,6 +22,7 @@ package org.apache.james.mailbox.opensearch.query;
 import static org.apache.james.backends.opensearch.IndexCreationFactory.RAW;
 import static org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration.DEFAULT_TEXT_FUZZINESS_SEARCH;
 
+import java.text.Normalizer;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -154,7 +155,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
 
         registerHeaderOperatorConverter(
             SearchQuery.AddressOperator.class,
-            (headerName, operator) -> manageAddressFields(headerName, operator.getAddress()));
+            (headerName, operator) -> manageAddressFields(headerName, nfc(operator.getAddress())));
 
         registerHeaderOperatorConverter(
             SearchQuery.DateOperator.class,
@@ -172,7 +173,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
                         .toQuery())
                     .must(new MatchQuery.Builder()
                         .field(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.VALUE)
-                        .query(new FieldValue.Builder().stringValue(operator.getValue()).build())
+                        .query(new FieldValue.Builder().stringValue(nfc(operator.getValue())).build())
                         .build()
                         .toQuery())
                     .build()
@@ -185,6 +186,13 @@ public class DefaultCriterionConverter implements CriterionConverter {
     @SuppressWarnings("unchecked")
     protected <T extends SearchQuery.HeaderOperator> void registerHeaderOperatorConverter(Class<T> type, BiFunction<String, T, Query> f) {
         headerOperatorConverterMap.put(type, (BiFunction<String, SearchQuery.HeaderOperator, Query>) f);
+    }
+
+    /**
+     * Searched text is normalized to NFC, like the indexed text, see {@link org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson}.
+     */
+    protected static String nfc(String value) {
+        return Normalizer.normalize(value, Normalizer.Form.NFC);
     }
 
     @Override
@@ -233,12 +241,13 @@ public class DefaultCriterionConverter implements CriterionConverter {
     }
 
     protected Query convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
+        String value = nfc(textCriterion.getOperator().getValue());
         switch (textCriterion.getType()) {
             case BODY:
-                if (useQueryStringQuery && matchesQueryStringHeuristic(textCriterion.getOperator().getValue())) {
+                if (useQueryStringQuery && matchesQueryStringHeuristic(value)) {
                     return new SimpleQueryStringQuery.Builder()
                         .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY))
-                        .query(textCriterion.getOperator().getValue())
+                        .query(value)
                         .defaultOperator(Operator.And)
                         .lenient(true)
                         .build().toQuery();
@@ -246,14 +255,14 @@ public class DefaultCriterionConverter implements CriterionConverter {
                     return new BoolQuery.Builder()
                         .should(new MatchQuery.Builder()
                             .field(JsonMessageConstants.TEXT_BODY)
-                            .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .query(new FieldValue.Builder().stringValue(value).build())
                             .fuzziness(textFuzzinessSearchValue)
                             .operator(Operator.And)
                             .build()
                             .toQuery())
                         .should(new MatchQuery.Builder()
                             .field(JsonMessageConstants.HTML_BODY)
-                            .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .query(new FieldValue.Builder().stringValue(value).build())
                             .fuzziness(textFuzzinessSearchValue)
                             .operator(Operator.And)
                             .build()
@@ -262,66 +271,66 @@ public class DefaultCriterionConverter implements CriterionConverter {
                         .toQuery();
                 }
             case FULL:
-                if (useQueryStringQuery && matchesQueryStringHeuristic(textCriterion.getOperator().getValue())) {
+                if (useQueryStringQuery && matchesQueryStringHeuristic(value)) {
                     return new BoolQuery.Builder()
                         .should(new SimpleQueryStringQuery.Builder()
                             .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY, JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
-                            .query(textCriterion.getOperator().getValue())
+                            .query(value)
                             .defaultOperator(Operator.And)
                             .lenient(true)
                             .build().toQuery())
                         .should(new TermQuery.Builder()
                             .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
-                            .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .value(new FieldValue.Builder().stringValue(value).build())
                             .build()
                             .toQuery())
-                        .should(headersContain(textCriterion.getOperator().getValue()))
+                        .should(headersContain(value))
                         .build()
                         .toQuery();
                 } else {
                     return new BoolQuery.Builder()
                         .should(new MatchQuery.Builder()
                             .field(JsonMessageConstants.TEXT_BODY)
-                            .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .query(new FieldValue.Builder().stringValue(value).build())
                             .fuzziness(textFuzzinessSearchValue)
                             .operator(Operator.And)
                             .build()
                             .toQuery())
                         .should(new MatchQuery.Builder()
                             .field(JsonMessageConstants.HTML_BODY)
-                            .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .query(new FieldValue.Builder().stringValue(value).build())
                             .fuzziness(textFuzzinessSearchValue)
                             .operator(Operator.And)
                             .build()
                             .toQuery())
                         .should(new MatchQuery.Builder()
                             .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
-                            .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .query(new FieldValue.Builder().stringValue(value).build())
                             .fuzziness(textFuzzinessSearchValue)
                             .operator(Operator.And)
                             .build()
                             .toQuery())
                         .should(new TermQuery.Builder()
                             .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
-                            .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .value(new FieldValue.Builder().stringValue(value).build())
                             .build()
                             .toQuery())
-                        .should(headersContain(textCriterion.getOperator().getValue()))
+                        .should(headersContain(value))
                         .build()
                         .toQuery();
                 }
             case ATTACHMENTS:
-                if (useQueryStringQuery && matchesQueryStringHeuristic(textCriterion.getOperator().getValue())) {
+                if (useQueryStringQuery && matchesQueryStringHeuristic(value)) {
                     return new BoolQuery.Builder()
                         .should(new SimpleQueryStringQuery.Builder()
                             .fields(ImmutableList.of(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
-                            .query(textCriterion.getOperator().getValue())
+                            .query(value)
                             .defaultOperator(Operator.And)
                             .lenient(true)
                             .build().toQuery())
                         .should(new TermQuery.Builder()
                             .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
-                            .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .value(new FieldValue.Builder().stringValue(value).build())
                             .build()
                             .toQuery())
                         .build()
@@ -330,25 +339,25 @@ public class DefaultCriterionConverter implements CriterionConverter {
                     return new BoolQuery.Builder()
                         .should(new MatchQuery.Builder()
                             .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
-                            .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .query(new FieldValue.Builder().stringValue(value).build())
                             .fuzziness(textFuzzinessSearchValue)
                             .operator(Operator.And)
                             .build()
                             .toQuery())
                         .should(new TermQuery.Builder()
                             .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
-                            .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .value(new FieldValue.Builder().stringValue(value).build())
                             .build()
                             .toQuery())
                         .build()
                         .toQuery();
                 }
             case ATTACHMENT_FILE_NAME:
-                if (useQueryStringQuery && matchesQueryStringHeuristic(textCriterion.getOperator().getValue())) {
+                if (useQueryStringQuery && matchesQueryStringHeuristic(value)) {
                     return new BoolQuery.Builder()
                         .should(new SimpleQueryStringQuery.Builder()
                             .fields(ImmutableList.of(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILENAME))
-                            .query(textCriterion.getOperator().getValue())
+                            .query(value)
                             .defaultOperator(Operator.And)
                             .lenient(true)
                             .build().toQuery())
@@ -358,14 +367,14 @@ public class DefaultCriterionConverter implements CriterionConverter {
                     return new BoolQuery.Builder()
                         .should(new MatchQuery.Builder()
                             .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILENAME)
-                            .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .query(new FieldValue.Builder().stringValue(value).build())
                             .fuzziness(textFuzzinessSearchValue)
                             .operator(Operator.And)
                             .build()
                             .toQuery())
                         .should(new TermQuery.Builder()
                             .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
-                            .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                            .value(new FieldValue.Builder().stringValue(value).build())
                             .build()
                             .toQuery())
                         .build()
@@ -642,10 +651,11 @@ public class DefaultCriterionConverter implements CriterionConverter {
     }
 
     protected Query convertSubject(SearchQuery.SubjectCriterion headerCriterion) {
-        if (useQueryStringQuery && matchesQueryStringHeuristic(headerCriterion.getSubject())) {
+        String subject = nfc(headerCriterion.getSubject());
+        if (useQueryStringQuery && matchesQueryStringHeuristic(subject)) {
             return new SimpleQueryStringQuery.Builder()
                 .fields(ImmutableList.of(JsonMessageConstants.SUBJECT))
-                .query(headerCriterion.getSubject())
+                .query(subject)
                 .defaultOperator(Operator.And)
                 .lenient(true)
                 .build().toQuery();
@@ -653,7 +663,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
             return new MatchQuery.Builder()
                 .field(JsonMessageConstants.SUBJECT)
                 .query(new FieldValue.Builder()
-                    .stringValue(headerCriterion.getSubject())
+                    .stringValue(subject)
                     .build())
                 .fuzziness(textFuzzinessSearchValue)
                 .operator(Operator.And)
