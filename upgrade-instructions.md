@@ -45,18 +45,6 @@ Change list:
  - [Pulsar verifies the TLS host name of its endpoints](#pulsar-verifies-the-tls-host-name-of-its-endpoints)
  - [Spring app generates its JMX password](#spring-app-generates-its-jmx-password)
  - [Scaling Pulsar SMTP app verifies the sender identity](#scaling-pulsar-smtp-app-verifies-the-sender-identity)
- - [STARTTLS injection check hooks of the line framer](#starttls-injection-check-hooks-of-the-line-framer)
-
-### STARTTLS injection check hooks of the line framer
-
-Date: 26/11/2026
-
-Concerned products: extensions subclassing `AllButStartTlsLineBasedChannelHandler`.
-
-The STARTTLS injection check no longer reads the whole read buffer for each line framed. The protected
-`multiPartsAndOneStartTls(List<String>)` and `hasInvalidStartTlsPart(List<String>)` methods, that were given every part
-of the read input, are replaced by `startsWithPattern(String)` and `endsWithPattern(String)`, given one part at a time.
-`hasStartTLS(String)` is no longer given the whole read input: see its Javadoc.
 
 ### Spring app IMAP enables STARTTLS
 
