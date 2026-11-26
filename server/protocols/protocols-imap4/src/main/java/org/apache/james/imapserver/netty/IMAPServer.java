@@ -59,6 +59,7 @@ import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
 import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.protocols.netty.HandlerConstants;
+import org.apache.james.util.DurationParser;
 import org.apache.james.util.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -215,6 +216,8 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .withCustomProperties(configuration.getProperties("customProperties"))
             .idFieldsResponse(getIdCommandResponseFields(configuration))
             .adminUsers(adminUsers)
+            .selectedMailboxCacheTtl(Optional.ofNullable(configuration.getString("selectedMailboxCacheTtl", null))
+                .map(DurationParser::parse))
             .build();
     }
 

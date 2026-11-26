@@ -23,6 +23,8 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.RESET;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.RETRIEVE;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -34,6 +36,7 @@ import java.util.stream.Stream;
 import jakarta.mail.Flags;
 
 import org.apache.james.events.EventBus;
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -93,6 +96,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     private final boolean openReadOnly;
     private final EventBus eventBus;
     private final MailboxCounterCorrector mailboxCounterCorrector;
+    private Duration selectedMailboxCacheTtl = ImapConfiguration.DEFAULT_SELECTED_MAILBOX_CACHE_TTL;
 
     public AbstractSelectionProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, PathConverter.Factory pathConverterFactory, boolean openReadOnly,
                                       MetricFactory metricFactory, EventBus eventBus, MailboxCounterCorrector mailboxCounterCorrector) {
@@ -103,6 +107,12 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
         this.eventBus = eventBus;
         this.mailboxCounterCorrector = mailboxCounterCorrector;
+    }
+
+    @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+        super.configure(imapConfiguration);
+        this.selectedMailboxCacheTtl = imapConfiguration.getSelectedMailboxCacheTtl();
     }
 
     @Override
@@ -156,9 +166,11 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 })
             .flatMap(metadata -> firstUnseen(session, fullMailboxPath, responder, metadata.getFirstUnseen(), session.getSelected())
             .thenReturn(metadata))
+            .flatMap(metaData -> session.getSelected().messageManager()
+                .doOnNext(messageManager -> permanentFlags(responder, metaData.getPermanentFlags(), session.getSelected(), messageManager, session.getMailboxSession()))
+                .thenReturn(metaData))
             .flatMap(metaData -> {
                 SelectedMailbox selected = session.getSelected();
-                permanentFlags(responder, metaData.getPermanentFlags(), selected, session.getMailboxSession());
                 selected.resetNewApplicableFlags();
                 highestModSeq(responder, metaData);
                 uidNext(responder, metaData, selected);
@@ -183,12 +195,12 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
                         Mono<Void> vanishedResponses = uidSet(request, metaData)
                             .map(uidSet -> vanishedRanges(knownSequences, knownUids, selected, uidSet))
-                            .map(ranges -> Mono.from(getMailboxManager().getMailboxReactive(selected.getMailboxId(), session.getMailboxSession()))
+                            .map(ranges -> selected.messageManager()
                                 .flatMap(mailbox -> respondVanished(selected, ranges, metaData.getUidNext(), mailbox, session.getMailboxSession(), responder)))
                             .orElse(Mono.empty());
 
                         Mono<Void> changedFlagsResponses = uidSet(request, metaData)
-                            .map(uidSet -> Mono.from(getMailboxManager().getMailboxReactive(selected.getMailboxId(), session.getMailboxSession()))
+                            .map(uidSet -> selected.messageManager()
                                 .flatMap(mailbox -> respondChangedFlags(selected, uidSet, request.getKnownModSeq(), mailbox, session.getMailboxSession(), responder)))
                             .orElse(Mono.empty());
 
@@ -463,9 +475,10 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         responder.respond(new ExistsResponse(realMessageCount));
 
         if (messageCount != realMessageCount) {
-            LOGGER.warn("Invalid counter for {}, was {} and should have been {}", selectedMailbox.getMessageManager().getId().serialize(),
+            LOGGER.warn("Invalid counter for {}, was {} and should have been {}", selectedMailbox.getMailboxId().serialize(),
                 messageCount, realMessageCount);
-            mailboxCounterCorrector.fixCountersFor(selectedMailbox.getMessageManager())
+            selectedMailbox.messageManager()
+                .flatMap(mailboxCounterCorrector::fixCountersFor)
                 .subscribeOn(Schedulers.parallel())
                 .subscribe();
         }
@@ -526,7 +539,8 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 responder.respond(getStatusResponseFactory()
                     .untaggedOk(HumanReadableText.QRESYNC_CLOSED, ResponseCode.closed()));
             }
-            SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(getMailboxManager(), eventBus, session.getMailboxSession(), mailbox);
+            SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(getMailboxManager(), eventBus, session.getMailboxSession(), mailbox,
+                selectedMailboxCacheTtl, Clock.systemUTC());
 
             return session.selected(selectedMailbox)
                 .then(selectedMailbox.finishInit())

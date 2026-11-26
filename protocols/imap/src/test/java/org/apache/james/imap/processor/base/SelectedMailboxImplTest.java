@@ -30,9 +30,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +49,8 @@ import java.util.stream.IntStream;
 import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
@@ -60,11 +66,15 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.ThreadId;
@@ -72,6 +82,7 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -518,5 +529,106 @@ class SelectedMailboxImplTest {
 
         selectedMailbox.deselect().block();
         assertThat(selectedMailbox.isIdling()).isFalse();
+    }
+
+    @Nested
+    class MessageManagerCache {
+        private static final Duration TTL = Duration.ofSeconds(30);
+        private static final Instant NOW = Instant.parse("2026-11-26T10:00:00Z");
+
+        private UpdatableTickingClock clock;
+        private MessageManager refreshed;
+        private SelectedMailboxImpl selectedMailbox;
+
+        @BeforeEach
+        void setUp() {
+            clock = new UpdatableTickingClock(NOW);
+            refreshed = mock(MessageManager.class);
+            when(mailboxManager.getMailboxReactive(eq(mailboxId), any(MailboxSession.class)))
+                .thenReturn(Mono.just(refreshed));
+            selectedMailbox = new SelectedMailboxImpl(mailboxManager, eventBus, MailboxSessionUtil.create(BOB), messageManager, TTL, clock);
+        }
+
+        @Test
+        void zeroTtlShouldDisableTheCache() {
+            SelectedMailboxImpl noCache = new SelectedMailboxImpl(mailboxManager, eventBus, MailboxSessionUtil.create(BOB), messageManager,
+                Duration.ZERO, clock);
+
+            noCache.messageManager().block();
+
+            assertThat(noCache.messageManager().block()).isEqualTo(refreshed);
+            verify(mailboxManager, times(2)).getMailboxReactive(eq(mailboxId), any(MailboxSession.class));
+        }
+
+        @Test
+        void shouldServeTheSelectedMessageManager() {
+            assertThat(selectedMailbox.messageManager().block()).isEqualTo(messageManager);
+            verify(mailboxManager, never()).getMailboxReactive(any(MailboxId.class), any(MailboxSession.class));
+        }
+
+        @Test
+        void shouldReadAgainOnceExpired() {
+            clock.setInstant(NOW.plus(TTL));
+
+            assertThat(selectedMailbox.messageManager().block()).isEqualTo(refreshed);
+        }
+
+        @Test
+        void shouldServeTheMessageManagerReadOnceExpired() {
+            clock.setInstant(NOW.plus(TTL));
+            selectedMailbox.messageManager().block();
+
+            assertThat(selectedMailbox.messageManager().block()).isEqualTo(refreshed);
+            verify(mailboxManager, times(1)).getMailboxReactive(eq(mailboxId), any(MailboxSession.class));
+        }
+
+        @Test
+        void aclUpdateShouldInvalidate() {
+            Mono.from(selectedMailbox.reactiveEvent(EventFactory.aclUpdated()
+                .randomEventId()
+                .mailboxSession(MailboxSessionUtil.create(Username.of("tellier@linagora.com")))
+                .mailbox(mailbox)
+                .aclDiff(ACLDiff.computeDiff(MailboxACL.EMPTY, MailboxACL.EMPTY))
+                .build())).block();
+
+            assertThat(selectedMailbox.messageManager().block()).isEqualTo(refreshed);
+        }
+
+        @Test
+        void deletionShouldInvalidate() {
+            Mono.from(selectedMailbox.reactiveEvent(deletion())).block();
+
+            assertThat(selectedMailbox.messageManager().block()).isEqualTo(refreshed);
+        }
+
+        @Test
+        void renameShouldInvalidate() {
+            Mono.from(selectedMailbox.reactiveEvent(rename())).block();
+
+            assertThat(selectedMailbox.messageManager().block()).isEqualTo(refreshed);
+        }
+
+        @Test
+        void aReadConcurrentWithAnInvalidationShouldNotBeCached() {
+            MessageManager readDuringRename = mock(MessageManager.class);
+            clock.setInstant(NOW.plus(TTL));
+            when(mailboxManager.getMailboxReactive(eq(mailboxId), any(MailboxSession.class)))
+                .thenReturn(Mono.from(selectedMailbox.reactiveEvent(rename())).thenReturn(readDuringRename))
+                .thenReturn(Mono.just(refreshed));
+
+            selectedMailbox.messageManager().block();
+
+            assertThat(selectedMailbox.messageManager().block()).isEqualTo(refreshed);
+        }
+
+        private MailboxDeletion deletion() {
+            return new MailboxDeletion(SESSION_ID, BOB, mailboxPath, MailboxACL.EMPTY,
+                QuotaRoot.quotaRoot("root", Optional.empty()), QuotaCountUsage.count(0), QuotaSizeUsage.size(0),
+                mailboxId, Event.EventId.random());
+        }
+
+        private MailboxRenamed rename() {
+            return new MailboxRenamed(SESSION_ID, BOB, mailboxPath, mailboxId, MailboxPath.forUser(BOB, "other"), Event.EventId.random());
+        }
     }
 }

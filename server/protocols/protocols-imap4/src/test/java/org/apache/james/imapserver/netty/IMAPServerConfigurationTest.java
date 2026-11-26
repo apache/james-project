@@ -21,6 +21,7 @@ package org.apache.james.imapserver.netty;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -48,6 +49,15 @@ class IMAPServerConfigurationTest {
                 .build();
 
         assertThat(imapConfiguration).isEqualTo(expectImapConfiguration);
+    }
+
+    @Test
+    void getImapConfigurationShouldReadSelectedMailboxCacheTtl() {
+        HierarchicalConfiguration<ImmutableNode> configurationBuilder = new BaseHierarchicalConfiguration();
+        configurationBuilder.addProperty("selectedMailboxCacheTtl", "30s");
+
+        assertThat(IMAPServer.getImapConfiguration(configurationBuilder).getSelectedMailboxCacheTtl())
+            .isEqualTo(Duration.ofSeconds(30));
     }
 
     @Test

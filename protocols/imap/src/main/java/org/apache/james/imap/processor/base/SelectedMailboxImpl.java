@@ -24,6 +24,9 @@ import static io.vavr.API.Case;
 import static io.vavr.API.Match;
 import static io.vavr.Predicates.instanceOf;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -55,6 +58,7 @@ import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxACLUpdated;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxEvent;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
 import org.apache.james.mailbox.events.MailboxEvents.MessageEvent;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -123,6 +127,16 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
         }
     }
 
+    private record CachedMessageManager(MessageManager messageManager, Instant cachedAt) {
+
+    }
+
+    private record MessageManagerCache(long version, Optional<CachedMessageManager> cached) {
+        MessageManagerCache invalidate() {
+            return new MessageManagerCache(version + 1, Optional.empty());
+        }
+    }
+
     private final AtomicReference<Registration> registration = new AtomicReference<>();
     private final MailboxManager mailboxManager;
     private final MessageManager messageManager;
@@ -142,14 +156,27 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     private final AtomicBoolean readOnly = new AtomicBoolean(false);
     private final AtomicBoolean readRightRevoked = new AtomicBoolean(false);
     private ApplicableFlags applicableFlags = ApplicableFlags.from(new Flags());
+    private final Duration messageManagerCacheTtl;
+    private final Clock clock;
+    private final AtomicReference<MessageManagerCache> messageManagerCache;
 
     public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, MailboxSession session, MessageManager messageManager) {
+        this(mailboxManager, eventBus, session, messageManager, Duration.ZERO, Clock.systemUTC());
+    }
+
+    public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, MailboxSession session, MessageManager messageManager,
+                               Duration messageManagerCacheTtl, Clock clock) {
         this.eventBus = eventBus;
         this.mailboxManager = mailboxManager;
         this.messageManager = messageManager;
         this.mailboxSession = session;
         this.uidMsnConverter = new UidMsnConverter();
         this.mailboxId = messageManager.getId();
+        this.messageManagerCacheTtl = messageManagerCacheTtl;
+        this.clock = clock;
+        this.messageManagerCache = new AtomicReference<>(new MessageManagerCache(0, Optional.of(messageManager)
+            .filter(any -> isMessageManagerCacheEnabled())
+            .map(manager -> new CachedMessageManager(manager, clock.instant()))));
     }
 
     public Mono<Void> finishInit() throws MailboxException {
@@ -226,8 +253,43 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     }
 
     @Override
-    public MessageManager getMessageManager() {
-        return messageManager;
+    public Mono<MessageManager> messageManager() {
+        if (!isMessageManagerCacheEnabled()) {
+            return readMessageManager();
+        }
+        return Mono.defer(() -> {
+            Instant now = clock.instant();
+            MessageManagerCache cache = messageManagerCache.get();
+            return cache.cached()
+                .filter(cached -> now.isBefore(cached.cachedAt().plus(messageManagerCacheTtl)))
+                .map(CachedMessageManager::messageManager)
+                .map(Mono::just)
+                .orElseGet(() -> readMessageManager()
+                    .doOnNext(manager -> cacheMessageManager(manager, cache.version())));
+        });
+    }
+
+    private Mono<MessageManager> readMessageManager() {
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxId, mailboxSession));
+    }
+
+    private void cacheMessageManager(MessageManager messageManager, long version) {
+        CachedMessageManager cached = new CachedMessageManager(messageManager, clock.instant());
+        messageManagerCache.updateAndGet(cache -> {
+            if (cache.version() == version) {
+                return new MessageManagerCache(version, Optional.of(cached));
+            }
+            // An event changed the mailbox while it was read
+            return cache;
+        });
+    }
+
+    private boolean isMessageManagerCacheEnabled() {
+        return messageManagerCacheTtl.isPositive();
+    }
+
+    private void invalidateMessageManagerCache() {
+        messageManagerCache.updateAndGet(MessageManagerCache::invalidate);
     }
 
     @Override
@@ -427,6 +489,10 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     private void mailboxEvent(MailboxEvent mailboxEvent) {
         // Check if the event was for the mailbox we are observing
         if (mailboxEvent.getMailboxId().equals(getMailboxId())) {
+            if (mailboxEvent instanceof MailboxDeletion || mailboxEvent instanceof MailboxACLUpdated || mailboxEvent instanceof MailboxRenamed) {
+                // Whatever the session: the cached mailbox, its path and its rights may be stale
+                invalidateMessageManagerCache();
+            }
             if (readRightRevoked.get() && !(mailboxEvent instanceof MailboxDeletion)) {
                 // The user may no longer read this mailbox: its updates must not reach him
                 return;

@@ -73,7 +73,6 @@ class CloseProcessorTest {
 
         messageManager = mock(MessageManager.class);
         when(messageManager.getMailboxEntity()).thenReturn(mock(Mailbox.class));
-        when(mailboxManager.getMailboxReactive(eq(MAILBOX_ID), any(MailboxSession.class))).thenReturn(Mono.just(messageManager));
 
         testee = new CloseProcessor(mailboxManager, new UnpooledStatusResponseFactory(), new RecordingMetricFactory());
     }
@@ -82,6 +81,7 @@ class CloseProcessorTest {
     void closeShouldAnswerOkWithoutExpungingWhenTheUserCannotExpunge() throws Exception {
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getMailboxId()).thenReturn(MAILBOX_ID);
+        when(selectedMailbox.messageManager()).thenReturn(Mono.just(messageManager));
         when(selectedMailbox.isReadOnly()).thenReturn(false);
         when(selectedMailbox.deselect()).thenReturn(Mono.empty());
         imapSession.selected(selectedMailbox).block();

@@ -104,6 +104,12 @@ By default, only `INBOX` is created.
 If `true`, James additionally creates the mailboxes `Outbox`, `Sent`, `Trash`, `Drafts`, `Archive`, and `Spam` on first login of a user.
 It is an optional boolean which defaults to `true`.
 
+| `selectedMailboxCacheTtl`
+| How long the mailbox selected by an IMAP session is kept in memory, sparing a read of the mailbox and of its rights
+for each FETCH, SEARCH, STORE, EXPUNGE or CLOSE. Its deletion, its renaming or a change of its rights, from any session,
+discards it at once.
+It is an optional duration, for instance `30s` (milliseconds when no unit is given). Defaults to `60s`. `0` disables this cache.
+
 | `idCommandResponse`
 | Configures the server response to the IMAP ID command.
 It is an optional element containing up to 30 `field` elements.
