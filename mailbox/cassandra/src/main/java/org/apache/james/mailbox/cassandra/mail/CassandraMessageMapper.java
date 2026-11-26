@@ -478,10 +478,13 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private Mono<FlagsUpdateStageResult> handleUpdatesStagedRetry(CassandraId mailboxId, FlagsUpdateCalculator flagUpdateCalculator, FlagsUpdateStageResult firstResult) {
+        if (!firstResult.containsFailedResults()) {
+            return Mono.just(firstResult);
+        }
         AtomicReference<FlagsUpdateStageResult> globalResult = new AtomicReference<>(firstResult);
 
         return Flux.range(0, cassandraConfiguration.getFlagsUpdateMessageMaxRetry())
-            .takeUntil(i -> globalResult.get().containsFailedResults())
+            .takeWhile(i -> globalResult.get().containsFailedResults())
             .concatMap(i -> retryUpdatesStage(mailboxId, flagUpdateCalculator, globalResult.get().getFailed())
                 .doOnNext(next -> globalResult.set(globalResult.get().keepSucceded().merge(next))))
             .then(Mono.fromCallable(globalResult::get));
