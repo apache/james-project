@@ -24,6 +24,7 @@ import static org.awaitility.Awaitility.await;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.IndexCreationFactory;
@@ -39,11 +40,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.client.opensearch._types.Time;
 import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
+import org.opensearch.client.opensearch.core.ClearScrollRequest;
+import org.opensearch.client.opensearch.core.ClearScrollResponse;
 import org.opensearch.client.opensearch.core.IndexRequest;
+import org.opensearch.client.opensearch.core.ScrollRequest;
+import org.opensearch.client.opensearch.core.ScrollResponse;
 import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.core.search.Hit;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.RawValue;
+
+import reactor.core.publisher.Mono;
 
 class ScrolledSearchTest {
     private static final Time TIMEOUT = new Time.Builder()
@@ -111,6 +120,51 @@ class ScrolledSearchTest {
         assertThat(new ScrolledSearch(client, searchRequest).searchHits().collectList().block())
             .extracting(Hit::id)
             .containsOnly(id);
+    }
+
+    @Test
+    void scrollIterableShouldNotScrollWhenFirstPageIsShorterThanSize() throws IOException {
+        String id = "1";
+        client.index(new IndexRequest.Builder<>()
+                .index(INDEX_NAME.getValue())
+                .id(id)
+                .document(new RawValue(CONTENT))
+                .build())
+            .block();
+
+        openSearch.awaitForOpenSearch();
+        WAIT_CONDITION.untilAsserted(() -> hasIdsInIndex(client, id));
+
+        SearchRequest searchRequest = new SearchRequest.Builder()
+            .index(INDEX_NAME.getValue())
+            .scroll(TIMEOUT)
+            .query(new MatchAllQuery.Builder().build().toQuery())
+            .size(SIZE)
+            .build();
+
+        AtomicInteger scrollCount = new AtomicInteger();
+        ReactorOpenSearchClient countingClient = new ReactorOpenSearchClient(null) {
+            @Override
+            public Mono<SearchResponse<ObjectNode>> search(SearchRequest request) throws IOException {
+                return client.search(request);
+            }
+
+            @Override
+            public Mono<ScrollResponse<ObjectNode>> scroll(ScrollRequest scrollRequest) throws IOException {
+                scrollCount.incrementAndGet();
+                return client.scroll(scrollRequest);
+            }
+
+            @Override
+            public Mono<ClearScrollResponse> clearScroll(ClearScrollRequest clearScrollRequest) throws IOException {
+                return client.clearScroll(clearScrollRequest);
+            }
+        };
+
+        assertThat(new ScrolledSearch(countingClient, searchRequest).searchHits().collectList().block())
+            .extracting(Hit::id)
+            .containsOnly(id);
+        assertThat(scrollCount.get()).isZero();
     }
 
     @Test

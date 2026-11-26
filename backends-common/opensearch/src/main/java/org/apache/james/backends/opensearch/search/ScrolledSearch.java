@@ -75,7 +75,7 @@ public class ScrolledSearch {
             scrollId.set(Optional.ofNullable(searchResponse.scrollId()));
             sink.next(searchResponse);
 
-            if (searchResponse.hits().hits().isEmpty()) {
+            if (isLastPage(searchResponse)) {
                 sink.complete();
             } else {
                 next(sink, scrollId, numberOfRequestedElements - 1);
@@ -86,6 +86,13 @@ public class ScrolledSearch {
 
         buildRequest(scrollId.get())
             .subscribe(onResponse, onFailure);
+    }
+
+    private boolean isLastPage(ScrollResponse<ObjectNode> searchResponse) {
+        int pageLength = searchResponse.hits().hits().size();
+        // A page shorter than the requested size is the last one: no need for an empty scroll round trip
+        return pageLength == 0
+            || Optional.ofNullable(searchRequest.size()).map(size -> pageLength < size).orElse(false);
     }
 
     private Mono<ScrollResponse<ObjectNode>> buildRequest(Optional<String> scrollId) {
