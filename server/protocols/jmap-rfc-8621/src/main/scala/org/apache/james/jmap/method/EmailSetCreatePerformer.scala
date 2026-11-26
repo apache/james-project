@@ -28,9 +28,9 @@ import jakarta.mail.Flags
 import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Properties, SetError, UTCDate}
+import org.apache.james.jmap.core.{JmapRfc8621Configuration, Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
-import org.apache.james.jmap.mail.{AttachmentNotFoundException, BlobId, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, ThreadId}
+import org.apache.james.jmap.mail.{AttachmentNotFoundException, AttachmentsTooLargeException, BlobId, EmailCreationId, EmailCreationLimits, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, InvalidEmailCreationPropertiesException, ThreadId, TooManyAttachmentsException}
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers}
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -77,6 +77,12 @@ object EmailSetCreatePerformer {
       case e: BlobNotFoundException =>
         LOGGER.info(s"Blob not found: ${e.blobId.value}")
         SetError.invalidArguments(SetErrorDescription(s"Blob not found: ${e.blobId.value}"), Some(Properties("blobId")))
+      case e: AttachmentsTooLargeException =>
+        LOGGER.info("Attempt to create a message with too big attachments")
+        SetError.tooLarge(SetErrorDescription(e.getMessage))
+      case e: TooManyAttachmentsException =>
+        LOGGER.info("Attempt to create a message with too many attachments")
+        SetError.tooLarge(SetErrorDescription(e.getMessage))
       case e: SizeExceededException =>
         LOGGER.info("Attempt to create too big of a message")
         SetError.tooLarge(SetErrorDescription(e.getMessage))
@@ -99,7 +105,11 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
                                         blobResolvers: BlobResolvers,
                                         htmlTextExtractor: HtmlTextExtractor,
                                         mailboxManager: MailboxManager,
-                                        configuration: JMAPConfiguration) {
+                                        configuration: JMAPConfiguration,
+                                        jmapRfc8621Configuration: JmapRfc8621Configuration) {
+  private val limits: EmailCreationLimits = EmailCreationLimits(
+    maxAttachments = jmapRfc8621Configuration.maxAttachmentsPerEmail,
+    maxSizeAttachments = jmapRfc8621Configuration.maxSizeAttachmentsPerEmail.asLong())
 
   def create(request: EmailSetRequest, mailboxSession: MailboxSession): SMono[CreationResults] =
     SFlux.fromIterable(request.create.getOrElse(Map()))
@@ -117,7 +127,7 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
     if (mailboxIds.size != 1) {
       SMono.just(CreationFailure(clientId, new IllegalArgumentException("mailboxIds need to have size 1")))
     } else {
-      request.toMime4JMessage(blobResolvers, htmlTextExtractor, mailboxSession)
+      request.toMime4JMessage(blobResolvers, htmlTextExtractor, mailboxSession, limits)
         .flatMap(message => asAppendCommand(request, message)
           .fold(e => SMono.error(e),
             appendCommand => append(clientId, appendCommand, mailboxSession, mailboxIds)))

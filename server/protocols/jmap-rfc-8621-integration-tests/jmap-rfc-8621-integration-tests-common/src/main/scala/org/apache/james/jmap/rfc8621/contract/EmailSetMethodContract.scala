@@ -1681,6 +1681,179 @@ trait EmailSetMethodContract {
           Matchers.endsWith(" bytes while the maximum allowed is 10485760")))
   }
 
+  private def uploadBlob(payload: Array[Byte]): String = {
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .contentType("text/plain")
+      .body(payload)
+    .when
+      .post(s"/upload/$bobAccountId")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+  }
+
+  private def creationWithAttachments(mailboxId: MailboxId, blobIds: Seq[String]): String =
+    s"""{
+       |  "mailboxIds": {"${mailboxId.serialize}": true},
+       |  "subject": "Attachments",
+       |  "attachments": [${blobIds.map(blobId => s"""{"blobId": "$blobId", "type": "text/plain", "disposition": "attachment"}""").mkString(",")}]
+       |}""".stripMargin
+
+  private def emailSetCreateThenCount(mailboxId: MailboxId, creations: Map[String, String]): String =
+    s"""{
+       |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+       |  "methodCalls": [
+       |    ["Email/set", {
+       |      "accountId": "$bobAccountId",
+       |      "create": {${creations.map { case (creationId, creation) => s""""$creationId": $creation""" }.mkString(",")}}
+       |    }, "c1"],
+       |    ["Mailbox/get", {
+       |      "accountId": "$bobAccountId",
+       |      "ids": ["${mailboxId.serialize}"],
+       |      "properties": ["totalEmails"]
+       |    }, "c2"]
+       |  ]
+       |}""".stripMargin
+
+  @Test
+  def createShouldRejectASmallBlobReferencedUntilTheAttachmentSizeLimitIsExceeded(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val blobId = uploadBlob(Array.fill[Byte](1_000_000)('a'.toByte))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(emailSetCreateThenCount(mailboxId, Map("aaaaaa" -> creationWithAttachments(mailboxId, Seq.fill(21)(blobId)))))
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("methodResponses[0][1].notCreated.aaaaaa.type", equalTo("tooLarge"))
+      .body("methodResponses[0][1].notCreated.aaaaaa.description",
+        equalTo("Attachments of this email exceed the maximum allowed total size of 20000000 bytes (maxSizeAttachmentsPerEmail)"))
+      .body("methodResponses[0][1].created", Matchers.nullValue())
+      .body("methodResponses[1][1].list[0].totalEmails", equalTo(0))
+  }
+
+  @Test
+  def createShouldNotApplyTheAttachmentSizeLimitWhenTheTotalEqualsIt(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val blobId = uploadBlob(Array.fill[Byte](1_000_000)('a'.toByte))
+
+    // 20 * 1_000_000 equals maxSizeAttachmentsPerEmail: only the (lower) email.send.max.size of the test servers rejects it
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(emailSetCreateThenCount(mailboxId, Map("aaaaaa" -> creationWithAttachments(mailboxId, Seq.fill(20)(blobId)))))
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("methodResponses[0][1].notCreated.aaaaaa.type", equalTo("tooLarge"))
+      .body("methodResponses[0][1].notCreated.aaaaaa.description", Matchers.startsWith("Attempt to create a message of "))
+  }
+
+  @Test
+  def createShouldAcceptAttachmentsUnderTheSizeLimit(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val blobId = uploadBlob(Array.fill[Byte](1_000_000)('a'.toByte))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(emailSetCreateThenCount(mailboxId, Map("aaaaaa" -> creationWithAttachments(mailboxId, Seq.fill(5)(blobId)))))
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("methodResponses[0][1].created.aaaaaa.id", notNullValue())
+      .body("methodResponses[0][1].notCreated", Matchers.nullValue())
+      .body("methodResponses[1][1].list[0].totalEmails", equalTo(1))
+  }
+
+  @Test
+  def createShouldRejectASingleAttachmentOverTheSizeLimit(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val blobId = uploadBlob(Array.fill[Byte](20_000_001)('a'.toByte))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(emailSetCreateThenCount(mailboxId, Map("aaaaaa" -> creationWithAttachments(mailboxId, Seq(blobId)))))
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("methodResponses[0][1].notCreated.aaaaaa.type", equalTo("tooLarge"))
+      .body("methodResponses[0][1].notCreated.aaaaaa.description",
+        equalTo("Attachments of this email exceed the maximum allowed total size of 20000000 bytes (maxSizeAttachmentsPerEmail)"))
+      .body("methodResponses[1][1].list[0].totalEmails", equalTo(0))
+  }
+
+  @Test
+  def createShouldProcessOtherCreationsWhenOneExceedsTheAttachmentSizeLimit(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val blobId = uploadBlob(Array.fill[Byte](1_000_000)('a'.toByte))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(emailSetCreateThenCount(mailboxId, Map(
+        "aaaaaa" -> creationWithAttachments(mailboxId, Seq(blobId)),
+        "bbbbbb" -> creationWithAttachments(mailboxId, Seq.fill(21)(blobId)))))
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("methodResponses[0][1].created.aaaaaa.id", notNullValue())
+      .body("methodResponses[0][1].notCreated.bbbbbb.type", equalTo("tooLarge"))
+      .body("methodResponses[1][1].list[0].totalEmails", equalTo(1))
+  }
+
+  @Test
+  def createShouldAcceptTheMaximumAttachmentCount(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val blobId = uploadBlob("a".getBytes(StandardCharsets.UTF_8))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(emailSetCreateThenCount(mailboxId, Map("aaaaaa" -> creationWithAttachments(mailboxId, Seq.fill(256)(blobId)))))
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("methodResponses[0][1].created.aaaaaa.id", notNullValue())
+      .body("methodResponses[1][1].list[0].totalEmails", equalTo(1))
+  }
+
+  @Test
+  def createShouldRejectMoreAttachmentsThanTheMaximumCount(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val blobId = uploadBlob("a".getBytes(StandardCharsets.UTF_8))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(emailSetCreateThenCount(mailboxId, Map(
+        "aaaaaa" -> creationWithAttachments(mailboxId, Seq.fill(257)(blobId)),
+        "bbbbbb" -> creationWithAttachments(mailboxId, Seq(blobId)))))
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("methodResponses[0][1].notCreated.aaaaaa.type", equalTo("tooLarge"))
+      .body("methodResponses[0][1].notCreated.aaaaaa.description", equalTo("This email has 257 attachments while the maximum allowed is 256"))
+      .body("methodResponses[0][1].created.bbbbbb.id", notNullValue())
+      .body("methodResponses[1][1].list[0].totalEmails", equalTo(1))
+  }
+
   @Test
   def createShouldSucceedWhenPartPropertiesOmitted(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
