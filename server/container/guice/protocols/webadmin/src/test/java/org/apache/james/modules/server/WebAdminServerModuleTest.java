@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.utils.PropertiesProvider;
+import org.apache.james.webadmin.TlsConfiguration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -141,6 +142,66 @@ class WebAdminServerModuleTest {
             PropertiesConfiguration configuration = new PropertiesConfiguration();
             configuration.addProperty(key, value);
             return configuration;
+        }
+    }
+
+    @Nested
+    class HttpsConfigurationTest {
+        @Test
+        void shouldReturnEmptyWhenHttpsDisabled() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            configuration.addProperty("https.enabled", false);
+
+            assertThat(new WebAdminServerModule().readHttpsConfiguration(configuration))
+                .isEmpty();
+        }
+
+        @Test
+        void shouldReadKeystoreConfiguration() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            configuration.addProperty("https.enabled", true);
+            configuration.addProperty("https.keystore", "conf/keystore.jks");
+            configuration.addProperty("https.password", "secret");
+
+            Optional<TlsConfiguration> tlsConfiguration = new WebAdminServerModule().readHttpsConfiguration(configuration);
+
+            assertThat(tlsConfiguration).isPresent();
+            assertThat(tlsConfiguration.get().isPem()).isFalse();
+            assertThat(tlsConfiguration.get().getKeystoreFilePath()).isEqualTo("conf/keystore.jks");
+            assertThat(tlsConfiguration.get().getKeystorePassword()).isEqualTo("secret");
+        }
+
+        @Test
+        void shouldReadPemConfiguration() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            configuration.addProperty("https.enabled", true);
+            configuration.addProperty("https.certificates", "conf/fullchain.pem");
+            configuration.addProperty("https.privateKey", "conf/privkey.pem");
+            configuration.addProperty("https.password", "keySecret");
+
+            Optional<TlsConfiguration> tlsConfiguration = new WebAdminServerModule().readHttpsConfiguration(configuration);
+
+            assertThat(tlsConfiguration).isPresent();
+            assertThat(tlsConfiguration.get().isPem()).isTrue();
+            assertThat(tlsConfiguration.get().getCertificatesFilePath()).isEqualTo("conf/fullchain.pem");
+            assertThat(tlsConfiguration.get().getPrivateKeyFilePath()).isEqualTo("conf/privkey.pem");
+            assertThat(tlsConfiguration.get().getPrivateKeyPassword()).isEqualTo("keySecret");
+        }
+
+        @Test
+        void shouldReadPemConfigurationWithoutPassword() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            configuration.addProperty("https.enabled", true);
+            configuration.addProperty("https.certificates", "conf/fullchain.pem");
+            configuration.addProperty("https.privateKey", "conf/privkey.pem");
+
+            Optional<TlsConfiguration> tlsConfiguration = new WebAdminServerModule().readHttpsConfiguration(configuration);
+
+            assertThat(tlsConfiguration).isPresent();
+            assertThat(tlsConfiguration.get().isPem()).isTrue();
+            assertThat(tlsConfiguration.get().getCertificatesFilePath()).isEqualTo("conf/fullchain.pem");
+            assertThat(tlsConfiguration.get().getPrivateKeyFilePath()).isEqualTo("conf/privkey.pem");
+            assertThat(tlsConfiguration.get().getPrivateKeyPassword()).isNull();
         }
     }
 }

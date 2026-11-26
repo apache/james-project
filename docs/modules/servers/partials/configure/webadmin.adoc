@@ -122,11 +122,17 @@ routes - query parameters included - it is allowed to call.
 | https.enable
 | Use https (default: false)
 
+| https.certificates
+| Specify the path to the PEM certificates file (e.g. Let's Encrypt fullchain.pem). Optional alternative to `https.keystore`.
+
+| https.privateKey
+| Specify the path to the PEM private key file (e.g. Let's Encrypt privkey.pem). Required when `https.certificates` is used.
+
 | https.keystore
 | Specify a keystore file for https (default: null)
 
 | https.password
-| Specify the keystore password (default: null)
+| Specify the keystore password or private key password (default: null)
 
 | https.trust.keystore
 | Specify a truststore file for https (default: null)

@@ -28,8 +28,13 @@ import static org.eclipse.jetty.http.HttpStatus.NOT_FOUND_404;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
 import jakarta.annotation.PreDestroy;
@@ -56,6 +61,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import nl.altindag.ssl.pem.util.PemUtils;
+import nl.altindag.ssl.util.KeyStoreUtils;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import spark.Service;
@@ -94,8 +101,25 @@ public class WebAdminServer implements Startable {
 
         EmbeddedServers.add(
             Identifiers.JAMES_JETTY,
-            new EmbeddedJettyFactory());
+            createEmbeddedJettyFactory());
         this.service = Service.ignite();
+    }
+
+    private EmbeddedJettyFactory createEmbeddedJettyFactory() {
+        EmbeddedJettyFactory factory = new EmbeddedJettyFactory();
+        if (configuration.isTlsEnabled() && configuration.getTlsConfiguration().isPem()) {
+            factory.withKeyStore(loadPemKeyStore(configuration.getTlsConfiguration()));
+        }
+        return factory;
+    }
+
+    private KeyStore loadPemKeyStore(TlsConfiguration tlsConfiguration) {
+        char[] password = Optional.ofNullable(tlsConfiguration.getPrivateKeyPassword())
+            .map(String::toCharArray)
+            .orElse(null);
+        List<X509Certificate> certificates = PemUtils.loadCertificate(Path.of(tlsConfiguration.getCertificatesFilePath()));
+        PrivateKey privateKey = PemUtils.loadPrivateKey(Path.of(tlsConfiguration.getPrivateKeyFilePath()), password);
+        return KeyStoreUtils.createIdentityStore(privateKey, Optional.ofNullable(password).orElse(new char[0]), certificates);
     }
 
     private static List<Routes> privateRoutes(List<Routes> routes) {
@@ -169,10 +193,19 @@ public class WebAdminServer implements Startable {
     private void configureHTTPS() {
         if (configuration.isTlsEnabled()) {
             TlsConfiguration tlsConfiguration = configuration.getTlsConfiguration();
-            service.secure(tlsConfiguration.getKeystoreFilePath(),
-                tlsConfiguration.getKeystorePassword(),
-                tlsConfiguration.getTruststoreFilePath(),
-                tlsConfiguration.getTruststorePassword());
+            if (tlsConfiguration.isPem()) {
+                // Spark requires non-null keystoreFile and keystorePassword to activate SSL internally.
+                // The actual TLS material is loaded directly from the in-memory KeyStore configured on EmbeddedJettyFactory.
+                service.secure(tlsConfiguration.getCertificatesFilePath(),
+                    Optional.ofNullable(tlsConfiguration.getPrivateKeyPassword()).orElse(""),
+                    tlsConfiguration.getTruststoreFilePath(),
+                    tlsConfiguration.getTruststorePassword());
+            } else {
+                service.secure(tlsConfiguration.getKeystoreFilePath(),
+                    tlsConfiguration.getKeystorePassword(),
+                    tlsConfiguration.getTruststoreFilePath(),
+                    tlsConfiguration.getTruststorePassword());
+            }
             LOGGER.info("Web admin set up to use HTTPS");
         }
     }

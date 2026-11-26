@@ -264,14 +264,28 @@ public class WebAdminServerModule extends AbstractModule {
             .orElseGet(jmapTokenVerifier::get);
     }
 
-    private Optional<TlsConfiguration> readHttpsConfiguration(Configuration configurationFile) {
+    @VisibleForTesting
+    Optional<TlsConfiguration> readHttpsConfiguration(Configuration configurationFile) {
         boolean enabled = configurationFile.getBoolean("https.enabled", DEFAULT_HTTPS_DISABLED);
         if (enabled) {
+            String certificates = configurationFile.getString("https.certificates", null);
+            String privateKey = configurationFile.getString("https.privateKey", null);
+            String trustKeystore = configurationFile.getString("https.trust.keystore", DEFAULT_NO_TRUST_KEYSTORE);
+            String trustPassword = configurationFile.getString("https.trust.password", DEFAULT_NO_TRUST_PASSWORD);
+            if (certificates != null && privateKey != null) {
+                return Optional.of(TlsConfiguration.builder()
+                    .pem(certificates,
+                        privateKey,
+                        configurationFile.getString("https.password", DEFAULT_NO_PASSWORD),
+                        trustKeystore,
+                        trustPassword)
+                    .build());
+            }
             return Optional.of(TlsConfiguration.builder()
                 .raw(configurationFile.getString("https.keystore", DEFAULT_NO_KEYSTORE),
                     configurationFile.getString("https.password", DEFAULT_NO_PASSWORD),
-                    configurationFile.getString("https.trust.keystore", DEFAULT_NO_TRUST_KEYSTORE),
-                    configurationFile.getString("https.trust.password", DEFAULT_NO_TRUST_PASSWORD))
+                    trustKeystore,
+                    trustPassword)
                 .build());
         }
         return Optional.empty();
