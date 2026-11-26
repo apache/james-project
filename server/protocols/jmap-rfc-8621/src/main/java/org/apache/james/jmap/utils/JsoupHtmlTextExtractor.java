@@ -22,6 +22,7 @@ package org.apache.james.jmap.utils;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,14 +33,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.core.JmapRfc8621Configuration;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.streams.Iterators;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.parser.Parser;
+import org.jsoup.parser.StreamParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
 public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
@@ -69,6 +72,9 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
     public static final String IMG_TAG = "img";
     public static final String ALT_TAG = "alt";
     public static final int INITIAL_LIST_NESTED_LEVEL = 0;
+    // The formatting elements of the HTML parsing algorithm: the only ones a parser recreates by itself
+    private static final Set<String> FORMATTING_TAGS = Set.of("a", "b", "big", "code", "em", "font", "i", "nobr",
+        "s", "small", "strike", "strong", "tt", "u");
 
     private final JmapRfc8621Configuration configuration;
 
@@ -84,7 +90,7 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
     @Override
     public String toPlainText(String html) {
         try {
-            Document document = Jsoup.parse(html);
+            Document document = parse(html);
 
             Element body = Optional.ofNullable(document.body()).orElse(document);
 
@@ -97,6 +103,23 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
             LOGGER.warn("Failed extracting text from html", e);
             return html;
         }
+    }
+
+    /**
+     * Parses the HTML while unwrapping the formatting elements as soon as they are closed.
+     *
+     * <p>The HTML parsing algorithm recreates the formatting elements still active each time text follows a
+     * closed paragraph, with all their attributes. A small input repeating such paragraphs hence builds a DOM
+     * thousands of times larger than itself. The conversion to text ignores formatting elements: unwrapping
+     * them leaves the text unchanged, and keeps the DOM proportional to the input.</p>
+     */
+    @VisibleForTesting
+    static Document parse(String html) {
+        StreamParser streamParser = new StreamParser(Parser.htmlParser()).parse(html, "");
+        streamParser.stream()
+            .filter(element -> FORMATTING_TAGS.contains(element.normalName()))
+            .forEach(Element::unwrap);
+        return streamParser.document();
     }
 
     private String convertNodeToText(HTMLNode htmlNode) {

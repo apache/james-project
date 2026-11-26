@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.mailbox.extractor.ParsedContent;
@@ -122,5 +123,37 @@ class JsoupTextExtractorTest {
 
     private InputStream textContentWithManyNullCharacters() {
         return new ByteArrayInputStream(FULL_CONTENT.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void parseHtmlShouldNotAmplifyFormattingElementReconstruction() {
+        int repetitions = 10_000;
+
+        // Without unwrapping, every repetition recreates the 12 formatting elements: 120,000+ elements
+        assertThat(JsoupTextExtractor.parseHtml(new StringReader(formattingReconstructionHtml(repetitions))).getAllElements())
+            .hasSizeLessThan(repetitions + 10);
+    }
+
+    @Test
+    void extractContentShouldKeepTheTextOfFormattingElements() throws Exception {
+        InputStream inputStream = new ByteArrayInputStream("<p>a <b>bold</b><i>italic</i> <a href=\"x\">link</a></p><p>next</p>".getBytes(StandardCharsets.UTF_8));
+
+        assertThat(textExtractor.extractContent(inputStream, TEXT_HTML_CONTENT_TYPE).getTextualContent())
+            .contains("a bolditalic link next");
+    }
+
+    private static String formattingReconstructionHtml(int repetitions) {
+        StringBuilder html = new StringBuilder("<p>");
+        for (String tag : new String[]{"b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u"}) {
+            html.append('<').append(tag);
+            for (int i = 0; i < 512; i++) {
+                html.append(" a").append(tag).append('_').append(i).append("=1");
+            }
+            html.append('>');
+        }
+        for (int i = 0; i < repetitions; i++) {
+            html.append("<p>x");
+        }
+        return html.toString();
     }
 }
