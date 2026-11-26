@@ -933,13 +933,47 @@ class ImapRequestFrameDecoderTest {
     }
 
     @Test
-    void aMetadataValueAboveTheStringLiteralLimitShouldBeDecoded() {
+    void aMetadataValueAboveTheStringLiteralLimitShouldBeRejectedAndDiscarded() {
         List<byte[]> chunks = List.of(
             ("a SETMETADATA INBOX (/private/comment {9000+}\r\n" + "x".repeat(9000) + ")\r\nb NOOP\r\n").getBytes(StandardCharsets.US_ASCII));
 
         assertThat(decode(true, 1024 * 1024, 0, 3008, chunks))
             .hasSize(2)
+            .satisfies(messages -> assertThat(messages.get(0)).contains("BAD"))
+            .satisfies(messages -> assertThat(messages.get(1)).contains("tag=b, command=NOOP"));
+    }
+
+    @Test
+    void aMetadataValueWithinTheStringLiteralLimitShouldBeDecoded() {
+        List<byte[]> chunks = List.of(
+            ("a SETMETADATA INBOX (/private/comment {8192+}\r\n" + "x".repeat(8192) + ")\r\nb NOOP\r\n").getBytes(StandardCharsets.US_ASCII));
+
+        assertThat(decode(true, 1024 * 1024, 0, 3008, chunks))
+            .hasSize(2)
             .satisfies(messages -> assertThat(messages.get(0)).doesNotContain("BAD"))
             .satisfies(messages -> assertThat(messages.get(1)).contains("tag=b, command=NOOP"));
+    }
+
+    @Test
+    void aSynchronizingMetadataValueAboveTheLimitShouldBeRejectedBeforeTheContinuationRequest() {
+        EmbeddedChannel channel = new EmbeddedChannel();
+        FakeImapSession session = new FakeImapSession() {
+            @Override
+            public boolean needsCommandInjectionDetection() {
+                return false;
+            }
+        };
+        session.authenticated();
+        channel.attr(NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY).set(session);
+        channel.attr(NettyConstants.FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY).set(new ConcurrentHashMap<>());
+        channel.pipeline().addLast(NettyConstants.FRAMER, new SwitchableLineBasedFrameDecoder(channel.pipeline(), 3008, false));
+        channel.pipeline().addLast("decoder", new ImapRequestFrameDecoder(new DefaultImapDecoderFactory().buildImapDecoder(),
+            1024, 0, 3008));
+
+        channel.writeInbound(Unpooled.wrappedBuffer("a SETMETADATA INBOX (/private/comment {20000000}\r\n".getBytes(StandardCharsets.US_ASCII)));
+
+        assertThat((Object) channel.readOutbound()).isNull();
+        assertThat(channel.readInbound().toString()).contains("BAD");
+        channel.finishAndReleaseAll();
     }
 }
