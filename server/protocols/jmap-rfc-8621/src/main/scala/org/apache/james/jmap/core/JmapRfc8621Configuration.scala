@@ -28,7 +28,7 @@ import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.core.JmapRfc8621Configuration.{JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT, JMAP_MAX_OBJECT_IN_GET, JMAP_MAX_OBJECT_IN_SET, JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT, MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT, UPLOAD_LIMIT_DEFAULT}
+import org.apache.james.jmap.core.JmapRfc8621Configuration.{JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT, JMAP_MAX_OBJECT_IN_GET, JMAP_MAX_OBJECT_IN_SET, JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT, MAX_ATTACHMENTS_PER_MAIL_DEFAULT, MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT, UPLOAD_LIMIT_DEFAULT}
 import org.apache.james.jmap.pushsubscription.{PushClientConfiguration, VapidConfiguration}
 import org.apache.james.rrt.api.RecipientValidator
 import org.apache.james.util.{DurationParser, Size}
@@ -41,6 +41,7 @@ import scala.jdk.OptionConverters._
 object JmapConfigProperties {
   val UPLOAD_LIMIT_PROPERTY: String = "upload.max.size"
   val MAX_SIZE_ATTACHMENTS_PER_MAIL_PROPERTY: String = "max.size.attachments.per.mail"
+  val MAX_ATTACHMENTS_PER_MAIL_PROPERTY: String = "max.attachments.per.mail"
   val URL_PREFIX_PROPERTY: String = "url.prefix"
   val WEBSOCKET_URL_PREFIX_PROPERTY: String = "websocket.url.prefix"
   val WEBSOCKET_PING_INTERVAL_PROPERTY: String = "websocket.ping.interval"
@@ -69,6 +70,7 @@ object JmapRfc8621Configuration {
   val WEBSOCKET_URL_PREFIX_DEFAULT: String = "ws://localhost"
   val UPLOAD_LIMIT_DEFAULT: MaxSizeUpload = MaxSizeUpload.of(Size.of(30L, Size.Unit.M)).get
   val MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT: MaxSizeAttachmentsPerEmail = MaxSizeAttachmentsPerEmail.of(Size.of(20_000_000L, Size.Unit.B)).get
+  val MAX_ATTACHMENTS_PER_MAIL_DEFAULT: Int = 256
   val JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT: JmapUploadQuotaLimit = JmapUploadQuotaLimit.of(Size.of(200L, Size.Unit.M)).get
   val JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT: JmapEmailGetFullMaxSize = JmapEmailGetFullMaxSize(UnsignedInt.liftOrThrow(5))
   val JMAP_MAX_OBJECT_IN_GET: MaxObjectsInGet = MaxObjectsInGet(UnsignedInt.liftOrThrow(500))
@@ -99,6 +101,13 @@ object JmapRfc8621Configuration {
         .map(Size.parse)
         .map(MaxSizeAttachmentsPerEmail.of(_).get)
         .getOrElse(MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT),
+      maxAttachmentsPerEmail = Option(configuration.getInteger(MAX_ATTACHMENTS_PER_MAIL_PROPERTY, null))
+        .map(Integer2int)
+        .map(value => {
+          Preconditions.checkArgument(value > 0, s"`$MAX_ATTACHMENTS_PER_MAIL_PROPERTY` must be positive".asInstanceOf[Object])
+          value
+        })
+        .getOrElse(MAX_ATTACHMENTS_PER_MAIL_DEFAULT),
       jmapUploadQuotaLimit = Option(configuration.getString(JMAP_UPLOAD_QUOTA_LIMIT_PROPERTY, null))
         .map(Size.parse)
         .map(JmapUploadQuotaLimit.of(_).get)
@@ -140,6 +149,7 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
                                     supportsDelaySends: Boolean = false,
                                     maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_DEFAULT,
                                     maxSizeAttachmentsPerEmail: MaxSizeAttachmentsPerEmail = MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT,
+                                    maxAttachmentsPerEmail: Int = MAX_ATTACHMENTS_PER_MAIL_DEFAULT,
                                     jmapUploadQuotaLimit: JmapUploadQuotaLimit = JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT,
                                     jmapEmailGetFullMaxSize: JmapEmailGetFullMaxSize = JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT,
                                     maxObjectsInGet: MaxObjectsInGet = JMAP_MAX_OBJECT_IN_GET,
