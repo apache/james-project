@@ -625,7 +625,7 @@
         <apache-mime4j.version>0.8.15</apache-mime4j.version>
         <apache.openjpa.version>4.1.1</apache.openjpa.version>
         <!-- Align with EE10 Persistence 3.1 & Transactions 2.0: https://openjpa.apache.org/ -->
-        <h2.version>2.3.232</h2.version>
+        <h2.version>2.5.252</h2.version>
         <log4j2.version>2.26.1</log4j2.version>
 
         <!-- Align with Jakarta EE 10
