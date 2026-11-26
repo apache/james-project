@@ -681,7 +681,7 @@
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>7.0.0</guice.version>
         <logback.version>1.6.8</logback.version>
-        <tink.version>1.17.0</tink.version>
+        <tink.version>1.23.0</tink.version>
         <zstd-jni.version>1.5.7-25</zstd-jni.version>
         <lettuce.core.version>6.8.2.RELEASE</lettuce.core.version>
         <io.micrometer.core.version>1.18.0</io.micrometer.core.version>
