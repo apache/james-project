@@ -129,12 +129,15 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
         }
         int readerIndex = buffer.readerIndex();
         int readableBytes = buffer.readableBytes();
-        Object frame = decodeLine(ctx, buffer);
-        if (buffer.readerIndex() != readerIndex) {
-            scannedWithoutLineEnd = 0;
+        try {
+            return decodeLine(ctx, buffer);
+        } finally {
+            // Also when framing fails after consuming some bytes: the positions shall follow the reader index
+            if (buffer.readerIndex() != readerIndex) {
+                scannedWithoutLineEnd = 0;
+            }
+            parts.consumed(buffer, readableBytes - buffer.readableBytes());
         }
-        parts.consumed(buffer, readableBytes - buffer.readableBytes());
-        return frame;
     }
 
     /**
@@ -288,7 +291,9 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
             if (bytes > 0 && position < splitUpTo) {
                 byte previous = buffer.getByte(buffer.readerIndex() - 1);
                 if (previous != '\n' && previous != '\r') {
-                    // Not consumed up to a CR or a LF: what was split is not relevant anymore
+                    // Not consumed up to a CR or a LF, eg by a decodeLine override failing after reading part of a
+                    // line (the framers in use consume whole lines, or the whole buffer): the part split around the
+                    // reader index is not the one the checks now see, split again
                     reset();
                 }
             }

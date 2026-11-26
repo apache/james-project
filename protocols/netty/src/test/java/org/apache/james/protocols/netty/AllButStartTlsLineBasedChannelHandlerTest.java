@@ -43,6 +43,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.buffer.UnpooledHeapByteBuf;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.AttributeKey;
@@ -258,6 +259,32 @@ class AllButStartTlsLineBasedChannelHandlerTest {
         assertThatThrownBy(() -> channel.writeInbound(line("RSET\r\nQUIT\r\n")))
             .matches(AllButStartTlsLineBasedChannelHandlerTest::isCommandInjection);
         assertThat(frames()).containsExactly("NOOP\r\n", "RSET\r\n", "STARTTLS\r\n");
+    }
+
+    @Test
+    void startTlsFollowingAFramingFailureShouldBeRejected() {
+        EmbeddedChannel failingChannel = new EmbeddedChannel();
+        failingChannel.pipeline().addLast(HandlerConstants.FRAMER, new AllButStartTlsLineBasedChannelHandler(failingChannel.pipeline(), 1024, false, "starttls") {
+            private boolean failed = false;
+
+            @Override
+            protected Object decodeLine(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+                if (!failed) {
+                    failed = true;
+                    // Fails after reading part of the line
+                    buffer.readRetainedSlice(3).release();
+                    throw new IllegalStateException("Framing failure");
+                }
+                return super.decodeLine(ctx, buffer);
+            }
+        });
+        failingChannel.pipeline().addLast(HandlerConstants.CORE_HANDLER, new ChannelInboundHandlerAdapter());
+        assertThatThrownBy(() -> failingChannel.writeInbound(line("ABCDEF\r\nXY")))
+            .matches(e -> e instanceof IllegalStateException || e.getCause() instanceof IllegalStateException);
+
+        assertThatThrownBy(() -> failingChannel.writeInbound(line("\r\nSTARTTLS\r\n")))
+            .matches(AllButStartTlsLineBasedChannelHandlerTest::isCommandInjection);
+        assertThat(failingChannel.inboundMessages()).isEmpty();
     }
 
     @Test
