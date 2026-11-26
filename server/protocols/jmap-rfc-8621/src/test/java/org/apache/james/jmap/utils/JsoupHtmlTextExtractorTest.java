@@ -284,4 +284,34 @@ public class JsoupHtmlTextExtractorTest {
         assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
     }
 
+
+    @Test
+    public void parseShouldNotAmplifyFormattingElementReconstruction() {
+        int repetitions = 10_000;
+
+        // Without unwrapping, every repetition recreates the 12 formatting elements: 120,000+ elements
+        assertThat(JsoupHtmlTextExtractor.parse(formattingReconstructionHtml(repetitions)).getAllElements())
+            .hasSizeLessThan(repetitions + 10);
+    }
+
+    @Test
+    public void toPlainTextShouldKeepTheTextOfFormattingElements() {
+        assertThat(textExtractor.toPlainText("<p>a <b>bold</b><i>italic</i> <a href=\"x\">link</a></p>"))
+            .isEqualTo("a bolditalic link\n\n");
+    }
+
+    private static String formattingReconstructionHtml(int repetitions) {
+        StringBuilder html = new StringBuilder("<p>");
+        for (String tag : new String[]{"b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u"}) {
+            html.append('<').append(tag);
+            for (int i = 0; i < 512; i++) {
+                html.append(" a").append(tag).append('_').append(i).append("=1");
+            }
+            html.append('>');
+        }
+        for (int i = 0; i < repetitions; i++) {
+            html.append("<p>x");
+        }
+        return html.toString();
+    }
 }
