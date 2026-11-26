@@ -197,4 +197,15 @@ class SetAnnotationCommandParserTest {
         assertThatThrownBy(() -> parser.decode(lineReader, TAG, null))
             .isInstanceOf(DecodingException.class);
     }
+
+    @Test
+    void decodeMessageShouldRefuseALiteralValueAboveTheStringLiteralLimitBeforeTheContinuationRequest() {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment {20000000}\n").getBytes());
+        ByteArrayOutputStream continuation = new ByteArrayOutputStream();
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, continuation);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, null))
+            .isInstanceOf(DecodingException.class);
+        assertThat(continuation.toByteArray()).isEmpty();
+    }
 }

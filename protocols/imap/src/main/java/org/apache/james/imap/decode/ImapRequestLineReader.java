@@ -506,14 +506,6 @@ public abstract class ImapRequestLineReader {
         return nstring(MAX_STRING_LITERAL_SIZE);
     }
 
-    /**
-     * Reads an argument of type "nstring" from the request, without the size limit of the string literals: the
-     * caller bounds the value.
-     */
-    public String nstringOfAnySize() throws DecodingException {
-        return nstring(Integer.MAX_VALUE);
-    }
-
     private String nstring(int maxLiteralSize) throws DecodingException {
         char next = nextWordChar();
         switch (next) {
