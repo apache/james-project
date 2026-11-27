@@ -986,6 +986,26 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void sentDateCriteriaShouldIgnoreAMessageWithAnOversizedDateNumber() throws Exception {
+        ComposedMessageId oversized = inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                "From: a@example.com\r\n"
+                    + "Date: 888888888888 Jan 2026 10:00:00 +0000\r\n"
+                    + "Subject: x\r\n\r\nbody\r\n"),
+            session).getId();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
+
+        // Date : 2015/06/01 00:00:00.000 ( Paris time zone )
+        SearchQuery searchQuery = SearchQuery.builder()
+            .andCriteria(SearchQuery.sentDateBefore(new Date(1433109600000L), DateResolution.Day))
+            .build();
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
+            .containsOnly(m5.getUid())
+            .doesNotContain(oversized.getUid());
+    }
+
+    @Test
     void sentDateOnShouldReturnMessagesOfTheGivenDate() throws Exception {
         // Date : 2015/06/02 08:00:00.000 ( Paris time zone )
         SearchQuery searchQuery = SearchQuery.builder()
