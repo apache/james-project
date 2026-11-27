@@ -28,7 +28,10 @@ import org.apache.james.blob.api.ChunkMarker;
 
 import com.google.common.base.Preconditions;
 
-/** Allocates chunk blob ids recognized by {@link ChunkMarker}. */
+/**
+ * Allocates chunk blob ids recognized by {@link ChunkMarker}, short enough for any slot address built on them to fit
+ * {@link SlotAddress#MAX_LENGTH}.
+ */
 final class ChunkIds {
     private static final String CHUNK_MARKER = "chunk";
     // Family and generation as written by the generation aware blob id factories, with "_" or "/" as separator.
@@ -42,9 +45,24 @@ final class ChunkIds {
         Matcher matcher = FAMILY_AND_GENERATION.matcher(sameGeneration.asString());
         Preconditions.checkArgument(matcher.lookingAt(), "%s carries no family and generation", sameGeneration.asString());
 
+        String familyAndGeneration = matcher.group();
         String identifier = UUID.randomUUID().toString().replace("-", "");
-        BlobId chunk = blobIdFactory.parse(matcher.group() + CHUNK_MARKER + matcher.group("separator") + identifier);
-        Preconditions.checkState(ChunkMarker.isChunkId(chunk), "%s is not recognized as a chunk", chunk.asString());
+        BlobId chunk = parse(familyAndGeneration + CHUNK_MARKER + matcher.group("separator") + identifier, blobIdFactory, sameGeneration);
+        // The factory may rewrite or drop a family or generation it cannot represent as written, e.g. leading zeros
+        // or integer overflow: the chunk would then land elsewhere.
+        boolean keptFamilyAndGeneration = chunk.asString().startsWith(familyAndGeneration) && ChunkMarker.isChunkId(chunk);
+        Preconditions.checkArgument(keptFamilyAndGeneration, "Cannot allocate a chunk in the family and generation of %s",
+            sameGeneration.asString());
+        Preconditions.checkArgument(chunk.asString().length() + SlotAddress.MAX_LOCATION_LENGTH <= SlotAddress.MAX_LENGTH,
+            "Family and generation of %s leave no room for slot addresses", sameGeneration.asString());
         return chunk;
+    }
+
+    private static BlobId parse(String chunk, BlobId.Factory blobIdFactory, BlobId sameGeneration) {
+        try {
+            return blobIdFactory.parse(chunk);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Cannot allocate a chunk in the family and generation of " + sameGeneration.asString(), e);
+        }
     }
 }

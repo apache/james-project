@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +44,7 @@ class ChunkFormatTest {
         .withContentEncoding(ContentEncoding.ZSTD)
         .withMetadata(new BlobMetadataName("content-original-size"), new BlobMetadataValue("12"));
     private static final BytesBlob FIRST = BytesBlob.of("first payload".getBytes(StandardCharsets.UTF_8), METADATA);
+    private static final char UNPAIRED_HIGH_SURROGATE = (char) 0xD800;
     private static final BytesBlob EMPTY = BytesBlob.of(new byte[0]);
     private static final BytesBlob THIRD = BytesBlob.of("third".getBytes(StandardCharsets.UTF_8),
         BlobMetadata.empty().withMetadata(new BlobMetadataName("note"), new BlobMetadataValue("é ü")));
@@ -78,7 +80,6 @@ class ChunkFormatTest {
     void emptyChunkShouldHaveAnEmptyFooter() {
         byte[] chunk = new ChunkWriter().finish();
 
-        ChunkParser.checkHeader(Arrays.copyOf(chunk, ChunkFormat.HEADER_SIZE));
         assertThat(readFooter(chunk).slots()).isEmpty();
     }
 
@@ -90,6 +91,37 @@ class ChunkFormatTest {
         byte[] chunk = writer.finish();
 
         assertThat(ChunkParser.parseSlot(ChunkParser.sliceSlot(chunk, location), location).metadata()).isEqualTo(METADATA);
+    }
+
+    @Test
+    void chunkLengthShouldFollowTheFormat() {
+        ChunkWriter writer = new ChunkWriter();
+        long slotsLength = writer.addSlot(FIRST).length() + writer.addSlot(THIRD).length();
+
+        assertThat((long) writer.finish().length).isEqualTo(ChunkFormat.HEADER_SIZE + slotsLength
+            + ChunkFormat.FOOTER_PREFIX_SIZE + 2 * ChunkFormat.FOOTER_ENTRY_SIZE + ChunkFormat.TRAILER_SIZE);
+    }
+
+    @Test
+    void slotBytesShouldNotDependOnTheirPosition() {
+        assertThat(Slot.of(THIRD).bytes).isEqualTo(Slot.at(THIRD, FIRST, EMPTY).bytes);
+    }
+
+    @Test
+    void parsedSlotsShouldEncodeBackToTheSameBytes() {
+        Slot slot = Slot.of(THIRD);
+
+        assertThat(Slot.of(slot.parse()).bytes).isEqualTo(slot.bytes);
+    }
+
+    @Test
+    void writerShouldRejectUnpairedSurrogates() {
+        ChunkWriter writer = new ChunkWriter();
+        BytesBlob unpairedSurrogate = BytesBlob.of(new byte[0],
+            BlobMetadata.empty().withMetadata(new BlobMetadataName("note"), new BlobMetadataValue(String.valueOf(UNPAIRED_HIGH_SURROGATE))));
+
+        assertThatThrownBy(() -> writer.addSlot(unpairedSurrogate)).isInstanceOf(IllegalArgumentException.class);
+        assertThat(writer.addSlot(FIRST).offset()).isEqualTo(ChunkFormat.HEADER_SIZE);
     }
 
     @Test
@@ -176,6 +208,28 @@ class ChunkFormatTest {
     }
 
     @Test
+    void uppercaseMetadataNameShouldBeRejected() {
+        byte[] slot = slotWithMetadata(metadata -> {
+            metadata.writeShort(1);
+            writeField(metadata, "Content-Encoding".getBytes(StandardCharsets.US_ASCII));
+            writeField(metadata, "zstd".getBytes(StandardCharsets.UTF_8));
+        });
+
+        assertThatThrownBy(() -> parse(slot)).isInstanceOf(ChunkFormatException.class).hasMessageContaining("lowercase");
+    }
+
+    @Test
+    void storedTotalObjectSizeShouldBeRejected() {
+        byte[] slot = slotWithMetadata(metadata -> {
+            metadata.writeShort(1);
+            writeField(metadata, "total-object-size".getBytes(StandardCharsets.US_ASCII));
+            writeField(metadata, "3".getBytes(StandardCharsets.UTF_8));
+        });
+
+        assertThatThrownBy(() -> parse(slot)).isInstanceOf(ChunkFormatException.class).hasMessageContaining("cannot be stored");
+    }
+
+    @Test
     void duplicatedMetadataShouldBeRejected() {
         byte[] slot = slotWithMetadata(metadata -> {
             metadata.writeShort(2);
@@ -208,10 +262,11 @@ class ChunkFormatTest {
 
     @Test
     void invalidHeaderShouldBeRejected() {
-        assertThatThrownBy(() -> ChunkParser.checkHeader("JCHK\u0002".getBytes(StandardCharsets.US_ASCII)))
-            .isInstanceOf(ChunkFormatException.class);
-        assertThatThrownBy(() -> ChunkParser.checkHeader(new byte[2]))
-            .isInstanceOf(ChunkFormatException.class);
+        byte[] header = Arrays.copyOf(new ChunkWriter().finish(), ChunkFormat.HEADER_SIZE);
+        header[ChunkFormat.MAGIC.length] = 2;
+
+        assertThatThrownBy(() -> ChunkParser.parseHeader(header)).isInstanceOf(ChunkFormatException.class);
+        assertThatThrownBy(() -> ChunkParser.parseHeader(new byte[2])).isInstanceOf(ChunkFormatException.class);
     }
 
     @Test
@@ -233,10 +288,11 @@ class ChunkFormatTest {
     @Test
     void trailerShouldRejectAFooterOffsetOverlappingTheHeader() {
         byte[] trailer = ByteBuffer.allocate(ChunkFormat.TRAILER_SIZE)
-            .putLong(0).putInt(4).putInt(0).put(ChunkFormat.MAGIC).put(ChunkFormat.VERSION)
+            .putLong(0).putInt(ChunkFormat.FOOTER_PREFIX_SIZE).putInt(0).put(ChunkFormat.MAGIC).put(ChunkFormat.VERSION)
             .array();
 
-        assertThatThrownBy(() -> ChunkParser.parseTrailer(trailer, 4 + ChunkFormat.TRAILER_SIZE)).isInstanceOf(ChunkFormatException.class);
+        assertThatThrownBy(() -> ChunkParser.parseTrailer(trailer, ChunkFormat.FOOTER_PREFIX_SIZE + ChunkFormat.TRAILER_SIZE))
+            .isInstanceOf(ChunkFormatException.class);
     }
 
     @Test
@@ -246,44 +302,71 @@ class ChunkFormatTest {
         byte[] footer = footer(chunk, trailer);
         footer[footer.length - 1] ^= 1;
 
-        assertThatThrownBy(() -> ChunkParser.parseFooter(footer, trailer)).isInstanceOf(ChunkFormatException.class);
+        assertThatThrownBy(() -> ChunkParser.parseFooter(footer, trailer, header(chunk))).isInstanceOf(ChunkFormatException.class);
+    }
+
+    @Test
+    void footerOfAnotherChunkShouldBeRejected() {
+        byte[] chunk = chunkWithSlots();
+        byte[] otherChunk = chunkWithSlots();
+        ChunkTrailer trailer = ChunkParser.parseTrailer(trailer(otherChunk), otherChunk.length);
+
+        assertThatThrownBy(() -> ChunkParser.parseFooter(footer(otherChunk, trailer), trailer, header(chunk)))
+            .isInstanceOf(ChunkFormatException.class)
+            .hasMessageContaining("another chunk");
     }
 
     @Test
     void footerShouldRejectNonContiguousSlots() {
-        byte[] footer = ByteBuffer.allocate(Integer.BYTES + 2 * 2 * Long.BYTES)
+        byte[] footer = ByteBuffer.allocate(ChunkFormat.FOOTER_PREFIX_SIZE + 2 * ChunkFormat.FOOTER_ENTRY_SIZE)
+            .putLong(IDENTITY.identity())
             .putInt(2)
             .putLong(ChunkFormat.HEADER_SIZE).putLong(20)
             .putLong(ChunkFormat.HEADER_SIZE + 21).putLong(20)
             .array();
 
-        assertThatThrownBy(() -> ChunkParser.parseFooter(footer, trailerFor(footer, ChunkFormat.HEADER_SIZE + 41)))
+        assertThatThrownBy(() -> ChunkParser.parseFooter(footer, trailerFor(footer, ChunkFormat.HEADER_SIZE + 41), IDENTITY))
             .isInstanceOf(ChunkFormatException.class)
             .hasMessageContaining("does not follow");
     }
 
     @Test
     void footerShouldRejectSlotsNotEndingAtTheFooter() {
-        byte[] footer = ByteBuffer.allocate(Integer.BYTES + 2 * Long.BYTES)
+        byte[] footer = ByteBuffer.allocate(ChunkFormat.FOOTER_PREFIX_SIZE + ChunkFormat.FOOTER_ENTRY_SIZE)
+            .putLong(IDENTITY.identity())
             .putInt(1)
             .putLong(ChunkFormat.HEADER_SIZE).putLong(20)
             .array();
 
-        assertThatThrownBy(() -> ChunkParser.parseFooter(footer, trailerFor(footer, ChunkFormat.HEADER_SIZE + 30)))
+        assertThatThrownBy(() -> ChunkParser.parseFooter(footer, trailerFor(footer, ChunkFormat.HEADER_SIZE + 30), IDENTITY))
             .isInstanceOf(ChunkFormatException.class);
     }
 
     @Test
     void footerShouldRejectAnOverflowingSlotCount() {
-        byte[] footer = ByteBuffer.allocate(Integer.BYTES).putInt(Integer.MAX_VALUE).array();
+        byte[] footer = ByteBuffer.allocate(ChunkFormat.FOOTER_PREFIX_SIZE).putLong(IDENTITY.identity()).putInt(Integer.MAX_VALUE).array();
 
-        assertThatThrownBy(() -> ChunkParser.parseFooter(footer, trailerFor(footer, ChunkFormat.HEADER_SIZE)))
+        assertThatThrownBy(() -> ChunkParser.parseFooter(footer, trailerFor(footer, ChunkFormat.HEADER_SIZE), IDENTITY))
             .isInstanceOf(ChunkFormatException.class);
     }
 
+    /** Reads the footer as chunk maintenance does: header, trailer, then footer. */
     static ChunkFooter readFooter(byte[] chunk) {
+        if (chunk.length < ChunkFormat.HEADER_SIZE + ChunkFormat.TRAILER_SIZE) {
+            throw new ChunkFormatException("Chunk too short: " + chunk.length);
+        }
+        ChunkHeader header = header(chunk);
         ChunkTrailer trailer = ChunkParser.parseTrailer(trailer(chunk), chunk.length);
-        return ChunkParser.parseFooter(footer(chunk, trailer), trailer);
+        return ChunkParser.parseFooter(footer(chunk, trailer), trailer, header);
+    }
+
+    /** Encodes a blob as a slot, for canonicity checks. */
+    static byte[] encodeSlot(BytesBlob blob) {
+        return Slot.of(blob).bytes;
+    }
+
+    private static ChunkHeader header(byte[] chunk) {
+        return ChunkParser.parseHeader(Arrays.copyOf(chunk, ChunkFormat.HEADER_SIZE));
     }
 
     private static byte[] trailer(byte[] chunk) {
@@ -294,6 +377,8 @@ class ChunkFormatTest {
         int offset = Math.toIntExact(trailer.footerOffset());
         return Arrays.copyOfRange(chunk, offset, offset + trailer.footerLength());
     }
+
+    private static final ChunkHeader IDENTITY = new ChunkHeader(42);
 
     private static ChunkTrailer trailerFor(byte[] footer, long footerOffset) {
         return new ChunkTrailer(footerOffset, footer.length, ChunkFormat.crc32c(footer, 0, footer.length));
@@ -327,6 +412,7 @@ class ChunkFormatTest {
 
     static byte[] withCrc(byte[] content) {
         return ByteBuffer.allocate(content.length + ChunkFormat.CRC_SIZE)
+            .order(ByteOrder.LITTLE_ENDIAN)
             .put(content)
             .putInt(ChunkFormat.crc32c(content, 0, content.length))
             .array();
@@ -334,7 +420,13 @@ class ChunkFormatTest {
 
     private record Slot(byte[] bytes, SlotLocation location) {
         static Slot of(BytesBlob blob) {
+            return at(blob);
+        }
+
+        /** The slot of {@code blob}, written after {@code preceding} slots. */
+        static Slot at(BytesBlob blob, BytesBlob... preceding) {
             ChunkWriter writer = new ChunkWriter();
+            List.of(preceding).forEach(writer::addSlot);
             SlotLocation location = writer.addSlot(blob);
             return new Slot(ChunkParser.sliceSlot(writer.finish(), location), location);
         }

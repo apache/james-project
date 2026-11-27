@@ -25,9 +25,15 @@ import static org.apache.james.blob.compaction.ChunkFormat.MAX_FIELD_LENGTH;
 import static org.apache.james.blob.compaction.ChunkFormat.METADATA_LENGTH_SIZE;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
@@ -40,15 +46,22 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
-/** Builds a chunk in memory. Slots keep the caller payload and metadata unchanged. */
+/**
+ * Builds a chunk in memory. Slots keep the caller payload and metadata unchanged. A rejected slot leaves the chunk
+ * unchanged; once finished, the writer refuses any further call.
+ */
 final class ChunkWriter {
     private final ByteArrayOutputStream output = new ByteArrayOutputStream();
     private final ImmutableList.Builder<SlotLocation> slots = ImmutableList.builder();
+    private final long identity = ThreadLocalRandom.current().nextLong();
     private boolean finished = false;
 
     ChunkWriter() {
-        output.writeBytes(ChunkFormat.MAGIC);
-        output.write(ChunkFormat.VERSION);
+        ByteArrayDataOutput header = ByteStreams.newDataOutput(ChunkFormat.HEADER_SIZE);
+        header.write(ChunkFormat.MAGIC);
+        header.writeByte(ChunkFormat.VERSION);
+        header.writeLong(identity);
+        output.writeBytes(header.toByteArray());
     }
 
     /** Exact number of bytes {@link #addSlot(BytesBlob)} writes for this blob. */
@@ -88,7 +101,7 @@ final class ChunkWriter {
         slot.write(metadata);
         slot.write(payload);
         byte[] content = slot.toByteArray();
-        slot.writeInt(ChunkFormat.crc32c(content, 0, content.length));
+        slot.write(littleEndian(ChunkFormat.crc32c(content, 0, content.length)));
         return slot.toByteArray();
     }
 
@@ -103,9 +116,24 @@ final class ChunkWriter {
         output.writeShort(entries.size());
         entries.forEach(entry -> {
             writeField(output, entry.getKey().name().getBytes(StandardCharsets.US_ASCII));
-            writeField(output, entry.getValue().value().getBytes(StandardCharsets.UTF_8));
+            writeField(output, utf8(entry.getValue().value()));
         });
         return output.toByteArray();
+    }
+
+    /** Unlike {@link String#getBytes}, refuses unpaired surrogates instead of silently replacing them. */
+    private static byte[] utf8(String value) {
+        try {
+            ByteBuffer encoded = StandardCharsets.UTF_8.newEncoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .encode(CharBuffer.wrap(value));
+            byte[] bytes = new byte[encoded.remaining()];
+            encoded.get(bytes);
+            return bytes;
+        } catch (CharacterCodingException e) {
+            throw new IllegalArgumentException("Metadata value is not valid UTF-16", e);
+        }
     }
 
     private static void writeField(ByteArrayDataOutput output, byte[] field) {
@@ -114,8 +142,9 @@ final class ChunkWriter {
         output.write(field);
     }
 
-    private static byte[] encodeFooter(List<SlotLocation> locations) {
-        ByteArrayDataOutput footer = ByteStreams.newDataOutput(ChunkFormat.FOOTER_COUNT_SIZE + locations.size() * ChunkFormat.FOOTER_ENTRY_SIZE);
+    private byte[] encodeFooter(List<SlotLocation> locations) {
+        ByteArrayDataOutput footer = ByteStreams.newDataOutput(ChunkFormat.FOOTER_PREFIX_SIZE + locations.size() * ChunkFormat.FOOTER_ENTRY_SIZE);
+        footer.writeLong(identity);
         footer.writeInt(locations.size());
         locations.forEach(location -> {
             footer.writeLong(location.offset());
@@ -128,9 +157,13 @@ final class ChunkWriter {
         ByteArrayDataOutput output = ByteStreams.newDataOutput(ChunkFormat.TRAILER_SIZE);
         output.writeLong(trailer.footerOffset());
         output.writeInt(trailer.footerLength());
-        output.writeInt(trailer.footerCrc());
+        output.write(littleEndian(trailer.footerCrc()));
         output.write(ChunkFormat.MAGIC);
         output.writeByte(ChunkFormat.VERSION);
         return output.toByteArray();
+    }
+
+    private static byte[] littleEndian(int value) {
+        return ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN).putInt(value).array();
     }
 }

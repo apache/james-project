@@ -31,9 +31,13 @@ import com.google.common.base.Preconditions;
 /**
  * Blob identifier of a slot: {@code <chunk blob id>~<offset>~<length>}.
  *
- * <p>The chunk blob id is opaque here: family and generation remain the concern of the blob id factory.</p>
+ * <p>The chunk blob id is opaque here: family and generation remain the concern of the blob id factory. Addresses are at
+ * most {@link #MAX_LENGTH} characters, so that they fit the mailbox blob id columns (PostgreSQL stores them as
+ * {@code VARCHAR(200)}).</p>
  */
 record SlotAddress(BlobId chunk, SlotLocation location) {
+    static final int MAX_LENGTH = 200;
+    static final int MAX_LOCATION_LENGTH = 2 * (1 + String.valueOf(Long.MAX_VALUE).length());
     private static final char SEPARATOR = '~';
     private static final String CHUNK = "(?<chunk>[^" + SEPARATOR + "]+)";
     // Canonical decimal numbers only, so that parsing then serializing restores the input.
@@ -59,6 +63,7 @@ record SlotAddress(BlobId chunk, SlotLocation location) {
     SlotAddress {
         Preconditions.checkArgument(ChunkMarker.isChunkId(chunk), "%s is not a chunk", chunk.asString());
         Preconditions.checkArgument(chunk.asString().indexOf(SEPARATOR) == -1, "%s is a slot address, not a chunk", chunk.asString());
+        Preconditions.checkArgument(serialize(chunk, location).length() <= MAX_LENGTH, "Slot address exceeds %s characters", MAX_LENGTH);
     }
 
     BlobId asBlobId(BlobId.Factory blobIdFactory) {
@@ -66,6 +71,10 @@ record SlotAddress(BlobId chunk, SlotLocation location) {
     }
 
     private String serialize() {
+        return serialize(chunk, location);
+    }
+
+    private static String serialize(BlobId chunk, SlotLocation location) {
         return chunk.asString() + SEPARATOR + location.offset() + SEPARATOR + location.length();
     }
 }

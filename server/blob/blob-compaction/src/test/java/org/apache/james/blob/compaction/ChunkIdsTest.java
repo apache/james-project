@@ -64,6 +64,34 @@ class ChunkIdsTest {
     }
 
     @Test
+    void shouldRejectAFamilyTheFactoryCannotRepresent() {
+        BlobId overflowingFamily = MINIO.parse("99999999999/1/");
+
+        assertThatThrownBy(() -> ChunkIds.newChunk(overflowingFamily, MINIO)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldRejectANonCanonicalGeneration() {
+        BlobId nonCanonical = PLAIN.of("1/007/abc");
+
+        assertThatThrownBy(() -> ChunkIds.newChunk(nonCanonical, MINIO)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldRejectAGenerationTheFactoryCannotParse() {
+        BlobId overflowingGeneration = PLAIN.of("1_99999999999_abc");
+
+        assertThatThrownBy(() -> ChunkIds.newChunk(overflowingGeneration, GENERATION_AWARE)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldRejectAFamilyLeavingNoRoomForSlotAddresses() {
+        BlobId longFamily = PLAIN.of("1".repeat(150) + "_1_abc");
+
+        assertThatThrownBy(() -> ChunkIds.newChunk(longFamily, PLAIN)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void shouldRejectBlobIdsWithoutGeneration() {
         assertThatThrownBy(() -> ChunkIds.newChunk(PLAIN.of("abcdef"), PLAIN)).isInstanceOf(IllegalArgumentException.class);
     }

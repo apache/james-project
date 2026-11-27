@@ -21,30 +21,47 @@ package org.apache.james.blob.compaction;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Clock;
-
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.PlainBlobId;
-import org.apache.james.server.blob.deduplication.GenerationAwareBlobId;
+import org.apache.james.blob.api.ChunkMarker;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.junit.DictionaryFile;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 
-/** Parsing never fails and, when it succeeds, serializing gives back the exact input. */
 class SlotAddressFuzzTest {
-    private static final PlainBlobId.Factory PLAIN = new PlainBlobId.Factory();
-    private static final GenerationAwareBlobId.Factory GENERATION_AWARE = new GenerationAwareBlobId.Factory(
-        Clock.systemUTC(), PLAIN, GenerationAwareBlobId.Configuration.DEFAULT);
-
-    @FuzzTest(maxDuration = "60s")
+    /**
+     * Parsing never fails, accepts only chunk ids, and serializing gives back the exact input: a blob id is exactly one
+     * of slot address, chunk or other blob.
+     */
+    @FuzzTest(maxDuration = "600s")
+    @DictionaryFile(resourcePath = "chunk.dict")
     void parseShouldBeSafeAndReversible(FuzzedDataProvider data) {
+        BlobId.Factory factory = FuzzedBlobIds.factory(data);
         String input = data.consumeRemainingAsString();
         if (input.isEmpty()) {
             return;
         }
-        BlobId blobId = PLAIN.of(input);
+        BlobId blobId = FuzzedBlobIds.PLAIN.of(input);
 
-        SlotAddress.parse(blobId, GENERATION_AWARE)
-            .ifPresent(address -> assertThat(address.asBlobId(GENERATION_AWARE).asString()).isEqualTo(input));
+        SlotAddress.parse(blobId, factory).ifPresent(address -> {
+            assertThat(ChunkMarker.isChunkId(blobId)).isTrue();
+            assertThat(ChunkMarker.isChunkId(address.chunk())).isTrue();
+            assertThat(SlotAddress.parse(address.chunk(), factory)).isEmpty();
+            assertThat(input).hasSizeLessThanOrEqualTo(SlotAddress.MAX_LENGTH);
+            assertThat(address.asBlobId(factory).asString()).isEqualTo(input);
+        });
+    }
+
+    /** Any address built on a new chunk parses back, for every factory and layout. */
+    @FuzzTest(maxDuration = "600s")
+    @DictionaryFile(resourcePath = "chunk.dict")
+    void addressesOfNewChunksShouldParseBack(FuzzedDataProvider data) {
+        BlobId.Factory factory = FuzzedBlobIds.factory(data);
+        char separator = FuzzedBlobIds.separator(data);
+        String sample = data.consumeInt(1, Integer.MAX_VALUE) + "" + separator + data.consumeInt(0, Integer.MAX_VALUE) + separator + "blob";
+        BlobId chunk = ChunkIds.newChunk(factory.parse(sample), factory);
+        SlotAddress address = new SlotAddress(chunk, FuzzedBlobIds.location(data));
+
+        assertThat(SlotAddress.parse(address.asBlobId(factory), factory)).contains(address);
     }
 }

@@ -94,6 +94,14 @@ class SlotAddressTest {
     }
 
     @Test
+    void shouldRejectAddressesLongerThanMailboxColumns() {
+        BlobId longChunk = PLAIN.of("1_689_chunk_" + "a".repeat(180));
+
+        assertThatThrownBy(() -> new SlotAddress(longChunk, LOCATION)).isInstanceOf(IllegalArgumentException.class);
+        assertThat(SlotAddress.parse(PLAIN.of(longChunk.asString() + "~1024~300"), PLAIN)).isEmpty();
+    }
+
+    @Test
     void shouldRejectNonChunkIds() {
         assertThatThrownBy(() -> new SlotAddress(PLAIN.of("1_689_blob"), LOCATION)).isInstanceOf(IllegalArgumentException.class);
     }
