@@ -95,7 +95,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                 // The target exists but the user has no Lookup right on it: do not reveal its existence (RFC 4314 section 4)
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
                 return ReactorUtils.logAsMono(() -> LOGGER.info("{} failed from mailbox {} to {}: {}",
-                    getOperationName(), selectedMailboxId(session), targetMailbox, e.getMessage()));
+                    getOperationName(), session.getSelected().getMailboxId(), targetMailbox, e.getMessage()));
             })
             .onErrorResume(MessageRangeException.class, e -> {
                 taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);

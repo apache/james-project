@@ -18,6 +18,7 @@
  * ***************************************************************/
 package org.apache.james.jmap.method
 
+import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation

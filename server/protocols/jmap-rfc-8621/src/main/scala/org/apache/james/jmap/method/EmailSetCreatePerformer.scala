@@ -30,7 +30,7 @@ import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{JmapRfc8621Configuration, Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
-import org.apache.james.jmap.mail.{AttachmentNotFoundException, AttachmentsTooLargeException, BlobId, EmailCreationId, EmailCreationLimits, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, InvalidEmailCreationPropertiesException, ThreadId, TooManyAttachmentsException}
+import org.apache.james.jmap.mail.{AttachmentNotFoundException, AttachmentsTooLargeException, BlobId, EmailCreationId, EmailCreationLimits, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, ThreadId, TooManyAttachmentsException}
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers}
 import org.apache.james.mailbox.MessageManager.AppendCommand

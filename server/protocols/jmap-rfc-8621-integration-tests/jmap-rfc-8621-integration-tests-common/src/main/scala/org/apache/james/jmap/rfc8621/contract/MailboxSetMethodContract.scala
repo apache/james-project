@@ -3827,10 +3827,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldNotMoveTopLevelSharedMailboxIntoTheCallerAccount(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(andreUsername, "previousName")
+    val path = MailboxPath.forUser(ANDRE, "previousName")
     val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, bobUsername.asString, MailboxACL.FULL_RIGHTS)
+      .replaceRights(path, BOB.asString, MailboxACL.FULL_RIGHTS)
     val request =
       s"""
         |{
@@ -3838,7 +3838,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "$bobAccountId",
+        |                "accountId": "$ACCOUNT_ID",
         |                "update": {
         |                    "${mailboxId1.serialize}": {
         |                      "name": "newName"
@@ -3861,7 +3861,7 @@ trait MailboxSetMethodContract {
       .body("methodResponses[0][1].notUpdated", hasKey(mailboxId1.serialize))
 
     assertThat(server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", andreUsername.asString(), "previousName"))
+      .getMailboxId("#private", ANDRE.asString(), "previousName"))
       .isEqualTo(mailboxId1)
   }
 
@@ -6641,7 +6641,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def partialRightsUpdateShouldNotGrantAuthenticatedRightOtherThanPost(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val path = MailboxPath.forUser(BOB, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
 
@@ -6653,7 +6653,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "$bobAccountId",
+         |                "accountId": "$ACCOUNT_ID",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith/authenticated": ["r", "l"]
@@ -6686,7 +6686,7 @@ trait MailboxSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Mailbox/set", {
-           |      "accountId": "$bobAccountId",
+           |      "accountId": "$ACCOUNT_ID",
            |      "notUpdated": {
            |        "${mailboxId.serialize}": {
            |          "type": "invalidPatch",
@@ -6703,7 +6703,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def resetRightsUpdateShouldNotGrantAuthenticatedRightOtherThanPost(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val path = MailboxPath.forUser(BOB, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
 
@@ -6715,7 +6715,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "$bobAccountId",
+         |                "accountId": "$ACCOUNT_ID",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith": {
@@ -6750,7 +6750,7 @@ trait MailboxSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Mailbox/set", {
-           |      "accountId": "$bobAccountId",
+           |      "accountId": "$ACCOUNT_ID",
            |      "notUpdated": {
            |        "${mailboxId.serialize}": {
            |          "type": "invalidPatch",
@@ -6767,7 +6767,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def partialRightsUpdateShouldRejectGroupIdentifiers(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val path = MailboxPath.forUser(BOB, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
 
@@ -6779,7 +6779,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "$bobAccountId",
+         |                "accountId": "$ACCOUNT_ID",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith/$$group": ["r", "l"]
@@ -6812,7 +6812,7 @@ trait MailboxSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Mailbox/set", {
-           |      "accountId": "$bobAccountId",
+           |      "accountId": "$ACCOUNT_ID",
            |      "notUpdated": {
            |        "${mailboxId.serialize}": {
            |          "type": "invalidPatch",
@@ -6829,7 +6829,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def resetRightsUpdateShouldRejectGroupIdentifiers(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val path = MailboxPath.forUser(BOB, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
 
@@ -6841,7 +6841,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "$bobAccountId",
+         |                "accountId": "$ACCOUNT_ID",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith": {
@@ -6876,7 +6876,7 @@ trait MailboxSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Mailbox/set", {
-           |      "accountId": "$bobAccountId",
+           |      "accountId": "$ACCOUNT_ID",
            |      "notUpdated": {
            |        "${mailboxId.serialize}": {
            |          "type": "invalidArguments",
@@ -6894,10 +6894,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldNotChangeRightsWhenRenameFails(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val path = MailboxPath.forUser(BOB, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
     val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
 
     val request =
@@ -6908,10 +6908,10 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "$bobAccountId",
+         |                "accountId": "$ACCOUNT_ID",
          |                "update": {
          |                    "${mailboxId.serialize}": {
-         |                      "sharedWith/${andreUsername.asString}": [],
+         |                      "sharedWith/${ANDRE.asString}": [],
          |                      "name": ""
          |                    }
          |                }
@@ -6940,10 +6940,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldNotChangeRightsWhenOneSharedWithKeyIsRejected(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val path = MailboxPath.forUser(BOB, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
     val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
 
     val request =
@@ -6954,10 +6954,10 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "$bobAccountId",
+         |                "accountId": "$ACCOUNT_ID",
          |                "update": {
          |                    "${mailboxId.serialize}": {
-         |                      "sharedWith/${andreUsername.asString}": ["t"],
+         |                      "sharedWith/${ANDRE.asString}": ["t"],
          |                      "sharedWith/user@other.tld": ["l"]
          |                    }
          |                }
@@ -6986,11 +6986,11 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldNotChangeRightsWhenTheNewNameAlreadyExists(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(bobUsername, "mailbox")
+    val path = MailboxPath.forUser(BOB, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "existing"))
+      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "existing"))
     val aclBefore = server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
 
     val request =
@@ -7001,10 +7001,10 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "$bobAccountId",
+         |                "accountId": "$ACCOUNT_ID",
          |                "update": {
          |                    "${mailboxId.serialize}": {
-         |                      "sharedWith/${andreUsername.asString}": [],
+         |                      "sharedWith/${ANDRE.asString}": [],
          |                      "name": "existing"
          |                    }
          |                }
@@ -8761,7 +8761,7 @@ trait MailboxSetMethodContract {
       .statusCode(SC_OK)
       .body("methodResponses[0][1].notUpdated", hasKey(mailboxId.serialize))
 
-    assertThat(mailboxProbe.getMailboxId("#private", andreUsername.asString(), "mailbox"))
+    assertThat(mailboxProbe.getMailboxId("#private", ANDRE.asString(), "mailbox"))
       .isEqualTo(mailboxId)
   }
 

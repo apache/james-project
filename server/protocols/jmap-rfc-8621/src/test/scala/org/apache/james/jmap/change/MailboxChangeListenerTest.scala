@@ -799,6 +799,7 @@ class MailboxChangeListenerTest {
         softly.assertThat(changes.getDestroyed).isEmpty()
       })
     }
+
     @Test
     def setFlagsShouldIgnoreRecent(): Unit = {
       val mailboxSession = MailboxSessionUtil.create(BOB)

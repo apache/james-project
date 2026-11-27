@@ -663,23 +663,23 @@ trait EmailChangesMethodContract {
   @Test
   def emailChangesShouldNotReturnChangesOfMailboxesSharedWithOnlyLookupRight(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val lookupOnlyPath: MailboxPath = MailboxPath.forUser(bobUsername, "lookupOnly")
-    val readablePath: MailboxPath = MailboxPath.forUser(bobUsername, "readable")
+    val lookupOnlyPath: MailboxPath = MailboxPath.forUser(BOB, "lookupOnly")
+    val readablePath: MailboxPath = MailboxPath.forUser(BOB, "readable")
     mailboxProbe.createMailbox(lookupOnlyPath)
     mailboxProbe.createMailbox(readablePath)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(lookupOnlyPath, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(lookupOnlyPath, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(readablePath, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+      .replaceRights(readablePath, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
     val message: Message = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    mailboxProbe.appendMessage(bobUsername.asString(), lookupOnlyPath, AppendCommand.from(message))
-    val readableMessageId: MessageId = mailboxProbe.appendMessage(bobUsername.asString(), readablePath, AppendCommand.from(message)).getMessageId
+    mailboxProbe.appendMessage(BOB.asString(), lookupOnlyPath, AppendCommand.from(message))
+    val readableMessageId: MessageId = mailboxProbe.appendMessage(BOB.asString(), readablePath, AppendCommand.from(message)).getMessageId
 
     val request =
       s"""{
@@ -687,7 +687,7 @@ trait EmailChangesMethodContract {
          |  "methodCalls": [[
          |    "Email/changes",
          |    {
-         |      "accountId": "$andreAccountId",
+         |      "accountId": "$ANDRE_ACCOUNT_ID",
          |      "sinceState": "${State.INITIAL.getValue}"
          |    },
          |    "c1"]]
@@ -696,7 +696,7 @@ trait EmailChangesMethodContract {
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
@@ -715,7 +715,7 @@ trait EmailChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Email/changes", {
-             |        "accountId": "$andreAccountId",
+             |        "accountId": "$ANDRE_ACCOUNT_ID",
              |        "oldState": "${State.INITIAL.getValue}",
              |        "hasMoreChanges": false,
              |        "created": ["${readableMessageId.serialize}"],

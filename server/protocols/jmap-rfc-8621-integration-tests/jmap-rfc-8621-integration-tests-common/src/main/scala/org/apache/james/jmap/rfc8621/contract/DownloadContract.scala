@@ -29,7 +29,7 @@ import org.apache.http.HttpStatus.{SC_FORBIDDEN, SC_NOT_FOUND, SC_OK, SC_UNAUTHO
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.DownloadContract.accountId
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE_ACCOUNT_ID, ANDRE, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ALICE_ACCOUNT_ID, ANDRE, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.{AttachmentId, MailboxACL, MailboxPath, MessageId}
@@ -364,10 +364,10 @@ trait DownloadContract {
 
   @Test
   def downloadShouldNotLetTheBrowserRenderActiveContentInline(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(bobUsername)
+    val path = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, path, AppendCommand.from(
+      .appendMessage(BOB.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -376,7 +376,7 @@ trait DownloadContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .queryParam("type", "text/html")
     .when
-      .get(s"/download/$bobAccountId/${messageId.serialize()}_3")
+      .get(s"/download/$ACCOUNT_ID/${messageId.serialize()}_3")
     .`then`
       .statusCode(SC_OK)
       .contentType("text/html")
@@ -387,10 +387,10 @@ trait DownloadContract {
 
   @Test
   def downloadShouldSandboxInlineContent(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(bobUsername)
+    val path = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, path, AppendCommand.from(
+      .appendMessage(BOB.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -398,7 +398,7 @@ trait DownloadContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
-      .get(s"/download/$bobAccountId/${messageId.serialize()}_3")
+      .get(s"/download/$ACCOUNT_ID/${messageId.serialize()}_3")
     .`then`
       .statusCode(SC_OK)
       .contentType("text/plain")

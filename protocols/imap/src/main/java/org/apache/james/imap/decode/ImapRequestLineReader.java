@@ -494,7 +494,7 @@ public abstract class ImapRequestLineReader {
      */
     public String astringOfAnySize() throws DecodingException {
         if (nextWordChar() == '{') {
-            return consumeLiteral(UTF_8, Integer.MAX_VALUE);
+            return consumeLiteral(US_ASCII, Integer.MAX_VALUE);
         }
         return astring();
     }
@@ -512,7 +512,7 @@ public abstract class ImapRequestLineReader {
         case '"':
             return consumeQuoted();
         case '{':
-            return consumeLiteral(UTF_8, maxLiteralSize);
+            return consumeLiteral(US_ASCII, maxLiteralSize);
         default:
             String value = atom();
             if ("NIL".equals(value)) {

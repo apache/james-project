@@ -26,8 +26,8 @@ import org.junit.jupiter.params.provider.ValueSource
 class NameTest {
   // Every Unicode Bidi_Control character (PropList.txt)
   @ParameterizedTest
-  @ValueSource(strings = Array("؜", "‎", "‏", "‪", "‫", "‬", "‭", "‮",
-    "⁦", "⁧", "⁨", "⁩"))
+  @ValueSource(strings = Array("\u061c", "\u200e", "\u200f", "\u202a", "\u202b", "\u202c", "\u202d", "\u202e",
+    "\u2066", "\u2067", "\u2068", "\u2069"))
   def normalizeShouldRemoveEveryBidiControl(control: String): Unit =
     assertThat(Name.of(s"invoice${control}.pdf").value).isEqualTo("invoice.pdf")
 }

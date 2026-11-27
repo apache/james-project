@@ -31,6 +31,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.junit.jupiter.api.Test;
 
 class JPAMailboxMessageTest {
@@ -66,8 +67,8 @@ class JPAMailboxMessageTest {
     void messagesWithTheSameMailboxAndUidShouldBeEqual() throws Exception {
         JPAMailbox mailbox = new JPAMailbox(MailboxPath.inbox(Username.of("bob")), 42);
         byte[] content = "Subject: test\r\n\r\nbody".getBytes(StandardCharsets.UTF_8);
-        JPAMailboxMessage message1 = new JPAMailboxMessage(mailbox, new Date(), content.length, new Flags(), new ByteContent(content), 15);
-        JPAMailboxMessage message2 = new JPAMailboxMessage(mailbox, new Date(), content.length, new Flags(), new ByteContent(content), 15);
+        JPAMailboxMessage message1 = new JPAMailboxMessage(mailbox, new Date(), content.length, new Flags(), new ByteContent(content), 15, new PropertyBuilder());
+        JPAMailboxMessage message2 = new JPAMailboxMessage(mailbox, new Date(), content.length, new Flags(), new ByteContent(content), 15, new PropertyBuilder());
         message1.setUid(MessageUid.of(7));
         message2.setUid(MessageUid.of(7));
 

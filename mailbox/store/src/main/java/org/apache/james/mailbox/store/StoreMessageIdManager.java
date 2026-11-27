@@ -600,7 +600,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                 MailboxMessage copy = mailboxMessage.copy(mailbox);
                 Flags flags = mailboxMessage.createFlags();
                 flags.remove(StoreMessageManager.flagsNotAllowedToSet(flags, myRights));
-                copy.setFlags(markRecent(flags, StoreMessageManager.HANDLE_RECENT));
+                copy.setFlags(markRecent(flags, true));
 
                 return save(messageIdMapper, copy, mailbox, mailboxSession)
                     .map(metadata -> addedEvent(mailboxSession, mailbox, metadata, messageMoves));

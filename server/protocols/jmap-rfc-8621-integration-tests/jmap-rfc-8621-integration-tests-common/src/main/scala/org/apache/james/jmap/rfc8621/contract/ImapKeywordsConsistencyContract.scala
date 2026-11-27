@@ -373,15 +373,15 @@ trait ImapKeywordsConsistencyContract {
     awaitAtMostOneMinute.until(() => listMessageIdsArchive(server).size == 1)
 
     imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
-      .login(bobUsername, BOB_PASSWORD)
+      .login(BOB, BOB_PASSWORD)
       .select(DefaultMailboxes.INBOX)
     imapClient.setFlagsForAllMessagesInMailbox("\\Deleted")
 
     emailSetFlags(messageId, "$Seen")
 
     val archiveId = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId(MailboxConstants.USER_NAMESPACE, bobUsername.asString(), DefaultMailboxes.ARCHIVE)
-    val archiveFlags: Flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala
+      .getMailboxId(MailboxConstants.USER_NAMESPACE, BOB.asString(), DefaultMailboxes.ARCHIVE)
+    val archiveFlags: Flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, BOB).asScala
       .filter(_.getMailboxId == archiveId)
       .head.getFlags
     assertThat(archiveFlags.contains(Flags.Flag.SEEN)).isTrue
@@ -393,13 +393,13 @@ trait ImapKeywordsConsistencyContract {
     val messageId = appendMessageToInbox(server)
 
     imapClient.connect(LOCALHOST_IP, server.getProbe(classOf[ImapGuiceProbe]).getImapPort)
-      .login(bobUsername, BOB_PASSWORD)
+      .login(BOB, BOB_PASSWORD)
       .select(DefaultMailboxes.INBOX)
     imapClient.setFlagsForAllMessagesInMailbox("a+b Foo.Bar \\Flagged")
 
     emailSetFlags(messageId, "$Seen")
 
-    val flags: Flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala.head.getFlags
+    val flags: Flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, BOB).asScala.head.getFlags
     assertThat(flags.contains(Flags.Flag.SEEN)).isTrue
     assertThat(flags.contains(Flags.Flag.FLAGGED)).isFalse
     assertThat(flags.contains("a+b")).isTrue

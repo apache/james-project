@@ -168,7 +168,9 @@ class AuthAnnounceTest {
 
     @Test
     void plainAuthShouldFailOnPlainChannelsWhenRequireSSL() throws Exception {
-        configureAndInit("smtpserver-requireSSL.xml");
+        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream("smtpserver-requireSSL.xml")));
+        testSystem.smtpServer.init();
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
@@ -182,7 +184,9 @@ class AuthAnnounceTest {
 
     @Test
     void loginAuthShouldFailOnPlainChannelsWhenRequireSSL() throws Exception {
-        configureAndInit("smtpserver-requireSSL.xml");
+        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream("smtpserver-requireSSL.xml")));
+        testSystem.smtpServer.init();
 
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();

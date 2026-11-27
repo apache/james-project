@@ -143,7 +143,7 @@ class ScrolledSearchTest {
             .build();
 
         AtomicInteger scrollCount = new AtomicInteger();
-        ReactorOpenSearchClient countingClient = new ReactorOpenSearchClient(null) {
+        ReactorOpenSearchClient countingClient = new ReactorOpenSearchClient(null, null) {
             @Override
             public Mono<SearchResponse<ObjectNode>> search(SearchRequest request) throws IOException {
                 return client.search(request);

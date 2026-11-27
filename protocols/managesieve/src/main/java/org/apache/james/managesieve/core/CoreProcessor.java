@@ -53,7 +53,6 @@ import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.user.api.UsersRepository;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

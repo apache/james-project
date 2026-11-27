@@ -22,7 +22,6 @@ package org.apache.james.webadmin;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
@@ -116,7 +115,7 @@ class WebAdminServerCorsTest {
 
     @Test
     void preflightShouldNotRequireAuthentication() {
-        start(configuration().corsEnabled().urlCORSOrigin(ORIGIN).build(), new PasswordFilter(Optional.of("secret"), Optional.empty()));
+        start(configuration().corsEnabled().urlCORSOrigin(ORIGIN).build(), new PasswordFilter("secret"));
 
         Response preflight = given()
             .header("Origin", ORIGIN)

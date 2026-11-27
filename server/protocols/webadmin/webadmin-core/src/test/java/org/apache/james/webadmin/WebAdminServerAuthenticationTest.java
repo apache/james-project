@@ -21,7 +21,6 @@ package org.apache.james.webadmin;
 
 import static io.restassured.RestAssured.given;
 
-import java.util.Optional;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.webadmin.authentication.PasswordFilter;
@@ -59,7 +58,7 @@ class WebAdminServerAuthenticationTest {
         server = new WebAdminServer(
             WebAdminConfiguration.TEST_CONFIGURATION,
             ImmutableList.of(routes),
-            new PasswordFilter(Optional.of("secret"), Optional.of("readonly")),
+            new PasswordFilter("secret"),
             new RecordingMetricFactory(),
             LoggingRequestFilter.create())
             .start();
@@ -82,24 +81,14 @@ class WebAdminServerAuthenticationTest {
     }
 
     @Test
-    void methodOverrideShouldBeRejectedWithReadOnlyPassword() {
+    void methodOverrideShouldBeRejectedWithPassword() {
         given()
-            .header("Password", "readonly")
+            .header("Password", "secret")
             .header("X-HTTP-Method-Override", "DELETE")
         .when()
             .get(PATH)
         .then()
             .statusCode(400);
-    }
-
-    @Test
-    void readOnlyPasswordShouldNotAllowDelete() {
-        given()
-            .header("Password", "readonly")
-        .when()
-            .delete(PATH)
-        .then()
-            .statusCode(403);
     }
 
     @Test

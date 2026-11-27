@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 import java.time.ZoneId
 
+import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.Properties
 import org.apache.james.mime4j.dom.Message
 import org.assertj.core.api.Assertions.assertThat

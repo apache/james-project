@@ -21,16 +21,13 @@ package org.apache.james.imap.encode.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.Test;
 
 class ImapResponseComposerImplTest {
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void quoteShouldNeverWriteCrLfOrNul(boolean utf8Accepted) throws Exception {
+    @Test
+    void quoteShouldNeverWriteCrLfOrNul() throws Exception {
         ByteImapResponseWriter writer = new ByteImapResponseWriter();
         ImapResponseComposerImpl composer = new ImapResponseComposerImpl(writer, 1024);
-        composer.setUtf8Accepted(utf8Accepted);
 
         composer.untagged().message("FETCH");
         composer.quote("\r\n* 1 EXPUNGE");

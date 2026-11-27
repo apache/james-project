@@ -3736,7 +3736,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 session);
             MailboxId destinationId = mailboxManager.createMailbox(MailboxPath.inbox(session2), session2).get();
 
-            assertThatThrownBy(() -> Flux.from(mailboxManager.moveMessagesReactive(ImmutableList.of(MessageRange.all()), sourceId, destinationId, session2))
+            assertThatThrownBy(() -> Flux.from(mailboxManager.moveMessagesReactive(MessageRange.all(), sourceId, destinationId, session2))
                     .collectList().block())
                 .hasCauseInstanceOf(InsufficientRightsException.class);
             assertThat(mailboxManager.getMailbox(path, session).getMessageCount(session)).isEqualTo(1);

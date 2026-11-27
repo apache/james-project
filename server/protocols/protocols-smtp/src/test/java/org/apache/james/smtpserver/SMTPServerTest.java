@@ -20,6 +20,7 @@ package org.apache.james.smtpserver;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 
 import java.io.BufferedReader;
@@ -2536,6 +2537,7 @@ public class SMTPServerTest {
         out.close();
         client.close();
     }
+
     @Test
     public void rejectedEhloArgumentShouldNotReplaceTheHeloNameOfTheReceivedHeader() throws Exception {
         init(smtpConfiguration);

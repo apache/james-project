@@ -35,8 +35,6 @@ import org.apache.james.managesieve.util.SettableSession;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.ImmutableList;
-
 class CoreProcessorTest {
     @Test
     void putScriptShouldNotStoreAnInvalidScript() throws Exception {
@@ -47,7 +45,7 @@ class CoreProcessorTest {
                 calls.add(method.getName());
                 return null;
             });
-        CoreProcessor processor = new CoreProcessor(repository, new Parser(), ImmutableList.of());
+        CoreProcessor processor = new CoreProcessor(repository, null, new Parser());
         SettableSession session = new SettableSession();
         session.setUser(Username.of("bob"));
         session.setState(Session.State.AUTHENTICATED);
@@ -63,7 +61,7 @@ class CoreProcessorTest {
         SieveRepository repository = (SieveRepository) Proxy.newProxyInstance(SieveRepository.class.getClassLoader(),
             new Class<?>[] {SieveRepository.class},
             (proxy, method, args) -> new ByteArrayInputStream("# é\r\nkeep;".getBytes(StandardCharsets.UTF_8)));
-        CoreProcessor processor = new CoreProcessor(repository, new Parser(), ImmutableList.of());
+        CoreProcessor processor = new CoreProcessor(repository, null, new Parser());
         SettableSession session = new SettableSession();
         session.setUser(Username.of("bob"));
         session.setState(Session.State.AUTHENTICATED);
@@ -73,16 +71,15 @@ class CoreProcessorTest {
 
     @Test
     void refusalsShouldBeAnsweredWithAQuotedText() throws Exception {
-        CoreProcessor processor = new CoreProcessor(null, new Parser(), ImmutableList.of());
+        CoreProcessor processor = new CoreProcessor(null, null, new Parser());
         SettableSession session = new SettableSession();
 
         assertThat(processor.unauthenticate(session)).isEqualTo("NO \"UNAUTHENTICATE command must be issued in authenticated state\"");
-        assertThat(processor.startTLS(session)).isEqualTo("NO \"STARTTLS is not available\"");
     }
 
     @Test
     void syntaxErrorShouldBeAnsweredOnASingleLineWithAQuotedText() throws Exception {
-        CoreProcessor processor = new CoreProcessor(null, new Parser(), ImmutableList.of());
+        CoreProcessor processor = new CoreProcessor(null, null, new Parser());
         SettableSession session = new SettableSession();
         session.setUser(Username.of("bob"));
         session.setState(Session.State.AUTHENTICATED);

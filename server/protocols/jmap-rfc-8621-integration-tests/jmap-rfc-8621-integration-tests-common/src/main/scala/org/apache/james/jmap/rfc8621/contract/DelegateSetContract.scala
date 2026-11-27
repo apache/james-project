@@ -32,7 +32,7 @@ import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.delegation.DelegationId
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.DelegateSetContract.BOB_ACCOUNT_ID
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
@@ -448,15 +448,15 @@ trait DelegateSetContract {
          |	"methodCalls": [
          |		[
          |			"Delegate/set", {
-         |				"accountId": "$bobAccountId",
+         |				"accountId": "$ACCOUNT_ID",
          |				"create": {
          |					"4f29": {
-         |						"username": "${bobUsername.asString()}"
+         |						"username": "${BOB.asString()}"
          |					}
          |				}
          |			}, "0"
          |		],
-         |		["Delegate/get", {"accountId": "$bobAccountId", "ids": null}, "1"]
+         |		["Delegate/get", {"accountId": "$ACCOUNT_ID", "ids": null}, "1"]
          |	]
          |}""".stripMargin
 

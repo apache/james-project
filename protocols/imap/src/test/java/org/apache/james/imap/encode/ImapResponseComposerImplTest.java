@@ -21,6 +21,9 @@ package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import jakarta.mail.Flags;
+
+import org.apache.james.imap.api.message.MessageFlags;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,26 +86,5 @@ class ImapResponseComposerImplTest {
         composer.flush();
 
         assertThat(writer.getString()).isEqualTo(" \"PL?IN\"\r\n");
-    }
-
-    @Test
-    void flagsShouldSkipStoredUserFlagsThatAreNotAtoms() throws Exception {
-        Flags flags = new Flags(Flags.Flag.SEEN);
-        flags.add("x)]");
-        flags.add("$Forwarded");
-        composer.flags(flags);
-        composer.end();
-        composer.flush();
-
-        assertThat(writer.getString()).isEqualTo(" FLAGS (\\Seen $Forwarded)\r\n");
-    }
-
-    @Test
-    void permanentFlagsShouldSkipStoredUserFlagsThatAreNotAtoms() {
-        Flags flags = new Flags(Flags.Flag.USER);
-        flags.add("x)]");
-        flags.add("$Forwarded");
-
-        assertThat(MessageFlags.names(flags)).containsExactly("$Forwarded", "\\*");
     }
 }

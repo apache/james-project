@@ -176,8 +176,6 @@ class StoreMailboxManagerAnnotationTest {
         assertThat(annotationManager.getAnnotationsByKeys(mailboxPath, session, KEYS)).isEqualTo(ANNOTATIONS);
     }
 
-        when(mailbox.getUser()).thenReturn(session.getUser());
-
     @Test
     void privateAnnotationsShouldNotBeVisibleToOtherUsers() throws Exception {
         when(mailbox.getUser()).thenReturn(Username.of("mailboxOwner"));

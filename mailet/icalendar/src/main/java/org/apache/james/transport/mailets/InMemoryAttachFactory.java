@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
@@ -71,7 +70,7 @@ public class InMemoryAttachFactory extends Attach.Factory {
         try {
             byte[] decoded = DecoderFactory.getInstance().createBinaryDecoder(encoding.get())
                 .decode(value.getBytes(StandardCharsets.UTF_8));
-            return new Attach(parameters, ByteBuffer.wrap(decoded));
+            return new Attach(parameters, decoded);
         } catch (UnsupportedEncodingException | DecoderException e) {
             return new Attach(parameters, value);
         }

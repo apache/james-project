@@ -25,6 +25,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.RejectedExecutionException;
 
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.ImapResponseWriter;

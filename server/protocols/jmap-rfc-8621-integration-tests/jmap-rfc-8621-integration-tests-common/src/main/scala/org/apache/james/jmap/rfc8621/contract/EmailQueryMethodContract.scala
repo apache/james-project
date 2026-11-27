@@ -39,7 +39,7 @@ import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.FlagsBuilder
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
@@ -874,9 +874,9 @@ trait EmailQueryMethodContract {
 
   private def inMailboxSortedByReceivedAtShouldReturnEmptyWithOnlyLookupRight(server: GuiceJamesServer, additionalFilter: String): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(andreUsername.asString, inbox(andreUsername),
+      .appendMessage(ANDRE.asString, inbox(ANDRE),
         AppendCommand.from(
           Message.Builder
             .of
@@ -896,7 +896,7 @@ trait EmailQueryMethodContract {
          |		[
          |			"Email/query",
          |			{
-         |				"accountId": "$bobAccountId",
+         |				"accountId": "$ACCOUNT_ID",
          |				"filter": {
          |					"inMailbox": "${andreInboxId.serialize()}"$additionalFilter
          |				},
@@ -924,7 +924,7 @@ trait EmailQueryMethodContract {
 
     // With the Read right the message is listed: it is indexed
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+      .replaceRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
     awaitAtMostTenSeconds.untilAsserted { () =>
       assertThatJson(queryIds())
         .inPath("$.methodResponses[0][1].ids")
@@ -933,7 +933,7 @@ trait EmailQueryMethodContract {
 
     // With only the Lookup right it is not
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
     assertThatJson(queryIds())
       .inPath("$.methodResponses[0][1].ids")
       .isEqualTo("[]")
@@ -7181,19 +7181,19 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxDisjunctionShouldBeSupported(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    val mailboxId1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
-    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox3"))
+    val mailboxId1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox3"))
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox1"), AppendCommand.from(message))
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox1"), AppendCommand.from(message))
       .getMessageId
 
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox2"), AppendCommand.from(message))
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox2"), AppendCommand.from(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox3"), AppendCommand.from(message))
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox3"), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -7204,7 +7204,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$bobAccountId",
+         |      "accountId": "$ACCOUNT_ID",
          |      "filter" : {
          |        "operator": "OR",
          |        "conditions": [
@@ -7243,23 +7243,23 @@ trait EmailQueryMethodContract {
       .setSubject("paradise")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    val mailboxId1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
-    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox3"))
+    val mailboxId1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox3"))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox1"), AppendCommand.from(message))
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox1"), AppendCommand.from(message))
       .getMessageId
 
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox1"), AppendCommand.from(paradiseMessage))
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox1"), AppendCommand.from(paradiseMessage))
       .getMessageId
 
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox2"), AppendCommand.from(paradiseMessage))
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox2"), AppendCommand.from(paradiseMessage))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox3"), AppendCommand.from(paradiseMessage))
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox3"), AppendCommand.from(paradiseMessage))
       .getMessageId
 
     val request =
@@ -7270,7 +7270,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$bobAccountId",
+         |      "accountId": "$ACCOUNT_ID",
          |      "filter" : {
          |        "operator": "AND",
          |        "conditions": [
@@ -7309,9 +7309,9 @@ trait EmailQueryMethodContract {
 
   @Test
   def inMailboxDisjunctionShouldBeRejectedWhenCombinedWithAnotherMailboxFilter(server: GuiceJamesServer): Unit = {
-    val mailboxId1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
-    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
-    val mailboxId3 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox3"))
+    val mailboxId1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+    val mailboxId3 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox3"))
 
     val request =
       s"""{
@@ -7321,7 +7321,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "$bobAccountId",
+         |      "accountId": "$ACCOUNT_ID",
          |      "filter" : {
          |        "operator": "AND",
          |        "conditions": [

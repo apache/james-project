@@ -166,46 +166,49 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
 
             // check if we should use a blob message here
             if (useBlob) {
-                ActiveMQSession amqSession = getAMQSession(session);
+                // JMS sessions are not thread safe: use a dedicated session for each enqueue
+                try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                     MessageProducer producer = session.createProducer(session.createQueue(queueName.asString()))) {
+                    ActiveMQSession amqSession = getAMQSession(session);
                 
-                /*
-                 * Remove this optimization as it could lead to problems when the same blob content
-                 * is shared across different messages. 
-                 * 
-                 * I still think it would be a good idea to somehow do this but at the moment it's just 
-                 * safer to disable it.
-                 * 
-                 * TODO: Re-Enable it again once it works!
-                 * 
-                 * See JAMES-1240
-                if (wrapper instanceof MimeMessageCopyOnWriteProxy) {
-                    wrapper = ((MimeMessageCopyOnWriteProxy) mm).getWrappedMessage();
-                }
-
-                if (wrapper instanceof MimeMessageWrapper) {
-                    URL blobUrl = (URL) mail.getAttribute(JAMES_BLOB_URL);
-                    String fromQueue = (String) mail.getAttribute(JAMES_QUEUE_NAME);
-                    MimeMessageWrapper mwrapper = (MimeMessageWrapper) wrapper;
-
-                    if (blobUrl != null && fromQueue != null && mwrapper.isModified() == false) {
-                        // the message content was not changed so don't need to
-                        // upload it again and can just point to the url
-                        blobMessage = amqSession.createBlobMessage(blobUrl);
-                        reuse = true;
+                    /*
+                     * Remove this optimization as it could lead to problems when the same blob content
+                     * is shared across different messages. 
+                     * 
+                     * I still think it would be a good idea to somehow do this but at the moment it's just 
+                     * safer to disable it.
+                     * 
+                     * TODO: Re-Enable it again once it works!
+                     * 
+                     * See JAMES-1240
+                    if (wrapper instanceof MimeMessageCopyOnWriteProxy) {
+                        wrapper = ((MimeMessageCopyOnWriteProxy) mm).getWrappedMessage();
                     }
 
-                }*/
-                if (blobMessage == null) {
-                    // just use the MimeMessageInputStream which can read every
-                    // MimeMessage implementation
-                    blobMessage = amqSession.createBlobMessage(new MimeMessageInputStream(mail.getMessage()));
-                }
+                    if (wrapper instanceof MimeMessageWrapper) {
+                        URL blobUrl = (URL) mail.getAttribute(JAMES_BLOB_URL);
+                        String fromQueue = (String) mail.getAttribute(JAMES_QUEUE_NAME);
+                        MimeMessageWrapper mwrapper = (MimeMessageWrapper) wrapper;
 
-                for (Map.Entry<String, Object> entry : props.entrySet()) {
-                    blobMessage.setObjectProperty(entry.getKey(), entry.getValue());
-                }
-                producer.send(blobMessage, Message.DEFAULT_DELIVERY_MODE, msgPrio, Message.DEFAULT_TIME_TO_LIVE);
+                        if (blobUrl != null && fromQueue != null && mwrapper.isModified() == false) {
+                            // the message content was not changed so don't need to
+                            // upload it again and can just point to the url
+                            blobMessage = amqSession.createBlobMessage(blobUrl);
+                            reuse = true;
+                        }
 
+                    }*/
+                    if (blobMessage == null) {
+                        // just use the MimeMessageInputStream which can read every
+                        // MimeMessage implementation
+                        blobMessage = amqSession.createBlobMessage(new MimeMessageInputStream(mail.getMessage()));
+                    }
+
+                    for (Map.Entry<String, Object> entry : props.entrySet()) {
+                        blobMessage.setObjectProperty(entry.getKey(), entry.getValue());
+                    }
+                    producer.send(blobMessage, Message.DEFAULT_DELIVERY_MODE, msgPrio, Message.DEFAULT_TIME_TO_LIVE);
+                }
             } else {
                 super.produceMail(props, msgPrio, mail);
             }
@@ -292,11 +295,13 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
      */
     @Override
     public long getSize() throws MailQueueException {
+        Session session = null;
         MessageConsumer consumer = null;
         MessageProducer producer = null;
         TemporaryQueue replyTo = null;
 
         try {
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             replyTo = session.createTemporaryQueue();
             consumer = session.createConsumer(replyTo);
 
@@ -323,7 +328,13 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
 
         } finally {
             closeConsumer(consumer);
-            closeProducer(producer);
+            if (producer != null) {
+                try {
+                    producer.close();
+                } catch (JMSException e) {
+                    // Ignore
+                }
+            }
             if (replyTo != null) {
                 try {
 
@@ -336,6 +347,7 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
                     LOGGER.error("Error while deleting temporary queue", e);
                 }
             }
+            closeSession(session);
         }
     }
 

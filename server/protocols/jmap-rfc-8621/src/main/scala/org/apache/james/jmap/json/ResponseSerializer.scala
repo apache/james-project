@@ -66,7 +66,7 @@ object ResponseSerializer {
   // predicate for them. Any other string is validated as before, with the same error.
   private val knownCapabilityIdentifiers: Map[String, CapabilityIdentifier] =
     Seq(CapabilityIdentifier.JMAP_CORE, CapabilityIdentifier.JMAP_MAIL, CapabilityIdentifier.JMAP_VACATION_RESPONSE,
-      CapabilityIdentifier.EMAIL_SUBMISSION, CapabilityIdentifier.JMAP_WEBSOCKET, CapabilityIdentifier.JMAP_WEBPUSH_VAPID,
+      CapabilityIdentifier.EMAIL_SUBMISSION, CapabilityIdentifier.JMAP_WEBSOCKET,
       CapabilityIdentifier.JAMES_QUOTA, CapabilityIdentifier.JMAP_QUOTA, CapabilityIdentifier.JAMES_SHARES,
       CapabilityIdentifier.JAMES_IDENTITY_SORTORDER, CapabilityIdentifier.JAMES_DELEGATION, CapabilityIdentifier.JMAP_MDN)
       .map(identifier => identifier.value -> identifier)

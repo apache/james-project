@@ -42,6 +42,7 @@ import play.api.libs.json._
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
+import scala.util.Try
 
 private sealed trait Event {
   def toJava: JavaEvent

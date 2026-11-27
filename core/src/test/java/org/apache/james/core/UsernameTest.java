@@ -282,6 +282,7 @@ class UsernameTest {
         assertThat(Username.of("user").equals(Username.of("uSEr")))
             .isTrue();
     }
+
     @ParameterizedTest
     @ValueSource(strings = {"-bob@domain.tld", "$bob@domain.tld", "-", "$", "-bob", "$bob", "anyone", "owner", "authenticated", "ANYONE"})
     void ofShouldRejectUsernamesThatCanNotBeGrantedMailboxRights(String username) {

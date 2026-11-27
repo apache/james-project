@@ -986,6 +986,7 @@ class IMAPServerTest {
                 .filteredOn(event -> event.getFormattedMessage().contains("Processing org.apache.james.imap.message.request.NoopRequest"))
                 .isEmpty();
         }
+
         @RepeatedTest(10)
         void concurrencyShouldNotLeadToCommandInjection() throws Exception {
             ListAppender<ILoggingEvent> listAppender = getListAppenderForClass(AbstractProcessor.class);

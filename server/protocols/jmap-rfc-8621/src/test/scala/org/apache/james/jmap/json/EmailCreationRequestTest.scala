@@ -20,7 +20,6 @@
 package org.apache.james.jmap.json
 
 import java.io.{ByteArrayInputStream, InputStream}
-import java.lang.Boolean.TRUE
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -75,8 +74,6 @@ object EmailCreationRequestTest {
         }
       }
     }
-
-    override def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] = SMono.just(TRUE)
   }
 }
 

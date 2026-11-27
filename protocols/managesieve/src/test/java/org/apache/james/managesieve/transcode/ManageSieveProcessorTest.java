@@ -52,7 +52,7 @@ class ManageSieveProcessorTest {
                 calls.add(new Call(method.getName(), args == null ? ImmutableList.of() : List.of(args)));
                 return "OK";
             });
-        processor = new ManageSieveProcessor(new ArgumentParser(core), ImmutableList.of(), null);
+        processor = new ManageSieveProcessor(new ArgumentParser(core));
         session = new SettableSession();
     }
 

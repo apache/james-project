@@ -1688,7 +1688,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$bobAccountId")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -1710,11 +1710,11 @@ trait EmailSetMethodContract {
        |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
        |  "methodCalls": [
        |    ["Email/set", {
-       |      "accountId": "$bobAccountId",
+       |      "accountId": "$ACCOUNT_ID",
        |      "create": {${creations.map { case (creationId, creation) => s""""$creationId": $creation""" }.mkString(",")}}
        |    }, "c1"],
        |    ["Mailbox/get", {
-       |      "accountId": "$bobAccountId",
+       |      "accountId": "$ACCOUNT_ID",
        |      "ids": ["${mailboxId.serialize}"],
        |      "properties": ["totalEmails"]
        |    }, "c2"]
@@ -1723,7 +1723,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldRejectASmallBlobReferencedUntilTheAttachmentSizeLimitIsExceeded(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val blobId = uploadBlob(Array.fill[Byte](1_000_000)('a'.toByte))
 
     `given`
@@ -1743,7 +1743,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldNotApplyTheAttachmentSizeLimitWhenTheTotalEqualsIt(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val blobId = uploadBlob(Array.fill[Byte](1_000_000)('a'.toByte))
 
     // 20 * 1_000_000 equals maxSizeAttachmentsPerEmail: only the (lower) email.send.max.size of the test servers rejects it
@@ -1761,7 +1761,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldAcceptAttachmentsUnderTheSizeLimit(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val blobId = uploadBlob(Array.fill[Byte](1_000_000)('a'.toByte))
 
     `given`
@@ -1779,7 +1779,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldRejectASingleAttachmentOverTheSizeLimit(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val blobId = uploadBlob(Array.fill[Byte](20_000_001)('a'.toByte))
 
     `given`
@@ -1798,7 +1798,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldProcessOtherCreationsWhenOneExceedsTheAttachmentSizeLimit(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val blobId = uploadBlob(Array.fill[Byte](1_000_000)('a'.toByte))
 
     `given`
@@ -1818,7 +1818,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldAcceptTheMaximumAttachmentCount(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val blobId = uploadBlob("a".getBytes(StandardCharsets.UTF_8))
 
     `given`
@@ -1835,7 +1835,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldRejectMoreAttachmentsThanTheMaximumCount(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val blobId = uploadBlob("a".getBytes(StandardCharsets.UTF_8))
 
     `given`
@@ -6144,16 +6144,16 @@ trait EmailSetMethodContract {
 
   @Test
   def rangeFlagsRemovalShouldRemoveUserFlagSpellingOfTheKeyword(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(bobUsername)
+    val bobPath = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val ids = (1 to 4).map(_ => server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+    val ids = (1 to 4).map(_ => server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
         AppendCommand.builder().withFlags(FlagsBuilder.builder().add("$SEEN", "a+b").build()).build(Fixture.createTestMessage))
       .getMessageId)
 
     postEmailSetUpdate(ids.map(id => s""""${id.serialize}": {"keywords/$$seen": null}""").mkString(","))
 
     ids.foreach(id => {
-      val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(id, bobUsername).asScala.head.getFlags
+      val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(id, BOB).asScala.head.getFlags
       assertThat(flags.contains(Flags.Flag.SEEN)).isFalse
       assertThat(flags.getUserFlags).containsExactly("a+b")
     })
@@ -6161,25 +6161,25 @@ trait EmailSetMethodContract {
 
   @Test
   def flagsRemovalShouldRemoveUserFlagSpellingOfTheKeyword(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(bobUsername)
+    val bobPath = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+    val messageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
         AppendCommand.builder().withFlags(FlagsBuilder.builder().add("$SEEN", "a+b").build()).build(Fixture.createTestMessage))
       .getMessageId
 
     postEmailSetUpdate(s""""${messageId.serialize}": {"keywords/$$seen": null}""")
 
-    val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala.head.getFlags
+    val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, BOB).asScala.head.getFlags
     assertThat(flags.contains(Flags.Flag.SEEN)).isFalse
     assertThat(flags.getUserFlags).containsExactly("a+b")
   }
 
   @Test
   def movesShouldMarkTheMessagesRecentWhateverTheirCount(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(bobUsername)
+    val bobPath = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val otherId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "other"))
-    def append(): MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+    val otherId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
+    def append(): MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
         AppendCommand.builder().notRecent().withFlags(new Flags(Flags.Flag.SEEN)).build(Fixture.createTestMessage))
       .getMessageId
     val batch = (1 to 4).map(_ => append())
@@ -6190,22 +6190,22 @@ trait EmailSetMethodContract {
     postEmailSetUpdate(s""""${single.serialize}": {"mailboxIds": {"${otherId.serialize}": true}}""")
 
     (batch :+ single).foreach(id => {
-      val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(id, bobUsername).asScala.head.getFlags
+      val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(id, BOB).asScala.head.getFlags
       assertThat(flags).isEqualTo(FlagsBuilder.builder().add(Flags.Flag.SEEN, Flags.Flag.RECENT).build())
     })
   }
 
   @Test
   def rangeMoveToTheCurrentMailboxShouldBeANoop(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(bobUsername)
+    val bobPath = MailboxPath.inbox(BOB)
     val inboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val composed = (1 to 4).map(_ => server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+    val composed = (1 to 4).map(_ => server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
       AppendCommand.builder().withFlags(new Flags(Flags.Flag.FLAGGED)).build(Fixture.createTestMessage)))
 
     postEmailSetUpdate(composed.map(c => s""""${c.getMessageId.serialize}": {"mailboxIds": {"${inboxId.serialize}": true}}""").mkString(","))
 
     composed.foreach(c => {
-      val stored = server.getProbe(classOf[MessageIdProbe]).getMessages(c.getMessageId, bobUsername).asScala
+      val stored = server.getProbe(classOf[MessageIdProbe]).getMessages(c.getMessageId, BOB).asScala
       assertThat(stored.map(_.getMailboxId).asJava).containsExactly(inboxId)
       assertThat(stored.head.getUid).isEqualTo(c.getUid)
     })
@@ -7058,9 +7058,9 @@ trait EmailSetMethodContract {
 
   @Test
   def partialKeywordUpdateShouldPreserveImapFlagsThatAreNotKeywords(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(bobUsername)
+    val bobPath = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
       AppendCommand.builder()
         .withFlags(FlagsBuilder.builder().add(Flags.Flag.FLAGGED).add("a+b", "Foo.Bar").build())
         .build(Fixture.createTestMessage))
@@ -7068,7 +7068,7 @@ trait EmailSetMethodContract {
 
     postEmailSetUpdate(s""""${messageId.serialize}": {"keywords/$$seen": true}""")
 
-    val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala.head.getFlags
+    val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, BOB).asScala.head.getFlags
     assertThat(flags.contains(Flags.Flag.SEEN)).isTrue
     assertThat(flags.contains(Flags.Flag.FLAGGED)).isTrue
     assertThat(flags.contains("a+b")).isTrue
@@ -7077,9 +7077,9 @@ trait EmailSetMethodContract {
 
   @Test
   def keywordsResetShouldPreserveImapFlagsThatAreNotKeywords(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(bobUsername)
+    val bobPath = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
       AppendCommand.builder()
         .withFlags(FlagsBuilder.builder().add(Flags.Flag.FLAGGED).add("a+b", "music").build())
         .build(Fixture.createTestMessage))
@@ -7087,7 +7087,7 @@ trait EmailSetMethodContract {
 
     postEmailSetUpdate(s""""${messageId.serialize}": {"keywords": {"$$seen": true}}""")
 
-    val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala.head.getFlags
+    val flags = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, BOB).asScala.head.getFlags
     assertThat(flags.contains(Flags.Flag.SEEN)).isTrue
     assertThat(flags.contains(Flags.Flag.FLAGGED)).isFalse
     assertThat(flags.contains("music")).isFalse
@@ -7096,10 +7096,10 @@ trait EmailSetMethodContract {
 
   @Test
   def moveAndKeywordUpdateShouldPreserveImapFlagsThatAreNotKeywords(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(bobUsername)
+    val bobPath = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val otherId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "other"))
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+    val otherId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
       AppendCommand.builder()
         .withFlags(FlagsBuilder.builder().add(Flags.Flag.FLAGGED).add("a+b", "Foo.Bar", "music").build())
         .build(Fixture.createTestMessage))
@@ -7107,7 +7107,7 @@ trait EmailSetMethodContract {
 
     postEmailSetUpdate(s""""${messageId.serialize}": {"mailboxIds": {"${otherId.serialize}": true}, "keywords/$$seen": true, "keywords/music": null}""")
 
-    val messages = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala
+    val messages = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, BOB).asScala
     assertThat(messages.map(_.getMailboxId).asJava).containsExactly(otherId)
     val flags = messages.head.getFlags
     assertThat(flags.contains(Flags.Flag.SEEN)).isTrue
@@ -7119,18 +7119,18 @@ trait EmailSetMethodContract {
 
   @Test
   def keywordUpdateShouldNotCopyDeletedFlagToOtherMailboxesOfTheMessage(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(bobUsername)
+    val bobPath = MailboxPath.inbox(BOB)
     val inboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val otherId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "other"))
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
+    val otherId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
       AppendCommand.builder().build(Fixture.createTestMessage))
       .getMessageId
     postEmailSetUpdate(s""""${messageId.serialize}": {"mailboxIds": {"${inboxId.serialize}": true, "${otherId.serialize}": true}}""")
-    server.getProbe(classOf[MessageIdProbe]).updateNewFlags(bobUsername, new Flags(Flags.Flag.DELETED), messageId, List(inboxId).asJava)
+    server.getProbe(classOf[MessageIdProbe]).updateNewFlags(BOB, new Flags(Flags.Flag.DELETED), messageId, List(inboxId).asJava)
 
     postEmailSetUpdate(s""""${messageId.serialize}": {"keywords/$$seen": true}""")
 
-    val flagsByMailbox = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, bobUsername).asScala
+    val flagsByMailbox = server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, BOB).asScala
       .map(message => message.getMailboxId -> message.getFlags)
       .toMap
     assertThat(flagsByMailbox(inboxId).contains(Flags.Flag.DELETED)).isTrue
@@ -7144,7 +7144,7 @@ trait EmailSetMethodContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(s"""{
                |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-               |  "methodCalls": [["Email/set", {"accountId": "$bobAccountId", "update": {$update}}, "c1"]]
+               |  "methodCalls": [["Email/set", {"accountId": "$ACCOUNT_ID", "update": {$update}}, "c1"]]
                |}""".stripMargin)
     .when
       .post
@@ -7354,10 +7354,10 @@ trait EmailSetMethodContract {
   @Test
   def updateShouldRejectAnEmptyMailboxIdsReset(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -7367,13 +7367,13 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$bobAccountId",
+         |      "accountId": "$ACCOUNT_ID",
          |      "update": {
          |        "${messageId.serialize}": {"mailboxIds": {}}
          |      }
          |    }, "c1"],
          |    ["Email/get", {
-         |      "accountId": "$bobAccountId",
+         |      "accountId": "$ACCOUNT_ID",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["mailboxIds"]
          |    }, "c2"]
@@ -7410,10 +7410,10 @@ trait EmailSetMethodContract {
   @Test
   def updateShouldRejectRemovingTheLastMailbox(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -7423,13 +7423,13 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$bobAccountId",
+         |      "accountId": "$ACCOUNT_ID",
          |      "update": {
          |        "${messageId.serialize}": {"mailboxIds/${mailboxId.serialize}": null}
          |      }
          |    }, "c1"],
          |    ["Email/get", {
-         |      "accountId": "$bobAccountId",
+         |      "accountId": "$ACCOUNT_ID",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["mailboxIds"]
          |    }, "c2"]

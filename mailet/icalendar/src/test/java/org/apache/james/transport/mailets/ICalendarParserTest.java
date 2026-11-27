@@ -200,7 +200,7 @@ class ICalendarParserTest {
         assertThat(ical4jAttachFiles()).isEqualTo(before);
         List<Attach> attachments = calendar.getComponent(Component.VEVENT).orElseThrow().getProperties(Property.ATTACH);
         assertThat(attachments).hasSize(2);
-        assertThat(new String(attachments.get(0).getBinaryData(), StandardCharsets.US_ASCII)).isEqualTo("hello");
+        assertThat(new String(attachments.get(0).getBinary(), StandardCharsets.US_ASCII)).isEqualTo("hello");
         assertThat(attachments.get(1).getUri()).hasToString("https://example.com/a.pdf");
     }
 

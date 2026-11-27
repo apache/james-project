@@ -27,6 +27,7 @@ import io.netty.util.concurrent.ImmediateEventExecutor
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
 import org.apache.james.jmap.pushsubscription.SSRFValidator.HostResolver
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
+import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
