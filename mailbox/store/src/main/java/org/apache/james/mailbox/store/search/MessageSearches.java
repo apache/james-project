@@ -482,7 +482,8 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                     default:
                         throw new UnsupportedSearchException();
                     }
-                } catch (ParseException e) {
+                } catch (ParseException | NumberFormatException e) {
+                    // mime4j DateTimeParser reports oversized numbers (eg the day 888888888888) as NumberFormatException
                     return false;
                 }
             }
