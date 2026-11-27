@@ -30,6 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.IntStream;
 
 import org.apache.james.blob.api.BlobStoreDAO;
@@ -55,8 +56,20 @@ import reactor.util.retry.Retry;
 public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
     private static final BucketName fallbackBucket = BucketName.of("fallback");
 
+    private static final long MULTIPART_THRESHOLD = 6L * 1024 * 1024;
+    private static final long MULTIPART_PART_SIZE = 5L * 1024 * 1024;
+    // 3 full parts and a smaller last one
+    private static final byte[] MULTIPART_CONTENT = randomBytes(3 * (int) MULTIPART_PART_SIZE + 1234);
+
     private static S3BlobStoreDAO testee;
+    private static S3BlobStoreDAO multipartTestee;
     private static S3ClientFactory s3ClientFactory;
+
+    private static byte[] randomBytes(int size) {
+        byte[] bytes = new byte[size];
+        new Random(42).nextBytes(bytes);
+        return bytes;
+    }
 
     @BeforeAll
     static void setUp(DockerAwsS3Container dockerAwsS3) {
@@ -79,6 +92,17 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
             DEFAULT_S3_METRICS_PREFIX));
 
         testee = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory(), S3RequestOption.DEFAULT);
+
+        S3BlobStoreConfiguration multipartConfiguration = S3BlobStoreConfiguration.builder()
+            .authConfiguration(authConfiguration)
+            .region(dockerAwsS3.dockerAwsS3().region())
+            .uploadRetrySpec(Optional.of(Retry.backoff(3, java.time.Duration.ofSeconds(1))
+                .filter(UPLOAD_RETRY_EXCEPTION_PREDICATE)))
+            .defaultBucketName(BucketName.DEFAULT)
+            .multipartUploadThreshold(Optional.of(MULTIPART_THRESHOLD))
+            .multipartUploadPartSize(Optional.of(MULTIPART_PART_SIZE))
+            .build();
+        multipartTestee = new S3BlobStoreDAO(s3ClientFactory, multipartConfiguration, new TestBlobId.Factory(), S3RequestOption.DEFAULT);
     }
 
     @AfterEach
@@ -94,6 +118,107 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
     @Override
     public BlobStoreDAO testee() {
         return testee;
+    }
+
+    @Test
+    void chunkSizeShouldBePositiveForContentsLargerThanTwoGigabytes() {
+        long sixGigabytes = 6L * 1024 * 1024 * 1024;
+
+        assertThat(S3BlobStoreDAO.chunkSize(sixGigabytes)).isEqualTo(1024 * 100);
+    }
+
+    @Test
+    void chunkSizeShouldBeContentLengthForSmallContents() {
+        assertThat(S3BlobStoreDAO.chunkSize(12)).isEqualTo(12);
+    }
+
+    @Test
+    void chunkSizeShouldBeZeroForEmptyContents() {
+        assertThat(S3BlobStoreDAO.chunkSize(0)).isZero();
+    }
+
+    @Test
+    void multipartUploadShouldStoreByteSourceContent() {
+        TestBlobId blobId = new TestBlobId("multipart");
+
+        Mono.from(multipartTestee.save(TEST_BUCKET_NAME, blobId, ByteSource.wrap(MULTIPART_CONTENT))).block();
+
+        assertThat(Mono.from(multipartTestee.readBytes(TEST_BUCKET_NAME, blobId)).block())
+            .isEqualTo(MULTIPART_CONTENT);
+    }
+
+    @Test
+    void multipartUploadShouldStoreInputStreamContent() {
+        TestBlobId blobId = new TestBlobId("multipart");
+
+        Mono.from(multipartTestee.save(TEST_BUCKET_NAME, blobId, new ByteArrayInputStream(MULTIPART_CONTENT))).block();
+
+        assertThat(multipartTestee.read(TEST_BUCKET_NAME, blobId))
+            .hasBinaryContent(MULTIPART_CONTENT);
+    }
+
+    @Test
+    void multipartUploadShouldStoreBytesContent() {
+        TestBlobId blobId = new TestBlobId("multipart");
+
+        Mono.from(multipartTestee.save(TEST_BUCKET_NAME, blobId, MULTIPART_CONTENT)).block();
+
+        assertThat(Mono.from(multipartTestee.readBytes(TEST_BUCKET_NAME, blobId)).block())
+            .isEqualTo(MULTIPART_CONTENT);
+    }
+
+    @Test
+    void multipartUploadShouldStoreContentOfExactlyOnePart() {
+        TestBlobId blobId = new TestBlobId("multipart");
+        byte[] content = randomBytes((int) MULTIPART_THRESHOLD + 1);
+
+        Mono.from(multipartTestee.save(TEST_BUCKET_NAME, blobId, ByteSource.wrap(content))).block();
+
+        assertThat(Mono.from(multipartTestee.readBytes(TEST_BUCKET_NAME, blobId)).block())
+            .isEqualTo(content);
+    }
+
+    @Test
+    void multipartUploadShouldOverwriteExistingBlob() {
+        TestBlobId blobId = new TestBlobId("multipart");
+        Mono.from(multipartTestee.save(TEST_BUCKET_NAME, blobId, ELEVEN_KILOBYTES)).block();
+
+        Mono.from(multipartTestee.save(TEST_BUCKET_NAME, blobId, ByteSource.wrap(MULTIPART_CONTENT))).block();
+
+        assertThat(Mono.from(multipartTestee.readBytes(TEST_BUCKET_NAME, blobId)).block())
+            .isEqualTo(MULTIPART_CONTENT);
+    }
+
+    @Test
+    void failingMultipartUploadShouldBeAborted() {
+        TestBlobId blobId = new TestBlobId("multipart");
+        ByteSource failingContent = new ByteSource() {
+            @Override
+            public InputStream openStream() {
+                return new InputStream() {
+                    private long position = 0;
+
+                    @Override
+                    public int read() throws IOException {
+                        if (position++ > MULTIPART_PART_SIZE + 1) {
+                            throw new IOException("Simulated failure");
+                        }
+                        return 0;
+                    }
+                };
+            }
+
+            @Override
+            public long size() {
+                return MULTIPART_CONTENT.length;
+            }
+        };
+
+        assertThatThrownBy(() -> Mono.from(multipartTestee.save(TEST_BUCKET_NAME, blobId, failingContent)).block())
+            .isInstanceOf(Exception.class);
+
+        assertThat(s3ClientFactory.get().listMultipartUploads(builder -> builder.bucket(TEST_BUCKET_NAME.asString())).join().uploads())
+            .isEmpty();
     }
 
     @Test

@@ -52,6 +52,8 @@ public class S3BlobStoreConfigurationReader {
     private static final String OBJECTSTORAGE_S3_UPLOAD_RETRY_BACKOFF_DURATION_MILLIS = "objectstorage.s3.upload.retry.backoffDurationMillis";
     private static final String OBJECTSTORAGE_S3_ENCRYPTION_SSEC_ENABLE_PROPERTY = "encryption.s3.sse.c.enable";
     private static final String OBJECTSTORAGE_NAMESPACE_READ_FALLBACK = "objectstorage.namespace.read.fallback";
+    private static final String OBJECTSTORAGE_S3_MULTIPART_THRESHOLD = "objectstorage.s3.multipart.threshold";
+    private static final String OBJECTSTORAGE_S3_MULTIPART_PART_SIZE = "objectstorage.s3.multipart.partSize";
 
     public static S3BlobStoreConfiguration from(Configuration configuration) throws ConfigurationException {
         Optional<Integer> httpConcurrency = Optional.ofNullable(configuration.getInteger(OBJECTSTORAGE_S3_HTTP_CONCURRENCY, null));
@@ -81,6 +83,13 @@ public class S3BlobStoreConfigurationReader {
 
         Optional<String> fallbackNamespace = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_NAMESPACE_READ_FALLBACK, null));
 
+        Optional<Long> multipartUploadThreshold = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_S3_MULTIPART_THRESHOLD, null))
+            .map(Size::parse)
+            .map(Size::asBytes);
+        Optional<Long> multipartUploadPartSize = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_S3_MULTIPART_PART_SIZE, null))
+            .map(Size::parse)
+            .map(Size::asBytes);
+
         S3BlobStoreConfiguration.Builder.ReadyToBuild configBuilder = S3BlobStoreConfiguration.builder()
             .authConfiguration(AwsS3ConfigurationReader.from(configuration))
             .region(region)
@@ -92,7 +101,9 @@ public class S3BlobStoreConfigurationReader {
             .writeTimeout(writeTimeout)
             .connectionTimeout(connectionTimeout)
             .uploadRetrySpec(uploadRetrySpec)
-            .fallbackBucketName(fallbackNamespace.map(BucketName::of));
+            .fallbackBucketName(fallbackNamespace.map(BucketName::of))
+            .multipartUploadThreshold(multipartUploadThreshold)
+            .multipartUploadPartSize(multipartUploadPartSize);
 
         if (ssecEnabled) {
             configBuilder.ssecEnabled().ssecConfiguration(configuration);
