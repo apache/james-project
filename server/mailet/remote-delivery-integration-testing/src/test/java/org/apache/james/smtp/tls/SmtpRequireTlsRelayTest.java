@@ -93,6 +93,7 @@ class SmtpRequireTlsRelayTest {
     @BeforeEach
     void setUp(@TempDir File temporaryFolder, DockerMockSmtp mockSmtp, TestInfo testInfo) throws Exception {
         boolean usePriority = testInfo.getTags().stream().anyMatch(tag -> tag.contains("usePriority=true"));
+        boolean trustAll = testInfo.getTags().stream().anyMatch(tag -> tag.contains("trustAll=true"));
 
         inMemoryDNSService = new InMemoryDNSService()
                 .registerMxRecord(DEFAULT_DOMAIN, LOCALHOST_IP)
@@ -122,7 +123,7 @@ class SmtpRequireTlsRelayTest {
                 .withMailetContainer(MailetContainer.builder()
                         .putProcessor(CommonProcessors.simpleRoot())
                         .putProcessor(CommonProcessors.error())
-                        .putProcessor(directResolutionTransport(usePriority))
+                        .putProcessor(relayToMockSmtpTransport(usePriority, trustAll))
                         .putProcessor(CommonProcessors.bounces()))
                 .withSmtpConfiguration(smtpConfiguration)
                 .build(temporaryFolder);
@@ -137,7 +138,9 @@ class SmtpRequireTlsRelayTest {
         assertThat(mockSmtp.getConfigurationClient().version()).isEqualTo("0.4");
     }
 
-    private ProcessorConfiguration.Builder directResolutionTransport(Boolean usePriority) {
+    // The mock server listens on a random port: it is reached as a gateway, its self-signed certificate being trusted
+    // by name. Trusting all hosts does not apply to REQUIRETLS mail.
+    private ProcessorConfiguration.Builder relayToMockSmtpTransport(Boolean usePriority, boolean trustAll) {
         return ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.LOCAL_DELIVERY)
@@ -145,6 +148,9 @@ class SmtpRequireTlsRelayTest {
                         .mailet(RemoteDelivery.class)
                         .matcher(All.class)
                         .addProperty("usePriority", usePriority.toString())
+                        .addProperty("gateway", LOCALHOST_IP + ":" + mockSmtp.getSmtpPort().getValue())
+                        .addProperty("mail.smtp.ssl.trust", trustAll ? "*" : LOCALHOST_IP)
+                        .addProperty("verifyServerIdentity", "false")
                         .addProperty("outgoingQueue", "outgoing")
                         .addProperty("delayTime", "3 * 10 ms")
                         .addProperty("maxRetries", "1")
@@ -276,6 +282,21 @@ class SmtpRequireTlsRelayTest {
                 .readFirstMessage();
 
         Assertions.assertThat(dsnMessage).contains("Mail delivery failed; REQUIRETLS mail needs a TLS connection to a server supporting REQUIRETLS");
+    }
+
+    @Test
+    @Tag("trustAll=true")
+    void remoteDeliveryShouldNotTrustAllCertificatesForRequireTlsMail() throws Exception {
+        SMTPSClient smtpClient = initSMTPSClient();
+        smtpClient.mail("<" + FROM + "> REQUIRETLS");
+        smtpClient.rcpt("<" + RECIPIENT + ">");
+        smtpClient.sendShortMessageData("A short message...");
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(FROM, PASSWORD)
+                .select(TestIMAPClient.INBOX)
+                .awaitMessageCount(awaitAtMostOneMinute, 1);
+        assertThat(mockSmtp.getConfigurationClient().listMails()).isEmpty();
     }
 
     @AfterEach

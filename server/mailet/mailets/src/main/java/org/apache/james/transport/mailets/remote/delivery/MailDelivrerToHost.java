@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
+import javax.net.ssl.SSLSocketFactory;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.SendFailedException;
 import jakarta.mail.Session;
@@ -61,6 +63,8 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableListMultimap;
 
 @SuppressWarnings("deprecation")
@@ -68,6 +72,9 @@ public class MailDelivrerToHost {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailDelivrerToHost.class);
     public static final String BIT_MIME_8 = "8BITMIME";
     public static final String REQUIRE_TLS = "REQUIRETLS";
+    // Validates the certificate chain against the JVM trust store
+    @VisibleForTesting
+    static final SSLSocketFactory VALIDATING_SOCKET_FACTORY = (SSLSocketFactory) SSLSocketFactory.getDefault();
     public static final String STARTTLS = "STARTTLS";
     public static final String MT_PRIORITY = "MT-PRIORITY";
     public static final String MAIL_PRIORITY_ATTRIBUTE_NAME = "MAIL_PRIORITY";
@@ -129,16 +136,13 @@ public class MailDelivrerToHost {
         // "mail.smtp.dsn.ret"        //default to nothing... appended as RET= after MAIL FROM line.
         // "mail.smtp.dsn.notify"     //default to nothing... appended as NOTIFY= after RCPT TO line.
 
-        if (requiresTls(mail)) {
-            // RFC 8689: such a mail only leaves over TLS
-            props.put(inContext(session, "mail.smtp.starttls.enable"), "true");
-        }
+        boolean connectByServerName = requiresTls(mail) && requireValidatedTls(props, session, outgoingMailServer);
 
         SMTPTransport transport = null;
         try {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost(props.getProperty(inContext(session, "mail.smtp.localhost"), configuration.getHeloNameProvider().getHeloName()));
-            connect(outgoingMailServer, transport);
+            connect(outgoingMailServer, transport, connectByServerName);
             if (requireTlsNotSatisfied(mail, transport)) {
                 return ExecutionResult.permanentFailure(new SendFailedException("Mail delivery failed; REQUIRETLS mail needs a TLS connection to a server supporting REQUIRETLS"));
             }
@@ -193,8 +197,12 @@ public class MailDelivrerToHost {
         }
     }
 
+    private boolean isSmtps(Session session) {
+        return "true".equals(session.getProperties().getProperty("mail.smtps.ssl.enable"));
+    }
+
     private String inContext(Session session, String name) {
-        if ("true".equals(session.getProperties().getProperty("mail.smtps.ssl.enable"))) {
+        if (isSmtps(session)) {
             return name.replace("smtp", "smtps");
         } else {
             return name;
@@ -316,10 +324,50 @@ public class MailDelivrerToHost {
         return props;
     }
 
-    private void connect(HostAddress outgoingMailServer, SMTPTransport transport) throws MessagingException {
+    /**
+     * RFC 8689 section 4.2.1: such a mail only leaves over TLS (see {@link #requireTlsNotSatisfied}), with a
+     * certificate that chains to a trusted root and matches the server name. The opportunistic settings of the other
+     * mails (mail.smtp.ssl.trust=*, no server identity check) do not apply to it, except for the hosts that
+     * mail.smtp.ssl.trust names explicitly. The pool clears these properties again when the session is passivated.
+     *
+     * @return whether the server has to be connected by its name for its certificate to be checked against it
+     */
+    private boolean requireValidatedTls(Properties props, Session session, HostAddress outgoingMailServer) {
+        props.put(inContext(session, "mail.smtp.starttls.enable"), "true");
+        String serverName = getHostName(outgoingMailServer);
+        String trustedHosts = Optional.ofNullable(props.getProperty(inContext(session, "mail.smtp.ssl.trust")))
+            .orElse(props.getProperty("mail.smtp.ssl.trust"));
+        if (isExplicitlyTrusted(trustedHosts, serverName)) {
+            return false;
+        }
+        props.put(inContext(session, "mail.smtp.ssl.checkserveridentity"), "true");
+        if (props.getProperty(inContext(session, "mail.smtp.ssl.socketFactory.class")) != null) {
+            // The trust the operator configured
+            return true;
+        }
+        if (isSmtps(session)) {
+            // Takes precedence over mail.smtps.ssl.trust. TLS from the start: the name is the one connected to.
+            props.put(inContext(session, "mail.smtp.ssl.socketFactory"), VALIDATING_SOCKET_FACTORY);
+            return true;
+        }
+        // Takes precedence over mail.smtp.ssl.trust. STARTTLS keeps the address our DNS resolved, but checks the name.
+        props.put(inContext(session, "mail.smtp.ssl.socketFactory"), new ServerNameSSLSocketFactory(VALIDATING_SOCKET_FACTORY, serverName));
+        return false;
+    }
+
+    @VisibleForTesting
+    static boolean isExplicitlyTrusted(String trustedHosts, String host) {
+        if (trustedHosts == null) {
+            return false;
+        }
+        return Splitter.on(CharMatcher.whitespace()).omitEmptyStrings().splitToStream(trustedHosts)
+            .anyMatch(trusted -> !trusted.equals("*") && trusted.equalsIgnoreCase(host));
+    }
+
+    private void connect(HostAddress outgoingMailServer, SMTPTransport transport, boolean connectByServerName) throws MessagingException {
         if (configuration.getAuthUser() != null) {
             transport.connect(getHostName(outgoingMailServer), configuration.getAuthUser(), configuration.getAuthPass());
-        } else if (configuration.isConnectByHostname()) {
+        } else if (configuration.isConnectByHostname() || connectByServerName) {
             transport.connect(getHostName(outgoingMailServer), null, null);
         } else {
             transport.connect(); // connect via IP address instead of host name

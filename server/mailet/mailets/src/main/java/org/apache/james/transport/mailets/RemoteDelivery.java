@@ -150,6 +150,10 @@ import com.google.common.collect.ImmutableMap;
  * You can also use other javax properties for StartTLS, but their property prefix must be <i>mail.smtp.ssl.</i> in this case.<br/>
  * James enables server identity verification by default. In certain rare edge cases you might disable it via the <b>verifyServerIdentity</b> and <b>sslTrustAllCerts</b> parameters,
  * or use the <i>mail.smtps.ssl.checkserveridentity</i> and <i>mail.smtp.ssl.checkserveridentity</i> javax properties for fine control.<br/>
+ * These relaxed settings do not apply to REQUIRETLS mail (RFC 8689): it only leaves over TLS, with a certificate validated
+ * against the JVM trust store (or the configured <i>mail.smtp.ssl.socketFactory.class</i>) and matching the server name.
+ * Only the hosts that <i>mail.smtp.ssl.trust</i> names explicitly (not <code>*</code>) keep the configured trust and server
+ * identity verification.<br/>
  * Read <a href="https://eclipse-ee4j.github.io/angus-mail/docs/api/org.eclipse.angus.mail/org/eclipse/angus/mail/smtp/package-summary.html"><code>org.eclipse.angus.mail.smtp</code></a>
  * for full information.
  */
