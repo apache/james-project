@@ -90,7 +90,8 @@ public class OidcJwtTokenVerifier {
                     .orElse(true)) // true if no aud is configured
                 .flatMap(claims -> Optional.ofNullable(claims.get(oidcSASLConfiguration.getClaim(), String.class)));
         } catch (JwtException e) {
-            LOGGER.info("Failed Jwt verification", e);
+            // Not the exception itself: jjwt messages quote the token header
+            LOGGER.info("Failed Jwt verification: {}", e.getClass().getSimpleName());
             return Optional.empty();
         }
     }
