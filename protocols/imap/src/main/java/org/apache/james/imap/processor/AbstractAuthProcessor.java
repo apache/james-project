@@ -90,6 +90,12 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                     final MailboxSession mailboxSession = getMailboxManager().authenticate(authenticationAttempt.getAuthenticationId(),
                         authenticationAttempt.getPassword())
                         .withoutDelegation();
+                    if (session.getState() != ImapSessionState.NON_AUTHENTICATED) {
+                        // For instance closed after too many failures while this attempt was checked
+                        LOGGER.info("Authentication succeeded on a session that no longer expects it: ignored");
+                        no(request, responder, HumanReadableText.AUTHENTICATION_FAILED);
+                        return;
+                    }
                     session.authenticated();
                     session.setMailboxSession(mailboxSession);
                     provisionInbox(session, getMailboxManager(), mailboxSession);
@@ -141,6 +147,12 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         try {
             MailboxManager mailboxManager = getMailboxManager();
             MailboxSession mailboxSession = mailboxSessionSupplier.get();
+            if (session.getState() != ImapSessionState.NON_AUTHENTICATED) {
+                // For instance closed after too many failures while this attempt was checked
+                LOGGER.info("Authentication succeeded on a session that no longer expects it: ignored");
+                no(request, responder, HumanReadableText.AUTHENTICATION_FAILED);
+                return;
+            }
             session.authenticated();
             session.setMailboxSession(mailboxSession);
             AuditTrail.entry()
