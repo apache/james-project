@@ -24,7 +24,9 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -469,6 +471,18 @@ class UserRoutesTest {
                     .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("JSON payload of the request is not valid"));
+            }
+
+            @Test
+            default void putShouldNotEchoTheBodyOfAnInvalidJsonPayload() {
+                given()
+                    .body("{\"password\": hunter2}")
+                .when()
+                    .put(USERNAME_WITH_DOMAIN.asString())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("message", is("JSON payload of the request is not valid"))
+                    .body(not(containsString("hunter2")));
             }
 
             @Test
@@ -1137,6 +1151,18 @@ class UserRoutesTest {
                 .post(USERNAME_WITH_DOMAIN.asString() + "/verify")
             .then()
                 .statusCode(HttpStatus.UNAUTHORIZED_401);
+        }
+
+        @Test
+        void verifyShouldNotEchoTheBodyOfAnInvalidJsonPayload() {
+            given()
+                .body("{\"password\": hunter2}")
+            .when()
+                .post(USERNAME_WITH_DOMAIN.asString() + "/verify")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("message", is("JSON payload of the request is not valid"))
+                .body(not(containsString("hunter2")));
         }
 
         @Test

@@ -22,6 +22,7 @@ package org.apache.james.webadmin.oidc;
 import static io.restassured.RestAssured.given;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -147,6 +148,23 @@ class OidcBackchannelLogoutRoutesTest {
             .post()
         .then()
             .statusCode(400);
+    }
+
+    @Test
+    void postShouldReturn400WhenSidContainsALineBreak() {
+        String payload = Base64.getUrlEncoder().withoutPadding()
+            .encodeToString("{\"sid\":\"sid1\\r\\nforged\"}".getBytes(StandardCharsets.UTF_8));
+        String token = "header." + payload + ".signature";
+
+        given()
+            .contentType(ContentType.URLENC)
+            .formParam("logout_token", token)
+        .when()
+            .post()
+        .then()
+            .statusCode(400);
+
+        verify(oidcTokenCache, never()).invalidate(any());
     }
 
     @Test

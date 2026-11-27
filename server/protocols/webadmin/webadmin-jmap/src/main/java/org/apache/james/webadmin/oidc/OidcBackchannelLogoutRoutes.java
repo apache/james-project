@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.io.BaseEncoding;
@@ -108,10 +109,13 @@ public class OidcBackchannelLogoutRoutes implements PublicRoutes {
             return Optional.ofNullable(payloadMap.getOrDefault(SID_PROPERTY, null))
                 .map(s -> (String) s)
                 .filter(sid -> !sid.isEmpty())
+                // The sid ends up in the logs: only printable ASCII
+                .filter(sid -> CharMatcher.inRange('!', '~').matchesAllOf(sid))
                 .map(Sid::new)
                 .orElseThrow(() -> new IllegalArgumentException("Unable to extract Sid from logout token"));
         } catch (Exception exception) {
-            throw new IllegalArgumentException("Unable to extract Sid from logout token", exception);
+            // The cause is not chained: its message can quote the decoded payload
+            throw new IllegalArgumentException("Unable to extract Sid from logout token");
         }
     }
 }

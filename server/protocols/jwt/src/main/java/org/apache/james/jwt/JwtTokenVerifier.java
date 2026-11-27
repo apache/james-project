@@ -127,7 +127,8 @@ public class JwtTokenVerifier {
                 try {
                     return Optional.ofNullable(claims.get(claimName, returnType));
                 } catch (JwtException e) {
-                    LOGGER.info("Failed Jwt verification", e);
+                    // Not the exception itself: jjwt messages quote the token content
+                    LOGGER.info("Failed Jwt verification: {}", e.getClass().getSimpleName());
                     return Optional.empty();
                 }
             });
@@ -155,7 +156,8 @@ public class JwtTokenVerifier {
             Jws<Claims> jws = parser.parseSignedClaims(token);
             return Optional.of(jws.getPayload());
         } catch (JwtException e) { // also if kid was given but our locator didn't find the corresponding key
-            LOGGER.info("Failed Jwt verification", e);
+            // Not the exception itself: jjwt messages quote the token header
+            LOGGER.info("Failed Jwt verification: {}", e.getClass().getSimpleName());
             return Optional.empty();
         }
     }
