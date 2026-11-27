@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets.jsieve.delivery;
 
+import java.util.List;
 import java.util.Optional;
 
 import jakarta.mail.MessagingException;
@@ -29,10 +30,22 @@ import jakarta.mail.internet.MimeMultipart;
 import org.apache.mailet.Mail;
 
 public class SieveFailureMessageComposer {
+    // The notification has its own multipart body: the headers describing the body of the original message do not apply
+    // to it, and Jakarta Mail would fail saving the changes on a malformed one (eg Content-Disposition: inline:x)
+    private static final List<String> ORIGINAL_BODY_HEADERS = List.of(
+        "Content-Disposition",
+        "Content-Transfer-Encoding",
+        "Content-ID",
+        "Content-Description",
+        "Content-MD5",
+        "Content-Language");
 
     public static MimeMessage composeMessage(Mail aMail, Exception ex, String user) throws MessagingException {
         MimeMessage originalMessage = aMail.getMessage();
         MimeMessage message = new MimeMessage(originalMessage);
+        for (String header : ORIGINAL_BODY_HEADERS) {
+            message.removeHeader(header);
+        }
         MimeMultipart multipart = new MimeMultipart();
 
         MimeBodyPart noticePart = new MimeBodyPart();

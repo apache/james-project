@@ -24,9 +24,13 @@ import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,5 +80,34 @@ class SieveExecutorTest {
         assertThat(mailetContext.getSentMails())
             .hasSize(1)
             .allSatisfy(sentMail -> assertThat(sentMail.getAttributes()).containsKey(SIEVE_NOTIFICATION));
+    }
+
+    @Test
+    void handleFailureShouldSendANotificationWhenTheMessageHasMalformedBodyHeaders() throws Exception {
+        MimeMessage original = MimeMessageUtil.mimeMessageFromString(
+            "Subject: hello\r\n" +
+            "Content-Transfer-Encoding: x-unknown\r\n" +
+            "Content-Disposition: inline:x\r\n" +
+            "Content-ID: <original@localhost>\r\n" +
+            "\r\n" +
+            "body\r\n");
+
+        testee.handleFailure(RECIPIENT1, MailImpl.builder()
+            .name("mymail")
+            .sender("sender@localhost")
+            .addRecipient(RECIPIENT1)
+            .mimeMessage(original)
+            .build(), new Exception("boom"));
+
+        assertThat(mailetContext.getSentMails())
+            .hasSize(1)
+            .allSatisfy(sentMail -> {
+                MimeMessage notification = sentMail.getMsg();
+                assertThat(notification.getSubject()).isEqualTo("[SIEVE ERROR] hello");
+                assertThat(notification.getContent()).isInstanceOf(MimeMultipart.class);
+                assertThat(notification.getHeader("Content-Disposition")).isNull();
+                assertThat(notification.getHeader("Content-ID")).isNull();
+                assertThat(notification.getEncoding()).isNotEqualTo("x-unknown");
+            });
     }
 }
