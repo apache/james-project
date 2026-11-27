@@ -86,10 +86,6 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
                 taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
                 return logAsMono(() -> LOGGER.debug("The mailbox name length is over limit: {}", newPath.getName(), e));
             })
-            .onErrorResume(TooLongMailboxNameException.class, e -> {
-                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-                return logAsMono(() -> LOGGER.error("Rename from {} to {} failed", existingPath, newPath, e));
-            })
             .then(unsolicitedResponses(session, responder, false));
     }
 
