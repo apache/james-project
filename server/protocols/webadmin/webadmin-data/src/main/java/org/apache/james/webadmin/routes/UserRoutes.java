@@ -241,6 +241,8 @@ public class UserRoutes implements Routes {
                 userService.insertUser(username, jsonExtractor.parse(request.body()).getPassword());
             }
             return halt(HttpStatus.NO_CONTENT_204);
+        } catch (JsonExtractException e) {
+            throw invalidPasswordPayload();
         } catch (InvalidUsernameException e) {
             LOGGER.info("Invalid username", e);
             throw ErrorResponder.builder()
@@ -269,6 +271,16 @@ public class UserRoutes implements Routes {
         }
     }
 
+    // Neither logged nor answered with its cause: the Jackson message can quote the password
+    private HaltException invalidPasswordPayload() {
+        LOGGER.info("Invalid JSON body supplied in a user password request");
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .type(ErrorType.INVALID_ARGUMENT)
+            .message("JSON payload of the request is not valid")
+            .haltError();
+    }
+
     private String verifyUser(Request request, Response response) throws UsersRepositoryException {
         Username username = extractUsername(request);
         try {
@@ -280,13 +292,7 @@ public class UserRoutes implements Routes {
             }
             return Constants.EMPTY_BODY;
         } catch (JsonExtractException e) {
-            LOGGER.info("Error while deserializing verifyUser request", e);
-            throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .type(ErrorType.INVALID_ARGUMENT)
-                    .message("Error while deserializing verifyUser request")
-                    .cause(e)
-                    .haltError();
+            throw invalidPasswordPayload();
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid user path", e);
             throw ErrorResponder.builder()

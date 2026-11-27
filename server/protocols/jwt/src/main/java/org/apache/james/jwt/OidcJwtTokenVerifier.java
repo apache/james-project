@@ -89,7 +89,8 @@ public class OidcJwtTokenVerifier {
                 .filter(this::hasExpectedAudience)
                 .flatMap(this::extractConfiguredClaim);
         } catch (JwtException e) {
-            LOGGER.info("Failed Jwt verification", e);
+            // Not the exception itself: jjwt messages quote the token header
+            LOGGER.info("Failed Jwt verification: {}", e.getClass().getSimpleName());
             return Optional.empty();
         }
     }
