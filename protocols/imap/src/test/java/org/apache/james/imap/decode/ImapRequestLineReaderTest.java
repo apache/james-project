@@ -127,7 +127,7 @@ class ImapRequestLineReaderTest {
         inputStream = new ByteArrayInputStream(("\"" + value + "\"\r\n").getBytes(StandardCharsets.UTF_8));
         lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        assertThat(lineReader.consumeQuoted()).isEqualTo(value);
+        assertThat(lineReader.consumeQuoted(StandardCharsets.UTF_8)).isEqualTo(value);
     }
 
     @ParameterizedTest
