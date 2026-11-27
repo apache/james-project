@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.jsieve;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import jakarta.activation.DataHandler;
 import jakarta.mail.MessagingException;
@@ -52,6 +53,7 @@ public class VacationReply {
         private String reason;
         private String mime;
         private String subject;
+        private Set<MailAddress> allowedFromAddresses;
 
         public Builder(Mail originalMail, ActionContext context) {
             Preconditions.checkArgument(originalMail.hasSender());
@@ -80,23 +82,29 @@ public class VacationReply {
             return this;
         }
 
+        public Builder allowedFromAddresses(Set<MailAddress> allowedFromAddresses) {
+            this.allowedFromAddresses = allowedFromAddresses;
+            return this;
+        }
+
         public VacationReply build() throws MessagingException {
             Preconditions.checkState(eitherReasonOrMime());
+            Preconditions.checkNotNull(this.allowedFromAddresses);
             ActionUtils.detectAndHandleLocalLooping(originalMail,  context, "vacation");
 
-            MailAddress sender = retrieveOriginalSender();
             MimeMessage reply = (MimeMessage) originalMail.getMessage().reply(false);
             // RFC 5322 section 3.6: From is mandatory, reply() does not set it. RFC 5230 section 4.2: the reply comes from the user
-            Optional<InternetAddress> fromAddress = sender.toInternetAddress();
-            if (fromAddress.isPresent()) {
-                reply.setFrom(fromAddress.get());
+            MailAddress fromAddressForReply = getFromForReply();
+            Optional<InternetAddress> fromAsInternetAddress = fromAddressForReply.toInternetAddress();
+            if (fromAsInternetAddress.isPresent()) {
+                reply.setFrom(fromAsInternetAddress.get());
             }
             reply.setSubject(generateNotificationSubject());
             // RFC 3834 section 5: lets other responders recognize the reply and not answer it
             reply.setHeader("Auto-Submitted", "auto-replied");
             reply.setContent(generateNotificationContent());
 
-            return new VacationReply(sender, ImmutableList.of(originalMail.getMaybeSender().get()), reply);
+            return new VacationReply(fromAddressForReply, ImmutableList.of(originalMail.getMaybeSender().get()), reply);
         }
 
         private boolean eitherReasonOrMime() {
@@ -138,19 +146,21 @@ public class VacationReply {
         }
 
         // RFC 5230 section 4.2: the user should not use a :from that is not theirs, which would forge the envelope sender
-        private MailAddress retrieveOriginalSender() {
+        private MailAddress getFromForReply() {
             return Optional.ofNullable(from)
                 .flatMap(this::retrieveAddressFromString)
                 .filter(this::belongsToTheUser)
+                // Fall back to the address the email was delivered to.
                 .orElse(context.getRecipient());
         }
 
         private boolean belongsToTheUser(MailAddress address) {
-            if (!address.equals(context.getRecipient())) {
-                LOGGER.warn("Ignoring the vacation :from {} of {}: it is not their address", address, context.getRecipient());
-                return false;
+            if (this.allowedFromAddresses.contains(address)) {
+                return true;
             }
-            return true;
+
+            LOGGER.warn("Ignoring the vacation :from {} of {}: not authorized", address, context.getRecipient());
+            return false;
         }
 
         private Optional<MailAddress> retrieveAddressFromString(String address) {

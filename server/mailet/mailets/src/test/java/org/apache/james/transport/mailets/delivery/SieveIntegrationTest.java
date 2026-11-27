@@ -1239,6 +1239,23 @@ class SieveIntegrationTest {
     }
 
     @Test
+    void vacationUsesFromAsEnvelopeSenderIfAliasOfTheUser() throws Exception {
+        useSieveWithAlias(Username.of(LOCAL_PART), "benwa@apache.org");
+        prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationSubjectFromReason.script", DATE_DEFAULT, DATE_NEW);
+
+        FakeMail mail = createMail();
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
+            .sender(new MailAddress("benwa@apache.org"))
+            .recipient(new MailAddress("sender@any.com"))
+            .fromMailet()
+            .build();
+        assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
+    }
+
+    @Test
     void vacationDaysAddressesShouldWork() throws Exception {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationDaysAddressesReason.script", DATE_CLOSE, DATE_NEW);
 
