@@ -97,6 +97,23 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
     }
 
     @Test
+    void chunkSizeShouldBePositiveForContentsLargerThanTwoGigabytes() {
+        long sixGigabytes = 6L * 1024 * 1024 * 1024;
+
+        assertThat(S3BlobStoreDAO.chunkSize(sixGigabytes)).isEqualTo(1024 * 100);
+    }
+
+    @Test
+    void chunkSizeShouldBeContentLengthForSmallContents() {
+        assertThat(S3BlobStoreDAO.chunkSize(12)).isEqualTo(12);
+    }
+
+    @Test
+    void chunkSizeShouldBeZeroForEmptyContents() {
+        assertThat(S3BlobStoreDAO.chunkSize(0)).isZero();
+    }
+
+    @Test
     void listingManyBlobsShouldSucceedWhenExceedingPageSize() {
         BlobStoreDAO store = testee();
 

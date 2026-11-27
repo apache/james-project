@@ -303,12 +303,18 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     private Mono<PutObjectResponse> save(BucketName resolvedBucketName, BlobId blobId, InputStream stream, long contentLength) {
-        int chunkSize = Math.min((int) contentLength, CHUNK_SIZE);
+        int chunkSize = chunkSize(contentLength);
 
         return buildPutObjectRequestBuilder(resolvedBucketName, contentLength, blobId)
             .flatMap(putObjectRequest -> Mono.fromFuture(() -> client.putObject(putObjectRequest.build(),
                 AsyncRequestBody.fromPublisher(chunkStream(chunkSize, stream)
                     .subscribeOn(Schedulers.boundedElastic())))));
+    }
+
+    @VisibleForTesting
+    static int chunkSize(long contentLength) {
+        // Compute the minimum on longs: casting first overflows for contents larger than Integer.MAX_VALUE
+        return (int) Math.min(contentLength, CHUNK_SIZE);
     }
 
     private Mono<PutObjectRequest.Builder> buildPutObjectRequestBuilder(BucketName bucketName, long contentLength, BlobId blobId) {
