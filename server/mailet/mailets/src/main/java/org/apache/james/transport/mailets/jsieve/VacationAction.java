@@ -21,7 +21,6 @@ package org.apache.james.transport.mailets.jsieve;
 
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
@@ -86,13 +85,9 @@ public class VacationAction implements MailAction {
     @Override
     public void execute(Action action, Mail mail, ActionContext context) throws MessagingException {
         ActionVacation actionVacation = (ActionVacation) action;
-        int dayDifference = Long.valueOf(
-            ChronoUnit.DAYS.between(
-                context.getScriptActivationDate().toLocalDate(),
-                context.getScriptInterpretationDate().toLocalDate()))
-            .intValue();
+
         // RFC 5230 section 4.6: no reply to a message with a null envelope sender
-        if (!mail.hasSender() || !isStillInVacation(actionVacation, dayDifference)) {
+        if (!mail.hasSender()) {
             return;
         }
         Set<MailAddress> userMailAddresses = userMailAddresses(actionVacation, context);
@@ -126,10 +121,6 @@ public class VacationAction implements MailAction {
         } finally {
             LifecycleUtil.dispose(replyMail);
         }
-    }
-
-    private boolean isStillInVacation(ActionVacation actionVacation, int dayDifference) {
-        return dayDifference >= 0 && dayDifference <= actionVacation.getDuration();
     }
 
     // RFC 5230 section 4.5: the user's addresses are the recipient, the :addresses and those the server knows to be
