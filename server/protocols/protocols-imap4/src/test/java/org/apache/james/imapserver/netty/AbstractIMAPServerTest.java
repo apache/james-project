@@ -203,12 +203,15 @@ abstract class AbstractIMAPServerTest {
 
     protected List<String> readStringUntil(SocketChannel channel, Predicate<String> condition) throws IOException {
         ImmutableList.Builder<String> result = ImmutableList.builder();
+        String previous = "";
         while (true) {
             String line = new String(readBytes(channel), StandardCharsets.US_ASCII);
             result.add(line);
-            if (condition.test(line)) {
+            // The awaited line may be split over two reads
+            if (condition.test(line) || condition.test(previous.replace("\u0000", "") + line)) {
                 return result.build();
             }
+            previous = line;
         }
     }
 }

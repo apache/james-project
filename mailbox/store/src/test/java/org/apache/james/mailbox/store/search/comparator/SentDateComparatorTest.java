@@ -37,6 +37,7 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.Test;
 
@@ -133,6 +134,7 @@ class SentDateComparatorTest {
             .bodyStartOctet(content.indexOf("\r\n\r\n") + 4)
             .content(new ByteContent(bytes))
             .flags(new Flags())
+            .properties(new PropertyBuilder())
             .build();
     }
 }

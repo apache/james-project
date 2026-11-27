@@ -1806,15 +1806,18 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a1 OK"));
 
 
+            // A string literal is at most 8 KiB: each one is refused from its announced size, its content discarded unread
             String literal = "a".repeat(32 * 1024); // 32 KB
             clientConnection.write(ByteBuffer.wrap(("a2 SEARCH CHARSET UTF-8 TO {" + literal.length() + "+}\r\n").getBytes(StandardCharsets.UTF_8)));
+            for (int i = 0; i < 10; i++) {
+                clientConnection.write(ByteBuffer.wrap((literal + " TO {" + literal.length() + "+}\r\n").getBytes(StandardCharsets.UTF_8)));
+            }
+            clientConnection.write(ByteBuffer.wrap((literal + " ALL\r\n").getBytes(StandardCharsets.UTF_8)));
+            clientConnection.write(ByteBuffer.wrap("a3 NOOP\r\n".getBytes(StandardCharsets.UTF_8)));
 
-            assertThatThrownBy(() -> {
-                    for (int i = 0; i < 7000; i++) {
-                        clientConnection.write(ByteBuffer.wrap((literal + " TO {" + literal.length() + "+}\r\n").getBytes(StandardCharsets.UTF_8)));
-                    }
-                    clientConnection.write(ByteBuffer.wrap((literal + " ALL\r\n").getBytes(StandardCharsets.UTF_8)));
-                }).isInstanceOf(IOException.class);
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK")))
+                .anySatisfy(line -> assertThat(line).startsWith("a2 BAD"))
+                .noneSatisfy(line -> assertThat(line).startsWith("a2 OK"));
         }
 
         @Test
@@ -2945,12 +2948,15 @@ class IMAPServerTest {
 
     private List<String> readStringUntil(SocketChannel channel, Predicate<String> condition) throws IOException {
         ImmutableList.Builder<String> result = ImmutableList.builder();
+        String previous = "";
         while (true) {
             String line = new String(readBytes(channel), StandardCharsets.US_ASCII);
             result.add(line);
-            if (condition.test(line)) {
+            // The awaited line may be split over two reads
+            if (condition.test(line) || condition.test(previous.replace("\u0000", "") + line)) {
                 return result.build();
             }
+            previous = line;
         }
     }
 
