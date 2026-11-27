@@ -7,3 +7,4 @@ dockerfiles/run/**/keystore
 test-run.log
 build
 .mvn/.develocity
+.cifuzz-corpus/
