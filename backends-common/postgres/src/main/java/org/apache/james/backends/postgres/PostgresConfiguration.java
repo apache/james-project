@@ -56,7 +56,7 @@ public class PostgresConfiguration {
     public static final String BY_PASS_RLS_POOL_MAX_SIZE = "by-pass-rls.pool.max.size";
     public static final int BY_PASS_RLS_POOL_MAX_SIZE_DEFAULT_VALUE = 10;
     public static final String SSL_MODE = "ssl.mode";
-    public static final String SSL_MODE_DEFAULT_VALUE = "allow";
+    public static final String SSL_MODE_DEFAULT_VALUE = "prefer";
     public static final String JOOQ_REACTIVE_TIMEOUT = "jooq.reactive.timeout";
     public static final Duration JOOQ_REACTIVE_TIMEOUT_DEFAULT_VALUE = Duration.ofSeconds(10);
 

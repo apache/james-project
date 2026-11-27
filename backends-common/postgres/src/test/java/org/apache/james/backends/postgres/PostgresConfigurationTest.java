@@ -69,7 +69,7 @@ class PostgresConfigurationTest {
         assertThat(configuration.getByPassRLSCredential().getUsername()).isEqualTo("james");
         assertThat(configuration.getByPassRLSCredential().getPassword()).isEqualTo("1");
         assertThat(configuration.getRowLevelSecurity()).isEqualTo(RowLevelSecurity.DISABLED);
-        assertThat(configuration.getSslMode()).isEqualTo(SSLMode.ALLOW);
+        assertThat(configuration.getSslMode()).isEqualTo(SSLMode.PREFER);
     }
 
     @Test
