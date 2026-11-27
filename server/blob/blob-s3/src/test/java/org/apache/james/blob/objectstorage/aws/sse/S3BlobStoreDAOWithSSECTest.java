@@ -25,11 +25,13 @@ import static org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration.U
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.TestBlobId;
+import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.JamesS3MetricPublisher;
 import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
@@ -45,7 +47,10 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.google.common.io.ByteSource;
+
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 
@@ -55,6 +60,7 @@ public class S3BlobStoreDAOWithSSECTest implements BlobStoreDAOContract, S3SSECC
     static S3MinioExtension minoExtension = new S3MinioExtension();
 
     private static S3BlobStoreDAO testee;
+    private static S3BlobStoreDAO multipartTestee;
     private static S3ClientFactory s3ClientFactory;
 
     @BeforeAll
@@ -73,6 +79,15 @@ public class S3BlobStoreDAOWithSSECTest implements BlobStoreDAOContract, S3SSECC
 
         S3RequestOption s3RequestOption = new S3RequestOption(new S3RequestOption.SSEC(true, Optional.of(sseCustomerKeyFactory)));
         testee = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory(), s3RequestOption);
+
+        AwsS3AuthConfiguration authConfiguration = minoExtension.minioDocker().getAwsS3AuthConfiguration();
+        S3BlobStoreConfiguration multipartConfiguration = S3BlobStoreConfiguration.builder()
+            .authConfiguration(authConfiguration)
+            .region(Region.of(software.amazon.awssdk.regions.Region.EU_WEST_1.id()))
+            .multipartUploadThreshold(Optional.of(6L * 1024 * 1024))
+            .multipartUploadPartSize(Optional.of(5L * 1024 * 1024))
+            .build();
+        multipartTestee = new S3BlobStoreDAO(s3ClientFactory, multipartConfiguration, new TestBlobId.Factory(), s3RequestOption);
     }
 
     @BeforeEach
@@ -99,6 +114,18 @@ public class S3BlobStoreDAOWithSSECTest implements BlobStoreDAOContract, S3SSECC
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Error while deleting bucket", e);
         }
+    }
+
+    @Test
+    void multipartUploadShouldStoreEncryptedContent() {
+        byte[] content = new byte[3 * 5 * 1024 * 1024 + 1234];
+        new Random(42).nextBytes(content);
+        TestBlobId blobId = new TestBlobId("multipart");
+
+        Mono.from(multipartTestee.save(TEST_BUCKET_NAME, blobId, BlobStoreDAO.ByteSourceBlob.of(ByteSource.wrap(content)))).block();
+
+        assertThat(Mono.from(multipartTestee.readBytes(TEST_BUCKET_NAME, blobId)).block().payload())
+            .isEqualTo(content);
     }
 
     @Test

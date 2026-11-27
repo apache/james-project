@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Random;
 
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
@@ -40,6 +41,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -53,6 +56,7 @@ class S3MinioIfNoneMatchTest {
     static S3MinioExtension minioExtension = new S3MinioExtension();
 
     private static S3BlobStoreDAO testee;
+    private static S3BlobStoreDAO multipartTestee;
     private static S3ClientFactory s3ClientFactory;
 
     @BeforeAll
@@ -66,6 +70,17 @@ class S3MinioIfNoneMatchTest {
 
         s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
         testee = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory(),
+            new S3RequestOption(S3RequestOption.DEFAULT.ssec(), true));
+
+        S3BlobStoreConfiguration multipartConfiguration = S3BlobStoreConfiguration.builder()
+            .authConfiguration(minioExtension.minioDocker().getAwsS3AuthConfiguration())
+            .region(DockerAwsS3Container.REGION)
+            .uploadRetrySpec(Optional.of(Retry.backoff(3, Duration.ofSeconds(1))
+                .filter(UPLOAD_RETRY_EXCEPTION_PREDICATE)))
+            .multipartUploadThreshold(Optional.of(6L * 1024 * 1024))
+            .multipartUploadPartSize(Optional.of(5L * 1024 * 1024))
+            .build();
+        multipartTestee = new S3BlobStoreDAO(s3ClientFactory, multipartConfiguration, new TestBlobId.Factory(),
             new S3RequestOption(S3RequestOption.DEFAULT.ssec(), true));
     }
 
@@ -145,5 +160,29 @@ class S3MinioIfNoneMatchTest {
         Mono.from(testee.save(CUSTOM_BUCKET, blobId, SHORT_BYTEARRAY)).block();
 
         assertThat(Mono.from(testee.readBytes(CUSTOM_BUCKET, blobId)).block()).isEqualTo(SHORT_BYTEARRAY);
+    }
+
+    @Test
+    void multipartUploadShouldSucceedWhenTheBlobIsAlreadyStored() {
+        byte[] content = new byte[3 * 5 * 1024 * 1024 + 1234];
+        new Random(42).nextBytes(content);
+        BlobStoreDAO.ByteSourceBlob blob = BlobStoreDAO.ByteSourceBlob.of(ByteSource.wrap(content));
+        Mono.from(multipartTestee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, blob)).block();
+
+        assertThatCode(() -> Mono.from(multipartTestee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, blob)).block())
+            .doesNotThrowAnyException();
+        assertThat(Mono.from(multipartTestee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload())
+            .isEqualTo(content);
+    }
+
+    @Test
+    void multipartUploadShouldNotOverwriteAnAlreadyStoredBlob() {
+        byte[] content = new byte[3 * 5 * 1024 * 1024 + 1234];
+        new Random(42).nextBytes(content);
+        Mono.from(multipartTestee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+
+        Mono.from(multipartTestee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.ByteSourceBlob.of(ByteSource.wrap(content)))).block();
+
+        assertThat(Mono.from(multipartTestee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block()).isEqualTo(SHORT_BYTEARRAY);
     }
 }

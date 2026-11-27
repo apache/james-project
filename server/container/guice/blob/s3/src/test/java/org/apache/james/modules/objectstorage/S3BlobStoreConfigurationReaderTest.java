@@ -66,4 +66,26 @@ class S3BlobStoreConfigurationReaderTest {
 
         assertThat(s3Configuration.ifNoneMatchEnabled()).isFalse();
     }
+
+    @Test
+    void shouldDefaultMultipartUploadSettings() throws Exception {
+        Configuration configuration = baseConfiguration();
+
+        S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfigurationReader.from(configuration);
+
+        assertThat(s3Configuration.getMultipartUploadThreshold()).isEqualTo(500L * 1024 * 1024);
+        assertThat(s3Configuration.getMultipartUploadPartSize()).isEqualTo(100L * 1024 * 1024);
+    }
+
+    @Test
+    void shouldRespectMultipartUploadSettings() throws Exception {
+        Configuration configuration = baseConfiguration();
+        configuration.addProperty("objectstorage.s3.multipart.threshold", "1G");
+        configuration.addProperty("objectstorage.s3.multipart.partSize", "64M");
+
+        S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfigurationReader.from(configuration);
+
+        assertThat(s3Configuration.getMultipartUploadThreshold()).isEqualTo(1024L * 1024 * 1024);
+        assertThat(s3Configuration.getMultipartUploadPartSize()).isEqualTo(64L * 1024 * 1024);
+    }
 }
