@@ -33,7 +33,8 @@ C: hello
 S: a3 OK (\[.+\] )?APPEND completed.
 
 C: a4 ENABLE UTF8=ACCEPT
-S: \* ENABLED UTF8=ACCEPT
+# UTF8=ACCEPT is not an ENABLE-able capability on 3.9.x
+S: \* ENABLED
 S: a4 OK ENABLE completed.
 
 C: a5 SELECT rbox

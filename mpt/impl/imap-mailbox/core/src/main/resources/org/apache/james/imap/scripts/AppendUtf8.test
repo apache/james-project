@@ -21,7 +21,8 @@ C: a1 CREATE utf8box
 S: a1 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: a2 ENABLE UTF8=ACCEPT
-S: \* ENABLED UTF8=ACCEPT
+# UTF8=ACCEPT is not an ENABLE-able capability on 3.9.x
+S: \* ENABLED
 S: a2 OK ENABLE completed.
 
 # Non synchronizing literal8
