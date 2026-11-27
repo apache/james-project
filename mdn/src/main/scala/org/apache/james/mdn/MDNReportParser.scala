@@ -63,17 +63,22 @@ class MDNReportParser(val input: ParserInput) extends Parser {
                      [ original-message-id-field CRLF ]
                      disposition-field CRLF
                      *( error-field CRLF )
-                     *( extension-field CRLF )    */
+                     *( extension-field CRLF )
+
+      The whole input is consumed: a line that is no field fails the parsing rather than being dropped with every
+      line after it. The CRLF ending the last field may be missing, as in a MIME body part whose final CRLF belongs
+      to the boundary delimiter (RFC 2046 section 5.1.1), and trailing blank lines are accepted.    */
   private def dispositionNotificationContent: Rule1[MDNReport] = rule {
     (
-      (reportingUaField ~ crlf).? ~
-        (mdnGatewayField ~ crlf).? ~
-        (originalRecipientField ~ crlf).? ~
-        finalRecipientField ~ crlf ~
-        (originalMessageIdField ~ crlf).? ~
-        dispositionField ~ crlf ~
-        zeroOrMore(errorField ~ crlf) ~
-        zeroOrMore(extentionField ~ crlf)
+      (reportingUaField ~ fieldEnd).? ~
+        (mdnGatewayField ~ fieldEnd).? ~
+        (originalRecipientField ~ fieldEnd).? ~
+        finalRecipientField ~ fieldEnd ~
+        (originalMessageIdField ~ fieldEnd).? ~
+        dispositionField ~ fieldEnd ~
+        zeroOrMore(errorField ~ fieldEnd) ~
+        zeroOrMore(extentionField ~ fieldEnd) ~
+        zeroOrMore(zeroOrMore(wsp) ~ crlf) ~ zeroOrMore(wsp) ~ EOI
       ) ~> ((reportingUserAgent : Option[ReportingUserAgent],
              gateway : Option[Gateway],
              originalRecipient : Option[OriginalRecipient],
@@ -323,6 +328,8 @@ class MDNReportParser(val input: ParserInput) extends Parser {
 
   //         CRLF           =  CR LF
   private def crlf: Rule0 = rule { cr ~ lf }
+
+  private def fieldEnd: Rule0 = rule { crlf | &(EOI) }
 
   //         CR             =  %x0D
   private def cr: Rule0 = rule { ch(0x0d) }
