@@ -39,8 +39,11 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
+import org.apache.james.blob.objectstorage.aws.sse.S3SSECustomerKeyFactory.SSECustomerKey;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -48,6 +51,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.FileBackedOutputStream;
 
 import reactor.core.publisher.Flux;
@@ -63,6 +67,10 @@ import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.Bucket;
 import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
+import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -74,6 +82,7 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 
 @Singleton
 public class S3BlobStoreDAO implements BlobStoreDAO {
@@ -104,7 +113,9 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
         }
     }
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(S3BlobStoreDAO.class);
     private static final int CHUNK_SIZE = 1024 * 100;
+    private static final int MAX_MULTIPART_UPLOAD_PART_COUNT = 10000;
     private static final int EMPTY_BUCKET_BATCH_SIZE = 1000;
     private static final int FILE_THRESHOLD = 1024 * 100;
     private static final Duration FIRST_BACK_OFF = Duration.ofMillis(100);
@@ -256,6 +267,10 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
+        if (data.length > configuration.getMultipartUploadThreshold()) {
+            return save(bucketName, blobId, ByteSource.wrap(data));
+        }
+
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return buildPutObjectRequestBuilder(resolvedBucketName, data.length, blobId)
@@ -302,13 +317,119 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .then();
     }
 
-    private Mono<PutObjectResponse> save(BucketName resolvedBucketName, BlobId blobId, InputStream stream, long contentLength) {
+    private Mono<Void> save(BucketName resolvedBucketName, BlobId blobId, InputStream stream, long contentLength) {
+        if (contentLength > configuration.getMultipartUploadThreshold()) {
+            return multipartUpload(resolvedBucketName, blobId, stream, contentLength);
+        }
+        return putObject(resolvedBucketName, blobId, stream, contentLength).then();
+    }
+
+    private Mono<PutObjectResponse> putObject(BucketName resolvedBucketName, BlobId blobId, InputStream stream, long contentLength) {
         int chunkSize = chunkSize(contentLength);
 
         return buildPutObjectRequestBuilder(resolvedBucketName, contentLength, blobId)
             .flatMap(putObjectRequest -> Mono.fromFuture(() -> client.putObject(putObjectRequest.build(),
                 AsyncRequestBody.fromPublisher(chunkStream(chunkSize, stream)
                     .subscribeOn(Schedulers.boundedElastic())))));
+    }
+
+    /**
+     * S3 rejects single PUTs larger than 5 GB. Big blobs are thus uploaded as several parts read one after the other
+     * from the stream, which bounds memory usage. Failures abort the upload so that the uploaded parts do not linger
+     * (and get billed) in the bucket. Retries and bucket creation are handled by the caller, which restarts the whole
+     * upload from a fresh stream.
+     */
+    private Mono<Void> multipartUpload(BucketName resolvedBucketName, BlobId blobId, InputStream stream, long contentLength) {
+        long partSize = configuration.getMultipartUploadPartSize();
+        long partCount = (contentLength + partSize - 1) / partSize;
+        if (partCount > MAX_MULTIPART_UPLOAD_PART_COUNT) {
+            return Mono.error(new ObjectStoreIOException("Can not upload " + blobId.asString() + " of " + contentLength
+                + " bytes: it would need " + partCount + " parts of " + partSize + " bytes while S3 allows at most "
+                + MAX_MULTIPART_UPLOAD_PART_COUNT + " parts. Consider increasing the multipart upload part size."));
+        }
+
+        return sseCustomerKey(resolvedBucketName, blobId)
+            .flatMap(sseCustomerKey -> Mono.usingWhen(
+                createMultipartUpload(resolvedBucketName, blobId, sseCustomerKey),
+                uploadId -> Flux.range(1, (int) partCount)
+                    .concatMap(partNumber -> uploadPart(resolvedBucketName, blobId, uploadId, partNumber,
+                        Math.min(partSize, contentLength - (partNumber - 1) * partSize), stream, sseCustomerKey))
+                    .collect(ImmutableList.toImmutableList())
+                    .flatMap(parts -> completeMultipartUpload(resolvedBucketName, blobId, uploadId, parts, sseCustomerKey)),
+                uploadId -> Mono.empty(),
+                (uploadId, error) -> abortMultipartUpload(resolvedBucketName, blobId, uploadId),
+                uploadId -> abortMultipartUpload(resolvedBucketName, blobId, uploadId)));
+    }
+
+    private Mono<java.util.Optional<SSECustomerKey>> sseCustomerKey(BucketName bucketName, BlobId blobId) {
+        if (s3RequestOption.ssec().enable()) {
+            return Mono.from(s3RequestOption.ssec().sseCustomerKeyFactory().get().generate(bucketName, blobId))
+                .map(java.util.Optional::of);
+        }
+        return Mono.just(java.util.Optional.empty());
+    }
+
+    private Mono<String> createMultipartUpload(BucketName bucketName, BlobId blobId, java.util.Optional<SSECustomerKey> sseCustomerKey) {
+        CreateMultipartUploadRequest.Builder builder = CreateMultipartUploadRequest.builder()
+            .bucket(bucketName.asString())
+            .key(blobId.asString());
+        sseCustomerKey.ifPresent(key -> builder
+            .sseCustomerAlgorithm(key.ssecAlgorithm())
+            .sseCustomerKey(key.customerKey())
+            .sseCustomerKeyMD5(key.md5()));
+
+        return Mono.fromFuture(() -> client.createMultipartUpload(builder.build()))
+            .map(CreateMultipartUploadResponse::uploadId);
+    }
+
+    private Mono<CompletedPart> uploadPart(BucketName bucketName, BlobId blobId, String uploadId, int partNumber, long partLength,
+                                           InputStream stream, java.util.Optional<SSECustomerKey> sseCustomerKey) {
+        UploadPartRequest.Builder builder = UploadPartRequest.builder()
+            .bucket(bucketName.asString())
+            .key(blobId.asString())
+            .uploadId(uploadId)
+            .partNumber(partNumber)
+            .contentLength(partLength);
+        sseCustomerKey.ifPresent(key -> builder
+            .sseCustomerAlgorithm(key.ssecAlgorithm())
+            .sseCustomerKey(key.customerKey())
+            .sseCustomerKeyMD5(key.md5()));
+
+        return Mono.fromFuture(() -> client.uploadPart(builder.build(),
+                AsyncRequestBody.fromPublisher(chunkStream(chunkSize(partLength), ByteStreams.limit(stream, partLength))
+                    .subscribeOn(Schedulers.boundedElastic()))))
+            .map(response -> CompletedPart.builder()
+                .partNumber(partNumber)
+                .eTag(response.eTag())
+                .build());
+    }
+
+    private Mono<Void> completeMultipartUpload(BucketName bucketName, BlobId blobId, String uploadId, List<CompletedPart> parts,
+                                               java.util.Optional<SSECustomerKey> sseCustomerKey) {
+        CompleteMultipartUploadRequest.Builder builder = CompleteMultipartUploadRequest.builder()
+            .bucket(bucketName.asString())
+            .key(blobId.asString())
+            .uploadId(uploadId)
+            .multipartUpload(upload -> upload.parts(parts));
+        sseCustomerKey.ifPresent(key -> builder
+            .sseCustomerAlgorithm(key.ssecAlgorithm())
+            .sseCustomerKey(key.customerKey())
+            .sseCustomerKeyMD5(key.md5()));
+
+        return Mono.fromFuture(() -> client.completeMultipartUpload(builder.build()))
+            .then();
+    }
+
+    private Mono<Void> abortMultipartUpload(BucketName bucketName, BlobId blobId, String uploadId) {
+        return Mono.fromFuture(() -> client.abortMultipartUpload(builder -> builder
+                .bucket(bucketName.asString())
+                .key(blobId.asString())
+                .uploadId(uploadId)))
+            .onErrorResume(e -> {
+                LOGGER.warn("Failed to abort multipart upload {} of {} in bucket {}", uploadId, blobId.asString(), bucketName.asString(), e);
+                return Mono.empty();
+            })
+            .then();
     }
 
     @VisibleForTesting
