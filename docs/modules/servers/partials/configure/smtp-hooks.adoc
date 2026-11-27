@@ -450,6 +450,10 @@ The SMTP server does not allow positive priorities from unauthorized sources and
 These hooks are designed to support the SMTP service extension, REQUIRETLS, and a TLS-Required message header field.
 (link:https://www.rfc-editor.org/rfc/rfc8689.html[RFC-8689])
 
+RemoteDelivery relays REQUIRETLS mail only over TLS, to a server announcing REQUIRETLS, with a certificate validated
+against the JVM trust store and matching the server name: its *verifyServerIdentity* and `mail.smtp.ssl.trust=*`
+settings do not apply to such mail. Hosts that *mail.smtp.ssl.trust* names explicitly keep the configured trust.
+
 [source,xml]
 ....
 <smtpserver enabled="true">
