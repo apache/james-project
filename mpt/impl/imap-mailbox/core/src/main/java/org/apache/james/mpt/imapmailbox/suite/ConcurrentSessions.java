@@ -204,4 +204,11 @@ public abstract class ConcurrentSessions implements ImapTestConstants {
               .withLocale(Locale.US)
               .run("ConcurrentAppendUIDToMSNMapping");
     }
+
+    @Test
+    public void changesOfAnotherSessionShouldAllBeReportedOnceAndKeepMSNConsistent() throws Exception {
+        simpleScriptedTestProtocol
+              .withLocale(Locale.US)
+              .run("ConcurrentMixedChangesResponse");
+    }
 }

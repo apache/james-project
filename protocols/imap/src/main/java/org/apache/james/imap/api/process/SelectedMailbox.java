@@ -142,6 +142,13 @@ public interface SelectedMailbox {
     boolean isSizeChanged();
 
     /**
+     * Reads and clears the size change at once: a message added afterwards sets it again.
+     *
+     * @return true if the mailbox size was changed
+     */
+    boolean getAndResetSizeChanged();
+
+    /**
      * Was the recent uid removed ?
      * 
      * @return true if the recent uid for this mailbox was removed
@@ -152,17 +159,21 @@ public interface SelectedMailbox {
 
 
     /**
-     * Reset all events
+     * Reset the events reported to the client
+     *
+     * @param reportedFlagUpdateUids the uids whose flag updates were reported: updates received since stay pending
      */
-    void resetEvents();
+    void resetEvents(Collection<MessageUid> reportedFlagUpdateUids);
 
     /**
      * Return a Collection which holds all uids which were expunged
      */
     Collection<MessageUid> expungedUids();
 
-    
-    void resetExpungedUids();
+    /**
+     * Forget the given expunged uids, once reported: uids expunged since stay pending
+     */
+    void resetExpungedUids(Collection<MessageUid> reportedExpungedUids);
     
     /**
      * Removes the given UID.

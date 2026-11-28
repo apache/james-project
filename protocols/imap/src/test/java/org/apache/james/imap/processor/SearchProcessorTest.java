@@ -203,7 +203,7 @@ class SearchProcessorTest {
         when(selectedMailbox.messageManager()).thenReturn(Mono.just(mailbox));
         session.selected(selectedMailbox).block();
         when(selectedMailbox.isRecentUidRemoved()).thenReturn(false);
-        when(selectedMailbox.isSizeChanged()).thenReturn(false);
+        when(selectedMailbox.getAndResetSizeChanged()).thenReturn(false);
         when(selectedMailbox.flagUpdateUids()).thenReturn(Collections.<MessageUid>emptyList());
         when(selectedMailbox.getRecent()).thenReturn(new ArrayList<>());
     }
@@ -515,7 +515,7 @@ class SearchProcessorTest {
     }
 
     private void verifyCalls() {
-        verify(selectedMailbox).resetEvents();
+        verify(selectedMailbox).resetEvents(Collections.emptyList());
 
         verify(responder).respond(new SearchResponse(EMPTY, null));
 

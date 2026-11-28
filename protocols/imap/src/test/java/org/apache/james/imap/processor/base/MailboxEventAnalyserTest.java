@@ -154,7 +154,7 @@ class MailboxEventAnalyserTest {
     @Test
     void testShouldNoSizeChangeAfterReset() throws Exception {
         testee.event(ADDED);
-        testee.resetEvents();
+        testee.getAndResetSizeChanged();
 
         assertThat(testee.isSizeChanged()).isFalse();
     }
