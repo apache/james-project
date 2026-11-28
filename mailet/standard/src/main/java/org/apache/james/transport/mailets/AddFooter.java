@@ -76,9 +76,10 @@ public class AddFooter extends GenericMailet {
         try {
             MimeMessage message = mail.getMessage();
 
-            if (exceedsMaxMimeDepth(message, 0)) {
-                // Adding the footer implies saving the changes, that walks the whole MIME tree recursively
-                LOGGER.info("Unable to add footer to mail {}: MIME structure deeper than {} levels", mail.getName(), MAX_MIME_DEPTH);
+            Optional<String> unsavableStructure = unsavableStructure(message, 0);
+            if (unsavableStructure.isPresent()) {
+                // Adding the footer implies saving the changes, that walks and parses the whole MIME tree recursively
+                LOGGER.info("Unable to add footer to mail {}: {}", mail.getName(), unsavableStructure.get());
                 return;
             }
             if (attachFooter(message, 0)) {
@@ -177,23 +178,34 @@ public class AddFooter extends GenericMailet {
         }
     }
 
-    private boolean exceedsMaxMimeDepth(MimePart part, int depth) {
+    private Optional<String> unsavableStructure(MimePart part, int depth) {
         if (depth > MAX_MIME_DEPTH) {
-            return true;
+            return Optional.of("MIME structure deeper than " + MAX_MIME_DEPTH + " levels");
         }
         try {
             if (part.isMimeType("multipart/*")) {
                 MimeMultipart multipart = parseMultipart(part);
-                for (int index = 0; index < multipart.getCount(); index++) {
-                    if (exceedsMaxMimeDepth((MimeBodyPart) multipart.getBodyPart(index), depth + 1)) {
-                        return true;
+                int count;
+                try {
+                    count = multipart.getCount();
+                } catch (MessagingException | RuntimeException e) {
+                    // Jakarta Mail fails parsing some malformed multiparts (eg ParseException "Missing start boundary",
+                    // or IndexOutOfBoundsException on a body part whose headers start with a whitespace-only folded line).
+                    // Saving the changes would parse it again and fail the same way, wherever the footer is added.
+                    LOGGER.debug("Could not parse the body parts of a multipart", e);
+                    return Optional.of("multipart that can not be parsed");
+                }
+                for (int index = 0; index < count; index++) {
+                    Optional<String> reason = unsavableStructure((MimeBodyPart) multipart.getBodyPart(index), depth + 1);
+                    if (reason.isPresent()) {
+                        return reason;
                     }
                 }
             }
-            return false;
+            return Optional.empty();
         } catch (MessagingException | IOException | RuntimeException e) {
             // Unreadable parts are handled while adding the footer
-            return false;
+            return Optional.empty();
         }
     }
 

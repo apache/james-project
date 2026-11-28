@@ -606,6 +606,86 @@ class AddFooterTest {
     }
 
     @Test
+    void shouldNotFailOnABodyPartStartingWithAWhitespaceOnlyFoldedLine() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+        String message = Joiner.on("\r\n").join(
+            "Content-Type: multipart/mixed; boundary=b",
+            "",
+            "--b",
+            " ",
+            " x",
+            "",
+            "body",
+            "--b--",
+            "");
+        Mail mail = FakeMail.fromMime(message, "ISO8859-15", "ISO-8859-15");
+
+        assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException();
+        assertThat(MailUtil.toString(mail, "ISO8859-15")).isEqualTo(message);
+    }
+
+    @Test
+    void shouldLeaveTheMailUnchangedWhenANestedMultipartCanNotBeParsed() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+        String message = Joiner.on("\r\n").join(
+            "MIME-Version: 1.0",
+            "Content-Type: multipart/alternative; boundary=outer",
+            "",
+            "--outer",
+            "Content-Type: text/plain",
+            "",
+            "hello",
+            "--outer",
+            "Content-Type: multipart/mixed; boundary=b",
+            "",
+            "--b",
+            " ",
+            " x",
+            "",
+            "body",
+            "--b--",
+            "--outer--",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        // Saving the footer added to the text alternative would parse the malformed multipart again, and fail
+        assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException();
+        assertThat(MailUtil.toString(mail, "UTF-8")).isEqualTo(message);
+    }
+
+    @Test
+    void shouldLeaveTheMailUnchangedWhenANestedMultipartHasNoStartBoundary() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("text", MY_FOOTER)
+            .build());
+        String message = Joiner.on("\r\n").join(
+            "MIME-Version: 1.0",
+            "Content-Type: multipart/mixed; boundary=outer",
+            "",
+            "--outer",
+            "Content-Type: text/plain",
+            "",
+            "hello",
+            "--outer",
+            "Content-Type: multipart/mixed; boundary=c",
+            "",
+            "no boundary line here",
+            "--outer--",
+            "");
+        Mail mail = FakeMail.fromMime(message, "UTF-8", "UTF-8");
+
+        assertThatCode(() -> mailet.service(mail)).doesNotThrowAnyException();
+        assertThat(MailUtil.toString(mail, "UTF-8")).isEqualTo(message);
+    }
+
+    @Test
     void shouldKeepMessageWritableWhenANestedMultipartHasNoPart() throws Exception {
         mailet.init(FakeMailetConfig.builder()
             .mailetName("Test")

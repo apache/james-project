@@ -647,14 +647,17 @@ public class StoreMailboxManager implements MailboxManager {
         if (!to.equals(from) && !from.isInbox() && to.getHierarchyLevels(fromSession.getPathDelimiter()).contains(from)) {
             return Mono.error(new MailboxNameException("Can not rename " + from.asString() + " into its own sub-tree: " + to.asString()));
         }
-        MailboxQuery.UserBound query = MailboxQuery.builder()
-            .userAndNamespaceFrom(from)
-            .expression(new PrefixedWildcard(from.getName()))
-            .build()
-            .asUserBound();
+        if (from.getUser() == null) {
+            // eg the bare user namespace "#user" given by IMAP: designates no mailbox
+            return Mono.error(new MailboxNotFoundException(from));
+        }
 
         return assertCanDeleteWhenRename(fromSession, from)
-            .then(getMailboxWithPathLikeUponRename(mapper, query)
+            .then(Mono.defer(() -> getMailboxWithPathLikeUponRename(mapper, MailboxQuery.builder()
+                    .userAndNamespaceFrom(from)
+                    .expression(new PrefixedWildcard(from.getName()))
+                    .build()
+                    .asUserBound())
                 .filter(mailbox -> mailbox.generateAssociatedPath().getHierarchyLevels(fromSession.getPathDelimiter()).contains(from))
                 .sort(Comparator.comparing(mailbox -> mailbox.generateAssociatedPath().getHierarchyLevels(fromSession.getPathDelimiter()).size()))
                 .collectList()
@@ -664,7 +667,7 @@ public class StoreMailboxManager implements MailboxManager {
                     } else {
                         sink.error(new MailboxNotFoundException(from));
                     }
-                }))
+                })))
             .flatMap(mailboxes -> assertCanDeleteSubMailboxesWhenRename(fromSession, from, to, mailboxes));
     }
 

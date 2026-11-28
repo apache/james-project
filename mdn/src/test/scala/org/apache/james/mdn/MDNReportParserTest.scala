@@ -384,6 +384,70 @@ class MDNReportParserTest {
     assertThat(actual.getErrorFields).hasSize(1)
     assertThat(actual.getExtensionFields).isEmpty()
   }
+
+  @Test
+  def parseShouldKeepALastErrorFieldWithoutTrailingCrlf(): Unit = {
+    val report = "Final-Recipient: rfc822; f\r\n" +
+      "Disposition: manual-action/MDN-sent-manually;displayed\r\n" +
+      "Error: e"
+    val actual = MDNReportParser.parse(report).get
+    assertThat(actual.getErrorFields).containsExactly(new Error(Text.fromRawText("e")))
+  }
+
+  @Test
+  def parseShouldKeepALastExtensionFieldWithoutTrailingCrlf(): Unit = {
+    val report = "Final-Recipient: rfc822; f\r\n" +
+      "Disposition: manual-action/MDN-sent-manually;displayed\r\n" +
+      "X-Vendor: v"
+    val actual = MDNReportParser.parse(report).get
+    assertThat(actual.getExtensionFields).hasSize(1)
+  }
+
+  @Test
+  def parseShouldAcceptALastDispositionFieldWithoutTrailingCrlf(): Unit = {
+    val report = "Final-Recipient: rfc822; f\r\n" +
+      "Disposition: manual-action/MDN-sent-manually;displayed"
+    assertThat(MDNReportParser.parse(report).isSuccess).isTrue
+  }
+
+  @Test
+  def parseShouldAcceptTrailingEmptyLines(): Unit = {
+    val report = "Final-Recipient: rfc822; f\r\n" +
+      "Disposition: manual-action/MDN-sent-manually;displayed\r\n" +
+      "Error: e\r\n" +
+      "\r\n"
+    val actual = MDNReportParser.parse(report).get
+    assertThat(actual.getErrorFields).containsExactly(new Error(Text.fromRawText("e")))
+  }
+
+  @Test
+  def parseShouldAcceptTrailingWhitespaceOnlyLines(): Unit = {
+    val report = "Final-Recipient: rfc822; f\r\n" +
+      "Disposition: manual-action/MDN-sent-manually;displayed\r\n" +
+      "X-A: b\r\n" +
+      " \r\n" +
+      "\t"
+    val actual = MDNReportParser.parse(report).get
+    assertThat(actual.getExtensionFields).hasSize(1)
+  }
+
+  @Test
+  def parseShouldFailOnAnUnparseableLine(): Unit = {
+    val report = "Final-Recipient: rfc822; f\r\n" +
+      "Disposition: manual-action/MDN-sent-manually;displayed\r\n" +
+      "foo\r\n" +
+      "Error: e\r\n"
+    assertThat(MDNReportParser.parse(report).isFailure).isTrue
+  }
+
+  @Test
+  def parseShouldFailOnAFieldAfterAnEmptyLine(): Unit = {
+    val report = "Final-Recipient: rfc822; f\r\n" +
+      "Disposition: manual-action/MDN-sent-manually;displayed\r\n" +
+      "\r\n" +
+      "Error: e\r\n"
+    assertThat(MDNReportParser.parse(report).isFailure).isTrue
+  }
 }
 
 private class WholeErrorFieldParser(input: ParserInput) extends MDNReportParser(input) {

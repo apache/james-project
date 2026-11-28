@@ -77,6 +77,7 @@ import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -2593,6 +2594,16 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 softly.assertThat(renamedMailboxPath).isEqualTo(newMailboxPath);
                 softly.assertThat(renamedChildMailboxPath).isEqualTo(new MailboxPath("#destination", USER_1, "mbx2.child"));
             });
+        }
+
+        @Test
+        void renameMailboxShouldThrowNotFoundWhenTheSourceHasNoUser() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath noUser = new MailboxPath(MailboxConstants.USER_NAMESPACE, null, "");
+
+            assertThatThrownBy(() -> mailboxManager.renameMailbox(noUser, MailboxPath.forUser(USER_1, "C"),
+                    MailboxManager.RenameOption.NONE, session))
+                .isInstanceOf(MailboxNotFoundException.class);
         }
 
         @Test
