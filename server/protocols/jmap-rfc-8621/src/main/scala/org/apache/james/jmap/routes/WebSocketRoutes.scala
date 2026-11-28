@@ -47,7 +47,6 @@ import org.apache.james.metrics.api.{Metric, MetricFactory}
 import org.apache.james.user.api.DelegationStore
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
-import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
 import reactor.core.publisher.{Mono, Sinks}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
@@ -73,7 +72,10 @@ case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration
 
   def clean(): Unit ={
     withRegistration(None)
-    outbound.emitComplete(FAIL_FAST)
+    // Same lock as the emissions of StateChangeListener: a push in progress makes a concurrent completion fail
+    outbound.synchronized {
+      outbound.tryEmitComplete()
+    }
   }
 
   def withRegistration(registration: Option[Registration]): Unit = Option(pushRegistration.getAndSet(registration.orNull))
