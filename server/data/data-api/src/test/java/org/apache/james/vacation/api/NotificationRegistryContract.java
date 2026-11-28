@@ -178,4 +178,41 @@ public interface NotificationRegistryContract {
 
         assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block()).isFalse();
     }
+
+    @Test
+    default void registerIfAbsentShouldRegister() {
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
+        assertThat(notificationRegistry().registerIfAbsent(ACCOUNT_ID, recipientId(), Optional.empty()).block()).isTrue();
+
+        assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block()).isTrue();
+    }
+
+    @Test
+    default void registerIfAbsentShouldReturnFalseWhenAlreadyRegistered() {
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
+        notificationRegistry().register(ACCOUNT_ID, recipientId(), Optional.empty()).block();
+
+        assertThat(notificationRegistry().registerIfAbsent(ACCOUNT_ID, recipientId(), Optional.empty()).block()).isFalse();
+    }
+
+    @Test
+    default void registerIfAbsentShouldRegisterAgainAfterExpiracyDate() {
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
+        notificationRegistry().registerIfAbsent(ACCOUNT_ID, recipientId(), Optional.of(ZONED_DATE_TIME_PLUS_4_SECONDS)).block();
+
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_PLUS_8_SECONDS);
+
+        await().atMost(20, TimeUnit.SECONDS).until(() -> notificationRegistry().registerIfAbsent(ACCOUNT_ID, recipientId(), Optional.empty()).block());
+        assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block()).isTrue();
+    }
+
+    @Test
+    default void registerIfAbsentShouldRegisterAgainAfterFlush() {
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
+        notificationRegistry().registerIfAbsent(ACCOUNT_ID, recipientId(), Optional.empty()).block();
+
+        notificationRegistry().flush(ACCOUNT_ID).block();
+
+        assertThat(notificationRegistry().registerIfAbsent(ACCOUNT_ID, recipientId(), Optional.empty()).block()).isTrue();
+    }
 }

@@ -29,8 +29,8 @@ import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.core.MailAddress;
 import org.apache.james.vacation.api.AccountId;
+import org.apache.james.vacation.api.AtomicNotificationRegistryContract;
 import org.apache.james.vacation.api.NotificationRegistry;
-import org.apache.james.vacation.api.NotificationRegistryContract;
 import org.apache.james.vacation.api.RecipientId;
 import org.jooq.Field;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +39,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import reactor.core.publisher.Mono;
 
-class PostgresNotificationRegistryTest implements NotificationRegistryContract {
+class PostgresNotificationRegistryTest implements AtomicNotificationRegistryContract {
     static final AccountId OTHER_ACCOUNT_ID = AccountId.fromString("other");
     static final Field<String> ACCOUNT_ID_COLUMN = PostgresVacationDataDefinition.PostgresVacationNotificationRegistryTable.ACCOUNT_ID;
 

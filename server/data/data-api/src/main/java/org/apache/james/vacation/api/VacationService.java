@@ -34,6 +34,19 @@ public interface VacationService {
 
     Mono<Boolean> isNotificationRegistered(AccountId accountId, RecipientId recipientId);
 
+    /**
+     * @return true when the caller is the one to notify, false when a notification is already registered
+     */
+    default Mono<Boolean> registerNotificationIfAbsent(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
+        return isNotificationRegistered(accountId, recipientId)
+            .flatMap(registered -> {
+                if (registered) {
+                    return Mono.just(false);
+                }
+                return registerNotification(accountId, recipientId, expiryDate).thenReturn(true);
+            });
+    }
+
     Mono<Void> flushNotifications(AccountId accountId);
 
 }
