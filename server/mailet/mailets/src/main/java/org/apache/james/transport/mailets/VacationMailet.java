@@ -211,16 +211,31 @@ public class VacationMailet extends GenericMailet {
                 .vacation(vacationInformation.vacation)
                 .build(mimeMessageBodyGenerator);
 
-            getMailetContext().sendMail(getSender(vacationInformation.recipient),
-                vacationReply.getRecipients(),
-                vacationReply.getMimeMessage());
-
-            vacationService.registerNotification(vacationInformation.accountId(),
-                vacationInformation.replyRecipient(),
-                vacationInformation.vacation().getToDate())
-                .block();
+            if (registerNotification(vacationInformation)) {
+                getMailetContext().sendMail(getSender(vacationInformation.recipient),
+                    vacationReply.getRecipients(),
+                    vacationReply.getMimeMessage());
+            }
         } catch (MessagingException e) {
             LOGGER.warn("Failed to send JMAP vacation notification from {} to {}", vacationInformation.recipient(), vacationInformation.replyRecipient().getAsString(), e);
+        }
+    }
+
+    /**
+     * Registering before sending, atomically, lets only one of the mails processed at once send the reply.
+     *
+     * @return true when this mail is the one to reply to
+     */
+    private boolean registerNotification(VacationInformation vacationInformation) {
+        try {
+            return vacationService.registerNotificationIfAbsent(vacationInformation.accountId(),
+                    vacationInformation.replyRecipient(),
+                    vacationInformation.vacation().getToDate())
+                .blockOptional()
+                .orElse(true);
+        } catch (RuntimeException e) {
+            LOGGER.warn("Failed to register JMAP vacation notification from {} to {}, sending it anyway", vacationInformation.recipient(), vacationInformation.replyRecipient().getAsString(), e);
+            return true;
         }
     }
 

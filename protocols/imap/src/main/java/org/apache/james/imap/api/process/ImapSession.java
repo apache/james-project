@@ -36,6 +36,8 @@ import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.util.MDCBuilder;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Encapsulates all state held for an ongoing Imap session, which commences when
@@ -105,6 +107,14 @@ public interface ImapSession extends CommandDetectionSession {
 
     default ImapProcessor.Responder threadSafe(ImapProcessor.Responder responder) {
         return responder;
+    }
+
+    /**
+     * @return a scheduler running tasks one at a time with the handling of the client input, for instance
+     * the IDLE continuation: a task running there sees the session between two lines of the client.
+     */
+    default Scheduler eventLoopScheduler() {
+        return Schedulers.immediate();
     }
 
     /**

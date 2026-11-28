@@ -33,6 +33,8 @@ import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.vacation.api.AccountId;
 import org.apache.james.vacation.api.RecipientId;
+import org.jooq.Field;
+import org.jooq.impl.DSL;
 
 import reactor.core.publisher.Mono;
 
@@ -67,6 +69,24 @@ public class PostgresNotificationRegistryDAO {
         return postgresExecutor.executeVoid(dsl -> Mono.from(dsl.deleteFrom(TABLE_NAME)
             .where(ACCOUNT_ID.eq(accountId.getIdentifier()),
                 EXPIRY_DATE.lt(currentUTCTime))));
+    }
+
+    public Mono<Boolean> registerIfAbsent(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
+        LocalDateTime currentUTCTime = zonedDateTimeProvider.get().withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+        LocalDateTime expiry = expiryDate.map(zonedDateTime -> zonedDateTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime())
+            .orElse(null);
+
+        // Replaces only an expired registration: a row that is still valid makes the insert a no-op
+        Field<LocalDateTime> existingExpiryDate = DSL.field(DSL.name(TABLE_NAME.getName(), EXPIRY_DATE.getName()), EXPIRY_DATE.getDataType());
+        return postgresExecutor.executeReturnAffectedRowsCount(dsl -> Mono.from(dsl.insertInto(TABLE_NAME)
+                .set(ACCOUNT_ID, accountId.getIdentifier())
+                .set(RECIPIENT_ID, recipientId.getAsString())
+                .set(EXPIRY_DATE, expiry)
+                .onConflict(ACCOUNT_ID, RECIPIENT_ID)
+                .doUpdate()
+                .set(EXPIRY_DATE, expiry)
+                .where(existingExpiryDate.lt(currentUTCTime))))
+            .map(count -> count > 0);
     }
 
     public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {

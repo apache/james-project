@@ -22,6 +22,7 @@ package org.apache.james.vacation.memory;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.inject.Inject;
 
@@ -76,6 +77,22 @@ public class MemoryNotificationRegistry implements NotificationRegistry {
     public Mono<Void> register(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
         registrations.put(new Registration(accountId, recipientId), expiryDate);
         return Mono.empty();
+    }
+
+    @Override
+    public Mono<Boolean> registerIfAbsent(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
+        return Mono.fromCallable(() -> {
+            ZonedDateTime currentTime = zonedDateTimeProvider.get();
+            AtomicBoolean registered = new AtomicBoolean(false);
+            registrations.asMap().compute(new Registration(accountId, recipientId), (registration, registrationEnd) -> {
+                if (registrationEnd != null && !isExpired(currentTime, registrationEnd)) {
+                    return registrationEnd;
+                }
+                registered.set(true);
+                return expiryDate;
+            });
+            return registered.get();
+        });
     }
 
     @Override

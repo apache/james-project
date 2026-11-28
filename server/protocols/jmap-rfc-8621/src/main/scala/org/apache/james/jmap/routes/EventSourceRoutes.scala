@@ -49,7 +49,6 @@ import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes, InjectionKeys => 
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.user.api.DelegationStore
 import play.api.libs.json.Json
-import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
 import reactor.core.publisher.{Mono, Sinks}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
@@ -192,7 +191,9 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
 
     val pingDisposable = options.pingPolicy
       .asFlux()
-      .subscribe(ping => context.outbound.emitNext(ping, FAIL_FAST))
+      .subscribe(ping => context.outbound.synchronized {
+        context.outbound.tryEmitNext(ping)
+      })
 
     SMono.just(session.getUser)
       .concatWith(SFlux.fromPublisher(delegationStore.delegatedUsers(session.getUser)))

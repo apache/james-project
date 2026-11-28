@@ -34,6 +34,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.core.Username;
 import org.junit.jupiter.api.AfterEach;
@@ -98,8 +102,30 @@ public abstract class OidcTokenCacheContract {
         verify(tokenInfoResolver, times(1)).apply(token);
         testee().invalidate(SID).block();
 
-        testee().associatedInformation(token).block();
+        assertThatThrownBy(() -> testee().associatedInformation(token).block())
+            .isInstanceOf(LoggedOutSessionException.class);
         verify(tokenInfoResolver, times(2)).apply(token);
+    }
+
+    @Test
+    void invalidateShouldDropATokenWhoseValidationIsInFlight() throws Exception {
+        CountDownLatch validating = new CountDownLatch(1);
+        CompletableFuture<Void> idpAnswer = new CompletableFuture<>();
+        when(tokenInfoResolver.apply(token))
+            .thenReturn(Mono.defer(() -> {
+                validating.countDown();
+                return Mono.fromFuture(idpAnswer);
+            }).thenReturn(TOKEN_INFO));
+
+        CompletableFuture<TokenInfo> request = testee().associatedInformation(token).toFuture();
+        assertThat(validating.await(10, TimeUnit.SECONDS)).isTrue();
+        testee().invalidate(SID).block();
+        idpAnswer.complete(null);
+
+        assertThatThrownBy(() -> request.get(10, TimeUnit.SECONDS))
+            .isInstanceOf(ExecutionException.class)
+            .hasCauseInstanceOf(LoggedOutSessionException.class);
+        assertThat(getUsernameFromCache(token)).isEmpty();
     }
 
     @Test

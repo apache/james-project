@@ -19,13 +19,24 @@
 
 package org.apache.james.oidc.memory;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+import java.time.Duration;
 import java.util.Optional;
+import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.core.Username;
 import org.apache.james.oidc.OidcTokenCacheConfiguration;
 import org.apache.james.oidc.OidcTokenCacheContract;
 import org.apache.james.oidc.Token;
+import org.apache.james.oidc.TokenInfo;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class CaffeineOidcTokenCacheTest extends OidcTokenCacheContract {
     private CaffeineOidcTokenCache testee;
@@ -43,5 +54,38 @@ public class CaffeineOidcTokenCacheTest extends OidcTokenCacheContract {
     @Override
     public Optional<Username> getUsernameFromCache(Token token) {
         return testee.getUsernameFromCache(token);
+    }
+
+    @Test
+    void invalidateShouldDropATokenReloadedBeforeItsEvictionWasNotified() {
+        AtomicLong nanos = new AtomicLong();
+        Queue<Runnable> tasks = new ConcurrentLinkedQueue<>();
+        CaffeineOidcTokenCache cache = new CaffeineOidcTokenCache(tokenInfoResolver, OidcTokenCacheConfiguration.DEFAULT, nanos::get, tasks::add);
+
+        CompletableFuture<TokenInfo> firstRequest = cache.associatedInformation(token).toFuture();
+        runAll(tasks);
+        assertThat(firstRequest.join()).isEqualTo(TOKEN_INFO);
+
+        // The token expires, and a request reloads it before the removal listener of the expired entry runs:
+        // the listener then unindexes the reloaded token.
+        nanos.addAndGet(OidcTokenCacheConfiguration.DEFAULT.expiration().plus(Duration.ofSeconds(1)).toNanos());
+        CompletableFuture<TokenInfo> reload = cache.associatedInformation(token).toFuture();
+        runAll(tasks);
+        assertThat(reload.join()).isEqualTo(TOKEN_INFO);
+        verify(tokenInfoResolver, times(2)).apply(token);
+
+        cache.invalidate(SID).block();
+        CompletableFuture<TokenInfo> afterLogout = cache.associatedInformation(token).toFuture();
+        runAll(tasks);
+
+        assertThat(afterLogout).isCompletedExceptionally();
+        assertThat(cache.getUsernameFromCache(token)).isEmpty();
+    }
+
+    private static void runAll(Queue<Runnable> tasks) {
+        Runnable task;
+        while ((task = tasks.poll()) != null) {
+            task.run();
+        }
     }
 }

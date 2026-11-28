@@ -21,10 +21,13 @@ package org.apache.james.oidc.memory;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.oidc.LoggedOutSessionException;
 import org.apache.james.oidc.OidcTokenCache;
 import org.apache.james.oidc.OidcTokenCacheConfiguration;
 import org.apache.james.oidc.Sid;
@@ -36,8 +39,10 @@ import org.slf4j.LoggerFactory;
 
 import com.github.benmanes.caffeine.cache.AsyncCacheLoader;
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.github.benmanes.caffeine.cache.Ticker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimaps;
@@ -53,19 +58,29 @@ public class CaffeineOidcTokenCache implements OidcTokenCache {
 
     private final AsyncLoadingCache<Token, TokenInfo> cacheToken;
     private final SetMultimap<Sid, Token> sidToTokens = Multimaps.synchronizedSetMultimap(HashMultimap.create());
+    // Sessions logged out within the cache expiration. invalidate(sid) evicts the tokens indexed at that time; a token
+    // indexed later (its validation was in flight, or the removal listener unindexed a reloaded token) is caught here.
+    private final Cache<Sid, Boolean> loggedOutSids;
 
     @Inject
     public CaffeineOidcTokenCache(TokenInfoResolver tokenInfoResolver, OidcTokenCacheConfiguration configuration) {
-        AsyncCacheLoader<Token, TokenInfo> cacheLoader = (token, executor) -> tokenInfoResolver.apply(token)
+        this(tokenInfoResolver, configuration, Ticker.systemTicker(), ForkJoinPool.commonPool());
+    }
+
+    @VisibleForTesting
+    CaffeineOidcTokenCache(TokenInfoResolver tokenInfoResolver, OidcTokenCacheConfiguration configuration, Ticker ticker, Executor executor) {
+        AsyncCacheLoader<Token, TokenInfo> cacheLoader = (token, loadExecutor) -> tokenInfoResolver.apply(token)
             .map(tokenInfo -> {
                 tokenInfo.sid().ifPresentOrElse(sidValue -> sidToTokens.put(sidValue, token),
                     () -> LOGGER.warn("OIDC token of user {} does not have a sid, this will break backchannel logout. Please review OIDC configuration.", tokenInfo.email()));
                 return tokenInfo;
             })
-            .subscribeOn(Schedulers.fromExecutor(executor))
+            .subscribeOn(Schedulers.fromExecutor(loadExecutor))
             .toFuture();
 
         cacheToken = Caffeine.newBuilder()
+            .ticker(ticker)
+            .executor(executor)
             .expireAfterWrite(configuration.expiration())
             .maximumSize(configuration.tokenCacheMaxSize().orElse(DEFAULT_TOKEN_CACHE_MAX_SIZE))
             .removalListener((Token token, TokenInfo tokenInfo, RemovalCause cause) -> {
@@ -74,10 +89,20 @@ public class CaffeineOidcTokenCache implements OidcTokenCache {
                 }
             })
             .buildAsync(cacheLoader);
+
+        loggedOutSids = Caffeine.newBuilder()
+            .ticker(ticker)
+            .executor(executor)
+            .expireAfterWrite(configuration.expiration())
+            .maximumSize(configuration.tokenCacheMaxSize().orElse(DEFAULT_TOKEN_CACHE_MAX_SIZE))
+            .build();
     }
 
     @Override
     public Mono<Void> invalidate(Sid sid) {
+        // The mark is written before the index is read, and a token is indexed before its mark is checked:
+        // a token missed by this snapshot is refused by associatedInformation.
+        loggedOutSids.put(sid, true);
         List<Token> snapshot;
         synchronized (sidToTokens) {
             snapshot = List.copyOf(sidToTokens.get(sid));
@@ -90,7 +115,17 @@ public class CaffeineOidcTokenCache implements OidcTokenCache {
 
     @Override
     public Mono<TokenInfo> associatedInformation(Token token) {
-        return Mono.fromFuture(cacheToken.get(token));
+        return Mono.fromFuture(cacheToken.get(token))
+            .handle((tokenInfo, sink) -> {
+                Optional<Sid> loggedOutSid = tokenInfo.sid().filter(sid -> loggedOutSids.getIfPresent(sid) != null);
+                if (loggedOutSid.isPresent()) {
+                    sidToTokens.remove(loggedOutSid.get(), token);
+                    cacheToken.synchronous().invalidate(token);
+                    sink.error(new LoggedOutSessionException(loggedOutSid.get()));
+                    return;
+                }
+                sink.next(tokenInfo);
+            });
     }
 
     @VisibleForTesting

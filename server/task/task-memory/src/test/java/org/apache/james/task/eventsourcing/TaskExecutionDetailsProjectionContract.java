@@ -24,13 +24,21 @@ import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_D
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_UPDATED;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_ID;
+import static org.apache.james.task.eventsourcing.LoadHookedTaskExecutionDetailsProjection.HOSTNAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static scala.jdk.javaapi.CollectionConverters.asJava;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.james.eventsourcing.EventId;
+import org.apache.james.task.MemoryReferenceTask;
+import org.apache.james.task.MemoryReferenceWithCounterTask;
+import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskId;
+import org.apache.james.task.TaskManager;
 import org.junit.jupiter.api.Test;
 
 import scala.compat.java8.OptionConverters;
@@ -126,5 +134,21 @@ public interface TaskExecutionDetailsProjectionContract {
         assertThat(taskExecutionDetails)
             .usingRecursiveFieldByFieldElementComparatorIgnoringFields("submittedDate")
             .containsOnly(TASK_EXECUTION_DETAILS_UPDATED());
+    }
+
+    @Test
+    default void anAdditionalInformationUpdateLoadedBeforeTheCompletionShouldNotRevertTheCompletedStatus() {
+        TaskId taskId = TaskId.generateTaskId();
+        TaskAggregateId aggregateId = new TaskAggregateId(taskId);
+        LoadHookedTaskExecutionDetailsProjection projection = new LoadHookedTaskExecutionDetailsProjection(testee());
+        projection.handle(new Created(aggregateId, EventId.fromSerialized(0), new MemoryReferenceTask(() -> Task.Result.COMPLETED), HOSTNAME));
+        projection.handle(new Started(aggregateId, EventId.fromSerialized(1), HOSTNAME));
+
+        projection.handleAfterNextLoad(new Completed(aggregateId, EventId.fromSerialized(3), Task.Result.COMPLETED, scala.Option.empty()));
+        projection.handle(new AdditionalInformationUpdated(aggregateId, EventId.fromSerialized(2),
+            new MemoryReferenceWithCounterTask.AdditionalInformation(1, Instant.EPOCH)));
+
+        assertThat(OptionConverters.toJava(projection.load(taskId)).get().getStatus())
+            .isEqualTo(TaskManager.Status.COMPLETED);
     }
 }

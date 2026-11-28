@@ -28,13 +28,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.apache.james.vacation.api.AtomicNotificationRegistryContract;
 import org.apache.james.vacation.api.NotificationRegistry;
-import org.apache.james.vacation.api.NotificationRegistryContract;
 import org.apache.james.vacation.api.RecipientId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class MemoryNotificationRegistryTest implements NotificationRegistryContract {
+class MemoryNotificationRegistryTest implements AtomicNotificationRegistryContract {
     static final int THREAD_COUNT = 10;
     static final int OPERATION_COUNT = 100;
 

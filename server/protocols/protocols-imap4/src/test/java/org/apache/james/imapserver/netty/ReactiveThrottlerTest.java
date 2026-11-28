@@ -23,7 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,6 +45,7 @@ import com.github.fge.lambdas.Throwing;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 
 class ReactiveThrottlerTest {
@@ -483,5 +487,148 @@ class ReactiveThrottlerTest {
         Awaitility.await().untilAsserted(() -> assertThat(concurrentTasksCountSnapshots.size()).isEqualTo(8));
         assertThat(concurrentTasksCountSnapshots)
             .allSatisfy(i -> assertThat(i).isBetween(0, 2));
+    }
+
+    @RepeatedTest(3)
+    void queuedTasksShouldBeExecutedWhenRunningTasksCompleteConcurrently() throws Exception {
+        // Given a throttler executing one task at a time
+        ReactiveThrottler testee = new ReactiveThrottler(new NoopGaugeRegistry(), 1, 10_000);
+
+        // When tasks are queued while the running ones complete on other threads
+        try (ConcurrentTestRunner runner = ConcurrentTestRunner.builder()
+            .reactorOperation((threadNumber, step) -> testee.throttle(Mono.empty(), NO_IMAP_MESSAGE))
+            .threadCount(8)
+            .operationCount(10_000)
+            .run()) {
+
+            // Then every task is eventually executed: none of them is left waiting in the queue
+            runner.awaitTermination(Duration.ofSeconds(30))
+                .assertNoException();
+        }
+    }
+
+    @Test
+    void queuedTasksShouldBeExecutedInSubmissionOrder() {
+        // Given a throttler whose only slot is taken
+        ReactiveThrottler testee = new ReactiveThrottler(new NoopGaugeRegistry(), 1, 10);
+        Sinks.Empty<Void> runningTask = Sinks.empty();
+        Mono.from(testee.throttle(runningTask.asMono(), NO_IMAP_MESSAGE)).subscribe();
+
+        // When tasks are queued
+        ConcurrentLinkedQueue<Integer> executionOrder = new ConcurrentLinkedQueue<>();
+        for (int i = 0; i < 10; i++) {
+            int taskNumber = i;
+            Mono.from(testee.throttle(Mono.fromRunnable(() -> executionOrder.add(taskNumber)), NO_IMAP_MESSAGE)).subscribe();
+        }
+        assertThat(executionOrder).isEmpty();
+        // And the running task completes
+        runningTask.tryEmitEmpty();
+
+        // Then the queued tasks are executed in the order they were submitted
+        Awaitility.await().atMost(Duration.ofSeconds(5))
+            .untilAsserted(() -> assertThat(executionOrder).containsExactly(0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
+    }
+
+    @RepeatedTest(3)
+    void concurrentBurstShouldNotExceedTheConcurrencyAndShouldLeaveTheThrottlerIdle() throws Exception {
+        // Given a throttler executing two tasks at a time
+        Map<String, Gauge<?>> gauges = new ConcurrentHashMap<>();
+        ReactiveThrottler testee = new ReactiveThrottler(capturingGaugeRegistry(gauges), 2, 10_000);
+        AtomicInteger runningTasks = new AtomicInteger(0);
+        AtomicInteger maxRunningTasks = new AtomicInteger(0);
+        Mono<Void> task = Mono.<Void>fromRunnable(() -> {
+                maxRunningTasks.accumulateAndGet(runningTasks.incrementAndGet(), Math::max);
+                runningTasks.decrementAndGet();
+            })
+            // the task completes on another thread than the one submitting it
+            .subscribeOn(Schedulers.parallel());
+
+        // When many tasks are submitted concurrently
+        try (ConcurrentTestRunner runner = ConcurrentTestRunner.builder()
+            .reactorOperation((threadNumber, step) -> testee.throttle(task, NO_IMAP_MESSAGE))
+            .threadCount(8)
+            .operationCount(2_000)
+            .run()) {
+
+            runner.awaitTermination(Duration.ofSeconds(30))
+                .assertNoException();
+        }
+
+        // Then no more than two tasks ran at once
+        assertThat(maxRunningTasks.get()).isBetween(1, 2);
+        // And the throttler ends up with nothing running nor queued
+        Awaitility.await().atMost(Duration.ofSeconds(5))
+            .untilAsserted(() -> {
+                assertThat(gauges.get("imap.request.concurrent.count").get()).isEqualTo(0);
+                assertThat(gauges.get("imap.request.queue.size").get()).isEqualTo(0);
+            });
+    }
+
+    @Test
+    void concurrentSubmissionsShouldNotQueueMoreTasksThanTheQueueSize() throws Exception {
+        // Given a throttler whose two slots are taken
+        Map<String, Gauge<?>> gauges = new ConcurrentHashMap<>();
+        ReactiveThrottler testee = new ReactiveThrottler(capturingGaugeRegistry(gauges), 2, 5);
+        Sinks.Empty<Void> runningTasks = Sinks.empty();
+        Mono.from(testee.throttle(runningTasks.asMono(), NO_IMAP_MESSAGE)).subscribe();
+        Mono.from(testee.throttle(runningTasks.asMono(), NO_IMAP_MESSAGE)).subscribe();
+
+        // When many tasks are submitted concurrently
+        AtomicInteger rejectedTasks = new AtomicInteger(0);
+        AtomicInteger executedTasks = new AtomicInteger(0);
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> Mono.from(testee.throttle(Mono.fromRunnable(executedTasks::incrementAndGet), NO_IMAP_MESSAGE))
+                .doOnError(ReactiveThrottler.RejectedException.class, e -> rejectedTasks.incrementAndGet())
+                .onErrorResume(ReactiveThrottler.RejectedException.class, e -> Mono.empty())
+                .subscribe())
+            .threadCount(8)
+            .operationCount(20)
+            .runSuccessfullyWithin(Duration.ofSeconds(10));
+
+        // Then exactly as many tasks as the queue size are queued, the other ones are rejected
+        assertThat(rejectedTasks.get()).isEqualTo(8 * 20 - 5);
+        assertThat(executedTasks.get()).isZero();
+
+        // And the queued tasks run once the running ones complete
+        runningTasks.tryEmitEmpty();
+        Awaitility.await().atMost(Duration.ofSeconds(5))
+            .untilAsserted(() -> {
+                assertThat(executedTasks.get()).isEqualTo(5);
+                assertThat(gauges.get("imap.request.concurrent.count").get()).isEqualTo(0);
+            });
+    }
+
+    @Test
+    void tasksCompletingOrFailingSynchronouslyShouldReleaseTheirSlot() {
+        // Given a throttler executing one task at a time, without queue
+        ReactiveThrottler testee = new ReactiveThrottler(new NoopGaugeRegistry(), 1, 0);
+
+        // When tasks completing or failing right away are executed one after the other
+        for (int i = 0; i < 100; i++) {
+            Mono.from(testee.throttle(Mono.empty(), NO_IMAP_MESSAGE)).block();
+            assertThatThrownBy(() -> Mono.from(testee.throttle(Mono.error(new IllegalStateException("task failure")), NO_IMAP_MESSAGE)).block())
+                // Then none of them is rejected: each one released its slot
+                .isInstanceOf(IllegalStateException.class);
+        }
+
+        // And the throttler still executes tasks
+        AtomicBoolean executed = new AtomicBoolean(false);
+        Mono.from(testee.throttle(Mono.fromRunnable(() -> executed.set(true)), NO_IMAP_MESSAGE)).block();
+        assertThat(executed.get()).isTrue();
+    }
+
+    private static GaugeRegistry capturingGaugeRegistry(Map<String, Gauge<?>> gauges) {
+        return new GaugeRegistry() {
+            @Override
+            public <T> GaugeRegistry register(String name, Gauge<T> gauge) {
+                gauges.put(name, gauge);
+                return this;
+            }
+
+            @Override
+            public <T> GaugeRegistry.SettableGauge<T> settableGauge(String name) {
+                return value -> { };
+            }
+        };
     }
 }

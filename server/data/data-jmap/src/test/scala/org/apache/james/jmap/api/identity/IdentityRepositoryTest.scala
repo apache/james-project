@@ -32,6 +32,7 @@ import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatTh
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{mock, when}
+import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
@@ -255,5 +256,36 @@ class IdentityRepositoryTest {
 
     assertThatThrownBy(() => SMono.fromPublisher(testee.update(BOB, identity.id, UPDATE_REQUEST)).block())
       .isInstanceOf(classOf[IdentityNotFoundException])
+  }
+
+  @Test
+  def updateShouldNotBringBackAnIdentityDestroyedAfterItWasRead(): Unit = {
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.empty)
+    when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
+    val identity: Identity = SMono(customIdentityDAO.save(BOB, CREATION_REQUEST)).block()
+    val destroyedAfterRead: CustomIdentityDAO = new CustomIdentityDAO {
+      override def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] = customIdentityDAO.save(user, creationRequest)
+
+      override def save(user: Username, identityId: IdentityId, creationRequest: IdentityCreationRequest): Publisher[Identity] = customIdentityDAO.save(user, identityId, creationRequest)
+
+      override def list(user: Username): Publisher[Identity] = customIdentityDAO.list(user)
+
+      override def findByIdentityId(user: Username, identityId: IdentityId): SMono[Identity] =
+        customIdentityDAO.findByIdentityId(user, identityId)
+          .flatMap(found => SMono(customIdentityDAO.delete(user, Set(identityId))).`then`(SMono.just(found)))
+
+      override def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): Publisher[Unit] = customIdentityDAO.update(user, identityId, identityUpdate)
+
+      override def upsert(user: Username, patch: Identity): SMono[Unit] = customIdentityDAO.upsert(user, patch)
+
+      override def delete(username: Username, ids: Set[IdentityId]): Publisher[Unit] = customIdentityDAO.delete(username, ids)
+
+      override def delete(username: Username): Publisher[Unit] = customIdentityDAO.delete(username)
+    }
+
+    assertThatThrownBy(() => SMono(new IdentityRepository(destroyedAfterRead, identityFactory).update(BOB, identity.id, UPDATE_REQUEST)).block())
+      .isInstanceOf(classOf[IdentityNotFoundException])
+    assertThat(SFlux(customIdentityDAO.list(BOB)).collectSeq().block().asJava)
+      .isEmpty()
   }
 }

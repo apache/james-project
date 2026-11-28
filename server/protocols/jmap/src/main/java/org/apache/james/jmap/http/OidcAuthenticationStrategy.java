@@ -34,6 +34,7 @@ import org.apache.james.jwt.userinfo.UserInfoCheckException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.oidc.Aud;
+import org.apache.james.oidc.LoggedOutSessionException;
 import org.apache.james.oidc.OidcTokenCache;
 import org.apache.james.oidc.Token;
 import org.apache.james.oidc.TokenInfo;
@@ -89,7 +90,8 @@ public class OidcAuthenticationStrategy implements AuthenticationStrategy {
             .flatMap(username -> Mono.fromCallable(() -> sessionProvider.authenticate(username)
                 .withoutDelegation()))
             .onErrorMap(TokenIntrospectionException.class, e -> new UnauthorizedException("Invalid OIDC token when introspection check", e))
-            .onErrorMap(UserInfoCheckException.class, e -> new UnauthorizedException("Invalid OIDC token when user info check", e));
+            .onErrorMap(UserInfoCheckException.class, e -> new UnauthorizedException("Invalid OIDC token when user info check", e))
+            .onErrorMap(LoggedOutSessionException.class, e -> new UnauthorizedException("Invalid OIDC token: its session was logged out", e));
     }
 
     private boolean isAudienceAccepted(Optional<List<Aud>> maybeTokenAudiences) {

@@ -30,6 +30,23 @@ public interface NotificationRegistry {
 
     Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId);
 
+    /**
+     * Registers the notification unless an unexpired registration already exists.
+     *
+     * Implementations should make this atomic so that, among concurrent calls, only one is told to notify.
+     *
+     * @return true when the caller is the one to notify, false when a notification is already registered
+     */
+    default Mono<Boolean> registerIfAbsent(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
+        return isRegistered(accountId, recipientId)
+            .flatMap(registered -> {
+                if (registered) {
+                    return Mono.just(false);
+                }
+                return register(accountId, recipientId, expiryDate).thenReturn(true);
+            });
+    }
+
     Mono<Void> flush(AccountId accountId);
 
 }

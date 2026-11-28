@@ -59,20 +59,10 @@ public class ConnectionPerIpLimitUpstreamHandler extends ChannelInboundHandlerAd
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         String remoteIp = remoteAddress.getAddress().getHostAddress();
 
-        AtomicInteger atomicCount = connections.get(remoteIp);
-
-        if (atomicCount == null) {
-            atomicCount = new AtomicInteger(1);
-            AtomicInteger oldAtomicCount = connections.putIfAbsent(remoteIp, atomicCount);
-            // if another thread put a new counter for this ip, we must use the other one.
-            if (oldAtomicCount != null) {
-                oldAtomicCount.incrementAndGet();
-            }
-        } else {
-            Integer count = atomicCount.incrementAndGet();
-            if (count > maxConnectionsPerIp) {
-                ctx.channel().close();
-            }
+        int count = connections.computeIfAbsent(remoteIp, ip -> new AtomicInteger())
+            .incrementAndGet();
+        if (count > maxConnectionsPerIp) {
+            ctx.channel().close();
         }
         
         super.channelActive(ctx);

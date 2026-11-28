@@ -62,6 +62,11 @@ public class DefaultVacationService implements VacationService {
     }
 
     @Override
+    public Mono<Boolean> registerNotificationIfAbsent(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
+        return notificationRegistry.registerIfAbsent(accountId, recipientId, expiryDate);
+    }
+
+    @Override
     public Mono<Boolean> isNotificationRegistered(AccountId accountId, RecipientId recipientId) {
         return notificationRegistry.isRegistered(accountId, recipientId);
     }

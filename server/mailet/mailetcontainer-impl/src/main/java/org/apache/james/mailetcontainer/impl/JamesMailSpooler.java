@@ -281,7 +281,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
     private final MailQueueFactory<?> queueFactory;
 
     private Configuration configuration;
-    private Optional<Runner> runner;
+    private volatile Optional<Runner> runner;
     private MailQueue queue;
 
     @Inject
@@ -293,7 +293,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         this.queueFactory = queueFactory;
     }
 
-    public void restart() {
+    public synchronized void restart() {
         Optional<Runner> previous = runner;
         runner = Optional.of(new Runner(metricFactory, gaugeRegistry, mailProcessor, errorRepository(), queue, configuration));
         previous.ifPresent(Runner::dispose);
@@ -344,7 +344,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
      */
     @PreDestroy
     @Override
-    public void dispose() {
+    public synchronized void dispose() {
         runner.ifPresent(Runner::dispose);
     }
 

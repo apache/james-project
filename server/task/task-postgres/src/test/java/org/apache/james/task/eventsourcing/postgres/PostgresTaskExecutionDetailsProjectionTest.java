@@ -24,12 +24,12 @@ import java.util.function.Supplier;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskAdditionalInformationDTO;
+import org.apache.james.task.eventsourcing.ConditionalTaskExecutionDetailsProjectionContract;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
-import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjectionContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class PostgresTaskExecutionDetailsProjectionTest implements TaskExecutionDetailsProjectionContract {
+class PostgresTaskExecutionDetailsProjectionTest implements ConditionalTaskExecutionDetailsProjectionContract {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresTaskExecutionDetailsProjectionDataDefinition.MODULE());
 

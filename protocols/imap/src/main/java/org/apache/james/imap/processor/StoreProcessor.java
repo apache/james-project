@@ -294,9 +294,10 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         // if some new flag/keyword was used
         // See IMAP-303
         if (selected.hasNewApplicableFlags()) {
+            // Acknowledge before reading the flags we send: a flag added afterwards is reported next time
+            selected.resetNewApplicableFlags();
             flags(responder, selected);
             permanentFlags(responder, mailbox.getPermanentFlags(mailboxSession), selected, mailbox, mailboxSession);
-            selected.resetNewApplicableFlags();
         }
     }
 

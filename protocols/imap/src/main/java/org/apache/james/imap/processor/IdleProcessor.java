@@ -261,13 +261,15 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         @Override
         public Publisher<Void> reactiveEvent(Event event) {
             return idleReadySink.asMono()
-                .then(Mono.defer(() -> {
+                // Serialised with DONE on the event loop: once IDLE completed, the changes are left to the next command,
+                // which reports them without the MSNs shifting under it
+                .then(Mono.<Void>defer(() -> {
                     if (!idleActive.get()) {
                         return Mono.empty();
                     }
                     return unsolicitedResponses(session, responder, false)
                         .then(Mono.fromRunnable(responder::flush));
-                }))
+                }).subscribeOn(session.eventLoopScheduler()))
                 .onErrorResume(e -> logAsMono(() -> LOGGER.info("Failed to push updates to idling client", e)))
                 .then();
         }

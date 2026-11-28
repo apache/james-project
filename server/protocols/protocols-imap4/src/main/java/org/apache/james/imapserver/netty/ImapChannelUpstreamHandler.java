@@ -583,19 +583,21 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     }
                     Object waitingMessage;
                     synchronized (linearalizer) {
+                        // Clean up before releasing the slot: the next request can start right after,
+                        // its heartbeat and its in-flight handle must not be removed by this cleanup
+                        if (signal.isOnComplete() || signal.isOnError()) {
+                            afterIDLEUponProcessing(ctx);
+                        }
+                        disposableAttribute.set(null);
                         waitingMessage = linearalizer.poll();
                         // RFC 9051 section 5.5: keep the slot for the next queued request, so that a request read
                         // before it runs does not overtake it
                         linearalizer.isExecutingRequest.set(waitingMessage != null && signal.isOnComplete());
                     }
-                    if (signal.isOnComplete() || signal.isOnError()) {
-                        afterIDLEUponProcessing(ctx);
-                    }
                     if (signal.hasError()) {
                         ctx.fireExceptionCaught(signal.getThrowable());
                     }
                     resumeReadingIfDrained(ctx, linearalizer);
-                    disposableAttribute.set(null);
                     response.flush();
                     ctx.fireChannelReadComplete();
                     if (waitingMessage != null) {

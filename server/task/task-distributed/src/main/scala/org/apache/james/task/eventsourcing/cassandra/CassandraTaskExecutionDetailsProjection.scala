@@ -21,8 +21,9 @@ package org.apache.james.task.eventsourcing.cassandra
 
 import jakarta.inject.Inject
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection
-import org.apache.james.task.{TaskExecutionDetails, TaskId}
+import org.apache.james.task.{TaskExecutionDetails, TaskId, TaskManager}
 import org.reactivestreams.Publisher
+import reactor.core.publisher.Mono
 
 import java.time.Instant
 import scala.compat.java8.OptionConverters._
@@ -46,6 +47,16 @@ class CassandraTaskExecutionDetailsProjection @Inject()(cassandraTaskExecutionDe
   override def listReactive(): Publisher[TaskExecutionDetails] = cassandraTaskExecutionDetailsProjectionDAO.listDetails()
 
   override def updateReactive(details: TaskExecutionDetails): Publisher[Void] = cassandraTaskExecutionDetailsProjectionDAO.saveDetails(details)
+
+  // Cassandra offers no conditional write without lightweight transactions: status transitions are saved unconditionally
+  override def updateReactive(details: TaskExecutionDetails, expectedStatus: TaskManager.Status): Publisher[java.lang.Boolean] =
+    cassandraTaskExecutionDetailsProjectionDAO.saveDetails(details)
+      .`then`(Mono.just(java.lang.Boolean.TRUE))
+
+  // a progress update only writes the additional information, so it never reverts the status set by a concurrent transition
+  override def updateAdditionalInformationReactive(details: TaskExecutionDetails, expectedStatus: TaskManager.Status): Publisher[java.lang.Boolean] =
+    cassandraTaskExecutionDetailsProjectionDAO.saveAdditionalInformation(details)
+      .`then`(Mono.just(java.lang.Boolean.TRUE))
 
   override def listDetailsByBeforeDate(beforeDate: Instant): Publisher[TaskExecutionDetails] = cassandraTaskExecutionDetailsProjectionDAO.listDetailsByBeforeDate(beforeDate)
 
