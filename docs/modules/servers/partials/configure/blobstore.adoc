@@ -161,6 +161,14 @@ brings benefits with the `deduplication` storage strategy: blob ids are then con
 already stored necessarily holds the very same content. The `passthrough` strategy generates a distinct blob id per
 write, thus no write is ever skipped.
 
+| objectstorage.s3.multipart.threshold
+| optional: Size, defaults to `500M`. Blobs larger than this size are uploaded with an S3 multipart upload rather than
+a single PUT, which S3 rejects above 5 GB. Supported units: K, M, G, defaults to B if no unit is specified.
+
+| objectstorage.s3.multipart.partSize
+| optional: Size, defaults to `100M`. Size of the parts of multipart uploads, between `5M` and `5G`. As S3 accepts at
+most 10.000 parts, the default allows blobs of up to roughly 1 TB. Supported units: K, M, G, defaults to B if no unit is specified.
+
 |===
 
 ==== Buckets Configuration

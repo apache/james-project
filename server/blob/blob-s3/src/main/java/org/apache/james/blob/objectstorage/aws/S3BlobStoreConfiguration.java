@@ -79,6 +79,8 @@ public class S3BlobStoreConfiguration {
             private Optional<S3SSECConfiguration> ssecConfiguration = Optional.empty();
             private Optional<BucketName> fallbackBucketName;
             private boolean ifNoneMatchEnabled;
+            private Optional<Long> multipartUploadThreshold;
+            private Optional<Long> multipartUploadPartSize;
 
             public ReadyToBuild(AwsS3AuthConfiguration specificAuthConfiguration, Region region) {
                 this.specificAuthConfiguration = specificAuthConfiguration;
@@ -93,6 +95,8 @@ public class S3BlobStoreConfiguration {
                 this.uploadRetrySpec = Optional.empty();
                 this.fallbackBucketName = Optional.empty();
                 this.ifNoneMatchEnabled = false;
+                this.multipartUploadThreshold = Optional.empty();
+                this.multipartUploadPartSize = Optional.empty();
             }
 
             public ReadyToBuild defaultBucketName(Optional<BucketName> defaultBucketName) {
@@ -169,11 +173,27 @@ public class S3BlobStoreConfiguration {
                 return this;
             }
 
+            public ReadyToBuild multipartUploadThreshold(Optional<Long> multipartUploadThreshold) {
+                this.multipartUploadThreshold = multipartUploadThreshold;
+                return this;
+            }
+
+            public ReadyToBuild multipartUploadPartSize(Optional<Long> multipartUploadPartSize) {
+                this.multipartUploadPartSize = multipartUploadPartSize;
+                return this;
+            }
+
             public S3BlobStoreConfiguration build() {
+                long threshold = multipartUploadThreshold.orElse(DEFAULT_MULTIPART_UPLOAD_THRESHOLD);
+                long partSize = multipartUploadPartSize.orElse(DEFAULT_MULTIPART_UPLOAD_PART_SIZE);
+                Preconditions.checkArgument(threshold > 0, "'multipartUploadThreshold' must be strictly positive");
+                Preconditions.checkArgument(partSize >= MIN_MULTIPART_UPLOAD_PART_SIZE && partSize <= MAX_MULTIPART_UPLOAD_PART_SIZE,
+                    "'multipartUploadPartSize' must be between 5 MB and 5 GB");
+
                 return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region,
                     specificAuthConfiguration, httpConcurrency.orElse(DEFAULT_HTTP_CONCURRENCY),
                     inMemoryReadLimit, readTimeout, writeTimeout, connectionTimeout, uploadRetrySpec.orElse(DEFAULT_UPLOAD_RETRY_SPEC),
-                    ssecEnabled, ssecConfiguration, fallbackBucketName, ifNoneMatchEnabled);
+                    ssecEnabled, ssecConfiguration, fallbackBucketName, ifNoneMatchEnabled, threshold, partSize);
             }
         }
 
@@ -184,6 +204,12 @@ public class S3BlobStoreConfiguration {
     public static final Double UPLOAD_RETRY_BACKOFF_JETTY_DEFAULT = 0.5;
     public static final Predicate<Throwable> UPLOAD_RETRY_EXCEPTION_PREDICATE = SdkException.class::isInstance;
     public static final Retry DEFAULT_UPLOAD_RETRY_SPEC = Retry.backoff(0, UPLOAD_RETRY_BACKOFF_DURATION_DEFAULT).filter(UPLOAD_RETRY_EXCEPTION_PREDICATE);
+    // S3 rejects single PUTs larger than 5 GB: bigger blobs need to be uploaded as several parts
+    public static final long DEFAULT_MULTIPART_UPLOAD_THRESHOLD = 500L * 1024 * 1024;
+    public static final long DEFAULT_MULTIPART_UPLOAD_PART_SIZE = 100L * 1024 * 1024;
+    // Bounds S3 enforces on multipart uploads parts, but the last one
+    public static final long MIN_MULTIPART_UPLOAD_PART_SIZE = 5L * 1024 * 1024;
+    public static final long MAX_MULTIPART_UPLOAD_PART_SIZE = 5L * 1024 * 1024 * 1024;
     private final Region region;
     private final AwsS3AuthConfiguration specificAuthConfiguration;
     private final Optional<BucketName> namespace;
@@ -195,6 +221,8 @@ public class S3BlobStoreConfiguration {
     private final Optional<S3SSECConfiguration> ssecConfiguration;
     private final Optional<BucketName> fallbackNamespace;
     private final boolean ifNoneMatchEnabled;
+    private final long multipartUploadThreshold;
+    private final long multipartUploadPartSize;
 
     private final Optional<Duration> readTimeout;
     private final Optional<Duration> writeTimeout;
@@ -214,7 +242,9 @@ public class S3BlobStoreConfiguration {
                              boolean ssecEnabled,
                              Optional<S3SSECConfiguration> ssecConfiguration,
                              Optional<BucketName> fallbackNamespace,
-                             boolean ifNoneMatchEnabled) {
+                             boolean ifNoneMatchEnabled,
+                             long multipartUploadThreshold,
+                             long multipartUploadPartSize) {
         this.bucketPrefix = bucketPrefix;
         this.namespace = namespace;
         this.region = region;
@@ -229,6 +259,8 @@ public class S3BlobStoreConfiguration {
         this.ssecConfiguration = ssecConfiguration;
         this.fallbackNamespace = fallbackNamespace;
         this.ifNoneMatchEnabled = ifNoneMatchEnabled;
+        this.multipartUploadThreshold = multipartUploadThreshold;
+        this.multipartUploadPartSize = multipartUploadPartSize;
     }
 
     public Optional<Long> getInMemoryReadLimit() {
@@ -287,6 +319,14 @@ public class S3BlobStoreConfiguration {
         return ifNoneMatchEnabled;
     }
 
+    public long getMultipartUploadThreshold() {
+        return multipartUploadThreshold;
+    }
+
+    public long getMultipartUploadPartSize() {
+        return multipartUploadPartSize;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof S3BlobStoreConfiguration that) {
@@ -303,7 +343,9 @@ public class S3BlobStoreConfiguration {
                 && Objects.equals(this.ssecEnabled, that.ssecEnabled)
                 && Objects.equals(this.ssecConfiguration, that.ssecConfiguration)
                 && Objects.equals(this.fallbackNamespace, that.fallbackNamespace)
-                && Objects.equals(this.ifNoneMatchEnabled, that.ifNoneMatchEnabled);
+                && Objects.equals(this.ifNoneMatchEnabled, that.ifNoneMatchEnabled)
+                && Objects.equals(this.multipartUploadThreshold, that.multipartUploadThreshold)
+                && Objects.equals(this.multipartUploadPartSize, that.multipartUploadPartSize);
         }
         return false;
     }
@@ -312,7 +354,7 @@ public class S3BlobStoreConfiguration {
     public final int hashCode() {
         return Objects.hash(namespace, bucketPrefix, httpConcurrency, specificAuthConfiguration,
             readTimeout, writeTimeout, connectionTimeout, uploadRetrySpec, ssecConfiguration, region,
-            inMemoryReadLimit, ssecEnabled, fallbackNamespace, ifNoneMatchEnabled);
+            inMemoryReadLimit, ssecEnabled, fallbackNamespace, ifNoneMatchEnabled, multipartUploadThreshold, multipartUploadPartSize);
     }
 
     @Override
@@ -332,6 +374,8 @@ public class S3BlobStoreConfiguration {
             .add("ssecConfiguration", ssecConfiguration)
             .add("fallbackNamespace", fallbackNamespace)
             .add("ifNoneMatchEnabled", ifNoneMatchEnabled)
+            .add("multipartUploadThreshold", multipartUploadThreshold)
+            .add("multipartUploadPartSize", multipartUploadPartSize)
             .toString();
     }
 }

@@ -75,4 +75,32 @@ public class S3BlobStoreConfigurationTest {
 
         assertThat(configuration.ifNoneMatchEnabled()).isFalse();
     }
+
+    @Test
+    void shouldRejectMultipartUploadPartSizeSmallerThanFiveMegabytes() {
+        assertThatThrownBy(() -> S3BlobStoreConfiguration.builder()
+            .authConfiguration(AwsS3AuthConfiguration.builder()
+                .endpoint(Throwing.supplier(() -> new URI("http://localhost:1234")).get())
+                .accessKeyId("accessKeyId")
+                .secretKey("secretKey1")
+                .build())
+            .region(Region.of("af-south-1"))
+            .multipartUploadPartSize(Optional.of(1024L * 1024))
+            .build())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldRejectNonPositiveMultipartUploadThreshold() {
+        assertThatThrownBy(() -> S3BlobStoreConfiguration.builder()
+            .authConfiguration(AwsS3AuthConfiguration.builder()
+                .endpoint(Throwing.supplier(() -> new URI("http://localhost:1234")).get())
+                .accessKeyId("accessKeyId")
+                .secretKey("secretKey1")
+                .build())
+            .region(Region.of("af-south-1"))
+            .multipartUploadThreshold(Optional.of(0L))
+            .build())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
 }
