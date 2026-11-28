@@ -28,7 +28,6 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.jms.JMSCacheableMailQueue;
 import org.apache.james.queue.jms.JMSMailQueueFactory;
 
 /**
@@ -53,6 +52,6 @@ public class ActiveMQMailQueueFactory extends JMSMailQueueFactory {
     @Override
     protected ManageableMailQueue createCacheableMailQueue(MailQueueName name) {
         activeMQMetricCollector.collectQueueStatistics(name);
-        return new JMSCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory, gaugeRegistry);
+        return new ActiveMQCacheableMailQueue(connectionFactory, mailQueueItemDecoratorFactory, name, metricFactory, gaugeRegistry);
     }
 }
