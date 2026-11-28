@@ -74,6 +74,9 @@ public class ReactiveThrottler {
     // In flight + executing
     private final AtomicInteger concurrentRequests = new AtomicInteger(0);
     private final Queue<TaskHolder> queue = new ConcurrentLinkedQueue<>();
+    // Counting a request and queueing it must be atomic with respect to a completion releasing its slot and polling
+    // the queue: otherwise a completion can poll before the request it just made room for is queued.
+    private final Object lock = new Object();
     private final Sinks.Many<TaskHolder> sink;
 
     public ReactiveThrottler(GaugeRegistry gaugeRegistry, int maxConcurrentRequests, int maxQueueSize) {
@@ -105,50 +108,55 @@ public class ReactiveThrottler {
         if (maxConcurrentRequests < 0) {
             return Mono.from(task);
         }
-        int requestNumber = concurrentRequests.incrementAndGet();
+        synchronized (lock) {
+            int requestNumber = concurrentRequests.incrementAndGet();
 
-        if (requestNumber <= maxConcurrentRequests) {
-            // We have capacity for one more concurrent request
-            return Mono.from(task)
-                .timeout(MAX_EXECUTION_TIME)
-                .doFinally(any -> onRequestDone());
-        } else if (requestNumber <= maxQueueSize + maxConcurrentRequests) {
-            // Queue the request for later
-            AtomicBoolean cancelled = new AtomicBoolean(false);
-            Sinks.One<Void> one = Sinks.one();
-            TaskHolder taskHolder = new TaskHolder(Mono.fromCallable(cancelled::get)
-                .flatMap(cancel -> {
-                    if (cancel) {
-                        return Mono.empty();
-                    }
-                    return Mono.from(task);
-                })
-                // Signal the outer one.asMono() subscriber on both success and error paths.
-                // tryEmitEmpty/tryEmitError are used (not FAIL_FAST) to avoid throwing when
-                // the subscriber has already cancelled (e.g. channel closed mid-queue).
-                .doOnSuccess(ignored -> one.tryEmitEmpty())
-                .doOnError(one::tryEmitError), ctx);
-            queue.add(taskHolder);
-            // Let the caller await task completion
-            return one.asMono()
-                .doOnCancel(() -> {
-                    cancelled.set(true);
-                    // Do NOT decrement concurrentRequests here when disposable is null
-                    // (task not yet dispatched). The TaskHolder stays in the queue, will be
-                    // dispatched as Mono.empty() by the next onRequestDone(), and that call
-                    // handles the single authoritative decrement. 
-                    Optional.ofNullable(taskHolder.disposable.get())
-                        .ifPresent(Disposable::dispose);
-                });
-        } else {
+            if (requestNumber <= maxConcurrentRequests) {
+                // We have capacity for one more concurrent request
+                return Mono.from(task)
+                    .timeout(MAX_EXECUTION_TIME)
+                    .doFinally(any -> onRequestDone());
+            } else if (requestNumber <= maxQueueSize + maxConcurrentRequests) {
+                // Queue the request for later
+                return enqueue(task, ctx);
+            }
             concurrentRequests.decrementAndGet();
-
-            return Mono.error(new RejectedException(
-                String.format(
-                    "The IMAP server has reached its maximum capacity "
-                        + "(concurrent requests: %d, queue size: %d)",
-                    maxConcurrentRequests, maxQueueSize), imapMessage));
         }
+
+        return Mono.error(new RejectedException(
+            String.format(
+                "The IMAP server has reached its maximum capacity "
+                    + "(concurrent requests: %d, queue size: %d)",
+                maxConcurrentRequests, maxQueueSize), imapMessage));
+    }
+
+    private Mono<Void> enqueue(Publisher<Void> task, Consumer<Runnable> ctx) {
+        AtomicBoolean cancelled = new AtomicBoolean(false);
+        Sinks.One<Void> one = Sinks.one();
+        TaskHolder taskHolder = new TaskHolder(Mono.fromCallable(cancelled::get)
+            .flatMap(cancel -> {
+                if (cancel) {
+                    return Mono.empty();
+                }
+                return Mono.from(task);
+            })
+            // Signal the outer one.asMono() subscriber on both success and error paths.
+            // tryEmitEmpty/tryEmitError are used (not FAIL_FAST) to avoid throwing when
+            // the subscriber has already cancelled (e.g. channel closed mid-queue).
+            .doOnSuccess(ignored -> one.tryEmitEmpty())
+            .doOnError(one::tryEmitError), ctx);
+        queue.add(taskHolder);
+        // Let the caller await task completion
+        return one.asMono()
+            .doOnCancel(() -> {
+                cancelled.set(true);
+                // Do NOT decrement concurrentRequests here when disposable is null
+                // (task not yet dispatched). The TaskHolder stays in the queue, will be
+                // dispatched as Mono.empty() by the next onRequestDone(), and that call
+                // handles the single authoritative decrement. 
+                Optional.ofNullable(taskHolder.disposable.get())
+                    .ifPresent(Disposable::dispose);
+            });
     }
 
     public boolean isQueueFull() {
@@ -156,8 +164,11 @@ public class ReactiveThrottler {
     }
 
     private void onRequestDone() {
-        concurrentRequests.getAndDecrement();
-        TaskHolder throttled = queue.poll();
+        TaskHolder throttled;
+        synchronized (lock) {
+            concurrentRequests.getAndDecrement();
+            throttled = queue.poll();
+        }
         if (throttled != null) {
             synchronized (sink) {
                 sink.emitNext(throttled, Sinks.EmitFailureHandler.FAIL_FAST);
