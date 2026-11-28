@@ -54,6 +54,8 @@ import io.netty.handler.codec.compression.ZlibWrapper;
 import io.netty.handler.ssl.SslHandler;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 public class NettyImapSession implements ImapSession, NettyConstants {
     private final Map<String, Object> attributesByKey = new HashMap<>();
@@ -61,6 +63,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     private final boolean compress;
     private final Channel channel;
     private final SessionId sessionId;
+    private final Scheduler eventLoopScheduler;
 
     private volatile ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
     private final AtomicReference<SelectedMailbox> selectedMailbox = new AtomicReference<>();
@@ -72,6 +75,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         this.secure = secure;
         this.compress = compress;
         this.sessionId = sessionId;
+        this.eventLoopScheduler = Schedulers.fromExecutor(channel.eventLoop());
         this.needsCommandInjectionDetection = true;
     }
 
@@ -112,14 +116,28 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         return new ImapProcessor.Responder() {
             @Override
             public void respond(ImapResponseMessage message) {
-                channel.eventLoop().execute(() -> responder.respond(message));
+                onEventLoop(() -> responder.respond(message));
             }
 
             @Override
             public void flush() {
-                channel.eventLoop().execute(responder::flush);
+                onEventLoop(responder::flush);
             }
         };
+    }
+
+    private void onEventLoop(Runnable runnable) {
+        // On the event loop, write right away: the response is then ordered with the handling of the next client line
+        if (channel.eventLoop().inEventLoop()) {
+            runnable.run();
+        } else {
+            channel.eventLoop().execute(runnable);
+        }
+    }
+
+    @Override
+    public Scheduler eventLoopScheduler() {
+        return eventLoopScheduler;
     }
 
     @Override
