@@ -1138,36 +1138,39 @@ class SieveIntegrationTest {
     }
 
     @Test
-    void vacationShouldNotGenerateNotificationIfTooOld() throws Exception {
+    void vacationShouldGenerateNotificationEvenIfOld() throws Exception {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReason.script", DATE_OLD, DATE_NEW);
 
         FakeMail mail = createMail();
         testee.service(mail);
 
         assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
-        assertThat(fakeMailContext.getSentMails()).isEmpty();
+
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
+            .sender(new MailAddress(RECEIVER_DOMAIN_COM))
+            .recipient(new MailAddress("sender@any.com"))
+            .fromMailet()
+            .build();
+        assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
     }
 
     @Test
     void vacationShouldNotCancelFileIntoActionIfNotExecuted() throws Exception {
-        prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReasonAndFileInto.script", DATE_OLD, DATE_NEW);
+        String script = "org/apache/james/transport/mailets/delivery/vacationReasonAndFileInto.script";
+        MailAddress sender = new MailAddress("sender@any.com");
+
+        // This sents an automatic vacation reply.
+        vacationReceivesMailsFrom(List.of(sender), script, DATE_DEFAULT.plusDays(3));
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
+
+        // This is 4 days after DATE_DEFAULT, so no vacation reply is sent.
+        prepareTestUsingScriptAndDates(script, DATE_DEFAULT, DATE_NEW);
 
         FakeMail mail = createMail();
         testee.service(mail);
 
         assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
-        assertThat(fakeMailContext.getSentMails()).isEmpty();
-    }
-
-    @Test
-    void vacationDaysParameterShouldFilterTooOldDates() throws Exception {
-        prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationDaysReason.script", DATE_DEFAULT, DATE_NEW);
-
-        FakeMail mail = createMail();
-        testee.service(mail);
-
-        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
-        assertThat(fakeMailContext.getSentMails()).isEmpty();
+        assertThat(fakeMailContext.getSentMails()).hasSize(1);
     }
 
     @Test
@@ -1229,6 +1232,23 @@ class SieveIntegrationTest {
         assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
         FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
+            .recipient(new MailAddress("sender@any.com"))
+            .fromMailet()
+            .build();
+        assertThat(fakeMailContext.getSentMails()).containsExactly(expectedSentMail);
+    }
+
+    @Test
+    void vacationUsesFromAsEnvelopeSenderIfAliasOfTheUser() throws Exception {
+        useSieveWithAlias(Username.of(LOCAL_PART), "benwa@apache.org");
+        prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationSubjectFromReason.script", DATE_DEFAULT, DATE_NEW);
+
+        FakeMail mail = createMail();
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
+            .sender(new MailAddress("benwa@apache.org"))
             .recipient(new MailAddress("sender@any.com"))
             .fromMailet()
             .build();

@@ -21,13 +21,12 @@ package org.apache.james.transport.mailets.jsieve;
 
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.mail.Header;
@@ -86,33 +85,40 @@ public class VacationAction implements MailAction {
     @Override
     public void execute(Action action, Mail mail, ActionContext context) throws MessagingException {
         ActionVacation actionVacation = (ActionVacation) action;
-        int dayDifference = Long.valueOf(
-            ChronoUnit.DAYS.between(
-                context.getScriptActivationDate().toLocalDate(),
-                context.getScriptInterpretationDate().toLocalDate()))
-            .intValue();
+
         // RFC 5230 section 4.6: no reply to a message with a null envelope sender
-        if (!mail.hasSender() || !isStillInVacation(actionVacation, dayDifference)) {
+        if (!mail.hasSender()) {
             return;
         }
-        Set<MailAddress> userMailAddresses = userMailAddresses(actionVacation, context);
-        if (isValidForReply(mail, userMailAddresses)
-                && !isFromUser(mail, userMailAddresses)
+
+        // Known addresses are used for authorization decisions. We can not use all addresses for that
+        // because the user can specify arbitrary addresses in :addresses.
+        Set<MailAddress> knownAddresses = getKnownAddresses(actionVacation, context);
+        // RFC 5230 section 4.5: The user's addresses are the envelope recipient, the user-specified :addresses,
+        // and email addresses known by James to be associated with the recipient (e.g. their aliases).
+        Set<MailAddress> allAddresses = Stream.concat(
+            knownAddresses.stream(),
+            actionVacation.getAddresses().stream().flatMap(this::retrieveAddressFromString)
+        ).collect(ImmutableSet.toImmutableSet());
+
+        if (isValidForReply(mail, allAddresses)
+                && !isFromUser(mail, allAddresses)
                 && !isMailingList(mail)
                 && !automaticallySentMailDetector.isAutomaticallySent(mail)
                 && !isNoReplySender(mail)
                 && !alreadyAnswered(mail, actionVacation, context)) {
-            sendVacationNotification(mail, actionVacation, context);
+            sendVacationNotification(mail, actionVacation, context, knownAddresses);
             registerNotification(mail, actionVacation, context);
         }
     }
 
-    private void sendVacationNotification(Mail mail, ActionVacation actionVacation, ActionContext context) throws MessagingException {
+    private void sendVacationNotification(Mail mail, ActionVacation actionVacation, ActionContext context, Set<MailAddress> allowedFromAddresses) throws MessagingException {
         VacationReply vacationReply = VacationReply.builder(mail, context)
             .from(actionVacation.getFrom())
             .mime(actionVacation.getMime())
             .reason(actionVacation.getReason())
             .subject(actionVacation.getSubject())
+            .allowedFromAddresses(allowedFromAddresses)
             .build();
 
         MailImpl replyMail = MailImpl.builder()
@@ -128,27 +134,17 @@ public class VacationAction implements MailAction {
         }
     }
 
-    private boolean isStillInVacation(ActionVacation actionVacation, int dayDifference) {
-        return dayDifference >= 0 && dayDifference <= actionVacation.getDuration();
-    }
-
-    // RFC 5230 section 4.5: the user's addresses are the recipient, the :addresses and those the server knows to be
-    // theirs (their aliases, their address in the domain aliases)
-    private Set<MailAddress> userMailAddresses(ActionVacation actionVacation, ActionContext context) {
+    private Set<MailAddress> getKnownAddresses(ActionVacation actionVacation, ActionContext context) {
         MailAddress recipient = context.getRecipient();
-        List<MailAddress> knownAddresses = Flux.from(userAddresses.of(recipient))
+        Set<MailAddress> addresses = Flux.from(userAddresses.of(recipient))
             .onErrorResume(e -> {
-                LOGGER.warn("Cannot list the addresses of {}, relying on the vacation :addresses only", recipient.asString(), e);
+                LOGGER.warn("Cannot list the addresses of {}, relying only on the vacation :addresses and the recipient itself", recipient.asString(), e);
                 return Flux.empty();
             })
-            .collectList()
+            .collect(Collectors.toSet())
             .block();
-        return Stream.of(
-                Stream.of(recipient),
-                actionVacation.getAddresses().stream().flatMap(this::retrieveAddressFromString),
-                knownAddresses.stream())
-            .flatMap(stream -> stream)
-            .collect(ImmutableSet.toImmutableSet());
+        addresses.add(recipient);
+        return addresses;
     }
 
     // RFC 5230 section 4.5: MUST NOT respond unless one of the user's addresses is in a To, Cc, Bcc, Resent-To,
