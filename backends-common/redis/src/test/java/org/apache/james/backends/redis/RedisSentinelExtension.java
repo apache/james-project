@@ -173,7 +173,7 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-        redisMasterReplicaContainerList.forEach(Throwing.consumer(container -> container.execInContainer("redis-cli", "flushall")));
+        redisMasterReplicaContainerList.forEach(Throwing.consumer(container -> container.execInContainer("redis-cli", "-a", "123", "--no-auth-warning", "flushall")));
     }
 
     public RedisSentinelCluster getRedisSentinelCluster() {
