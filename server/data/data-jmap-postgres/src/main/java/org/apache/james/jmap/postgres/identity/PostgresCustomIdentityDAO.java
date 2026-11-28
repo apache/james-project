@@ -146,7 +146,7 @@ public class PostgresCustomIdentityDAO implements CustomIdentityDAO {
         return Mono.from(findByIdentityId(user, identityId))
             .switchIfEmpty(Mono.error(new IdentityNotFoundException(identityId)))
             .map(identityUpdate::update)
-            .flatMap(updatedIdentity -> upsertReturnMono(user, updatedIdentity)
+            .flatMap(updatedIdentity -> updateIfExists(user, updatedIdentity)
                 .flatMap(saved -> eventBus.dispatch(
                     new CustomIdentityUpdated(Event.EventId.random(), user, saved),
                     new AccountIdRegistrationKey(AccountId.fromUsername(user)))
@@ -160,6 +160,24 @@ public class PostgresCustomIdentityDAO implements CustomIdentityDAO {
                 new CustomIdentityUpdated(Event.EventId.random(), user, saved),
                 new AccountIdRegistrationKey(AccountId.fromUsername(user)))
                 .thenReturn(BoxedUnit.UNIT)));
+    }
+
+    private Mono<Identity> updateIfExists(Username user, Identity identity) {
+        return executorFactory.create(user.getDomainPart())
+            .executeReturnAffectedRowsCount(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
+                .set(NAME, identity.name())
+                .set(EMAIL, identity.email().asString())
+                .set(TEXT_SIGNATURE, identity.textSignature())
+                .set(HTML_SIGNATURE, identity.htmlSignature())
+                .set(MAY_DELETE, identity.mayDelete())
+                .set(SORT_ORDER, identity.sortOrder())
+                .set(REPLY_TO, convertToJooqJson(identity.replyTo()))
+                .set(BCC, convertToJooqJson(identity.bcc()))
+                .where(USERNAME.eq(user.asString()))
+                .and(ID.eq(identity.id().id()))))
+            .filter(updatedRows -> updatedRows > 0)
+            .switchIfEmpty(Mono.error(() -> new IdentityNotFoundException(identity.id())))
+            .thenReturn(identity);
     }
 
     private Mono<Identity> upsertReturnMono(Username user, Identity identity) {

@@ -226,13 +226,13 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
       .next()
       .flatMap {
         case (None, None) => SMono.error(IdentityNotFoundException(identityId))
-        case (Some(_), Some(customIdentity)) => customIdentityDao.upsert(user, identityUpdateRequest.update(customIdentity))
+        case (Some(_), Some(_)) => SMono(customIdentityDao.update(user, identityId, identityUpdateRequest))
         case (Some(serverSetIdentity), None) => customIdentityDao.upsert(user, identityUpdateRequest.update(serverSetIdentity))
         case (None, Some(customIdentity)) =>
           identityFactory.userCanSendFrom(user, customIdentity.email)
             .filter(bool => bool)
             .switchIfEmpty(SMono.error(IdentityNotFoundException(identityId)))
-            .flatMap(_ => SMono(customIdentityDao.upsert(user, identityUpdateRequest.update(customIdentity))))
+            .flatMap(_ => SMono(customIdentityDao.update(user, identityId, identityUpdateRequest)))
       }
       .map(_ => ())
   }

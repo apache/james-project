@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.memory.identity
 
-import com.google.common.collect.{HashBasedTable, Table}
+import com.google.common.collect.{HashBasedTable, Table, Tables}
 import com.google.inject.name.Named
 import jakarta.inject.Inject
 import org.apache.james.core.Username
@@ -34,7 +34,7 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import scala.jdk.CollectionConverters._
 
 class MemoryCustomIdentityDAO @Inject()(@Named("JMAP") eventBus: EventBus) extends CustomIdentityDAO {
-  private val table: Table[Username, IdentityId, Identity] = HashBasedTable.create
+  private val table: Table[Username, IdentityId, Identity] = Tables.synchronizedTable(HashBasedTable.create[Username, IdentityId, Identity]())
 
   override def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] =
     save(user, IdentityId.generate, creationRequest)
@@ -47,20 +47,27 @@ class MemoryCustomIdentityDAO @Inject()(@Named("JMAP") eventBus: EventBus) exten
         SMono.fromPublisher(eventBus.dispatch(CustomIdentityCreated(Event.EventId.random(), user, identity), AccountIdRegistrationKey(AccountId.fromUsername(user))))
           .`then`(SMono.just(identity)))
 
-  override def list(user: Username): Publisher[Identity] = SFlux.fromIterable(table.row(user).values().asScala)
+  override def list(user: Username): Publisher[Identity] =
+    SFlux.defer(SFlux.fromIterable(table.synchronized(table.row(user).values().asScala.toList)))
 
   override def findByIdentityId(user: Username, identityId: IdentityId): SMono[Identity] =
-    SFlux.fromIterable(table.row(user).values().asScala)
-      .filter(identity => identity.id.equals(identityId))
-      .next()
+    SMono.fromCallable(() => table.get(user, identityId))
 
   override def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): Publisher[Unit] =
-    Option(table.get(user, identityId))
-      .map(identityUpdate.update)
-      .fold(SMono.error[Unit](IdentityNotFoundException(identityId)))(updatedIdentity =>
-        SMono.fromCallable[Unit](() => table.put(user, identityId, updatedIdentity))
-          .flatMap(_ => SMono.fromPublisher(eventBus.dispatch(CustomIdentityUpdated(Event.EventId.random(), user, updatedIdentity), AccountIdRegistrationKey(AccountId.fromUsername(user))))
-            .map(_ => ())))
+    SMono.fromCallable(() => updateIfExists(user, identityId, identityUpdate))
+      .flatMap(_.fold(SMono.error[Unit](IdentityNotFoundException(identityId)))(updatedIdentity =>
+        SMono.fromPublisher(eventBus.dispatch(CustomIdentityUpdated(Event.EventId.random(), user, updatedIdentity), AccountIdRegistrationKey(AccountId.fromUsername(user))))
+          .map(_ => ())))
+
+  private def updateIfExists(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): Option[Identity] =
+    table.synchronized {
+      Option(table.get(user, identityId))
+        .map(identityUpdate.update)
+        .map(updatedIdentity => {
+          table.put(user, identityId, updatedIdentity)
+          updatedIdentity
+        })
+    }
 
   override def upsert(user: Username, patch: Identity): SMono[Unit] =
     SMono.fromCallable[Unit](() => table.put(user, patch.id, patch))
@@ -73,7 +80,7 @@ class MemoryCustomIdentityDAO @Inject()(@Named("JMAP") eventBus: EventBus) exten
         .map(_ => ()))
 
   override def delete(username: Username): Publisher[Unit] =
-    SMono.fromCallable(() => {
+    SMono.fromCallable(() => table.synchronized {
       val ids = table.row(username).keySet().asScala.toSet
       table.rowMap().remove(username)
       ids
