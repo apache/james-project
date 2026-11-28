@@ -131,6 +131,8 @@ public interface MessageStorer {
             return Mono.usingWhen(Mono.fromCallable(() -> extractAttachments(messageContent, maybeMessage)),
                 attachments -> attachmentMapperFactory.getAttachmentMapper(session)
                     .storeAttachmentsReactive(attachments.getAttachments(), messageId),
+                parsingResults -> Mono.fromRunnable(parsingResults::dispose).subscribeOn(Schedulers.boundedElastic()),
+                (parsingResults, error) -> Mono.fromRunnable(parsingResults::dispose).subscribeOn(Schedulers.boundedElastic()),
                 parsingResults -> Mono.fromRunnable(parsingResults::dispose).subscribeOn(Schedulers.boundedElastic()));
         }
 
