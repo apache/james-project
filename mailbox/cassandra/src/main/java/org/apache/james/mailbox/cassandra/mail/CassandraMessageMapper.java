@@ -513,7 +513,8 @@ public class CassandraMessageMapper implements MessageMapper {
         // Allocated upon the first flags change only: an update changing nothing keeps the highest mod-sequence
         Mono<ModSeq> newModSeq = computeNewModSeq(mailboxId).cache();
         return toBeUpdated
-            .flatMap(metadata -> tryFlagsUpdate(flagsUpdateCalculator, newModSeq, metadata), reactorConcurrency)
+            // Sequential: updates run concurrently yet results keep the UID order, so that IMAP STORE answers in order
+            .flatMapSequential(metadata -> tryFlagsUpdate(flagsUpdateCalculator, newModSeq, metadata), reactorConcurrency)
             .reduce(FlagsUpdateStageResult.none(), FlagsUpdateStageResult::merge)
             .flatMap(result -> updateIndexesForUpdatesResult(mailboxId, result));
     }
