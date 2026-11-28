@@ -26,6 +26,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +36,7 @@ import org.junit.jupiter.api.Test;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.rabbitmq.Sender;
 
 class KeyRegistrationHandlerTest {
@@ -76,5 +80,26 @@ class KeyRegistrationHandlerTest {
             .isInstanceOf(RuntimeException.class);
 
         assertThat(localListenerRegistry.getLocalListeners(KEY)).isEmpty();
+    }
+
+    @Test
+    void unbindReachingTheBrokerAfterTheBindOfANewFirstListenerShouldBindTheKeyAgain() {
+        List<String> brokerOperations = new CopyOnWriteArrayList<>();
+        when(sender.bind(any())).thenAnswer(invocation -> Mono.fromRunnable(() -> brokerOperations.add("bind")));
+        Registration registrationA = testee.register(LISTENER, KEY).block();
+
+        Sinks.Empty<Void> unbindAcknowledged = Sinks.empty();
+        when(sender.unbind(any())).thenReturn(unbindAcknowledged.asMono()
+            .doOnSuccess(any -> brokerOperations.add("unbind"))
+            .then(Mono.empty()));
+        CompletableFuture<Void> unregisterA = Mono.from(registrationA.unregister()).toFuture();
+
+        EventListener.ReactiveEventListener listenerB = EventListener.wrapReactive(event -> { });
+        testee.register(listenerB, KEY).block();
+        unbindAcknowledged.tryEmitEmpty();
+        unregisterA.join();
+
+        assertThat(localListenerRegistry.getLocalListeners(KEY)).containsOnly(listenerB);
+        assertThat(brokerOperations).last().isEqualTo("bind");
     }
 }
