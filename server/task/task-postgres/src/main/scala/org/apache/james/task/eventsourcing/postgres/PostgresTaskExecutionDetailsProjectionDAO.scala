@@ -51,6 +51,14 @@ class PostgresTaskExecutionDetailsProjectionDAO @Inject()(postgresExecutor: Post
         Mono.from(insertStatement)
       })))
 
+  def saveDetailsIfStatus(details: TaskExecutionDetails, expectedStatus: TaskManager.Status): Mono[java.lang.Boolean] =
+    serializeAdditionalInformation(details)
+      .flatMap(serializedAdditionalInformation => postgresExecutor.executeReturnAffectedRowsCount(dsl => Mono.from(dsl.update(TABLE_NAME)
+        .set(toInsertValues(details, serializedAdditionalInformation))
+        .where(TASK_ID.eq(details.getTaskId.getValue))
+        .and(STATUS.eq(expectedStatus.getValue)))))
+      .map(updatedRows => java.lang.Boolean.valueOf(updatedRows > 0))
+
   private def toInsertValues(details: TaskExecutionDetails, serializedAdditionalInformation: Optional[String]): ImmutableMap[Any, Any] = {
     val builder: ImmutableMap.Builder[Any, Any] = ImmutableMap.builder()
     builder.put(TYPE, details.getType.asString())

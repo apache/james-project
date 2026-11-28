@@ -19,8 +19,9 @@
 package org.apache.james.task.eventsourcing
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import org.apache.james.eventsourcing.ReactiveSubscriber
-import org.apache.james.task.{Hostname, TaskExecutionDetails, TaskId}
+import org.apache.james.task.{Hostname, TaskExecutionDetails, TaskId, TaskManager}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -43,13 +44,28 @@ trait TaskExecutionDetailsProjection {
     case canceled: Cancelled =>
       updateReactive(canceled.aggregateId.taskId)(_.cancelEffectively(canceled.additionalInformation.asJava))
     case updated: AdditionalInformationUpdated =>
-      updateReactive(updated.aggregateId.taskId)(_.updateInformation(updated.additionalInformation))
+      updateReactiveWith(updated.aggregateId.taskId)(_.updateInformation(updated.additionalInformation), (details, expectedStatus) => updateAdditionalInformationReactive(details, expectedStatus))
   }
 
   private def updateReactive(taskId: TaskId)(updater: TaskExecutionDetails => TaskExecutionDetails): Publisher[Void] =
+    updateReactiveWith(taskId)(updater, (details, expectedStatus) => updateReactive(details, expectedStatus))
+
+  private def updateReactiveWith(taskId: TaskId)(updater: TaskExecutionDetails => TaskExecutionDetails,
+                                                 save: (TaskExecutionDetails, TaskManager.Status) => Publisher[java.lang.Boolean]): Publisher[Void] =
     SMono.fromPublisher(loadReactive(taskId))
-      .map(updater)
-      .flatMap(taskExecutionDetails => SMono.fromPublisher(updateReactive(taskExecutionDetails)))
+      .flatMap(loaded => {
+        val updated = updater(loaded)
+        if (updated eq loaded) {
+          // the event does not apply to the current status: nothing to save
+          SMono.empty
+        } else {
+          SMono.fromPublisher(save(updated, loaded.getStatus))
+            .filter(saved => !saved)
+            // a concurrent update changed the status since the load: apply the updater again to the new details
+            .flatMap(_ => SMono.fromPublisher(updateReactiveWith(taskId)(updater, save)))
+        }
+      })
+      .`then`(SMono.empty)
 
   def load(taskId: TaskId): Option[TaskExecutionDetails]
   def list: List[TaskExecutionDetails]
@@ -62,6 +78,22 @@ trait TaskExecutionDetailsProjection {
   def listDetailsByBeforeDate(beforeDate: Instant): Publisher[TaskExecutionDetails]
 
   def updateReactive(details: TaskExecutionDetails): Publisher[Void]
+
+  /**
+   * Saves the details only if the stored ones still have the expected status.
+   *
+   * @return whether the details were saved
+   */
+  def updateReactive(details: TaskExecutionDetails, expectedStatus: TaskManager.Status): Publisher[java.lang.Boolean]
+
+  /**
+   * Saves the details carrying a progress update (new additional information) only if the stored ones still have the
+   * expected status.
+   *
+   * @return whether the details were saved
+   */
+  def updateAdditionalInformationReactive(details: TaskExecutionDetails, expectedStatus: TaskManager.Status): Publisher[java.lang.Boolean] =
+    updateReactive(details, expectedStatus)
 
   def remove(taskExecutionDetails: TaskExecutionDetails) : Publisher[Void]
 }
@@ -81,6 +113,19 @@ class MemoryTaskExecutionDetailsProjection() extends TaskExecutionDetailsProject
   override def listReactive(): Publisher[TaskExecutionDetails] = SFlux.fromIterable(this.details.values().asScala)
 
   override def updateReactive(details: TaskExecutionDetails): Publisher[Void] = SMono.fromCallable(() => this.details.put(details.taskId, details)).`then`(SMono.empty)
+
+  override def updateReactive(details: TaskExecutionDetails, expectedStatus: TaskManager.Status): Publisher[java.lang.Boolean] =
+    SMono.fromCallable(() => {
+      val saved = new AtomicBoolean(false)
+      this.details.computeIfPresent(details.taskId, (_, current) =>
+        if (current.getStatus == expectedStatus) {
+          saved.set(true)
+          details
+        } else {
+          current
+        })
+      java.lang.Boolean.valueOf(saved.get())
+    })
 
   override def listDetailsByBeforeDate(beforeDate: Instant): Publisher[TaskExecutionDetails] = SFlux.fromIterable(this.details.values().asScala)
     .filter(taskExecutionDetails => taskExecutionDetails.getSubmittedDate.toInstant.isBefore(beforeDate))

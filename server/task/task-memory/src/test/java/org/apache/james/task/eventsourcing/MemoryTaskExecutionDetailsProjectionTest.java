@@ -19,7 +19,7 @@
 
 package org.apache.james.task.eventsourcing;
 
-class MemoryTaskExecutionDetailsProjectionTest implements TaskExecutionDetailsProjectionContract {
+class MemoryTaskExecutionDetailsProjectionTest implements ConditionalTaskExecutionDetailsProjectionContract {
 
     @Override
     public TaskExecutionDetailsProjection testee() {

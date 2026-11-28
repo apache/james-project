@@ -94,6 +94,22 @@ class CassandraTaskExecutionDetailsProjectionDAO @Inject()(session: CqlSession, 
     SMono(cassandraAsyncExecutor.executeVoid(fullyBoundStatement))
   }))
 
+  /**
+   * Saves the additional information of the details, leaving the status and the dates of the stored ones untouched:
+   * a progress update handled concurrently with a status transition can not revert the status.
+   */
+  def saveAdditionalInformation(details: TaskExecutionDetails): Mono[Void] =
+    Mono.from(serializeAdditionalInformation(details)
+      .flatMap(serializeAdditionalInformation => {
+        val boundStatement = insertStatement.bind()
+          .setUuid(TASK_ID, details.getTaskId.getValue)
+          .setString(TYPE, details.getType.asString())
+          .setUdtValue(SUBMITTED_DATE, CassandraZonedDateTimeDataDefinition.toUDT(dateType, details.getSubmittedDate))
+          .setString(SUBMITTED_NODE, details.getSubmittedNode.asString)
+
+        SMono(cassandraAsyncExecutor.executeVoid(bindOptionalStringValue(boundStatement, ADDITIONAL_INFORMATION, serializeAdditionalInformation)))
+      }))
+
   private def bindOptionalStringValue(statement: BoundStatement, fieldName: String, fieldValue: Optional[String]) =
     fieldValue.asScala match {
       case Some(value) => statement.setString(fieldName, value)
