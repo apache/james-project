@@ -61,4 +61,15 @@ public interface Session {
     void stop() throws Exception;
 
     void await() throws Exception;
+
+    /**
+     * Upgrades the underlying connection to TLS, typically after a successful STARTTLS command.
+     */
+    default void write(String data) throws Exception {
+        throw new UnsupportedOperationException("Raw writes (literals) are not supported by " + getClass().getSimpleName());
+    }
+
+    default void startTls() throws Exception {
+        throw new UnsupportedOperationException("STARTTLS is not supported by " + getClass().getSimpleName());
+    }
 }
