@@ -1,0 +1,11 @@
+{
+  "type": "BlobCompactionTask",
+  "bucketName": "default",
+  "generation": 2,
+  "family": 1,
+  "chunkTargetSize": 104857600,
+  "maxPackableSize": 1048576,
+  "purgeDeadRatio": 0.1,
+  "mergeDeadRatio": 0.5,
+  "gainThreshold": 0.1
+}
