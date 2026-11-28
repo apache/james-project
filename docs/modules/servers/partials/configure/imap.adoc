@@ -95,7 +95,7 @@ A value of 0 disables the queue.
 | `concurrentRequests`
 | Sets the maximum number of IMAP requests that are executed simultaneously.
 All requests past that limit are queued.
-It is an optional Integer that defaults to 20.
+It is an optional Integer that defaults to 128.
 A negative value deactivates this feature and leads to unbounded concurrency.
 
 | `provisionDefaultMailboxes`

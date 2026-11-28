@@ -81,7 +81,7 @@
         <dt><strong>handler.connectionLimitPerIP</strong></dt>
         <dd>Set the maximum simultaneous incoming connections per IP for this service</dd>
         <dt><strong>concurrentRequests</strong></dt>
-        <dd>Maximum number of IMAP requests executed simultaneously. Past that limit requests are queued. Defaults to 20.
+        <dd>Maximum number of IMAP requests executed simultaneously. Past that limit requests are queued. Defaults to 128.
             Negative values deactivate this feature, leading to unbounded concurrency.</dd>
         <dt><strong>maxQueueSize</strong></dt>
         <dd>Upper bound to the IMAP throttler queue. Upon burst, requests that cannot be queued are rejected and not executed.
