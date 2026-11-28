@@ -30,6 +30,7 @@ import org.apache.james.adapter.mailbox.QuotaUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
 import org.apache.james.backends.postgres.PostgresDataDefinition;
+import org.apache.james.blob.api.BlobIdUpdater;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.events.EventListener;
 import org.apache.james.eventsourcing.Event;
@@ -62,6 +63,7 @@ import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.PostgresThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.postgres.mail.PostgresAttachmentBlobReferenceSource;
+import org.apache.james.mailbox.postgres.mail.PostgresBlobIdUpdater;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageBlobReferenceSource;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.postgres.mail.eventsourcing.acl.ACLModule;
@@ -155,6 +157,7 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(MessageIdReIndexer.class).to(MessageIdReIndexerImpl.class);
 
         bind(PostgresMessageDAO.class).in(Scopes.SINGLETON);
+        bind(BlobIdUpdater.Factory.class).to(PostgresBlobIdUpdater.Factory.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(PostgresMailboxManagerDefinition.class);
 
