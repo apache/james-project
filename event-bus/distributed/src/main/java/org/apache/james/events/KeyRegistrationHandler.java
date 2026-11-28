@@ -28,6 +28,7 @@ import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -150,19 +151,34 @@ class KeyRegistrationHandler {
     }
 
     Mono<Registration> register(EventListener.ReactiveEventListener listener, RegistrationKey key) {
-        LocalListenerRegistry.LocalRegistration registration = localListenerRegistry.addListener(key, listener);
-
-        return registerIfNeeded(key, registration)
-            .thenReturn(new KeyRegistration(() -> {
-                if (registration.unregister().lastListenerRemoved()) {
-                    return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-unregister", registrationBinder.unbind(key)
-                        .timeout(TOPOLOGY_CHANGES_TIMEOUT)
-                        .retryWhen(configurations.retryBackoff().asReactorRetry().scheduler(Schedulers.boundedElastic()))))
-                        // Unbind is potentially blocking
-                        .subscribeOn(Schedulers.boundedElastic());
+        return Mono.defer(() -> {
+            LocalListenerRegistry.LocalRegistration registration = localListenerRegistry.addListener(key, listener);
+            KeyRegistration keyRegistration = new KeyRegistration(() -> unregister(key, registration));
+            // Either the caller gets the registration, or the listener is removed (cancel or bind failure): nobody else could remove it
+            AtomicBoolean settled = new AtomicBoolean(false);
+            Runnable unregisterIfNotHandedOut = () -> {
+                if (settled.compareAndSet(false, true)) {
+                    keyRegistration.unregister().subscribe();
                 }
-                return Mono.empty();
-            }));
+            };
+
+            return registerIfNeeded(key, registration)
+                .thenReturn((Registration) keyRegistration)
+                .filter(any -> settled.compareAndSet(false, true))
+                .doOnCancel(unregisterIfNotHandedOut)
+                .doOnError(e -> unregisterIfNotHandedOut.run());
+        });
+    }
+
+    private Mono<Void> unregister(RegistrationKey key, LocalListenerRegistry.LocalRegistration registration) {
+        if (registration.unregister().lastListenerRemoved()) {
+            return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-unregister", registrationBinder.unbind(key)
+                .timeout(TOPOLOGY_CHANGES_TIMEOUT)
+                .retryWhen(configurations.retryBackoff().asReactorRetry().scheduler(Schedulers.boundedElastic()))))
+                // Unbind is potentially blocking
+                .subscribeOn(Schedulers.boundedElastic());
+        }
+        return Mono.empty();
     }
 
     private Mono<Void> registerIfNeeded(RegistrationKey key, LocalListenerRegistry.LocalRegistration registration) {
